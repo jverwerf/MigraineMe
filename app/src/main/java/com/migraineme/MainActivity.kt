@@ -1,5 +1,7 @@
+// app/src/main/java/com/migraineme/MainActivity.kt
 package com.migraineme
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -45,13 +47,39 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // schedule daily background weather sync
+        scheduleDailyWeatherWork(this)
+
         setContent { MaterialTheme { AppRoot() } }
     }
+}
+
+private fun scheduleDailyWeatherWork(context: Context) {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+    val request = PeriodicWorkRequestBuilder<WeatherDailyWorker>(1, TimeUnit.DAYS)
+        .setConstraints(constraints)
+        .setInitialDelay(1, TimeUnit.HOURS) // first run ~1h later
+        .build()
+
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "weather-daily-sync",
+        ExistingPeriodicWorkPolicy.KEEP,
+        request
+    )
 }
 
 object Routes {
@@ -117,7 +145,7 @@ fun AppRoot() {
                             scope.launch { drawerState.close() }
                             nav.navigate(item.route) { launchSingleTop = true }
                         },
-                        icon = { Icon(imageVector = item.icon, contentDescription = null) }
+                        icon = { Icon(imageVector = item.icon, contentDescription = item.title) }
                     )
                 }
             }
@@ -169,7 +197,8 @@ fun AppRoot() {
                     .padding(inner)
             ) {
                 composable(Routes.MONITOR) { MonitorScreen() }
-                composable(Routes.INSIGHTS) { InsightsScreen() }
+                // >>> IMPORTANT: pass shared VMs to Insights <<<
+                composable(Routes.INSIGHTS) { InsightsScreen(authVm = authVm, logVm = logVm) }
                 composable(Routes.HOME) {
                     HomeScreenRoot(
                         onLogout = { nav.navigate(Routes.LOGOUT) { launchSingleTop = true } },
@@ -179,11 +208,9 @@ fun AppRoot() {
                     )
                 }
                 composable(Routes.COMMUNITY) { CommunityScreen() }
-
                 composable(Routes.LOG_HOME) {
                     LogHomeScreen(navController = nav, authVm = authVm, vm = logVm)
                 }
-
                 composable(Routes.LOGIN) {
                     val a by authVm.state.collectAsState()
                     LaunchedEffect(a.accessToken) {
@@ -217,7 +244,6 @@ fun AppRoot() {
                         onNavigateToLogin = { nav.navigate(Routes.LOGIN) { launchSingleTop = true } }
                     )
                 }
-
                 composable(Routes.PROFILE) { ProfileScreen(authVm = authVm) }
                 composable(Routes.TRIGGERS) { AdjustTriggersScreen() }
                 composable(Routes.LOGOUT) {
@@ -253,7 +279,8 @@ private fun BottomBar(
         val backStack by nav.currentBackStackEntryAsState()
         val currentRoute = backStack?.destination?.route
         val logState by logVm.state.collectAsState()
-        val totalAlerts = logState.missingTimeCount + logState.missingAmountCount + logState.missingDurationCount
+        val totalAlerts =
+            logState.missingTimeCount + logState.missingAmountCount + logState.missingDurationCount
         items.forEach { item ->
             val withBadge = item.route == Routes.LOG_HOME && totalAlerts > 0
             NavigationBarItem(

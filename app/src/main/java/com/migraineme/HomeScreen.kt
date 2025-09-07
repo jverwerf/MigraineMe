@@ -1,26 +1,15 @@
+// app/src/main/java/com/migraineme/HomeScreen.kt
 package com.migraineme
 
-import android.widget.Toast
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Medication
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Spa
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
@@ -36,71 +25,24 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import java.time.Instant
+import kotlin.math.max
+import kotlin.math.min
 
 @Composable
 fun HomeScreenRoot(
     onLogout: () -> Unit,
     onNavigateToMigraine: () -> Unit = {},
-    authVm: AuthViewModel,            // <-- use shared instances from MainActivity
-    logVm: LogViewModel,              // <--
-    vm: HomeViewModel = viewModel()
+    authVm: AuthViewModel,
+    logVm: LogViewModel,
+    vm: HomeViewModel? = null // safe default
 ) {
-    val state by vm.state.collectAsState()
-    val auth by authVm.state.collectAsState()
-    val ctx = LocalContext.current
-
-    // Quick actions: create minimal entries with "now" timestamps (details editable later)
-    val onQuickMigraine = {
-        val token = auth.accessToken
-        if (token != null) {
-            logVm.addMigraine(
-                accessToken = token,
-                type = "Migraine",
-                severity = 5,
-                notes = "Quick action",
-                endedAtIso = null
-            )
-            Toast.makeText(ctx, "Quick migraine started (edit later in Log → History).", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(ctx, "Please sign in first.", Toast.LENGTH_SHORT).show()
-        }
-    }
-    val onQuickMedicine = {
-        val token = auth.accessToken
-        if (token != null) {
-            logVm.addMedicine(
-                accessToken = token,
-                name = "Medicine",
-                amount = null,
-                migraineId = null,
-                notes = "Quick action"
-            )
-            Toast.makeText(ctx, "Quick medicine saved (edit later in Log → History).", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(ctx, "Please sign in first.", Toast.LENGTH_SHORT).show()
-        }
-    }
-    val onQuickRelief = {
-        val token = auth.accessToken
-        if (token != null) {
-            logVm.addRelief(
-                accessToken = token,
-                type = "Relief",
-                durationMin = null,
-                migraineId = null,
-                notes = "Quick action"
-            )
-            Toast.makeText(ctx, "Quick relief saved (edit later in Log → History).", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(ctx, "Please sign in first.", Toast.LENGTH_SHORT).show()
-        }
-    }
+    val actualVm: HomeViewModel = vm ?: viewModel()
+    val state by actualVm.state.collectAsState()
 
     if (state.loading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -109,13 +51,21 @@ fun HomeScreenRoot(
     } else {
         HomeScreen(
             state = state,
-            onQuickMigraine = onQuickMigraine,
-            onQuickMedicine = onQuickMedicine,
-            onQuickRelief = onQuickRelief,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+            onQuickMigraine = {
+                authVm.state.value.accessToken?.let {
+                    logVm.addMigraine(it, "Migraine", 5, "Quick action", null)
+                }
+            },
+            onQuickMedicine = {
+                authVm.state.value.accessToken?.let {
+                    logVm.addMedicine(it, "Medicine", null, null, "Quick action")
+                }
+            },
+            onQuickRelief = {
+                authVm.state.value.accessToken?.let {
+                    logVm.addRelief(it, "Relief", null, null, "Quick action")
+                }
+            }
         )
     }
 }
@@ -125,131 +75,86 @@ private fun HomeScreen(
     state: HomeUiState,
     onQuickMigraine: () -> Unit,
     onQuickMedicine: () -> Unit,
-    onQuickRelief: () -> Unit,
-    modifier: Modifier = Modifier
+    onQuickRelief: () -> Unit
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // ---- Quick Actions (first) ----
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Quick Actions", style = MaterialTheme.typography.titleMedium)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    QuickActionButton(
-                        text = "Migraine",
-                        icon = { Icon(Icons.Outlined.Psychology, contentDescription = null) },
-                        onClick = onQuickMigraine,
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickActionButton(
-                        text = "Medicine",
-                        icon = { Icon(Icons.Outlined.Medication, contentDescription = null) },
-                        onClick = onQuickMedicine,
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickActionButton(
-                        text = "Relief",
-                        icon = { Icon(Icons.Outlined.Spa, contentDescription = null) },
-                        onClick = onQuickRelief,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+        // Quick actions
+        SectionCard(title = "Quick actions") {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                QuickActionButton(
+                    text = "Migraine",
+                    icon = { Icon(Icons.Outlined.Psychology, contentDescription = null) },
+                    onClick = onQuickMigraine,
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    text = "Medicine",
+                    icon = { Icon(Icons.Outlined.Medication, contentDescription = null) },
+                    onClick = onQuickMedicine,
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    text = "Relief",
+                    icon = { Icon(Icons.Outlined.Spa, contentDescription = null) },
+                    onClick = onQuickRelief,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
 
-        // ---- Risk Gauge ----
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
+        // Risk gauge
+        SectionCard(title = "Risk today") {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Risk today", style = MaterialTheme.typography.titleMedium)
                 RiskGauge(
                     percent = state.riskPercent,
-                    diameter = 180.dp,
-                    stroke = 14.dp,
-                    trackColor = Color(0xFFE8E8E8),
-                    progressColor = Color(0xFF6750A4)
+                    diameter = 160.dp,
+                    stroke = 12.dp,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    progressColor = MaterialTheme.colorScheme.primary
                 )
-                Spacer(Modifier.height(8.dp))
                 Text(
                     "${state.riskPercent}%",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
             }
         }
 
-        // ---- Top Triggers ----
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Top Triggers", style = MaterialTheme.typography.titleMedium)
-                state.triggersAtRisk.forEach { t ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(t.name, style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.width(8.dp))
-                        Column(Modifier.width(120.dp)) {
-                            androidx.compose.material3.LinearProgressIndicator(
-                                progress = t.score / 100f,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Text("${t.score}%")
-                    }
+        // Triggers: Now vs Average
+        SectionCard(title = "Top triggers (now vs avg)") {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                state.triggersAtRisk.forEach { trig ->
+                    val now = trig.score.toFloat().coerceIn(0f, 100f)
+                    val avg = 50f // TODO: replace with real average when available
+                    TriggerRowLineMeter(
+                        name = trig.name,
+                        now = now,
+                        avg = avg
+                    )
                 }
             }
         }
 
-        // ---- AI Recommendation ----
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Recommendation", style = MaterialTheme.typography.titleMedium)
-                Text(state.aiRecommendation.ifBlank { "—" })
-            }
+        // Recommendation (brought back)
+        SectionCard(title = "Recommendation") {
+            Text(
+                text = state.aiRecommendation.ifBlank { "No recommendation right now." },
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }
+
+/* --- UI helpers --- */
 
 @Composable
 private fun QuickActionButton(
@@ -258,16 +163,28 @@ private fun QuickActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedButton(onClick = onClick, modifier = modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    ElevatedButton(
+        onClick = onClick,
+        modifier = modifier.height(72.dp) // a bit taller so both fit comfortably
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             icon()
-            Spacer(Modifier.width(8.dp))
-            Text(text)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
 
-/** Simple circular gauge that avoids name collisions with Canvas' `size`. */
+
 @Composable
 private fun RiskGauge(
     percent: Int,
@@ -277,11 +194,10 @@ private fun RiskGauge(
     progressColor: Color
 ) {
     val p = percent.coerceIn(0, 100) / 100f
-    Canvas(modifier = Modifier.size(diameter)) {
+    androidx.compose.foundation.Canvas(modifier = Modifier.height(diameter)) {
         val strokePx = stroke.toPx()
-        val arcSize = Size(width = size.minDimension - strokePx, height = size.minDimension - strokePx)
+        val arcSize = Size(size.minDimension - strokePx, size.minDimension - strokePx)
         val topLeft = Offset((size.width - arcSize.width) / 2f, (size.height - arcSize.height) / 2f)
-        // Track
         drawArc(
             color = trackColor,
             startAngle = 135f,
@@ -291,7 +207,6 @@ private fun RiskGauge(
             size = arcSize,
             topLeft = topLeft
         )
-        // Progress
         drawArc(
             color = progressColor,
             startAngle = 135f,
@@ -301,5 +216,71 @@ private fun RiskGauge(
             size = arcSize,
             topLeft = topLeft
         )
+    }
+}
+
+@Composable
+private fun TriggerRowLineMeter(
+    name: String,
+    now: Float,
+    avg: Float
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(name, color = MaterialTheme.colorScheme.onSurface)
+            Text("${now.toInt()} / avg ${avg.toInt()}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        LineMeter(now = now, avg = avg)
+    }
+}
+
+@Composable
+private fun LineMeter(
+    now: Float,
+    avg: Float,
+    height: Dp = 12.dp
+) {
+    val clampedNow = min(100f, max(0f, now))
+    val clampedAvg = min(100f, max(0f, avg))
+
+    // Hoist colors here (composable context) and capture inside Canvas
+    val bg = MaterialTheme.colorScheme.surface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val primary = MaterialTheme.colorScheme.primary
+    val trackShape = RoundedCornerShape(999.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(height)
+            .background(bg, trackShape)
+    ) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val nowX = w * (clampedNow / 100f)
+            val avgX = w * (clampedAvg / 100f)
+
+            // avg marker
+            drawLine(
+                color = onSurfaceVariant.copy(alpha = 0.7f),
+                start = Offset(avgX, 0f),
+                end = Offset(avgX, h),
+                strokeWidth = 2f
+            )
+            // now fill
+            drawRect(
+                color = primary.copy(alpha = 0.22f),
+                topLeft = Offset(0f, 0f),
+                size = Size(nowX, h)
+            )
+            // now edge
+            drawLine(
+                color = primary,
+                start = Offset(nowX, 0f),
+                end = Offset(nowX, h),
+                strokeWidth = 4f
+            )
+        }
     }
 }

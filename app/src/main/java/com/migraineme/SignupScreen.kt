@@ -88,13 +88,11 @@ fun SignupScreen(
                 busy = true
                 scope.launch {
                     try {
-                        val ses = SupabaseAuthService().signUpWithEmail(email.trim(), password)
+                        val ses = SupabaseAuthService.signUpWithEmail(email.trim(), password)
                         if (!ses.accessToken.isNullOrBlank()) {
-                            // Project allows immediate session after signup.
                             authVm.setSession(ses.accessToken, userId = null)
                             onSignedUpAndLoggedIn()
                         } else {
-                            // Project likely requires email confirmation.
                             info = "Check your email to confirm your account, then sign in."
                         }
                     } catch (e: Exception) {

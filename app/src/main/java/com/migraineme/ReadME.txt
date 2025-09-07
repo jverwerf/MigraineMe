@@ -51,3 +51,7 @@ Wearable integrations
 UX simplification
 📜 License
 TBD (default: private development)
+
+repo: https://github.com/jverwerf/MigraineMe
+supa: uuid: f04ac70c-4bb0-4d44-b392-328dd0f3ffab
+supa: anon eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5a2ZsYXJwaWJvZnZmZm16Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0NjU5NDMsImV4cCI6MjA3MjA0MTk0M30.r3DHA2EKNvC_AraPs1gwgaBl_oEBpDrD1bwPfiuiSbM

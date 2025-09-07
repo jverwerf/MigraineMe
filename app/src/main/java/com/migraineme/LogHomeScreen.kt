@@ -2,6 +2,7 @@ package com.migraineme
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -54,7 +55,7 @@ fun LogHomeScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Full-width tabs; History label shows per-type incomplete counts with icons
+        // Tabs
         TabRow(selectedTabIndex = mainTab, modifier = Modifier.fillMaxWidth()) {
             Tab(
                 selected = mainTab == 0,
@@ -105,37 +106,43 @@ fun LogHomeScreen(
 
         when (mainTab) {
             0 -> {
+                // NEW tab — scrollable column
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    // Compact selectors (icon over text)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        RowScopeFilterChipButton(
-                            text = "Migraine",
-                            selected = newTab == NewTab.MIGRAINE,
-                            icon = { Icon(Icons.Outlined.Psychology, contentDescription = null) }
-                        ) { newTab = NewTab.MIGRAINE }
-
-                        RowScopeFilterChipButton(
-                            text = "Medicine",
-                            selected = newTab == NewTab.MEDICINE,
-                            icon = { Icon(Icons.Outlined.Medication, contentDescription = null) }
-                        ) { newTab = NewTab.MEDICINE }
-
-                        RowScopeFilterChipButton(
-                            text = "Relief",
-                            selected = newTab == NewTab.RELIEF,
-                            icon = { Icon(Icons.Outlined.Spa, contentDescription = null) }
-                        ) { newTab = NewTab.RELIEF }
+                        Box(modifier = Modifier.weight(1f)) {
+                            CompactSelectCard(
+                                title = "Migraine",
+                                icon = { Icon(Icons.Outlined.Psychology, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                                selected = newTab == NewTab.MIGRAINE
+                            ) { newTab = NewTab.MIGRAINE }
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            CompactSelectCard(
+                                title = "Medicine",
+                                icon = { Icon(Icons.Outlined.Medication, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                                selected = newTab == NewTab.MEDICINE
+                            ) { newTab = NewTab.MEDICINE }
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            CompactSelectCard(
+                                title = "Relief",
+                                icon = { Icon(Icons.Outlined.Spa, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                                selected = newTab == NewTab.RELIEF
+                            ) { newTab = NewTab.RELIEF }
+                        }
                     }
 
                     if (auth.accessToken == null) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Text("Please sign in.")
                         }
                     } else {
@@ -145,13 +152,22 @@ fun LogHomeScreen(
                                 vm = vm,
                                 onSavedNavigateHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } }
                             )
-                            NewTab.MEDICINE -> MedicineFormInline(accessToken = auth.accessToken!!, state = state, vm = vm)
-                            NewTab.RELIEF   -> ReliefFormInline(accessToken = auth.accessToken!!, state = state, vm = vm)
+                            NewTab.MEDICINE -> MedicineFormInline(
+                                accessToken = auth.accessToken!!,
+                                state = state,
+                                vm = vm
+                            )
+                            NewTab.RELIEF -> ReliefFormInline(
+                                accessToken = auth.accessToken!!,
+                                state = state,
+                                vm = vm
+                            )
                         }
                     }
                 }
             }
             1 -> {
+                // HISTORY tab — already scrollable
                 if (auth.accessToken == null) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("Please sign in.")
@@ -164,8 +180,46 @@ fun LogHomeScreen(
     }
 }
 
-/* ====================== NEW: Migraine with meds/reliefs ====================== */
+/* ---------- Compact scorecard selector (tiny height) ---------- */
+@Composable
+private fun CompactSelectCard(
+    title: String,
+    icon: @Composable () -> Unit,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val container = androidx.compose.ui.graphics.Color(0xFFFAF5FF)
+    val border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
 
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = container.copy(alpha = 0.8f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = border
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp, horizontal = 8.dp), // tighter padding
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            icon()
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = title,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+    }
+}
+
+/* ====================== NEW: Migraine with meds/reliefs (SectionCards) ====================== */
 @Composable
 private fun MigraineFormInline(
     accessToken: String,
@@ -175,7 +229,6 @@ private fun MigraineFormInline(
     val context = LocalContext.current
     val deviceZone = remember { ZoneId.systemDefault() }
     val displayFmt = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd  HH:mm") }
-    val isoFmt = remember { java.time.format.DateTimeFormatter.ISO_INSTANT }
 
     var type by remember { mutableStateOf("Migraine") }
     var severity by remember { mutableStateOf(5f) }
@@ -218,10 +271,10 @@ private fun MigraineFormInline(
         ).show()
     }
 
-    ElevatedCard(Modifier.fillMaxWidth(), elevation = CardDefaults.elevatedCardElevation(2.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Migraine", style = MaterialTheme.typography.titleMedium)
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
+        // 1) Core migraine info
+        SectionCard(title = "Migraine") {
             OutlinedTextField(
                 value = type, onValueChange = { type = it },
                 label = { Text("Type") }, modifier = Modifier.fillMaxWidth()
@@ -241,97 +294,118 @@ private fun MigraineFormInline(
                     }
                 }
             }
+        }
 
+        // 2) Medicines
+        SectionCard(title = "Medicines (optional)") {
+            if (meds.isEmpty()) {
+                Text("No medicines added yet.")
+            }
+            meds.forEachIndexed { idx, row ->
+                SectionCard(title = "Medicine #${idx + 1}") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = row.name,
+                            onValueChange = { meds[idx] = row.copy(name = it) },
+                            label = { Text("Name") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = row.amount,
+                            onValueChange = { meds[idx] = row.copy(amount = it) },
+                            label = { Text("Amount") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { meds.removeAt(idx) }) { Icon(Icons.Outlined.Delete, contentDescription = "Remove") }
+                    }
+                    OutlinedButton(onClick = { pickDateTime(row.dt) { meds[idx] = row.copy(dt = it) } }) {
+                        Text("Time: ${row.dt.format(displayFmt)}")
+                    }
+                }
+            }
+            OutlinedButton(onClick = { meds.add(MedRow()) }, modifier = Modifier.fillMaxWidth()) { Text("Add medicine") }
+        }
+
+        // 3) Reliefs
+        SectionCard(title = "Reliefs (optional)") {
+            if (rels.isEmpty()) {
+                Text("No reliefs added yet.")
+            }
+            rels.forEachIndexed { idx, row ->
+                SectionCard(title = "Relief #${idx + 1}") {
+                    OutlinedTextField(
+                        value = row.type,
+                        onValueChange = { rels[idx] = row.copy(type = it) },
+                        label = { Text("Relief type") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text("Duration: ${row.durationMin} min")
+                    Slider(
+                        value = row.durationMin.toFloat(),
+                        onValueChange = { newVal -> rels[idx] = row.copy(durationMin = newVal.toInt()) },
+                        valueRange = 0f..240f, steps = 23
+                    )
+                    OutlinedButton(onClick = { pickDateTime(row.dt) { rels[idx] = row.copy(dt = it) } }) {
+                        Text("Time: ${row.dt.format(displayFmt)}")
+                    }
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        IconButton(onClick = { rels.removeAt(idx) }) { Icon(Icons.Outlined.Delete, contentDescription = "Remove") }
+                    }
+                }
+            }
+            OutlinedButton(onClick = { rels.add(ReliefRow()) }, modifier = Modifier.fillMaxWidth()) { Text("Add relief") }
+        }
+
+        // 4) Notes (last)
+        SectionCard(title = "Notes (optional)") {
             OutlinedTextField(
                 value = notes, onValueChange = { notes = it },
-                label = { Text("Notes") }, modifier = Modifier.fillMaxWidth()
+                label = { Text("Notes") }, modifier = Modifier.fillMaxWidth(), minLines = 3
             )
-
-            HorizontalDivider()
-
-            Text("Medicines (optional)", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-            meds.forEachIndexed { idx, row ->
-                ElevatedCard(Modifier.fillMaxWidth(), elevation = CardDefaults.elevatedCardElevation(1.dp)) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(row.name, { meds[idx] = row.copy(name = it) }, label = { Text("Name") }, modifier = Modifier.weight(1f))
-                            OutlinedTextField(row.amount, { meds[idx] = row.copy(amount = it) }, label = { Text("Amount") }, modifier = Modifier.weight(1f))
-                            IconButton(onClick = { meds.removeAt(idx) }) { Icon(Icons.Outlined.Delete, contentDescription = "Remove") }
-                        }
-                        OutlinedButton(onClick = { pickDateTime(row.dt) { meds[idx] = row.copy(dt = it) } }) {
-                            Text("Time: ${row.dt.format(displayFmt)}")
-                        }
-                    }
-                }
-            }
-            OutlinedButton(onClick = { meds.add(MedRow()) }) { Text("Add medicine") }
-
-            HorizontalDivider()
-
-            Text("Reliefs (optional)", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-            rels.forEachIndexed { idx, row ->
-                ElevatedCard(Modifier.fillMaxWidth(), elevation = CardDefaults.elevatedCardElevation(1.dp)) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(row.type, { rels[idx] = row.copy(type = it) }, label = { Text("Relief type") }, modifier = Modifier.fillMaxWidth())
-                        Text("Duration: ${row.durationMin} min")
-                        Slider(
-                            value = row.durationMin.toFloat(),
-                            onValueChange = { newVal -> rels[idx] = row.copy(durationMin = newVal.toInt()) },
-                            valueRange = 0f..240f, steps = 23
-                        )
-                        OutlinedButton(onClick = { pickDateTime(row.dt) { rels[idx] = row.copy(dt = it) } }) {
-                            Text("Time: ${row.dt.format(displayFmt)}")
-                        }
-                        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                            IconButton(onClick = { rels.removeAt(idx) }) { Icon(Icons.Outlined.Delete, contentDescription = "Remove") }
-                        }
-                    }
-                }
-            }
-            OutlinedButton(onClick = { rels.add(ReliefRow()) }) { Text("Add relief") }
-
-            Button(
-                onClick = {
-                    val isoFmt = java.time.format.DateTimeFormatter.ISO_INSTANT
-                    val beginIso = isoFmt.format(beginDt.atZone(deviceZone).toInstant())
-                    val endIso = endDt?.let { isoFmt.format(it.atZone(deviceZone).toInstant()) }
-
-                    val medInputs = meds.filter { it.name.isNotBlank() }.map {
-                        LogViewModel.MedInput(
-                            name = it.name,
-                            amount = it.amount.ifBlank { null },
-                            notes = null,
-                            takenAtIso = isoFmt.format(it.dt.atZone(deviceZone).toInstant())
-                        )
-                    }
-                    val reliefInputs = rels.filter { it.type.isNotBlank() }.map {
-                        LogViewModel.ReliefInput(
-                            type = it.type,
-                            durationMinutes = it.durationMin,
-                            notes = null,
-                            takenAtIso = isoFmt.format(it.dt.atZone(deviceZone).toInstant())
-                        )
-                    }
-
-                    vm.addFull(
-                        accessToken = accessToken,
-                        type = type,
-                        severity = severity.toInt(),
-                        beganAtIso = beginIso,
-                        endedAtIso = endIso,
-                        note = notes.ifBlank { null },
-                        meds = medInputs,
-                        rels = reliefInputs
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = type.isNotBlank()
-            ) { Text("Save migraine + items") }
         }
+
+        // Save
+        Button(
+            onClick = {
+                val isoFmt = java.time.format.DateTimeFormatter.ISO_INSTANT
+                val beginIso = isoFmt.format(beginDt.atZone(deviceZone).toInstant())
+                val endIso = endDt?.let { isoFmt.format(it.atZone(deviceZone).toInstant()) }
+
+                val medInputs = meds.filter { it.name.isNotBlank() }.map {
+                    LogViewModel.MedInput(
+                        name = it.name,
+                        amount = it.amount.ifBlank { null },
+                        notes = null,
+                        takenAtIso = isoFmt.format(it.dt.atZone(deviceZone).toInstant())
+                    )
+                }
+                val reliefInputs = rels.filter { it.type.isNotBlank() }.map {
+                    LogViewModel.ReliefInput(
+                        type = it.type,
+                        durationMinutes = it.durationMin,
+                        notes = null,
+                        takenAtIso = isoFmt.format(it.dt.atZone(deviceZone).toInstant())
+                    )
+                }
+
+                vm.addFull(
+                    accessToken = accessToken,
+                    type = type,
+                    severity = severity.toInt(),
+                    beganAtIso = beginIso,
+                    endedAtIso = endIso,
+                    note = notes.ifBlank { null },
+                    meds = medInputs,
+                    rels = reliefInputs
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = type.isNotBlank()
+        ) { Text("Save migraine + items") }
     }
 
     if (showSuccess) {
@@ -344,8 +418,7 @@ private fun MigraineFormInline(
     }
 }
 
-/* ====================== single Medicine form ====================== */
-
+/* ====================== single Medicine form (SectionCard) ====================== */
 @Composable
 private fun MedicineFormInline(accessToken: String, state: LogUiState, vm: LogViewModel) {
     var name by remember { mutableStateOf("") }
@@ -356,25 +429,21 @@ private fun MedicineFormInline(accessToken: String, state: LogUiState, vm: LogVi
     val options = listOf("None") + state.migrainesForLink.map { it.second }
     val selectedMigraineId = state.migrainesForLink.getOrNull(migraineIdx - 1)?.first
 
-    ElevatedCard(Modifier.fillMaxWidth(), elevation = CardDefaults.elevatedCardElevation(2.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Medicine", style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Which medicine") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = amount, onValueChange = { amount = it }, label = { Text("Amount / dose") }, modifier = Modifier.fillMaxWidth())
-            Text("Link to migraine (optional)")
-            AppDropdown(options, migraineIdx) { migraineIdx = it }
-            OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
-            Button(
-                onClick = { vm.addMedicine(accessToken, name, amount.ifBlank { null }, selectedMigraineId, notes.ifBlank { null }) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = name.isNotBlank()
-            ) { Text("Save medicine") }
-        }
+    SectionCard(title = "Medicine") {
+        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Which medicine") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = amount, onValueChange = { amount = it }, label = { Text("Amount / dose") }, modifier = Modifier.fillMaxWidth())
+        Text("Link to migraine (optional)")
+        AppDropdown(options, migraineIdx) { migraineIdx = it }
+        OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        Button(
+            onClick = { vm.addMedicine(accessToken, name, amount.ifBlank { null }, selectedMigraineId, notes.ifBlank { null }) },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = name.isNotBlank()
+        ) { Text("Save medicine") }
     }
 }
 
-/* ====================== single Relief form ====================== */
-
+/* ====================== single Relief form (SectionCard) ====================== */
 @Composable
 private fun ReliefFormInline(accessToken: String, state: LogUiState, vm: LogViewModel) {
     var type by remember { mutableStateOf("") }
@@ -385,26 +454,22 @@ private fun ReliefFormInline(accessToken: String, state: LogUiState, vm: LogView
     val options = listOf("None") + state.migrainesForLink.map { it.second }
     val selectedMigraineId = state.migrainesForLink.getOrNull(migraineIdx - 1)?.first
 
-    ElevatedCard(Modifier.fillMaxWidth(), elevation = CardDefaults.elevatedCardElevation(2.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Relief", style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Which relief") }, modifier = Modifier.fillMaxWidth())
-            Text("Duration: ${duration.toInt()} min")
-            Slider(value = duration, onValueChange = { duration = it }, valueRange = 0f..240f, steps = 23)
-            Text("Link to migraine (optional)")
-            AppDropdown(options, migraineIdx) { migraineIdx = it }
-            OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
-            Button(
-                onClick = { vm.addRelief(accessToken, type, duration.toInt(), selectedMigraineId, notes.ifBlank { null }) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = type.isNotBlank()
-            ) { Text("Save relief") }
-        }
+    SectionCard(title = "Relief") {
+        OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Which relief") }, modifier = Modifier.fillMaxWidth())
+        Text("Duration: ${duration.toInt()} min")
+        Slider(value = duration, onValueChange = { duration = it }, valueRange = 0f..240f, steps = 23)
+        Text("Link to migraine (optional)")
+        AppDropdown(options, migraineIdx) { migraineIdx = it }
+        OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth())
+        Button(
+            onClick = { vm.addRelief(accessToken, type, duration.toInt(), selectedMigraineId, notes.ifBlank { null }) },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = type.isNotBlank()
+        ) { Text("Save relief") }
     }
 }
 
-/* ====================== HISTORY: show what's missing on each card ====================== */
-
+/* ====================== HISTORY: SectionCard per item ====================== */
 @Composable
 private fun HistoryPaneInline(
     accessToken: String,
@@ -431,56 +496,44 @@ private fun HistoryPaneInline(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(state.history) { item ->
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.elevatedCardElevation(1.dp)
-            ) {
-                Column(Modifier.padding(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "${item.type}: ${item.title}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(onClick = {
-                            when (item.type) {
-                                "Migraine" -> editMigraine = item
-                                "Medicine" -> editMedicine = item
-                                "Relief"   -> editRelief = item
-                            }
-                        }) { Icon(Icons.Outlined.Edit, contentDescription = "Edit") }
-                        IconButton(onClick = { deleteTarget = DeleteTarget(item.type, item.id) }) {
-                            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+            SectionCard(title = "${item.type}: ${item.title}") {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Spacer(Modifier.weight(1f))
+                    IconButton(onClick = {
+                        when (item.type) {
+                            "Migraine" -> editMigraine = item
+                            "Medicine" -> editMedicine = item
+                            "Relief"   -> editRelief = item
                         }
+                    }) { Icon(Icons.Outlined.Edit, contentDescription = "Edit") }
+                    IconButton(onClick = { deleteTarget = DeleteTarget(item.type, item.id) }) {
+                        Icon(Icons.Outlined.Delete, contentDescription = "Delete")
                     }
-                    Spacer(Modifier.height(6.dp))
+                }
+                Spacer(Modifier.height(6.dp))
 
-                    item.subtitle?.let {
-                        Text(it, style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.height(4.dp))
-                    }
+                item.subtitle?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
+                }
 
-                    // Concise line describing what's missing
-                    val missing = buildList {
-                        if (!item.hasFullTimestamps) add("time")
-                        if (item.type == "Medicine" && item.missingAmount) add("amount")
-                        if (item.type == "Relief" && item.missingDuration) add("duration")
-                    }
-                    if (missing.isNotEmpty()) {
-                        Text(
-                            "Missing: ${missing.joinToString(", ")}",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
+                val missing = buildList {
+                    if (!item.hasFullTimestamps) add("time")
+                    if (item.type == "Medicine" && item.missingAmount) add("amount")
+                    if (item.type == "Relief" && item.missingDuration) add("duration")
+                }
+                if (missing.isNotEmpty()) {
+                    Text(
+                        "Missing: ${missing.joinToString(", ")}",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 }
             }
         }
         item { Spacer(Modifier.height(12.dp)) }
     }
 
-    // Delete confirm
     deleteTarget?.let { tgt ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
@@ -499,12 +552,9 @@ private fun HistoryPaneInline(
             dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel") } }
         )
     }
-
-    // Edit dialogs (your previous ones still apply)
 }
 
 /* ---------- tiny helpers ---------- */
-
 private fun showTimePicker(
     context: android.content.Context,
     onIso: (String) -> Unit
@@ -526,22 +576,4 @@ private fun showTimePicker(
         },
         now.year, now.monthValue - 1, now.dayOfMonth
     ).show()
-}
-
-@Composable
-private fun RowScope.RowScopeFilterChipButton(
-    text: String,
-    selected: Boolean,
-    icon: @Composable () -> Unit,
-    onClick: () -> Unit
-) {
-    if (selected) {
-        FilledTonalButton(onClick = onClick, modifier = Modifier.weight(1f)) {
-            icon(); Spacer(Modifier.width(8.dp)); Text(text)
-        }
-    } else {
-        OutlinedButton(onClick = onClick, modifier = Modifier.weight(1f)) {
-            icon(); Spacer(Modifier.width(8.dp)); Text(text)
-        }
-    }
 }
