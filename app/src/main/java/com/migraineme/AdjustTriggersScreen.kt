@@ -1,107 +1,98 @@
 package com.migraineme
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdjustTriggersScreen() {
-    // Local state only; wire to real storage later.
-    val (sleepWeight, setSleepWeight) = remember { mutableFloatStateOf(0.8f) }
-    val (screensWeight, setScreensWeight) = remember { mutableFloatStateOf(0.6f) }
-    val (hydrationWeight, setHydrationWeight) = remember { mutableFloatStateOf(0.5f) }
-    val (custom, setCustom) = remember { mutableStateOf("") }
+fun AdjustTriggersScreen(
+    navController: NavController,
+    vm: TriggerViewModel
+) {
+    val authVm: AuthViewModel = viewModel()
+    val authState by authVm.state.collectAsState()
+
+    val pool by vm.pool.collectAsState()
+    val frequent by vm.frequent.collectAsState()
+
+    LaunchedEffect(authState.accessToken) {
+        authState.accessToken?.let { vm.loadAll(it) }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(16.dp)
     ) {
-        Text("Adjust triggers", style = MaterialTheme.typography.titleLarge)
-        Divider()
-
-        TriggerRow(
-            title = "Poor sleep",
-            value = sleepWeight,
-            onChange = setSleepWeight
-        )
-        TriggerRow(
-            title = "Screen time",
-            value = screensWeight,
-            onChange = setScreensWeight
-        )
-        TriggerRow(
-            title = "Hydration",
-            value = hydrationWeight,
-            onChange = setHydrationWeight
-        )
-
-        Card(elevation = CardDefaults.cardElevation(2.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Add custom trigger", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(
-                    value = custom,
-                    onValueChange = setCustom,
-                    label = { Text("e.g., Weather changes") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Button(
-                    onClick = { /* save custom trigger later */ },
-                    enabled = custom.isNotBlank(),
-                    modifier = Modifier.align(Alignment.End)
-                ) { Text("Add") }
-            }
-        }
-
+        Text("Manage Triggers", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
-        Button(
-            onClick = { /* persist to backend later */ },
-            modifier = Modifier.fillMaxWidth()
-        ) { Text("Save changes") }
-    }
-}
 
-@Composable
-private fun TriggerRow(
-    title: String,
-    value: Float,
-    onChange: (Float) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(1.dp)
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(String.format("%.0f%%", value * 100))
+        Text(
+            "DEBUG → pool=${pool.size}, frequent=${frequent.size}",
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        Text("Frequent", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+
+        LazyColumn {
+            items(frequent) { pref ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(pref.trigger?.label ?: "")
+                    IconButton(onClick = {
+                        authState.accessToken?.let { token ->
+                            vm.removeFromFrequent(token, pref.id)
+                        }
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Remove")
+                    }
+                }
             }
-            Slider(value = value, onValueChange = onChange)
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Text("All Triggers", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+
+        val frequentIds = frequent.map { it.triggerId }.toSet()
+        val remaining = pool.filter { it.id !in frequentIds }
+
+        LazyColumn {
+            items(remaining) { trig ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(trig.label)
+                    IconButton(onClick = {
+                        authState.accessToken?.let { token ->
+                            vm.addToFrequent(token, trig.id)
+                        }
+                    }) {
+                        Icon(Icons.Default.Add, contentDescription = "Add")
+                    }
+                }
+            }
         }
     }
 }
-

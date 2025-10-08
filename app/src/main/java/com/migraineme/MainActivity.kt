@@ -1,5 +1,6 @@
 package com.migraineme
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,33 +10,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.NoteAlt
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -45,32 +27,56 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        scheduleDailyWeatherWork(this)
         setContent { MaterialTheme { AppRoot() } }
     }
 }
 
+private fun scheduleDailyWeatherWork(context: Context) {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+    val request = PeriodicWorkRequestBuilder<WeatherDailyWorker>(1, TimeUnit.DAYS)
+        .setConstraints(constraints)
+        .setInitialDelay(1, TimeUnit.HOURS)
+        .build()
+
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "weather-daily-sync",
+        ExistingPeriodicWorkPolicy.KEEP,
+        request
+    )
+}
+
 object Routes {
-    const val MONITOR = "monitor"
-    const val INSIGHTS = "insights"
     const val HOME = "home"
+    const val PROFILE = "profile"
     const val COMMUNITY = "community"
-
-    const val LOG_HOME = "log_home"
-    const val LOG_FULL = LOG_HOME
-    const val LOG_MED = LOG_HOME
-    const val LOG_RELIEF = LOG_HOME
-    const val LOG_HISTORY = LOG_HOME
-
+    const val INSIGHTS = "insights"
+    const val MONITOR = "monitor"
+    const val JOURNAL = "journal"
+    // log flow
+    const val MIGRAINE = "migraine"   // LogHome
+    const val TRIGGERS = "triggers"
+    const val ADJUST_TRIGGERS = "adjust_triggers"
+    const val MEDICINES = "medicines"
+    const val RELIEFS = "reliefs"
+    const val REVIEW = "review"
+    // auth
     const val LOGIN = "login"
     const val SIGNUP = "signup"
-
-    const val PROFILE = "profile"
-    const val TRIGGERS = "triggers"
     const val LOGOUT = "logout"
 }
 
@@ -81,22 +87,13 @@ fun AppRoot() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Shared VMs
     val authVm: AuthViewModel = viewModel()
     val logVm: LogViewModel = viewModel()
-
-    val authState by authVm.state.collectAsState()
-    LaunchedEffect(authState.accessToken) {
-        authState.accessToken?.let {
-            logVm.preloadForNew(it)
-            logVm.loadHistory(it)
-        }
-    }
+    val triggerVm: TriggerViewModel = viewModel()
 
     data class DrawerItem(val title: String, val route: String, val icon: ImageVector)
     val drawerItems = listOf(
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
-        DrawerItem("Adjust triggers", Routes.TRIGGERS, Icons.Outlined.Tune),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout)
     )
 
@@ -117,7 +114,7 @@ fun AppRoot() {
                             scope.launch { drawerState.close() }
                             nav.navigate(item.route) { launchSingleTop = true }
                         },
-                        icon = { Icon(imageVector = item.icon, contentDescription = null) }
+                        icon = { Icon(imageVector = item.icon, contentDescription = item.title) }
                     )
                 }
             }
@@ -135,13 +132,18 @@ fun AppRoot() {
                                 Routes.MONITOR -> "Monitor"
                                 Routes.INSIGHTS -> "Insights"
                                 Routes.HOME -> "Home"
-                                Routes.LOG_HOME -> "Log"
+                                Routes.MIGRAINE -> "Migraine"
                                 Routes.COMMUNITY -> "Community"
+                                Routes.JOURNAL -> "Journal"
                                 Routes.LOGIN -> "Sign in"
                                 Routes.SIGNUP -> "Create account"
                                 Routes.PROFILE -> "Profile"
-                                Routes.TRIGGERS -> "Adjust triggers"
                                 Routes.LOGOUT -> "Logout"
+                                Routes.MEDICINES -> "Medicines"
+                                Routes.RELIEFS -> "Reliefs"
+                                Routes.TRIGGERS -> "Triggers"
+                                Routes.ADJUST_TRIGGERS -> "Adjust Triggers"
+                                Routes.REVIEW -> "Review Log"
                                 else -> ""
                             }
                         )
@@ -152,12 +154,19 @@ fun AppRoot() {
                                 Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Settings")
                             }
                         }
+                    },
+                    actions = {
+                        if (current != Routes.LOGIN && current != Routes.SIGNUP) {
+                            IconButton(onClick = { nav.navigate(Routes.COMMUNITY) }) {
+                                Icon(imageVector = Icons.Outlined.Groups, contentDescription = "Community")
+                            }
+                        }
                     }
                 )
             },
             bottomBar = {
                 if (current != Routes.LOGIN && current != Routes.SIGNUP) {
-                    BottomBar(nav, logVm)
+                    BottomBar(nav)
                 }
             }
         ) { inner ->
@@ -173,17 +182,35 @@ fun AppRoot() {
                 composable(Routes.HOME) {
                     HomeScreenRoot(
                         onLogout = { nav.navigate(Routes.LOGOUT) { launchSingleTop = true } },
-                        onNavigateToMigraine = { nav.navigate(Routes.LOG_HOME) },
+                        onNavigateToMigraine = { nav.navigate(Routes.MIGRAINE) },
                         authVm = authVm,
                         logVm = logVm
                     )
                 }
                 composable(Routes.COMMUNITY) { CommunityScreen() }
+                composable(Routes.JOURNAL) { JournalScreen(navController = nav, authVm = authVm, vm = logVm) }
 
-                composable(Routes.LOG_HOME) {
-                    LogHomeScreen(navController = nav, authVm = authVm, vm = logVm)
+                // Log flow
+                composable(Routes.MIGRAINE) { LogHomeScreen(navController = nav, vm = logVm) }
+                composable(Routes.TRIGGERS) {
+                    TriggersScreen(
+                        navController = nav,
+                        vm = triggerVm,
+                        authVm = authVm,   // ✅ pass the same AuthViewModel
+                        logVm = logVm
+                    )
                 }
+                composable(Routes.ADJUST_TRIGGERS) {
+                    AdjustTriggersScreen(
+                        navController = nav,
+                        vm = triggerVm      // Adjust screen uses its own viewModel() for auth or none
+                    )
+                }
+                composable(Routes.MEDICINES) { MedicinesScreen(navController = nav, vm = logVm) }
+                composable(Routes.RELIEFS) { ReliefsScreen(navController = nav, vm = logVm) }
+                composable(Routes.REVIEW) { ReviewLogScreen(navController = nav, authVm = authVm, vm = logVm) }
 
+                // Auth
                 composable(Routes.LOGIN) {
                     val a by authVm.state.collectAsState()
                     LaunchedEffect(a.accessToken) {
@@ -217,9 +244,7 @@ fun AppRoot() {
                         onNavigateToLogin = { nav.navigate(Routes.LOGIN) { launchSingleTop = true } }
                     )
                 }
-
                 composable(Routes.PROFILE) { ProfileScreen(authVm = authVm) }
-                composable(Routes.TRIGGERS) { AdjustTriggersScreen() }
                 composable(Routes.LOGOUT) {
                     LogoutScreen(
                         authVm = authVm,
@@ -238,24 +263,20 @@ fun AppRoot() {
 
 @Composable
 private fun BottomBar(
-    nav: androidx.navigation.NavHostController,
-    logVm: LogViewModel
+    nav: androidx.navigation.NavHostController
 ) {
     data class BottomItem(val route: String, val label: String, val icon: ImageVector)
     val items = listOf(
         BottomItem(Routes.MONITOR, "Monitor", Icons.Outlined.Timeline),
         BottomItem(Routes.INSIGHTS, "Insights", Icons.Outlined.BarChart),
         BottomItem(Routes.HOME, "Home", Icons.Outlined.Home),
-        BottomItem(Routes.LOG_HOME, "Log", Icons.Outlined.NoteAlt),
-        BottomItem(Routes.COMMUNITY, "Community", Icons.Outlined.Groups)
+        BottomItem(Routes.MIGRAINE, "Migraine", Icons.Outlined.Psychology),
+        BottomItem(Routes.JOURNAL, "Journal", Icons.Outlined.History)
     )
     NavigationBar {
         val backStack by nav.currentBackStackEntryAsState()
         val currentRoute = backStack?.destination?.route
-        val logState by logVm.state.collectAsState()
-        val totalAlerts = logState.missingTimeCount + logState.missingAmountCount + logState.missingDurationCount
         items.forEach { item ->
-            val withBadge = item.route == Routes.LOG_HOME && totalAlerts > 0
             NavigationBarItem(
                 selected = currentRoute == item.route,
                 onClick = {
@@ -265,15 +286,7 @@ private fun BottomBar(
                         restoreState = true
                     }
                 },
-                icon = {
-                    if (withBadge) {
-                        BadgedBox(badge = { Badge { Text("$totalAlerts") } }) {
-                            Icon(item.icon, contentDescription = item.label)
-                        }
-                    } else {
-                        Icon(item.icon, contentDescription = item.label)
-                    }
-                },
+                icon = { Icon(item.icon, contentDescription = item.label) },
                 label = { Text(item.label) },
                 alwaysShowLabel = true
             )

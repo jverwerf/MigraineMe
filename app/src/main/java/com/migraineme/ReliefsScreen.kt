@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun LogHomeScreen(navController: NavController, vm: LogViewModel) {
+fun ReliefsScreen(navController: NavController, vm: LogViewModel) {
     val draft by vm.draft.collectAsState()
     val scroll = rememberScrollState()
 
@@ -20,25 +20,21 @@ fun LogHomeScreen(navController: NavController, vm: LogViewModel) {
             .verticalScroll(scroll)
             .padding(16.dp)
     ) {
-        // Show migraine draft if exists
-        draft.migraine?.let {
-            ElevatedCard(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+        draft.rels.asReversed().forEach { r ->
+            ElevatedCard(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Migraine logged")
-                    Text("Type: ${it.type ?: "-"}")
-                    Text("Severity: ${it.severity ?: "-"}")
-                    Text("Began: ${it.beganAtIso ?: "-"}")
-                    Text("Ended: ${it.endedAtIso ?: "-"}")
-                    Text("Notes: ${it.note ?: "-"}")
+                    Text("Relief: ${r.type}")
+                    Text("Duration: ${r.durationMinutes ?: "-"} minutes")
+                    Text("Notes: ${r.notes ?: "-"}")
+                    Text("Time: ${r.startAtIso ?: "-"}")
                 }
             }
         }
 
-        var type by remember { mutableStateOf("Migraine") }
-        var severity by remember { mutableStateOf(5) }
-        var beganAt by remember { mutableStateOf<String?>(null) }
-        var endedAt by remember { mutableStateOf<String?>(null) }
+        var type by remember { mutableStateOf("") }
+        var duration by remember { mutableStateOf("") }
         var notes by remember { mutableStateOf("") }
+        var timestamp by remember { mutableStateOf<String?>(null) }
 
         OutlinedTextField(
             value = type,
@@ -49,17 +45,14 @@ fun LogHomeScreen(navController: NavController, vm: LogViewModel) {
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = severity.toString(),
-            onValueChange = { s -> severity = s.toIntOrNull() ?: 0 },
-            label = { Text("Severity (1–10)") },
+            value = duration,
+            onValueChange = { duration = it },
+            label = { Text("Duration (minutes)") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(8.dp))
 
-        AppDateTimePicker(label = "Start time") { beganAt = it }
-        Spacer(Modifier.height(8.dp))
-
-        AppDateTimePicker(label = "End time") { endedAt = it }
+        AppDateTimePicker(label = "Relief start") { timestamp = it }
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
@@ -70,10 +63,15 @@ fun LogHomeScreen(navController: NavController, vm: LogViewModel) {
         )
         Spacer(Modifier.height(16.dp))
 
-        Button(onClick = {
-            vm.setMigraineDraft(type, severity, beganAt, endedAt, notes.ifBlank { null })
-        }) {
-            Text("Add Migraine")
+        Button(
+            onClick = {
+                if (type.isNotBlank()) {
+                    vm.addReliefDraft(type, duration.toIntOrNull(), notes.ifBlank { null }, timestamp)
+                    type = ""; duration = ""; notes = ""; timestamp = null
+                }
+            }
+        ) {
+            Text("Add Relief")
         }
 
         Spacer(Modifier.weight(1f))
@@ -82,10 +80,10 @@ fun LogHomeScreen(navController: NavController, vm: LogViewModel) {
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedButton(onClick = { navController.navigate(Routes.HOME) }) {
+            OutlinedButton(onClick = { navController.navigate(Routes.MEDICINES) }) {
                 Text("Back")
             }
-            Button(onClick = { navController.navigate(Routes.TRIGGERS) }) {
+            Button(onClick = { navController.navigate(Routes.REVIEW) }) {
                 Text("Next")
             }
         }

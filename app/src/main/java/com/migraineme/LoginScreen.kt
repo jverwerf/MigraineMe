@@ -66,16 +66,16 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                busy = true; error = null
+                error = null
+                busy = true
                 scope.launch {
                     try {
-                        val ses = SupabaseAuthService().signInWithEmail(email.trim(), password)
-                        if (ses.accessToken.isNullOrBlank()) {
-                            error = "Login failed. Please check your credentials."
-                        } else {
-                            // If you can get userId from Supabase, set it here; otherwise null.
+                        val ses = SupabaseAuthService.signInWithEmail(email.trim(), password)
+                        if (!ses.accessToken.isNullOrBlank()) {
                             authVm.setSession(ses.accessToken, userId = null)
                             onLoggedIn()
+                        } else {
+                            error = "Invalid login response."
                         }
                     } catch (e: Exception) {
                         error = e.message ?: "Login failed."
@@ -91,7 +91,7 @@ fun LoginScreen(
         }
 
         TextButton(onClick = onNavigateToSignUp) {
-            Text("No account? Create one")
+            Text("Don't have an account? Sign up")
         }
     }
 }
