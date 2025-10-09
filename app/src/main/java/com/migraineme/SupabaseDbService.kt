@@ -22,7 +22,7 @@ class SupabaseDbService(
                 Json {
                     ignoreUnknownKeys = true
                     encodeDefaults = true
-                    explicitNulls = false // omit nulls
+                    explicitNulls = false
                 }
             )
         }
@@ -31,7 +31,6 @@ class SupabaseDbService(
     private fun HttpStatusCode.isSuccess(): Boolean = value in 200..299
 
     // ───────────────────────── MIGRAINES ─────────────────────────
-
     @Serializable
     data class MigraineRow(
         val id: String,
@@ -42,7 +41,6 @@ class SupabaseDbService(
         @SerialName("ended_at") val endAt: String? = null,
         val notes: String? = null
     )
-
     @Serializable
     data class MigraineInsert(
         val type: String? = null,
@@ -51,7 +49,6 @@ class SupabaseDbService(
         @SerialName("ended_at") val endAt: String? = null,
         val notes: String? = null
     )
-
     suspend fun insertMigraine(
         accessToken: String,
         type: String?,
@@ -62,7 +59,6 @@ class SupabaseDbService(
     ): MigraineRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         val payload = MigraineInsert(type, severity, safeStart, endAt, notes)
-
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -71,13 +67,11 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-
         val raw = response.bodyAsText()
         println("DEBUG insertMigraine: ${response.status} $raw")
         if (!response.status.isSuccess()) throw RuntimeException("Insert migraine failed")
         return response.body()
     }
-
     suspend fun getMigraines(accessToken: String): List<MigraineRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -90,8 +84,7 @@ class SupabaseDbService(
         return response.body()
     }
 
-    // ───────────────────────── TRIGGERS ─────────────────────────
-
+    // ───────────────────────── TRIGGERS (events) ─────────────────────────
     @Serializable
     data class TriggerRow(
         val id: String,
@@ -101,7 +94,6 @@ class SupabaseDbService(
         val notes: String? = null,
         @SerialName("migraine_id") val migraineId: String? = null
     )
-
     @Serializable
     data class TriggerInsert(
         val type: String? = null,
@@ -109,7 +101,6 @@ class SupabaseDbService(
         val notes: String? = null,
         @SerialName("migraine_id") val migraineId: String? = null
     )
-
     suspend fun insertTrigger(
         accessToken: String,
         migraineId: String?,
@@ -119,7 +110,6 @@ class SupabaseDbService(
     ): TriggerRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         val payload = TriggerInsert(type, safeStart, notes, migraineId)
-
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -128,13 +118,11 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-
         val raw = response.bodyAsText()
         println("DEBUG insertTrigger: ${response.status} $raw")
         if (!response.status.isSuccess()) throw RuntimeException("Insert trigger failed")
         return response.body()
     }
-
     suspend fun getAllTriggers(accessToken: String): List<TriggerRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -148,7 +136,6 @@ class SupabaseDbService(
     }
 
     // ───────────────────────── MEDICINES ─────────────────────────
-
     @Serializable
     data class MedicineRow(
         val id: String,
@@ -159,7 +146,6 @@ class SupabaseDbService(
         val notes: String? = null,
         @SerialName("migraine_id") val migraineId: String? = null
     )
-
     @Serializable
     data class MedicineInsert(
         val name: String? = null,
@@ -168,7 +154,6 @@ class SupabaseDbService(
         val notes: String? = null,
         @SerialName("migraine_id") val migraineId: String? = null
     )
-
     suspend fun insertMedicine(
         accessToken: String,
         migraineId: String?,
@@ -179,7 +164,6 @@ class SupabaseDbService(
     ): MedicineRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         val payload = MedicineInsert(name, amount, safeStart, notes, migraineId)
-
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -188,13 +172,11 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-
         val raw = response.bodyAsText()
         println("DEBUG insertMedicine: ${response.status} $raw")
         if (!response.status.isSuccess()) throw RuntimeException("Insert medicine failed")
         return response.body()
     }
-
     suspend fun getAllMedicines(accessToken: String): List<MedicineRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -208,7 +190,6 @@ class SupabaseDbService(
     }
 
     // ───────────────────────── RELIEFS ─────────────────────────
-
     @Serializable
     data class ReliefRow(
         val id: String,
@@ -219,7 +200,6 @@ class SupabaseDbService(
         val notes: String? = null,
         @SerialName("migraine_id") val migraineId: String? = null
     )
-
     @Serializable
     data class ReliefInsert(
         val type: String? = null,
@@ -228,7 +208,6 @@ class SupabaseDbService(
         val notes: String? = null,
         @SerialName("migraine_id") val migraineId: String? = null
     )
-
     suspend fun insertRelief(
         accessToken: String,
         migraineId: String?,
@@ -239,7 +218,6 @@ class SupabaseDbService(
     ): ReliefRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         val payload = ReliefInsert(type, durationMinutes, safeStart, notes, migraineId)
-
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -248,13 +226,11 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-
         val raw = response.bodyAsText()
         println("DEBUG insertRelief: ${response.status} $raw")
         if (!response.status.isSuccess()) throw RuntimeException("Insert relief failed")
         return response.body()
     }
-
     suspend fun getAllReliefs(accessToken: String): List<ReliefRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -267,8 +243,7 @@ class SupabaseDbService(
         return response.body()
     }
 
-    // ───────────────────────── TRIGGER PREFERENCES ─────────────────────────
-
+    // ───────────────────────── TRIGGER PREFERENCES / POOL ─────────────────────────
     @Serializable
     data class AllTriggerRow(val id: String, val label: String)
 
@@ -278,7 +253,7 @@ class SupabaseDbService(
         @SerialName("user_id") val userId: String,
         @SerialName("trigger_id") val triggerId: String,
         val position: Int,
-        val status: String, // NEW
+        val status: String,
         @SerialName("all_triggers") val trigger: AllTriggerRow? = null
     )
 
@@ -313,6 +288,24 @@ class SupabaseDbService(
         return response.body()
     }
 
+    // remove user prefs for this trigger, then delete the trigger from pool
+    suspend fun deleteTriggerFromPool(accessToken: String, triggerId: String) {
+        client.delete("$supabaseUrl/rest/v1/trigger_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("trigger_id", "eq.$triggerId")
+        }
+        val response = client.delete("$supabaseUrl/rest/v1/all_triggers") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("id", "eq.$triggerId")
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG deleteTriggerFromPool: ${response.status} $raw")
+        if (!response.status.isSuccess()) throw RuntimeException("Delete pool trigger failed")
+    }
+
+    // fetch prefs for current user
     suspend fun getTriggerPrefs(accessToken: String): List<TriggerPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/trigger_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -331,7 +324,6 @@ class SupabaseDbService(
         val position: Int,
         val status: String
     )
-
     suspend fun insertTriggerPref(
         accessToken: String,
         triggerId: String,
@@ -354,7 +346,6 @@ class SupabaseDbService(
     }
 
     @Serializable private data class TriggerPrefUpdatePosition(val position: Int)
-
     suspend fun updateTriggerPrefPosition(accessToken: String, prefId: String, newPosition: Int) {
         val response = client.patch("$supabaseUrl/rest/v1/trigger_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -369,7 +360,6 @@ class SupabaseDbService(
     }
 
     @Serializable private data class TriggerPrefUpdateStatus(val status: String)
-
     suspend fun updateTriggerPrefStatus(accessToken: String, prefId: String, newStatus: String) {
         val response = client.patch("$supabaseUrl/rest/v1/trigger_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")

@@ -25,12 +25,11 @@ class TriggerViewModel : ViewModel() {
     private fun safeSortPrefs(prefs: List<SupabaseDbService.TriggerPrefRow>) =
         prefs.sortedBy { it.position }
 
-    fun loadAll(token: String) {
+    fun loadAll(accessToken: String) {
         viewModelScope.launch {
             try {
-                val p = db.getAllTriggerPool(token)
-                val prefs = db.getTriggerPrefs(token)
-
+                val p = db.getAllTriggerPool(accessToken)
+                val prefs = db.getTriggerPrefs(accessToken)
                 _pool.value = p
                 _frequent.value = safeSortPrefs(prefs.filter { it.status == "frequent" })
                 _hidden.value = prefs.filter { it.status == "hidden" }
@@ -43,61 +42,48 @@ class TriggerViewModel : ViewModel() {
         }
     }
 
-    fun addNewToPool(token: String, label: String) {
+    fun addNewToPool(accessToken: String, label: String) {
         viewModelScope.launch {
             try {
-                db.upsertTriggerToPool(token, label.trim())
-                loadAll(token)
+                db.upsertTriggerToPool(accessToken, label.trim())
+                loadAll(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    /** ✅ Needed by AdjustTriggersScreen: add a trigger to Frequent (appends at end). */
-    fun addToFrequent(token: String, triggerId: String) {
+    fun removeFromPool(accessToken: String, triggerId: String) {
+        viewModelScope.launch {
+            try {
+                db.deleteTriggerFromPool(accessToken, triggerId)
+                loadAll(accessToken)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun addToFrequent(accessToken: String, triggerId: String) {
         viewModelScope.launch {
             try {
                 val pos = _frequent.value.size
-                db.insertTriggerPref(token, triggerId, pos, status = "frequent")
-                loadAll(token)
+                db.insertTriggerPref(accessToken, triggerId, pos, status = "frequent")
+                loadAll(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    /** Used by AdjustTriggersScreen to remove from Frequent. */
-    fun removeFromFrequent(token: String, prefId: String) {
+    fun removeFromFrequent(accessToken: String, prefId: String) {
         viewModelScope.launch {
             try {
-                db.deleteTriggerPref(token, prefId)
-                loadAll(token)
+                db.deleteTriggerPref(accessToken, prefId)
+                loadAll(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
-    }
-
-    /** Used by AdjustTriggersScreen to persist order after local moves. */
-    fun persistFrequentOrder(token: String, current: List<SupabaseDbService.TriggerPrefRow>) {
-        viewModelScope.launch {
-            try {
-                current.forEachIndexed { idx, pref ->
-                    db.updateTriggerPrefPosition(token, pref.id, idx)
-                }
-                _frequent.value = safeSortPrefs(current)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    /** Local reorder used for instant UI feedback before persisting. */
-    fun localReorder(fromIndex: Int, toIndex: Int) {
-        val list = _frequent.value.toMutableList()
-        val item = list.removeAt(fromIndex)
-        list.add(toIndex, item)
-        _frequent.value = list
     }
 }

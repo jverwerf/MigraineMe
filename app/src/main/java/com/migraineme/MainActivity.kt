@@ -203,9 +203,11 @@ fun AppRoot() {
                 composable(Routes.ADJUST_TRIGGERS) {
                     AdjustTriggersScreen(
                         navController = nav,
-                        vm = triggerVm      // Adjust screen uses its own viewModel() for auth or none
+                        vm = triggerVm,
+                        authVm = authVm   // same instance with the logged-in token
                     )
                 }
+
                 composable(Routes.MEDICINES) { MedicinesScreen(navController = nav, vm = logVm) }
                 composable(Routes.RELIEFS) { ReliefsScreen(navController = nav, vm = logVm) }
                 composable(Routes.REVIEW) { ReviewLogScreen(navController = nav, authVm = authVm, vm = logVm) }
