@@ -72,6 +72,7 @@ object Routes {
     const val TRIGGERS = "triggers"
     const val ADJUST_TRIGGERS = "adjust_triggers"
     const val MEDICINES = "medicines"
+    const val ADJUST_MEDICINES = "adjust_medicines" // added
     const val RELIEFS = "reliefs"
     const val REVIEW = "review"
     // auth
@@ -90,6 +91,7 @@ fun AppRoot() {
     val authVm: AuthViewModel = viewModel()
     val logVm: LogViewModel = viewModel()
     val triggerVm: TriggerViewModel = viewModel()
+    val medVm: MedicineViewModel = viewModel() // added
 
     data class DrawerItem(val title: String, val route: String, val icon: ImageVector)
     val drawerItems = listOf(
@@ -140,6 +142,7 @@ fun AppRoot() {
                                 Routes.PROFILE -> "Profile"
                                 Routes.LOGOUT -> "Logout"
                                 Routes.MEDICINES -> "Medicines"
+                                Routes.ADJUST_MEDICINES -> "Adjust Medicines" // added
                                 Routes.RELIEFS -> "Reliefs"
                                 Routes.TRIGGERS -> "Triggers"
                                 Routes.ADJUST_TRIGGERS -> "Adjust Triggers"
@@ -196,7 +199,7 @@ fun AppRoot() {
                     TriggersScreen(
                         navController = nav,
                         vm = triggerVm,
-                        authVm = authVm,   // ✅ pass the same AuthViewModel
+                        authVm = authVm,
                         logVm = logVm
                     )
                 }
@@ -204,11 +207,27 @@ fun AppRoot() {
                     AdjustTriggersScreen(
                         navController = nav,
                         vm = triggerVm,
-                        authVm = authVm   // same instance with the logged-in token
+                        authVm = authVm
                     )
                 }
 
-                composable(Routes.MEDICINES) { MedicinesScreen(navController = nav, vm = logVm) }
+                // Medicines wired like triggers, using shared VMs
+                composable(Routes.MEDICINES) {
+                    MedicinesScreen(
+                        navController = nav,
+                        vm = medVm,
+                        authVm = authVm,
+                        logVm = logVm
+                    )
+                }
+                composable(Routes.ADJUST_MEDICINES) {
+                    AdjustMedicinesScreen(
+                        navController = nav,
+                        vm = medVm,
+                        authVm = authVm
+                    )
+                }
+
                 composable(Routes.RELIEFS) { ReliefsScreen(navController = nav, vm = logVm) }
                 composable(Routes.REVIEW) { ReviewLogScreen(navController = nav, authVm = authVm, vm = logVm) }
 

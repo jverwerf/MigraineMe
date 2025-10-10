@@ -58,19 +58,6 @@ fun TriggersScreen(
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header + Manage
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Triggers", style = MaterialTheme.typography.titleLarge)
-                    TextButton(onClick = { navController.navigate(Routes.ADJUST_TRIGGERS) }) {
-                        Text("Manage")
-                    }
-                }
-            }
-
             // Selected now
             if (draft.triggers.isNotEmpty()) {
                 item {
@@ -150,9 +137,19 @@ fun TriggersScreen(
                 }
             }
 
-            // Frequent chips
+            // Frequent header + Manage on same row
             if (frequent.isNotEmpty()) {
-                item { Text("Frequent", style = MaterialTheme.typography.titleMedium) }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Frequent", style = MaterialTheme.typography.titleMedium)
+                        TextButton(onClick = { navController.navigate(Routes.ADJUST_TRIGGERS) }) {
+                            Text("Manage")
+                        }
+                    }
+                }
                 item {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),

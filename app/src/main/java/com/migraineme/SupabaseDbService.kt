@@ -383,4 +383,144 @@ class SupabaseDbService(
         println("DEBUG deleteTriggerPref: ${response.status} $raw")
         if (!response.status.isSuccess()) throw RuntimeException("Delete pref failed")
     }
+    // ───────────────────────── MEDICINE POOL / PREFERENCES ─────────────────────────
+    @Serializable
+    data class AllMedicineRow(val id: String, val label: String)
+
+    @Serializable
+    data class MedicinePrefRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        @SerialName("medicine_id") val medicineId: String,
+        val position: Int,
+        val status: String,
+        @SerialName("all_medicines") val medicine: AllMedicineRow? = null
+    )
+
+    @Serializable private data class AllMedicineInsert(val label: String)
+
+    suspend fun getAllMedicinePool(accessToken: String): List<AllMedicineRow> {
+        val response = client.get("$supabaseUrl/rest/v1/all_medicines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "id,label")
+            parameter("order", "label.asc")
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG getAllMedicinePool: ${response.status} $raw")
+        if (!response.status.isSuccess()) throw RuntimeException("Fetch all_medicines failed")
+        return response.body()
+    }
+
+    suspend fun upsertMedicineToPool(accessToken: String, label: String): AllMedicineRow {
+        val response = client.post("$supabaseUrl/rest/v1/all_medicines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            header("Prefer", "return=representation,resolution=merge-duplicates")
+            parameter("on_conflict", "label")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json)
+            setBody(AllMedicineInsert(label))
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG upsertMedicineToPool: ${response.status} $raw")
+        if (!response.status.isSuccess()) throw RuntimeException("Upsert all_medicines failed")
+        return response.body()
+    }
+
+    // Delete user prefs first, then delete pool row
+    suspend fun deleteMedicineFromPool(accessToken: String, medicineId: String) {
+        client.delete("$supabaseUrl/rest/v1/medicine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("medicine_id", "eq.$medicineId")
+        }.also {
+            val raw = it.bodyAsText()
+            println("DEBUG deleteMedPrefsByMedicine: ${it.status} $raw")
+            if (!it.status.isSuccess()) throw RuntimeException("Delete dependent medicine prefs failed")
+        }
+        val response = client.delete("$supabaseUrl/rest/v1/all_medicines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("id", "eq.$medicineId")
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG deleteMedicineFromPool: ${response.status} $raw")
+        if (!response.status.isSuccess()) throw RuntimeException("Delete all_medicines failed")
+    }
+
+    @Serializable private data class MedicinePrefInsert(
+        @SerialName("medicine_id") val medicineId: String,
+        val position: Int,
+        val status: String
+    )
+
+    suspend fun getMedicinePrefs(accessToken: String): List<MedicinePrefRow> {
+        val response = client.get("$supabaseUrl/rest/v1/medicine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "id,user_id,medicine_id,position,status,all_medicines(id,label)")
+            parameter("order", "position.asc")
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG getMedicinePrefs: ${response.status} $raw")
+        if (!response.status.isSuccess()) throw RuntimeException("Fetch medicine prefs failed")
+        return response.body()
+    }
+
+    suspend fun insertMedicinePref(
+        accessToken: String,
+        medicineId: String,
+        position: Int,
+        status: String = "frequent"
+    ): MedicinePrefRow {
+        val response = client.post("$supabaseUrl/rest/v1/medicine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            header("Prefer", "return=representation,resolution=merge-duplicates")
+            parameter("on_conflict", "user_id,medicine_id")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json)
+            // FIX: use typed DTO, not a raw Map
+            setBody(MedicinePrefInsert(medicineId, position, status))
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG insertMedicinePref: ${response.status} $raw")
+        if (response.status.value !in 200..299) error("Insert medicine pref failed")
+        return response.body()
+    }
+
+    suspend fun updateMedicinePref(
+        accessToken: String,
+        prefId: String,
+        position: Int? = null,
+        status: String? = null
+    ) {
+        val payload = buildMap<String, Any> {
+            position?.let { put("position", it) }
+            status?.let { put("status", it) }
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/medicine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("id", "eq.$prefId")
+            header("Prefer", "return=minimal")
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG updateMedicinePref: ${response.status} $raw")
+        if (!response.status.isSuccess()) throw RuntimeException("Update medicine pref failed")
+    }
+
+    suspend fun deleteMedicinePref(accessToken: String, prefId: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/medicine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("id", "eq.$prefId")
+        }
+        val raw = response.bodyAsText()
+        println("DEBUG deleteMedicinePref: ${response.status} $raw")
+        if (!response.status.isSuccess()) throw RuntimeException("Delete medicine pref failed")
+    }
 }
