@@ -1,3 +1,4 @@
+// SupabaseDbService.kt
 package com.migraineme
 
 import io.ktor.client.*
@@ -10,12 +11,14 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.ExperimentalSerializationApi
 import java.time.Instant
 
 class SupabaseDbService(
     private val supabaseUrl: String,
     private val supabaseKey: String
 ) {
+    @OptIn(ExperimentalSerializationApi::class)
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(
@@ -30,7 +33,7 @@ class SupabaseDbService(
 
     private fun HttpStatusCode.isSuccess(): Boolean = value in 200..299
 
-    // ───────────────────────── MIGRAINES ─────────────────────────
+    // ───────── MIGRAINES ─────────
     @Serializable
     data class MigraineRow(
         val id: String,
@@ -67,9 +70,7 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        val raw = response.bodyAsText()
-        println("DEBUG insertMigraine: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Insert migraine failed")
+        if (!response.status.isSuccess()) error("Insert migraine failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun getMigraines(accessToken: String): List<MigraineRow> {
@@ -78,13 +79,56 @@ class SupabaseDbService(
             header("apikey", supabaseKey)
             parameter("select", "*")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getMigraines: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch migraines failed")
+        if (!response.status.isSuccess()) error("Fetch migraines failed: ${response.bodyAsText()}")
         return response.body()
     }
+    // NEW
+    suspend fun getMigraineById(accessToken: String, id: String): MigraineRow {
+        val response = client.get("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id"); parameter("select", "*")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+        }
+        if (!response.status.isSuccess()) error("Get migraine by id failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun updateMigraine(
+        accessToken: String,
+        id: String,
+        type: String? = null,
+        severity: Int? = null,
+        startAt: String? = null,
+        endAt: String? = null,
+        notes: String? = null
+    ): MigraineRow {
+        val payload = buildMap<String, Any?> {
+            type?.let { put("type", it) }
+            severity?.let { put("severity", it) }
+            startAt?.let { put("start_at", it) }
+            endAt?.let { put("ended_at", it) }
+            if (notes != null) put("notes", notes)
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            header("Prefer", "return=representation")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Update migraine failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun deleteMigraine(accessToken: String, id: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+        if (!response.status.isSuccess()) error("Delete migraine failed: ${response.bodyAsText()}")
+    }
 
-    // ───────────────────────── TRIGGERS (events) ─────────────────────────
+    // ───────── TRIGGERS ─────────
     @Serializable
     data class TriggerRow(
         val id: String,
@@ -118,9 +162,7 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        val raw = response.bodyAsText()
-        println("DEBUG insertTrigger: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Insert trigger failed")
+        if (!response.status.isSuccess()) error("Insert trigger failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun getAllTriggers(accessToken: String): List<TriggerRow> {
@@ -129,13 +171,54 @@ class SupabaseDbService(
             header("apikey", supabaseKey)
             parameter("select", "*")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getTriggers: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch triggers failed")
+        if (!response.status.isSuccess()) error("Fetch triggers failed: ${response.bodyAsText()}")
         return response.body()
     }
+    // NEW
+    suspend fun getTriggerById(accessToken: String, id: String): TriggerRow {
+        val response = client.get("$supabaseUrl/rest/v1/triggers") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id"); parameter("select", "*")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+        }
+        if (!response.status.isSuccess()) error("Get trigger by id failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun updateTrigger(
+        accessToken: String,
+        id: String,
+        type: String? = null,
+        startAt: String? = null,
+        notes: String? = null,
+        migraineId: String? = null
+    ): TriggerRow {
+        val payload = buildMap<String, Any?> {
+            type?.let { put("type", it) }
+            startAt?.let { put("start_at", it) }
+            if (notes != null) put("notes", notes)
+            migraineId?.let { put("migraine_id", it) }
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/triggers") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            header("Prefer", "return=representation")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Update trigger failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun deleteTrigger(accessToken: String, id: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/triggers") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+        if (!response.status.isSuccess()) error("Delete trigger failed: ${response.bodyAsText()}")
+    }
 
-    // ───────────────────────── MEDICINES ─────────────────────────
+    // ───────── MEDICINES ─────────
     @Serializable
     data class MedicineRow(
         val id: String,
@@ -172,9 +255,7 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        val raw = response.bodyAsText()
-        println("DEBUG insertMedicine: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Insert medicine failed")
+        if (!response.status.isSuccess()) error("Insert medicine failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun getAllMedicines(accessToken: String): List<MedicineRow> {
@@ -183,13 +264,56 @@ class SupabaseDbService(
             header("apikey", supabaseKey)
             parameter("select", "*")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getMedicines: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch medicines failed")
+        if (!response.status.isSuccess()) error("Fetch medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
+    // NEW
+    suspend fun getMedicineById(accessToken: String, id: String): MedicineRow {
+        val response = client.get("$supabaseUrl/rest/v1/medicines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id"); parameter("select", "*")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+        }
+        if (!response.status.isSuccess()) error("Get medicine by id failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun updateMedicine(
+        accessToken: String,
+        id: String,
+        name: String? = null,
+        amount: String? = null,
+        startAt: String? = null,
+        notes: String? = null,
+        migraineId: String? = null
+    ): MedicineRow {
+        val payload = buildMap<String, Any?> {
+            name?.let { put("name", it) }
+            if (amount != null) put("amount", amount)
+            startAt?.let { put("start_at", it) }
+            if (notes != null) put("notes", notes)
+            migraineId?.let { put("migraine_id", it) }
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/medicines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            header("Prefer", "return=representation")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Update medicine failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun deleteMedicine(accessToken: String, id: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/medicines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+        if (!response.status.isSuccess()) error("Delete medicine failed: ${response.bodyAsText()}")
+    }
 
-    // ───────────────────────── RELIEFS ─────────────────────────
+    // ───────── RELIEFS ─────────
     @Serializable
     data class ReliefRow(
         val id: String,
@@ -226,9 +350,7 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        val raw = response.bodyAsText()
-        println("DEBUG insertRelief: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Insert relief failed")
+        if (!response.status.isSuccess()) error("Insert relief failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun getAllReliefs(accessToken: String): List<ReliefRow> {
@@ -237,16 +359,57 @@ class SupabaseDbService(
             header("apikey", supabaseKey)
             parameter("select", "*")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getReliefs: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch reliefs failed")
+        if (!response.status.isSuccess()) error("Fetch reliefs failed: ${response.bodyAsText()}")
         return response.body()
     }
+    // NEW
+    suspend fun getReliefById(accessToken: String, id: String): ReliefRow {
+        val response = client.get("$supabaseUrl/rest/v1/reliefs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id"); parameter("select", "*")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+        }
+        if (!response.status.isSuccess()) error("Get relief by id failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun updateRelief(
+        accessToken: String,
+        id: String,
+        type: String? = null,
+        durationMinutes: Int? = null,
+        startAt: String? = null,
+        notes: String? = null,
+        migraineId: String? = null
+    ): ReliefRow {
+        val payload = buildMap<String, Any?> {
+            type?.let { put("type", it) }
+            durationMinutes?.let { put("duration_minutes", it) }
+            startAt?.let { put("start_at", it) }
+            if (notes != null) put("notes", notes)
+            migraineId?.let { put("migraine_id", it) }
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/reliefs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            header("Prefer", "return=representation")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Update relief failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    // NEW
+    suspend fun deleteRelief(accessToken: String, id: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/reliefs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+        if (!response.status.isSuccess()) error("Delete relief failed: ${response.bodyAsText()}")
+    }
 
-    // ───────────────────────── TRIGGER PREFERENCES / POOL ─────────────────────────
-    @Serializable
-    data class AllTriggerRow(val id: String, val label: String)
-
+    // ───────── TRIGGER POOL / PREFS ─────────
+    @Serializable data class AllTriggerRow(val id: String, val label: String)
     @Serializable
     data class TriggerPrefRow(
         val id: String,
@@ -256,137 +419,87 @@ class SupabaseDbService(
         val status: String,
         @SerialName("all_triggers") val trigger: AllTriggerRow? = null
     )
-
     @Serializable private data class AllTriggerInsert(val label: String)
 
     suspend fun getAllTriggerPool(accessToken: String): List<AllTriggerRow> {
         val response = client.get("$supabaseUrl/rest/v1/all_triggers") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
-            parameter("select", "id,label")
-            parameter("order", "label.asc")
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,label"); parameter("order", "label.asc")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getAllTriggerPool: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch pool failed")
+        if (!response.status.isSuccess()) error("Fetch all_triggers failed: ${response.bodyAsText()}")
         return response.body()
     }
-
     suspend fun upsertTriggerToPool(accessToken: String, label: String): AllTriggerRow {
         val response = client.post("$supabaseUrl/rest/v1/all_triggers") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json)
-            setBody(AllTriggerInsert(label))
+            contentType(ContentType.Application.Json); setBody(AllTriggerInsert(label))
         }
-        val raw = response.bodyAsText()
-        println("DEBUG upsertTriggerToPool: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Upsert pool failed")
+        if (!response.status.isSuccess()) error("Upsert all_triggers failed: ${response.bodyAsText()}")
         return response.body()
     }
-
-    // remove user prefs for this trigger, then delete the trigger from pool
     suspend fun deleteTriggerFromPool(accessToken: String, triggerId: String) {
         client.delete("$supabaseUrl/rest/v1/trigger_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("trigger_id", "eq.$triggerId")
         }
         val response = client.delete("$supabaseUrl/rest/v1/all_triggers") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$triggerId")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG deleteTriggerFromPool: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Delete pool trigger failed")
+        if (!response.status.isSuccess()) error("Delete all_triggers failed: ${response.bodyAsText()}")
     }
-
-    // fetch prefs for current user
+    @Serializable private data class TriggerPrefInsert(@SerialName("trigger_id") val triggerId: String, val position: Int, val status: String)
     suspend fun getTriggerPrefs(accessToken: String): List<TriggerPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/trigger_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("select", "id,user_id,trigger_id,position,status,all_triggers(id,label)")
             parameter("order", "position.asc")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getTriggerPrefs: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch prefs failed")
+        if (!response.status.isSuccess()) error("Fetch trigger prefs failed: ${response.bodyAsText()}")
         return response.body()
     }
-
-    @Serializable private data class TriggerPrefInsert(
-        @SerialName("trigger_id") val triggerId: String,
-        val position: Int,
-        val status: String
-    )
-    suspend fun insertTriggerPref(
-        accessToken: String,
-        triggerId: String,
-        position: Int,
-        status: String = "frequent"
-    ): TriggerPrefRow {
+    suspend fun insertTriggerPref(accessToken: String, triggerId: String, position: Int, status: String = "frequent"): TriggerPrefRow {
         val response = client.post("$supabaseUrl/rest/v1/trigger_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,trigger_id")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json)
-            setBody(TriggerPrefInsert(triggerId, position, status))
+            contentType(ContentType.Application.Json); setBody(TriggerPrefInsert(triggerId, position, status))
         }
-        val raw = response.bodyAsText()
-        println("DEBUG insertTriggerPref: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Insert pref failed")
+        if (!response.status.isSuccess()) error("Insert trigger pref failed: ${response.bodyAsText()}")
         return response.body()
     }
-
     @Serializable private data class TriggerPrefUpdatePosition(val position: Int)
     suspend fun updateTriggerPrefPosition(accessToken: String, prefId: String, newPosition: Int) {
         val response = client.patch("$supabaseUrl/rest/v1/trigger_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$prefId")
-            contentType(ContentType.Application.Json)
-            setBody(TriggerPrefUpdatePosition(newPosition))
+            contentType(ContentType.Application.Json); setBody(TriggerPrefUpdatePosition(newPosition))
         }
-        val raw = response.bodyAsText()
-        println("DEBUG updateTriggerPrefPosition: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Update pref failed")
+        if (!response.status.isSuccess()) error("Update trigger pref failed: ${response.bodyAsText()}")
     }
-
     @Serializable private data class TriggerPrefUpdateStatus(val status: String)
     suspend fun updateTriggerPrefStatus(accessToken: String, prefId: String, newStatus: String) {
         val response = client.patch("$supabaseUrl/rest/v1/trigger_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$prefId")
-            contentType(ContentType.Application.Json)
-            setBody(TriggerPrefUpdateStatus(newStatus))
+            contentType(ContentType.Application.Json); setBody(TriggerPrefUpdateStatus(newStatus))
         }
-        val raw = response.bodyAsText()
-        println("DEBUG updateTriggerPrefStatus: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Update status failed")
+        if (!response.status.isSuccess()) error("Update trigger status failed: ${response.bodyAsText()}")
     }
-
     suspend fun deleteTriggerPref(accessToken: String, prefId: String) {
         val response = client.delete("$supabaseUrl/rest/v1/trigger_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$prefId")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG deleteTriggerPref: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Delete pref failed")
+        if (!response.status.isSuccess()) error("Delete trigger pref failed: ${response.bodyAsText()}")
     }
-    // ───────────────────────── MEDICINE POOL / PREFERENCES ─────────────────────────
-    @Serializable
-    data class AllMedicineRow(val id: String, val label: String)
 
+    // ───────── MEDICINE POOL / PREFS ─────────
+    @Serializable data class AllMedicineRow(val id: String, val label: String)
     @Serializable
     data class MedicinePrefRow(
         val id: String,
@@ -396,131 +509,247 @@ class SupabaseDbService(
         val status: String,
         @SerialName("all_medicines") val medicine: AllMedicineRow? = null
     )
-
     @Serializable private data class AllMedicineInsert(val label: String)
 
     suspend fun getAllMedicinePool(accessToken: String): List<AllMedicineRow> {
         val response = client.get("$supabaseUrl/rest/v1/all_medicines") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
-            parameter("select", "id,label")
-            parameter("order", "label.asc")
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,label"); parameter("order", "label.asc")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getAllMedicinePool: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch all_medicines failed")
+        if (!response.status.isSuccess()) error("Fetch all_medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
-
     suspend fun upsertMedicineToPool(accessToken: String, label: String): AllMedicineRow {
         val response = client.post("$supabaseUrl/rest/v1/all_medicines") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json)
-            setBody(AllMedicineInsert(label))
+            contentType(ContentType.Application.Json); setBody(AllMedicineInsert(label))
         }
-        val raw = response.bodyAsText()
-        println("DEBUG upsertMedicineToPool: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Upsert all_medicines failed")
+        if (!response.status.isSuccess()) error("Upsert all_medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
-
-    // Delete user prefs first, then delete pool row
     suspend fun deleteMedicineFromPool(accessToken: String, medicineId: String) {
         client.delete("$supabaseUrl/rest/v1/medicine_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("medicine_id", "eq.$medicineId")
-        }.also {
-            val raw = it.bodyAsText()
-            println("DEBUG deleteMedPrefsByMedicine: ${it.status} $raw")
-            if (!it.status.isSuccess()) throw RuntimeException("Delete dependent medicine prefs failed")
         }
         val response = client.delete("$supabaseUrl/rest/v1/all_medicines") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$medicineId")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG deleteMedicineFromPool: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Delete all_medicines failed")
+        if (!response.status.isSuccess()) error("Delete all_medicines failed: ${response.bodyAsText()}")
     }
-
-    @Serializable private data class MedicinePrefInsert(
-        @SerialName("medicine_id") val medicineId: String,
-        val position: Int,
-        val status: String
-    )
-
+    @Serializable private data class MedicinePrefInsert(@SerialName("medicine_id") val medicineId: String, val position: Int, val status: String)
     suspend fun getMedicinePrefs(accessToken: String): List<MedicinePrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/medicine_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("select", "id,user_id,medicine_id,position,status,all_medicines(id,label)")
             parameter("order", "position.asc")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG getMedicinePrefs: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Fetch medicine prefs failed")
+        if (!response.status.isSuccess()) error("Fetch medicine prefs failed: ${response.bodyAsText()}")
         return response.body()
     }
-
-    suspend fun insertMedicinePref(
-        accessToken: String,
-        medicineId: String,
-        position: Int,
-        status: String = "frequent"
-    ): MedicinePrefRow {
+    suspend fun insertMedicinePref(accessToken: String, medicineId: String, position: Int, status: String = "frequent"): MedicinePrefRow {
         val response = client.post("$supabaseUrl/rest/v1/medicine_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,medicine_id")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json)
-            // FIX: use typed DTO, not a raw Map
-            setBody(MedicinePrefInsert(medicineId, position, status))
+            contentType(ContentType.Application.Json); setBody(MedicinePrefInsert(medicineId, position, status))
         }
-        val raw = response.bodyAsText()
-        println("DEBUG insertMedicinePref: ${response.status} $raw")
-        if (response.status.value !in 200..299) error("Insert medicine pref failed")
+        if (!response.status.isSuccess()) error("Insert medicine pref failed: ${response.bodyAsText()}")
         return response.body()
     }
-
-    suspend fun updateMedicinePref(
-        accessToken: String,
-        prefId: String,
-        position: Int? = null,
-        status: String? = null
-    ) {
+    suspend fun updateMedicinePref(accessToken: String, prefId: String, position: Int? = null, status: String? = null) {
         val payload = buildMap<String, Any> {
             position?.let { put("position", it) }
             status?.let { put("status", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/medicine_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$prefId")
             header("Prefer", "return=minimal")
-            contentType(ContentType.Application.Json)
-            setBody(payload)
+            contentType(ContentType.Application.Json); setBody(payload)
         }
-        val raw = response.bodyAsText()
-        println("DEBUG updateMedicinePref: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Update medicine pref failed")
+        if (!response.status.isSuccess()) error("Update medicine pref failed: ${response.bodyAsText()}")
     }
-
     suspend fun deleteMedicinePref(accessToken: String, prefId: String) {
         val response = client.delete("$supabaseUrl/rest/v1/medicine_preferences") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            header("apikey", supabaseKey)
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$prefId")
         }
-        val raw = response.bodyAsText()
-        println("DEBUG deleteMedicinePref: ${response.status} $raw")
-        if (!response.status.isSuccess()) throw RuntimeException("Delete medicine pref failed")
+        if (!response.status.isSuccess()) error("Delete medicine pref failed: ${response.bodyAsText()}")
+    }
+
+    // ───────── RELIEF POOL / PREFS ─────────
+    @Serializable data class AllReliefRow(val id: String, val label: String)
+    @Serializable
+    data class ReliefPrefRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        @SerialName("relief_id") val reliefId: String,
+        val position: Int,
+        val status: String,
+        @SerialName("all_reliefs") val relief: AllReliefRow? = null
+    )
+    @Serializable private data class AllReliefInsert(val label: String)
+
+    suspend fun getAllReliefPool(accessToken: String): List<AllReliefRow> {
+        val response = client.get("$supabaseUrl/rest/v1/all_reliefs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,label"); parameter("order", "label.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch all_reliefs failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun upsertReliefToPool(accessToken: String, label: String): AllReliefRow {
+        val response = client.post("$supabaseUrl/rest/v1/all_reliefs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            header("Prefer", "return=representation,resolution=merge-duplicates")
+            parameter("on_conflict", "label")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(AllReliefInsert(label))
+        }
+        if (!response.status.isSuccess()) error("Upsert all_reliefs failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun deleteReliefFromPool(accessToken: String, reliefId: String) {
+        client.delete("$supabaseUrl/rest/v1/relief_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("relief_id", "eq.$reliefId")
+        }
+        val response = client.delete("$supabaseUrl/rest/v1/all_reliefs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$reliefId")
+        }
+        if (!response.status.isSuccess()) error("Delete all_reliefs failed: ${response.bodyAsText()}")
+    }
+    @Serializable private data class ReliefPrefInsert(@SerialName("relief_id") val reliefId: String, val position: Int, val status: String)
+    suspend fun getReliefPrefs(accessToken: String): List<ReliefPrefRow> {
+        val response = client.get("$supabaseUrl/rest/v1/relief_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,user_id,relief_id,position,status,all_reliefs(id,label)")
+            parameter("order", "position.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch relief prefs failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun insertReliefPref(accessToken: String, reliefId: String, position: Int, status: String = "frequent"): ReliefPrefRow {
+        val response = client.post("$supabaseUrl/rest/v1/relief_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            header("Prefer", "return=representation,resolution=merge-duplicates")
+            parameter("on_conflict", "user_id,relief_id")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(ReliefPrefInsert(reliefId, position, status))
+        }
+        if (!response.status.isSuccess()) error("Insert relief pref failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun updateReliefPref(accessToken: String, prefId: String, position: Int? = null, status: String? = null) {
+        val payload = buildMap<String, Any> {
+            position?.let { put("position", it) }
+            status?.let { put("status", it) }
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/relief_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$prefId")
+            header("Prefer", "return=minimal")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Update relief pref failed: ${response.bodyAsText()}")
+    }
+    suspend fun deleteReliefPref(accessToken: String, prefId: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/relief_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$prefId")
+        }
+        if (!response.status.isSuccess()) error("Delete relief pref failed: ${response.bodyAsText()}")
+    }
+
+    // ───────── MIGRAINE POOL / PREFS ─────────
+    @Serializable data class AllMigraineRow(val id: String, val label: String)
+    @Serializable
+    data class MigrainePrefRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        @SerialName("migraine_id") val migraineId: String,
+        val position: Int,
+        val status: String,
+        @SerialName("all_migraines") val migraine: AllMigraineRow? = null
+    )
+    @Serializable private data class AllMigraineInsert(val label: String)
+
+    suspend fun getAllMigrainePool(accessToken: String): List<AllMigraineRow> {
+        val response = client.get("$supabaseUrl/rest/v1/all_migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,label"); parameter("order", "label.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch all_migraines failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun upsertMigraineToPool(accessToken: String, label: String): AllMigraineRow {
+        val response = client.post("$supabaseUrl/rest/v1/all_migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            header("Prefer", "return=representation,resolution=merge-duplicates")
+            parameter("on_conflict", "label")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(AllMigraineInsert(label))
+        }
+        if (!response.status.isSuccess()) error("Upsert all_migraines failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun deleteMigraineFromPool(accessToken: String, migraineId: String) {
+        client.delete("$supabaseUrl/rest/v1/migraine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("migraine_id", "eq.$migraineId")
+        }
+        val response = client.delete("$supabaseUrl/rest/v1/all_migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$migraineId")
+        }
+        if (!response.status.isSuccess()) error("Delete all_migraines failed: ${response.bodyAsText()}")
+    }
+    @Serializable private data class MigrainePrefInsert(@SerialName("migraine_id") val migraineId: String, val position: Int, val status: String)
+    suspend fun getMigrainePrefs(accessToken: String): List<MigrainePrefRow> {
+        val response = client.get("$supabaseUrl/rest/v1/migraine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,user_id,migraine_id,position,status,all_migraines(id,label)")
+            parameter("order", "position.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch migraine prefs failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun insertMigrainePref(accessToken: String, migraineId: String, position: Int, status: String = "frequent"): MigrainePrefRow {
+        val response = client.post("$supabaseUrl/rest/v1/migraine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            header("Prefer", "return=representation,resolution=merge-duplicates")
+            parameter("on_conflict", "user_id,migraine_id")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(MigrainePrefInsert(migraineId, position, status))
+        }
+        if (!response.status.isSuccess()) error("Insert migraine pref failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun updateMigrainePref(accessToken: String, prefId: String, position: Int? = null, status: String? = null) {
+        val payload = buildMap<String, Any> {
+            position?.let { put("position", it) }
+            status?.let { put("status", it) }
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/migraine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$prefId")
+            header("Prefer", "return=minimal")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Update migraine pref failed: ${response.bodyAsText()}")
+    }
+    suspend fun deleteMigrainePref(accessToken: String, prefId: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/migraine_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$prefId")
+        }
+        if (!response.status.isSuccess()) error("Delete migraine pref failed: ${response.bodyAsText()}")
     }
 }

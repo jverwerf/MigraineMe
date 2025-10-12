@@ -4,8 +4,8 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.BarChart
@@ -16,7 +16,22 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -68,17 +83,25 @@ object Routes {
     const val MONITOR = "monitor"
     const val JOURNAL = "journal"
     // log flow
-    const val MIGRAINE = "migraine"   // LogHome
+    const val MIGRAINE = "migraine"
     const val TRIGGERS = "triggers"
     const val ADJUST_TRIGGERS = "adjust_triggers"
     const val MEDICINES = "medicines"
-    const val ADJUST_MEDICINES = "adjust_medicines" // added
+    const val ADJUST_MEDICINES = "adjust_medicines"
     const val RELIEFS = "reliefs"
+    const val ADJUST_RELIEFS = "adjust_reliefs"
     const val REVIEW = "review"
     // auth
     const val LOGIN = "login"
     const val SIGNUP = "signup"
     const val LOGOUT = "logout"
+    // edit screens
+    const val EDIT_MIGRAINE = "edit_migraine"
+    const val EDIT_TRIGGER = "edit_trigger"
+    const val EDIT_MEDICINE = "edit_medicine"
+    const val EDIT_RELIEF = "edit_relief"
+    // migraine prefs
+    const val ADJUST_MIGRAINES = "adjust_migraines"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,7 +114,13 @@ fun AppRoot() {
     val authVm: AuthViewModel = viewModel()
     val logVm: LogViewModel = viewModel()
     val triggerVm: TriggerViewModel = viewModel()
-    val medVm: MedicineViewModel = viewModel() // added
+    val medVm: MedicineViewModel = viewModel()
+    val reliefVm: ReliefViewModel = viewModel()
+    val migraineVm: MigraineViewModel = viewModel() // NEW
+
+    // Journal attention badge
+    val journal by logVm.journal.collectAsState()
+    val attentionCount = remember(journal) { journal.count { needsAttention(it) } }
 
     data class DrawerItem(val title: String, val route: String, val icon: ImageVector)
     val drawerItems = listOf(
@@ -142,11 +171,17 @@ fun AppRoot() {
                                 Routes.PROFILE -> "Profile"
                                 Routes.LOGOUT -> "Logout"
                                 Routes.MEDICINES -> "Medicines"
-                                Routes.ADJUST_MEDICINES -> "Adjust Medicines" // added
+                                Routes.ADJUST_MEDICINES -> "Adjust Medicines"
                                 Routes.RELIEFS -> "Reliefs"
+                                Routes.ADJUST_RELIEFS -> "Adjust Reliefs"
                                 Routes.TRIGGERS -> "Triggers"
                                 Routes.ADJUST_TRIGGERS -> "Adjust Triggers"
                                 Routes.REVIEW -> "Review Log"
+                                Routes.EDIT_MIGRAINE -> "Edit Migraine"
+                                Routes.EDIT_TRIGGER -> "Edit Trigger"
+                                Routes.EDIT_MEDICINE -> "Edit Medicine"
+                                Routes.EDIT_RELIEF -> "Edit Relief"
+                                Routes.ADJUST_MIGRAINES -> "Adjust Migraines"
                                 else -> ""
                             }
                         )
@@ -169,7 +204,7 @@ fun AppRoot() {
             },
             bottomBar = {
                 if (current != Routes.LOGIN && current != Routes.SIGNUP) {
-                    BottomBar(nav)
+                    BottomBar(nav, attentionCount)
                 }
             }
         ) { inner ->
@@ -194,7 +229,7 @@ fun AppRoot() {
                 composable(Routes.JOURNAL) { JournalScreen(navController = nav, authVm = authVm, vm = logVm) }
 
                 // Log flow
-                composable(Routes.MIGRAINE) { LogHomeScreen(navController = nav, vm = logVm) }
+                composable(Routes.MIGRAINE) { LogHomeScreen(navController = nav, authVm = authVm, vm = logVm) }
                 composable(Routes.TRIGGERS) {
                     TriggersScreen(
                         navController = nav,
@@ -211,7 +246,7 @@ fun AppRoot() {
                     )
                 }
 
-                // Medicines wired like triggers, using shared VMs
+                // Medicines
                 composable(Routes.MEDICINES) {
                     MedicinesScreen(
                         navController = nav,
@@ -228,8 +263,51 @@ fun AppRoot() {
                     )
                 }
 
-                composable(Routes.RELIEFS) { ReliefsScreen(navController = nav, vm = logVm) }
+                // Reliefs
+                composable(Routes.RELIEFS) {
+                    ReliefsScreen(
+                        navController = nav,
+                        vm = reliefVm,
+                        authVm = authVm,
+                        logVm = logVm
+                    )
+                }
+                composable(Routes.ADJUST_RELIEFS) {
+                    AdjustReliefsScreen(
+                        navController = nav,
+                        vm = reliefVm,
+                        authVm = authVm
+                    )
+                }
+
                 composable(Routes.REVIEW) { ReviewLogScreen(navController = nav, authVm = authVm, vm = logVm) }
+
+                // Edit screens
+                composable("${Routes.EDIT_MIGRAINE}/{id}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                    EditMigraineScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                }
+                composable("${Routes.EDIT_TRIGGER}/{id}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                    EditTriggerScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                }
+                composable("${Routes.EDIT_MEDICINE}/{id}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                    EditMedicineScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                }
+                composable("${Routes.EDIT_RELIEF}/{id}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                    EditReliefScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                }
+
+                // Adjust migraines (now passes MigraineViewModel)
+                composable(Routes.ADJUST_MIGRAINES) {
+                    AdjustMigrainesScreen(
+                        navController = nav,
+                        vm = migraineVm,
+                        authVm = authVm
+                    )
+                }
 
                 // Auth
                 composable(Routes.LOGIN) {
@@ -282,9 +360,20 @@ fun AppRoot() {
     }
 }
 
+/** Same logic as JournalScreen’s top-right icon */
+private fun needsAttention(ev: JournalEvent): Boolean {
+    return when (ev) {
+        is JournalEvent.Migraine -> ev.row.startAt.isNullOrBlank() || ev.row.endAt.isNullOrBlank() || ev.row.severity == null
+        is JournalEvent.Trigger -> ev.row.startAt.isNullOrBlank()
+        is JournalEvent.Medicine -> ev.row.amount.isNullOrBlank() || ev.row.startAt.isNullOrBlank()
+        is JournalEvent.Relief -> ev.row.durationMinutes == null || ev.row.startAt.isNullOrBlank()
+    }
+}
+
 @Composable
 private fun BottomBar(
-    nav: androidx.navigation.NavHostController
+    nav: androidx.navigation.NavHostController,
+    journalBadgeCount: Int
 ) {
     data class BottomItem(val route: String, val label: String, val icon: ImageVector)
     val items = listOf(
@@ -298,6 +387,7 @@ private fun BottomBar(
         val backStack by nav.currentBackStackEntryAsState()
         val currentRoute = backStack?.destination?.route
         items.forEach { item ->
+            val showBadge = item.route == Routes.JOURNAL && journalBadgeCount > 0
             NavigationBarItem(
                 selected = currentRoute == item.route,
                 onClick = {
@@ -307,7 +397,15 @@ private fun BottomBar(
                         restoreState = true
                     }
                 },
-                icon = { Icon(item.icon, contentDescription = item.label) },
+                icon = {
+                    if (showBadge) {
+                        BadgedBox(badge = { Badge { Text(journalBadgeCount.toString()) } }) {
+                            Icon(item.icon, contentDescription = item.label)
+                        }
+                    } else {
+                        Icon(item.icon, contentDescription = item.label)
+                    }
+                },
                 label = { Text(item.label) },
                 alwaysShowLabel = true
             )
