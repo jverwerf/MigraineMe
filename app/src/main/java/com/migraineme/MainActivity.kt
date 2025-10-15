@@ -1,11 +1,10 @@
 package com.migraineme
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.BarChart
@@ -32,7 +31,14 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -42,38 +48,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        scheduleDailyWeatherWork(this)
-        setContent { MaterialTheme { AppRoot() } }
-    }
-}
-
-private fun scheduleDailyWeatherWork(context: Context) {
-    val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-    val request = PeriodicWorkRequestBuilder<WeatherDailyWorker>(1, TimeUnit.DAYS)
-        .setConstraints(constraints)
-        .setInitialDelay(1, TimeUnit.HOURS)
-        .build()
-
-    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-        "weather-daily-sync",
-        ExistingPeriodicWorkPolicy.KEEP,
-        request
-    )
-}
 
 object Routes {
     const val HOME = "home"
@@ -104,6 +79,13 @@ object Routes {
     const val ADJUST_MIGRAINES = "adjust_migraines"
 }
 
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent { MaterialTheme { AppRoot() } }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppRoot() {
@@ -116,7 +98,20 @@ fun AppRoot() {
     val triggerVm: TriggerViewModel = viewModel()
     val medVm: MedicineViewModel = viewModel()
     val reliefVm: ReliefViewModel = viewModel()
-    val migraineVm: MigraineViewModel = viewModel() // NEW
+    val migraineVm: MigraineViewModel = viewModel()
+
+    // preload journal after login
+    val authState by authVm.state.collectAsState()
+    val token = authState.accessToken
+    var preloaded by remember { mutableStateOf(false) }
+    LaunchedEffect(token) {
+        if (token.isNullOrBlank()) {
+            preloaded = false
+        } else if (!preloaded) {
+            logVm.loadJournal(token)
+            preloaded = true
+        }
+    }
 
     // Journal attention badge
     val journal by logVm.journal.collectAsState()
@@ -300,7 +295,7 @@ fun AppRoot() {
                     EditReliefScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
                 }
 
-                // Adjust migraines (now passes MigraineViewModel)
+                // Adjust migraines
                 composable(Routes.ADJUST_MIGRAINES) {
                     AdjustMigrainesScreen(
                         navController = nav,

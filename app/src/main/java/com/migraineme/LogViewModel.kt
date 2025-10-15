@@ -1,6 +1,7 @@
 package com.migraineme
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,7 +53,7 @@ sealed class JournalEvent {
     data class Relief(val row: SupabaseDbService.ReliefRow) : JournalEvent()
 }
 
-class LogViewModel : ViewModel() {
+class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = SupabaseDbService(
         BuildConfig.SUPABASE_URL,

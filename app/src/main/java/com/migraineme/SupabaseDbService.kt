@@ -1,4 +1,4 @@
-// SupabaseDbService.kt
+// app/src/main/java/com/migraineme/SupabaseDbService.kt
 package com.migraineme
 
 import io.ktor.client.*
@@ -10,8 +10,10 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.time.Instant
 
 class SupabaseDbService(
@@ -82,7 +84,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch migraines failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun getMigraineById(accessToken: String, id: String): MigraineRow {
         val response = client.get("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -92,7 +93,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Get migraine by id failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun updateMigraine(
         accessToken: String,
         id: String,
@@ -102,12 +102,12 @@ class SupabaseDbService(
         endAt: String? = null,
         notes: String? = null
     ): MigraineRow {
-        val payload = buildMap<String, Any?> {
+        val payload = buildJsonObject {
             type?.let { put("type", it) }
             severity?.let { put("severity", it) }
             startAt?.let { put("start_at", it) }
             endAt?.let { put("ended_at", it) }
-            if (notes != null) put("notes", notes)
+            notes?.let { put("notes", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -119,7 +119,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Update migraine failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun deleteMigraine(accessToken: String, id: String) {
         val response = client.delete("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -174,7 +173,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch triggers failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun getTriggerById(accessToken: String, id: String): TriggerRow {
         val response = client.get("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -184,7 +182,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Get trigger by id failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun updateTrigger(
         accessToken: String,
         id: String,
@@ -193,10 +190,10 @@ class SupabaseDbService(
         notes: String? = null,
         migraineId: String? = null
     ): TriggerRow {
-        val payload = buildMap<String, Any?> {
+        val payload = buildJsonObject {
             type?.let { put("type", it) }
             startAt?.let { put("start_at", it) }
-            if (notes != null) put("notes", notes)
+            notes?.let { put("notes", it) }
             migraineId?.let { put("migraine_id", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/triggers") {
@@ -209,7 +206,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Update trigger failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun deleteTrigger(accessToken: String, id: String) {
         val response = client.delete("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -267,7 +263,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun getMedicineById(accessToken: String, id: String): MedicineRow {
         val response = client.get("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -277,7 +272,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Get medicine by id failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun updateMedicine(
         accessToken: String,
         id: String,
@@ -287,11 +281,11 @@ class SupabaseDbService(
         notes: String? = null,
         migraineId: String? = null
     ): MedicineRow {
-        val payload = buildMap<String, Any?> {
+        val payload = buildJsonObject {
             name?.let { put("name", it) }
             if (amount != null) put("amount", amount)
             startAt?.let { put("start_at", it) }
-            if (notes != null) put("notes", notes)
+            notes?.let { put("notes", it) }
             migraineId?.let { put("migraine_id", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/medicines") {
@@ -304,7 +298,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Update medicine failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun deleteMedicine(accessToken: String, id: String) {
         val response = client.delete("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -362,7 +355,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch reliefs failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun getReliefById(accessToken: String, id: String): ReliefRow {
         val response = client.get("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -372,7 +364,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Get relief by id failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun updateRelief(
         accessToken: String,
         id: String,
@@ -382,11 +373,11 @@ class SupabaseDbService(
         notes: String? = null,
         migraineId: String? = null
     ): ReliefRow {
-        val payload = buildMap<String, Any?> {
+        val payload = buildJsonObject {
             type?.let { put("type", it) }
             durationMinutes?.let { put("duration_minutes", it) }
             startAt?.let { put("start_at", it) }
-            if (notes != null) put("notes", notes)
+            notes?.let { put("notes", it) }
             migraineId?.let { put("migraine_id", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/reliefs") {
@@ -399,7 +390,6 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Update relief failed: ${response.bodyAsText()}")
         return response.body()
     }
-    // NEW
     suspend fun deleteRelief(accessToken: String, id: String) {
         val response = client.delete("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -563,7 +553,7 @@ class SupabaseDbService(
         return response.body()
     }
     suspend fun updateMedicinePref(accessToken: String, prefId: String, position: Int? = null, status: String? = null) {
-        val payload = buildMap<String, Any> {
+        val payload = buildJsonObject {
             position?.let { put("position", it) }
             status?.let { put("status", it) }
         }
@@ -648,7 +638,7 @@ class SupabaseDbService(
         return response.body()
     }
     suspend fun updateReliefPref(accessToken: String, prefId: String, position: Int? = null, status: String? = null) {
-        val payload = buildMap<String, Any> {
+        val payload = buildJsonObject {
             position?.let { put("position", it) }
             status?.let { put("status", it) }
         }
@@ -733,7 +723,7 @@ class SupabaseDbService(
         return response.body()
     }
     suspend fun updateMigrainePref(accessToken: String, prefId: String, position: Int? = null, status: String? = null) {
-        val payload = buildMap<String, Any> {
+        val payload = buildJsonObject {
             position?.let { put("position", it) }
             status?.let { put("status", it) }
         }
@@ -751,5 +741,28 @@ class SupabaseDbService(
             parameter("id", "eq.$prefId")
         }
         if (!response.status.isSuccess()) error("Delete migraine pref failed: ${response.bodyAsText()}")
+    }
+
+    // ───────── WEATHER DAILY ─────────
+    @Serializable
+    data class WeatherDailyRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        val date: String, // ISO date "YYYY-MM-DD"
+        @SerialName("temp_c") val tempC: Double? = null,
+        @SerialName("pressure_hpa") val pressureHpa: Double? = null,
+        @SerialName("humidity_pct") val humidityPct: Double? = null,
+        @SerialName("created_at") val createdAt: String,
+        @SerialName("updated_at") val updatedAt: String
+    )
+
+    suspend fun getWeatherDaily(accessToken: String): List<WeatherDailyRow> {
+        val response = client.get("$supabaseUrl/rest/v1/weather_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,user_id,date,temp_c,pressure_hpa,humidity_pct,created_at,updated_at")
+            parameter("order", "date.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch weather_daily failed: ${response.bodyAsText()}")
+        return response.body()
     }
 }

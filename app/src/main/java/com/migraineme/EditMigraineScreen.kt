@@ -1,24 +1,68 @@
 package com.migraineme
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+
+/* ---------- Top-level types ---------- */
+
+private enum class Step { CORE, TRIGGERS, MEDICINES, RELIEFS, REVIEW }
+
+private data class PendingTrigger(val type: String, val startIso: String?)
+private data class PendingMedicine(val name: String, val amount: String?, val startIso: String?, val notes: String?)
+private data class PendingRelief(val type: String, val durationMinutes: Int?, val startIso: String?, val notes: String?)
+
+/* ----------------------------------------------------------------------------- */
 
 @Composable
 fun EditMigraineScreen(
@@ -30,16 +74,20 @@ fun EditMigraineScreen(
     val auth by authVm.state.collectAsState()
     val token = auth.accessToken
 
-    // Local service to avoid changing VMs
+    // Supabase access unchanged
     val db = remember { SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) }
     val scope = rememberCoroutineScope()
 
-    // Core row state
+    // Stepper (same order as draft flow)
+    var step by remember { mutableStateOf(Step.CORE) }
+
+    // Base row and loading
     var row by remember { mutableStateOf<SupabaseDbService.MigraineRow?>(null) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var saving by remember { mutableStateOf(false) }
 
-    // Pools and prefs for dropdowns
+    // Pools and prefs
     var mgFrequent by remember { mutableStateOf(listOf<String>()) }
     var mgAll by remember { mutableStateOf(listOf<String>()) }
 
@@ -52,21 +100,45 @@ fun EditMigraineScreen(
     var relPool by remember { mutableStateOf(listOf<SupabaseDbService.AllReliefRow>()) }
     var relFreq by remember { mutableStateOf(listOf<String>()) }
 
-    // Linked items
+    // Linked rows
     var linkedTriggers by remember { mutableStateOf(listOf<SupabaseDbService.TriggerRow>()) }
     var linkedMeds by remember { mutableStateOf(listOf<SupabaseDbService.MedicineRow>()) }
     var linkedRels by remember { mutableStateOf(listOf<SupabaseDbService.ReliefRow>()) }
 
+    // Draft (single save)
+    var selectedLabel by remember { mutableStateOf<String?>(null) }
+    var severity by remember { mutableStateOf(5f) }
+    var beganAt by remember { mutableStateOf<String?>(null) }
+    var endedAt by remember { mutableStateOf<String?>(null) }
+    var notes by remember { mutableStateOf(TextFieldValue("")) }
+
+    // Queues for adds and deletes
+    var addTriggers by remember { mutableStateOf(listOf<PendingTrigger>()) }
+    var addMeds by remember { mutableStateOf(listOf<PendingMedicine>()) }
+    var addRels by remember { mutableStateOf(listOf<PendingRelief>()) }
+
+    var deleteTriggerIds by remember { mutableStateOf(setOf<String>()) }
+    var deleteMedicineIds by remember { mutableStateOf(setOf<String>()) }
+    var deleteReliefIds by remember { mutableStateOf(setOf<String>()) }
+
+    // UI flags
+    var typeMenuOpen by remember { mutableStateOf(false) }
+    var showAddTrig by remember { mutableStateOf<String?>(null) }
+    var showAddMed by remember { mutableStateOf<String?>(null) }
+    var showAddRel by remember { mutableStateOf<String?>(null) }
+
+    // Validation
+    val endBeforeStart by derivedStateOf { isEndBeforeStart(beganAt, endedAt) }
+
+    // Load data
     LaunchedEffect(token, id) {
         if (token.isNullOrBlank()) return@LaunchedEffect
         try {
             loading = true
             error = null
-            // Load migraine row
-            val r = db.getMigraineById(token, id)
-            row = r
 
-            // Load pools and prefs
+            row = db.getMigraineById(token, id)
+
             val mgPrefs = db.getMigrainePrefs(token)
             mgFrequent = mgPrefs.filter { it.status == "frequent" }.sortedBy { it.position }
                 .mapNotNull { it.migraine?.label }
@@ -87,13 +159,9 @@ fun EditMigraineScreen(
                 .mapNotNull { it.relief?.label }
             relPool = db.getAllReliefPool(token)
 
-            // Load linked items from full lists and filter by migraineId
-            val allT = db.getAllTriggers(token)
-            linkedTriggers = allT.filter { it.migraineId == id }
-            val allM = db.getAllMedicines(token)
-            linkedMeds = allM.filter { it.migraineId == id }
-            val allR = db.getAllReliefs(token)
-            linkedRels = allR.filter { it.migraineId == id }
+            linkedTriggers = db.getAllTriggers(token).filter { it.migraineId == id }.sortedByDescending { it.startAt }
+            linkedMeds = db.getAllMedicines(token).filter { it.migraineId == id }.sortedByDescending { it.startAt }
+            linkedRels = db.getAllReliefs(token).filter { it.migraineId == id }.sortedByDescending { it.startAt }
         } catch (e: Exception) {
             e.printStackTrace()
             error = e.message ?: "Failed to load"
@@ -102,15 +170,7 @@ fun EditMigraineScreen(
         }
     }
 
-    // UI state mirrors draft
-    var menuOpen by remember { mutableStateOf(false) }
-    var selectedLabel by remember { mutableStateOf<String?>(null) }
-    var severity by remember { mutableStateOf(5f) }
-    var beganAt by remember { mutableStateOf<String?>(null) }
-    var endedAt by remember { mutableStateOf<String?>(null) }
-    var notes by remember { mutableStateOf(TextFieldValue("")) }
-
-    // Bootstrap UI state from row
+    // Seed draft
     LaunchedEffect(row?.id) {
         row?.let {
             selectedLabel = it.type ?: "Migraine"
@@ -118,55 +178,136 @@ fun EditMigraineScreen(
             beganAt = it.startAt
             endedAt = it.endAt
             notes = TextFieldValue(it.notes ?: "")
+            addTriggers = emptyList(); addMeds = emptyList(); addRels = emptyList()
+            deleteTriggerIds = emptySet(); deleteMedicineIds = emptySet(); deleteReliefIds = emptySet()
         }
     }
 
-    // Add dialogs
-    var showAddTrig by remember { mutableStateOf<String?>(null) } // holds selected trigger label
-    var showAddMed by remember { mutableStateOf<String?>(null) }  // medicine name
-    var showAddRel by remember { mutableStateOf<String?>(null) }  // relief type
-
+    // Bottom bar and stepper
     Scaffold(
         bottomBar = {
             Row(
                 Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedButton(onClick = { navController.popBackStack() }) { Text("Back") }
-                Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                OutlinedButton(
                     onClick = {
-                        if (token.isNullOrBlank()) return@Button
-                        scope.launch {
-                            try {
-                                db.deleteMigraine(token, id)
-                                // refresh journal so badges remain correct
-                                vm.loadJournal(token)
-                                navController.popBackStack()
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
+                        when (step) {
+                            Step.CORE -> navController.popBackStack()
+                            Step.TRIGGERS -> step = Step.CORE
+                            Step.MEDICINES -> step = Step.TRIGGERS
+                            Step.RELIEFS -> step = Step.MEDICINES
+                            Step.REVIEW -> step = Step.RELIEFS
                         }
+                    },
+                    enabled = !saving
+                ) { Text(if (step == Step.CORE) "Back" else "Previous") }
+
+                when (step) {
+                    Step.CORE, Step.TRIGGERS, Step.MEDICINES, Step.RELIEFS -> {
+                        Button(
+                            onClick = {
+                                step = when (step) {
+                                    Step.CORE -> Step.TRIGGERS
+                                    Step.TRIGGERS -> Step.MEDICINES
+                                    Step.MEDICINES -> Step.RELIEFS
+                                    Step.RELIEFS -> Step.REVIEW
+                                    Step.REVIEW -> Step.REVIEW
+                                }
+                            },
+                            enabled = !saving && !(step == Step.CORE && endBeforeStart)
+                        ) { Text("Next") }
                     }
-                ) { Text("Delete") }
+                    Step.REVIEW -> {
+                        Button(
+                            onClick = {
+                                if (token.isNullOrBlank() || row == null) return@Button
+                                scope.launch {
+                                    try {
+                                        saving = true
+                                        if (endBeforeStart) {
+                                            error = "End time cannot be before start time"
+                                            saving = false
+                                            return@launch
+                                        }
+                                        // Update migraine
+                                        row = db.updateMigraine(
+                                            accessToken = token,
+                                            id = id,
+                                            type = selectedLabel,
+                                            severity = severity.toInt(),
+                                            startAt = beganAt,
+                                            endAt = endedAt,
+                                            notes = notes.text
+                                        )
+                                        // Deletes
+                                        deleteTriggerIds.forEach { runCatching { db.deleteTrigger(token, it) } }
+                                        deleteMedicineIds.forEach { runCatching { db.deleteMedicine(token, it) } }
+                                        deleteReliefIds.forEach { runCatching { db.deleteRelief(token, it) } }
+                                        // Adds
+                                        addTriggers.forEach { t ->
+                                            runCatching {
+                                                db.insertTrigger(
+                                                    accessToken = token,
+                                                    migraineId = id,
+                                                    type = t.type,
+                                                    startAt = t.startIso ?: beganAt,
+                                                    notes = null
+                                                )
+                                            }
+                                        }
+                                        addMeds.forEach { m ->
+                                            runCatching {
+                                                db.insertMedicine(
+                                                    accessToken = token,
+                                                    migraineId = id,
+                                                    name = m.name,
+                                                    amount = m.amount,
+                                                    startAt = m.startIso ?: beganAt,
+                                                    notes = m.notes
+                                                )
+                                            }
+                                        }
+                                        addRels.forEach { r ->
+                                            runCatching {
+                                                db.insertRelief(
+                                                    accessToken = token,
+                                                    migraineId = id,
+                                                    type = r.type,
+                                                    durationMinutes = r.durationMinutes,
+                                                    startAt = r.startIso ?: beganAt,
+                                                    notes = r.notes
+                                                )
+                                            }
+                                        }
+                                        vm.loadJournal(token)
+                                        navController.popBackStack()
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        error = e.message ?: "Failed to save"
+                                    } finally {
+                                        saving = false
+                                    }
+                                }
+                            },
+                            enabled = !saving && !endBeforeStart
+                        ) { Text(if (saving) "Saving..." else "Save") }
+                    }
+                }
             }
         }
     ) { inner ->
         if (loading) {
-            Box(Modifier.fillMaxSize().padding(inner), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            Box(Modifier.fillMaxSize().padding(inner), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
             return@Scaffold
         }
         if (error != null || row == null) {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(inner)
-                    .padding(16.dp)
-            ) {
+            Column(Modifier.fillMaxSize().padding(inner).padding(16.dp)) {
                 Text(error ?: "Not found")
                 Spacer(Modifier.height(12.dp))
                 OutlinedButton(onClick = { navController.popBackStack() }) { Text("Back") }
@@ -174,419 +315,488 @@ fun EditMigraineScreen(
             return@Scaffold
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(inner)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Migraine type dropdown like draft
-            item {
-                Column {
-                    OutlinedTextField(
-                        value = selectedLabel ?: "Migraine",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Migraine selection") },
-                        trailingIcon = {
-                            IconButton(onClick = { menuOpen = true }) {
-                                Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose migraine")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        if (mgFrequent.isNotEmpty()) {
-                            DropdownMenuItem(text = { Text("Frequent") }, onClick = {}, enabled = false)
-                            mgFrequent.forEach { label ->
-                                DropdownMenuItem(text = { Text(label) }, onClick = {
-                                    menuOpen = false
-                                    selectedLabel = label
-                                    if (!token.isNullOrBlank()) {
-                                        scope.launch {
-                                            val updated = db.updateMigraine(
-                                                accessToken = token,
-                                                id = id,
-                                                type = label
-                                            )
-                                            row = updated
-                                        }
-                                    }
-                                })
-                            }
-                            Divider()
-                        }
-                        if (mgAll.isNotEmpty()) {
-                            DropdownMenuItem(text = { Text("All") }, onClick = {}, enabled = false)
-                            mgAll.forEach { label ->
-                                DropdownMenuItem(text = { Text(label) }, onClick = {
-                                    menuOpen = false
-                                    selectedLabel = label
-                                    if (!token.isNullOrBlank()) {
-                                        scope.launch {
-                                            val updated = db.updateMigraine(
-                                                accessToken = token,
-                                                id = id,
-                                                type = label
-                                            )
-                                            row = updated
-                                        }
-                                    }
-                                })
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Severity slider
-            item {
-                Column {
-                    Text("Severity: ${severity.toInt()}", style = MaterialTheme.typography.bodyMedium)
-                    Slider(
-                        value = severity,
-                        onValueChange = {
-                            severity = it.coerceIn(1f, 10f)
-                        },
-                        onValueChangeFinished = {
-                            if (!token.isNullOrBlank()) {
-                                scope.launch {
-                                    val updated = db.updateMigraine(
-                                        accessToken = token,
-                                        id = id,
-                                        severity = severity.toInt()
-                                    )
-                                    row = updated
-                                }
-                            }
-                        },
-                        valueRange = 1f..10f,
-                        steps = 8,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            // Start / End time
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AppDateTimePicker(label = "Start time") { iso ->
-                        beganAt = iso
-                        if (!token.isNullOrBlank()) {
-                            scope.launch {
-                                val updated = db.updateMigraine(
-                                    accessToken = token,
-                                    id = id,
-                                    startAt = iso
-                                )
-                                row = updated
-                            }
-                        }
-                    }
-                    Text("Current: ${formatIsoDdMmYyHm(beganAt)}")
-                    AppDateTimePicker(label = "End time") { iso ->
-                        endedAt = iso
-                        if (!token.isNullOrBlank()) {
-                            scope.launch {
-                                val updated = db.updateMigraine(
-                                    accessToken = token,
-                                    id = id,
-                                    endAt = iso
-                                )
-                                row = updated
-                            }
-                        }
-                    }
-                    Text("Current: ${formatIsoDdMmYyHm(endedAt)}")
-                }
-            }
-
-            // Notes
-            item {
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = {
-                        notes = it
-                    },
-                    label = { Text("Notes") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            // Save notes button
-            item {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Button(
-                        onClick = {
-                            if (!token.isNullOrBlank()) {
-                                scope.launch {
-                                    val updated = db.updateMigraine(
-                                        accessToken = token,
-                                        id = id,
-                                        notes = notes.text
-                                    )
-                                    row = updated
-                                }
-                            }
-                        }
-                    ) { Text("Save notes") }
-                }
-            }
-
-            // Linked TRIGGERS section
-            item { Text("Triggers", style = MaterialTheme.typography.titleMedium) }
-            items(linkedTriggers, key = { it.id }) { t ->
-                ElevatedCard(Modifier.fillMaxWidth()) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text("Type: ${t.type ?: "-"}")
-                            Text("Time: ${formatIsoDdMmYyHm(t.startAt)}")
-                            if (!t.notes.isNullOrBlank()) Text("Notes: ${t.notes}")
-                        }
-                        Row {
-                            TextButton(onClick = { navController.navigate("${Routes.EDIT_TRIGGER}/${t.id}") }) {
-                                Text("Edit")
-                            }
-                            IconButton(onClick = {
-                                if (token.isNullOrBlank()) return@IconButton
-                                scope.launch {
-                                    db.deleteTrigger(token, t.id)
-                                    linkedTriggers = linkedTriggers.filterNot { it.id == t.id }
-                                    vm.loadJournal(token)
-                                }
-                            }) { Icon(Icons.Filled.Delete, contentDescription = "Delete trigger") }
-                        }
-                    }
-                }
-            }
-            // Add trigger chips
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (trigFreq.isNotEmpty()) {
-                        Text("Frequent", style = MaterialTheme.typography.titleSmall)
-                        FlowRowWrap {
-                            trigFreq.forEach { label ->
-                                AssistChip(onClick = { showAddTrig = label }, label = { Text(label) })
-                            }
-                        }
-                    }
-                    val remainingTrig = trigPool.map { it.label }.filter { it !in trigFreq }
-                    if (remainingTrig.isNotEmpty()) {
-                        Text("All", style = MaterialTheme.typography.titleSmall)
-                        FlowRowWrap {
-                            remainingTrig.forEach { label ->
-                                AssistChip(onClick = { showAddTrig = label }, label = { Text(label) })
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Linked MEDICINES
-            item { Text("Medicines", style = MaterialTheme.typography.titleMedium) }
-            items(linkedMeds, key = { it.id }) { m ->
-                ElevatedCard(Modifier.fillMaxWidth()) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text("Name: ${m.name ?: "-"}")
-                            Text("Amount: ${m.amount ?: "-"}")
-                            Text("Time: ${formatIsoDdMmYyHm(m.startAt)}")
-                            if (!m.notes.isNullOrBlank()) Text("Notes: ${m.notes}")
-                        }
-                        Row {
-                            TextButton(onClick = { navController.navigate("${Routes.EDIT_MEDICINE}/${m.id}") }) {
-                                Text("Edit")
-                            }
-                            IconButton(onClick = {
-                                if (token.isNullOrBlank()) return@IconButton
-                                scope.launch {
-                                    db.deleteMedicine(token, m.id)
-                                    linkedMeds = linkedMeds.filterNot { it.id == m.id }
-                                    vm.loadJournal(token)
-                                }
-                            }) { Icon(Icons.Filled.Delete, contentDescription = "Delete medicine") }
-                        }
-                    }
-                }
-            }
-            // Add medicine chips
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (medFreq.isNotEmpty()) {
-                        Text("Frequent", style = MaterialTheme.typography.titleSmall)
-                        FlowRowWrap {
-                            medFreq.forEach { label ->
-                                AssistChip(onClick = { showAddMed = label }, label = { Text(label) })
-                            }
-                        }
-                    }
-                    val remaining = medPool.map { it.label }.filter { it !in medFreq }
-                    if (remaining.isNotEmpty()) {
-                        Text("All", style = MaterialTheme.typography.titleSmall)
-                        FlowRowWrap {
-                            remaining.forEach { label ->
-                                AssistChip(onClick = { showAddMed = label }, label = { Text(label) })
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Linked RELIEFS
-            item { Text("Reliefs", style = MaterialTheme.typography.titleMedium) }
-            items(linkedRels, key = { it.id }) { r ->
-                ElevatedCard(Modifier.fillMaxWidth()) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text("Type: ${r.type ?: "-"}")
-                            Text("Duration: ${r.durationMinutes ?: 0} min")
-                            Text("Time: ${formatIsoDdMmYyHm(r.startAt)}")
-                            if (!r.notes.isNullOrBlank()) Text("Notes: ${r.notes}")
-                        }
-                        Row {
-                            TextButton(onClick = { navController.navigate("${Routes.EDIT_RELIEF}/${r.id}") }) {
-                                Text("Edit")
-                            }
-                            IconButton(onClick = {
-                                if (token.isNullOrBlank()) return@IconButton
-                                scope.launch {
-                                    db.deleteRelief(token, r.id)
-                                    linkedRels = linkedRels.filterNot { it.id == r.id }
-                                    vm.loadJournal(token)
-                                }
-                            }) { Icon(Icons.Filled.Delete, contentDescription = "Delete relief") }
-                        }
-                    }
-                }
-            }
-            // Add relief chips
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (relFreq.isNotEmpty()) {
-                        Text("Frequent", style = MaterialTheme.typography.titleSmall)
-                        FlowRowWrap {
-                            relFreq.forEach { label ->
-                                AssistChip(onClick = { showAddRel = label }, label = { Text(label) })
-                            }
-                        }
-                    }
-                    val remaining = relPool.map { it.label }.filter { it !in relFreq }
-                    if (remaining.isNotEmpty()) {
-                        Text("All", style = MaterialTheme.typography.titleSmall)
-                        FlowRowWrap {
-                            remaining.forEach { label ->
-                                AssistChip(onClick = { showAddRel = label }, label = { Text(label) })
-                            }
-                        }
-                    }
-                }
-            }
-
-            item { Spacer(Modifier.height(96.dp)) }
+        when (step) {
+            Step.CORE -> CorePage(
+                selectedLabel = selectedLabel,
+                onSelectLabel = { selectedLabel = it },
+                mgFrequent = mgFrequent,
+                mgAll = mgAll,
+                typeMenuOpen = typeMenuOpen,
+                setTypeMenuOpen = { typeMenuOpen = it },
+                severity = severity,
+                setSeverity = { severity = it.coerceIn(1f, 10f) },
+                beganAt = beganAt,
+                setBeganAt = { beganAt = it },
+                endedAt = endedAt,
+                setEndedAt = { endedAt = it },
+                endBeforeStart = endBeforeStart,
+                notes = notes,
+                setNotes = { notes = it },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(inner)
+                    .padding(horizontal = 16.dp)
+            )
+            Step.TRIGGERS -> TriggersPage(
+                trigFreq = trigFreq,
+                trigPool = trigPool.map { it.label },
+                linked = linkedTriggers,
+                addQueue = addTriggers,
+                onQueueRemove = { addTriggers = addTriggers.filterNot { p -> p === it } },
+                deleteIds = deleteTriggerIds,
+                toggleDelete = { idToggle ->
+                    deleteTriggerIds = if (deleteTriggerIds.contains(idToggle)) deleteTriggerIds - idToggle else deleteTriggerIds + idToggle
+                },
+                setShowAddTrig = { showAddTrig = it },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(inner)
+                    .padding(horizontal = 16.dp)
+            )
+            Step.MEDICINES -> MedicinesPage(
+                medFreq = medFreq,
+                medPool = medPool.map { it.label },
+                linked = linkedMeds,
+                addQueue = addMeds,
+                onQueueRemove = { addMeds = addMeds.filterNot { p -> p === it } },
+                deleteIds = deleteMedicineIds,
+                toggleDelete = { idToggle ->
+                    deleteMedicineIds = if (deleteMedicineIds.contains(idToggle)) deleteMedicineIds - idToggle else deleteMedicineIds + idToggle
+                },
+                setShowAddMed = { showAddMed = it },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(inner)
+                    .padding(horizontal = 16.dp)
+            )
+            Step.RELIEFS -> ReliefsPage(
+                relFreq = relFreq,
+                relPool = relPool.map { it.label },
+                linked = linkedRels,
+                addQueue = addRels,
+                onQueueRemove = { addRels = addRels.filterNot { p -> p === it } },
+                deleteIds = deleteReliefIds,
+                toggleDelete = { idToggle ->
+                    deleteReliefIds = if (deleteReliefIds.contains(idToggle)) deleteReliefIds - idToggle else deleteReliefIds + idToggle
+                },
+                setShowAddRel = { showAddRel = it },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(inner)
+                    .padding(horizontal = 16.dp)
+            )
+            Step.REVIEW -> ReviewPage(
+                label = selectedLabel,
+                severity = severity.toInt(),
+                beganAt = beganAt,
+                endedAt = endedAt,
+                notes = notes.text,
+                deletes = Triple(deleteTriggerIds.size, deleteMedicineIds.size, deleteReliefIds.size),
+                adds = Triple(addTriggers.size, addMeds.size, addRels.size),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(inner)
+                    .padding(16.dp)
+            )
         }
     }
 
-    // Trigger add dialog
+    // Add dialogs (queue only)
     if (showAddTrig != null) {
         TimeAddDialog(
             title = "Add trigger",
             onDismiss = { showAddTrig = null },
             onConfirm = { iso ->
                 val label = showAddTrig ?: return@TimeAddDialog
-                if (!token.isNullOrBlank()) {
-                    scope.launch {
-                        try {
-                            val t = db.insertTrigger(
-                                accessToken = token,
-                                migraineId = id,
-                                type = label,
-                                startAt = iso,
-                                notes = null
-                            )
-                            linkedTriggers = listOf(t) + linkedTriggers
-                            vm.loadJournal(token)
-                        } catch (e: Exception) { e.printStackTrace() }
-                    }
-                }
+                addTriggers = listOf(PendingTrigger(type = label, startIso = iso)) + addTriggers
                 showAddTrig = null
             }
         )
     }
-
-    // Medicine add dialog
     if (showAddMed != null) {
         MedicineAddDialog(
             title = "Add medicine",
             name = showAddMed!!,
             onDismiss = { showAddMed = null },
             onConfirm = { amount, iso, notesText ->
-                if (!token.isNullOrBlank()) {
-                    scope.launch {
-                        try {
-                            val m = db.insertMedicine(
-                                accessToken = token,
-                                migraineId = id,
-                                name = showAddMed,
-                                amount = amount,
-                                startAt = iso,
-                                notes = notesText
-                            )
-                            linkedMeds = listOf(m) + linkedMeds
-                            vm.loadJournal(token)
-                        } catch (e: Exception) { e.printStackTrace() }
-                    }
-                }
+                val name = showAddMed ?: return@MedicineAddDialog
+                addMeds = listOf(PendingMedicine(name, amount, iso, notesText)) + addMeds
                 showAddMed = null
             }
         )
     }
-
-    // Relief add dialog
     if (showAddRel != null) {
         ReliefAddDialog(
             title = "Add relief",
             typeLabel = showAddRel!!,
             onDismiss = { showAddRel = null },
             onConfirm = { durationMinutes, iso, notesText ->
-                if (!token.isNullOrBlank()) {
-                    scope.launch {
-                        try {
-                            val r = db.insertRelief(
-                                accessToken = token,
-                                migraineId = id,
-                                type = showAddRel,
-                                durationMinutes = durationMinutes,
-                                startAt = iso,
-                                notes = notesText
-                            )
-                            linkedRels = listOf(r) + linkedRels
-                            vm.loadJournal(token)
-                        } catch (e: Exception) { e.printStackTrace() }
-                    }
-                }
+                val type = showAddRel ?: return@ReliefAddDialog
+                addRels = listOf(PendingRelief(type, durationMinutes, iso, notesText)) + addRels
                 showAddRel = null
             }
         )
     }
 }
 
-/* ---------- small UI helpers (local to this screen) ---------- */
+/* -------------------- Pages -------------------- */
+
+@Composable
+private fun CorePage(
+    selectedLabel: String?,
+    onSelectLabel: (String) -> Unit,
+    mgFrequent: List<String>,
+    mgAll: List<String>,
+    typeMenuOpen: Boolean,
+    setTypeMenuOpen: (Boolean) -> Unit,
+    severity: Float,
+    setSeverity: (Float) -> Unit,
+    beganAt: String?,
+    setBeganAt: (String?) -> Unit,
+    endedAt: String?,
+    setEndedAt: (String?) -> Unit,
+    endBeforeStart: Boolean,
+    notes: TextFieldValue,
+    setNotes: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Column {
+                OutlinedTextField(
+                    value = selectedLabel ?: "Migraine",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Migraine selection") },
+                    trailingIcon = {
+                        IconButton(onClick = { setTypeMenuOpen(true) }) {
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose migraine")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                DropdownMenu(expanded = typeMenuOpen, onDismissRequest = { setTypeMenuOpen(false) }) {
+                    if (mgFrequent.isNotEmpty()) {
+                        DropdownMenuItem(text = { Text("Frequent") }, onClick = {}, enabled = false)
+                        mgFrequent.forEach { label ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = {
+                                setTypeMenuOpen(false); onSelectLabel(label)
+                            })
+                        }
+                        HorizontalDivider()
+                    }
+                    if (mgAll.isNotEmpty()) {
+                        DropdownMenuItem(text = { Text("All") }, onClick = {}, enabled = false)
+                        mgAll.forEach { label ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = {
+                                setTypeMenuOpen(false); onSelectLabel(label)
+                            })
+                        }
+                    }
+                }
+            }
+        }
+        item {
+            Column {
+                Text("Severity: ${severity.toInt()}", style = MaterialTheme.typography.bodyMedium)
+                Slider(
+                    value = severity,
+                    onValueChange = setSeverity,
+                    valueRange = 1f..10f,
+                    steps = 8,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppDateTimePicker(label = "Start time") { iso -> setBeganAt(iso) }
+                Text("Current: ${formatIsoDdMmYyHm(beganAt)}")
+                AppDateTimePicker(label = "End time") { iso -> setEndedAt(iso) }
+                Text("Current: ${formatIsoDdMmYyHm(endedAt)}")
+                if (endBeforeStart) {
+                    Text("End time cannot be before start time", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+        item {
+            OutlinedTextField(
+                value = notes,
+                onValueChange = setNotes,
+                label = { Text("Notes") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun TriggersPage(
+    trigFreq: List<String>,
+    trigPool: List<String>,
+    linked: List<SupabaseDbService.TriggerRow>,
+    addQueue: List<PendingTrigger>,
+    onQueueRemove: (PendingTrigger) -> Unit,
+    deleteIds: Set<String>,
+    toggleDelete: (String) -> Unit,
+    setShowAddTrig: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { Text("Triggers", style = MaterialTheme.typography.titleMedium) }
+        items(linked, key = { it.id }) { t ->
+            val mark = deleteIds.contains(t.id)
+            ElevatedCard(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Type: ${t.type ?: "-"}")
+                        Text("Time: ${formatIsoDdMmYyHm(t.startAt)}")
+                        if (!t.notes.isNullOrBlank()) Text("Notes: ${t.notes}")
+                        if (mark) Text("Marked for deletion", color = MaterialTheme.colorScheme.error)
+                    }
+                    Row {
+                        TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
+                        IconButton(onClick = { toggleDelete(t.id) }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Toggle delete trigger")
+                        }
+                    }
+                }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (trigFreq.isNotEmpty()) {
+                    Text("Frequent", style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { trigFreq.forEach { label -> AssistChip(onClick = { setShowAddTrig(label) }, label = { Text(label) }) } }
+                }
+                val remaining = trigPool.filter { it !in trigFreq }
+                if (remaining.isNotEmpty()) {
+                    Text("All", style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddTrig(label) }, label = { Text(label) }) } }
+                }
+            }
+        }
+        if (addQueue.isNotEmpty()) {
+            item { Text("Pending triggers", style = MaterialTheme.typography.titleSmall) }
+            items(addQueue) { pt ->
+                ElevatedCard(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Type: ${pt.type}")
+                            Text("Time: ${formatIsoDdMmYyHm(pt.startIso)}")
+                        }
+                        TextButton(onClick = { onQueueRemove(pt) }) { Text("Remove") }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MedicinesPage(
+    medFreq: List<String>,
+    medPool: List<String>,
+    linked: List<SupabaseDbService.MedicineRow>,
+    addQueue: List<PendingMedicine>,
+    onQueueRemove: (PendingMedicine) -> Unit,
+    deleteIds: Set<String>,
+    toggleDelete: (String) -> Unit,
+    setShowAddMed: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { Text("Medicines", style = MaterialTheme.typography.titleMedium) }
+        items(linked, key = { it.id }) { m ->
+            val mark = deleteIds.contains(m.id)
+            ElevatedCard(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Name: ${m.name ?: "-"}")
+                        Text("Amount: ${m.amount ?: "-"}")
+                        Text("Time: ${formatIsoDdMmYyHm(m.startAt)}")
+                        if (!m.notes.isNullOrBlank()) Text("Notes: ${m.notes}")
+                        if (mark) Text("Marked for deletion", color = MaterialTheme.colorScheme.error)
+                    }
+                    Row {
+                        TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
+                        IconButton(onClick = { toggleDelete(m.id) }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Toggle delete medicine")
+                        }
+                    }
+                }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (medFreq.isNotEmpty()) {
+                    Text("Frequent", style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { medFreq.forEach { label -> AssistChip(onClick = { setShowAddMed(label) }, label = { Text(label) }) } }
+                }
+                val remaining = medPool.filter { it !in medFreq }
+                if (remaining.isNotEmpty()) {
+                    Text("All", style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddMed(label) }, label = { Text(label) }) } }
+                }
+            }
+        }
+        if (addQueue.isNotEmpty()) {
+            item { Text("Pending medicines", style = MaterialTheme.typography.titleSmall) }
+            items(addQueue) { pm ->
+                ElevatedCard(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Name: ${pm.name}")
+                            Text("Amount: ${pm.amount ?: "-"}")
+                            Text("Time: ${formatIsoDdMmYyHm(pm.startIso)}")
+                            if (!pm.notes.isNullOrBlank()) Text("Notes: ${pm.notes}")
+                        }
+                        TextButton(onClick = { onQueueRemove(pm) }) { Text("Remove") }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReliefsPage(
+    relFreq: List<String>,
+    relPool: List<String>,
+    linked: List<SupabaseDbService.ReliefRow>,
+    addQueue: List<PendingRelief>,
+    onQueueRemove: (PendingRelief) -> Unit,
+    deleteIds: Set<String>,
+    toggleDelete: (String) -> Unit,
+    setShowAddRel: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { Text("Reliefs", style = MaterialTheme.typography.titleMedium) }
+        items(linked, key = { it.id }) { r ->
+            val mark = deleteIds.contains(r.id)
+            ElevatedCard(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Type: ${r.type ?: "-"}")
+                        Text("Duration: ${r.durationMinutes ?: 0} min")
+                        Text("Time: ${formatIsoDdMmYyHm(r.startAt)}")
+                        if (!r.notes.isNullOrBlank()) Text("Notes: ${r.notes}")
+                        if (mark) Text("Marked for deletion", color = MaterialTheme.colorScheme.error)
+                    }
+                    Row {
+                        TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
+                        IconButton(onClick = { toggleDelete(r.id) }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Toggle delete relief")
+                        }
+                    }
+                }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (relFreq.isNotEmpty()) {
+                    Text("Frequent", style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { relFreq.forEach { label -> AssistChip(onClick = { setShowAddRel(label) }, label = { Text(label) }) } }
+                }
+                val remaining = relPool.filter { it !in relFreq }
+                if (remaining.isNotEmpty()) {
+                    Text("All", style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddRel(label) }, label = { Text(label) }) } }
+                }
+            }
+        }
+        if (addQueue.isNotEmpty()) {
+            item { Text("Pending reliefs", style = MaterialTheme.typography.titleSmall) }
+            items(addQueue) { pr ->
+                ElevatedCard(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Type: ${pr.type}")
+                            Text("Duration: ${pr.durationMinutes ?: 0} min")
+                            Text("Time: ${formatIsoDdMmYyHm(pr.startIso)}")
+                            if (!pr.notes.isNullOrBlank()) Text("Notes: ${pr.notes}")
+                        }
+                        TextButton(onClick = { onQueueRemove(pr) }) { Text("Remove") }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewPage(
+    label: String?,
+    severity: Int,
+    beganAt: String?,
+    endedAt: String?,
+    notes: String?,
+    deletes: Triple<Int, Int, Int>,
+    adds: Triple<Int, Int, Int>,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Review", style = MaterialTheme.typography.titleLarge)
+        Text("Migraine: ${label ?: "Migraine"}")
+        Text("Severity: $severity")
+        Text("Start: ${formatIsoDdMmYyHm(beganAt)}")
+        Text("End: ${formatIsoDdMmYyHm(endedAt)}")
+        if (!notes.isNullOrBlank()) Text("Notes: $notes")
+        Spacer(Modifier.height(8.dp))
+        Text("Queued changes:", style = MaterialTheme.typography.titleMedium)
+        Text("Delete → Triggers: ${deletes.first}, Medicines: ${deletes.second}, Reliefs: ${deletes.third}")
+        Text("Add → Triggers: ${adds.first}, Medicines: ${adds.second}, Reliefs: ${adds.third}")
+    }
+}
+
+/* -------------------- Helpers -------------------- */
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -608,6 +818,21 @@ private fun formatIsoDdMmYyHm(iso: String?): String {
         "-"
     }
 }
+
+private fun isEndBeforeStart(startIso: String?, endIso: String?): Boolean {
+    if (startIso.isNullOrBlank() || endIso.isNullOrBlank()) return false
+    val start = parseInstantFlexible(startIso) ?: return false
+    val end = parseInstantFlexible(endIso) ?: return false
+    return end.isBefore(start)
+}
+
+private fun parseInstantFlexible(iso: String): Instant? {
+    return runCatching { Instant.parse(iso) }.getOrElse {
+        runCatching { OffsetDateTime.parse(iso).toInstant() }.getOrNull()
+    }
+}
+
+/* ---------- local dialogs ---------- */
 
 @Composable
 private fun TimeAddDialog(

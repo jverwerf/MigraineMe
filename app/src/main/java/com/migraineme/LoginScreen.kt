@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +35,7 @@ fun LoginScreen(
     var busy by remember { mutableStateOf(false) }
 
     val scope = remember { CoroutineScope(Dispatchers.Main) }
+    val appContext = LocalContext.current.applicationContext
 
     Column(
         modifier = Modifier
@@ -72,6 +74,7 @@ fun LoginScreen(
                     try {
                         val ses = SupabaseAuthService.signInWithEmail(email.trim(), password)
                         if (!ses.accessToken.isNullOrBlank()) {
+                            SessionStore.saveAccessToken(appContext, ses.accessToken)
                             authVm.setSession(ses.accessToken, userId = null)
                             onLoggedIn()
                         } else {
