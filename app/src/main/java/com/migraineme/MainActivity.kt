@@ -1,6 +1,9 @@
 package com.migraineme
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -80,9 +83,55 @@ object Routes {
 }
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Handle WHOOP OAuth redirect if this Activity was launched by migraineme://whoop/callback
+        handleWhoopOAuthIntent(intent)
+
         setContent { MaterialTheme { AppRoot() } }
+    }
+
+    // FIX: Android Activity.onNewIntent expects a non-null Intent parameter.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Handle WHOOP OAuth redirect when app is already running
+        handleWhoopOAuthIntent(intent)
+    }
+
+    /**
+     * Parse WHOOP OAuth callback URIs like:
+     * migraineme://whoop/callback?code=...&state=...
+     * Stores values into private SharedPreferences ("whoop_oauth") for later retrieval.
+     */
+    private fun handleWhoopOAuthIntent(intent: Intent?) {
+        val data: Uri? = intent?.data
+        if (data?.scheme == "migraineme" && data.host == "whoop" && data.path == "/callback") {
+            val code = data.getQueryParameter("code")
+            val state = data.getQueryParameter("state")
+            val error = data.getQueryParameter("error")
+
+            // Persist for the connector to read later
+            val prefs = getSharedPreferences("whoop_oauth", MODE_PRIVATE)
+            prefs.edit()
+                .putString("last_uri", data.toString())
+                .putString("code", code)
+                .putString("state", state)
+                .putString("error", error)
+                .apply()
+
+            when {
+                !error.isNullOrBlank() -> {
+                    Toast.makeText(this, "WHOOP auth error: $error", Toast.LENGTH_SHORT).show()
+                }
+                !code.isNullOrBlank() -> {
+                    Toast.makeText(this, "WHOOP connected. Code received.", Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    Toast.makeText(this, "WHOOP callback opened.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 }
 
@@ -332,8 +381,7 @@ fun AppRoot() {
                         onSignedUpAndLoggedIn = {
                             nav.navigate(Routes.HOME) {
                                 popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                launchSingleTop = true
-                            }
+                                launchSingleTop = true }
                         },
                         onNavigateToLogin = { nav.navigate(Routes.LOGIN) { launchSingleTop = true } }
                     )
