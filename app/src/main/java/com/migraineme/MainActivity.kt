@@ -1,3 +1,4 @@
+// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\MainActivity.kt
 package com.migraineme
 
 import android.content.Intent
@@ -44,14 +45,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object Routes {
     const val HOME = "home"
@@ -80,6 +85,9 @@ object Routes {
     const val EDIT_RELIEF = "edit_relief"
     // migraine prefs
     const val ADJUST_MIGRAINES = "adjust_migraines"
+
+    // NEW: testing route for gear drawer
+    const val TESTING = "testing"
 }
 
 class MainActivity : ComponentActivity() {
@@ -89,10 +97,20 @@ class MainActivity : ComponentActivity() {
         // Handle WHOOP OAuth redirect if this Activity was launched by migraineme://whoop/callback
         handleWhoopOAuthIntent(intent)
 
+        // Schedule daily syncs at 09:00. Idempotent.
+        WhoopDailySyncWorkerSleepFields.scheduleNext(applicationContext)
+        // NEW: schedule daily location capture at 09:00 as well.
+        LocationDailySyncWorker.scheduleNext(applicationContext)
+
+        // Run WHOOP refresh off the main thread to avoid blocking UI.
+        lifecycleScope.launch(Dispatchers.IO) {
+            WhoopAuthService().refresh(applicationContext)
+        }
+
         setContent { MaterialTheme { AppRoot() } }
     }
 
-    // FIX: Android Activity.onNewIntent expects a non-null Intent parameter.
+    // Android Activity.onNewIntent expects a non-null Intent parameter.
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Handle WHOOP OAuth redirect when app is already running
@@ -141,6 +159,7 @@ fun AppRoot() {
     val nav = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val appContext = LocalContext.current.applicationContext
 
     val authVm: AuthViewModel = viewModel()
     val logVm: LogViewModel = viewModel()
@@ -157,6 +176,13 @@ fun AppRoot() {
         if (token.isNullOrBlank()) {
             preloaded = false
         } else if (!preloaded) {
+            // Refresh WHOOP token after Supabase session exists, on a background dispatcher.
+            withContext(Dispatchers.IO) {
+                WhoopAuthService().refresh(appContext)
+            }
+            // attempt to fill today's location row once when a session exists.
+            LocationDailySyncWorker.runOnceNow(appContext)
+
             logVm.loadJournal(token)
             preloaded = true
         }
@@ -169,6 +195,8 @@ fun AppRoot() {
     data class DrawerItem(val title: String, val route: String, val icon: ImageVector)
     val drawerItems = listOf(
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
+        // NEW: Testing entry
+        DrawerItem("Testing", Routes.TESTING, Icons.Outlined.BarChart),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout)
     )
 
@@ -226,6 +254,7 @@ fun AppRoot() {
                                 Routes.EDIT_MEDICINE -> "Edit Medicine"
                                 Routes.EDIT_RELIEF -> "Edit Relief"
                                 Routes.ADJUST_MIGRAINES -> "Adjust Migraines"
+                                Routes.TESTING -> "Testing"
                                 else -> ""
                             }
                         )
@@ -252,7 +281,7 @@ fun AppRoot() {
                 }
             }
         ) { inner ->
-            NavHost(
+            androidx.navigation.compose.NavHost(
                 navController = nav,
                 startDestination = Routes.LOGIN,
                 modifier = Modifier
@@ -381,7 +410,8 @@ fun AppRoot() {
                         onSignedUpAndLoggedIn = {
                             nav.navigate(Routes.HOME) {
                                 popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                launchSingleTop = true }
+                                launchSingleTop = true
+                            }
                         },
                         onNavigateToLogin = { nav.navigate(Routes.LOGIN) { launchSingleTop = true } }
                     )
@@ -398,6 +428,9 @@ fun AppRoot() {
                         }
                     )
                 }
+
+                // NEW: Testing destination
+                composable(Routes.TESTING) { TestingScreen(authVm = authVm) }
             }
         }
     }
