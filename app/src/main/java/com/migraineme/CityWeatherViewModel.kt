@@ -1,3 +1,4 @@
+// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\CityWeatherViewModel.kt
 package com.migraineme
 
 import android.app.Application
@@ -53,74 +54,98 @@ class CityWeatherViewModel(app: Application) : AndroidViewModel(app) {
     private val supabaseUrl: String = BuildConfig.SUPABASE_URL
     private val supabaseKey: String = BuildConfig.SUPABASE_ANON_KEY
 
-    /** Entry point used by InsightsWeatherPanel */
+    /** Existing entry (kept): pulls around today (T−2..T+6, fallback to recent). */
     fun loadNearestAndDaily(location: Location?) {
         if (_state.value.loading) return
         _state.value = _state.value.copy(loading = true, error = null)
         viewModelScope.launch {
             try {
-                val refLat: Double
-                val refLon: Double
-                if (location != null) {
-                    refLat = location.latitude
-                    refLon = location.longitude
-                } else {
-                    // London fallback when device has no location
-                    refLat = 51.5074
-                    refLon = -0.1278
-                }
+                val (refLat, refLon) = extractRefLatLonOrFallback(location)
                 Log.d("CityWX", "Ref location lat=$refLat lon=$refLon")
 
                 val cities: List<CityRow> = withContext(Dispatchers.IO) {
-                    // 1) Try near-box first (±2° ≈ ~220 km at mid-latitudes)
                     val nearby = fetchCitiesNear(refLat, refLon, 2.0)
                     if (nearby.isNotEmpty()) {
-                        Log.d("CityWX", "Nearby cities: ${nearby.size}")
-                        // Also fetch the global list only if nearby is tiny, to avoid missing close borders
-                        if (nearby.size < 5) {
-                            val all = fetchAllCities()
-                            mergeUnique(nearby, all)
-                        } else {
-                            nearby
-                        }
+                        if (nearby.size < 5) mergeUnique(nearby, fetchAllCities()) else nearby
                     } else {
-                        Log.d("CityWX", "Nearby empty. Falling back to all cities.")
                         fetchAllCities()
                     }
                 }
-
                 if (cities.isEmpty()) {
                     _state.value = _state.value.copy(loading = false, error = "No cities available")
                     return@launch
                 }
 
-                // Sort by distance and pick nearest
-                val sorted = cities
-                    .asSequence()
-                    .map { c -> c to haversineKm(refLat, refLon, c.lat, c.lon) }
-                    .sortedBy { it.second }
-                    .toList()
-
-                for ((i, p) in sorted.take(5).withIndex()) {
-                    val c = p.first
-                    Log.d("CityWX", "Nearest[$i]: ${c.label} (id=${c.id}) lat=${c.lat} lon=${c.lon} dist=${"%.2f".format(p.second)} km tz=${c.timezone}")
-                }
-
-                val nearest = sorted.first().first
-                Log.d("CityWX", "Chosen: ${nearest.label} (id=${nearest.id})")
-
+                val nearest = pickNearest(refLat, refLon, cities)
                 val days = withContext(Dispatchers.IO) { fetchDaily(nearest.id) }
 
-                _state.value = CityWeatherState(
-                    loading = false,
-                    error = null,
-                    nearestCity = nearest,
-                    days = days
-                )
+                _state.value = CityWeatherState(loading = false, error = null, nearestCity = nearest, days = days)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(loading = false, error = e.message ?: "Error")
             }
         }
+    }
+
+    /**
+     * NEW: Range-aware loader.
+     * Start = max( earliest user_location_daily (source=device), today−30d )
+     * End   = today
+     * If the ranged query is empty, fall back to the original window logic.
+     */
+    fun loadNearestAndDailyByUserHistory(
+        accessToken: String,
+        location: Location?
+    ) {
+        if (_state.value.loading) return
+        _state.value = _state.value.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                val (refLat, refLon) = extractRefLatLonOrFallback(location)
+
+                val personal = SupabasePersonalService(getApplication())
+                val earliestStr = withContext(Dispatchers.IO) {
+                    runCatching { personal.earliestUserLocationDate(accessToken, source = "device") }.getOrNull()
+                }
+
+                val today = LocalDate.now()
+                val start = runCatching { earliestStr?.let { LocalDate.parse(it) } }.getOrNull()
+                    ?.let { if (it.isAfter(today.minusDays(30))) it else today.minusDays(30) }
+                    ?: today.minusDays(30)
+                val fromIso = start.format(DateTimeFormatter.ISO_DATE)
+                val toIso = today.format(DateTimeFormatter.ISO_DATE)
+
+                Log.d("CityWX", "History range from=$fromIso to=$toIso (earliest=$earliestStr)")
+
+                val cities: List<CityRow> = withContext(Dispatchers.IO) {
+                    val nearby = fetchCitiesNear(refLat, refLon, 2.0)
+                    if (nearby.isNotEmpty()) {
+                        if (nearby.size < 5) mergeUnique(nearby, fetchAllCities()) else nearby
+                    } else {
+                        fetchAllCities()
+                    }
+                }
+                if (cities.isEmpty()) {
+                    _state.value = _state.value.copy(loading = false, error = "No cities available")
+                    return@launch
+                }
+
+                val nearest = pickNearest(refLat, refLon, cities)
+                val days = withContext(Dispatchers.IO) {
+                    val ranged = fetchDailyRange(nearest.id, fromIso, toIso)
+                    if (ranged.isNotEmpty()) ranged else fetchDaily(nearest.id)
+                }
+
+                _state.value = CityWeatherState(loading = false, error = null, nearestCity = nearest, days = days)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(loading = false, error = e.message ?: "Error")
+            }
+        }
+    }
+
+    /* ---------------- Internals ---------------- */
+
+    private fun extractRefLatLonOrFallback(location: Location?): Pair<Double, Double> {
+        return if (location != null) location.latitude to location.longitude else 51.5074 to -0.1278 // London fallback
     }
 
     /** GET /rest/v1/city?select=id,label:name,lat,lon,timezone&limit=5000 */
@@ -183,9 +208,7 @@ class CityWeatherViewModel(app: Application) : AndroidViewModel(app) {
         return out
     }
 
-    /**
-     * Primary: T−2..T+6 window. Fallback: recent rows if window empty.
-     */
+    /** Original: T−2..T+6 window with fallback to most recent rows. */
     private fun fetchDaily(cityId: Long): List<DailyRow> {
         val today = LocalDate.now()
         val from = today.minusDays(2).format(DateTimeFormatter.ISO_DATE)
@@ -201,6 +224,13 @@ class CityWeatherViewModel(app: Application) : AndroidViewModel(app) {
         if (recentDesc.isNotEmpty()) return recentDesc.asReversed()
 
         return emptyList()
+    }
+
+
+    private fun fetchDailyRange(cityId: Long, fromIso: String, toIso: String): List<DailyRow> {
+        val base = "select=day,temp_c_mean,pressure_hpa_mean,humidity_pct_mean&city_id=eq.$cityId"
+        val qp = "$base&order=day.asc&day=gte.$fromIso&day=lte.$toIso"
+        return parseDaily(httpGet("$supabaseUrl/rest/v1/city_weather_daily?$qp"))
     }
 
     private fun parseDaily(resp: Pair<Int, String>): List<DailyRow> {
@@ -271,5 +301,13 @@ class CityWeatherViewModel(app: Application) : AndroidViewModel(app) {
                 sin(dLon / 2) * sin(dLon / 2)
         val c = 2 * atan2(sqrt(a), sqrt(1 - a))
         return R * c
+    }
+
+    private fun pickNearest(refLat: Double, refLon: Double, cities: List<CityRow>): CityRow {
+        return cities
+            .asSequence()
+            .map { c -> c to haversineKm(refLat, refLon, c.lat, c.lon) }
+            .sortedBy { it.second }
+            .first().first
     }
 }

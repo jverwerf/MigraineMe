@@ -97,10 +97,7 @@ class MainActivity : ComponentActivity() {
         // Handle WHOOP OAuth redirect if this Activity was launched by migraineme://whoop/callback
         handleWhoopOAuthIntent(intent)
 
-        // Schedule daily syncs at 09:00. Idempotent.
-        WhoopDailySyncWorkerSleepFields.scheduleNext(applicationContext)
-        // NEW: schedule daily location capture at 09:00 as well.
-        LocationDailySyncWorker.scheduleNext(applicationContext)
+        // NOTE: 09:00 scheduling moved to LoginScreen after successful login.
 
         // Run WHOOP refresh off the main thread to avoid blocking UI.
         lifecycleScope.launch(Dispatchers.IO) {

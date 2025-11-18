@@ -1,5 +1,7 @@
+// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\InsightsScreen.kt
 package com.migraineme
 
+import android.content.Context
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.Orientation
@@ -67,33 +69,33 @@ data class MigraineSpan(
     val severity: Int? = null,
     val label: String? = null
 )
+
 data class ReliefSpan(
     val start: Instant,
     val end: Instant?,
     val intensity: Int? = null,
     val name: String
 )
+
 data class TriggerPoint(
     val at: Instant,
     val name: String
 )
+
 data class MedicinePoint(
     val at: Instant,
     val name: String,
     val amount: String?
 )
 
-private data class HitPoint(
-    val x: Float,
-    val y: Float,
-    val label: String
-)
+private data class HitPoint(val x: Float, val y: Float, val label: String)
 
 private enum class TimeSpan(val days: Long, val label: String) {
     DAY(1, "Day"),
     WEEK(7, "Week"),
     MONTH(30, "Month"),
     YEAR(365, "Year");
+
     val millis: Long get() = days * 24L * 60L * 60L * 1000L
 }
 
@@ -102,12 +104,14 @@ fun InsightsScreen(
     vm: InsightsViewModel = viewModel()
 ) {
     val owner = LocalContext.current as ViewModelStoreOwner
+    val ctx: Context = LocalContext.current.applicationContext
     val authVm: AuthViewModel = viewModel(owner)
     val auth by authVm.state.collectAsState()
 
+    // Load only (no workers here)
     LaunchedEffect(auth.accessToken) {
         val token = auth.accessToken
-        if (!token.isNullOrBlank()) vm.load(token)
+        if (!token.isNullOrBlank()) vm.load(ctx, token)
     }
 
     val migraines by vm.migraines.collectAsState()
@@ -126,6 +130,11 @@ fun InsightsScreen(
             .padding(12.dp),
         horizontalAlignment = Alignment.Start
     ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Insights", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(8.dp))
+
         Text("graph", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
 
@@ -159,11 +168,6 @@ fun InsightsScreen(
                 .fillMaxWidth()
                 .height(360.dp)
         )
-
-        Spacer(Modifier.height(24.dp))
-
-        // NEW: local weather table below the graph (nearest city, 9 days, 3 metrics)
-        InsightsWeatherPanel()
     }
 }
 
@@ -184,21 +188,14 @@ private fun TimelineCanvas(
     val density = LocalDensity.current
     var canvasWidthPx by remember { mutableStateOf(0) }
     var canvasHeightPx by remember { mutableStateOf(0) }
-
     var popup by remember { mutableStateOf<HitPoint?>(null) }
 
-    val axisTextPaint = remember {
-        Paint().apply { color = Color.Gray.toArgb(); textSize = 28f; isAntiAlias = true }
-    }
-    val axisLabelPaint = remember {
-        Paint().apply { color = Color.DarkGray.toArgb(); textSize = 30f; isAntiAlias = true }
-    }
+    val axisTextPaint = remember { Paint().apply { color = Color.Gray.toArgb(); textSize = 28f; isAntiAlias = true } }
+    val axisLabelPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 30f; isAntiAlias = true } }
     val brainPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
     val leafPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
     val pillPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
     val lightningPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
-
-    val dayFormatter = remember { DateTimeFormatter.ofPattern("MMM d").withZone(zoneId) }
 
     val hitRadiusPx = with(density) { 24.dp.toPx() }
     val barHitHalfHeight = with(density) { 16.dp.toPx() }
@@ -219,9 +216,9 @@ private fun TimelineCanvas(
     val Y_REL = 0.4f
     val Y_TRI = 0.15f
 
-    Box(modifier = modifier.onSizeChanged {
-        canvasWidthPx = it.width
-        canvasHeightPx = it.height
+    Box(modifier = modifier.onSizeChanged { size ->
+        canvasWidthPx = size.width
+        canvasHeightPx = size.height
     }) {
         Canvas(
             modifier = Modifier
@@ -268,12 +265,12 @@ private fun TimelineCanvas(
 
                         val yMig = yOf(Y_MIG)
                         migraines.sortedBy { it.start }.forEach { m ->
-                            val s = m.start; val e = m.end ?: now
-                            val xs = xOf(s); val xe = xOf(e)
+                            val s = m.start
+                            val e = m.end ?: now
+                            val xs = xOf(s)
+                            val xe = xOf(e)
                             val mid = xs + (xe - xs) / 2f
-                            val line1 = m.label ?: "Migraine"
-                            val line2 = "Duration: ${humanDuration(s, e)}"
-                            val lbl = "$line1\n$line2"
+                            val lbl = "${m.label ?: "Migraine"}\nDuration: ${humanDuration(s, e)}"
                             hits += HitPoint(mid, yMig, lbl)
                             if (pos.x in min(xs, xe)..max(xs, xe) && abs(pos.y - yMig) <= barHitHalfHeight) {
                                 popup = HitPoint(pos.x, yMig, lbl)
@@ -283,12 +280,12 @@ private fun TimelineCanvas(
 
                         val yRel = yOf(Y_REL)
                         reliefs.sortedBy { it.start }.forEach { r ->
-                            val s = r.start; val e = r.end ?: now
-                            val xs = xOf(s); val xe = xOf(e)
+                            val s = r.start
+                            val e = r.end ?: now
+                            val xs = xOf(s)
+                            val xe = xOf(e)
                             val mid = xs + (xe - xs) / 2f
-                            val line1 = r.name
-                            val line2 = "Duration: ${humanDuration(s, e)}"
-                            val lbl = "$line1\n$line2"
+                            val lbl = "${r.name}\nDuration: ${humanDuration(s, e)}"
                             hits += HitPoint(mid, yRel, lbl)
                             if (pos.x in min(xs, xe)..max(xs, xe) && abs(pos.y - yRel) <= barHitHalfHeight) {
                                 popup = HitPoint(pos.x, yRel, lbl)
@@ -299,23 +296,19 @@ private fun TimelineCanvas(
                         val yMed = yOf(Y_MED)
                         meds.sortedBy { it.at }.forEach { med ->
                             val x = xOf(med.at)
-                            val line1 = med.name
-                            val line2 = med.amount?.let { "Amount: $it" } ?: ""
-                            val lbl = if (line2.isNotEmpty()) "$line1\n$line2" else line1
+                            val line2 = med.amount?.let { amt -> "Amount: $amt" } ?: ""
+                            val lbl = if (line2.isNotEmpty()) "${med.name}\n$line2" else med.name
                             hits += HitPoint(x, yMed, lbl)
                         }
 
                         val yTrig = yOf(Y_TRI)
                         triggers.sortedBy { it.at }.forEach { t ->
                             val x = xOf(t.at)
-                            val lbl = t.name
-                            hits += HitPoint(x, yTrig, lbl)
+                            hits += HitPoint(x, yTrig, t.name)
                         }
 
                         val nearest = hits.minByOrNull { h -> hypot(h.x - pos.x, h.y - pos.y) }
-                        popup = if (nearest != null && hypot(nearest.x - pos.x, nearest.y - pos.y) <= hitRadiusPx) {
-                            nearest
-                        } else null
+                        popup = if (nearest != null && hypot(nearest.x - pos.x, nearest.y - pos.y) <= hitRadiusPx) nearest else null
                     }
                 }
         ) {
@@ -351,15 +344,16 @@ private fun TimelineCanvas(
                 return x0 + r * (x1 - x0)
             }
 
+            // axes
             drawLine(Color.Gray, Offset(x0, y1), Offset(x1, y1), axisStroke)
             drawLine(Color.Gray, Offset(x0, y0), Offset(x0, y1), axisStroke)
 
             val marks = listOf(1f, 0.75f, 0.5f, 0.25f, 0f)
-            marks.forEach {
-                val y = yOf(it)
+            marks.forEach { value ->
+                val y = yOf(value)
                 drawLine(Color.DarkGray, Offset(x0 - 6f, y), Offset(x0 + 6f, y), 2f)
                 drawContext.canvas.nativeCanvas.drawText(
-                    it.toString(), x0 - 48f, y + 10f, axisLabelPaint
+                    value.toString(), x0 - 48f, y + 10f, axisLabelPaint
                 )
             }
 
@@ -368,7 +362,8 @@ private fun TimelineCanvas(
 
             val yMig = yOf(0.9f)
             migraines.sortedBy { it.start }.forEach { m ->
-                val xs = xOf(m.start); val xe = xOf(m.end ?: now)
+                val xs = xOf(m.start)
+                val xe = xOf(m.end ?: now)
                 val sev = (m.severity ?: 0).coerceIn(0, 10)
                 val t = minStroke + (maxStroke - minStroke) * (sev / 10f)
                 drawLine(Color(0xFF607D8B), Offset(xs, yMig), Offset(xe, yMig), t)
@@ -378,7 +373,8 @@ private fun TimelineCanvas(
 
             val yRel = yOf(0.4f)
             reliefs.sortedBy { it.start }.forEach { r ->
-                val xs = xOf(r.start); val xe = xOf(r.end ?: now)
+                val xs = xOf(r.start)
+                val xe = xOf(r.end ?: now)
                 val inten = (r.intensity ?: 0).coerceIn(0, 10)
                 val t = minStroke + (maxStroke - minStroke) * (inten / 10f)
                 drawLine(Color(0xFF4CAF50), Offset(xs, yRel), Offset(xe, yRel), t)
@@ -405,7 +401,10 @@ private fun TimelineCanvas(
                     val xi = xOf(d.toInstant())
                     drawLine(Color.LightGray, Offset(xi, y1), Offset(xi, y1 - 10f))
                     drawContext.canvas.nativeCanvas.drawText(
-                        DateTimeFormatter.ofPattern("MMM d").withZone(zoneId).format(d), xi - 40f, y1 + 28f, axisTextPaint
+                        DateTimeFormatter.ofPattern("MMM d").withZone(zoneId).format(d),
+                        xi - 40f,
+                        y1 + 28f,
+                        axisTextPaint
                     )
                     d = d.plusDays(1)
                 }

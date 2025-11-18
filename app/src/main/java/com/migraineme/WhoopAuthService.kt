@@ -11,15 +11,18 @@ import java.net.HttpURLConnection
 import java.net.URLEncoder
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.util.concurrent.FutureTask
 
 /**
- * WHOOP OAuth2 (PKCE) client.
- * Adds detailed error logging and persists last token error in SharedPreferences ("whoop_oauth").
+ * WHOOP OAuth2 (PKCE) client for a CONFIDENTIAL app.
+ * Uses client_secret_post (client_id and client_secret in the POST body).
+ * No Supabase changes.
  */
 class WhoopAuthService(
     private val clientId: String = "354e4d44-3780-4e99-a655-a306776879ee",
+    private val clientSecret: String = "ce7314f4cdfab97a16467747a174a0ba8f1a8c561bc1dcc149674171ccd85d00",
     private val redirectUri: String = "migraineme://whoop/callback",
-    private val scopes: String = "read:recovery read:sleep read:workout"
+    private val scopes: String = "read:recovery read:sleep read:workout read:cycles read:body_measurement"
 ) {
     private val authBase = "https://api.prod.whoop.com/oauth/oauth2/auth"
     private val tokenUrl = "https://api.prod.whoop.com/oauth/oauth2/token"
@@ -47,14 +50,12 @@ class WhoopAuthService(
             .appendQueryParameter("code_challenge_method", "S256")
             .build()
 
-        val intent = Intent(Intent.ACTION_VIEW, uri)
-        activity.startActivity(intent)
+        activity.startActivity(Intent(Intent.ACTION_VIEW, uri))
     }
 
     /**
-     * Step 2: after MainActivity stored the callback URI, call this once.
-     * Exchanges the code for tokens using PKCE and stores them.
-     * Returns true on success. On failure, writes "token_error" to whoop_oauth prefs.
+     * Exchange code for tokens using PKCE.
+     * On failure, writes "token_error" to whoop_oauth prefs.
      */
     fun completeAuth(context: Context): Boolean {
         val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
@@ -77,15 +78,16 @@ class WhoopAuthService(
             "grant_type" to "authorization_code",
             "code" to code,
             "redirect_uri" to redirectUri,
+            "code_verifier" to verifier,
             "client_id" to clientId,
-            "code_verifier" to verifier
+            "client_secret" to clientSecret
         ).formUrlEncode()
 
-        val resp = httpPost(tokenUrl, "application/x-www-form-urlencoded", body)
+        // Run HTTP off the main thread
+        val resp = bg { httpPost(tokenUrl, "application/x-www-form-urlencoded", body) }
         if (resp.code !in 200..299) {
             val serverMsg = resp.body ?: "no body"
             Log.e(logTag, "token endpoint error ${resp.code}: $serverMsg")
-            // Try to extract OAuth error fields if present
             val err = try {
                 val o = JSONObject(serverMsg)
                 listOfNotNull(
@@ -99,7 +101,6 @@ class WhoopAuthService(
         val tok = WhoopToken.parse(resp.body ?: "") ?: return fail("parse token json failed")
         WhoopTokenStore(context).save(tok)
 
-        // Clear one-time values
         prefs.edit()
             .remove("last_uri")
             .remove("code")
@@ -122,10 +123,12 @@ class WhoopAuthService(
         val body = mapOf(
             "grant_type" to "refresh_token",
             "refresh_token" to current.refreshToken,
-            "client_id" to clientId
+            "client_id" to clientId,
+            "client_secret" to clientSecret
         ).formUrlEncode()
 
-        val resp = httpPost(tokenUrl, "application/x-www-form-urlencoded", body)
+        // Run HTTP off the main thread
+        val resp = bg { httpPost(tokenUrl, "application/x-www-form-urlencoded", body) }
         if (resp.code !in 200..299) {
             Log.e(logTag, "refresh error ${resp.code}: ${resp.body}")
             return null
@@ -136,6 +139,13 @@ class WhoopAuthService(
     }
 
     // --- helpers ---
+
+    /** Run a block on a background thread and wait for the result. */
+    private fun <T> bg(block: () -> T): T {
+        val task = FutureTask(block)
+        Thread(task, "whoop-http").start()
+        return task.get()
+    }
 
     private fun pkcePair(): Pair<String, String> {
         val verifier = randomUrlSafe(32)

@@ -1,7 +1,8 @@
-// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\TestingScreen.kt
+// FILE: app/src/main/java/com/migraineme/TestingScreen.kt
 package com.migraineme
 
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -50,13 +54,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-/**
- * Testing screen grouped as requested:
- * - Wearable (WHOOP)
- * - Weather API by location points (ONLY this variant kept)
- * - CellPhone (user_location_daily)
- * - App data (domain tables)
- */
 @Composable
 fun TestingScreen(
     authVm: AuthViewModel,
@@ -85,14 +82,23 @@ fun TestingScreen(
     // Wearable (WHOOP)
     val sleepDuration by vm.sleepDuration.collectAsState()
     val fellAsleep by vm.fellAsleep.collectAsState()
+    val wokeUp by vm.wokeUp.collectAsState()
     val sleepDisturbances by vm.sleepDisturbances.collectAsState()
     val sleepStages by vm.sleepStages.collectAsState()
+    val sleepScore by vm.sleepScore.collectAsState()
+    val sleepEfficiency by vm.sleepEfficiency.collectAsState()
 
     // CellPhone
     val locations by vm.userLocations.collectAsState()
 
     // Weather per location point
     val wxPerLoc by vm.weatherAtLocations.collectAsState()
+
+    // Local nudge for status recompute (not passed into SleepSyncStatus anymore)
+    val (statusTick, bumpStatus) = remember {
+        val s = mutableIntStateOf(0)
+        Pair(s) { s.intValue++ }
+    }
 
     Column(
         modifier = Modifier
@@ -101,6 +107,27 @@ fun TestingScreen(
             .padding(12.dp)
     ) {
         Text("Testing (raw tables)", style = MaterialTheme.typography.headlineMedium)
+
+        Spacer(Modifier.padding(6.dp))
+        SleepSyncStatus(
+            accessToken = auth.accessToken,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = {
+                    val token = auth.accessToken ?: return@Button
+                    vm.launchBackfillThenToday(ctx, token) {
+                        vm.load(ctx, token)
+                        bumpStatus()
+                    }
+                }
+            ) { Text("Backfill now") }
+            Button(onClick = { bumpStatus() }) { Text("Refresh status") }
+        }
 
         Spacer(Modifier.padding(6.dp))
 
@@ -113,9 +140,24 @@ fun TestingScreen(
             }
         }
         Spacer(Modifier.padding(6.dp))
+        TableCard(title = "sleep_score_daily") {
+            RowHeader("date", "value_pct")
+            sleepScore.take(180).forEach { r -> RowLine(r.date, String.format("%.0f", r.value_pct)) }
+        }
+        Spacer(Modifier.padding(6.dp))
+        TableCard(title = "sleep_efficiency_daily") {
+            RowHeader("date", "value_pct")
+            sleepEfficiency.take(180).forEach { r -> RowLine(r.date, String.format("%.0f", r.value_pct)) }
+        }
+        Spacer(Modifier.padding(6.dp))
         TableCard(title = "fell_asleep_time_daily") {
             RowHeader("date", "value_at")
             fellAsleep.take(180).forEach { r -> RowLine(r.date, r.value_at) }
+        }
+        Spacer(Modifier.padding(6.dp))
+        TableCard(title = "woke_up_time_daily") {
+            RowHeader("date", "value_at")
+            wokeUp.take(180).forEach { r -> RowLine(r.date, r.value_at) }
         }
         Spacer(Modifier.padding(6.dp))
         TableCard(title = "sleep_disturbances_daily") {
@@ -179,9 +221,7 @@ fun TestingScreen(
         Spacer(Modifier.padding(6.dp))
         TableCard(title = "reliefs") {
             RowHeader("start_at", "duration_minutes", "type")
-            reliefs.take(50).forEach { r ->
-                RowLine(r.startAt ?: "-", r.durationMinutes?.toString() ?: "-", r.type ?: "-")
-            }
+            reliefs.take(50).forEach { r -> RowLine(r.startAt ?: "-", r.durationMinutes?.toString() ?: "-", r.type ?: "-") }
         }
         Spacer(Modifier.padding(6.dp))
         TableCard(title = "triggers") {
@@ -263,17 +303,26 @@ class TestingViewModel : ViewModel() {
     private val _sleepDuration = MutableStateFlow<List<SupabaseMetricsService.SleepDurationDailyRead>>(emptyList())
     val sleepDuration: StateFlow<List<SupabaseMetricsService.SleepDurationDailyRead>> = _sleepDuration
 
-    @Serializable
-    data class FellAsleepRead(val date: String, val value_at: String)
+    @Serializable data class FellAsleepRead(val date: String, val value_at: String)
+    @Serializable data class WokeUpRead(val date: String, val value_at: String)
 
     private val _fellAsleep = MutableStateFlow<List<FellAsleepRead>>(emptyList())
     val fellAsleep: StateFlow<List<FellAsleepRead>> = _fellAsleep
+
+    private val _wokeUp = MutableStateFlow<List<WokeUpRead>>(emptyList())
+    val wokeUp: StateFlow<List<WokeUpRead>> = _wokeUp
 
     private val _sleepDisturbances = MutableStateFlow<List<SupabaseMetricsService.SleepDisturbancesDailyRead>>(emptyList())
     val sleepDisturbances: StateFlow<List<SupabaseMetricsService.SleepDisturbancesDailyRead>> = _sleepDisturbances
 
     private val _sleepStages = MutableStateFlow<List<SupabaseMetricsService.SleepStagesDailyRead>>(emptyList())
     val sleepStages: StateFlow<List<SupabaseMetricsService.SleepStagesDailyRead>> = _sleepStages
+
+    private val _sleepScore = MutableStateFlow<List<SupabaseMetricsService.SleepScoreDailyRead>>(emptyList())
+    val sleepScore: StateFlow<List<SupabaseMetricsService.SleepScoreDailyRead>> = _sleepScore
+
+    private val _sleepEfficiency = MutableStateFlow<List<SupabaseMetricsService.SleepEfficiencyDailyRead>>(emptyList())
+    val sleepEfficiency: StateFlow<List<SupabaseMetricsService.SleepEfficiencyDailyRead>> = _sleepEfficiency
 
     // CellPhone
     data class LocationRow(val date: String, val latitude: Double, val longitude: Double)
@@ -317,7 +366,10 @@ class TestingViewModel : ViewModel() {
                 _sleepDuration.value = metrics.fetchSleepDurationDaily(accessToken, limitDays = 180)
                 _sleepDisturbances.value = metrics.fetchSleepDisturbancesDaily(accessToken, limitDays = 180)
                 _sleepStages.value = metrics.fetchSleepStagesDaily(accessToken, limitDays = 180)
+                _sleepScore.value = metrics.fetchSleepScoreDaily(accessToken, limitDays = 180)
+                _sleepEfficiency.value = metrics.fetchSleepEfficiencyDaily(accessToken, limitDays = 180)
                 _fellAsleep.value = fetchFellAsleep(accessToken)
+                _wokeUp.value = fetchWokeUp(accessToken)
 
                 // CellPhone
                 val personal = SupabasePersonalService(context)
@@ -327,7 +379,7 @@ class TestingViewModel : ViewModel() {
 
                 // Weather by location points (nearest city on that day)
                 _weatherAtLocations.value = withContext(Dispatchers.IO) {
-                    fetchWeatherForLocations(locRows)
+                    fetchWeatherForLocations(locs = locRows)
                 }
             } catch (_: Exception) {
                 clear()
@@ -342,18 +394,28 @@ class TestingViewModel : ViewModel() {
         _medicines.value = emptyList()
         _sleepDuration.value = emptyList()
         _fellAsleep.value = emptyList()
+        _wokeUp.value = emptyList()
         _sleepDisturbances.value = emptyList()
         _sleepStages.value = emptyList()
+        _sleepScore.value = emptyList()
+        _sleepEfficiency.value = emptyList()
         _userLocations.value = emptyList()
         _weatherAtLocations.value = emptyList()
+    }
+
+    /** Trigger backfill (latest+1..yesterday) and then write today. */
+    fun launchBackfillThenToday(context: Context, accessToken: String, onDone: () -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try { WhoopDailySyncWorkerSleepFields.backfillUpToYesterday(context, accessToken) } catch (_: Throwable) {}
+            try { WhoopDailySyncWorkerSleepFields.runOnceNow(context) } catch (_: Throwable) {}
+            withContext(Dispatchers.Main) { onDone() }
+        }
     }
 
     private suspend fun fetchFellAsleep(accessToken: String): List<FellAsleepRead> {
         val supabaseUrl = BuildConfig.SUPABASE_URL
         val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
-        val client = HttpClient {
-            install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
-        }
+        val client = HttpClient { install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) } }
         val resp = client.get("$supabaseUrl/rest/v1/fell_asleep_time_daily") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -361,11 +423,21 @@ class TestingViewModel : ViewModel() {
             parameter("order", "date.desc")
             parameter("limit", "180")
         }
-        return if (resp.status.isSuccess()) {
-            runCatching { resp.body<List<FellAsleepRead>>() }.getOrDefault(emptyList())
-        } else {
-            emptyList()
+        return if (resp.status.isSuccess()) runCatching { resp.body<List<FellAsleepRead>>() }.getOrDefault(emptyList()) else emptyList()
+    }
+
+    private suspend fun fetchWokeUp(accessToken: String): List<WokeUpRead> {
+        val supabaseUrl = BuildConfig.SUPABASE_URL
+        val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
+        val client = HttpClient { install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) } }
+        val resp = client.get("$supabaseUrl/rest/v1/woke_up_time_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "date,value_at")
+            parameter("order", "date.desc")
+            parameter("limit", "180")
         }
+        return if (resp.status.isSuccess()) runCatching { resp.body<List<WokeUpRead>>() }.getOrDefault(emptyList()) else emptyList()
     }
 
     /* --------- Weather per location point: nearest city + day match --------- */
@@ -375,7 +447,7 @@ class TestingViewModel : ViewModel() {
     private fun haversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val R = 6371.0
         val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
+        val dLon = Math.toRadians(lat2 - lon1)
         val a = sin(dLat / 2) * sin(dLat / 2) +
                 cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
                 sin(dLon / 2) * sin(dLon / 2)
@@ -476,31 +548,16 @@ class TestingViewModel : ViewModel() {
 
     private suspend fun fetchWeatherForLocations(locs: List<LocationRow>): List<WeatherAtLocationRow> {
         if (locs.isEmpty()) return emptyList()
-
-        // Cache nearest city per rounded lat/lon (~0.1° bucket) to reduce queries
         data class Key(val la: Int, val lo: Int)
         val cityCache = HashMap<Key, CityRow?>()
-
         val out = ArrayList<WeatherAtLocationRow>(locs.size)
         for (row in locs) {
             val key = Key((row.latitude * 10).toInt(), (row.longitude * 10).toInt())
             val city = cityCache.getOrPut(key) { findNearestCity(row.latitude, row.longitude) }
-
             if (city == null) {
-                out.add(
-                    WeatherAtLocationRow(
-                        date = row.date,
-                        latitude = row.latitude,
-                        longitude = row.longitude,
-                        cityLabel = null,
-                        tempMeanC = null,
-                        pressureMeanHpa = null,
-                        humidityMeanPct = null
-                    )
-                )
+                out.add(WeatherAtLocationRow(row.date, row.latitude, row.longitude, null, null, null, null))
                 continue
             }
-
             val (w, cityName) = fetchWeatherForCityOnDate(city.id, row.date)
             out.add(
                 WeatherAtLocationRow(

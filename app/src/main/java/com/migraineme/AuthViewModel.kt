@@ -1,4 +1,4 @@
-
+// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\AuthViewModel.kt
 package com.migraineme
 
 import androidx.lifecycle.ViewModel
