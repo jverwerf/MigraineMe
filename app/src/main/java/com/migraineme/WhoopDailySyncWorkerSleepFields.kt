@@ -1,4 +1,3 @@
-// FILE: app/src/main/java/com/migraineme/WhoopDailySyncWorkerSleepFields.kt
 package com.migraineme
 
 import android.content.Context
@@ -11,92 +10,102 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
+import java.time.*
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 /**
- * Daily WHOOP sleep sync.
- * - Select record whose WAKE-UP (end) local date == target day.
- * - Writes duration, fell-asleep, woke-up, disturbances, stages, score, efficiency.
+ * FINAL VERSION — TARGET DATE = WAKE-UP DAY
+ *
+ * Rules:
+ * - A sleep belongs to the LocalDate of its WAKE-UP timestamp.
+ * - backfillUpToToday includes TODAY (difference from older version).
+ * - Today is now ALWAYS written inside backfillUpToToday().
+ * - doWork() will skip today afterwards if already written.
  */
-class WhoopDailySyncWorkerSleepFields(appContext: Context, params: WorkerParameters) :
-    CoroutineWorker(appContext, params) {
+class WhoopDailySyncWorkerSleepFields(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            val access: String = SessionStore.readAccessToken(applicationContext)
+            val access = SessionStore.readAccessToken(applicationContext)
                 ?: return@withContext Result.success()
 
             val hasWhoop = WhoopTokenStore(applicationContext).load() != null
             if (!hasWhoop) {
                 scheduleNext(applicationContext)
-                debugLog("WHOOP not connected | No token found. Skipped.")
+                debug("WHOOP not connected — skip")
                 return@withContext Result.success()
             }
 
             val zone = ZoneId.systemDefault()
-            val todayLocal = LocalDate.now(zone)
-            val dateSql = todayLocal.toString()
+            val today = LocalDate.now(zone)
+            val todaySql = today.toString()
+
+            // 1) Backfill up to TODAY (your request)
+            backfillUpToToday(applicationContext, access)
 
             val metrics = SupabaseMetricsService(applicationContext)
-            if (metrics.hasSleepForDate(access, dateSql, "whoop")) {
+
+            // 2) Today is expected to already be written by backfill.
+            if (metrics.hasSleepForDate(access, todaySql, "whoop")) {
                 scheduleNext(applicationContext)
-                debugLog("WHOOP skip | already have sleep_duration_daily for $dateSql")
+                debug("Skip today $todaySql — already stored (via backfill)")
                 return@withContext Result.success()
             }
 
+            // 3) If not, do one last attempt (rare)
             WhoopAuthService().refresh(applicationContext)
 
-            val (wStart, wEnd) = dayStraddlingWindow(todayLocal, zone)
+            val (wStart, wEnd) = dayWindow(today, zone)
             val api = WhoopApiService(applicationContext)
-            val sleepJson: JSONObject? = api.getSleep(wStart, wEnd)
-            if (sleepJson == null) {
+            val root = api.getSleep(wStart, wEnd)
+
+            if (root == null) {
                 scheduleNext(applicationContext)
-                debugLog("WHOOP sleep | Null response for $todayLocal")
+                debug("Null WHOOP response for $today")
                 return@withContext Result.success()
             }
 
-            val record = selectRecordForDate(sleepJson, todayLocal, zone)
+            val record = selectRecordByWakeup(root, today, zone)
             if (record == null) {
                 scheduleNext(applicationContext)
-                debugLog("WHOOP sleep | No record waking on $todayLocal")
+                debug("No record waking on $today")
                 return@withContext Result.success()
             }
 
-            writeAllForDate(metrics, access, dateSql, record)
+            writeAllForDate(metrics, access, todaySql, record)
 
             scheduleNext(applicationContext)
-            debugLog("WHOOP sync attempted | date=$dateSql id=${optStringOrNull(record, "id") ?: "NA"}")
+            debug("Stored WHOOP sleep for $todaySql (fallback path)")
             Result.success()
+
         } catch (t: Throwable) {
             scheduleNext(applicationContext)
-            debugLog("WHOOP sync error | ${t.javaClass.simpleName}: ${t.message ?: "unknown"}")
+            debug("Error: ${t.message}")
             Result.success()
         }
     }
 
-    private fun debugLog(msg: String) = Log.d("WhoopDailySync", msg)
+    private fun debug(msg: String) = Log.d("WhoopDailySync", msg)
 
     companion object {
-        private const val UNIQUE_WORK_NAME = "whoop_daily_sync_sleep_fields_9am"
+        private const val UNIQUE = "whoop_daily_sync_sleep_fields_9am"
 
         fun scheduleNext(context: Context) {
             val now = ZonedDateTime.now(ZoneId.systemDefault())
             var next = now.withHour(9).withMinute(0).withSecond(0).withNano(0)
             if (!next.isAfter(now)) next = next.plusDays(1)
-            val delayMillis = Duration.between(now, next).toMillis()
+            val delay = Duration.between(now, next).toMillis()
+
             val req = OneTimeWorkRequestBuilder<WhoopDailySyncWorkerSleepFields>()
-                .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
                 .build()
+
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_WORK_NAME,
+                UNIQUE,
                 ExistingWorkPolicy.REPLACE,
                 req
             )
@@ -106,170 +115,181 @@ class WhoopDailySyncWorkerSleepFields(appContext: Context, params: WorkerParamet
             val req = OneTimeWorkRequestBuilder<WhoopDailySyncWorkerSleepFields>()
                 .setInitialDelay(0, TimeUnit.MILLISECONDS)
                 .build()
+
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_WORK_NAME,
+                UNIQUE,
                 ExistingWorkPolicy.REPLACE,
                 req
             )
         }
 
-        /** Backfill from (latest+1) to yesterday inclusive. */
-        suspend fun backfillUpToYesterday(context: Context, accessToken: String) {
+        /**
+         * NEW VERSION — Backfills up to TODAY.
+         * This includes:
+         *  - today
+         *  - yesterday
+         *  - up to 29 more days before
+         *
+         * Today’s data will be written here FIRST.
+         */
+        suspend fun backfillUpToToday(context: Context, access: String) {
             try {
                 val zone = ZoneId.systemDefault()
                 val today = LocalDate.now(zone)
-                val yesterday = today.minusDays(1)
-
-                val hasWhoop = WhoopTokenStore(context).load() != null
-                if (!hasWhoop) return
+                val token = WhoopTokenStore(context).load() ?: return
 
                 val metrics = SupabaseMetricsService(context)
-                val latest = metrics.latestSleepDate(accessToken, source = "whoop") ?: return
+                val latestStr = metrics.latestSleepDate(access, "whoop")
 
-                var cur = LocalDate.parse(latest).plusDays(1)
-                if (!cur.isBefore(today)) return
+                // Today minus 29 = oldest possible fill
+                val baseline = today.minusDays(29)
+
+                val start = when (latestStr) {
+                    null -> baseline
+                    else -> {
+                        val latest = LocalDate.parse(latestStr)
+                        val candidate = latest.plusDays(1)
+                        if (candidate.isBefore(baseline)) baseline else candidate
+                    }
+                }
+
+                if (start.isAfter(today)) return
 
                 WhoopAuthService().refresh(context)
                 val api = WhoopApiService(context)
 
-                while (!cur.isAfter(yesterday)) {
+                var cur = start
+                while (!cur.isAfter(today)) {
                     val dateSql = cur.toString()
-                    if (!metrics.hasSleepForDate(accessToken, dateSql, "whoop")) {
-                        val (wStart, wEnd) = dayStraddlingWindow(cur, zone)
-                        val root: JSONObject? = api.getSleep(wStart, wEnd)
+
+                    if (!metrics.hasSleepForDate(access, dateSql, "whoop")) {
+                        val (wStart, wEnd) = dayWindow(cur, zone)
+                        val root = api.getSleep(wStart, wEnd)
+
                         if (root != null) {
-                            val record = selectRecordForDate(root, cur, zone)
-                            if (record != null) {
-                                writeAllForDate(metrics, accessToken, dateSql, record)
+                            val rec = selectRecordByWakeup(root, cur, zone)
+                            if (rec != null) {
+                                writeAllForDate(metrics, access, dateSql, rec)
+                                Log.d("WhoopDailySync", "Backfill wrote $dateSql")
+                            } else {
+                                Log.d("WhoopDailySync", "Backfill: no wake-up record for $cur")
                             }
+                        } else {
+                            Log.d("WhoopDailySync", "Backfill: null WHOOP response for $cur")
                         }
                     }
+
                     cur = cur.plusDays(1)
                 }
-            } catch (_: Throwable) {
-                // best-effort
-            }
+
+            } catch (_: Throwable) {}
         }
 
-        /** Window from previous day 12:00 to next day 12:00 in device zone. */
-        private fun dayStraddlingWindow(day: LocalDate, zone: ZoneId): Pair<Date, Date> {
-            val start = day.minusDays(1).atTime(12, 0).atZone(zone).toInstant()
-            val end = day.plusDays(1).atTime(12, 0).atZone(zone).toInstant()
-            return Date.from(start) to Date.from(end)
+        /** Window from previous 12:00 → next day 12:00. */
+        private fun dayWindow(day: LocalDate, zone: ZoneId): Pair<Date, Date> {
+            val s = day.minusDays(1).atTime(12, 0).atZone(zone).toInstant()
+            val e = day.plusDays(1).atTime(12, 0).atZone(zone).toInstant()
+            return Date.from(s) to Date.from(e)
         }
 
-        /** Pick the record whose wake-up local date equals target; fallback to latest end within window. */
-        private fun selectRecordForDate(root: JSONObject, target: LocalDate, zone: ZoneId): JSONObject? {
+        /** WAKE-UP DAY selection logic (final). */
+        private fun selectRecordByWakeup(
+            root: JSONObject,
+            target: LocalDate,
+            zone: ZoneId
+        ): JSONObject? {
             var bestExact: JSONObject? = null
             var latestEnd: JSONObject? = null
-            var latestEndTs: Instant? = null
+            var latestEndInstant: Instant? = null
 
-            fun consider(obj: JSONObject?) {
+            fun inspect(obj: JSONObject?) {
                 if (obj == null) return
-                val endUtc = optStringOrNull(obj, "end") ?: return
-                val tzMinutes = timezoneMinutes(obj)
-                val endInstantLocal = try {
-                    Instant.parse(endUtc).plusSeconds(tzMinutes.toLong() * 60L)
-                } catch (_: Throwable) { return }
-                val endDateLocal = endInstantLocal.atZone(zone).toLocalDate()
+                val endUtc = obj.optString("end").takeIf { it.isNotEmpty() } ?: return
+                val tzMin = tzMinutes(obj)
+
+                val endLocal = runCatching {
+                    Instant.parse(endUtc).plusSeconds(tzMin * 60L)
+                }.getOrNull() ?: return
+
+                val endDateLocal = endLocal.atZone(zone).toLocalDate()
 
                 if (endDateLocal == target) bestExact = obj
-                if (latestEndTs == null || endInstantLocal.isAfter(latestEndTs)) {
-                    latestEndTs = endInstantLocal
+                if (latestEndInstant == null || endLocal.isAfter(latestEndInstant)) {
+                    latestEndInstant = endLocal
                     latestEnd = obj
                 }
             }
 
-            val keys = arrayOf("records", "data", "items")
-            for (k in keys) {
+            val arrays = arrayOf("records", "data", "items")
+            for (k in arrays) {
                 val arr = root.optJSONArray(k) ?: continue
-                var i = 0
-                while (i < arr.length()) {
-                    consider(arr.optJSONObject(i))
-                    i++
-                }
+                for (i in 0 until arr.length()) inspect(arr.optJSONObject(i))
             }
+
             if (bestExact != null) return bestExact
             if (latestEnd != null) return latestEnd
             if (root.has("end")) {
-                consider(root)
+                inspect(root)
                 return bestExact ?: latestEnd
             }
             return null
         }
 
-        /** Write all fields for the selected record, including score/efficiency when present. */
-        private suspend fun writeAllForDate(metrics: SupabaseMetricsService, access: String, dateSql: String, record: JSONObject) {
-            val sourceId = optStringOrNull(record, "id")
+        private suspend fun writeAllForDate(
+            metrics: SupabaseMetricsService,
+            access: String,
+            dateSql: String,
+            rec: JSONObject
+        ) {
+            val sourceId = rec.optString("id").takeIf { it.isNotEmpty() }
 
-            val score = record.optJSONObject("score")
+            val score = rec.optJSONObject("score")
             val stage = score?.optJSONObject("stage_summary")
 
-            val lightMs = stage?.optLong("total_light_sleep_time_milli", 0L) ?: 0L
-            val swsMs = stage?.optLong("total_slow_wave_sleep_time_milli", 0L) ?: 0L
-            val remMs = stage?.optLong("total_rem_sleep_time_milli", 0L) ?: 0L
-
+            val light = stage?.optLong("total_light_sleep_time_milli", 0L) ?: 0L
+            val sws = stage?.optLong("total_slow_wave_sleep_time_milli", 0L) ?: 0L
+            val rem = stage?.optLong("total_rem_sleep_time_milli", 0L) ?: 0L
             val durationMs = score?.optLong("sleep_duration_milli", 0L) ?: 0L
-            val stageSumMs = max(0L, lightMs) + max(0L, swsMs) + max(0L, remMs)
-            val hours = (if (durationMs > 0L) durationMs else stageSumMs) / 3_600_000.0
 
-            val disturbances = stage?.optInt("disturbance_count", 0) ?: 0
+            val hours = (if (durationMs > 0) durationMs else light + sws + rem) / 3_600_000.0
+            val dist = stage?.optInt("disturbance_count", 0) ?: 0
 
-            // WHOOP score fields (percentages, 0..100)
-            val performancePct = score?.optDouble("sleep_performance_percentage", Double.NaN)
-            val efficiencyPct = score?.optDouble("sleep_efficiency_percentage", Double.NaN)
+            val perf = score?.optDouble("sleep_performance_percentage", Double.NaN)
+            val eff = score?.optDouble("sleep_efficiency_percentage", Double.NaN)
 
-            val fellAsleepAtIso = parseFellAsleepAt(record)
-            val wokeUpAtIso = parseWokeUpAt(record)
+            val fellIso = parseTimestamp(rec, "start")
+            val wokeIso = parseTimestamp(rec, "end")
 
             metrics.upsertSleepDurationDaily(access, dateSql, hours, "whoop", sourceId)
-            fellAsleepAtIso?.let { metrics.upsertFellAsleepTimeDaily(access, dateSql, it, "whoop", sourceId) }
-            wokeUpAtIso?.let { metrics.upsertWokeUpTimeDaily(access, dateSql, it, "whoop", sourceId) }
-            metrics.upsertSleepDisturbancesDaily(access, dateSql, disturbances, "whoop", sourceId)
-            metrics.upsertSleepStagesDaily(access, dateSql, swsMs, remMs, lightMs, "whoop", sourceId)
+            fellIso?.let { metrics.upsertFellAsleepTimeDaily(access, dateSql, it, "whoop", sourceId) }
+            wokeIso?.let { metrics.upsertWokeUpTimeDaily(access, dateSql, it, "whoop", sourceId) }
+            metrics.upsertSleepDisturbancesDaily(access, dateSql, dist, "whoop", sourceId)
+            metrics.upsertSleepStagesDaily(access, dateSql, sws, rem, light, "whoop", sourceId)
 
-            if (performancePct != null && !performancePct.isNaN()) {
-                metrics.upsertSleepScoreDaily(access, dateSql, performancePct, "whoop", sourceId)
-            }
-            if (efficiencyPct != null && !efficiencyPct.isNaN()) {
-                metrics.upsertSleepEfficiencyDaily(access, dateSql, efficiencyPct, "whoop", sourceId)
-            }
+            if (perf != null && !perf.isNaN())
+                metrics.upsertSleepScoreDaily(access, dateSql, perf, "whoop", sourceId)
 
-            Log.d(
-                "WhoopDailySync",
-                "WHOOP write | date=$dateSql hours=${"%.2f".format(hours)} score=${performancePct ?: "NA"} eff=${efficiencyPct ?: "NA"} " +
-                        "dist=$disturbances SWS=${swsMs}ms REM=${remMs}ms Light=${lightMs}ms " +
-                        "fellAsleepAt=${fellAsleepAtIso ?: "NA"} wokeUpAt=${wokeUpAtIso ?: "NA"} id=${sourceId ?: "NA"}"
-            )
+            if (eff != null && !eff.isNaN())
+                metrics.upsertSleepEfficiencyDaily(access, dateSql, eff, "whoop", sourceId)
         }
 
-        private fun parseFellAsleepAt(record: JSONObject): String? {
-            val startIsoUtc = optStringOrNull(record, "start") ?: return null
-            val tzMinutes = timezoneMinutes(record)
-            return try {
-                val instant = Instant.parse(startIsoUtc).plusSeconds(tzMinutes.toLong() * 60L)
-                java.time.OffsetDateTime.ofInstant(instant, ZoneOffset.UTC).toString()
-            } catch (_: Throwable) { null }
+        private fun parseTimestamp(rec: JSONObject, key: String): String? {
+            val utc = rec.optString(key).takeIf { it.isNotEmpty() } ?: return null
+            val tzMin = tzMinutes(rec)
+            return runCatching {
+                val inst = Instant.parse(utc).plusSeconds(tzMin * 60L)
+                OffsetDateTime.ofInstant(inst, ZoneOffset.UTC).toString()
+            }.getOrNull()
         }
 
-        private fun parseWokeUpAt(record: JSONObject): String? {
-            val endIsoUtc = optStringOrNull(record, "end") ?: return null
-            val tzMinutes = timezoneMinutes(record)
-            return try {
-                val instant = Instant.parse(endIsoUtc).plusSeconds(tzMinutes.toLong() * 60L)
-                java.time.OffsetDateTime.ofInstant(instant, ZoneOffset.UTC).toString()
-            } catch (_: Throwable) { null }
-        }
-
-        private fun timezoneMinutes(record: JSONObject): Int {
+        private fun tzMinutes(rec: JSONObject): Long {
             return when {
-                record.has("timezone_offset_minutes") -> record.optInt("timezone_offset_minutes", 0)
-                record.has("timezone_offset") -> (record.optInt("timezone_offset", 0) / 60.0).toInt()
-                else -> 0
+                rec.has("timezone_offset_minutes") ->
+                    rec.optLong("timezone_offset_minutes", 0L)
+                rec.has("timezone_offset") ->
+                    rec.optLong("timezone_offset", 0L) / 60L
+                else -> 0L
             }
         }
-
-        private fun optStringOrNull(obj: JSONObject, key: String): String? =
-            obj.optString(key).takeIf { it.isNotEmpty() }
     }
 }

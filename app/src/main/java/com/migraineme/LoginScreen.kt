@@ -1,4 +1,3 @@
-// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\LoginScreen.kt
 package com.migraineme
 
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,82 +39,80 @@ fun LoginScreen(
 
     val scope = remember { CoroutineScope(Dispatchers.Main) }
     val appContext = LocalContext.current.applicationContext
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("Sign in", style = MaterialTheme.typography.titleLarge)
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (error != null) {
-            Text(error!!, color = MaterialTheme.colorScheme.error)
-        }
-
-        Button(
-            onClick = {
-                error = null
-                busy = true
-                scope.launch {
-                    try {
-                        val ses = SupabaseAuthService.signInWithEmail(email.trim(), password)
-                        if (!ses.accessToken.isNullOrBlank()) {
-                            // Persist session as before
-                            SessionStore.saveAccessToken(appContext, ses.accessToken)
-                            authVm.setSession(ses.accessToken, userId = null)
-
-                            // Schedule daily 09:00 jobs from login (moved from MainActivity)
-                            WhoopDailySyncWorkerSleepFields.scheduleNext(appContext)
-                            LocationDailySyncWorker.scheduleNext(appContext)
-
-                            // Fill today immediately
-                            WhoopDailySyncWorkerSleepFields.runOnceNow(appContext)
-
-                            // Backfill missing WHOOP sleep up to yesterday
-                            scope.launch(Dispatchers.IO) {
-                                val token = ses.accessToken
-                                if (!token.isNullOrBlank()) {
-                                    WhoopDailySyncWorkerSleepFields.backfillUpToYesterday(appContext, token)
-                                }
-                            }
-
-                            onLoggedIn()
-                        } else {
-                            error = "Invalid login response."
-                        }
-                    } catch (e: Exception) {
-                        error = e.message ?: "Login failed."
-                    } finally {
-                        busy = false
-                    }
-                }
-            },
-            enabled = !busy && email.isNotBlank() && password.isNotBlank(),
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(if (busy) "Signing in..." else "Sign in")
-        }
+            Text("Sign in", style = MaterialTheme.typography.titleLarge)
 
-        TextButton(onClick = onNavigateToSignUp) {
-            Text("Don't have an account? Sign up")
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (error != null) {
+                Text(error!!, color = MaterialTheme.colorScheme.error)
+            }
+
+            Button(
+                onClick = {
+                    error = null
+                    busy = true
+                    scope.launch {
+                        try {
+                            val ses = SupabaseAuthService.signInWithEmail(email.trim(), password)
+                            if (!ses.accessToken.isNullOrBlank()) {
+                                SessionStore.saveAccessToken(appContext, ses.accessToken)
+                                authVm.setSession(ses.accessToken, userId = null)
+
+                                // Call the unified sync manager
+                                MetricsSyncManager.onLogin(
+                                    context = appContext,
+                                    token = ses.accessToken!!,
+                                    snackbarHostState = snackbarHostState
+                                )
+
+                                onLoggedIn()
+                            } else {
+                                error = "Invalid login response."
+                            }
+                        } catch (e: Exception) {
+                            error = e.message ?: "Login failed."
+                        } finally {
+                            busy = false
+                        }
+                    }
+                },
+                enabled = !busy && email.isNotBlank() && password.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (busy) "Signing in..." else "Sign in")
+            }
+
+            TextButton(onClick = onNavigateToSignUp) {
+                Text("Don't have an account? Sign up")
+            }
         }
     }
 }
