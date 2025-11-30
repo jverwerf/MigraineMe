@@ -1,225 +1,281 @@
-// FILE: app/src/main/java/com/migraineme/SupabasePhysicalHealthService.kt
 package com.migraineme
 
 import android.content.Context
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLEncoder
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
- * Supabase REST wrappers for Physical Health daily tables.
- * Tables expected:
- *   recovery_daily(date text, value_pct numeric, source text, source_id text)
- *   rhr_daily(date text, value_bpm numeric, source text, source_id text)
- *   hrv_daily(date text, value_ms numeric, source text, source_id text)
- *   skin_temp_daily(date text, value_c numeric, source text, source_id text)
- *   spo2_daily(date text, value_pct numeric, source text, source_id text)
- *   high_hr_time_daily(date text, value_minutes integer, source text, source_id text)
+ * Supabase service for Physical Health metrics.
+ * Mirrors SupabaseMetricsServiceSleep.kt (structure, behavior, upsert style).
+ *
+ * Tables:
+ * - recovery_score_daily
+ * - resting_hr_daily
+ * - hrv_daily
+ * - skin_temp_daily
+ * - spo2_daily
+ * - time_in_high_hr_zones_daily (value_minutes, zone_three_minutes, zone_four_minutes, zone_five_minutes, zone_six_minutes)
+ *
+ * Unique key everywhere: (user_id, source, date)
  */
-class SupabasePhysicalHealthService(private val context: Context) {
+class SupabasePhysicalHealthService(context: Context) {
 
-    private val supabaseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
-    private val anonKey = BuildConfig.SUPABASE_ANON_KEY
+    private val supabaseUrl = BuildConfig.SUPABASE_URL
+    private val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
 
-    /* ---------- existence / latest ---------- */
+    private val client = HttpClient {
+        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+    }
 
-    fun hasRecoveryForDate(accessToken: String, dateIso: String, source: String): Boolean {
-        val qp = buildString {
-            append("select=date")
-            append("&date=eq.").append(encode(dateIso))
-            append("&source=eq.").append(encode(source))
-            append("&limit=1")
+    /* ============================================================
+     * READ DTOs
+     * ============================================================
+     */
+
+    @Serializable
+    data class RecoveryScoreDailyRead(
+        val date: String,
+        @SerialName("value_pct") val value_pct: Double
+    )
+
+    @Serializable
+    data class RestingHrDailyRead(
+        val date: String,
+        @SerialName("value_bpm") val value_bpm: Double
+    )
+
+    @Serializable
+    data class HrvDailyRead(
+        val date: String,
+        @SerialName("value_rmssd_ms") val value_rmssd_ms: Double
+    )
+
+    @Serializable
+    data class SkinTempDailyRead(
+        val date: String,
+        @SerialName("value_celsius") val value_celsius: Double
+    )
+
+    @Serializable
+    data class Spo2DailyRead(
+        val date: String,
+        @SerialName("value_pct") val value_pct: Double
+    )
+
+    @Serializable
+    data class HighHrZonesDailyRead(
+        val date: String,
+        @SerialName("value_minutes") val value_minutes: Double,
+        @SerialName("zone_three_minutes") val zone_three_minutes: Double,
+        @SerialName("zone_four_minutes") val zone_four_minutes: Double,
+        @SerialName("zone_five_minutes") val zone_five_minutes: Double,
+        @SerialName("zone_six_minutes") val zone_six_minutes: Double
+    )
+
+    /* ============================================================
+     * WRITER DTOs
+     * ============================================================
+     */
+
+    @Serializable private data class PctRow(
+        val date: String,
+        val value_pct: Double,
+        val source: String? = null,
+        val source_measure_id: String? = null
+    )
+
+    @Serializable private data class HrRow(
+        val date: String,
+        val value_bpm: Double,
+        val source: String? = null,
+        val source_measure_id: String? = null
+    )
+
+    @Serializable private data class HrvRow(
+        val date: String,
+        val value_rmssd_ms: Double,
+        val source: String? = null,
+        val source_measure_id: String? = null
+    )
+
+    @Serializable private data class TempRow(
+        val date: String,
+        val value_celsius: Double,
+        val source: String? = null,
+        val source_measure_id: String? = null
+    )
+
+    @Serializable private data class Spo2Row(
+        val date: String,
+        val value_pct: Double,
+        val source: String? = null,
+        val source_measure_id: String? = null
+    )
+
+    @Serializable private data class HighHrRow(
+        val date: String,
+        val value_minutes: Double,
+        val zone_three_minutes: Double,
+        val zone_four_minutes: Double,
+        val zone_five_minutes: Double,
+        val zone_six_minutes: Double,
+        val source: String? = null,
+        val source_measure_id: String? = null
+    )
+
+    /* ============================================================
+     * GENERIC FETCHER
+     * ============================================================
+     */
+
+    private suspend inline fun <reified T> getList(
+        endpoint: String,
+        access: String,
+        select: String,
+        limit: Int
+    ): List<T> {
+        val resp = client.get(endpoint) {
+            header(HttpHeaders.Authorization, "Bearer $access")
+            header("apikey", supabaseKey)
+            parameter("select", select)
+            parameter("order", "date.desc")
+            parameter("limit", limit.toString())
         }
-        val (code, body) = httpGet("/rest/v1/recovery_daily", qp, accessToken)
-        if (code !in 200..299) return false
-        return try { JSONArray(body).length() > 0 } catch (_: Throwable) { false }
+        if (!resp.status.isSuccess()) return emptyList()
+        return runCatching { resp.body<List<T>>() }.getOrDefault(emptyList())
     }
 
-    /** Uses recovery as the anchor for "latest" marker. */
-    fun latestPhysicalHealthDate(accessToken: String): String? {
-        val qp = "select=date&order=date.desc&limit=1"
-        val (code, body) = httpGet("/rest/v1/recovery_daily", qp, accessToken)
-        if (code !in 200..299 || body.isBlank() || body == "[]") return null
-        return try { JSONArray(body).getJSONObject(0).optString("date").takeIf { it.isNotBlank() } } catch (_: Throwable) { null }
-    }
+    /* ============================================================
+     * PUBLIC FETCH API
+     * ============================================================
+     */
 
-    /* ---------- upserts ---------- */
+    suspend fun fetchRecoveryScoreDaily(access: String, days: Int = 14): List<RecoveryScoreDailyRead> =
+        getList("$supabaseUrl/rest/v1/recovery_score_daily", access, "date,value_pct", days)
 
-    fun upsertRecoveryDaily(accessToken: String, dateIso: String, valuePct: Double, source: String, sourceId: String?) {
-        upsertOne(
-            accessToken, "recovery_daily",
-            JSONObject().put("date", dateIso).put("value_pct", valuePct).put("source", source).put("source_id", sourceId)
+    suspend fun fetchRestingHrDaily(access: String, days: Int = 14): List<RestingHrDailyRead> =
+        getList("$supabaseUrl/rest/v1/resting_hr_daily", access, "date,value_bpm", days)
+
+    suspend fun fetchHrvDaily(access: String, days: Int = 14): List<HrvDailyRead> =
+        getList("$supabaseUrl/rest/v1/hrv_daily", access, "date,value_rmssd_ms", days)
+
+    suspend fun fetchSkinTempDaily(access: String, days: Int = 14): List<SkinTempDailyRead> =
+        getList("$supabaseUrl/rest/v1/skin_temp_daily", access, "date,value_celsius", days)
+
+    suspend fun fetchSpo2Daily(access: String, days: Int = 14): List<Spo2DailyRead> =
+        getList("$supabaseUrl/rest/v1/spo2_daily", access, "date,value_pct", days)
+
+    suspend fun fetchHighHrDaily(access: String, days: Int = 14): List<HighHrZonesDailyRead> =
+        getList(
+            "$supabaseUrl/rest/v1/time_in_high_hr_zones_daily",
+            access,
+            "date,value_minutes,zone_three_minutes,zone_four_minutes,zone_five_minutes,zone_six_minutes",
+            days
         )
-    }
 
-    fun upsertRhrDaily(accessToken: String, dateIso: String, valueBpm: Double, source: String, sourceId: String?) {
-        upsertOne(
-            accessToken, "rhr_daily",
-            JSONObject().put("date", dateIso).put("value_bpm", valueBpm).put("source", source).put("source_id", sourceId)
-        )
-    }
+    /* ============================================================
+     * CONFLICT CHECKERS
+     * ============================================================
+     */
 
-    fun upsertHrvDaily(accessToken: String, dateIso: String, valueMs: Double, source: String, sourceId: String?) {
-        upsertOne(
-            accessToken, "hrv_daily",
-            JSONObject().put("date", dateIso).put("value_ms", valueMs).put("source", source).put("source_id", sourceId)
-        )
-    }
-
-    fun upsertSkinTempDaily(accessToken: String, dateIso: String, valueC: Double, source: String, sourceId: String?) {
-        upsertOne(
-            accessToken, "skin_temp_daily",
-            JSONObject().put("date", dateIso).put("value_c", valueC).put("source", source).put("source_id", sourceId)
-        )
-    }
-
-    fun upsertSpO2Daily(accessToken: String, dateIso: String, valuePct: Double, source: String, sourceId: String?) {
-        upsertOne(
-            accessToken, "spo2_daily",
-            JSONObject().put("date", dateIso).put("value_pct", valuePct).put("source", source).put("source_id", sourceId)
-        )
-    }
-
-    fun upsertHighHrTimeDaily(accessToken: String, dateIso: String, valueMinutes: Int, source: String, sourceId: String?) {
-        upsertOne(
-            accessToken, "high_hr_time_daily",
-            JSONObject().put("date", dateIso).put("value_minutes", valueMinutes).put("source", source).put("source_id", sourceId)
-        )
-    }
-
-    /* ---------- reads for Testing ---------- */
-
-    data class RecoveryRead(val date: String, val value_pct: Double)
-    data class RhrRead(val date: String, val value_bpm: Double)
-    data class HrvRead(val date: String, val value_ms: Double)
-    data class SkinTempRead(val date: String, val value_c: Double)
-    data class SpO2Read(val date: String, val value_pct: Double)
-    data class HighHrTimeRead(val date: String, val value_minutes: Int)
-
-    fun fetchRecoveryDaily(accessToken: String, limitDays: Int = 180): List<RecoveryRead> {
-        val qp = "select=date,value_pct&order=date.desc&limit=$limitDays"
-        val (code, body) = httpGet("/rest/v1/recovery_daily", qp, accessToken)
-        if (code !in 200..299 || body.isBlank() || body == "[]") return emptyList()
-        val arr = JSONArray(body)
-        val out = ArrayList<RecoveryRead>(arr.length())
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            out.add(RecoveryRead(o.optString("date"), o.optDouble("value_pct")))
+    suspend fun hasRecoveryForDate(access: String, date: String, source: String): Boolean {
+        val resp = client.get("$supabaseUrl/rest/v1/recovery_score_daily") {
+            header(HttpHeaders.Authorization, "Bearer $access")
+            header("apikey", supabaseKey)
+            parameter("date", "eq.$date")
+            parameter("source", "eq.$source")
+            parameter("select", "date")
+            parameter("limit", "1")
         }
-        return out
+        if (!resp.status.isSuccess()) return false
+        val body = runCatching { resp.body<List<Map<String, String>>>() }.getOrDefault(emptyList())
+        return body.isNotEmpty()
     }
 
-    fun fetchRhrDaily(accessToken: String, limitDays: Int = 180): List<RhrRead> {
-        val qp = "select=date,value_bpm&order=date.desc&limit=$limitDays"
-        val (code, body) = httpGet("/rest/v1/rhr_daily", qp, accessToken)
-        if (code !in 200..299 || body.isBlank() || body == "[]") return emptyList()
-        val arr = JSONArray(body)
-        val out = ArrayList<RhrRead>(arr.length())
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            out.add(RhrRead(o.optString("date"), o.optDouble("value_bpm")))
+    suspend fun latestPhysicalDate(access: String, source: String): String? {
+        val resp = client.get("$supabaseUrl/rest/v1/recovery_score_daily") {
+            header(HttpHeaders.Authorization, "Bearer $access")
+            header("apikey", supabaseKey)
+            parameter("source", "eq.$source")
+            parameter("select", "date")
+            parameter("order", "date.desc")
+            parameter("limit", "1")
         }
-        return out
+        if (!resp.status.isSuccess()) return null
+        val rows = runCatching { resp.body<List<Map<String, String>>>() }.getOrDefault(emptyList())
+        return rows.firstOrNull()?.get("date")
     }
 
-    fun fetchHrvDaily(accessToken: String, limitDays: Int = 180): List<HrvRead> {
-        val qp = "select=date,value_ms&order=date.desc&limit=$limitDays"
-        val (code, body) = httpGet("/rest/v1/hrv_daily", qp, accessToken)
-        if (code !in 200..299 || body.isBlank() || body == "[]") return emptyList()
-        val arr = JSONArray(body)
-        val out = ArrayList<HrvRead>(arr.length())
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            out.add(HrvRead(o.optString("date"), o.optDouble("value_ms")))
+    /* ============================================================
+     * UPSERTS
+     * ============================================================
+     */
+
+    suspend fun upsertRecoveryScoreDaily(
+        access: String, date: String, valuePct: Double, source: String?, sourceId: String?
+    ) = upsert(access, "recovery_score_daily", PctRow(date, valuePct, source, sourceId))
+
+    suspend fun upsertRestingHrDaily(
+        access: String, date: String, bpm: Double, source: String?, sourceId: String?
+    ) = upsert(access, "resting_hr_daily", HrRow(date, bpm, source, sourceId))
+
+    suspend fun upsertHrvDaily(
+        access: String, date: String, rmssd: Double, source: String?, sourceId: String?
+    ) = upsert(access, "hrv_daily", HrvRow(date, rmssd, source, sourceId))
+
+    suspend fun upsertSkinTempDaily(
+        access: String, date: String, celsius: Double, source: String?, sourceId: String?
+    ) = upsert(access, "skin_temp_daily", TempRow(date, celsius, source, sourceId))
+
+    suspend fun upsertSpo2Daily(
+        access: String, date: String, pct: Double, source: String?, sourceId: String?
+    ) = upsert(access, "spo2_daily", Spo2Row(date, pct, source, sourceId))
+
+    suspend fun upsertHighHrDaily(
+        access: String,
+        date: String,
+        totalMinutes: Double,
+        z3: Double,
+        z4: Double,
+        z5: Double,
+        z6: Double,
+        source: String?,
+        sourceId: String?
+    ) = upsert(
+        access,
+        "time_in_high_hr_zones_daily",
+        HighHrRow(date, totalMinutes, z3, z4, z5, z6, source, sourceId)
+    )
+
+    private suspend inline fun <reified T> upsert(
+        accessToken: String,
+        table: String,
+        row: T
+    ) {
+        val resp = client.post("$supabaseUrl/rest/v1/$table") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            header("Prefer", "resolution=merge-duplicates,return=minimal")
+            parameter("on_conflict", "user_id,source,date")
+            contentType(ContentType.Application.Json)
+            setBody(listOf(row))
         }
-        return out
-    }
-
-    fun fetchSkinTempDaily(accessToken: String, limitDays: Int = 180): List<SkinTempRead> {
-        val qp = "select=date,value_c&order=date.desc&limit=$limitDays"
-        val (code, body) = httpGet("/rest/v1/skin_temp_daily", qp, accessToken)
-        if (code !in 200..299 || body.isBlank() || body == "[]") return emptyList()
-        val arr = JSONArray(body)
-        val out = ArrayList<SkinTempRead>(arr.length())
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            out.add(SkinTempRead(o.optString("date"), o.optDouble("value_c")))
+        if (!resp.status.isSuccess()) {
+            error("Upsert $table failed: HTTP ${resp.status.value}")
         }
-        return out
     }
-
-    fun fetchSpO2Daily(accessToken: String, limitDays: Int = 180): List<SpO2Read> {
-        val qp = "select=date,value_pct&order=date.desc&limit=$limitDays"
-        val (code, body) = httpGet("/rest/v1/spo2_daily", qp, accessToken)
-        if (code !in 200..299 || body.isBlank() || body == "[]") return emptyList()
-        val arr = JSONArray(body)
-        val out = ArrayList<SpO2Read>(arr.length())
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            out.add(SpO2Read(o.optString("date"), o.optDouble("value_pct")))
-        }
-        return out
-    }
-
-    fun fetchHighHrTimeDaily(accessToken: String, limitDays: Int = 180): List<HighHrTimeRead> {
-        val qp = "select=date,value_minutes&order=date.desc&limit=$limitDays"
-        val (code, body) = httpGet("/rest/v1/high_hr_time_daily", qp, accessToken)
-        if (code !in 200..299 || body.isBlank() || body == "[]") return emptyList()
-        val arr = JSONArray(body)
-        val out = ArrayList<HighHrTimeRead>(arr.length())
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            out.add(HighHrTimeRead(o.optString("date"), o.optInt("value_minutes")))
-        }
-        return out
-    }
-
-    /* ---------- HTTP helpers ---------- */
-
-    private fun httpGet(path: String, query: String, bearer: String): Pair<Int, String> {
-        val urlStr = "$supabaseUrl$path?$query"
-        val url = URL(urlStr)
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            setRequestProperty("apikey", anonKey)
-            setRequestProperty("Authorization", "Bearer $bearer")
-            setRequestProperty("Accept", "application/json")
-            connectTimeout = 15000
-            readTimeout = 30000
-        }
-        val code = conn.responseCode
-        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        val body = BufferedReader(stream.reader()).use { it.readText() }
-        conn.disconnect()
-        return code to body
-    }
-
-    private fun upsertOne(accessToken: String, table: String, obj: JSONObject) {
-        val urlStr = "$supabaseUrl/rest/v1/$table?on_conflict=date,source"
-        val url = URL(urlStr)
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            doOutput = true
-            setRequestProperty("apikey", anonKey)
-            setRequestProperty("Authorization", "Bearer $accessToken")
-            setRequestProperty("Content-Type", "application/json")
-            setRequestProperty("Accept", "application/json")
-            setRequestProperty("Prefer", "resolution=merge-duplicates")
-            connectTimeout = 15000
-            readTimeout = 30000
-        }
-        val payload = JSONArray().put(obj).toString()
-        OutputStreamWriter(conn.outputStream, Charsets.UTF_8).use { it.write(payload) }
-        val code = conn.responseCode
-        // Drain stream to allow connection reuse (don’t bind to reserved '_' names)
-        val ignoreBytes = (if (code in 200..299) conn.inputStream else conn.errorStream)
-        ignoreBytes?.use { it.readBytes() }
-        conn.disconnect()
-    }
-
-    private fun encode(s: String) = URLEncoder.encode(s, "UTF-8")
 }

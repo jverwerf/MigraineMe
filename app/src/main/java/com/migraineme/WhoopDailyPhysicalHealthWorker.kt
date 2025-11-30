@@ -1,4 +1,3 @@
-// FILE: app/src/main/java/com/migraineme/WhoopDailyPhysicalHealthWorker.kt
 package com.migraineme
 
 import android.content.Context
@@ -11,69 +10,112 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import java.time.*
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-class WhoopDailyPhysicalHealthWorker(appContext: Context, params: WorkerParameters) :
-    CoroutineWorker(appContext, params) {
+/**
+ * WHOOP → PHYS HEALTH DAILY SYNC
+ *
+ * Mirrors the design of WhoopDailySyncWorkerSleepFields:
+ * - Backfills up to TODAY (29 days)
+ * - Today is written during backfill
+ * - Worker runs daily at 09:00
+ *
+ * Metrics written:
+ * - recovery_score_daily
+ * - resting_hr_daily
+ * - hrv_daily
+ * - skin_temp_daily
+ * - spo2_daily
+ * - time_in_high_hr_zones_daily (z3 + z4 + z5 monitored, z6 = 0)
+ *
+ * Unique key: (user_id, source, date)
+ */
+class WhoopDailyPhysicalHealthWorker(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            val access: String = SessionStore.readAccessToken(applicationContext)
+            val access = SessionStore.readAccessToken(applicationContext)
                 ?: return@withContext Result.success()
 
-            if (WhoopTokenStore(applicationContext).load() == null) {
-                scheduleNext(applicationContext); return@withContext Result.success()
+            val hasWhoop = WhoopTokenStore(applicationContext).load() != null
+            if (!hasWhoop) {
+                scheduleNext(applicationContext)
+                Log.d(TAG, "PH: WHOOP not connected — skip")
+                return@withContext Result.success()
             }
 
             val zone = ZoneId.systemDefault()
-            val todayLocal = LocalDate.now(zone)
-            val dateSql = todayLocal.toString()
+            val today = LocalDate.now(zone)
+            val todaySql = today.toString()
 
-            val svc = SupabasePhysicalHealthService(applicationContext)
-            if (svc.hasRecoveryForDate(access, dateSql, source = "whoop")) {
-                scheduleNext(applicationContext); return@withContext Result.success()
+            // 1) Backfill up to TODAY
+            backfillUpToToday(applicationContext, access)
+
+            val metrics = SupabasePhysicalHealthService(applicationContext)
+
+            // 2) Today should now be written. Check.
+            if (metrics.hasRecoveryForDate(access, todaySql, "whoop")) {
+                scheduleNext(applicationContext)
+                Log.d(TAG, "PH: Skip today $todaySql — already via backfill")
+                return@withContext Result.success()
             }
 
+            // 3) Last chance — refresh token
             WhoopAuthService().refresh(applicationContext)
-            val (wStart, wEnd) = window(todayLocal, zone)
+
+            val (wStart, wEnd) = dayWindow(today, zone)
             val api = WhoopApiService(applicationContext)
 
-            api.getRecovery(wStart, wEnd)?.let { root ->
-                val rec = selectRecordForDate(root, todayLocal, zone)
-                if (rec != null) writeAllForDate(svc, access, dateSql, rec)
+            val recObj = api.getRecovery(wStart, wEnd)
+            val wrkObj = api.getWorkouts(wStart, wEnd)
+
+            if (recObj == null && wrkObj == null) {
+                scheduleNext(applicationContext)
+                Log.d(TAG, "PH: Null WHOOP response for $today")
+                return@withContext Result.success()
             }
 
-            api.getWorkouts(wStart, wEnd)?.let { root ->
-                val minutes = sumHighHrMinutes(root)
-                svc.upsertHighHrTimeDaily(access, dateSql, minutes, "whoop", null)
-            }
+            writeAllForDate(
+                context = applicationContext,
+                metrics = metrics,
+                access = access,
+                dateSql = todaySql,
+                recoveryRoot = recObj,
+                workoutRoot = wrkObj
+            )
 
             scheduleNext(applicationContext)
+            Log.d(TAG, "PH: Stored PH metrics for $todaySql (fallback path)")
             Result.success()
+
         } catch (t: Throwable) {
-            Log.d("WhoopDailySync", "PH sync error: ${t.message ?: "unknown"}")
-            scheduleNext(applicationContext); Result.success()
+            scheduleNext(applicationContext)
+            Log.d(TAG, "PH error: ${t.message}")
+            Result.success()
         }
     }
 
     companion object {
-        private const val UNIQUE_WORK_NAME = "whoop_daily_physical_health_9am"
+        private const val TAG = "WhoopDailyPH"
+        private const val UNIQUE = "whoop_daily_sync_physical_health_9am"
 
         fun scheduleNext(context: Context) {
             val now = ZonedDateTime.now(ZoneId.systemDefault())
             var next = now.withHour(9).withMinute(0).withSecond(0).withNano(0)
             if (!next.isAfter(now)) next = next.plusDays(1)
-            val delayMillis = Duration.between(now, next).toMillis()
+            val delay = Duration.between(now, next).toMillis()
+
             val req = OneTimeWorkRequestBuilder<WhoopDailyPhysicalHealthWorker>()
-                .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
                 .build()
+
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_WORK_NAME,
+                UNIQUE,
                 ExistingWorkPolicy.REPLACE,
                 req
             )
@@ -83,24 +125,38 @@ class WhoopDailyPhysicalHealthWorker(appContext: Context, params: WorkerParamete
             val req = OneTimeWorkRequestBuilder<WhoopDailyPhysicalHealthWorker>()
                 .setInitialDelay(0, TimeUnit.MILLISECONDS)
                 .build()
+
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_WORK_NAME,
+                UNIQUE,
                 ExistingWorkPolicy.REPLACE,
                 req
             )
         }
 
-        /** Backfill from the day **after** latest stored up through **today** (inclusive). */
-        suspend fun backfillUpToToday(context: Context, accessToken: String) {
+        /**
+         * Backfill PH Daily Metrics up to today.
+         * Anchored on recovery_score_daily same way sleep uses sleep_duration_daily.
+         */
+        suspend fun backfillUpToToday(context: Context, access: String) {
             try {
                 val zone = ZoneId.systemDefault()
                 val today = LocalDate.now(zone)
-                if (WhoopTokenStore(context).load() == null) return
-                val svc = SupabasePhysicalHealthService(context)
-                val latest = svc.latestPhysicalHealthDate(accessToken)
+                val token = WhoopTokenStore(context).load() ?: return
 
-                // If nothing yet, do nothing here (first run will be today's on login/runOnceNow)
-                val start = latest?.let { LocalDate.parse(it).plusDays(1) } ?: return
+                val metrics = SupabasePhysicalHealthService(context)
+                val latestStr = metrics.latestPhysicalDate(access, "whoop")
+
+                val baseline = today.minusDays(29)
+
+                val start = when (latestStr) {
+                    null -> baseline
+                    else -> {
+                        val latest = LocalDate.parse(latestStr)
+                        val candidate = latest.plusDays(1)
+                        if (candidate.isBefore(baseline)) baseline else candidate
+                    }
+                }
+
                 if (start.isAfter(today)) return
 
                 WhoopAuthService().refresh(context)
@@ -109,64 +165,124 @@ class WhoopDailyPhysicalHealthWorker(appContext: Context, params: WorkerParamete
                 var cur = start
                 while (!cur.isAfter(today)) {
                     val dateSql = cur.toString()
-                    if (!svc.hasRecoveryForDate(accessToken, dateSql, "whoop")) {
-                        val (wStart, wEnd) = window(cur, zone)
-                        api.getRecovery(wStart, wEnd)?.let { root ->
-                            val rec = selectRecordForDate(root, cur, zone)
-                            if (rec != null) writeAllForDate(svc, accessToken, dateSql, rec)
-                        }
-                        api.getWorkouts(wStart, wEnd)?.let { root ->
-                            val minutes = sumHighHrMinutes(root)
-                            svc.upsertHighHrTimeDaily(accessToken, dateSql, minutes, "whoop", null)
-                        }
+
+                    if (!metrics.hasRecoveryForDate(access, dateSql, "whoop")) {
+                        val (wStart, wEnd) = dayWindow(cur, zone)
+
+                        val recObj = api.getRecovery(wStart, wEnd)
+                        val wrkObj = api.getWorkouts(wStart, wEnd)
+
+                        writeAllForDate(context, metrics, access, dateSql, recObj, wrkObj)
+                        Log.d(TAG, "PH Backfill wrote $dateSql")
                     }
+
                     cur = cur.plusDays(1)
                 }
-            } catch (_: Throwable) { }
+            } catch (_: Throwable) {}
         }
 
-        private fun window(day: LocalDate, zone: ZoneId): Pair<Date, Date> {
-            val start = day.minusDays(1).atTime(12, 0).atZone(zone).toInstant()
-            val end = day.plusDays(1).atTime(12, 0).atZone(zone).toInstant()
-            return Date.from(start) to Date.from(end)
+        /**
+         * Window from previous 12:00 → next day 12:00.
+         * Matches your final sleep system.
+         */
+        private fun dayWindow(day: LocalDate, zone: ZoneId): Pair<Date, Date> {
+            val s = day.minusDays(1).atTime(12, 0).atZone(zone).toInstant()
+            val e = day.plusDays(1).atTime(12, 0).atZone(zone).toInstant()
+            return Date.from(s) to Date.from(e)
         }
 
-        private fun selectRecordForDate(root: JSONObject, target: LocalDate, zone: ZoneId): JSONObject? {
-            var best: JSONObject? = null
-            var bestEndMs = Long.MIN_VALUE
+        private suspend fun writeAllForDate(
+            context: Context,
+            metrics: SupabasePhysicalHealthService,
+            access: String,
+            dateSql: String,
+            recoveryRoot: JSONObject?,
+            workoutRoot: JSONObject?
+        ) {
+            val rec = selectFirst(recoveryRoot)
+            val wrk = selectFirst(workoutRoot)
+
+            val sourceId = rec?.optString("id")?.takeIf { it.isNotEmpty() }
+                ?: wrk?.optString("id")?.takeIf { it.isNotEmpty() }
+
+            // -------- Recovery extraction --------
+            val score = rec?.optJSONObject("score")
+
+            val recoveryPct = score?.optDouble("recovery_score", Double.NaN)
+            val restingHr = score?.optDouble("resting_heart_rate", Double.NaN)
+            val hrv = score?.optDouble("hrv_rmssd_milli", Double.NaN)
+            val temp = score?.optDouble("skin_temp_celsius", Double.NaN)
+            val spo2 = score?.optDouble("blood_oxygen_pct", Double.NaN)
+
+            // Write recovery score
+            if (recoveryPct != null && !recoveryPct.isNaN()) {
+                metrics.upsertRecoveryScoreDaily(access, dateSql, recoveryPct, "whoop", sourceId)
+            }
+
+            // Resting HR
+            if (restingHr != null && !restingHr.isNaN()) {
+                metrics.upsertRestingHrDaily(access, dateSql, restingHr, "whoop", sourceId)
+            }
+
+            // HRV RMSSD
+            if (hrv != null && !hrv.isNaN()) {
+                metrics.upsertHrvDaily(access, dateSql, hrv, "whoop", sourceId)
+            }
+
+            // Skin temp
+            if (temp != null && !temp.isNaN()) {
+                metrics.upsertSkinTempDaily(access, dateSql, temp, "whoop", sourceId)
+            }
+
+            // SpO2
+            if (spo2 != null && !spo2.isNaN()) {
+                metrics.upsertSpo2Daily(access, dateSql, spo2, "whoop", sourceId)
+            }
+
+            // -------- HIGH HR ZONES from workout --------
+            writeHighHrZones(metrics, access, dateSql, wrk, sourceId)
+        }
+
+        private fun selectFirst(root: JSONObject?): JSONObject? {
+            if (root == null) return null
             val arr = root.optJSONArray("records") ?: return null
-            for (i in 0 until arr.length()) {
-                val obj = arr.optJSONObject(i) ?: continue
-                val endUtc = obj.optString("end", null) ?: continue
-                val tzMin = obj.optInt("timezone_offset_minutes", 0)
-                val endLocal = try { java.time.Instant.parse(endUtc).plusSeconds(tzMin.toLong() * 60L) } catch (_: Throwable) { continue }
-                val endDateLocal = endLocal.atZone(zone).toLocalDate()
-                if (endDateLocal == target) return obj
-                val ms = endLocal.toEpochMilli()
-                if (ms > bestEndMs) { best = obj; bestEndMs = ms }
-            }
-            return best
+            return if (arr.length() > 0) arr.optJSONObject(0) else null
         }
 
-        private suspend fun writeAllForDate(svc: SupabasePhysicalHealthService, access: String, dateSql: String, rec: JSONObject) {
-            val score = rec.optJSONObject("score")
-            val sid = rec.optString("id", null)
-            score?.optDouble("recovery_score")?.let { if (!it.isNaN()) svc.upsertRecoveryDaily(access, dateSql, it, "whoop", sid) }
-            score?.optDouble("user_calibrating_resting_heart_rate")?.let { if (!it.isNaN()) svc.upsertRhrDaily(access, dateSql, it, "whoop", sid) }
-            score?.optDouble("user_calibrating_hrv_rmssd_milli")?.let { if (!it.isNaN()) svc.upsertHrvDaily(access, dateSql, it, "whoop", sid) }
-            score?.optDouble("delta_skin_temp_celsius")?.let { if (!it.isNaN()) svc.upsertSkinTempDaily(access, dateSql, it, "whoop", sid) }
-            score?.optDouble("spo2_percentage")?.let { if (!it.isNaN()) svc.upsertSpO2Daily(access, dateSql, it, "whoop", sid) }
-        }
+        private suspend fun writeHighHrZones(
+            metrics: SupabasePhysicalHealthService,
+            access: String,
+            dateSql: String,
+            wrk: JSONObject?,
+            sourceId: String?
+        ) {
+            if (wrk == null) return
 
-        private fun sumHighHrMinutes(root: JSONObject): Int {
-            var total = 0
-            val recs = root.optJSONArray("records") ?: return 0
-            for (i in 0 until recs.length()) {
-                val w = recs.optJSONObject(i) ?: continue
-                val zones = w.optJSONObject("score")?.optJSONObject("minutes_in_heart_rate_zones")
-                if (zones != null) total += zones.optInt("zone_four", 0) + zones.optInt("zone_five", 0)
-            }
-            return total
+            val score = wrk.optJSONObject("score") ?: return
+            val zd = score.optJSONObject("zone_durations") ?: return
+
+            val z3ms = zd.optDouble("zone_three_milli", 0.0)
+            val z4ms = zd.optDouble("zone_four_milli", 0.0)
+            val z5ms = zd.optDouble("zone_five_milli", 0.0)
+
+            val z3 = z3ms / 60000.0
+            val z4 = z4ms / 60000.0
+            val z5 = z5ms / 60000.0
+            val z6 = 0.0
+
+            val total = z3 + z4 + z5
+
+            metrics.upsertHighHrDaily(
+                access = access,
+                date = dateSql,
+                totalMinutes = total,
+                z3 = z3,
+                z4 = z4,
+                z5 = z5,
+                z6 = z6,
+                source = "whoop",
+                sourceId = sourceId
+            )
         }
     }
 }

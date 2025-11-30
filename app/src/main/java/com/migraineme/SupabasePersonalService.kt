@@ -19,31 +19,13 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.json.JSONArray
 
-/**
- * Supabase service for *personal* user signals.
- * Keeps same Ktor + PostgREST style as other services. No auth flow changes.
- *
- * Table assumed:
- *   user_location_daily(
- *     date date not null,
- *     latitude double precision not null,
- *     longitude double precision not null,
- *     source text not null,
- *     source_measure_id text,
- *     user_id uuid not null default auth.uid(),
- *     unique (user_id, source, date)
- *   )
- */
 class SupabasePersonalService(context: Context) {
     private val supabaseUrl = BuildConfig.SUPABASE_URL
     private val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
-    private val appContext = context.applicationContext
 
     private val client = HttpClient {
         install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
     }
-
-    // ----- DTOs -----
 
     @Serializable
     private data class LocationWriteRow(
@@ -63,27 +45,15 @@ class SupabasePersonalService(context: Context) {
         val source_measure_id: String? = null
     )
 
-    // ----- Writes -----
-
-    /**
-     * Upsert user daily location.
-     * on_conflict = (user_id, source, date) to avoid duplicates per source per day.
-     */
     suspend fun upsertUserLocationDaily(
         accessToken: String,
-        date: String,              // "YYYY-MM-DD"
+        date: String,
         latitude: Double,
         longitude: Double,
-        source: String = "device", // e.g., "device", "whoop", etc.
+        source: String = "device",
         sourceId: String? = null
     ) {
-        val row = LocationWriteRow(
-            date = date,
-            latitude = latitude,
-            longitude = longitude,
-            source = source,
-            source_measure_id = sourceId
-        )
+        val row = LocationWriteRow(date, latitude, longitude, source, sourceId)
         postgrestInsert(
             accessToken = accessToken,
             table = "user_location_daily",
@@ -92,11 +62,6 @@ class SupabasePersonalService(context: Context) {
         )
     }
 
-    // ----- Reads -----
-
-    /**
-     * Fetch recent locations. Default 14 most-recent days.
-     */
     suspend fun fetchUserLocationDaily(
         accessToken: String,
         limitDays: Int = 14
@@ -112,9 +77,6 @@ class SupabasePersonalService(context: Context) {
         return runCatching { resp.body<List<UserLocationDailyRead>>() }.getOrNull() ?: emptyList()
     }
 
-    /**
-     * Point existence check for a given date+source.
-     */
     suspend fun hasUserLocationForDate(
         accessToken: String,
         date: String,
@@ -133,9 +95,6 @@ class SupabasePersonalService(context: Context) {
         return txt.startsWith("[{")
     }
 
-    /**
-     * Latest existing date for a source, ordered descending. Returns ISO "YYYY-MM-DD" or null.
-     */
     suspend fun latestUserLocationDate(
         accessToken: String,
         source: String = "device"
@@ -154,14 +113,9 @@ class SupabasePersonalService(context: Context) {
         return try {
             val arr = JSONArray(body)
             if (arr.length() == 0) null else arr.getJSONObject(0).getString("date")
-        } catch (_: Throwable) {
-            null
-        }
+        } catch (_: Throwable) { null }
     }
 
-    /**
-     * Earliest existing date for a source, ordered ascending. Returns ISO "YYYY-MM-DD" or null.
-     */
     suspend fun earliestUserLocationDate(
         accessToken: String,
         source: String = "device"
@@ -180,12 +134,8 @@ class SupabasePersonalService(context: Context) {
         return try {
             val arr = JSONArray(body)
             if (arr.length() == 0) null else arr.getJSONObject(0).getString("date")
-        } catch (_: Throwable) {
-            null
-        }
+        } catch (_: Throwable) { null }
     }
-
-    // ----- Helpers -----
 
     private suspend inline fun <reified T> postgrestInsert(
         accessToken: String,
@@ -196,7 +146,7 @@ class SupabasePersonalService(context: Context) {
         val resp = client.post("$supabaseUrl/rest/v1/$table") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
-            header("Prefer", "resolution=merge-duplicates,return=representation")
+            header("Prefer", "resolution=merge-duplicates,return=minimal")
             onConflict?.let { parameter("on_conflict", it) }
             contentType(ContentType.Application.Json)
             setBody(body)

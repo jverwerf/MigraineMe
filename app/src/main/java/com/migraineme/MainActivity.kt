@@ -1,4 +1,3 @@
-// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\MainActivity.kt
 package com.migraineme
 
 import android.content.Intent
@@ -87,7 +86,6 @@ object Routes {
 
     const val ADJUST_MIGRAINES = "adjust_migraines"
 
-    // Testing
     const val TESTING = "testing"
     const val TESTING_COMPLETE = "testing_complete"
 }
@@ -143,7 +141,9 @@ fun AppRoot() {
     val nav = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val ctx = LocalContext.current.applicationContext
+
+    // FIXED: Was applicationContext. Now Activity context.
+    val ctx = LocalContext.current
 
     val authVm: AuthViewModel = viewModel()
     val logVm: LogViewModel = viewModel()
@@ -372,16 +372,12 @@ fun AppRoot() {
                         onLoggedOut = {
                             nav.navigate(Routes.LOGIN) {
                                 popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                launchSingleTop = true
-                            }
+                                launchSingleTop = true }
                         }
                     )
                 }
 
-                // NEW
                 composable(Routes.TESTING) { TestingScreen(authVm = authVm) }
-
-                // NEW COMPLETE SCREEN
                 composable(Routes.TESTING_COMPLETE) { TestingScreenComplete(authVm = authVm) }
             }
         }
