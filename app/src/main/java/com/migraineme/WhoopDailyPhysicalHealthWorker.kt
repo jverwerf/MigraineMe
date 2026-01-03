@@ -215,32 +215,44 @@ class WhoopDailyPhysicalHealthWorker(
             val spo2 = score?.optDouble("blood_oxygen_pct", Double.NaN)
 
             // Write recovery score
-            if (recoveryPct != null && !recoveryPct.isNaN()) {
-                metrics.upsertRecoveryScoreDaily(access, dateSql, recoveryPct, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "recovery_score_daily")) {
+                if (recoveryPct != null && !recoveryPct.isNaN()) {
+                    metrics.upsertRecoveryScoreDaily(access, dateSql, recoveryPct, "whoop", sourceId)
+                }
             }
 
             // Resting HR
-            if (restingHr != null && !restingHr.isNaN()) {
-                metrics.upsertRestingHrDaily(access, dateSql, restingHr, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "resting_hr_daily")) {
+                if (restingHr != null && !restingHr.isNaN()) {
+                    metrics.upsertRestingHrDaily(access, dateSql, restingHr, "whoop", sourceId)
+                }
             }
 
             // HRV RMSSD
-            if (hrv != null && !hrv.isNaN()) {
-                metrics.upsertHrvDaily(access, dateSql, hrv, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "hrv_daily")) {
+                if (hrv != null && !hrv.isNaN()) {
+                    metrics.upsertHrvDaily(access, dateSql, hrv, "whoop", sourceId)
+                }
             }
 
             // Skin temp
-            if (temp != null && !temp.isNaN()) {
-                metrics.upsertSkinTempDaily(access, dateSql, temp, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "skin_temp_daily")) {
+                if (temp != null && !temp.isNaN()) {
+                    metrics.upsertSkinTempDaily(access, dateSql, temp, "whoop", sourceId)
+                }
             }
 
             // SpO2
-            if (spo2 != null && !spo2.isNaN()) {
-                metrics.upsertSpo2Daily(access, dateSql, spo2, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "spo2_daily")) {
+                if (spo2 != null && !spo2.isNaN()) {
+                    metrics.upsertSpo2Daily(access, dateSql, spo2, "whoop", sourceId)
+                }
             }
 
             // -------- HIGH HR ZONES from workout --------
-            writeHighHrZones(metrics, access, dateSql, wrk, sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "time_in_high_hr_zones_daily")) {
+                writeHighHrZones(metrics, access, dateSql, wrk, sourceId)
+            }
         }
 
         private fun selectFirst(root: JSONObject?): JSONObject? {

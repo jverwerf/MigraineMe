@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.History
@@ -17,8 +18,8 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -27,8 +28,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
@@ -47,20 +48,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 object Routes {
     const val HOME = "home"
     const val PROFILE = "profile"
+    const val DATA = "data"
     const val COMMUNITY = "community"
     const val INSIGHTS = "insights"
     const val MONITOR = "monitor"
@@ -172,6 +171,7 @@ fun AppRoot() {
 
     val drawerItems = listOf(
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
+        DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Testing", Routes.TESTING, Icons.Outlined.BarChart),
         DrawerItem("Testing Complete", Routes.TESTING_COMPLETE, Icons.Outlined.Assessment),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout)
@@ -218,6 +218,7 @@ fun AppRoot() {
                                 Routes.LOGIN -> "Sign in"
                                 Routes.SIGNUP -> "Create account"
                                 Routes.PROFILE -> "Profile"
+                                Routes.DATA -> "Data"
                                 Routes.LOGOUT -> "Logout"
                                 Routes.MEDICINES -> "Medicines"
                                 Routes.ADJUST_MEDICINES -> "Adjust Medicines"
@@ -366,13 +367,16 @@ fun AppRoot() {
 
                 composable(Routes.PROFILE) { ProfileScreen(authVm = authVm) }
 
+                composable(Routes.DATA) { DataSettingsScreen() }
+
                 composable(Routes.LOGOUT) {
                     LogoutScreen(
                         authVm = authVm,
                         onLoggedOut = {
                             nav.navigate(Routes.LOGIN) {
                                 popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                launchSingleTop = true }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }

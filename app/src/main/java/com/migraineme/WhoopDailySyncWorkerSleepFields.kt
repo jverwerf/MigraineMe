@@ -76,7 +76,7 @@ class WhoopDailySyncWorkerSleepFields(
                 return@withContext Result.success()
             }
 
-            writeAllForDate(metrics, access, todaySql, record)
+            writeAllForDate(applicationContext, metrics, access, todaySql, record)
 
             scheduleNext(applicationContext)
             debug("Stored WHOOP sleep for $todaySql (fallback path)")
@@ -169,7 +169,7 @@ class WhoopDailySyncWorkerSleepFields(
                         if (root != null) {
                             val rec = selectRecordByWakeup(root, cur, zone)
                             if (rec != null) {
-                                writeAllForDate(metrics, access, dateSql, rec)
+                                writeAllForDate(context, metrics, access, dateSql, rec)
                                 Log.d("WhoopDailySync", "Backfill wrote $dateSql")
                             } else {
                                 Log.d("WhoopDailySync", "Backfill: no wake-up record for $cur")
@@ -236,6 +236,7 @@ class WhoopDailySyncWorkerSleepFields(
         }
 
         private suspend fun writeAllForDate(
+            context: Context,
             metrics: SupabaseMetricsService,
             access: String,
             dateSql: String,
@@ -260,17 +261,31 @@ class WhoopDailySyncWorkerSleepFields(
             val fellIso = parseTimestamp(rec, "start")
             val wokeIso = parseTimestamp(rec, "end")
 
-            metrics.upsertSleepDurationDaily(access, dateSql, hours, "whoop", sourceId)
-            fellIso?.let { metrics.upsertFellAsleepTimeDaily(access, dateSql, it, "whoop", sourceId) }
-            wokeIso?.let { metrics.upsertWokeUpTimeDaily(access, dateSql, it, "whoop", sourceId) }
-            metrics.upsertSleepDisturbancesDaily(access, dateSql, dist, "whoop", sourceId)
-            metrics.upsertSleepStagesDaily(access, dateSql, sws, rem, light, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_duration_daily")) {
+                metrics.upsertSleepDurationDaily(access, dateSql, hours, "whoop", sourceId)
+            }
+            if (DataCollectionSettings.isEnabledForWhoop(context, "fell_asleep_time_daily")) {
+                fellIso?.let { metrics.upsertFellAsleepTimeDaily(access, dateSql, it, "whoop", sourceId) }
+            }
+            if (DataCollectionSettings.isEnabledForWhoop(context, "woke_up_time_daily")) {
+                wokeIso?.let { metrics.upsertWokeUpTimeDaily(access, dateSql, it, "whoop", sourceId) }
+            }
+            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_disturbances_daily")) {
+                metrics.upsertSleepDisturbancesDaily(access, dateSql, dist, "whoop", sourceId)
+            }
+            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_stages_daily")) {
+                metrics.upsertSleepStagesDaily(access, dateSql, sws, rem, light, "whoop", sourceId)
+            }
 
-            if (perf != null && !perf.isNaN())
-                metrics.upsertSleepScoreDaily(access, dateSql, perf, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_score_daily")) {
+                if (perf != null && !perf.isNaN())
+                    metrics.upsertSleepScoreDaily(access, dateSql, perf, "whoop", sourceId)
+            }
 
-            if (eff != null && !eff.isNaN())
-                metrics.upsertSleepEfficiencyDaily(access, dateSql, eff, "whoop", sourceId)
+            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_efficiency_daily")) {
+                if (eff != null && !eff.isNaN())
+                    metrics.upsertSleepEfficiencyDaily(access, dateSql, eff, "whoop", sourceId)
+            }
         }
 
         private fun parseTimestamp(rec: JSONObject, key: String): String? {

@@ -17,7 +17,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 class LocationDailySyncWorker(
     appContext: Context,
@@ -30,6 +29,13 @@ class LocationDailySyncWorker(
 
             val access = SessionStore.readAccessToken(applicationContext)
                 ?: return@withContext Result.success()
+
+            // Gate entire location collection by the single table toggle.
+            if (!DataCollectionSettings.isActive(applicationContext, "user_location_daily", wearable = null, defaultValue = true)) {
+                Log.d(LOG_TAG, "user_location_daily disabled — skip")
+                scheduleNext(applicationContext)
+                return@withContext Result.success()
+            }
 
             val svc = SupabasePersonalService(applicationContext)
             val today = LocalDate.now(ZoneId.systemDefault())
@@ -122,6 +128,11 @@ class LocationDailySyncWorker(
          * Same as WHOOP: backfill runs manually without needing a Worker instance.
          */
         suspend fun backfillUpToToday(context: Context, accessToken: String) {
+            // Gate backfill too; otherwise disabling would still write history.
+            if (!DataCollectionSettings.isActive(context, "user_location_daily", wearable = null, defaultValue = true)) {
+                return
+            }
+
             val svc = SupabasePersonalService(context)
 
             val today = LocalDate.now(ZoneId.systemDefault())
