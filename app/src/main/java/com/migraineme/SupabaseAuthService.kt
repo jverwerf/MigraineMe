@@ -35,6 +35,13 @@ object SupabaseAuthService {
     data class SignUpRequest(val email: String, val password: String)
 
     @Serializable
+    data class IdTokenGrantRequest(
+        val provider: String,
+        @SerialName("id_token") val idToken: String,
+        val nonce: String? = null
+    )
+
+    @Serializable
     data class SessionResponse(
         @SerialName("access_token") val accessToken: String? = null,
         @SerialName("refresh_token") val refreshToken: String? = null,
@@ -57,6 +64,26 @@ object SupabaseAuthService {
             header("apikey", anonKey)
             contentType(ContentType.Application.Json)
             setBody(SignUpRequest(email, password))
+        }.body()
+    }
+
+    /**
+     * Native mobile Google sign-in:
+     * - You obtain a Google ID token on-device (Credential Manager)
+     * - Exchange it for a Supabase session (access_token / refresh_token)
+     */
+    suspend fun signInWithGoogleIdToken(idToken: String, nonce: String? = null): SessionResponse {
+        val url = "$baseUrl/auth/v1/token?grant_type=id_token"
+        return client.post(url) {
+            header("apikey", anonKey)
+            contentType(ContentType.Application.Json)
+            setBody(
+                IdTokenGrantRequest(
+                    provider = "google",
+                    idToken = idToken,
+                    nonce = nonce
+                )
+            )
         }.body()
     }
 

@@ -22,6 +22,8 @@ android {
             "SUPABASE_ANON_KEY",
             "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5a2ZsYXJwaWJvZnZmZm16Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0NjU5NDMsImV4cCI6MjA3MjA0MTk0M30.r3DHA2EKNvC_AraPs1gwgaBl_oEBpDrD1bwPfiuiSbM\""
         )
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"168300231262-3if586pjr3eejrfn46nijb2ss0egavmq.apps.googleusercontent.com\"")
+
     }
 
     buildTypes {
@@ -100,5 +102,10 @@ dependencies {
 
     // ---- Reorderable list ----
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
+
+    // ---- Credential Manager + Google ID (Sign in with Google) ----
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
 }
