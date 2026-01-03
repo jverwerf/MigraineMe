@@ -87,6 +87,9 @@ object Routes {
 
     const val TESTING = "testing"
     const val TESTING_COMPLETE = "testing_complete"
+
+    // NEW
+    const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
 }
 
 class MainActivity : ComponentActivity() {
@@ -234,6 +237,7 @@ fun AppRoot() {
                                 Routes.ADJUST_MIGRAINES -> "Adjust Migraines"
                                 Routes.TESTING -> "Testing"
                                 Routes.TESTING_COMPLETE -> "Testing Complete"
+                                Routes.THIRD_PARTY_CONNECTIONS -> "Connections"
                                 else -> ""
                             }
                         )
@@ -365,7 +369,17 @@ fun AppRoot() {
                     )
                 }
 
-                composable(Routes.PROFILE) { ProfileScreen(authVm = authVm) }
+                composable(Routes.PROFILE) {
+                    ProfileScreen(
+                        authVm = authVm,
+                        onOpenThirdPartyConnections = { nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) }
+                    )
+                }
+
+                // NEW
+                composable(Routes.THIRD_PARTY_CONNECTIONS) {
+                    ThirdPartyConnectionsScreen(onBack = { nav.popBackStack() })
+                }
 
                 composable(Routes.DATA) { DataSettingsScreen() }
 
