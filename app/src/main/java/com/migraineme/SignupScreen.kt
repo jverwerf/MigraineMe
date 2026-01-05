@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -108,8 +109,13 @@ fun SignupScreen(
             Text(if (busy) "Creating account..." else "Create account")
         }
 
-        TextButton(onClick = onNavigateToLogin) {
-            Text("Already have an account? Sign in")
+        TextButton(
+            onClick = onNavigateToLogin,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text("Back")
         }
     }
 }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -52,6 +52,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.foundation.layout.Spacer
+
 
 private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://www.andlane.co.uk/migraineme-recover"
 
@@ -65,11 +67,13 @@ fun LoginScreen(
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
     val snackbarHostState = remember { SnackbarHostState() }
+
     var loginCompleted by remember { mutableStateOf(false) }
 
     var showEmailForm by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -203,6 +207,8 @@ fun LoginScreen(
                 }
             } catch (e: GetCredentialException) {
                 error = e.message
+            } catch (t: Throwable) {
+                error = t.message ?: "Google sign-in failed."
             } finally {
                 busy = false
             }
@@ -284,52 +290,71 @@ fun LoginScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Sign in",
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            OutlinedButton(
-                onClick = { showEmailForm = true },
-                enabled = !busy,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
+            // App logo (app/src/main/res/drawable/logo.png)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Email,
-                        contentDescription = "Email",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text("Continue with email")
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "MigraineMe",
+                    modifier = Modifier.size(110.dp)
+                )
             }
 
-            OutlinedButton(
-                onClick = { signInWithGoogle() },
-                enabled = !busy,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+            if (!showEmailForm) {
+                OutlinedButton(
+                    onClick = { showEmailForm = true },
+                    enabled = !busy,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = "Email",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text("Continue with email")
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = { signInWithGoogle() },
+                    enabled = !busy,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_google_logo),
+                            contentDescription = "Google",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text("Continue with Google")
+                    }
+                }
+
+                Divider()
+
+                TextButton(
+                    onClick = onNavigateToSignUp,
+                    enabled = !busy,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_google_logo),
-                        contentDescription = "Google",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text("Continue with Google")
+                    Text("Create account")
                 }
             }
 
@@ -353,30 +378,21 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                TextButton(
+                    enabled = !busy,
+                    onClick = {
+                        forgotEmail = email.trim()
+                        forgotError = null
+                        showForgotDialog = true
+                    }
                 ) {
-                    TextButton(
-                        enabled = !busy,
-                        onClick = {
-                            forgotEmail = email.trim()
-                            forgotError = null
-                            showForgotDialog = true
-                        }
-                    ) {
-                        Text("Forgot password?")
-                    }
-
-                    TextButton(onClick = onNavigateToSignUp, enabled = !busy) {
-                        Text("Sign up")
-                    }
+                    Text("Forgot password?")
                 }
 
                 Button(
                     onClick = {
                         busy = true
+                        error = null
                         scope.launch {
                             try {
                                 val ses = SupabaseAuthService.signInWithEmail(
@@ -392,6 +408,8 @@ fun LoginScreen(
                                 } ?: run {
                                     error = "Invalid login response."
                                 }
+                            } catch (t: Throwable) {
+                                error = t.message ?: "Login failed."
                             } finally {
                                 busy = false
                             }
@@ -404,6 +422,14 @@ fun LoginScreen(
                         .height(48.dp)
                 ) {
                     Text("Continue")
+                }
+
+                TextButton(
+                    onClick = { showEmailForm = false },
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Back")
                 }
             }
 

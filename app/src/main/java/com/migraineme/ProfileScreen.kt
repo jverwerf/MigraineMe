@@ -8,6 +8,7 @@ import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -82,18 +84,28 @@ fun ProfileScreen(
     val avatarBitmap = remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     val avatarUploadErrorDialog = remember { mutableStateOf<String?>(null) }
 
-    // NEW: forces avatar reload even when avatar_url string doesn't change
-    val avatarReloadNonce = remember { mutableStateOf(0L) }
+    // Modal state for "updating picture"
+    val avatarUploading = remember { mutableStateOf(false) }
 
+    // Change-password is only relevant for email/password users.
+    // Prefer the provider we stored at login time (SessionStore) to avoid ambiguity when users have multiple identities linked.
     val canChangePassword = remember { mutableStateOf(false) }
 
-    LaunchedEffect(auth.accessToken) {
+    LaunchedEffect(auth.accessToken, auth.userId) {
         val token = auth.accessToken
         if (token.isNullOrBlank()) {
             canChangePassword.value = false
             return@LaunchedEffect
         }
 
+        // 1) Fast path: use locally stored login provider ("email" | "google" | ...)
+        val storedProvider = SessionStore.readAuthProvider(context)
+        if (!storedProvider.isNullOrBlank()) {
+            canChangePassword.value = storedProvider == "email"
+            return@LaunchedEffect
+        }
+
+        // 2) Fallback: ask Supabase (older installs may not have stored provider yet).
         try {
             val user = withContext(Dispatchers.IO) { SupabaseAuthService.getUser(token) }
             canChangePassword.value = user.identities?.any { it.provider == "email" } == true
@@ -114,8 +126,15 @@ fun ProfileScreen(
             return@rememberLauncherForActivityResult
         }
 
+        // Instant local preview so the user sees the new image immediately.
+        runCatching {
+            val bmp = decodePreviewBitmap(context, uri, 512)
+            if (bmp != null) avatarBitmap.value = bmp.asImageBitmap()
+        }
+
         profileLoading.value = true
         profileError.value = null
+        avatarUploading.value = true
 
         scope.launch {
             try {
@@ -123,23 +142,34 @@ fun ProfileScreen(
                     uploadAvatarToSupabaseStorage(context, token, userId, uri)
                 }
 
+                // Cache-bust so phones/CDNs don't show the old avatar (same object path userId.jpg).
+                val cacheBustedUrl = "$publicUrl?v=${System.currentTimeMillis()}"
+
                 val updated = withContext(Dispatchers.IO) {
                     SupabaseProfileService.updateProfile(
                         accessToken = token,
                         userId = userId,
                         displayName = null,
-                        avatarUrl = publicUrl,
+                        avatarUrl = cacheBustedUrl,
                         migraineType = null
                     )
                 }
 
                 profile.value = updated
 
-                // NEW: avatar URL string may be the same; force a reload of bitmap anyway.
-                avatarReloadNonce.value = System.currentTimeMillis()
+                // Force refresh fetch using the new cache-busted URL (extra safety)
+                runCatching {
+                    val bmp = withContext(Dispatchers.IO) {
+                        URL(cacheBustedUrl).openStream().use { input ->
+                            BitmapFactory.decodeStream(input)
+                        }
+                    }
+                    avatarBitmap.value = bmp?.asImageBitmap()
+                }
             } catch (t: Throwable) {
                 avatarUploadErrorDialog.value = t.message ?: "Failed to upload profile picture."
             } finally {
+                avatarUploading.value = false
                 profileLoading.value = false
             }
         }
@@ -172,8 +202,8 @@ fun ProfileScreen(
         }
     }
 
-    // UPDATED: include nonce so we reload even if avatar_url is unchanged; add cache-buster when fetching.
-    LaunchedEffect(profile.value?.avatarUrl, avatarReloadNonce.value) {
+    // Still keep the fetch-from-URL behavior, but now avatar_url includes cache-busting when updated.
+    LaunchedEffect(profile.value?.avatarUrl) {
         val url = profile.value?.avatarUrl?.trim()
         if (url.isNullOrBlank()) {
             avatarBitmap.value = null
@@ -182,11 +212,8 @@ fun ProfileScreen(
 
         avatarBitmap.value = null
         try {
-            val cb = System.currentTimeMillis()
-            val fetchUrl = if (url.contains("?")) "$url&cb=$cb" else "$url?cb=$cb"
-
             val bmp = withContext(Dispatchers.IO) {
-                URL(fetchUrl).openStream().use { input ->
+                URL(url).openStream().use { input ->
                     BitmapFactory.decodeStream(input)
                 }
             }
@@ -231,6 +258,24 @@ fun ProfileScreen(
         }
         migraineMenuExpanded.value = false
         isEditing.value = false
+    }
+
+    // "Updating picture..." modal
+    if (avatarUploading.value) {
+        AlertDialog(
+            onDismissRequest = { /* block dismiss while uploading */ },
+            confirmButton = {},
+            title = { Text("Updating picture") },
+            text = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp))
+                    Text("Uploading and updating profile…")
+                }
+            }
+        )
     }
 
     avatarUploadErrorDialog.value?.let { msg ->
@@ -432,6 +477,43 @@ fun ProfileScreen(
     }
 }
 
+private fun decodePreviewBitmap(
+    context: android.content.Context,
+    uri: Uri,
+    maxDim: Int
+): Bitmap? {
+    val resolver = context.contentResolver
+
+    val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
+
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+
+    val srcW = bounds.outWidth
+    val srcH = bounds.outHeight
+    if (srcW <= 0 || srcH <= 0) return null
+
+    var sample = 1
+    while ((srcW / sample) > maxDim * 2 || (srcH / sample) > maxDim * 2) {
+        sample *= 2
+        if (sample >= 128) break
+    }
+
+    val opts = BitmapFactory.Options().apply { inSampleSize = max(1, sample) }
+    val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts) ?: return null
+
+    val maxSide = max(decoded.width, decoded.height)
+    if (maxSide <= maxDim) return decoded
+
+    val scale = maxDim.toFloat() / maxSide.toFloat()
+    val newW = (decoded.width * scale).toInt().coerceAtLeast(1)
+    val newH = (decoded.height * scale).toInt().coerceAtLeast(1)
+
+    val scaled = Bitmap.createScaledBitmap(decoded, newW, newH, true)
+    if (scaled !== decoded) decoded.recycle()
+    return scaled
+}
+
 private fun uploadAvatarToSupabaseStorage(
     context: android.content.Context,
     accessToken: String,
@@ -476,8 +558,9 @@ private fun uploadAvatarToSupabaseStorage(
     val sample = computePowerOfTwoSampleSize(srcW, srcH, maxDim * 2)
     val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
 
-    val decoded: Bitmap = BitmapFactory.decodeByteArray(originalBytes, 0, originalBytes.size, decodeOpts)
-        ?: throw IllegalStateException("Could not decode selected image.")
+    val decoded: Bitmap =
+        BitmapFactory.decodeByteArray(originalBytes, 0, originalBytes.size, decodeOpts)
+            ?: throw IllegalStateException("Could not decode selected image.")
 
     val scaled = scaleDown(decoded, maxDim)
     if (scaled !== decoded) decoded.recycle()
