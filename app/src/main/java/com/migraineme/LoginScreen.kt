@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +53,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://www.andlane.co.uk/migraineme-recover"
+
 @Composable
 fun LoginScreen(
     authVm: AuthViewModel,
@@ -69,6 +72,12 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+
+    // Forgot password dialog state
+    var showForgotDialog by remember { mutableStateOf(false) }
+    var forgotEmail by remember { mutableStateOf("") }
+    var forgotBusy by remember { mutableStateOf(false) }
+    var forgotError by remember { mutableStateOf<String?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -125,9 +134,6 @@ fun LoginScreen(
         authVm.setSession(token, userId)
 
         scope.launch {
-            // Hydrate profiles on login (provider-agnostic).
-            // - Google/Apple/Facebook can provide hints
-            // - Email/password passes nulls and user fills later
             try {
                 withContext(Dispatchers.IO) {
                     SupabaseProfileService.ensureProfile(
@@ -203,6 +209,73 @@ fun LoginScreen(
         }
     }
 
+    if (showForgotDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!forgotBusy) {
+                    showForgotDialog = false
+                    forgotError = null
+                }
+            },
+            title = { Text("Reset password") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Enter your email and we’ll send you a reset link.")
+                    OutlinedTextField(
+                        value = forgotEmail,
+                        onValueChange = { forgotEmail = it },
+                        label = { Text("Email") },
+                        singleLine = true,
+                        enabled = !forgotBusy,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    forgotError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !forgotBusy,
+                    onClick = {
+                        val e = forgotEmail.trim()
+                        if (e.isBlank()) {
+                            forgotError = "Please enter your email."
+                            return@TextButton
+                        }
+
+                        forgotBusy = true
+                        forgotError = null
+
+                        scope.launch {
+                            try {
+                                withContext(Dispatchers.IO) {
+                                    SupabaseAuthService.requestPasswordReset(
+                                        email = e,
+                                        redirectTo = PASSWORD_RECOVERY_REDIRECT_URL
+                                    )
+                                }
+                                showForgotDialog = false
+                                snackbarHostState.showSnackbar("Password reset email sent (if the account exists).")
+                            } catch (t: Throwable) {
+                                forgotError = t.message ?: "Failed to send reset email."
+                            } finally {
+                                forgotBusy = false
+                            }
+                        }
+                    }
+                ) { Text(if (forgotBusy) "Sending." else "Send link") }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !forgotBusy,
+                    onClick = {
+                        showForgotDialog = false
+                        forgotError = null
+                    }
+                ) { Text("Cancel") }
+            }
+        )
+    }
+
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(
             modifier = Modifier
@@ -216,7 +289,6 @@ fun LoginScreen(
                 style = MaterialTheme.typography.headlineSmall
             )
 
-            // Email-first button (UI kept the same; icon is provided via Material Icons)
             OutlinedButton(
                 onClick = { showEmailForm = true },
                 enabled = !busy,
@@ -239,7 +311,6 @@ fun LoginScreen(
                 }
             }
 
-            // Google button (kept as before; uses your drawable)
             OutlinedButton(
                 onClick = { signInWithGoogle() },
                 enabled = !busy,
@@ -282,6 +353,27 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        enabled = !busy,
+                        onClick = {
+                            forgotEmail = email.trim()
+                            forgotError = null
+                            showForgotDialog = true
+                        }
+                    ) {
+                        Text("Forgot password?")
+                    }
+
+                    TextButton(onClick = onNavigateToSignUp, enabled = !busy) {
+                        Text("Sign up")
+                    }
+                }
+
                 Button(
                     onClick = {
                         busy = true
@@ -292,7 +384,11 @@ fun LoginScreen(
                                     password
                                 )
                                 ses.accessToken?.let {
-                                    handleSuccessfulSession(token = it, displayNameHint = null, avatarUrlHint = null)
+                                    handleSuccessfulSession(
+                                        token = it,
+                                        displayNameHint = null,
+                                        avatarUrlHint = null
+                                    )
                                 } ?: run {
                                     error = "Invalid login response."
                                 }
@@ -308,10 +404,6 @@ fun LoginScreen(
                         .height(48.dp)
                 ) {
                     Text("Continue")
-                }
-
-                TextButton(onClick = onNavigateToSignUp) {
-                    Text("Don't have an account? Sign up.")
                 }
             }
 

@@ -1,4 +1,4 @@
-// FILE: C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme\AuthViewModel.kt
+// FILE: app/src/main/java/com/migraineme/AuthViewModel.kt
 package com.migraineme
 
 import androidx.lifecycle.ViewModel
@@ -26,20 +26,26 @@ class AuthViewModel : ViewModel() {
         _state.update { AuthState() }
     }
 
+    /**
+     * Fixes "needs two taps" logout:
+     * - Clear local session immediately so UI updates / navigation guards stop treating user as signed in
+     * - Perform remote signout in background (best-effort)
+     */
     fun signOut() {
         val token = _state.value.accessToken
-        if (token != null) {
+
+        // Clear local session immediately (prevents Login screen from auto-routing back to Home)
+        clearSession()
+
+        // Best-effort remote sign-out (does not block UI)
+        if (!token.isNullOrBlank()) {
             viewModelScope.launch {
                 try {
                     SupabaseAuthService.signOut(token)
                 } catch (_: Exception) {
                     // ignore remote signout errors
-                } finally {
-                    clearSession()
                 }
             }
-        } else {
-            clearSession()
         }
     }
 }

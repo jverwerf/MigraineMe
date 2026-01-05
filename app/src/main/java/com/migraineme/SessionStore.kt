@@ -1,4 +1,4 @@
-// app/src/main/java/com/migraineme/SessionStore.kt
+// FILE: app/src/main/java/com/migraineme/SessionStore.kt
 package com.migraineme
 
 import android.content.Context
@@ -8,6 +8,7 @@ object SessionStore {
     private const val PREFS = "session_prefs"
     private const val KEY_ACCESS = "access_token"
     private const val KEY_USER_ID = "user_id"
+    private const val KEY_AUTH_PROVIDER = "auth_provider" // "email" | "google" | null
 
     fun saveAccessToken(context: Context, token: String) {
         context.getSharedPreferences(PREFS, MODE_PRIVATE)
@@ -28,14 +29,31 @@ object SessionStore {
     }
 
     /**
-     * Convenience method to store both token + derived user id together.
-     * Keeps existing call sites compatible (they can still call saveAccessToken()).
+     * Persists which auth method was used for this session.
+     * Expected values: "email", "google"
      */
-    fun saveSession(context: Context, token: String, userId: String?) {
+    fun saveAuthProvider(context: Context, provider: String?) {
+        context.getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putString(KEY_AUTH_PROVIDER, provider)
+            .apply()
+    }
+
+    fun readAuthProvider(context: Context): String? {
+        return context.getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getString(KEY_AUTH_PROVIDER, null)
+    }
+
+    /**
+     * Convenience method to store token + derived user id (+ provider) together.
+     * Existing call sites that pass only (context, token, userId) still compile because provider has a default.
+     */
+    fun saveSession(context: Context, token: String, userId: String?, provider: String? = null) {
         context.getSharedPreferences(PREFS, MODE_PRIVATE)
             .edit()
             .putString(KEY_ACCESS, token)
             .putString(KEY_USER_ID, userId)
+            .putString(KEY_AUTH_PROVIDER, provider)
             .apply()
     }
 

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
@@ -88,8 +89,10 @@ object Routes {
     const val TESTING = "testing"
     const val TESTING_COMPLETE = "testing_complete"
 
-    // NEW
     const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
+
+    // NEW
+    const val CHANGE_PASSWORD = "change_password"
 }
 
 class MainActivity : ComponentActivity() {
@@ -144,7 +147,7 @@ fun AppRoot() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // FIXED: Was applicationContext. Now Activity context.
+    // Activity context
     val ctx = LocalContext.current
 
     val authVm: AuthViewModel = viewModel()
@@ -174,6 +177,7 @@ fun AppRoot() {
 
     val drawerItems = listOf(
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
+        DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Testing", Routes.TESTING, Icons.Outlined.BarChart),
         DrawerItem("Testing Complete", Routes.TESTING_COMPLETE, Icons.Outlined.Assessment),
@@ -238,6 +242,7 @@ fun AppRoot() {
                                 Routes.TESTING -> "Testing"
                                 Routes.TESTING_COMPLETE -> "Testing Complete"
                                 Routes.THIRD_PARTY_CONNECTIONS -> "Connections"
+                                Routes.CHANGE_PASSWORD -> "Change password"
                                 else -> ""
                             }
                         )
@@ -372,11 +377,17 @@ fun AppRoot() {
                 composable(Routes.PROFILE) {
                     ProfileScreen(
                         authVm = authVm,
-                        onOpenThirdPartyConnections = { nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) }
+                        onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) }
                     )
                 }
 
-                // NEW
+                composable(Routes.CHANGE_PASSWORD) {
+                    ChangePasswordScreen(
+                        authVm = authVm,
+                        onDone = { nav.popBackStack() }
+                    )
+                }
+
                 composable(Routes.THIRD_PARTY_CONNECTIONS) {
                     ThirdPartyConnectionsScreen(onBack = { nav.popBackStack() })
                 }
