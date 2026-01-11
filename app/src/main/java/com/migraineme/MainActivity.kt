@@ -91,7 +91,6 @@ object Routes {
 
     const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
 
-    // NEW
     const val CHANGE_PASSWORD = "change_password"
 }
 
@@ -167,6 +166,7 @@ fun AppRoot() {
 
     // Activity context
     val ctx = LocalContext.current
+    val appCtx = ctx.applicationContext
 
     val authVm: AuthViewModel = viewModel()
     val logVm: LogViewModel = viewModel()
@@ -178,6 +178,27 @@ fun AppRoot() {
     val authState by authVm.state.collectAsState()
     val token = authState.accessToken
     var preloaded by remember { mutableStateOf(false) }
+
+    // UPDATED: restore persisted session on cold start using refresh-aware token retrieval
+    LaunchedEffect(Unit) {
+        // This will refresh silently if the stored access token is expired (using refresh_token in SessionStore).
+        val persistedToken = SessionStore.getValidAccessToken(appCtx)
+
+        if (!persistedToken.isNullOrBlank() && authState.accessToken.isNullOrBlank()) {
+            var persistedUserId = SessionStore.readUserId(appCtx)
+
+            if (persistedUserId.isNullOrBlank()) {
+                persistedUserId = JwtUtils.extractUserIdFromAccessToken(persistedToken)
+                if (!persistedUserId.isNullOrBlank()) {
+                    SessionStore.saveUserId(appCtx, persistedUserId)
+                }
+            }
+
+            if (!persistedUserId.isNullOrBlank()) {
+                authVm.setSession(persistedToken, persistedUserId)
+            }
+        }
+    }
 
     LaunchedEffect(token) {
         if (token.isNullOrBlank()) {

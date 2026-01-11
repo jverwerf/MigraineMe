@@ -27,7 +27,7 @@ class LocationDailySyncWorker(
         try {
             Log.d(LOG_TAG, "---- Running LocationDailySyncWorker ----")
 
-            val access = SessionStore.readAccessToken(applicationContext)
+            val access = SessionStore.getValidAccessToken(applicationContext)
                 ?: return@withContext Result.success()
 
             // Gate entire location collection by the single table toggle.

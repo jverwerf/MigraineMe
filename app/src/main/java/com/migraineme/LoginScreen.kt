@@ -55,11 +55,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.layout.Spacer
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
 
 private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://www.andlane.co.uk/migraineme-recover"
 
@@ -129,6 +124,8 @@ fun LoginScreen(
 
     fun handleSuccessfulSession(
         token: String,
+        refreshToken: String? = null,
+        expiresIn: Long? = null,
         displayNameHint: String? = null,
         avatarUrlHint: String? = null,
         providerHint: String? = null
@@ -141,8 +138,16 @@ fun LoginScreen(
             return
         }
 
-        // Store provider so Profile can determine if password change is relevant (email only).
-        SessionStore.saveSession(appCtx, token, userId, providerHint)
+        // Store provider (+ refresh/expires) so app can restore + refresh for workers.
+        SessionStore.saveSession(
+            context = appCtx,
+            accessToken = token,
+            userId = userId,
+            provider = providerHint,
+            refreshToken = refreshToken,
+            expiresIn = expiresIn,
+            obtainedAtMs = System.currentTimeMillis()
+        )
         authVm.setSession(token, userId)
 
         scope.launch {
@@ -179,25 +184,6 @@ fun LoginScreen(
             .toMap()
     }
 
-    fun jsonElementStringOrNull(el: JsonElement?): String? {
-        return (el as? JsonPrimitive)?.contentOrNull
-    }
-
-    fun extractPictureUrl(el: JsonElement?): String? {
-        if (el == null) return null
-
-        // Sometimes a string URL
-        val prim = el as? JsonPrimitive
-        if (prim != null) return prim.contentOrNull
-
-        // Sometimes nested: { data: { url: "..." } } or { url: "..." }
-        val obj = runCatching { el.jsonObject }.getOrNull() ?: return null
-        jsonElementStringOrNull(obj["url"])?.let { return it }
-
-        val dataObj = runCatching { obj["data"]?.jsonObject }.getOrNull()
-        return jsonElementStringOrNull(dataObj?.get("url"))
-    }
-
     fun tryCompleteSupabaseOAuthReturn(): Boolean {
         val prefs = ctx.getSharedPreferences("supabase_oauth", android.content.Context.MODE_PRIVATE)
         val last = prefs.getString("last_uri", null) ?: return false
@@ -209,6 +195,9 @@ fun LoginScreen(
         val frag = parseFragmentParams(uri)
 
         val accessToken = frag["access_token"]
+        val refreshToken = frag["refresh_token"]
+        val expiresIn = frag["expires_in"]?.toLongOrNull()
+
         val errDesc = frag["error_description"] ?: frag["error"]
 
         if (!errDesc.isNullOrBlank()) {
@@ -221,40 +210,14 @@ fun LoginScreen(
             return true
         }
 
-        // Minimal change: hydrate name/avatar from Supabase user_metadata for Facebook.
-        busy = true
-        scope.launch {
-            try {
-                val (nameHint, avatarHint) = withContext(Dispatchers.IO) {
-                    val user = SupabaseAuthService.getUser(accessToken)
-                    val md: JsonObject? = user.userMetadata
-
-                    val name =
-                        jsonElementStringOrNull(md?.get("full_name"))
-                            ?: jsonElementStringOrNull(md?.get("name"))
-                            ?: jsonElementStringOrNull(md?.get("display_name"))
-
-                    val avatar =
-                        jsonElementStringOrNull(md?.get("avatar_url"))
-                            ?: extractPictureUrl(md?.get("picture"))
-                            ?: jsonElementStringOrNull(md?.get("picture_url"))
-
-                    name to avatar
-                }
-
-                handleSuccessfulSession(
-                    token = accessToken,
-                    displayNameHint = nameHint,
-                    avatarUrlHint = avatarHint,
-                    providerHint = "facebook"
-                )
-            } catch (t: Throwable) {
-                error = t.message ?: "Facebook sign-in failed."
-            } finally {
-                busy = false
-            }
-        }
-
+        handleSuccessfulSession(
+            token = accessToken,
+            refreshToken = refreshToken,
+            expiresIn = expiresIn,
+            displayNameHint = null,
+            avatarUrlHint = null,
+            providerHint = "facebook"
+        )
         return true
     }
 
@@ -307,6 +270,8 @@ fun LoginScreen(
                 ses.accessToken?.let {
                     handleSuccessfulSession(
                         token = it,
+                        refreshToken = ses.refreshToken,
+                        expiresIn = ses.expiresIn,
                         displayNameHint = googleCred?.displayName,
                         avatarUrlHint = googleCred?.profilePictureUri?.toString(),
                         providerHint = "google"
@@ -546,6 +511,8 @@ fun LoginScreen(
                                 ses.accessToken?.let {
                                     handleSuccessfulSession(
                                         token = it,
+                                        refreshToken = ses.refreshToken,
+                                        expiresIn = ses.expiresIn,
                                         displayNameHint = null,
                                         avatarUrlHint = null,
                                         providerHint = "email"

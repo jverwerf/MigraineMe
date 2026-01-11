@@ -48,6 +48,11 @@ object SupabaseAuthService {
     )
 
     @Serializable
+    data class RefreshTokenGrantRequest(
+        @SerialName("refresh_token") val refreshToken: String
+    )
+
+    @Serializable
     data class SessionResponse(
         @SerialName("access_token") val accessToken: String? = null,
         @SerialName("refresh_token") val refreshToken: String? = null,
@@ -113,6 +118,19 @@ object SupabaseAuthService {
                     nonce = nonce
                 )
             )
+        }.body()
+    }
+
+    /**
+     * Refreshes a Supabase session using a refresh_token.
+     * Supabase: POST /auth/v1/token?grant_type=refresh_token
+     */
+    suspend fun refreshSession(refreshToken: String): SessionResponse {
+        val url = "$baseUrl/auth/v1/token?grant_type=refresh_token"
+        return client.post(url) {
+            header("apikey", anonKey)
+            contentType(ContentType.Application.Json)
+            setBody(RefreshTokenGrantRequest(refreshToken = refreshToken))
         }.body()
     }
 

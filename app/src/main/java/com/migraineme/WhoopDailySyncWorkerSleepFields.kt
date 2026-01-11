@@ -30,7 +30,7 @@ class WhoopDailySyncWorkerSleepFields(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            val access = SessionStore.readAccessToken(applicationContext)
+            val access = SessionStore.getValidAccessToken(applicationContext)
                 ?: return@withContext Result.success()
 
             val hasWhoop = WhoopTokenStore(applicationContext).load() != null
