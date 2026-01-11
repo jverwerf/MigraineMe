@@ -1,7 +1,9 @@
 package com.migraineme
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -53,7 +55,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.layout.Spacer
-
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 
 private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://www.andlane.co.uk/migraineme-recover"
 
@@ -124,7 +130,8 @@ fun LoginScreen(
     fun handleSuccessfulSession(
         token: String,
         displayNameHint: String? = null,
-        avatarUrlHint: String? = null
+        avatarUrlHint: String? = null,
+        providerHint: String? = null
     ) {
         val userId = JwtUtils.extractUserIdFromAccessToken(token)
         if (userId.isNullOrBlank()) {
@@ -134,7 +141,8 @@ fun LoginScreen(
             return
         }
 
-        SessionStore.saveSession(appCtx, token, userId)
+        // Store provider so Profile can determine if password change is relevant (email only).
+        SessionStore.saveSession(appCtx, token, userId, providerHint)
         authVm.setSession(token, userId)
 
         scope.launch {
@@ -154,6 +162,106 @@ fun LoginScreen(
             MetricsSyncManager.onLogin(appCtx, token, snackbarHostState)
             loginCompleted = true
         }
+    }
+
+    fun parseFragmentParams(uri: Uri): Map<String, String> {
+        val frag = uri.fragment ?: return emptyMap()
+        if (frag.isBlank()) return emptyMap()
+
+        return frag.split("&")
+            .mapNotNull { kv ->
+                val idx = kv.indexOf("=")
+                if (idx <= 0) return@mapNotNull null
+                val k = Uri.decode(kv.substring(0, idx))
+                val v = Uri.decode(kv.substring(idx + 1))
+                k to v
+            }
+            .toMap()
+    }
+
+    fun jsonElementStringOrNull(el: JsonElement?): String? {
+        return (el as? JsonPrimitive)?.contentOrNull
+    }
+
+    fun extractPictureUrl(el: JsonElement?): String? {
+        if (el == null) return null
+
+        // Sometimes a string URL
+        val prim = el as? JsonPrimitive
+        if (prim != null) return prim.contentOrNull
+
+        // Sometimes nested: { data: { url: "..." } } or { url: "..." }
+        val obj = runCatching { el.jsonObject }.getOrNull() ?: return null
+        jsonElementStringOrNull(obj["url"])?.let { return it }
+
+        val dataObj = runCatching { obj["data"]?.jsonObject }.getOrNull()
+        return jsonElementStringOrNull(dataObj?.get("url"))
+    }
+
+    fun tryCompleteSupabaseOAuthReturn(): Boolean {
+        val prefs = ctx.getSharedPreferences("supabase_oauth", android.content.Context.MODE_PRIVATE)
+        val last = prefs.getString("last_uri", null) ?: return false
+
+        // Clear immediately to avoid double-processing on recomposition.
+        prefs.edit().remove("last_uri").apply()
+
+        val uri = Uri.parse(last)
+        val frag = parseFragmentParams(uri)
+
+        val accessToken = frag["access_token"]
+        val errDesc = frag["error_description"] ?: frag["error"]
+
+        if (!errDesc.isNullOrBlank()) {
+            error = errDesc
+            return true
+        }
+
+        if (accessToken.isNullOrBlank()) {
+            error = "Facebook sign-in failed (missing access token)."
+            return true
+        }
+
+        // Minimal change: hydrate name/avatar from Supabase user_metadata for Facebook.
+        busy = true
+        scope.launch {
+            try {
+                val (nameHint, avatarHint) = withContext(Dispatchers.IO) {
+                    val user = SupabaseAuthService.getUser(accessToken)
+                    val md: JsonObject? = user.userMetadata
+
+                    val name =
+                        jsonElementStringOrNull(md?.get("full_name"))
+                            ?: jsonElementStringOrNull(md?.get("name"))
+                            ?: jsonElementStringOrNull(md?.get("display_name"))
+
+                    val avatar =
+                        jsonElementStringOrNull(md?.get("avatar_url"))
+                            ?: extractPictureUrl(md?.get("picture"))
+                            ?: jsonElementStringOrNull(md?.get("picture_url"))
+
+                    name to avatar
+                }
+
+                handleSuccessfulSession(
+                    token = accessToken,
+                    displayNameHint = nameHint,
+                    avatarUrlHint = avatarHint,
+                    providerHint = "facebook"
+                )
+            } catch (t: Throwable) {
+                error = t.message ?: "Facebook sign-in failed."
+            } finally {
+                busy = false
+            }
+        }
+
+        return true
+    }
+
+    LaunchedEffect(Unit) {
+        // If the app was opened via migraineme://auth/callback, MainActivity stored it.
+        // Complete login here using the existing post-login flow.
+        tryCompleteSupabaseOAuthReturn()
     }
 
     fun signInWithGoogle() {
@@ -200,7 +308,8 @@ fun LoginScreen(
                     handleSuccessfulSession(
                         token = it,
                         displayNameHint = googleCred?.displayName,
-                        avatarUrlHint = googleCred?.profilePictureUri?.toString()
+                        avatarUrlHint = googleCred?.profilePictureUri?.toString(),
+                        providerHint = "google"
                     )
                 } ?: run {
                     error = "Invalid login response."
@@ -213,6 +322,19 @@ fun LoginScreen(
                 busy = false
             }
         }
+    }
+
+    fun signInWithFacebook() {
+        error = null
+
+        val activity = ctx as? Activity
+        if (activity == null) {
+            error = "Facebook sign-in unavailable."
+            return
+        }
+
+        // Browser handoff is immediate; completion happens when we return via deep link.
+        FacebookAuthService().startAuth(activity)
     }
 
     if (showForgotDialog) {
@@ -326,6 +448,28 @@ fun LoginScreen(
                 }
 
                 OutlinedButton(
+                    onClick = { signInWithFacebook() },
+                    enabled = !busy,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.facebook_logo_primary),
+                            contentDescription = "Facebook",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text("Continue with Facebook")
+                    }
+                }
+
+                OutlinedButton(
                     onClick = { signInWithGoogle() },
                     enabled = !busy,
                     shape = RoundedCornerShape(12.dp),
@@ -403,7 +547,8 @@ fun LoginScreen(
                                     handleSuccessfulSession(
                                         token = it,
                                         displayNameHint = null,
-                                        avatarUrlHint = null
+                                        avatarUrlHint = null,
+                                        providerHint = "email"
                                     )
                                 } ?: run {
                                     error = "Invalid login response."

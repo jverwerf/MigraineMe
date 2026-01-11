@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         handleWhoopOAuthIntent(intent)
+        handleSupabaseOAuthIntent(intent)
 
         setContent { MaterialTheme { AppRoot() } }
     }
@@ -108,6 +109,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleWhoopOAuthIntent(intent)
+        handleSupabaseOAuthIntent(intent)
     }
 
     private fun handleWhoopOAuthIntent(intent: Intent?) {
@@ -136,6 +138,22 @@ class MainActivity : ComponentActivity() {
                 else ->
                     Toast.makeText(this, "WHOOP callback opened.", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    /**
+     * Supabase OAuth callback handler (Facebook now; reusable for other providers later).
+     * Stores the callback URI for LoginScreen to complete login using the existing post-login flow.
+     */
+    private fun handleSupabaseOAuthIntent(intent: Intent?) {
+        val data: Uri? = intent?.data
+        if (data?.scheme == "migraineme" && data.host == "auth" && data.path == "/callback") {
+            val prefs = getSharedPreferences("supabase_oauth", MODE_PRIVATE)
+            prefs.edit()
+                .putString("last_uri", data.toString())
+                .apply()
+
+            Toast.makeText(this, "Returning from sign-in…", Toast.LENGTH_SHORT).show()
         }
     }
 }

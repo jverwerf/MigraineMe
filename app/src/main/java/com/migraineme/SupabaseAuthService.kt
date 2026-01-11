@@ -16,6 +16,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 object SupabaseAuthService {
     private val baseUrl: String = BuildConfig.SUPABASE_URL
@@ -63,7 +64,8 @@ object SupabaseAuthService {
     data class UserResponse(
         val id: String? = null,
         val email: String? = null,
-        val identities: List<Identity>? = null
+        val identities: List<Identity>? = null,
+        @SerialName("user_metadata") val userMetadata: JsonObject? = null
     )
 
     @Serializable
