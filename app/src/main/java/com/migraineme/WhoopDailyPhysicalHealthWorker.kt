@@ -75,6 +75,8 @@ class WhoopDailyPhysicalHealthWorker(
             val wrkObj = api.getWorkouts(wStart, wEnd)
 
             if (recObj == null && wrkObj == null) {
+                // Could not fetch anything: mark enabled PH tables as FAILED for today
+                markPhysicalTables(applicationContext, todaySql, WhoopSyncLogStore.TableOutcomeType.FETCH_FAILED, "api_null")
                 scheduleNext(applicationContext)
                 Log.d(TAG, "PH: Null WHOOP response for $today")
                 return@withContext Result.success()
@@ -141,7 +143,7 @@ class WhoopDailyPhysicalHealthWorker(
             try {
                 val zone = ZoneId.systemDefault()
                 val today = LocalDate.now(zone)
-                val token = WhoopTokenStore(context).load() ?: return
+                WhoopTokenStore(context).load() ?: return
 
                 val metrics = SupabasePhysicalHealthService(context)
                 val latestStr = metrics.latestPhysicalDate(access, "whoop")
@@ -172,7 +174,12 @@ class WhoopDailyPhysicalHealthWorker(
                         val recObj = api.getRecovery(wStart, wEnd)
                         val wrkObj = api.getWorkouts(wStart, wEnd)
 
-                        writeAllForDate(context, metrics, access, dateSql, recObj, wrkObj)
+                        if (recObj == null && wrkObj == null) {
+                            markPhysicalTables(context, dateSql, WhoopSyncLogStore.TableOutcomeType.FETCH_FAILED, "api_null")
+                        } else {
+                            writeAllForDate(context, metrics, access, dateSql, recObj, wrkObj)
+                        }
+
                         Log.d(TAG, "PH Backfill wrote $dateSql")
                     }
 
@@ -199,8 +206,21 @@ class WhoopDailyPhysicalHealthWorker(
             recoveryRoot: JSONObject?,
             workoutRoot: JSONObject?
         ) {
+            val outcomes = WhoopSyncLogStore(context)
+
             val rec = selectFirst(recoveryRoot)
             val wrk = selectFirst(workoutRoot)
+
+            // If we fetched, but there is no record, that is "no data" for the relevant tables.
+            if (rec == null && recoveryRoot != null) {
+                markRecoveryTables(context, dateSql, WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "no_record")
+            }
+            if (wrk == null && workoutRoot != null) {
+                // only impacts time_in_high_hr_zones_daily
+                if (DataCollectionSettings.isEnabledForWhoop(context, "time_in_high_hr_zones_daily")) {
+                    outcomes.setOutcome(dateSql, "time_in_high_hr_zones_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "no_record")
+                }
+            }
 
             val sourceId = rec?.optString("id")?.takeIf { it.isNotEmpty() }
                 ?: wrk?.optString("id")?.takeIf { it.isNotEmpty() }
@@ -214,10 +234,13 @@ class WhoopDailyPhysicalHealthWorker(
             val temp = score?.optDouble("skin_temp_celsius", Double.NaN)
             val spo2 = score?.optDouble("blood_oxygen_pct", Double.NaN)
 
-            // Write recovery score
+            // Recovery score
             if (DataCollectionSettings.isEnabledForWhoop(context, "recovery_score_daily")) {
                 if (recoveryPct != null && !recoveryPct.isNaN()) {
                     metrics.upsertRecoveryScoreDaily(access, dateSql, recoveryPct, "whoop", sourceId)
+                    outcomes.setOutcome(dateSql, "recovery_score_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
+                } else {
+                    outcomes.setOutcome(dateSql, "recovery_score_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_value")
                 }
             }
 
@@ -225,6 +248,9 @@ class WhoopDailyPhysicalHealthWorker(
             if (DataCollectionSettings.isEnabledForWhoop(context, "resting_hr_daily")) {
                 if (restingHr != null && !restingHr.isNaN()) {
                     metrics.upsertRestingHrDaily(access, dateSql, restingHr, "whoop", sourceId)
+                    outcomes.setOutcome(dateSql, "resting_hr_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
+                } else {
+                    outcomes.setOutcome(dateSql, "resting_hr_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_value")
                 }
             }
 
@@ -232,6 +258,9 @@ class WhoopDailyPhysicalHealthWorker(
             if (DataCollectionSettings.isEnabledForWhoop(context, "hrv_daily")) {
                 if (hrv != null && !hrv.isNaN()) {
                     metrics.upsertHrvDaily(access, dateSql, hrv, "whoop", sourceId)
+                    outcomes.setOutcome(dateSql, "hrv_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
+                } else {
+                    outcomes.setOutcome(dateSql, "hrv_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_value")
                 }
             }
 
@@ -239,6 +268,9 @@ class WhoopDailyPhysicalHealthWorker(
             if (DataCollectionSettings.isEnabledForWhoop(context, "skin_temp_daily")) {
                 if (temp != null && !temp.isNaN()) {
                     metrics.upsertSkinTempDaily(access, dateSql, temp, "whoop", sourceId)
+                    outcomes.setOutcome(dateSql, "skin_temp_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
+                } else {
+                    outcomes.setOutcome(dateSql, "skin_temp_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_value")
                 }
             }
 
@@ -246,12 +278,20 @@ class WhoopDailyPhysicalHealthWorker(
             if (DataCollectionSettings.isEnabledForWhoop(context, "spo2_daily")) {
                 if (spo2 != null && !spo2.isNaN()) {
                     metrics.upsertSpo2Daily(access, dateSql, spo2, "whoop", sourceId)
+                    outcomes.setOutcome(dateSql, "spo2_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
+                } else {
+                    outcomes.setOutcome(dateSql, "spo2_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_value")
                 }
             }
 
             // -------- HIGH HR ZONES from workout --------
             if (DataCollectionSettings.isEnabledForWhoop(context, "time_in_high_hr_zones_daily")) {
-                writeHighHrZones(metrics, access, dateSql, wrk, sourceId)
+                val wrote = writeHighHrZones(metrics, access, dateSql, wrk, sourceId)
+                if (wrote) {
+                    outcomes.setOutcome(dateSql, "time_in_high_hr_zones_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
+                } else {
+                    outcomes.setOutcome(dateSql, "time_in_high_hr_zones_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_value")
+                }
             }
         }
 
@@ -267,11 +307,11 @@ class WhoopDailyPhysicalHealthWorker(
             dateSql: String,
             wrk: JSONObject?,
             sourceId: String?
-        ) {
-            if (wrk == null) return
+        ): Boolean {
+            if (wrk == null) return false
 
-            val score = wrk.optJSONObject("score") ?: return
-            val zd = score.optJSONObject("zone_durations") ?: return
+            val score = wrk.optJSONObject("score") ?: return false
+            val zd = score.optJSONObject("zone_durations") ?: return false
 
             val z3ms = zd.optDouble("zone_three_milli", 0.0)
             val z4ms = zd.optDouble("zone_four_milli", 0.0)
@@ -295,6 +335,50 @@ class WhoopDailyPhysicalHealthWorker(
                 source = "whoop",
                 sourceId = sourceId
             )
+            return true
+        }
+
+        private fun markPhysicalTables(
+            context: Context,
+            dateSql: String,
+            type: WhoopSyncLogStore.TableOutcomeType,
+            note: String?
+        ) {
+            val out = WhoopSyncLogStore(context)
+            val tables = listOf(
+                "recovery_score_daily",
+                "resting_hr_daily",
+                "hrv_daily",
+                "skin_temp_daily",
+                "spo2_daily",
+                "time_in_high_hr_zones_daily"
+            )
+            for (t in tables) {
+                if (DataCollectionSettings.isEnabledForWhoop(context, t)) {
+                    out.setOutcome(dateSql, t, type, note)
+                }
+            }
+        }
+
+        private fun markRecoveryTables(
+            context: Context,
+            dateSql: String,
+            type: WhoopSyncLogStore.TableOutcomeType,
+            note: String?
+        ) {
+            val out = WhoopSyncLogStore(context)
+            val tables = listOf(
+                "recovery_score_daily",
+                "resting_hr_daily",
+                "hrv_daily",
+                "skin_temp_daily",
+                "spo2_daily"
+            )
+            for (t in tables) {
+                if (DataCollectionSettings.isEnabledForWhoop(context, t)) {
+                    out.setOutcome(dateSql, t, type, note)
+                }
+            }
         }
     }
 }

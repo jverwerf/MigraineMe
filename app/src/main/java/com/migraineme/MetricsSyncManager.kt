@@ -7,6 +7,18 @@ import androidx.compose.material3.SnackbarHostState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Called from LoginScreen after successful auth.
+ *
+ * Responsibilities:
+ * - Best-effort WHOOP token refresh (does not change auth approach)
+ * - Schedule WHOOP daily workers (sleep + physical) if enabled + connected
+ * - Schedule Location worker if enabled
+ *
+ * Does NOT:
+ * - Change Supabase auth
+ * - Change Whoop auth structure
+ */
 object MetricsSyncManager {
 
     suspend fun onLogin(
@@ -14,71 +26,78 @@ object MetricsSyncManager {
         token: String,
         snackbarHostState: SnackbarHostState
     ) {
+        val appCtx = context.applicationContext
+
         withContext(Dispatchers.IO) {
             try {
-                val hasWhoop = try {
-                    WhoopAuthService().refresh(context)
-                    WhoopTokenStore(context).load() != null
-                } catch (t: Throwable) {
-                    false
-                }
+                // WHOOP connection = token exists locally
+                val whoopConnected = runCatching { WhoopTokenStore(appCtx).load() != null }.getOrDefault(false)
 
-                if (!hasWhoop) {
-                    snackbarHostState.showSnackbar(
-                        message = "WhoopSyncFailed – Refresh Connection.",
-                        duration = SnackbarDuration.Short
-                    )
-                }
-
+                // Determine if ANY WHOOP tables are enabled (sleep / physical)
                 val whoopSleepEnabled =
-                    DataCollectionSettings.isEnabledForWhoop(context, "sleep_duration_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "sleep_score_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "sleep_efficiency_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "sleep_stages_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "sleep_disturbances_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "fell_asleep_time_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "woke_up_time_daily")
+                    DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_duration_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_score_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_efficiency_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_stages_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_disturbances_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "fell_asleep_time_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "woke_up_time_daily")
 
                 val whoopPhysicalEnabled =
-                    DataCollectionSettings.isEnabledForWhoop(context, "recovery_score_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "resting_hr_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "hrv_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "skin_temp_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "spo2_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "time_in_high_hr_zones_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(context, "steps_daily")
+                    DataCollectionSettings.isEnabledForWhoop(appCtx, "recovery_score_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "resting_hr_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "hrv_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "skin_temp_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "spo2_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "time_in_high_hr_zones_daily") ||
+                            DataCollectionSettings.isEnabledForWhoop(appCtx, "steps_daily")
 
-                if (hasWhoop && whoopSleepEnabled) {
-                    WhoopDailySyncWorkerSleepFields.runOnceNow(context)
-                    WhoopDailySyncWorkerSleepFields.scheduleNext(context)
-                    WhoopDailySyncWorkerSleepFields.backfillUpToToday(context, token)
+                // If WHOOP connected, refresh Whoop token once (best-effort).
+                // If it fails, we still schedule; workers will log failures and retry next day.
+                if (whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
+                    runCatching { WhoopAuthService().refresh(appCtx) }.onFailure {
+                        Log.w("MetricsSyncManager", "WHOOP refresh failed: ${it.message}")
+                    }
+
+                    // Schedule + run once now (only if the category is enabled)
+                    if (whoopSleepEnabled) {
+                        WhoopDailySyncWorkerSleepFields.runOnceNow(appCtx)
+                        WhoopDailySyncWorkerSleepFields.scheduleNext(appCtx)
+                    }
+
+                    if (whoopPhysicalEnabled) {
+                        WhoopDailyPhysicalHealthWorker.runOnceNow(appCtx)
+                        WhoopDailyPhysicalHealthWorker.scheduleNext(appCtx)
+                    }
+                } else if (!whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
+                    // User has WHOOP collection enabled but no connection.
+                    withContext(Dispatchers.Main) {
+                        snackbarHostState.showSnackbar(
+                            message = "Whoop not connected — connect Whoop to collect data.",
+                            duration = SnackbarDuration.Short
+                        )
+                    }
                 }
 
-                if (hasWhoop && whoopPhysicalEnabled) {
-                    WhoopDailyPhysicalHealthWorker.runOnceNow(context)
-                    WhoopDailyPhysicalHealthWorker.scheduleNext(context)
-                    WhoopDailyPhysicalHealthWorker.backfillUpToToday(context, token)
-                }
-
+                // Location (NOT Whoop-specific)
                 val locationEnabled =
                     DataCollectionSettings.isActive(
-                        context = context,
+                        context = appCtx,
                         table = "user_location_daily",
                         wearable = null,
                         defaultValue = true
                     )
 
                 if (locationEnabled) {
-                    LocationDailySyncWorker.runOnceNow(context)
-                    LocationDailySyncWorker.scheduleNext(context)
-                    LocationDailySyncWorker.backfillUpToToday(context, token)
+                    LocationDailySyncWorker.runOnceNow(appCtx)
+                    LocationDailySyncWorker.scheduleNext(appCtx)
+                    LocationDailySyncWorker.backfillUpToToday(appCtx, token)
                 }
 
             } catch (t: Throwable) {
                 Log.w("MetricsSyncManager", "onLogin error: ${t.message}")
             }
 
-            // Force the lambda to be Unit-returning (prevents "if as expression" edge cases)
             Unit
         }
     }
