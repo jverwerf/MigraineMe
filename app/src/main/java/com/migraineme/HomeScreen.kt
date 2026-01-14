@@ -142,101 +142,12 @@ private fun DataStatusCard(accessToken: String?) {
     val ctx = LocalContext.current.applicationContext
     val zone = ZoneId.systemDefault()
     val today = LocalDate.now(zone).toString()
-    val afterNine = LocalTime.now(zone) >= LocalTime.of(9, 0)
 
     val whoopConnected = remember {
         runCatching { WhoopTokenStore(ctx).load() != null }.getOrDefault(false)
     }
 
-    val sleepAnchorsAll = listOf("sleep_duration_daily", "sleep_score_daily")
-    val sleepOptionalsAll = listOf(
-        "sleep_efficiency_daily",
-        "sleep_stages_daily",
-        "sleep_disturbances_daily",
-        "fell_asleep_time_daily",
-        "woke_up_time_daily"
-    )
-
-    val physicalAnchorsAll = listOf("recovery_score_daily", "resting_hr_daily", "hrv_daily")
-    val physicalOptionalsAll = listOf("spo2_daily", "skin_temp_daily", "time_in_high_hr_zones_daily")
-
-    val locationTable = "user_location_daily"
-
-    val enabledSleepAnchors = remember { sleepAnchorsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-    val enabledSleepOptionals = remember { sleepOptionalsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-
-    val enabledPhysicalAnchors = remember { physicalAnchorsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-    val enabledPhysicalOptionals = remember { physicalOptionalsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-
-    val locationEnabled = remember {
-        DataCollectionSettings.isActive(
-            context = ctx,
-            table = locationTable,
-            wearable = null,
-            defaultValue = true
-        )
-    }
-
-    var sleepAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-    var physicalAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-    var locationLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-
-    // NEW: a simple local confirmation that the button was tapped.
     var lastManualRunLabel by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(today, accessToken) {
-        if (accessToken.isNullOrBlank()) {
-            sleepAnchorLoaded = null
-            physicalAnchorLoaded = null
-            locationLoaded = null
-            return@LaunchedEffect
-        }
-
-        sleepAnchorLoaded = if (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) {
-            null
-        } else if (!whoopConnected) {
-            false
-        } else {
-            runCatching {
-                SupabaseMetricsService(ctx).hasSleepForDate(accessToken, today, "whoop")
-            }.getOrDefault(false)
-        }
-
-        physicalAnchorLoaded = if (enabledPhysicalAnchors.isEmpty() && enabledPhysicalOptionals.isEmpty()) {
-            null
-        } else if (!whoopConnected) {
-            false
-        } else {
-            runCatching {
-                SupabasePhysicalHealthService(ctx).hasRecoveryForDate(accessToken, today, "whoop")
-            }.getOrDefault(false)
-        }
-
-        locationLoaded = if (!locationEnabled) {
-            null
-        } else {
-            runCatching {
-                SupabasePersonalService(ctx).hasUserLocationForDate(accessToken, today, source = "device")
-            }.getOrDefault(false)
-        }
-    }
-
-    val logStore = remember { WhoopSyncLogStore(ctx) }
-
-    /**
-     * Returns:
-     * - null if we have no outcome recorded for that table today (unknown; do not show "pending" for optionals)
-     * - "couldn't fetch" / "no data" for known non-success outcomes
-     * - null for success (stored) because it’s not a warning
-     */
-    fun optionalWarningReasonOrNull(table: String): String? {
-        val o = logStore.getOutcome(today, table) ?: return null
-        return when (o.type) {
-            WhoopSyncLogStore.TableOutcomeType.FETCH_FAILED -> "couldn't fetch"
-            WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA -> "no data"
-            WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED -> null
-        }
-    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -250,49 +161,23 @@ private fun DataStatusCard(accessToken: String?) {
         ) {
             Text("Data status", style = MaterialTheme.typography.titleMedium)
 
-            StatusGroupWhoop(
-                title = "Sleep",
-                enabledAnchors = enabledSleepAnchors,
-                enabledOptionals = enabledSleepOptionals,
-                anchorLoaded = sleepAnchorLoaded,
-                afterNine = afterNine,
-                wearableConnected = whoopConnected,
-                optionalWarningReasonOrNull = ::optionalWarningReasonOrNull
-            )
-
-            StatusGroupWhoop(
-                title = "Physical",
-                enabledAnchors = enabledPhysicalAnchors,
-                enabledOptionals = enabledPhysicalOptionals,
-                anchorLoaded = physicalAnchorLoaded,
-                afterNine = afterNine,
-                wearableConnected = whoopConnected,
-                optionalWarningReasonOrNull = ::optionalWarningReasonOrNull
-            )
-
-            StatusGroupLocation(
-                title = "Location",
-                enabled = locationEnabled,
-                loaded = locationLoaded,
-                afterNine = afterNine
-            )
-
-            // NEW: Manual WHOOP sync trigger button.
-            val canRunWhoopNow = !accessToken.isNullOrBlank() && whoopConnected
+            val canRunNow = !accessToken.isNullOrBlank() && whoopConnected
 
             Button(
                 onClick = {
-                    // Trigger both WHOOP workers immediately.
+                    // WHOOP
                     WhoopDailySyncWorkerSleepFields.runOnceNow(ctx)
                     WhoopDailyPhysicalHealthWorker.runOnceNow(ctx)
 
-                    val t = LocalTime.now(zone).withSecond(0).withNano(0)
-                    lastManualRunLabel = "Triggered WHOOP sync at $t"
+                    // LOCATION
+                    LocationDailySyncWorker.runOnceNow(ctx)
+
+                    lastManualRunLabel = "Manual sync triggered at ${java.time.LocalTime.now(zone).withSecond(0)}"
                 },
-                enabled = canRunWhoopNow,
+                enabled = canRunNow,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Run WHOOP sync now")
+                Text("Run WHOOP + Location sync now")
             }
 
             if (lastManualRunLabel != null) {
@@ -303,80 +188,14 @@ private fun DataStatusCard(accessToken: String?) {
                 )
             }
 
-            if (!canRunWhoopNow) {
+            if (!canRunNow) {
                 val reason = when {
-                    accessToken.isNullOrBlank() -> "Sign in to run WHOOP sync."
+                    accessToken.isNullOrBlank() -> "Sign in to run sync."
                     !whoopConnected -> "Connect WHOOP to run sync."
-                    else -> "Cannot run WHOOP sync."
+                    else -> "Sync unavailable."
                 }
                 Text(reason, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
-        }
-    }
-}
-
-@Composable
-private fun StatusGroupWhoop(
-    title: String,
-    enabledAnchors: List<String>,
-    enabledOptionals: List<String>,
-    anchorLoaded: Boolean?,
-    afterNine: Boolean,
-    wearableConnected: Boolean,
-    optionalWarningReasonOrNull: (String) -> String?
-) {
-    if (enabledAnchors.isEmpty() && enabledOptionals.isEmpty()) {
-        Text("$title: not collecting", color = Color.Gray)
-        return
-    }
-
-    if (!wearableConnected) {
-        Text("$title: not connected", fontWeight = FontWeight.Medium)
-        Text("• Connect your wearable to collect this data.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        return
-    }
-
-    val status = when (anchorLoaded) {
-        true -> "Loaded"
-        false -> if (afterNine) "Still fetching" else "Fetching"
-        null -> "Checking…"
-    }
-
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text("$title: $status", fontWeight = FontWeight.Medium)
-
-        // Optional warnings (only if we have a known outcome reason; no "pending" spam)
-        enabledOptionals.forEach { table ->
-            val reason = optionalWarningReasonOrNull(table)
-            if (reason != null) {
-                Text("• $table: $reason", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusGroupLocation(
-    title: String,
-    enabled: Boolean,
-    loaded: Boolean?,
-    afterNine: Boolean
-) {
-    if (!enabled) {
-        Text("$title: not collecting", color = Color.Gray)
-        return
-    }
-
-    val status = when (loaded) {
-        true -> "Loaded"
-        false -> if (afterNine) "Still fetching" else "Fetching"
-        null -> "Checking…"
-    }
-
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text("$title: $status", fontWeight = FontWeight.Medium)
-        if (loaded == false) {
-            Text("• user_location_daily: pending", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         }
     }
 }
