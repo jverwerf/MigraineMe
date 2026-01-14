@@ -1,3 +1,4 @@
+// FILE: app/src/main/java/com/migraineme/MainActivity.kt
 package com.migraineme
 
 import android.content.Intent
@@ -99,6 +100,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // IMPORTANT: MainActivity should ONLY persist callback URIs.
+        // Do NOT call WhoopAuthService.completeAuth() here.
         handleWhoopOAuthIntent(intent)
         handleSupabaseOAuthIntent(intent)
 
@@ -107,6 +110,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // IMPORTANT: persist callback URIs on every new intent.
         handleWhoopOAuthIntent(intent)
         handleSupabaseOAuthIntent(intent)
     }
@@ -128,22 +132,20 @@ class MainActivity : ComponentActivity() {
                 .apply()
 
             when {
-                !error.isNullOrBlank() ->
+                !error.isNullOrBlank() -> {
                     Toast.makeText(this, "WHOOP auth error: $error", Toast.LENGTH_SHORT).show()
-
-                !code.isNullOrBlank() ->
-                    Toast.makeText(this, "WHOOP connected. Code received.", Toast.LENGTH_SHORT).show()
-
-                else ->
+                }
+                !code.isNullOrBlank() -> {
+                    // Completion happens in ThirdPartyConnectionsScreen (it calls WhoopAuthService().completeAuth(context))
+                    Toast.makeText(this, "Returning from WHOOP…", Toast.LENGTH_SHORT).show()
+                }
+                else -> {
                     Toast.makeText(this, "WHOOP callback opened.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
-    /**
-     * Supabase OAuth callback handler (Facebook now; reusable for other providers later).
-     * Stores the callback URI for LoginScreen to complete login using the existing post-login flow.
-     */
     private fun handleSupabaseOAuthIntent(intent: Intent?) {
         val data: Uri? = intent?.data
         if (data?.scheme == "migraineme" && data.host == "auth" && data.path == "/callback") {
@@ -164,7 +166,6 @@ fun AppRoot() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Activity context
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
 
@@ -179,9 +180,7 @@ fun AppRoot() {
     val token = authState.accessToken
     var preloaded by remember { mutableStateOf(false) }
 
-    // UPDATED: restore persisted session on cold start using refresh-aware token retrieval
     LaunchedEffect(Unit) {
-        // This will refresh silently if the stored access token is expired (using refresh_token in SessionStore).
         val persistedToken = SessionStore.getValidAccessToken(appCtx)
 
         if (!persistedToken.isNullOrBlank() && authState.accessToken.isNullOrBlank()) {

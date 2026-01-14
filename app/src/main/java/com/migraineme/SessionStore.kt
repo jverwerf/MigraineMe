@@ -142,11 +142,24 @@ object SessionStore {
      * - If the current access token is not expired (with skew), return it.
      * - If expired and refresh_token exists, refresh via Supabase and persist new tokens.
      * - If we cannot refresh, returns null (workers should treat as "skip").
+     *
+     * IMPORTANT: Ensure KEY_USER_ID is always present when an access token is present.
+     * WHOOP token ownership checks depend on a stable Supabase user_id in SessionStore.
      */
     suspend fun getValidAccessToken(context: Context): String? {
         return refreshMutex.withLock {
             val access = readAccessToken(context)
             if (access.isNullOrBlank()) return@withLock null
+
+            // CHANGE #1:
+            // If user_id is missing, derive it from the access token JWT and persist it.
+            val existingUserId = readUserId(context)
+            if (existingUserId.isNullOrBlank()) {
+                val derived = JwtUtils.extractUserIdFromAccessToken(access)
+                if (!derived.isNullOrBlank()) {
+                    saveUserId(context, derived)
+                }
+            }
 
             val expiresIn = readExpiresIn(context)
             val obtainedAt = readObtainedAt(context)
@@ -177,11 +190,17 @@ object SessionStore {
                 if (newAccess.isNullOrBlank()) {
                     null
                 } else {
+                    // CHANGE #2:
+                    // Always derive userId from the refreshed access token (do not depend on existing prefs).
+                    val newUserId =
+                        JwtUtils.extractUserIdFromAccessToken(newAccess)
+                            ?: readUserId(context)
+
                     // Supabase may rotate refresh tokens; persist both.
                     saveSession(
                         context = context,
                         accessToken = newAccess,
-                        userId = readUserId(context),
+                        userId = newUserId,
                         provider = readAuthProvider(context),
                         refreshToken = ses.refreshToken ?: refresh,
                         expiresIn = ses.expiresIn,

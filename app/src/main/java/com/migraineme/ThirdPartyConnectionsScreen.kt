@@ -65,6 +65,7 @@ fun ThirdPartyConnectionsScreen(
         if (drawableId != 0) drawableId else r.getIdentifier("whoop_logo", "mipmap", pkg)
     }
 
+    // Try to complete auth if MainActivity stored a callback URI.
     LaunchedEffect(Unit) {
         if (triedCompleteOnce.value) return@LaunchedEffect
         triedCompleteOnce.value = true
@@ -73,20 +74,17 @@ fun ThirdPartyConnectionsScreen(
         val lastUri = prefs.getString("last_uri", null)
 
         if (!lastUri.isNullOrBlank()) {
-            try {
-                val ok = withContext(Dispatchers.IO) {
-                    WhoopAuthService().completeAuth(context)
-                }
-                if (ok && tokenStore.load() != null) {
-                    hasWhoop.value = true
-                } else {
-                    hasWhoop.value = false
-                    whoopErrorDialog.value =
-                        prefs.getString("token_error", "WHOOP authentication failed")
-                }
-            } catch (_: Throwable) {
+            val ok = withContext(Dispatchers.IO) {
+                WhoopAuthService().completeAuth(context)
+            }
+
+            if (ok && tokenStore.load() != null) {
+                hasWhoop.value = true
+            } else {
                 hasWhoop.value = false
-                whoopErrorDialog.value = "WHOOP authentication failed"
+                whoopErrorDialog.value =
+                    prefs.getString("token_error", "WHOOP authentication failed")
+                        ?: "WHOOP authentication failed"
             }
         }
     }
@@ -174,8 +172,13 @@ fun ThirdPartyConnectionsScreen(
                     .combinedClickable(
                         enabled = activity != null,
                         onClick = {
-                            if (!hasWhoop.value) {
-                                activity?.let { WhoopAuthService().startAuth(it) }
+                            activity?.let {
+                                // Connect or RECONNECT: always start from a clean state
+                                WhoopTokenStore(context).clear()
+                                context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
+                                    .edit().clear().apply()
+                                hasWhoop.value = false
+                                WhoopAuthService().startAuth(it)
                             }
                         },
                         onLongClick = {

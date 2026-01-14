@@ -1,3 +1,4 @@
+// FILE: app/src/main/java/com/migraineme/WhoopTokenStore.kt
 package com.migraineme
 
 import android.content.Context
@@ -5,10 +6,10 @@ import android.content.Context
 /**
  * Stores WHOOP tokens privately.
  *
- * Fix: bind WHOOP tokens to the currently logged-in Supabase userId.
+ * Tokens are bound to the currently logged-in Supabase userId.
  * - On save(): record owner_user_id
  * - On load(): only return tokens if owner_user_id matches current SessionStore userId
- *   Otherwise clear and return null, so another account won't "inherit" WHOOP connection.
+ *   Otherwise clear and return null
  */
 class WhoopTokenStore(private val context: Context) {
     private val app = context.applicationContext
@@ -38,10 +39,8 @@ class WhoopTokenStore(private val context: Context) {
         val currentUserId = SessionStore.readUserId(app).orEmpty()
         val ownerUserId = prefs.getString(KEY_OWNER_USER_ID, "") ?: ""
 
-        // If there is no current Supabase session, treat as disconnected
         if (currentUserId.isBlank()) return null
 
-        // If tokens belong to a different user, clear and treat as disconnected
         if (ownerUserId.isNotBlank() && ownerUserId != currentUserId) {
             clear()
             return null
@@ -51,7 +50,13 @@ class WhoopTokenStore(private val context: Context) {
         val refresh = prefs.getString(KEY_REFRESH, "") ?: ""
         val type = prefs.getString(KEY_TYPE, "Bearer") ?: "Bearer"
         val exp = prefs.getLong(KEY_EXPIRES, 0L)
-        return WhoopToken(access, refresh, type, exp)
+
+        return WhoopToken(
+            accessToken = access,
+            refreshToken = refresh,
+            tokenType = type,
+            expiresAtMillis = exp
+        )
     }
 
     fun clear() {

@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit
  *
  * Rules:
  * - A sleep belongs to the LocalDate of its WAKE-UP timestamp.
- * - backfillUpToToday includes TODAY (difference from older version).
- * - Today is now ALWAYS written inside backfillUpToToday().
+ * - backfillUpToToday includes TODAY.
+ * - Today is written inside backfillUpToToday().
  * - doWork() will skip today afterwards if already written.
  */
 class WhoopDailySyncWorkerSleepFields(
@@ -29,13 +29,16 @@ class WhoopDailySyncWorkerSleepFields(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        val ctx = applicationContext
         try {
-            val access = SessionStore.getValidAccessToken(applicationContext)
-                ?: return@withContext Result.success()
+            val access = SessionStore.getValidAccessToken(ctx)
+                ?: run {
+                    debug("No Supabase session — skip")
+                    return@withContext Result.success()
+                }
 
-            val hasWhoop = WhoopTokenStore(applicationContext).load() != null
+            val hasWhoop = WhoopTokenStore(ctx).load() != null
             if (!hasWhoop) {
-                scheduleNext(applicationContext)
                 debug("WHOOP not connected — skip")
                 return@withContext Result.success()
             }
@@ -44,63 +47,58 @@ class WhoopDailySyncWorkerSleepFields(
             val today = LocalDate.now(zone)
             val todaySql = today.toString()
 
-            // 1) Backfill up to TODAY (your request)
-            backfillUpToToday(applicationContext, access)
+            // Backfill up to TODAY (includes today)
+            backfillUpToToday(ctx, access)
 
-            val metrics = SupabaseMetricsService(applicationContext)
+            val metrics = SupabaseMetricsService(ctx)
 
-            // 2) Today is expected to already be written by backfill.
+            // If already written by backfill, stop.
             if (metrics.hasSleepForDate(access, todaySql, "whoop")) {
-                scheduleNext(applicationContext)
                 debug("Skip today $todaySql — already stored (via backfill)")
                 return@withContext Result.success()
             }
 
-            // 3) If not, do one last attempt (rare)
-            WhoopAuthService().refresh(applicationContext)
+            // Last attempt
+            WhoopAuthService().refresh(ctx)
 
             val (wStart, wEnd) = dayWindow(today, zone)
-            val api = WhoopApiService(applicationContext)
+            val api = WhoopApiService(ctx)
             val root = api.getSleep(wStart, wEnd)
 
             if (root == null) {
-                // Could not fetch at all: mark enabled sleep tables as FAILED for today
-                markSleepTables(applicationContext, todaySql, WhoopSyncLogStore.TableOutcomeType.FETCH_FAILED, "api_null")
-                scheduleNext(applicationContext)
                 debug("Null WHOOP response for $today")
                 return@withContext Result.success()
             }
 
             val record = selectRecordByWakeup(root, today, zone)
             if (record == null) {
-                // Fetch succeeded but no sleep record for that wake-up day
-                markSleepTables(applicationContext, todaySql, WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "no_record")
-                scheduleNext(applicationContext)
                 debug("No record waking on $today")
                 return@withContext Result.success()
             }
 
-            writeAllForDate(applicationContext, metrics, access, todaySql, record)
+            writeAllForDate(ctx, metrics, access, todaySql, record)
 
-            scheduleNext(applicationContext)
             debug("Stored WHOOP sleep for $todaySql (fallback path)")
             Result.success()
 
         } catch (t: Throwable) {
-            scheduleNext(applicationContext)
             debug("Error: ${t.message}")
             Result.success()
+        } finally {
+            // Keep the 09:00 chain alive
+            scheduleNext(ctx)
         }
     }
 
     private fun debug(msg: String) = Log.d("WhoopDailySync", msg)
 
     companion object {
-        private const val UNIQUE = "whoop_daily_sync_sleep_fields_9am"
+        private const val UNIQUE_RUN_NOW = "whoop_daily_sync_sleep_fields_run_now"
+        private const val UNIQUE_9AM = "whoop_daily_sync_sleep_fields_9am"
 
         fun scheduleNext(context: Context) {
             val now = ZonedDateTime.now(ZoneId.systemDefault())
-            var next = now.withHour(9).withMinute(0).withSecond(0).withNano(0)
+            var next = now.withHour(17).withMinute(35).withSecond(0).withNano(0)
             if (!next.isAfter(now)) next = next.plusDays(1)
             val delay = Duration.between(now, next).toMillis()
 
@@ -109,7 +107,7 @@ class WhoopDailySyncWorkerSleepFields(
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE,
+                UNIQUE_9AM,
                 ExistingWorkPolicy.REPLACE,
                 req
             )
@@ -121,21 +119,12 @@ class WhoopDailySyncWorkerSleepFields(
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE,
+                UNIQUE_RUN_NOW,
                 ExistingWorkPolicy.REPLACE,
                 req
             )
         }
 
-        /**
-         * NEW VERSION — Backfills up to TODAY.
-         * This includes:
-         *  - today
-         *  - yesterday
-         *  - up to 29 more days before
-         *
-         * Today’s data will be written here FIRST.
-         */
         suspend fun backfillUpToToday(context: Context, access: String) {
             try {
                 val zone = ZoneId.systemDefault()
@@ -145,7 +134,6 @@ class WhoopDailySyncWorkerSleepFields(
                 val metrics = SupabaseMetricsService(context)
                 val latestStr = metrics.latestSleepDate(access, "whoop")
 
-                // Today minus 29 = oldest possible fill
                 val baseline = today.minusDays(29)
 
                 val start = when (latestStr) {
@@ -175,32 +163,21 @@ class WhoopDailySyncWorkerSleepFields(
                             if (rec != null) {
                                 writeAllForDate(context, metrics, access, dateSql, rec)
                                 Log.d("WhoopDailySync", "Backfill wrote $dateSql")
-                            } else {
-                                // Fetched, but no record for that wake-up date
-                                markSleepTables(context, dateSql, WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "no_record")
-                                Log.d("WhoopDailySync", "Backfill: no wake-up record for $cur")
                             }
-                        } else {
-                            // Couldn't fetch at all for that day
-                            markSleepTables(context, dateSql, WhoopSyncLogStore.TableOutcomeType.FETCH_FAILED, "api_null")
-                            Log.d("WhoopDailySync", "Backfill: null WHOOP response for $cur")
                         }
                     }
 
                     cur = cur.plusDays(1)
                 }
-
             } catch (_: Throwable) {}
         }
 
-        /** Window from previous 12:00 → next day 12:00. */
         private fun dayWindow(day: LocalDate, zone: ZoneId): Pair<Date, Date> {
             val s = day.minusDays(1).atTime(12, 0).atZone(zone).toInstant()
             val e = day.plusDays(1).atTime(12, 0).atZone(zone).toInstant()
             return Date.from(s) to Date.from(e)
         }
 
-        /** WAKE-UP DAY selection logic (final). */
         private fun selectRecordByWakeup(
             root: JSONObject,
             target: LocalDate,
@@ -250,7 +227,6 @@ class WhoopDailySyncWorkerSleepFields(
             dateSql: String,
             rec: JSONObject
         ) {
-            val outcomes = WhoopSyncLogStore(context)
             val sourceId = rec.optString("id").takeIf { it.isNotEmpty() }
 
             val score = rec.optJSONObject("score")
@@ -264,61 +240,34 @@ class WhoopDailySyncWorkerSleepFields(
             val hours = (if (durationMs > 0) durationMs else light + sws + rem) / 3_600_000.0
             val dist = stage?.optInt("disturbance_count", 0) ?: 0
 
-            val perf = score?.optDouble("sleep_performance_percentage", Double.NaN)
-            val eff = score?.optDouble("sleep_efficiency_percentage", Double.NaN)
+            val perf = score?.optDouble("sleep_performance_percentage", Double.NaN) ?: Double.NaN
+            val eff = score?.optDouble("sleep_efficiency_percentage", Double.NaN) ?: Double.NaN
 
             val fellIso = parseTimestamp(rec, "start")
             val wokeIso = parseTimestamp(rec, "end")
 
             if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_duration_daily")) {
                 metrics.upsertSleepDurationDaily(access, dateSql, hours, "whoop", sourceId)
-                outcomes.setOutcome(dateSql, "sleep_duration_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
             }
-
             if (DataCollectionSettings.isEnabledForWhoop(context, "fell_asleep_time_daily")) {
-                if (fellIso != null) {
-                    metrics.upsertFellAsleepTimeDaily(access, dateSql, fellIso, "whoop", sourceId)
-                    outcomes.setOutcome(dateSql, "fell_asleep_time_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
-                } else {
-                    outcomes.setOutcome(dateSql, "fell_asleep_time_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_start")
-                }
+                fellIso?.let { metrics.upsertFellAsleepTimeDaily(access, dateSql, it, "whoop", sourceId) }
             }
-
             if (DataCollectionSettings.isEnabledForWhoop(context, "woke_up_time_daily")) {
-                if (wokeIso != null) {
-                    metrics.upsertWokeUpTimeDaily(access, dateSql, wokeIso, "whoop", sourceId)
-                    outcomes.setOutcome(dateSql, "woke_up_time_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
-                } else {
-                    outcomes.setOutcome(dateSql, "woke_up_time_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_end")
-                }
+                wokeIso?.let { metrics.upsertWokeUpTimeDaily(access, dateSql, it, "whoop", sourceId) }
             }
-
             if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_disturbances_daily")) {
                 metrics.upsertSleepDisturbancesDaily(access, dateSql, dist, "whoop", sourceId)
-                outcomes.setOutcome(dateSql, "sleep_disturbances_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
             }
-
             if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_stages_daily")) {
                 metrics.upsertSleepStagesDaily(access, dateSql, sws, rem, light, "whoop", sourceId)
-                outcomes.setOutcome(dateSql, "sleep_stages_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
             }
 
-            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_score_daily")) {
-                if (perf != null && !perf.isNaN()) {
-                    metrics.upsertSleepScoreDaily(access, dateSql, perf, "whoop", sourceId)
-                    outcomes.setOutcome(dateSql, "sleep_score_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
-                } else {
-                    outcomes.setOutcome(dateSql, "sleep_score_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_perf")
-                }
+            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_score_daily") && !perf.isNaN()) {
+                metrics.upsertSleepScoreDaily(access, dateSql, perf, "whoop", sourceId)
             }
 
-            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_efficiency_daily")) {
-                if (eff != null && !eff.isNaN()) {
-                    metrics.upsertSleepEfficiencyDaily(access, dateSql, eff, "whoop", sourceId)
-                    outcomes.setOutcome(dateSql, "sleep_efficiency_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED)
-                } else {
-                    outcomes.setOutcome(dateSql, "sleep_efficiency_daily", WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA, "missing_eff")
-                }
+            if (DataCollectionSettings.isEnabledForWhoop(context, "sleep_efficiency_daily") && !eff.isNaN()) {
+                metrics.upsertSleepEfficiencyDaily(access, dateSql, eff, "whoop", sourceId)
             }
         }
 
@@ -338,29 +287,6 @@ class WhoopDailySyncWorkerSleepFields(
                 rec.has("timezone_offset") ->
                     rec.optLong("timezone_offset", 0L) / 60L
                 else -> 0L
-            }
-        }
-
-        private fun markSleepTables(
-            context: Context,
-            dateSql: String,
-            type: WhoopSyncLogStore.TableOutcomeType,
-            note: String?
-        ) {
-            val out = WhoopSyncLogStore(context)
-            val tables = listOf(
-                "sleep_duration_daily",
-                "sleep_score_daily",
-                "sleep_efficiency_daily",
-                "sleep_stages_daily",
-                "sleep_disturbances_daily",
-                "fell_asleep_time_daily",
-                "woke_up_time_daily"
-            )
-            for (t in tables) {
-                if (DataCollectionSettings.isEnabledForWhoop(context, t)) {
-                    out.setOutcome(dateSql, t, type, note)
-                }
             }
         }
     }

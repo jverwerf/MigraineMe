@@ -33,7 +33,6 @@ class LocationDailySyncWorker(
             // Gate entire location collection by the single table toggle.
             if (!DataCollectionSettings.isActive(applicationContext, "user_location_daily", wearable = null, defaultValue = true)) {
                 Log.d(LOG_TAG, "user_location_daily disabled — skip")
-                scheduleNext(applicationContext)
                 return@withContext Result.success()
             }
 
@@ -43,7 +42,6 @@ class LocationDailySyncWorker(
             val loc = getDeviceLocation(applicationContext)
             if (loc == null) {
                 Log.d(LOG_TAG, "No location found → skip")
-                scheduleNext(applicationContext)
                 return@withContext Result.success()
             }
 
@@ -83,14 +81,13 @@ class LocationDailySyncWorker(
             }
 
             Log.d(LOG_TAG, "Inserted $ok of ${toWrite.size} days")
-
-            scheduleNext(applicationContext)
             Result.success()
 
         } catch (t: Throwable) {
             Log.w(LOG_TAG, "Worker error: ${t.message}")
-            scheduleNext(applicationContext)
             Result.success()
+        } finally {
+            scheduleNext(applicationContext)
         }
     }
 

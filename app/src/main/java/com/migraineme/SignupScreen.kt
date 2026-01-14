@@ -37,6 +37,8 @@ fun SignupScreen(
     var busy by remember { mutableStateOf(false) }
 
     val scope = remember { CoroutineScope(Dispatchers.Main) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val appCtx = ctx.applicationContext
 
     Column(
         modifier = Modifier
@@ -90,8 +92,22 @@ fun SignupScreen(
                 scope.launch {
                     try {
                         val ses = SupabaseAuthService.signUpWithEmail(email.trim(), password)
-                        if (!ses.accessToken.isNullOrBlank()) {
-                            authVm.setSession(ses.accessToken, userId = null)
+                        val access = ses.accessToken
+
+                        if (!access.isNullOrBlank()) {
+                            val userId = JwtUtils.extractUserIdFromAccessToken(access)
+
+                            SessionStore.saveSession(
+                                context = appCtx,
+                                accessToken = access,
+                                userId = userId,
+                                provider = "email",
+                                refreshToken = ses.refreshToken,
+                                expiresIn = ses.expiresIn,
+                                obtainedAtMs = System.currentTimeMillis()
+                            )
+
+                            authVm.setSession(access, userId)
                             onSignedUpAndLoggedIn()
                         } else {
                             info = "Check your email to confirm your account, then sign in."

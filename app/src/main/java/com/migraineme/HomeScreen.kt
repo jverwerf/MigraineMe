@@ -1,13 +1,10 @@
 package com.migraineme
 
-import android.content.Context
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,15 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -69,7 +61,6 @@ private fun HomeScreen(
     ) {
         DataStatusCard(accessToken = accessToken)
 
-        // ---- Risk Gauge ----
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(2.dp)
@@ -97,7 +88,6 @@ private fun HomeScreen(
             }
         }
 
-        // ---- Top Triggers ----
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(2.dp)
@@ -130,7 +120,6 @@ private fun HomeScreen(
             }
         }
 
-        // ---- AI Recommendation ----
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(2.dp)
@@ -148,60 +137,17 @@ private fun HomeScreen(
     }
 }
 
-/**
- * Data Status Card behavior:
- * - Refresh on app resume (foreground)
- * - Optional periodic refresh between 06:00 and 09:00 while Home is visible,
- *   until anchors are loaded (no WHOOP API calls here; only Supabase hasXForDate + local log reads)
- * - Manual refresh button
- * - User can "slide away" (dismiss) for today (stored locally)
- *
- * Supabase remains the source of truth for group "Loaded".
- * WhoopSyncLogStore outcomes are only used to explain optional warnings (no-data / couldn't-fetch).
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DataStatusCard(accessToken: String?) {
     val ctx = LocalContext.current.applicationContext
-    val lifecycleOwner = LocalLifecycleOwner.current
     val zone = ZoneId.systemDefault()
+    val today = LocalDate.now(zone).toString()
+    val afterNine = LocalTime.now(zone) >= LocalTime.of(9, 0)
 
-    val today = remember { LocalDate.now(zone).toString() }
-    val nowTime = remember { LocalTime.now(zone) }
-
-    // ----- Dismiss for today (slide away) -----
-    val prefs = remember { ctx.getSharedPreferences("home_status_prefs", Context.MODE_PRIVATE) }
-    val dismissedKey = "dismissed_date"
-    var dismissedToday by remember {
-        mutableStateOf((prefs.getString(dismissedKey, null) ?: "") == today)
-    }
-
-    fun dismissForToday() {
-        prefs.edit().putString(dismissedKey, today).apply()
-        dismissedToday = true
-    }
-
-    // ----- Refresh trigger -----
-    var refreshNonce by remember { mutableIntStateOf(0) }
-    fun requestRefresh() { refreshNonce++ }
-
-    // Refresh when app resumes
-    DisposableEffect(lifecycleOwner) {
-        val obs = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                requestRefresh()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(obs)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
-    }
-
-    // WHOOP connected = token exists locally
     val whoopConnected = remember {
         runCatching { WhoopTokenStore(ctx).load() != null }.getOrDefault(false)
     }
 
-    // Tables
     val sleepAnchorsAll = listOf("sleep_duration_daily", "sleep_score_daily")
     val sleepOptionalsAll = listOf(
         "sleep_efficiency_daily",
@@ -231,33 +177,19 @@ private fun DataStatusCard(accessToken: String?) {
         )
     }
 
-    // Anchor presence (Supabase)
-    var sleepAnchorLoaded by remember(today) { mutableStateOf<Boolean?>(null) }
-    var physicalAnchorLoaded by remember(today) { mutableStateOf<Boolean?>(null) }
-    var locationLoaded by remember(today) { mutableStateOf<Boolean?>(null) }
+    var sleepAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
+    var physicalAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
+    var locationLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
 
-    val logStore = remember { WhoopSyncLogStore(ctx) }
+    // NEW: a simple local confirmation that the button was tapped.
+    var lastManualRunLabel by remember { mutableStateOf<String?>(null) }
 
-    /**
-     * Optional warnings:
-     * - Only show if we have a recorded outcome today.
-     * - Do NOT show "pending" for optionals (unknown is not actionable).
-     */
-    fun optionalWarningReasonOrNull(table: String): String? {
-        val o = logStore.getOutcome(today, table) ?: return null
-        return when (o.type) {
-            WhoopSyncLogStore.TableOutcomeType.FETCH_FAILED -> "couldn't fetch"
-            WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA -> "no data"
-            WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED -> null
-        }
-    }
-
-    suspend fun refreshNow() {
+    LaunchedEffect(today, accessToken) {
         if (accessToken.isNullOrBlank()) {
             sleepAnchorLoaded = null
             physicalAnchorLoaded = null
             locationLoaded = null
-            return
+            return@LaunchedEffect
         }
 
         sleepAnchorLoaded = if (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) {
@@ -289,122 +221,97 @@ private fun DataStatusCard(accessToken: String?) {
         }
     }
 
-    // Primary refresh: on resume + manual + internal ticks
-    LaunchedEffect(today, accessToken, refreshNonce) {
-        refreshNow()
-    }
+    val logStore = remember { WhoopSyncLogStore(ctx) }
 
-    // Periodic refresh window while visible: 06:00–09:00
-    // - Only if something relevant is enabled
-    // - Stops early if both WHOOP anchors are loaded (or not collecting) and location loaded (or not collecting)
-    LaunchedEffect(today, accessToken) {
-        if (dismissedToday) return@LaunchedEffect
-
-        fun withinWindow(): Boolean {
-            val t = LocalTime.now(zone)
-            return !t.isBefore(LocalTime.of(6, 0)) && t.isBefore(LocalTime.of(9, 0))
-        }
-
-        val anyWhoopEnabled =
-            (enabledSleepAnchors.isNotEmpty() || enabledSleepOptionals.isNotEmpty() ||
-                    enabledPhysicalAnchors.isNotEmpty() || enabledPhysicalOptionals.isNotEmpty())
-        val anyEnabled = anyWhoopEnabled || locationEnabled
-
-        if (!anyEnabled) return@LaunchedEffect
-        if (!withinWindow()) return@LaunchedEffect
-
-        while (isActive && withinWindow()) {
-            // Stop if everything that's enabled is loaded (anchors only, since optionals are warnings)
-            val sleepOk = (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) || (sleepAnchorLoaded == true)
-            val physOk = (enabledPhysicalAnchors.isEmpty() && enabledPhysicalOptionals.isEmpty()) || (physicalAnchorLoaded == true)
-            val locOk = (!locationEnabled) || (locationLoaded == true)
-
-            if (sleepOk && physOk && locOk) break
-
-            // Refresh every 15 minutes while Home is visible in the window
-            delay(15 * 60 * 1000L)
-            requestRefresh()
+    /**
+     * Returns:
+     * - null if we have no outcome recorded for that table today (unknown; do not show "pending" for optionals)
+     * - "couldn't fetch" / "no data" for known non-success outcomes
+     * - null for success (stored) because it’s not a warning
+     */
+    fun optionalWarningReasonOrNull(table: String): String? {
+        val o = logStore.getOutcome(today, table) ?: return null
+        return when (o.type) {
+            WhoopSyncLogStore.TableOutcomeType.FETCH_FAILED -> "couldn't fetch"
+            WhoopSyncLogStore.TableOutcomeType.FETCH_OK_NO_DATA -> "no data"
+            WhoopSyncLogStore.TableOutcomeType.FETCH_OK_STORED -> null
         }
     }
 
-    // Slide-away UI
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart || value == SwipeToDismissBoxValue.StartToEnd) {
-                dismissForToday()
-                true
-            } else {
-                false
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Data status", style = MaterialTheme.typography.titleMedium)
+
+            StatusGroupWhoop(
+                title = "Sleep",
+                enabledAnchors = enabledSleepAnchors,
+                enabledOptionals = enabledSleepOptionals,
+                anchorLoaded = sleepAnchorLoaded,
+                afterNine = afterNine,
+                wearableConnected = whoopConnected,
+                optionalWarningReasonOrNull = ::optionalWarningReasonOrNull
+            )
+
+            StatusGroupWhoop(
+                title = "Physical",
+                enabledAnchors = enabledPhysicalAnchors,
+                enabledOptionals = enabledPhysicalOptionals,
+                anchorLoaded = physicalAnchorLoaded,
+                afterNine = afterNine,
+                wearableConnected = whoopConnected,
+                optionalWarningReasonOrNull = ::optionalWarningReasonOrNull
+            )
+
+            StatusGroupLocation(
+                title = "Location",
+                enabled = locationEnabled,
+                loaded = locationLoaded,
+                afterNine = afterNine
+            )
+
+            // NEW: Manual WHOOP sync trigger button.
+            val canRunWhoopNow = !accessToken.isNullOrBlank() && whoopConnected
+
+            Button(
+                onClick = {
+                    // Trigger both WHOOP workers immediately.
+                    WhoopDailySyncWorkerSleepFields.runOnceNow(ctx)
+                    WhoopDailyPhysicalHealthWorker.runOnceNow(ctx)
+
+                    val t = LocalTime.now(zone).withSecond(0).withNano(0)
+                    lastManualRunLabel = "Triggered WHOOP sync at $t"
+                },
+                enabled = canRunWhoopNow,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Run WHOOP sync now")
             }
-        }
-    )
 
-    AnimatedVisibility(visible = !dismissedToday) {
-        SwipeToDismissBox(
-            state = dismissState,
-            backgroundContent = {
-                // Keep background empty to avoid visual noise
-            },
-            content = {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Data status", style = MaterialTheme.typography.titleMedium)
+            if (lastManualRunLabel != null) {
+                Text(
+                    text = lastManualRunLabel!!,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                TextButton(onClick = { requestRefresh() }) {
-                                    Text("Refresh")
-                                }
-                                TextButton(onClick = { dismissForToday() }) {
-                                    Text("Hide today")
-                                }
-                            }
-                        }
-
-                        val afterNine = LocalTime.now(zone) >= LocalTime.of(9, 0)
-
-                        StatusGroupWhoop(
-                            title = "Sleep",
-                            enabledAnchors = enabledSleepAnchors,
-                            enabledOptionals = enabledSleepOptionals,
-                            anchorLoaded = sleepAnchorLoaded,
-                            afterNine = afterNine,
-                            wearableConnected = whoopConnected,
-                            optionalWarningReasonOrNull = ::optionalWarningReasonOrNull
-                        )
-
-                        StatusGroupWhoop(
-                            title = "Physical",
-                            enabledAnchors = enabledPhysicalAnchors,
-                            enabledOptionals = enabledPhysicalOptionals,
-                            anchorLoaded = physicalAnchorLoaded,
-                            afterNine = afterNine,
-                            wearableConnected = whoopConnected,
-                            optionalWarningReasonOrNull = ::optionalWarningReasonOrNull
-                        )
-
-                        StatusGroupLocation(
-                            title = "Location",
-                            enabled = locationEnabled,
-                            loaded = locationLoaded,
-                            afterNine = afterNine
-                        )
-                    }
+            if (!canRunWhoopNow) {
+                val reason = when {
+                    accessToken.isNullOrBlank() -> "Sign in to run WHOOP sync."
+                    !whoopConnected -> "Connect WHOOP to run sync."
+                    else -> "Cannot run WHOOP sync."
                 }
+                Text(reason, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
-        )
+        }
     }
 }
 
@@ -425,11 +332,7 @@ private fun StatusGroupWhoop(
 
     if (!wearableConnected) {
         Text("$title: not connected", fontWeight = FontWeight.Medium)
-        Text(
-            "• Connect your wearable to collect this data.",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
-        )
+        Text("• Connect your wearable to collect this data.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         return
     }
 
@@ -442,7 +345,7 @@ private fun StatusGroupWhoop(
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text("$title: $status", fontWeight = FontWeight.Medium)
 
-        // Optional warnings (only when we have a recorded reason; no "pending" spam)
+        // Optional warnings (only if we have a known outcome reason; no "pending" spam)
         enabledOptionals.forEach { table ->
             val reason = optionalWarningReasonOrNull(table)
             if (reason != null) {
