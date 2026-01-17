@@ -6,15 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,21 +31,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.android.Android
+import io.ktor.client.request.post
+import io.ktor.client.request.header
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ThirdPartyConnectionsScreen(
-    onBack: () -> Unit // intentionally unused
+    onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val activity = (context as? Activity)
-    val scope = rememberCoroutineScope()
+    val activity = context as? Activity
 
     val wearablesExpanded = remember { mutableStateOf(true) }
-
     val tokenStore = remember { WhoopTokenStore(context) }
     val hasWhoop = remember { mutableStateOf(tokenStore.load() != null) }
     val whoopErrorDialog = remember { mutableStateOf<String?>(null) }
@@ -64,11 +56,27 @@ fun ThirdPartyConnectionsScreen(
     val whoopLogoResId = remember {
         val pkg = context.packageName
         val r = context.resources
-        val drawableId = r.getIdentifier("whoop_logo", "drawable", pkg)
-        if (drawableId != 0) drawableId else r.getIdentifier("whoop_logo", "mipmap", pkg)
+        r.getIdentifier("whoop_logo", "drawable", pkg)
+            .takeIf { it != 0 }
+            ?: r.getIdentifier("whoop_logo", "mipmap", pkg)
     }
 
-    // Try to complete auth if MainActivity stored a callback URI.
+    suspend fun enqueueBackfillIfLoggedIn(ctx: Context) {
+        val accessToken = SessionStore.getValidAccessToken(ctx) ?: return
+
+        val client = HttpClient(Android)
+        try {
+            client.post("${BuildConfig.SUPABASE_URL}/functions/v1/enqueue-login-backfill") {
+                header("Authorization", "Bearer $accessToken")
+                header("Content-Type", "application/json")
+            }
+        } catch (_: Throwable) {
+            // Best-effort only. Do not block WHOOP connection.
+        } finally {
+            client.close()
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (triedCompleteOnce.value) return@LaunchedEffect
         triedCompleteOnce.value = true
@@ -81,38 +89,14 @@ fun ThirdPartyConnectionsScreen(
                 WhoopAuthService().completeAuth(context)
             }
 
-            val stored = tokenStore.load()
-
-            if (ok && stored != null) {
-                // Persist WHOOP token in Supabase for backend jobs
-                withContext(Dispatchers.IO) {
-                    runCatching {
-                        val appCtx = context.applicationContext
-                        val supaAccess = SessionStore.getValidAccessToken(appCtx)
-                        val userId = SessionStore.readUserId(appCtx)
-                        if (!supaAccess.isNullOrBlank() && !userId.isNullOrBlank()) {
-                            SupabaseWhoopTokenService(appCtx).upsertToken(
-                                supabaseAccessToken = supaAccess,
-                                userId = userId,
-                                token = stored
-                            )
-                        }
-                    }
-                }
-
-                // NEW: When WHOOP becomes connected, seed ALL wearable metrics into metric_settings
-                // so Supabase immediately reflects the full per-metric config matrix.
-                withContext(Dispatchers.IO) {
-                    runCatching {
-                        val appCtx = context.applicationContext
-                        val supaAccess = SessionStore.getValidAccessToken(appCtx)
-                        if (!supaAccess.isNullOrBlank()) {
-                            seedMetricSettingsForWhoopConnection(appCtx, supaAccess)
-                        }
-                    }
-                }
-
+            if (ok && tokenStore.load() != null) {
                 hasWhoop.value = true
+
+                // 🔥 NEW: trigger backfill on WHOOP (re)connect
+                withContext(Dispatchers.IO) {
+                    enqueueBackfillIfLoggedIn(context.applicationContext)
+                }
+
             } else {
                 hasWhoop.value = false
                 whoopErrorDialog.value =
@@ -143,40 +127,11 @@ fun ThirdPartyConnectionsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        scope.launch {
-                            val appCtx = context.applicationContext
-
-                            // Delete token row from Supabase, then clear local token
-                            withContext(Dispatchers.IO) {
-                                runCatching {
-                                    val supaAccess = SessionStore.getValidAccessToken(appCtx)
-                                    val userId = SessionStore.readUserId(appCtx)
-                                    if (!supaAccess.isNullOrBlank() && !userId.isNullOrBlank()) {
-                                        SupabaseWhoopTokenService(appCtx).deleteToken(
-                                            supabaseAccessToken = supaAccess,
-                                            userId = userId
-                                        )
-                                    }
-                                }
-                            }
-
-                            WhoopTokenStore(context).clear()
-                            context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
-                                .edit().clear().apply()
-
-                            // NEW: Clear WHOOP availability in metric_settings so backend won't try WHOOP collection
-                            withContext(Dispatchers.IO) {
-                                runCatching {
-                                    val supaAccess = SessionStore.getValidAccessToken(appCtx)
-                                    if (!supaAccess.isNullOrBlank()) {
-                                        seedMetricSettingsForWhoopDisconnect(appCtx, supaAccess)
-                                    }
-                                }
-                            }
-
-                            hasWhoop.value = false
-                            showDisconnectDialog.value = false
-                        }
+                        tokenStore.clear()
+                        context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
+                            .edit().clear().apply()
+                        hasWhoop.value = false
+                        showDisconnectDialog.value = false
                     }
                 ) { Text("Disconnect") }
             },
@@ -235,8 +190,7 @@ fun ThirdPartyConnectionsScreen(
                         enabled = activity != null,
                         onClick = {
                             activity?.let {
-                                // Connect or RECONNECT: always start from a clean state
-                                WhoopTokenStore(context).clear()
+                                tokenStore.clear()
                                 context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
                                     .edit().clear().apply()
                                 hasWhoop.value = false
@@ -244,9 +198,7 @@ fun ThirdPartyConnectionsScreen(
                             }
                         },
                         onLongClick = {
-                            if (hasWhoop.value) {
-                                showDisconnectDialog.value = true
-                            }
+                            if (hasWhoop.value) showDisconnectDialog.value = true
                         }
                     )
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -264,37 +216,17 @@ fun ThirdPartyConnectionsScreen(
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        Text(
-                            text = "W",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("W", fontWeight = FontWeight.Bold)
                     }
                 }
 
                 Spacer(Modifier.size(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    if (!hasWhoop.value) {
-                        Text(
-                            text = "Not connected",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
                     Text(
                         text = if (hasWhoop.value) "Sync enabled" else "Tap to connect",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyLarge
                     )
-
-                    if (hasWhoop.value) {
-                        Text(
-                            text = "Hold to disconnect",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
 
                 Box(
@@ -326,85 +258,4 @@ fun ThirdPartyConnectionsScreen(
             Divider()
         }
     }
-}
-
-/**
- * Wearable metrics currently exposed in DataSettingsScreen and seeded on WHOOP connect/disconnect.
- * This ensures Supabase metric_settings always contains the full matrix without requiring UI interaction.
- */
-private fun wearableMetrics(): List<String> {
-    return listOf(
-        "sleep_duration_daily",
-        "sleep_score_daily",
-        "sleep_efficiency_daily",
-        "sleep_stages_daily",
-        "sleep_disturbances_daily",
-        "fell_asleep_time_daily",
-        "woke_up_time_daily",
-        "recovery_score_daily",
-        "resting_hr_daily",
-        "hrv_daily",
-        "skin_temp_daily",
-        "spo2_daily",
-        "time_in_high_hr_zones_daily",
-        "steps_daily"
-    )
-}
-
-/**
- * On WHOOP connect:
- * - enabled = local toggle state (default true)
- * - preferred_source = "whoop"
- * - allowed_sources = ["whoop"]
- */
-private suspend fun seedMetricSettingsForWhoopConnection(appCtx: Context, supaAccess: String) {
-    val rows = wearableMetrics().map { metric ->
-        val enabled = DataCollectionSettings.isActive(
-            context = appCtx,
-            table = metric,
-            wearable = "whoop",
-            defaultValue = true
-        )
-
-        SupabaseDataCollectionSettingsService.MetricSettingRow(
-            metric = metric,
-            enabled = enabled,
-            preferredSource = "whoop",
-            allowedSources = listOf("whoop")
-        )
-    }
-
-    SupabaseDataCollectionSettingsService(appCtx).upsertMetricSettingsBatch(
-        supabaseAccessToken = supaAccess,
-        rows = rows
-    )
-}
-
-/**
- * On WHOOP disconnect:
- * - enabled remains based on local toggle state
- * - preferred_source cleared
- * - allowed_sources cleared
- */
-private suspend fun seedMetricSettingsForWhoopDisconnect(appCtx: Context, supaAccess: String) {
-    val rows = wearableMetrics().map { metric ->
-        val enabled = DataCollectionSettings.isActive(
-            context = appCtx,
-            table = metric,
-            wearable = "whoop",
-            defaultValue = true
-        )
-
-        SupabaseDataCollectionSettingsService.MetricSettingRow(
-            metric = metric,
-            enabled = enabled,
-            preferredSource = null,
-            allowedSources = emptyList()
-        )
-    }
-
-    SupabaseDataCollectionSettingsService(appCtx).upsertMetricSettingsBatch(
-        supabaseAccessToken = supaAccess,
-        rows = rows
-    )
 }

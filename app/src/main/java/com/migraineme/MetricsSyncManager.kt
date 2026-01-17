@@ -4,11 +4,91 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.work.WorkManager
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
+/**
+ * Called from LoginScreen after successful auth.
+ *
+ * Responsibilities:
+ * - Best-effort WHOOP token refresh (does not change auth approach)
+ * - Schedule WHOOP daily workers (sleep + physical) if enabled + connected
+ * - Schedule Location worker if enabled
+ * - Best-effort enqueue of server-side WHOOP backfill jobs on login
+ *
+ * Does NOT:
+ * - Change Supabase auth
+ * - Change Whoop auth structure
+ */
 object MetricsSyncManager {
+
+    private val baseUrl: String = BuildConfig.SUPABASE_URL.trimEnd('/')
+    private val anonKey: String = BuildConfig.SUPABASE_ANON_KEY
+
+    private val client = HttpClient(Android) {
+        install(ContentNegotiation) {
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                    encodeDefaults = true
+                    explicitNulls = false
+                }
+            )
+        }
+    }
+
+    @Serializable
+    private data class EmptyBody(val ok: Boolean = true)
+
+    /**
+     * Triggers the Edge Function:
+     * POST {SUPABASE_URL}/functions/v1/enqueue-login-backfill
+     *
+     * Requires:
+     * - Authorization: Bearer <user access token>
+     *
+     * Best-effort: failures are logged, never block login.
+     */
+    private suspend fun enqueueLoginBackfillBestEffort(accessToken: String) {
+        val url = "$baseUrl/functions/v1/enqueue-login-backfill"
+
+        try {
+            val resp = client.post(url) {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", anonKey)
+                contentType(ContentType.Application.Json)
+                setBody(EmptyBody())
+            }
+
+            if (!resp.status.isSuccess()) {
+                val txt = runCatching { resp.bodyAsText() }.getOrNull()
+                Log.w(
+                    "MetricsSyncManager",
+                    "enqueue-login-backfill failed: HTTP ${resp.status.value} ${txt ?: ""}".trim()
+                )
+            } else {
+                // Optional: keep quiet to avoid noise; logs exist in Edge Function.
+                Log.d("MetricsSyncManager", "enqueue-login-backfill ok")
+            }
+        } catch (t: Throwable) {
+            Log.w("MetricsSyncManager", "enqueue-login-backfill error: ${t.message}")
+        }
+    }
 
     suspend fun onLogin(
         context: Context,
@@ -19,8 +99,13 @@ object MetricsSyncManager {
 
         withContext(Dispatchers.IO) {
             try {
+                // NEW: enqueue server-side login backfill jobs (best-effort, never blocks login)
+                enqueueLoginBackfillBestEffort(token)
+
+                // WHOOP connection = token exists locally
                 val whoopConnected = runCatching { WhoopTokenStore(appCtx).load() != null }.getOrDefault(false)
 
+                // Determine if ANY WHOOP tables are enabled (sleep / physical)
                 val whoopSleepEnabled =
                     DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_duration_daily") ||
                             DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_score_daily") ||
@@ -39,65 +124,25 @@ object MetricsSyncManager {
                             DataCollectionSettings.isEnabledForWhoop(appCtx, "time_in_high_hr_zones_daily") ||
                             DataCollectionSettings.isEnabledForWhoop(appCtx, "steps_daily")
 
-                // Mirror local metric settings into Supabase (public.metric_settings) so backend jobs
-                // have the full per-metric matrix (including device metrics like location).
-                runCatching {
-                    val svc = SupabaseDataCollectionSettingsService(appCtx)
-
-                    val wearableAllowedSources = if (whoopConnected) listOf("whoop") else emptyList()
-                    val wearablePreferredSource = if (whoopConnected) "whoop" else null
-
-                    val rows = buildList {
-                        // WHOOP sleep metrics
-                        add(metricRowWearable(appCtx, "sleep_duration_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "sleep_score_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "sleep_efficiency_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "sleep_stages_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "sleep_disturbances_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "fell_asleep_time_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "woke_up_time_daily", wearablePreferredSource, wearableAllowedSources))
-
-                        // WHOOP physical metrics
-                        add(metricRowWearable(appCtx, "recovery_score_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "resting_hr_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "hrv_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "skin_temp_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "spo2_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "time_in_high_hr_zones_daily", wearablePreferredSource, wearableAllowedSources))
-                        add(metricRowWearable(appCtx, "steps_daily", wearablePreferredSource, wearableAllowedSources))
-
-                        // Device metric: location
-                        add(metricRowDevice(appCtx, "user_location_daily"))
-                    }
-
-                    svc.upsertMetricSettingsBatch(
-                        supabaseAccessToken = token,
-                        rows = rows
-                    )
-                }.onFailure {
-                    Log.w("MetricsSyncManager", "Settings sync to Supabase failed: ${it.message}")
-                }
-
+                // If WHOOP connected, refresh Whoop token once (best-effort).
+                // If it fails, we still schedule; workers will log failures and retry next day.
                 if (whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
                     runCatching { WhoopAuthService().refresh(appCtx) }.onFailure {
                         Log.w("MetricsSyncManager", "WHOOP refresh failed: ${it.message}")
                     }
 
-                    // Backend owns the daily scheduled runs.
-                    // Cancel any previously-scheduled WorkManager daily chains to avoid double-sync.
-                    runCatching {
-                        WorkManager.getInstance(appCtx).cancelUniqueWork("whoop_daily_sync_sleep_fields_9am")
-                        WorkManager.getInstance(appCtx).cancelUniqueWork("whoop_daily_physical_health_9am")
-                    }
-
-                    // Keep login/new-client behavior: run once now.
+                    // Schedule + run once now (only if the category is enabled)
                     if (whoopSleepEnabled) {
                         WhoopDailySyncWorkerSleepFields.runOnceNow(appCtx)
+                        WhoopDailySyncWorkerSleepFields.scheduleNext(appCtx)
                     }
+
                     if (whoopPhysicalEnabled) {
                         WhoopDailyPhysicalHealthWorker.runOnceNow(appCtx)
+                        WhoopDailyPhysicalHealthWorker.scheduleNext(appCtx)
                     }
                 } else if (!whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
+                    // User has WHOOP collection enabled but no connection.
                     withContext(Dispatchers.Main) {
                         snackbarHostState.showSnackbar(
                             message = "Whoop not connected — connect Whoop to collect data.",
@@ -106,7 +151,7 @@ object MetricsSyncManager {
                     }
                 }
 
-                // Location (unchanged; still device-scheduled)
+                // Location (NOT Whoop-specific)
                 val locationEnabled =
                     DataCollectionSettings.isActive(
                         context = appCtx,
@@ -127,38 +172,5 @@ object MetricsSyncManager {
 
             Unit
         }
-    }
-
-    private fun metricRowWearable(
-        ctx: Context,
-        metric: String,
-        preferredSource: String?,
-        allowedSources: List<String>
-    ): SupabaseDataCollectionSettingsService.MetricSettingRow {
-        val enabled = DataCollectionSettings.isEnabledForWhoop(ctx, metric)
-        return SupabaseDataCollectionSettingsService.MetricSettingRow(
-            metric = metric,
-            enabled = enabled,
-            preferredSource = preferredSource,
-            allowedSources = allowedSources
-        )
-    }
-
-    private fun metricRowDevice(
-        ctx: Context,
-        metric: String
-    ): SupabaseDataCollectionSettingsService.MetricSettingRow {
-        val enabled = DataCollectionSettings.isActive(
-            context = ctx,
-            table = metric,
-            wearable = null,
-            defaultValue = true
-        )
-        return SupabaseDataCollectionSettingsService.MetricSettingRow(
-            metric = metric,
-            enabled = enabled,
-            preferredSource = "device",
-            allowedSources = listOf("device")
-        )
     }
 }

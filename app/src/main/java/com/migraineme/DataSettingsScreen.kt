@@ -1,7 +1,6 @@
 package com.migraineme
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,36 +21,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Data Settings Screen
  *
- * Settings are persisted locally (SharedPreferences).
- * Additionally mirrored to Supabase (public.metric_settings) so backend jobs can use:
- * - enabled (per metric)
- * - preferred_source (per metric)
- * - allowed_sources (per metric)
+ * Displays the 5 requested sections and lets the user toggle per-table collection.
+ * - Phone-collected tables: Collected By fixed to "Phone"
+ * - Wearable-collected tables: Collected By is a dropdown, limited to connected wearables
+ * - If no wearable is connected, wearable rows are greyed out + disabled
+ *
+ * Settings are persisted locally (SharedPreferences). Workers will be gated in the next step.
  */
 @Composable
 fun DataSettingsScreen() {
     val context = LocalContext.current.applicationContext
     val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
 
-    // Connected wearables (only WHOOP is implemented right now)
+    // Connected wearables (only WHOOP is implemented in the codebase right now)
     val whoopConnected = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         whoopConnected.value = WhoopTokenStore(context).load() != null
-        Log.d("DataSettingsScreen", "whoopConnected=${whoopConnected.value}")
     }
     val connectedWearables = remember(whoopConnected.value) {
         buildList {
@@ -62,6 +57,7 @@ fun DataSettingsScreen() {
 
     val store = remember { DataSettingsStore(context) }
 
+    // Define all rows (tables) grouped into the 5 sections you requested.
     val sections = remember {
         listOf(
             DataSection(
@@ -85,6 +81,7 @@ fun DataSettingsScreen() {
                     wearableRow("skin_temp_daily", "Wearable recovery sync"),
                     wearableRow("spo2_daily", "Wearable recovery sync"),
                     wearableRow("time_in_high_hr_zones_daily", "Wearable workout sync"),
+                    // Present in schema; no collector in provided Kotlin yet.
                     DataRow(
                         table = "steps_daily",
                         collectedByKind = CollectedByKind.WEARABLE,
@@ -96,6 +93,7 @@ fun DataSettingsScreen() {
             DataSection(
                 title = "Mental Health",
                 rows = listOf(
+                    // These are user-entered via the logging flow (not worker collection).
                     manualRow("migraines", "User log entry"),
                     manualRow("triggers", "User log entry"),
                     manualRow("medicines", "User log entry"),
@@ -106,6 +104,7 @@ fun DataSettingsScreen() {
                 title = "Environment",
                 rows = listOf(
                     phoneRow("user_location_daily", "Phone GPS/location"),
+                    // Read-only reference tables; shown for completeness.
                     referenceRow("city", "Reference dataset (read-only)"),
                     referenceRow("city_weather_daily", "Reference dataset (read-only)")
                 )
@@ -136,17 +135,13 @@ fun DataSettingsScreen() {
                 section = section,
                 store = store,
                 connectedWearables = connectedWearables,
-                hasAnyWearable = hasAnyWearable,
-                onMetricChanged = { metric, enabled, preferredSource, allowedSources ->
-                    scope.launch(Dispatchers.IO) {
-                        mirrorSettingToSupabase(context, metric, enabled, preferredSource, allowedSources)
-                    }
-                }
+                hasAnyWearable = hasAnyWearable
             )
 
             if (idx != sections.lastIndex) Spacer(Modifier.height(14.dp))
         }
 
+        // A little bottom padding so the last card isn't flush with the screen edge.
         Spacer(Modifier.height(12.dp))
     }
 }
@@ -156,14 +151,14 @@ private fun SectionCard(
     section: DataSection,
     store: DataSettingsStore,
     connectedWearables: List<WearableSource>,
-    hasAnyWearable: Boolean,
-    onMetricChanged: (metric: String, enabled: Boolean, preferredSource: String?, allowedSources: List<String>) -> Unit
+    hasAnyWearable: Boolean
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(section.title, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(10.dp))
 
+            // Header row
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     "Type",
@@ -199,6 +194,7 @@ private fun SectionCard(
                 val isWearableRow = row.collectedByKind == CollectedByKind.WEARABLE
                 val isReferenceRow = row.collectedByKind == CollectedByKind.REFERENCE
 
+                // Grey out wearable rows when no wearable connected
                 val enabled =
                     when {
                         isReferenceRow -> false
@@ -212,8 +208,7 @@ private fun SectionCard(
                     store = store,
                     connectedWearables = connectedWearables,
                     enabled = enabled,
-                    greyOut = isWearableRow && !hasAnyWearable,
-                    onMetricChanged = onMetricChanged
+                    greyOut = isWearableRow && !hasAnyWearable
                 )
 
                 if (i != section.rows.lastIndex) {
@@ -222,6 +217,7 @@ private fun SectionCard(
                 }
             }
 
+            // Wearable hint per section if none connected and section contains wearable rows
             val containsWearable = section.rows.any { it.collectedByKind == CollectedByKind.WEARABLE }
             if (containsWearable && !hasAnyWearable) {
                 Spacer(Modifier.height(10.dp))
@@ -241,15 +237,17 @@ private fun DataRowUi(
     store: DataSettingsStore,
     connectedWearables: List<WearableSource>,
     enabled: Boolean,
-    greyOut: Boolean,
-    onMetricChanged: (metric: String, enabled: Boolean, preferredSource: String?, allowedSources: List<String>) -> Unit
+    greyOut: Boolean
 ) {
     val alpha = if (greyOut) 0.55f else 1.0f
 
+    // Wearable selection (dropdown) is stored per-table.
+    // Phone/manual/reference rows don’t use it.
     var selectedWearable by remember(row.table) {
         mutableStateOf(store.getSelectedWearable(row.table, row.defaultWearable))
     }
 
+    // Active is stored per table + (wearable if applicable)
     var active by remember(row.table) {
         mutableStateOf(
             store.getActive(
@@ -260,22 +258,18 @@ private fun DataRowUi(
         )
     }
 
+    // If connected wearables change and current selection is no longer allowed, snap to first available.
     if (row.collectedByKind == CollectedByKind.WEARABLE) {
         val allowed = connectedWearables
-        if (allowed.isNotEmpty() && !allowed.contains(selectedWearable)) {
+        if (allowed.isEmpty()) {
+            // keep selection but row disabled; no action needed
+        } else if (!allowed.contains(selectedWearable)) {
             selectedWearable = allowed.first()
             store.setSelectedWearable(row.table, selectedWearable)
             active = store.getActive(
                 table = row.table,
                 wearable = selectedWearable,
                 defaultValue = defaultActiveFor(row)
-            )
-
-            onMetricChanged(
-                row.table,
-                active,
-                selectedWearable.key,
-                allowed.map { it.key }
             )
         }
     }
@@ -286,6 +280,7 @@ private fun DataRowUi(
             .alpha(alpha),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // Type column
         Column(modifier = Modifier.weight(0.46f)) {
             Text(row.table, style = MaterialTheme.typography.bodyMedium)
             if (row.collectedByLabel.isNotBlank()) {
@@ -298,11 +293,20 @@ private fun DataRowUi(
             }
         }
 
+        // Collected By column
         Column(modifier = Modifier.weight(0.34f)) {
             when (row.collectedByKind) {
-                CollectedByKind.PHONE -> Text("Phone", style = MaterialTheme.typography.bodyMedium)
-                CollectedByKind.MANUAL -> Text("User", style = MaterialTheme.typography.bodyMedium)
-                CollectedByKind.REFERENCE -> Text("Reference", style = MaterialTheme.typography.bodyMedium)
+                CollectedByKind.PHONE -> {
+                    Text("Phone", style = MaterialTheme.typography.bodyMedium)
+                }
+
+                CollectedByKind.MANUAL -> {
+                    Text("User", style = MaterialTheme.typography.bodyMedium)
+                }
+
+                CollectedByKind.REFERENCE -> {
+                    Text("Reference", style = MaterialTheme.typography.bodyMedium)
+                }
 
                 CollectedByKind.WEARABLE -> {
                     val options = connectedWearables.map { it.label }
@@ -311,6 +315,7 @@ private fun DataRowUi(
                     if (options.isEmpty()) {
                         Text("No wearable", style = MaterialTheme.typography.bodyMedium)
                     } else {
+                        // Reuse existing dropdown helper to stay consistent with the codebase.
                         AppDropdown(
                             options = options,
                             selectedIndex = selectedIndex,
@@ -319,17 +324,11 @@ private fun DataRowUi(
                                 selectedWearable = newSel
                                 store.setSelectedWearable(row.table, newSel)
 
+                                // Reload active for the new wearable/source
                                 active = store.getActive(
                                     table = row.table,
                                     wearable = newSel,
                                     defaultValue = defaultActiveFor(row)
-                                )
-
-                                onMetricChanged(
-                                    row.table,
-                                    active,
-                                    newSel.key,
-                                    connectedWearables.map { it.key }
                                 )
                             }
                         )
@@ -338,6 +337,7 @@ private fun DataRowUi(
             }
         }
 
+        // Active column
         Column(modifier = Modifier.weight(0.20f)) {
             val canToggle = enabled && row.collectedByKind != CollectedByKind.REFERENCE
             Row {
@@ -351,28 +351,6 @@ private fun DataRowUi(
                             wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
                             value = new
                         )
-
-                        when (row.collectedByKind) {
-                            CollectedByKind.PHONE -> {
-                                onMetricChanged(
-                                    row.table,
-                                    new,
-                                    "device",
-                                    listOf("device")
-                                )
-                            }
-
-                            CollectedByKind.WEARABLE -> {
-                                onMetricChanged(
-                                    row.table,
-                                    new,
-                                    selectedWearable.key,
-                                    connectedWearables.map { it.key }
-                                )
-                            }
-
-                            else -> Unit
-                        }
                     },
                     enabled = canToggle
                 )
@@ -389,32 +367,7 @@ private fun defaultActiveFor(row: DataRow): Boolean {
     }
 }
 
-private suspend fun mirrorSettingToSupabase(
-    context: Context,
-    metric: String,
-    enabled: Boolean,
-    preferredSource: String?,
-    allowedSources: List<String>
-) {
-    try {
-        val access = SessionStore.getValidAccessToken(context)
-        if (access.isNullOrBlank()) {
-            Log.w("DataSettingsScreen", "No Supabase session token; not mirroring (metric=$metric)")
-            return
-        }
-
-        SupabaseDataCollectionSettingsService(context).upsertMetricSetting(
-            supabaseAccessToken = access,
-            metric = metric,
-            enabled = enabled,
-            preferredSource = preferredSource,
-            allowedSources = allowedSources
-        )
-    } catch (t: Throwable) {
-        Log.w("DataSettingsScreen", "Mirror setting failed ($metric): ${t.message}", t)
-    }
-}
-
+/** Helpers to build rows consistently */
 private fun wearableRow(table: String, label: String): DataRow =
     DataRow(
         table = table,
@@ -444,6 +397,7 @@ private fun referenceRow(table: String, label: String): DataRow =
         collectedByLabel = label
     )
 
+/** Data model */
 private data class DataSection(
     val title: String,
     val rows: List<DataRow>
@@ -467,6 +421,14 @@ private enum class WearableSource(val key: String, val label: String) {
     WHOOP("whoop", "WHOOP")
 }
 
+/**
+ * Local persistence for Data settings.
+ * Stores:
+ * - Selected wearable per table: data_source_<table> = whoop
+ * - Active per table:
+ *    - phone/manual/reference: data_active_<table>
+ *    - wearable: data_active_<table>_<source>
+ */
 private class DataSettingsStore(context: Context) {
     private val prefs = context.getSharedPreferences("data_settings", Context.MODE_PRIVATE)
 

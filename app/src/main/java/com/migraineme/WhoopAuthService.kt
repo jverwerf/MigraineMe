@@ -52,16 +52,8 @@ class WhoopAuthService {
 
         private const val EXPIRY_SKEW_MS = 60_000L
 
-        /**
-         * CHANGE:
-         * Add "offline" scope so WHOOP issues a refresh_token.
-         *
-         * Why:
-         * - Without "offline", WHOOP may return only an access_token (no refresh_token),
-         *   which breaks backend/cron usage once the access token expires.
-         */
         private const val SCOPE =
-            "offline read:recovery read:sleep read:workout read:cycles read:body_measurement"
+            "read:recovery read:sleep read:workout read:cycles read:body_measurement"
     }
 
     /**
@@ -193,21 +185,12 @@ class WhoopAuthService {
         if (!current.isExpiredSoon(EXPIRY_SKEW_MS)) return true
         if (current.refreshToken.isBlank()) return false
 
-        /**
-         * CHANGE:
-         * Include scope=offline on refresh request.
-         *
-         * Why:
-         * - WHOOP docs/examples show using the "offline" scope when refreshing.
-         * - Keeps refresh flow consistent with how refresh tokens are issued/rotated.
-         */
         val res = postForm(
             TOKEN_URL,
             mapOf(
                 "grant_type" to "refresh_token",
                 "client_id" to CLIENT_ID,
                 "client_secret" to CLIENT_SECRET,
-                "scope" to "offline",
                 "refresh_token" to current.refreshToken
             )
         )
@@ -340,8 +323,7 @@ data class WhoopToken(
         fun fromTokenResponse(jo: JSONObject): WhoopToken {
             val access = jo.optString("access_token", "")
             val refresh = jo.optString("refresh_token", "")
-            val rawType = jo.optString("token_type", "Bearer")
-            val type = if (rawType.equals("bearer", ignoreCase = true)) "Bearer" else rawType
+            val type = jo.optString("token_type", "Bearer")
 
             val expiresInSec = jo.optLong("expires_in", 0L)
             val expiresAt = if (expiresInSec > 0L) {
