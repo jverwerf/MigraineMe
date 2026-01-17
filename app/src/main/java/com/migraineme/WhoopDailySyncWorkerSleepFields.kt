@@ -22,6 +22,9 @@ import java.util.concurrent.TimeUnit
  * - backfillUpToToday includes TODAY.
  * - Today is written inside backfillUpToToday().
  * - doWork() will skip today afterwards if already written.
+ *
+ * NOTE:
+ * - This worker does NOT schedule daily runs anymore (backend owns daily schedule).
  */
 class WhoopDailySyncWorkerSleepFields(
     appContext: Context,
@@ -84,9 +87,6 @@ class WhoopDailySyncWorkerSleepFields(
         } catch (t: Throwable) {
             debug("Error: ${t.message}")
             Result.success()
-        } finally {
-            // Keep the 09:00 chain alive
-            scheduleNext(ctx)
         }
     }
 
@@ -94,24 +94,6 @@ class WhoopDailySyncWorkerSleepFields(
 
     companion object {
         private const val UNIQUE_RUN_NOW = "whoop_daily_sync_sleep_fields_run_now"
-        private const val UNIQUE_9AM = "whoop_daily_sync_sleep_fields_9am"
-
-        fun scheduleNext(context: Context) {
-            val now = ZonedDateTime.now(ZoneId.systemDefault())
-            var next = now.withHour(17).withMinute(35).withSecond(0).withNano(0)
-            if (!next.isAfter(now)) next = next.plusDays(1)
-            val delay = Duration.between(now, next).toMillis()
-
-            val req = OneTimeWorkRequestBuilder<WhoopDailySyncWorkerSleepFields>()
-                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                .build()
-
-            WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_9AM,
-                ExistingWorkPolicy.REPLACE,
-                req
-            )
-        }
 
         fun runOnceNow(context: Context) {
             val req = OneTimeWorkRequestBuilder<WhoopDailySyncWorkerSleepFields>()
@@ -282,10 +264,8 @@ class WhoopDailySyncWorkerSleepFields(
 
         private fun tzMinutes(rec: JSONObject): Long {
             return when {
-                rec.has("timezone_offset_minutes") ->
-                    rec.optLong("timezone_offset_minutes", 0L)
-                rec.has("timezone_offset") ->
-                    rec.optLong("timezone_offset", 0L) / 60L
+                rec.has("timezone_offset_minutes") -> rec.optLong("timezone_offset_minutes", 0L)
+                rec.has("timezone_offset") -> rec.optLong("timezone_offset", 0L) / 60L
                 else -> 0L
             }
         }

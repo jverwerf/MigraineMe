@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -49,6 +51,7 @@ fun ThirdPartyConnectionsScreen(
 ) {
     val context = LocalContext.current
     val activity = (context as? Activity)
+    val scope = rememberCoroutineScope()
 
     val wearablesExpanded = remember { mutableStateOf(true) }
 
@@ -78,7 +81,37 @@ fun ThirdPartyConnectionsScreen(
                 WhoopAuthService().completeAuth(context)
             }
 
-            if (ok && tokenStore.load() != null) {
+            val stored = tokenStore.load()
+
+            if (ok && stored != null) {
+                // Persist WHOOP token in Supabase for backend jobs
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        val appCtx = context.applicationContext
+                        val supaAccess = SessionStore.getValidAccessToken(appCtx)
+                        val userId = SessionStore.readUserId(appCtx)
+                        if (!supaAccess.isNullOrBlank() && !userId.isNullOrBlank()) {
+                            SupabaseWhoopTokenService(appCtx).upsertToken(
+                                supabaseAccessToken = supaAccess,
+                                userId = userId,
+                                token = stored
+                            )
+                        }
+                    }
+                }
+
+                // NEW: When WHOOP becomes connected, seed ALL wearable metrics into metric_settings
+                // so Supabase immediately reflects the full per-metric config matrix.
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        val appCtx = context.applicationContext
+                        val supaAccess = SessionStore.getValidAccessToken(appCtx)
+                        if (!supaAccess.isNullOrBlank()) {
+                            seedMetricSettingsForWhoopConnection(appCtx, supaAccess)
+                        }
+                    }
+                }
+
                 hasWhoop.value = true
             } else {
                 hasWhoop.value = false
@@ -110,11 +143,40 @@ fun ThirdPartyConnectionsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        WhoopTokenStore(context).clear()
-                        context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
-                            .edit().clear().apply()
-                        hasWhoop.value = false
-                        showDisconnectDialog.value = false
+                        scope.launch {
+                            val appCtx = context.applicationContext
+
+                            // Delete token row from Supabase, then clear local token
+                            withContext(Dispatchers.IO) {
+                                runCatching {
+                                    val supaAccess = SessionStore.getValidAccessToken(appCtx)
+                                    val userId = SessionStore.readUserId(appCtx)
+                                    if (!supaAccess.isNullOrBlank() && !userId.isNullOrBlank()) {
+                                        SupabaseWhoopTokenService(appCtx).deleteToken(
+                                            supabaseAccessToken = supaAccess,
+                                            userId = userId
+                                        )
+                                    }
+                                }
+                            }
+
+                            WhoopTokenStore(context).clear()
+                            context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
+                                .edit().clear().apply()
+
+                            // NEW: Clear WHOOP availability in metric_settings so backend won't try WHOOP collection
+                            withContext(Dispatchers.IO) {
+                                runCatching {
+                                    val supaAccess = SessionStore.getValidAccessToken(appCtx)
+                                    if (!supaAccess.isNullOrBlank()) {
+                                        seedMetricSettingsForWhoopDisconnect(appCtx, supaAccess)
+                                    }
+                                }
+                            }
+
+                            hasWhoop.value = false
+                            showDisconnectDialog.value = false
+                        }
                     }
                 ) { Text("Disconnect") }
             },
@@ -264,4 +326,85 @@ fun ThirdPartyConnectionsScreen(
             Divider()
         }
     }
+}
+
+/**
+ * Wearable metrics currently exposed in DataSettingsScreen and seeded on WHOOP connect/disconnect.
+ * This ensures Supabase metric_settings always contains the full matrix without requiring UI interaction.
+ */
+private fun wearableMetrics(): List<String> {
+    return listOf(
+        "sleep_duration_daily",
+        "sleep_score_daily",
+        "sleep_efficiency_daily",
+        "sleep_stages_daily",
+        "sleep_disturbances_daily",
+        "fell_asleep_time_daily",
+        "woke_up_time_daily",
+        "recovery_score_daily",
+        "resting_hr_daily",
+        "hrv_daily",
+        "skin_temp_daily",
+        "spo2_daily",
+        "time_in_high_hr_zones_daily",
+        "steps_daily"
+    )
+}
+
+/**
+ * On WHOOP connect:
+ * - enabled = local toggle state (default true)
+ * - preferred_source = "whoop"
+ * - allowed_sources = ["whoop"]
+ */
+private suspend fun seedMetricSettingsForWhoopConnection(appCtx: Context, supaAccess: String) {
+    val rows = wearableMetrics().map { metric ->
+        val enabled = DataCollectionSettings.isActive(
+            context = appCtx,
+            table = metric,
+            wearable = "whoop",
+            defaultValue = true
+        )
+
+        SupabaseDataCollectionSettingsService.MetricSettingRow(
+            metric = metric,
+            enabled = enabled,
+            preferredSource = "whoop",
+            allowedSources = listOf("whoop")
+        )
+    }
+
+    SupabaseDataCollectionSettingsService(appCtx).upsertMetricSettingsBatch(
+        supabaseAccessToken = supaAccess,
+        rows = rows
+    )
+}
+
+/**
+ * On WHOOP disconnect:
+ * - enabled remains based on local toggle state
+ * - preferred_source cleared
+ * - allowed_sources cleared
+ */
+private suspend fun seedMetricSettingsForWhoopDisconnect(appCtx: Context, supaAccess: String) {
+    val rows = wearableMetrics().map { metric ->
+        val enabled = DataCollectionSettings.isActive(
+            context = appCtx,
+            table = metric,
+            wearable = "whoop",
+            defaultValue = true
+        )
+
+        SupabaseDataCollectionSettingsService.MetricSettingRow(
+            metric = metric,
+            enabled = enabled,
+            preferredSource = null,
+            allowedSources = emptyList()
+        )
+    }
+
+    SupabaseDataCollectionSettingsService(appCtx).upsertMetricSettingsBatch(
+        supabaseAccessToken = supaAccess,
+        rows = rows
+    )
 }

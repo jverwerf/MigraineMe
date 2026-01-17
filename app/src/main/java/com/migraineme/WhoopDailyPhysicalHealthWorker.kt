@@ -1,4 +1,3 @@
-// FILE: app/src/main/java/com/migraineme/WhoopDailyPhysicalHealthWorker.kt
 package com.migraineme
 
 import android.content.Context
@@ -11,10 +10,8 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +29,7 @@ import java.util.concurrent.TimeUnit
  * Notes:
  * - Uses Supabase session access token from SessionStore.
  * - Skips if WHOOP not connected.
- * - Schedules itself for next 09:00 local time.
+ * - Does NOT schedule itself anymore (backend owns daily schedule).
  */
 class WhoopDailyPhysicalHealthWorker(
     appContext: Context,
@@ -99,37 +96,13 @@ class WhoopDailyPhysicalHealthWorker(
         } catch (t: Throwable) {
             debug("Error: ${t.message}")
             Result.success()
-        } finally {
-            // Keep the 09:00 chain alive even on early-return paths.
-            scheduleNext(ctx)
         }
     }
 
     private fun debug(msg: String) = Log.d("WhoopPhysicalSync", msg)
 
     companion object {
-        // CHANGED:
-        // Separate unique names so "run now" does not get replaced by the scheduled 09:00 chain.
-        // Matches the pattern used by WhoopDailySyncWorkerSleepFields.
         private const val UNIQUE_RUN_NOW = "whoop_daily_physical_health_run_now"
-        private const val UNIQUE_9AM = "whoop_daily_physical_health_9am"
-
-        fun scheduleNext(context: Context) {
-            val now = ZonedDateTime.now(ZoneId.systemDefault())
-            var next = now.withHour(9).withMinute(0).withSecond(0).withNano(0)
-            if (!next.isAfter(now)) next = next.plusDays(1)
-            val delay = Duration.between(now, next).toMillis()
-
-            val req = OneTimeWorkRequestBuilder<WhoopDailyPhysicalHealthWorker>()
-                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                .build()
-
-            WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_9AM,
-                ExistingWorkPolicy.REPLACE,
-                req
-            )
-        }
 
         fun runOnceNow(context: Context) {
             val req = OneTimeWorkRequestBuilder<WhoopDailyPhysicalHealthWorker>()
@@ -172,7 +145,6 @@ class WhoopDailyPhysicalHealthWorker(
                 while (!cur.isAfter(today)) {
                     val dateSql = cur.toString()
 
-                    // Use recovery_score_daily as the anchor "already synced" signal.
                     if (!metrics.hasRecoveryForDate(access, dateSql, "whoop")) {
                         val (wStart, wEnd) = dayWindow(cur, zone)
                         val recoveryRoot = api.getRecovery(wStart, wEnd)

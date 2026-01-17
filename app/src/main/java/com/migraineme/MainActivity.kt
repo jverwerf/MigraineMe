@@ -39,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,6 +51,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -180,6 +184,54 @@ fun AppRoot() {
     val token = authState.accessToken
     var preloaded by remember { mutableStateOf(false) }
 
+    /**
+     * CHANGE:
+     * Keep AuthViewModel in sync with SessionStore when app returns to foreground.
+     *
+     * Why:
+     * - Your workers use SessionStore.getValidAccessToken() (with refresh).
+     * - Your UI uses authVm.state.accessToken.
+     * After idle, authVm token can be stale/expired until cold start. This makes UI queries
+     * look "empty" and makes "sync then see data" inconsistent.
+     *
+     * What this does:
+     * - On every ON_RESUME, fetch a valid access token from SessionStore (refresh if needed),
+     *   ensure user_id is present, and push into authVm via setSession().
+     *
+     * What it does NOT do:
+     * - Does not change Supabase connection/auth flow.
+     * - Does not change workers.
+     */
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    val persistedToken = SessionStore.getValidAccessToken(appCtx)
+
+                    if (!persistedToken.isNullOrBlank()) {
+                        var persistedUserId = SessionStore.readUserId(appCtx)
+
+                        if (persistedUserId.isNullOrBlank()) {
+                            persistedUserId = JwtUtils.extractUserIdFromAccessToken(persistedToken)
+                            if (!persistedUserId.isNullOrBlank()) {
+                                SessionStore.saveUserId(appCtx, persistedUserId)
+                            }
+                        }
+
+                        if (!persistedUserId.isNullOrBlank()) {
+                            // Always refresh authVm session on resume so UI uses a valid token.
+                            authVm.setSession(persistedToken, persistedUserId)
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
+
+    // Keep initial cold-start preload (still useful on first launch).
     LaunchedEffect(Unit) {
         val persistedToken = SessionStore.getValidAccessToken(appCtx)
 
