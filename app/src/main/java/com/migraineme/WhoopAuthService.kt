@@ -52,8 +52,11 @@ class WhoopAuthService {
 
         private const val EXPIRY_SKEW_MS = 60_000L
 
+        // FIX:
+        // WHOOP returns a refresh token only when requesting the `offline` scope.
+        // Without it, refresh_token will be empty and upsert-whoop-token will (correctly) reject.
         private const val SCOPE =
-            "read:recovery read:sleep read:workout read:cycles read:body_measurement"
+            "offline read:recovery read:sleep read:workout read:cycles read:body_measurement"
     }
 
     /**
@@ -138,9 +141,6 @@ class WhoopAuthService {
             return false
         }
 
-        // IMPORTANT FIX:
-        // WHOOP token endpoint is rejecting requests without client authentication.
-        // Include client_secret (client_secret_post) for both code exchange and refresh flows.
         val res = postForm(
             TOKEN_URL,
             mapOf(
@@ -155,15 +155,30 @@ class WhoopAuthService {
 
         return if (res.isSuccess) {
             val tok = res.getOrThrow()
+
+            // CRITICAL: WhoopTokenStore binds tokens to SessionStore.userId.
+            // Ensure userId is persisted before saving, derived from the already-stored Supabase access token.
+            val currentUserId = SessionStore.readUserId(appCtx)
+            if (currentUserId.isNullOrBlank()) {
+                val access = SessionStore.readAccessToken(appCtx)
+                if (!access.isNullOrBlank()) {
+                    val derived = JwtUtils.extractUserIdFromAccessToken(access)
+                    if (!derived.isNullOrBlank()) {
+                        SessionStore.saveUserId(appCtx, derived)
+                    }
+                }
+            }
+
             WhoopTokenStore(appCtx).save(tok)
 
-            // Clear one-time oauth data + last_uri
             prefs.edit()
                 .remove(KEY_STATE)
                 .remove(KEY_VERIFIER)
                 .remove(KEY_LAST_URI)
                 .putString(KEY_TOKEN_ERROR, "")
                 .apply()
+
+            WhoopTokenUploadWorker.enqueueNow(appCtx)
 
             true
         } else {
@@ -191,12 +206,23 @@ class WhoopAuthService {
                 "grant_type" to "refresh_token",
                 "client_id" to CLIENT_ID,
                 "client_secret" to CLIENT_SECRET,
-                "refresh_token" to current.refreshToken
+                "refresh_token" to current.refreshToken,
+                // WHOOP recommends requesting offline when refreshing as well.
+                "scope" to "offline"
             )
         )
 
         return if (res.isSuccess) {
-            store.save(res.getOrThrow())
+            val refreshed = res.getOrThrow()
+
+            // Preserve existing refresh token if WHOOP omits it in refresh response.
+            val merged = if (refreshed.refreshToken.isBlank()) {
+                refreshed.copy(refreshToken = current.refreshToken)
+            } else {
+                refreshed
+            }
+
+            store.save(merged)
             true
         } else {
             Log.w(TAG, "refresh failed: ${res.exceptionOrNull()?.message}")
@@ -204,9 +230,6 @@ class WhoopAuthService {
         }
     }
 
-    /**
-     * Preferred: workers should use this to get a valid access token.
-     */
     fun getValidAccessToken(context: Context): String? {
         val appCtx = context.applicationContext
         val store = WhoopTokenStore(appCtx)
@@ -220,13 +243,6 @@ class WhoopAuthService {
         }
     }
 
-    /**
-     * REQUIRED by WhoopApiService.
-     * Returns the full token (refreshing if needed), or null if not connected / cannot refresh.
-     *
-     * Marked suspend so coroutine workers can call it cleanly; implementation uses the existing
-     * synchronous refresh() logic.
-     */
     suspend fun refreshIfNeeded(context: Context): WhoopToken? {
         val appCtx = context.applicationContext
         val store = WhoopTokenStore(appCtx)
@@ -239,10 +255,6 @@ class WhoopAuthService {
             store.load()?.takeIf { ok }
         }
     }
-
-    // -------------------------
-    // HTTP (no ktor)
-    // -------------------------
 
     private fun postForm(url: String, form: Map<String, String>): Result<WhoopToken> {
         val body = form.entries.joinToString("&") { (k, v) ->
@@ -287,10 +299,6 @@ class WhoopAuthService {
         }
     }
 
-    // -------------------------
-    // PKCE helpers
-    // -------------------------
-
     private fun pkceChallengeS256(verifier: String): String {
         val md = MessageDigest.getInstance("SHA-256")
         val digest = md.digest(verifier.toByteArray(Charsets.UTF_8))
@@ -305,9 +313,6 @@ class WhoopAuthService {
     }
 }
 
-/**
- * Canonical WHOOP token model.
- */
 data class WhoopToken(
     val accessToken: String,
     val refreshToken: String,

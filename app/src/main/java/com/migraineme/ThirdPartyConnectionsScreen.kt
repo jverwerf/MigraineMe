@@ -20,9 +20,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,11 +33,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
-import io.ktor.client.request.post
-import io.ktor.client.request.header
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -45,13 +47,17 @@ fun ThirdPartyConnectionsScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
 
     val wearablesExpanded = remember { mutableStateOf(true) }
     val tokenStore = remember { WhoopTokenStore(context) }
     val hasWhoop = remember { mutableStateOf(tokenStore.load() != null) }
     val whoopErrorDialog = remember { mutableStateOf<String?>(null) }
-    val triedCompleteOnce = remember { mutableStateOf(false) }
     val showDisconnectDialog = remember { mutableStateOf(false) }
+
+    // Prevent re-processing the same callback URI repeatedly
+    val lastProcessedUri = remember { mutableStateOf<String?>(null) }
 
     val whoopLogoResId = remember {
         val pkg = context.packageName
@@ -61,49 +67,68 @@ fun ThirdPartyConnectionsScreen(
             ?: r.getIdentifier("whoop_logo", "mipmap", pkg)
     }
 
-    suspend fun enqueueBackfillIfLoggedIn(ctx: Context) {
-        val accessToken = SessionStore.getValidAccessToken(ctx) ?: return
-
-        val client = HttpClient(Android)
-        try {
-            client.post("${BuildConfig.SUPABASE_URL}/functions/v1/enqueue-login-backfill") {
-                header("Authorization", "Bearer $accessToken")
-                header("Content-Type", "application/json")
-            }
-        } catch (_: Throwable) {
-            // Best-effort only. Do not block WHOOP connection.
-        } finally {
-            client.close()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (triedCompleteOnce.value) return@LaunchedEffect
-        triedCompleteOnce.value = true
-
+    suspend fun tryCompleteWhoopIfCallbackPresent() {
         val prefs = context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
         val lastUri = prefs.getString("last_uri", null)
 
-        if (!lastUri.isNullOrBlank()) {
-            val ok = withContext(Dispatchers.IO) {
-                WhoopAuthService().completeAuth(context)
-            }
+        // Nothing to do
+        if (lastUri.isNullOrBlank()) return
 
-            if (ok && tokenStore.load() != null) {
-                hasWhoop.value = true
+        // Already processed this callback
+        if (lastProcessedUri.value == lastUri) return
 
-                // 🔥 NEW: trigger backfill on WHOOP (re)connect
-                withContext(Dispatchers.IO) {
-                    enqueueBackfillIfLoggedIn(context.applicationContext)
+        // Mark as processed immediately to avoid loops if completion fails
+        lastProcessedUri.value = lastUri
+
+        val ok = withContext(Dispatchers.IO) {
+            WhoopAuthService().completeAuth(context)
+        }
+
+        val localToken = tokenStore.load()
+
+        if (ok && localToken != null) {
+            hasWhoop.value = true
+
+            withContext(Dispatchers.IO) {
+                val edge = EdgeFunctionsService()
+
+                // 1) Store token in Supabase (whoop_tokens)
+                val stored = edge.upsertWhoopTokenToSupabase(context.applicationContext, localToken)
+                if (!stored) {
+                    whoopErrorDialog.value =
+                        "WHOOP connected locally, but failed to store token in Supabase. " +
+                                "Check Edge Function logs for upsert-whoop-token."
+                    return@withContext
                 }
 
-            } else {
-                hasWhoop.value = false
-                whoopErrorDialog.value =
-                    prefs.getString("token_error", "WHOOP authentication failed")
-                        ?: "WHOOP authentication failed"
+                // 2) Enqueue backfill after token exists server-side
+                edge.enqueueLoginBackfill(context.applicationContext)
+            }
+        } else {
+            hasWhoop.value = false
+            whoopErrorDialog.value =
+                prefs.getString("token_error", "WHOOP authentication failed")
+                    ?: "WHOOP authentication failed"
+        }
+    }
+
+    // Run completion when coming back from WHOOP browser flow.
+    // This is the missing part: LaunchedEffect(Unit) runs once; ON_RESUME runs after returning.
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    tryCompleteWhoopIfCallbackPresent()
+                }
             }
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Also attempt once on first composition (safe no-op if no last_uri)
+    LaunchedEffect(Unit) {
+        tryCompleteWhoopIfCallbackPresent()
     }
 
     whoopErrorDialog.value?.let { msg ->
@@ -131,6 +156,7 @@ fun ThirdPartyConnectionsScreen(
                         context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
                             .edit().clear().apply()
                         hasWhoop.value = false
+                        lastProcessedUri.value = null
                         showDisconnectDialog.value = false
                     }
                 ) { Text("Disconnect") }
@@ -194,6 +220,7 @@ fun ThirdPartyConnectionsScreen(
                                 context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
                                     .edit().clear().apply()
                                 hasWhoop.value = false
+                                lastProcessedUri.value = null
                                 WhoopAuthService().startAuth(it)
                             }
                         },

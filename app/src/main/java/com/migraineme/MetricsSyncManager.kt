@@ -20,12 +20,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.util.Date
 
 /**
  * Called from LoginScreen after successful auth.
  *
  * Responsibilities:
  * - Best-effort WHOOP token refresh (does not change auth approach)
+ * - Upload WHOOP token to Supabase (server worker source of truth)
  * - Schedule WHOOP daily workers (sleep + physical) if enabled + connected
  * - Schedule Location worker if enabled
  * - Best-effort enqueue of server-side WHOOP backfill jobs on login
@@ -55,6 +57,14 @@ object MetricsSyncManager {
     @Serializable
     private data class EmptyBody(val ok: Boolean = true)
 
+    @Serializable
+    private data class UpsertWhoopTokenBody(
+        val access_token: String,
+        val refresh_token: String,
+        val token_type: String,
+        val expires_at: String?
+    )
+
     /**
      * Triggers the Edge Function:
      * POST {SUPABASE_URL}/functions/v1/enqueue-login-backfill
@@ -82,11 +92,61 @@ object MetricsSyncManager {
                     "enqueue-login-backfill failed: HTTP ${resp.status.value} ${txt ?: ""}".trim()
                 )
             } else {
-                // Optional: keep quiet to avoid noise; logs exist in Edge Function.
                 Log.d("MetricsSyncManager", "enqueue-login-backfill ok")
             }
         } catch (t: Throwable) {
             Log.w("MetricsSyncManager", "enqueue-login-backfill error: ${t.message}")
+        }
+    }
+
+    /**
+     * CRITICAL: Upload local WHOOP token to Supabase so Edge Worker can run.
+     *
+     * POST {SUPABASE_URL}/functions/v1/upsert-whoop-token
+     *
+     * Best-effort: never blocks login.
+     */
+    private suspend fun upsertWhoopTokenToSupabaseBestEffort(
+        context: Context,
+        accessToken: String
+    ) {
+        val appCtx = context.applicationContext
+        val localTok = runCatching { WhoopTokenStore(appCtx).load() }.getOrNull() ?: return
+
+        val url = "$baseUrl/functions/v1/upsert-whoop-token"
+
+        val expiresAtIso = if (localTok.expiresAtMillis > 0L) {
+            runCatching { Date(localTok.expiresAtMillis).toInstant().toString() }.getOrNull()
+        } else {
+            null
+        }
+
+        val body = UpsertWhoopTokenBody(
+            access_token = localTok.accessToken,
+            refresh_token = localTok.refreshToken,
+            token_type = localTok.tokenType.ifBlank { "Bearer" },
+            expires_at = expiresAtIso
+        )
+
+        try {
+            val resp = client.post(url) {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", anonKey)
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            if (!resp.status.isSuccess()) {
+                val txt = runCatching { resp.bodyAsText() }.getOrNull()
+                Log.w(
+                    "MetricsSyncManager",
+                    "upsert-whoop-token failed: HTTP ${resp.status.value} ${txt ?: ""}".trim()
+                )
+            } else {
+                Log.d("MetricsSyncManager", "upsert-whoop-token ok")
+            }
+        } catch (t: Throwable) {
+            Log.w("MetricsSyncManager", "upsert-whoop-token error: ${t.message}")
         }
     }
 
@@ -99,8 +159,11 @@ object MetricsSyncManager {
 
         withContext(Dispatchers.IO) {
             try {
-                // NEW: enqueue server-side login backfill jobs (best-effort, never blocks login)
+                // Enqueue backfill jobs on login (best-effort)
                 enqueueLoginBackfillBestEffort(token)
+
+                // If WHOOP token exists locally, upload it to Supabase (best-effort)
+                upsertWhoopTokenToSupabaseBestEffort(appCtx, token)
 
                 // WHOOP connection = token exists locally
                 val whoopConnected = runCatching { WhoopTokenStore(appCtx).load() != null }.getOrDefault(false)
@@ -125,13 +188,11 @@ object MetricsSyncManager {
                             DataCollectionSettings.isEnabledForWhoop(appCtx, "steps_daily")
 
                 // If WHOOP connected, refresh Whoop token once (best-effort).
-                // If it fails, we still schedule; workers will log failures and retry next day.
                 if (whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
                     runCatching { WhoopAuthService().refresh(appCtx) }.onFailure {
                         Log.w("MetricsSyncManager", "WHOOP refresh failed: ${it.message}")
                     }
 
-                    // Schedule + run once now (only if the category is enabled)
                     if (whoopSleepEnabled) {
                         WhoopDailySyncWorkerSleepFields.runOnceNow(appCtx)
                         WhoopDailySyncWorkerSleepFields.scheduleNext(appCtx)
@@ -142,7 +203,6 @@ object MetricsSyncManager {
                         WhoopDailyPhysicalHealthWorker.scheduleNext(appCtx)
                     }
                 } else if (!whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
-                    // User has WHOOP collection enabled but no connection.
                     withContext(Dispatchers.Main) {
                         snackbarHostState.showSnackbar(
                             message = "Whoop not connected — connect Whoop to collect data.",
