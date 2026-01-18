@@ -30,6 +30,14 @@ class EdgeFunctionsService {
         @SerialName("expires_at") val expiresAtIso: String? = null
     )
 
+    @Serializable
+    private data class MetricSettingUpsertBody(
+        @SerialName("user_id") val userId: String,
+        val metric: String,
+        val enabled: Boolean,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
     private fun buildClient(): HttpClient {
         return HttpClient(Android) {
             install(ContentNegotiation) {
@@ -83,6 +91,53 @@ class EdgeFunctionsService {
             ok
         } catch (t: Throwable) {
             Log.e("EdgeFunctionsService", "upsertWhoopToken exception", t)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * NEW:
+     * Client-side upsert into public.metric_settings via PostgREST.
+     *
+     * Requires:
+     * - RLS policies allowing authenticated users to select/insert/update their own rows
+     * - grants for authenticated on public.metric_settings
+     */
+    suspend fun upsertMetricSetting(context: Context, metric: String, enabled: Boolean): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = MetricSettingUpsertBody(
+            userId = userId,
+            metric = metric,
+            enabled = enabled,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?on_conflict=user_id,metric"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
+                Log.e("EdgeFunctionsService", "upsertMetricSetting failed: ${res.status.value} $bodyText")
+            }
+            ok
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "upsertMetricSetting exception", t)
             false
         } finally {
             client.close()

@@ -1,0 +1,26 @@
+# Root directory containing the files
+$sourceDir = "C:\Users\verwe\Projects\MigraineMe\app\src\main\java\com\migraineme"
+
+# Output text file
+$outputFile = "C:\Users\verwe\Projects\MigraineMe\all_files_output.txt"
+
+# Clear output file if it already exists
+if (Test-Path $outputFile) {
+    Remove-Item $outputFile
+}
+
+# Get all files recursively
+Get-ChildItem -Path $sourceDir -File -Recurse | ForEach-Object {
+    $filePath = $_.FullName
+    $fileName = $_.Name
+
+    # Write title
+    Add-Content -Path $outputFile -Value "title: $fileName"
+    Add-Content -Path $outputFile -Value "text:"
+
+    # Write file contents
+    Get-Content -Path $filePath | Add-Content -Path $outputFile
+
+    # Blank line between files
+    Add-Content -Path $outputFile -Value ""
+}

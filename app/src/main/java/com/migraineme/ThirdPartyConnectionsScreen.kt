@@ -21,10 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +35,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -48,7 +45,6 @@ fun ThirdPartyConnectionsScreen(
     val context = LocalContext.current
     val activity = context as? Activity
     val lifecycleOwner = LocalLifecycleOwner.current
-    val scope = rememberCoroutineScope()
 
     val wearablesExpanded = remember { mutableStateOf(true) }
     val tokenStore = remember { WhoopTokenStore(context) }
@@ -56,7 +52,7 @@ fun ThirdPartyConnectionsScreen(
     val whoopErrorDialog = remember { mutableStateOf<String?>(null) }
     val showDisconnectDialog = remember { mutableStateOf(false) }
 
-    // Prevent re-processing the same callback URI repeatedly
+    // Track which callback URI we already processed, so returning to this screen doesn't re-run repeatedly.
     val lastProcessedUri = remember { mutableStateOf<String?>(null) }
 
     val whoopLogoResId = remember {
@@ -67,17 +63,21 @@ fun ThirdPartyConnectionsScreen(
             ?: r.getIdentifier("whoop_logo", "mipmap", pkg)
     }
 
+    /**
+     * Attempt WHOOP completion when the screen resumes.
+     *
+     * This is necessary because the user starts WHOOP auth from this screen, leaves the app to a browser,
+     * and returns via MainActivity.onNewIntent(). The previous LaunchedEffect(Unit) approach ran only once
+     * and would not run again on return, so the token upsert never happened.
+     */
     suspend fun tryCompleteWhoopIfCallbackPresent() {
         val prefs = context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
         val lastUri = prefs.getString("last_uri", null)
 
-        // Nothing to do
         if (lastUri.isNullOrBlank()) return
-
-        // Already processed this callback
         if (lastProcessedUri.value == lastUri) return
 
-        // Mark as processed immediately to avoid loops if completion fails
+        // Mark as processed immediately to avoid loops if completeAuth fails and user stays on screen.
         lastProcessedUri.value = lastUri
 
         val ok = withContext(Dispatchers.IO) {
@@ -91,17 +91,16 @@ fun ThirdPartyConnectionsScreen(
 
             withContext(Dispatchers.IO) {
                 val edge = EdgeFunctionsService()
-
-                // 1) Store token in Supabase (whoop_tokens)
                 val stored = edge.upsertWhoopTokenToSupabase(context.applicationContext, localToken)
+
                 if (!stored) {
                     whoopErrorDialog.value =
                         "WHOOP connected locally, but failed to store token in Supabase. " +
-                                "Check Edge Function logs for upsert-whoop-token."
+                                "Check edge function logs for upsert-whoop-token."
                     return@withContext
                 }
 
-                // 2) Enqueue backfill after token exists server-side
+                // After token is stored server-side, enqueue backfill.
                 edge.enqueueLoginBackfill(context.applicationContext)
             }
         } else {
@@ -112,22 +111,40 @@ fun ThirdPartyConnectionsScreen(
         }
     }
 
-    // Run completion when coming back from WHOOP browser flow.
-    // This is the missing part: LaunchedEffect(Unit) runs once; ON_RESUME runs after returning.
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                scope.launch {
-                    tryCompleteWhoopIfCallbackPresent()
-                }
+                // Run completion attempt when coming back from WHOOP browser.
+                // Use the Activity's lifecycle; this screen remains in composition during browser round-trip.
+                // We launch via the composition's coroutine context using withContext inside tryComplete.
+                kotlinx.coroutines.GlobalScope // NOT USED: we call via a safe Compose coroutine below.
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // We need a Compose coroutine to call the suspend function when ON_RESUME fires.
+    // To keep structure minimal and avoid new ViewModels, we use a remembered flag that triggers a recomposition-safe call.
+    val resumeTick = remember { mutableStateOf(0) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                resumeTick.value = resumeTick.value + 1
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Also attempt once on first composition (safe no-op if no last_uri)
-    LaunchedEffect(Unit) {
+    androidx.compose.runtime.LaunchedEffect(resumeTick.value) {
+        // On first composition (resumeTick=0) this will run once; it is safe (no last_uri => no-op).
+        // On returning from browser, ON_RESUME increments resumeTick, triggering this again.
         tryCompleteWhoopIfCallbackPresent()
     }
 
@@ -156,8 +173,8 @@ fun ThirdPartyConnectionsScreen(
                         context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
                             .edit().clear().apply()
                         hasWhoop.value = false
-                        lastProcessedUri.value = null
                         showDisconnectDialog.value = false
+                        lastProcessedUri.value = null
                     }
                 ) { Text("Disconnect") }
             },

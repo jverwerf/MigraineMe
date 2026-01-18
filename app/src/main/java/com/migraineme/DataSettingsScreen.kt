@@ -1,3 +1,4 @@
+// FILE: app/src/main/java/com/migraineme/DataSettingsScreen.kt
 package com.migraineme
 
 import android.content.Context
@@ -22,11 +23,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 /**
  * Data Settings Screen
@@ -37,6 +40,10 @@ import androidx.compose.ui.unit.dp
  * - If no wearable is connected, wearable rows are greyed out + disabled
  *
  * Settings are persisted locally (SharedPreferences). Workers will be gated in the next step.
+ *
+ * CHANGE:
+ * - When a toggle is switched, also upsert metric_settings in Supabase via EdgeFunctionsService
+ *   (client-side PostgREST; no edge function needed).
  */
 @Composable
 fun DataSettingsScreen() {
@@ -239,6 +246,10 @@ private fun DataRowUi(
     enabled: Boolean,
     greyOut: Boolean
 ) {
+    val context = LocalContext.current.applicationContext
+    val scope = rememberCoroutineScope()
+    val edge = remember { EdgeFunctionsService() }
+
     val alpha = if (greyOut) 0.55f else 1.0f
 
     // Wearable selection (dropdown) is stored per-table.
@@ -345,12 +356,25 @@ private fun DataRowUi(
                     checked = active,
                     onCheckedChange = { new ->
                         if (!canToggle) return@Switch
+
                         active = new
+
+                        // Local persistence (existing)
                         store.setActive(
                             table = row.table,
                             wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
                             value = new
                         )
+
+                        // Supabase persistence (new): update metric_settings.enabled
+                        // Metric key is the table name (row.table), matching your metric_settings.metric convention.
+                        scope.launch {
+                            edge.upsertMetricSetting(
+                                context = context,
+                                metric = row.table,
+                                enabled = new
+                            )
+                        }
                     },
                     enabled = canToggle
                 )
