@@ -28,7 +28,11 @@ import kotlinx.serialization.json.Json
  * - hrv_daily
  * - skin_temp_daily
  * - spo2_daily
- * - time_in_high_hr_zones_daily (value_minutes, zone_three_minutes, zone_four_minutes, zone_five_minutes, zone_six_minutes)
+ * - time_in_high_hr_zones_daily
+ *
+ * NOTE:
+ * - time_in_high_hr_zones_daily now also carries "activities" fields:
+ *   activity_type, start_at, end_at, plus zone_zero/one/two minutes when available.
  *
  * Unique key everywhere: (user_id, source, date)
  */
@@ -80,10 +84,24 @@ class SupabasePhysicalHealthService(context: Context) {
     data class HighHrZonesDailyRead(
         val date: String,
         @SerialName("value_minutes") val value_minutes: Double,
+
+        // These are the "high HR" zones used for totals
         @SerialName("zone_three_minutes") val zone_three_minutes: Double,
         @SerialName("zone_four_minutes") val zone_four_minutes: Double,
         @SerialName("zone_five_minutes") val zone_five_minutes: Double,
-        @SerialName("zone_six_minutes") val zone_six_minutes: Double
+        @SerialName("zone_six_minutes") val zone_six_minutes: Double,
+
+        // Optional (present when you store full zone splits / activities)
+        @SerialName("zone_zero_minutes") val zone_zero_minutes: Double? = null,
+        @SerialName("zone_one_minutes") val zone_one_minutes: Double? = null,
+        @SerialName("zone_two_minutes") val zone_two_minutes: Double? = null,
+
+        @SerialName("activity_type") val activity_type: String? = null,
+        @SerialName("start_at") val start_at: String? = null,
+        @SerialName("end_at") val end_at: String? = null,
+
+        @SerialName("source_measure_id") val source_measure_id: String? = null,
+        @SerialName("source") val source: String? = null
     )
 
     /* ============================================================
@@ -146,13 +164,14 @@ class SupabasePhysicalHealthService(context: Context) {
         endpoint: String,
         access: String,
         select: String,
-        limit: Int
+        limit: Int,
+        order: String = "date.desc"
     ): List<T> {
         val resp = client.get(endpoint) {
             header(HttpHeaders.Authorization, "Bearer $access")
             header("apikey", supabaseKey)
             parameter("select", select)
-            parameter("order", "date.desc")
+            parameter("order", order)
             parameter("limit", limit.toString())
         }
         if (!resp.status.isSuccess()) return emptyList()
@@ -179,12 +198,29 @@ class SupabasePhysicalHealthService(context: Context) {
     suspend fun fetchSpo2Daily(access: String, days: Int = 14): List<Spo2DailyRead> =
         getList("$supabaseUrl/rest/v1/spo2_daily", access, "date,value_pct", days)
 
+    /**
+     * Daily-style fetch (still ordered by date.desc).
+     * We also select activity + zone0..2 fields so TestingScreenComplete can display "activities"
+     * from the SAME table without changing auth patterns.
+     */
     suspend fun fetchHighHrDaily(access: String, days: Int = 14): List<HighHrZonesDailyRead> =
         getList(
             "$supabaseUrl/rest/v1/time_in_high_hr_zones_daily",
             access,
-            "date,value_minutes,zone_three_minutes,zone_four_minutes,zone_five_minutes,zone_six_minutes",
+            "date,value_minutes,zone_zero_minutes,zone_one_minutes,zone_two_minutes,zone_three_minutes,zone_four_minutes,zone_five_minutes,zone_six_minutes,activity_type,start_at,end_at,source,source_measure_id",
             days
+        )
+
+    /**
+     * Activities-style view: same table, just ordered by start_at (most recent first).
+     */
+    suspend fun fetchHighHrActivities(access: String, limitRows: Int = 50): List<HighHrZonesDailyRead> =
+        getList(
+            "$supabaseUrl/rest/v1/time_in_high_hr_zones_daily",
+            access,
+            "date,value_minutes,zone_zero_minutes,zone_one_minutes,zone_two_minutes,zone_three_minutes,zone_four_minutes,zone_five_minutes,zone_six_minutes,activity_type,start_at,end_at,source,source_measure_id",
+            limitRows,
+            order = "start_at.desc"
         )
 
     /* ============================================================

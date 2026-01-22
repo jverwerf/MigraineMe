@@ -61,7 +61,10 @@ fun TestingScreenComplete(
     var hrv by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.HrvDailyRead>()) }
     var skin by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.SkinTempDailyRead>()) }
     var spo2 by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.Spo2DailyRead>()) }
+
+    // High HR Zones (daily-style) + Activities (same table, different ordering)
     var zones by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.HighHrZonesDailyRead>()) }
+    var zoneActivities by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.HighHrZonesDailyRead>()) }
 
     LaunchedEffect(auth.accessToken) {
         val token = auth.accessToken ?: return@LaunchedEffect
@@ -72,7 +75,9 @@ fun TestingScreenComplete(
         hrv = svc.fetchHrvDaily(token)
         skin = svc.fetchSkinTempDaily(token)
         spo2 = svc.fetchSpo2Daily(token)
+
         zones = svc.fetchHighHrDaily(token)
+        zoneActivities = svc.fetchHighHrActivities(token)
     }
 
     // Existing VM fields
@@ -132,8 +137,40 @@ fun TestingScreenComplete(
             spo2.forEach { r -> RowLine(r.date, r.value_pct.toString()) }
         }
 
+        // NEW: High HR Zones (daily-style)
+        TableCard("time_in_high_hr_zones_daily (daily)") {
+            RowHeader("date", "total", "z3", "z4", "z5", "z6")
+            zones.forEach { z ->
+                RowLine(
+                    z.date,
+                    z.value_minutes.toString(),
+                    z.zone_three_minutes.toString(),
+                    z.zone_four_minutes.toString(),
+                    z.zone_five_minutes.toString(),
+                    z.zone_six_minutes.toString()
+                )
+            }
+        }
 
-        
+        // NEW: Activities + full zone splits (same table)
+        TableCard("time_in_high_hr_zones_daily (activities)") {
+            RowHeader("start", "end", "activity", "total", "z0", "z1", "z2", "z3", "z4", "z5", "z6")
+            zoneActivities.forEach { a ->
+                RowLine(
+                    a.start_at ?: "-",
+                    a.end_at ?: "-",
+                    a.activity_type ?: "-",
+                    a.value_minutes.toString(),
+                    (a.zone_zero_minutes ?: 0.0).toString(),
+                    (a.zone_one_minutes ?: 0.0).toString(),
+                    (a.zone_two_minutes ?: 0.0).toString(),
+                    a.zone_three_minutes.toString(),
+                    a.zone_four_minutes.toString(),
+                    a.zone_five_minutes.toString(),
+                    a.zone_six_minutes.toString()
+                )
+            }
+        }
 
         Spacer(Modifier.height(20.dp))
 

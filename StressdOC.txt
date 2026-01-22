@@ -1,0 +1,171 @@
+Stress Index — Methodology & Assumptions
+Overview
+
+The Stress Index is a deterministic, baseline-relative physiological index designed to capture autonomic nervous system deviation consistent with sustained psychological load, under explicitly constrained assumptions.
+
+This metric is not a diagnostic tool, not a mental health assessment, and not a validated measure of subjective stress. It is a signal-level index derived solely from cardiovascular physiology.
+
+What the Stress Index Measures
+
+The Stress Index quantifies how far an individual’s daily autonomic state deviates from their recent personal baseline, using two primitive physiological signals:
+
+Heart Rate Variability (HRV, RMSSD) — parasympathetic (vagal) tone
+
+Resting Heart Rate (RHR) — sympathetic dominance / vagal withdrawal
+
+The metric reflects physiological deviation, not causation. Elevated values indicate an autonomic state that is consistent with stress responses described in psychophysiological literature, but may also arise from unobserved confounders.
+
+Explicit Exclusions (by design)
+
+The Stress Index does not include:
+
+Sleep metrics (handled as a separate domain)
+
+Physical strain or activity metrics
+
+Composite vendor scores (e.g. recovery)
+
+Skin temperature or other context-sensitive signals
+
+These exclusions are intentional to:
+
+Avoid double counting
+
+Avoid opaque weighting
+
+Minimize confounding from environment, sleep, or exercise
+
+Preserve interpretability and transparency
+
+Scientific Framing
+
+This metric is a signal detection index, not a predictive or causal model.
+
+It does not:
+
+Learn weights
+
+Fit parameters
+
+Optimize against outcomes
+
+Use machine learning
+
+Claim validation against ground truth stress
+
+It does:
+
+Apply fixed, reproducible transformations
+
+Measure deviation from a personal physiological baseline
+
+Treat signals symmetrically to minimize assumptions
+
+Baseline Definition
+
+For each user, a rolling baseline is computed over a recent window (e.g. 21–28 days):
+
+Baseline location: median
+
+Baseline scale: median absolute deviation (MAD)
+
+Days with missing data or extreme anomalies may be excluded to improve robustness.
+
+This process establishes what is normal for that individual and does not constitute model fitting or recalibration.
+
+Directional Standardization
+
+Physiological directionality is explicitly encoded:
+
+Decreased HRV → unfavorable deviation
+
+Increased RHR → unfavorable deviation
+
+Daily standardized deviations are computed as:
+
+ΔHRV = (HRV_baseline − HRV_today) / HRV_MAD
+ΔRHR = (RHR_today − RHR_baseline) / RHR_MAD
+
+
+This ensures all deviations are expressed on a common, dimensionless scale relative to individual variability.
+
+Stress Index Calculation
+
+The Stress Index is defined as the magnitude of deviation in standardized autonomic space:
+
+StressIndex = √(ΔHRV² + ΔRHR²)
+
+
+Key properties:
+
+No explicit weights
+
+No prioritization of signals
+
+Contribution emerges from abnormality, not importance
+
+Equivalent to distance from baseline equilibrium
+
+This formulation avoids arbitrary weighting while allowing either signal to dominate when it deviates strongly.
+
+Interpretation
+
+Low values indicate autonomic states close to baseline
+
+Higher values indicate increasing physiological deviation
+
+Interpretation is within-person only, not population-normed
+
+The Stress Index should be interpreted as:
+
+“How unusual is today’s autonomic state for this individual?”
+
+Not:
+
+“How stressed is this person in absolute terms?”
+
+Limitations (Non-negotiable)
+
+The Stress Index:
+
+Cannot distinguish mental stress from illness, injury, alcohol, travel, or other unobserved factors
+
+Lacks contextual awareness (e.g. work vs leisure)
+
+Does not capture subjective experience
+
+Is not validated against self-report or biomarkers
+
+As such, it should be treated as a supporting physiological signal, not a definitive measure.
+
+Terminology Guidance
+
+Recommended:
+
+Stress Index
+
+Physiological Stress Signal
+
+Autonomic Deviation Index
+
+Avoid:
+
+“Mental stress score”
+
+“Stress prediction”
+
+“ML-based stress”
+
+“Stress level”
+
+Summary
+
+The Stress Index is a conservative, transparent, and scientifically honest metric that reflects baseline-relative autonomic deviation using minimal assumptions and primitive signals only. It prioritizes interpretability and methodological integrity over ambition.
+
+If you want, next step we can:
+
+Convert this into a shorter user-facing explanation
+
+Add a technical appendix with formulas only
+
+Translate this directly into edge-function computation steps (10:00 daily run)

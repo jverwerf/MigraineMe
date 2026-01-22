@@ -1460,6 +1460,7 @@ object DataCollectionSettings {
 
 title: DataSettingsScreen.kt
 text:
+// FILE: app/src/main/java/com/migraineme/DataSettingsScreen.kt
 package com.migraineme
 
 import android.content.Context
@@ -1481,14 +1482,17 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 /**
  * Data Settings Screen
@@ -1499,6 +1503,19 @@ import androidx.compose.ui.unit.dp
  * - If no wearable is connected, wearable rows are greyed out + disabled
  *
  * Settings are persisted locally (SharedPreferences). Workers will be gated in the next step.
+ *
+ * CHANGE:
+ * - When a toggle is switched, also upsert metric_settings in Supabase via EdgeFunctionsService
+ *   (client-side PostgREST; no edge function needed).
+ *
+ * ADDITION (Stress):
+ * - Added a wearable metric row for `stress_daily`
+ * - Stress toggle is only available when BOTH `hrv_daily` and `resting_hr_daily` are enabled
+ *   for the same selected wearable source (e.g., WHOOP). If either is off, Stress is forced off.
+ *
+ * ADDITION (Refresh):
+ * - After any toggle or wearable dropdown change, we force a screen refresh (repull) by re-reading
+ *   stored preferences into Compose state.
  */
 @Composable
 fun DataSettingsScreen() {
@@ -1518,6 +1535,12 @@ fun DataSettingsScreen() {
     val hasAnyWearable = connectedWearables.isNotEmpty()
 
     val store = remember { DataSettingsStore(context) }
+
+    // Increment to force "repull" (reload) from prefs after any change.
+    var refreshTick by remember { mutableIntStateOf(0) }
+    fun bumpRefresh() {
+        refreshTick += 1
+    }
 
     // Define all rows (tables) grouped into the 5 sections you requested.
     val sections = remember {
@@ -1555,6 +1578,9 @@ fun DataSettingsScreen() {
             DataSection(
                 title = "Mental Health",
                 rows = listOf(
+                    // Wearable-derived computed metric (standalone), gated by HRV + Resting HR.
+                    wearableRow("stress_daily", "Computed mental stress (requires HRV + Resting HR)"),
+
                     // These are user-entered via the logging flow (not worker collection).
                     manualRow("migraines", "User log entry"),
                     manualRow("triggers", "User log entry"),
@@ -1597,7 +1623,9 @@ fun DataSettingsScreen() {
                 section = section,
                 store = store,
                 connectedWearables = connectedWearables,
-                hasAnyWearable = hasAnyWearable
+                hasAnyWearable = hasAnyWearable,
+                refreshTick = refreshTick,
+                onAnyChange = { bumpRefresh() }
             )
 
             if (idx != sections.lastIndex) Spacer(Modifier.height(14.dp))
@@ -1613,7 +1641,9 @@ private fun SectionCard(
     section: DataSection,
     store: DataSettingsStore,
     connectedWearables: List<WearableSource>,
-    hasAnyWearable: Boolean
+    hasAnyWearable: Boolean,
+    refreshTick: Int,
+    onAnyChange: () -> Unit
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -1670,7 +1700,9 @@ private fun SectionCard(
                     store = store,
                     connectedWearables = connectedWearables,
                     enabled = enabled,
-                    greyOut = isWearableRow && !hasAnyWearable
+                    greyOut = isWearableRow && !hasAnyWearable,
+                    refreshTick = refreshTick,
+                    onAnyChange = onAnyChange
                 )
 
                 if (i != section.rows.lastIndex) {
@@ -1699,18 +1731,22 @@ private fun DataRowUi(
     store: DataSettingsStore,
     connectedWearables: List<WearableSource>,
     enabled: Boolean,
-    greyOut: Boolean
+    greyOut: Boolean,
+    refreshTick: Int,
+    onAnyChange: () -> Unit
 ) {
-    val alpha = if (greyOut) 0.55f else 1.0f
+    val context = LocalContext.current.applicationContext
+    val scope = rememberCoroutineScope()
+    val edge = remember { EdgeFunctionsService() }
 
     // Wearable selection (dropdown) is stored per-table.
     // Phone/manual/reference rows don’t use it.
-    var selectedWearable by remember(row.table) {
+    var selectedWearable by remember(row.table, refreshTick) {
         mutableStateOf(store.getSelectedWearable(row.table, row.defaultWearable))
     }
 
     // Active is stored per table + (wearable if applicable)
-    var active by remember(row.table) {
+    var active by remember(row.table, refreshTick, selectedWearable) {
         mutableStateOf(
             store.getActive(
                 table = row.table,
@@ -1736,6 +1772,51 @@ private fun DataRowUi(
         }
     }
 
+    // Stress gating: only available if BOTH HRV + Resting HR are enabled for the same wearable source.
+    val isStressRow = row.table == "stress_daily" && row.collectedByKind == CollectedByKind.WEARABLE
+    val depsOkForStress =
+        if (!isStressRow) {
+            true
+        } else {
+            val hrvOn = store.getActive(
+                table = "hrv_daily",
+                wearable = selectedWearable,
+                defaultValue = true
+            )
+            val rrOn = store.getActive(
+                table = "resting_hr_daily",
+                wearable = selectedWearable,
+                defaultValue = true
+            )
+            hrvOn && rrOn
+        }
+
+    // If Stress is ON but dependencies turn OFF, force Stress OFF (local + Supabase).
+    LaunchedEffect(isStressRow, depsOkForStress, selectedWearable, refreshTick) {
+        if (isStressRow && !depsOkForStress && active) {
+            active = false
+
+            store.setActive(
+                table = row.table,
+                wearable = selectedWearable,
+                value = false
+            )
+
+            scope.launch {
+                edge.upsertMetricSetting(
+                    context = context,
+                    metric = row.table,
+                    enabled = false
+                )
+                onAnyChange()
+            }
+        }
+    }
+
+    // Grey out Stress when deps are not satisfied.
+    val effectiveGreyOut = greyOut || (isStressRow && !depsOkForStress)
+    val alpha = if (effectiveGreyOut) 0.55f else 1.0f
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1751,6 +1832,14 @@ private fun DataRowUi(
                     row.collectedByLabel,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.alpha(0.75f)
+                )
+            }
+            if (isStressRow && !depsOkForStress) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Enable hrv_daily and resting_hr_daily to use stress.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.alpha(0.70f)
                 )
             }
         }
@@ -1792,6 +1881,8 @@ private fun DataRowUi(
                                     wearable = newSel,
                                     defaultValue = defaultActiveFor(row)
                                 )
+
+                                onAnyChange()
                             }
                         )
                     }
@@ -1801,18 +1892,62 @@ private fun DataRowUi(
 
         // Active column
         Column(modifier = Modifier.weight(0.20f)) {
-            val canToggle = enabled && row.collectedByKind != CollectedByKind.REFERENCE
+            val canToggleBase = enabled && row.collectedByKind != CollectedByKind.REFERENCE
+            val canToggle = canToggleBase && (!isStressRow || depsOkForStress)
+
             Row {
                 Switch(
                     checked = active,
                     onCheckedChange = { new ->
                         if (!canToggle) return@Switch
+
                         active = new
+
+                        // Local persistence (existing)
                         store.setActive(
                             table = row.table,
                             wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
                             value = new
                         )
+
+                        // Supabase persistence (new): update metric_settings.enabled
+                        // Metric key is the table name (row.table), matching your metric_settings.metric convention.
+                        scope.launch {
+                            edge.upsertMetricSetting(
+                                context = context,
+                                metric = row.table,
+                                enabled = new
+                            )
+
+                            // If HRV or Resting HR is turned OFF, force stress_daily OFF (local + Supabase),
+                            // for the same selected wearable source as the stress row.
+                            if (!new && row.collectedByKind == CollectedByKind.WEARABLE &&
+                                (row.table == "hrv_daily" || row.table == "resting_hr_daily")
+                            ) {
+                                val stressWearable = store.getSelectedWearable("stress_daily", WearableSource.WHOOP)
+                                if (stressWearable == selectedWearable) {
+                                    val stressCurrentlyOn = store.getActive(
+                                        table = "stress_daily",
+                                        wearable = stressWearable,
+                                        defaultValue = true
+                                    )
+                                    if (stressCurrentlyOn) {
+                                        store.setActive(
+                                            table = "stress_daily",
+                                            wearable = stressWearable,
+                                            value = false
+                                        )
+                                        edge.upsertMetricSetting(
+                                            context = context,
+                                            metric = "stress_daily",
+                                            enabled = false
+                                        )
+                                    }
+                                }
+                            }
+
+                            onAnyChange()
+                        }
                     },
                     enabled = canToggle
                 )
@@ -1964,6 +2099,14 @@ class EdgeFunctionsService {
         @SerialName("expires_at") val expiresAtIso: String? = null
     )
 
+    @Serializable
+    private data class MetricSettingUpsertBody(
+        @SerialName("user_id") val userId: String,
+        val metric: String,
+        val enabled: Boolean,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
     private fun buildClient(): HttpClient {
         return HttpClient(Android) {
             install(ContentNegotiation) {
@@ -2017,6 +2160,53 @@ class EdgeFunctionsService {
             ok
         } catch (t: Throwable) {
             Log.e("EdgeFunctionsService", "upsertWhoopToken exception", t)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * NEW:
+     * Client-side upsert into public.metric_settings via PostgREST.
+     *
+     * Requires:
+     * - RLS policies allowing authenticated users to select/insert/update their own rows
+     * - grants for authenticated on public.metric_settings
+     */
+    suspend fun upsertMetricSetting(context: Context, metric: String, enabled: Boolean): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = MetricSettingUpsertBody(
+            userId = userId,
+            metric = metric,
+            enabled = enabled,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?on_conflict=user_id,metric"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
+                Log.e("EdgeFunctionsService", "upsertMetricSetting failed: ${res.status.value} $bodyText")
+            }
+            ok
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "upsertMetricSetting exception", t)
             false
         } finally {
             client.close()
@@ -11528,7 +11718,11 @@ import kotlinx.serialization.json.Json
  * - hrv_daily
  * - skin_temp_daily
  * - spo2_daily
- * - time_in_high_hr_zones_daily (value_minutes, zone_three_minutes, zone_four_minutes, zone_five_minutes, zone_six_minutes)
+ * - time_in_high_hr_zones_daily
+ *
+ * NOTE:
+ * - time_in_high_hr_zones_daily now also carries "activities" fields:
+ *   activity_type, start_at, end_at, plus zone_zero/one/two minutes when available.
  *
  * Unique key everywhere: (user_id, source, date)
  */
@@ -11580,10 +11774,24 @@ class SupabasePhysicalHealthService(context: Context) {
     data class HighHrZonesDailyRead(
         val date: String,
         @SerialName("value_minutes") val value_minutes: Double,
+
+        // These are the "high HR" zones used for totals
         @SerialName("zone_three_minutes") val zone_three_minutes: Double,
         @SerialName("zone_four_minutes") val zone_four_minutes: Double,
         @SerialName("zone_five_minutes") val zone_five_minutes: Double,
-        @SerialName("zone_six_minutes") val zone_six_minutes: Double
+        @SerialName("zone_six_minutes") val zone_six_minutes: Double,
+
+        // Optional (present when you store full zone splits / activities)
+        @SerialName("zone_zero_minutes") val zone_zero_minutes: Double? = null,
+        @SerialName("zone_one_minutes") val zone_one_minutes: Double? = null,
+        @SerialName("zone_two_minutes") val zone_two_minutes: Double? = null,
+
+        @SerialName("activity_type") val activity_type: String? = null,
+        @SerialName("start_at") val start_at: String? = null,
+        @SerialName("end_at") val end_at: String? = null,
+
+        @SerialName("source_measure_id") val source_measure_id: String? = null,
+        @SerialName("source") val source: String? = null
     )
 
     /* ============================================================
@@ -11646,13 +11854,14 @@ class SupabasePhysicalHealthService(context: Context) {
         endpoint: String,
         access: String,
         select: String,
-        limit: Int
+        limit: Int,
+        order: String = "date.desc"
     ): List<T> {
         val resp = client.get(endpoint) {
             header(HttpHeaders.Authorization, "Bearer $access")
             header("apikey", supabaseKey)
             parameter("select", select)
-            parameter("order", "date.desc")
+            parameter("order", order)
             parameter("limit", limit.toString())
         }
         if (!resp.status.isSuccess()) return emptyList()
@@ -11679,12 +11888,29 @@ class SupabasePhysicalHealthService(context: Context) {
     suspend fun fetchSpo2Daily(access: String, days: Int = 14): List<Spo2DailyRead> =
         getList("$supabaseUrl/rest/v1/spo2_daily", access, "date,value_pct", days)
 
+    /**
+     * Daily-style fetch (still ordered by date.desc).
+     * We also select activity + zone0..2 fields so TestingScreenComplete can display "activities"
+     * from the SAME table without changing auth patterns.
+     */
     suspend fun fetchHighHrDaily(access: String, days: Int = 14): List<HighHrZonesDailyRead> =
         getList(
             "$supabaseUrl/rest/v1/time_in_high_hr_zones_daily",
             access,
-            "date,value_minutes,zone_three_minutes,zone_four_minutes,zone_five_minutes,zone_six_minutes",
+            "date,value_minutes,zone_zero_minutes,zone_one_minutes,zone_two_minutes,zone_three_minutes,zone_four_minutes,zone_five_minutes,zone_six_minutes,activity_type,start_at,end_at,source,source_measure_id",
             days
+        )
+
+    /**
+     * Activities-style view: same table, just ordered by start_at (most recent first).
+     */
+    suspend fun fetchHighHrActivities(access: String, limitRows: Int = 50): List<HighHrZonesDailyRead> =
+        getList(
+            "$supabaseUrl/rest/v1/time_in_high_hr_zones_daily",
+            access,
+            "date,value_minutes,zone_zero_minutes,zone_one_minutes,zone_two_minutes,zone_three_minutes,zone_four_minutes,zone_five_minutes,zone_six_minutes,activity_type,start_at,end_at,source,source_measure_id",
+            limitRows,
+            order = "start_at.desc"
         )
 
     /* ============================================================
@@ -12152,7 +12378,10 @@ fun TestingScreenComplete(
     var hrv by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.HrvDailyRead>()) }
     var skin by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.SkinTempDailyRead>()) }
     var spo2 by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.Spo2DailyRead>()) }
+
+    // High HR Zones (daily-style) + Activities (same table, different ordering)
     var zones by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.HighHrZonesDailyRead>()) }
+    var zoneActivities by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.HighHrZonesDailyRead>()) }
 
     LaunchedEffect(auth.accessToken) {
         val token = auth.accessToken ?: return@LaunchedEffect
@@ -12163,7 +12392,9 @@ fun TestingScreenComplete(
         hrv = svc.fetchHrvDaily(token)
         skin = svc.fetchSkinTempDaily(token)
         spo2 = svc.fetchSpo2Daily(token)
+
         zones = svc.fetchHighHrDaily(token)
+        zoneActivities = svc.fetchHighHrActivities(token)
     }
 
     // Existing VM fields
@@ -12223,8 +12454,40 @@ fun TestingScreenComplete(
             spo2.forEach { r -> RowLine(r.date, r.value_pct.toString()) }
         }
 
+        // NEW: High HR Zones (daily-style)
+        TableCard("time_in_high_hr_zones_daily (daily)") {
+            RowHeader("date", "total", "z3", "z4", "z5", "z6")
+            zones.forEach { z ->
+                RowLine(
+                    z.date,
+                    z.value_minutes.toString(),
+                    z.zone_three_minutes.toString(),
+                    z.zone_four_minutes.toString(),
+                    z.zone_five_minutes.toString(),
+                    z.zone_six_minutes.toString()
+                )
+            }
+        }
 
-        
+        // NEW: Activities + full zone splits (same table)
+        TableCard("time_in_high_hr_zones_daily (activities)") {
+            RowHeader("start", "end", "activity", "total", "z0", "z1", "z2", "z3", "z4", "z5", "z6")
+            zoneActivities.forEach { a ->
+                RowLine(
+                    a.start_at ?: "-",
+                    a.end_at ?: "-",
+                    a.activity_type ?: "-",
+                    a.value_minutes.toString(),
+                    (a.zone_zero_minutes ?: 0.0).toString(),
+                    (a.zone_one_minutes ?: 0.0).toString(),
+                    (a.zone_two_minutes ?: 0.0).toString(),
+                    a.zone_three_minutes.toString(),
+                    a.zone_four_minutes.toString(),
+                    a.zone_five_minutes.toString(),
+                    a.zone_six_minutes.toString()
+                )
+            }
+        }
 
         Spacer(Modifier.height(20.dp))
 
@@ -12716,10 +12979,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -12732,7 +12993,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -12743,7 +13003,6 @@ fun ThirdPartyConnectionsScreen(
     val context = LocalContext.current
     val activity = context as? Activity
     val lifecycleOwner = LocalLifecycleOwner.current
-    val scope = rememberCoroutineScope()
 
     val wearablesExpanded = remember { mutableStateOf(true) }
     val tokenStore = remember { WhoopTokenStore(context) }
@@ -12751,7 +13010,7 @@ fun ThirdPartyConnectionsScreen(
     val whoopErrorDialog = remember { mutableStateOf<String?>(null) }
     val showDisconnectDialog = remember { mutableStateOf(false) }
 
-    // Prevent re-processing the same callback URI repeatedly
+    // Track which callback URI we already processed, so returning to this screen doesn't re-run repeatedly.
     val lastProcessedUri = remember { mutableStateOf<String?>(null) }
 
     val whoopLogoResId = remember {
@@ -12762,17 +13021,21 @@ fun ThirdPartyConnectionsScreen(
             ?: r.getIdentifier("whoop_logo", "mipmap", pkg)
     }
 
+    /**
+     * Attempt WHOOP completion when the screen resumes.
+     *
+     * This is necessary because the user starts WHOOP auth from this screen, leaves the app to a browser,
+     * and returns via MainActivity.onNewIntent(). The previous LaunchedEffect(Unit) approach ran only once
+     * and would not run again on return, so the token upsert never happened.
+     */
     suspend fun tryCompleteWhoopIfCallbackPresent() {
         val prefs = context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
         val lastUri = prefs.getString("last_uri", null)
 
-        // Nothing to do
         if (lastUri.isNullOrBlank()) return
-
-        // Already processed this callback
         if (lastProcessedUri.value == lastUri) return
 
-        // Mark as processed immediately to avoid loops if completion fails
+        // Mark as processed immediately to avoid loops if completeAuth fails and user stays on screen.
         lastProcessedUri.value = lastUri
 
         val ok = withContext(Dispatchers.IO) {
@@ -12786,17 +13049,16 @@ fun ThirdPartyConnectionsScreen(
 
             withContext(Dispatchers.IO) {
                 val edge = EdgeFunctionsService()
-
-                // 1) Store token in Supabase (whoop_tokens)
                 val stored = edge.upsertWhoopTokenToSupabase(context.applicationContext, localToken)
+
                 if (!stored) {
                     whoopErrorDialog.value =
                         "WHOOP connected locally, but failed to store token in Supabase. " +
-                                "Check Edge Function logs for upsert-whoop-token."
+                                "Check edge function logs for upsert-whoop-token."
                     return@withContext
                 }
 
-                // 2) Enqueue backfill after token exists server-side
+                // After token is stored server-side, enqueue backfill.
                 edge.enqueueLoginBackfill(context.applicationContext)
             }
         } else {
@@ -12807,22 +13069,40 @@ fun ThirdPartyConnectionsScreen(
         }
     }
 
-    // Run completion when coming back from WHOOP browser flow.
-    // This is the missing part: LaunchedEffect(Unit) runs once; ON_RESUME runs after returning.
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                scope.launch {
-                    tryCompleteWhoopIfCallbackPresent()
-                }
+                // Run completion attempt when coming back from WHOOP browser.
+                // Use the Activity's lifecycle; this screen remains in composition during browser round-trip.
+                // We launch via the composition's coroutine context using withContext inside tryComplete.
+                kotlinx.coroutines.GlobalScope // NOT USED: we call via a safe Compose coroutine below.
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // We need a Compose coroutine to call the suspend function when ON_RESUME fires.
+    // To keep structure minimal and avoid new ViewModels, we use a remembered flag that triggers a recomposition-safe call.
+    val resumeTick = remember { mutableStateOf(0) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                resumeTick.value = resumeTick.value + 1
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Also attempt once on first composition (safe no-op if no last_uri)
-    LaunchedEffect(Unit) {
+    androidx.compose.runtime.LaunchedEffect(resumeTick.value) {
+        // On first composition (resumeTick=0) this will run once; it is safe (no last_uri => no-op).
+        // On returning from browser, ON_RESUME increments resumeTick, triggering this again.
         tryCompleteWhoopIfCallbackPresent()
     }
 
@@ -12851,8 +13131,8 @@ fun ThirdPartyConnectionsScreen(
                         context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
                             .edit().clear().apply()
                         hasWhoop.value = false
-                        lastProcessedUri.value = null
                         showDisconnectDialog.value = false
+                        lastProcessedUri.value = null
                     }
                 ) { Text("Disconnect") }
             },
@@ -13751,8 +14031,11 @@ class WhoopAuthService {
 
         private const val EXPIRY_SKEW_MS = 60_000L
 
+        // FIX:
+        // WHOOP returns a refresh token only when requesting the `offline` scope.
+        // Without it, refresh_token will be empty and upsert-whoop-token will (correctly) reject.
         private const val SCOPE =
-            "read:recovery read:sleep read:workout read:cycles read:body_measurement"
+            "offline read:recovery read:sleep read:workout read:cycles read:body_measurement"
     }
 
     /**
@@ -13837,9 +14120,6 @@ class WhoopAuthService {
             return false
         }
 
-        // IMPORTANT FIX:
-        // WHOOP token endpoint is rejecting requests without client authentication.
-        // Include client_secret (client_secret_post) for both code exchange and refresh flows.
         val res = postForm(
             TOKEN_URL,
             mapOf(
@@ -13870,7 +14150,6 @@ class WhoopAuthService {
 
             WhoopTokenStore(appCtx).save(tok)
 
-            // Clear one-time oauth data + last_uri
             prefs.edit()
                 .remove(KEY_STATE)
                 .remove(KEY_VERIFIER)
@@ -13878,10 +14157,6 @@ class WhoopAuthService {
                 .putString(KEY_TOKEN_ERROR, "")
                 .apply()
 
-            // GUARANTEE EVENTUAL SUPABASE UPLOAD + BACKFILL ENQUEUE:
-            // This schedules a WorkManager job that retries until:
-            //  - upsert-whoop-token succeeds, then
-            //  - enqueue-login-backfill succeeds.
             WhoopTokenUploadWorker.enqueueNow(appCtx)
 
             true
@@ -13910,12 +14185,23 @@ class WhoopAuthService {
                 "grant_type" to "refresh_token",
                 "client_id" to CLIENT_ID,
                 "client_secret" to CLIENT_SECRET,
-                "refresh_token" to current.refreshToken
+                "refresh_token" to current.refreshToken,
+                // WHOOP recommends requesting offline when refreshing as well.
+                "scope" to "offline"
             )
         )
 
         return if (res.isSuccess) {
-            store.save(res.getOrThrow())
+            val refreshed = res.getOrThrow()
+
+            // Preserve existing refresh token if WHOOP omits it in refresh response.
+            val merged = if (refreshed.refreshToken.isBlank()) {
+                refreshed.copy(refreshToken = current.refreshToken)
+            } else {
+                refreshed
+            }
+
+            store.save(merged)
             true
         } else {
             Log.w(TAG, "refresh failed: ${res.exceptionOrNull()?.message}")
@@ -13923,9 +14209,6 @@ class WhoopAuthService {
         }
     }
 
-    /**
-     * Preferred: workers should use this to get a valid access token.
-     */
     fun getValidAccessToken(context: Context): String? {
         val appCtx = context.applicationContext
         val store = WhoopTokenStore(appCtx)
@@ -13939,13 +14222,6 @@ class WhoopAuthService {
         }
     }
 
-    /**
-     * REQUIRED by WhoopApiService.
-     * Returns the full token (refreshing if needed), or null if not connected / cannot refresh.
-     *
-     * Marked suspend so coroutine workers can call it cleanly; implementation uses the existing
-     * synchronous refresh() logic.
-     */
     suspend fun refreshIfNeeded(context: Context): WhoopToken? {
         val appCtx = context.applicationContext
         val store = WhoopTokenStore(appCtx)
@@ -13958,10 +14234,6 @@ class WhoopAuthService {
             store.load()?.takeIf { ok }
         }
     }
-
-    // -------------------------
-    // HTTP (no ktor)
-    // -------------------------
 
     private fun postForm(url: String, form: Map<String, String>): Result<WhoopToken> {
         val body = form.entries.joinToString("&") { (k, v) ->
@@ -14006,10 +14278,6 @@ class WhoopAuthService {
         }
     }
 
-    // -------------------------
-    // PKCE helpers
-    // -------------------------
-
     private fun pkceChallengeS256(verifier: String): String {
         val md = MessageDigest.getInstance("SHA-256")
         val digest = md.digest(verifier.toByteArray(Charsets.UTF_8))
@@ -14024,9 +14292,6 @@ class WhoopAuthService {
     }
 }
 
-/**
- * Canonical WHOOP token model.
- */
 data class WhoopToken(
     val accessToken: String,
     val refreshToken: String,
@@ -15096,8 +15361,11 @@ class WhoopTokenUploadWorker(
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .build()
 
+            // CRITICAL: Use REPLACE (not KEEP) so we always trigger a run.
+            // KEEP can result in "stuck" ENQUEUED work preventing any future triggers,
+            // which matches your symptom: no new edge_audit rows.
             WorkManager.getInstance(appCtx)
-                .enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.KEEP, req)
+                .enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, req)
         }
     }
 }

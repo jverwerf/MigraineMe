@@ -226,6 +226,21 @@ object MetricsSyncManager {
                     LocationDailySyncWorker.backfillUpToToday(appCtx, token)
                 }
 
+                // Ambient noise sampling (device mic -> derived numbers -> Supabase)
+                val noiseEnabled =
+                    DataCollectionSettings.isActive(
+                        context = appCtx,
+                        table = "ambient_noise_samples",
+                        wearable = null,
+                        defaultValue = false
+                    )
+
+                if (noiseEnabled) {
+                    AmbientNoiseSampleWorker.schedule(appCtx)
+                } else {
+                    AmbientNoiseSampleWorker.cancel(appCtx)
+                }
+
             } catch (t: Throwable) {
                 Log.w("MetricsSyncManager", "onLogin error: ${t.message}")
             }
