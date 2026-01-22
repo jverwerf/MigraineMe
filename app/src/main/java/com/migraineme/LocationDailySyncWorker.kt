@@ -24,11 +24,18 @@ class LocationDailySyncWorker(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        var shouldScheduleNext = true
+
         try {
             Log.d(LOG_TAG, "---- Running LocationDailySyncWorker ----")
 
             val access = SessionStore.getValidAccessToken(applicationContext)
-                ?: return@withContext Result.success()
+            if (access == null) {
+                // If we're logged out / token refresh failed temporarily, retry instead of silently "succeeding".
+                Log.w(LOG_TAG, "No valid access token; will retry")
+                shouldScheduleNext = false
+                return@withContext Result.retry()
+            }
 
             // Gate entire location collection by the single table toggle.
             if (!DataCollectionSettings.isActive(applicationContext, "user_location_daily", wearable = null, defaultValue = true)) {
@@ -84,10 +91,15 @@ class LocationDailySyncWorker(
             Result.success()
 
         } catch (t: Throwable) {
-            Log.w(LOG_TAG, "Worker error: ${t.message}")
-            Result.success()
+            // Treat transient failures (network, service) as retryable; don't silently "succeed".
+            Log.w(LOG_TAG, "Worker error", t)
+            shouldScheduleNext = false
+            Result.retry()
         } finally {
-            scheduleNext(applicationContext)
+            // If WorkManager will retry soon, don't replace the work with a next-9am run (it cancels the retry).
+            if (shouldScheduleNext) {
+                scheduleNext(applicationContext)
+            }
         }
     }
 

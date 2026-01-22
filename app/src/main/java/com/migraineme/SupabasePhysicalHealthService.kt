@@ -1,3 +1,4 @@
+// FILE: app/src/main/java/com/migraineme/SupabasePhysicalHealthService.kt
 package com.migraineme
 
 import android.content.Context
@@ -29,6 +30,7 @@ import kotlinx.serialization.json.Json
  * - skin_temp_daily
  * - spo2_daily
  * - time_in_high_hr_zones_daily
+ * - stress_index_daily
  *
  * NOTE:
  * - time_in_high_hr_zones_daily now also carries "activities" fields:
@@ -78,6 +80,14 @@ class SupabasePhysicalHealthService(context: Context) {
     data class Spo2DailyRead(
         val date: String,
         @SerialName("value_pct") val value_pct: Double
+    )
+
+    @Serializable
+    data class StressIndexDailyRead(
+        val date: String,
+        @SerialName("value_pct") val value_pct: Double,
+        val source: String? = null,
+        @SerialName("updated_at") val updated_at: String? = null
     )
 
     @Serializable
@@ -197,6 +207,9 @@ class SupabasePhysicalHealthService(context: Context) {
 
     suspend fun fetchSpo2Daily(access: String, days: Int = 14): List<Spo2DailyRead> =
         getList("$supabaseUrl/rest/v1/spo2_daily", access, "date,value_pct", days)
+
+    suspend fun fetchStressIndexDaily(access: String, days: Int = 30): List<StressIndexDailyRead> =
+        getList("$supabaseUrl/rest/v1/stress_index_daily", access, "date,value_pct,source,updated_at", days)
 
     /**
      * Daily-style fetch (still ordered by date.desc).

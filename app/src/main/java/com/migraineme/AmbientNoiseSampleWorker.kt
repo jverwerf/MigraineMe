@@ -41,7 +41,7 @@ class AmbientNoiseSampleWorker(
                 context = ctx,
                 table = "ambient_noise_samples",
                 wearable = null,
-                defaultValue = false
+                defaultValue = true
             )
             if (!enabled) {
                 Log.d(LOG_TAG, "ambient_noise_samples disabled — skip")

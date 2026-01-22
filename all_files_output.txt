@@ -786,6 +786,281 @@ fun AdjustTriggersScreen(
     }
 }
 
+title: AmbientNoiseSampler.kt
+text:
+package com.migraineme
+
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
+import kotlin.math.ln
+import kotlin.math.sqrt
+
+data class AmbientNoiseMetrics(
+    val lMean: Double,
+    val lP90: Double,
+    val lMax: Double,
+    val frames: Int
+)
+
+/**
+ * Records short PCM audio and computes loudness metrics WITHOUT storing audio.
+ *
+ * We use log-RMS per frame:
+ * - lMean = mean(logRms)
+ * - lP90  = 90th percentile(logRms)
+ * - lMax  = max(logRms)
+ *
+ * This is NOT calibrated dB SPL; it's a stable relative measure per device.
+ */
+object AmbientNoiseSampler {
+
+    fun capture(durationMs: Long = 60_000L): AmbientNoiseMetrics {
+        val sampleRate = 16_000
+        val channelConfig = AudioFormat.CHANNEL_IN_MONO
+        val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+
+        val minBuf = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
+        val bufferSize = maxOf(minBuf, sampleRate * 2) // ~1 second buffer (16-bit mono)
+
+        val recorder = AudioRecord(
+            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            sampleRate,
+            channelConfig,
+            audioFormat,
+            bufferSize
+        )
+
+        if (recorder.state != AudioRecord.STATE_INITIALIZED) {
+            runCatching { recorder.release() }
+            return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
+        }
+
+        val readBuf = ShortArray(bufferSize / 2)
+
+        val frameMs = 200L
+        val frameSamples = (sampleRate * frameMs / 1000).toInt()
+        val frameBuf = ShortArray(frameSamples)
+        var frameFill = 0
+
+        val frameAcc = ArrayList<Double>(512)
+
+        recorder.startRecording()
+        val start = System.currentTimeMillis()
+
+        while (System.currentTimeMillis() - start < durationMs) {
+            val read = recorder.read(readBuf, 0, readBuf.size)
+            if (read <= 0) continue
+
+            var i = 0
+            while (i < read) {
+                val take = minOf(read - i, frameSamples - frameFill)
+                for (k in 0 until take) {
+                    frameBuf[frameFill + k] = readBuf[i + k]
+                }
+                frameFill += take
+                i += take
+
+                if (frameFill == frameSamples) {
+                    frameAcc.add(computeLogRms(frameBuf))
+                    frameFill = 0
+                }
+            }
+        }
+
+        runCatching { recorder.stop() }
+        runCatching { recorder.release() }
+
+        if (frameAcc.isEmpty()) {
+            return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
+        }
+
+        frameAcc.sort()
+        val p90Index = ((frameAcc.size - 1) * 0.90).toInt().coerceIn(0, frameAcc.size - 1)
+
+        val lP90 = frameAcc[p90Index]
+        val lMax = frameAcc.last()
+        val lMean = frameAcc.average()
+
+        return AmbientNoiseMetrics(lMean = lMean, lP90 = lP90, lMax = lMax, frames = frameAcc.size)
+    }
+
+    private fun computeLogRms(frame: ShortArray): Double {
+        var sumSq = 0.0
+        for (s in frame) {
+            val v = s.toDouble()
+            sumSq += v * v
+        }
+        val meanSq = sumSq / frame.size.toDouble()
+        val rms = sqrt(meanSq)
+
+        // Avoid ln(0)
+        val eps = 1.0
+        return ln(rms + eps)
+    }
+}
+
+title: AmbientNoiseSampleWorker.kt
+text:
+package com.migraineme
+
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ForegroundInfo
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+
+/**
+ * Periodically captures ~60 seconds of ambient loudness metrics and uploads numbers to Supabase.
+ *
+ * IMPORTANT:
+ * - This uses WorkManager foreground execution while recording so microphone access is allowed.
+ * - The foreground notification is automatic (no user click), and disappears when work finishes.
+ * - No audio is stored or uploaded.
+ */
+class AmbientNoiseSampleWorker(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
+
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        val ctx = applicationContext
+        try {
+            // Gate collection by your standard settings toggle
+            val enabled = DataCollectionSettings.isActive(
+                context = ctx,
+                table = "ambient_noise_samples",
+                wearable = null,
+                defaultValue = true
+            )
+            if (!enabled) {
+                Log.d(LOG_TAG, "ambient_noise_samples disabled — skip")
+                return@withContext Result.success()
+            }
+
+            val hasMicPerm = ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) ==
+                    PackageManager.PERMISSION_GRANTED
+            if (!hasMicPerm) {
+                Log.d(LOG_TAG, "RECORD_AUDIO not granted — skip")
+                return@withContext Result.success()
+            }
+
+            val access = SessionStore.getValidAccessToken(ctx) ?: return@withContext Result.success()
+
+            // Table requires user_id; prefer persisted value, fallback to auth lookup.
+            val userId = SessionStore.readUserId(ctx)
+                ?: runCatching { SupabaseAuthService.getUser(access).id }.getOrNull()
+                ?: run {
+                    Log.d(LOG_TAG, "userId unavailable — skip")
+                    return@withContext Result.success()
+                }
+
+            // Foreground (notification visible only during recording)
+            setForeground(createForegroundInfo(ctx))
+
+            val startTsIso = Instant.now().toString()
+            val durationS = 60
+
+            val metrics = AmbientNoiseSampler.capture(durationMs = durationS * 1000L)
+
+            // If we got nothing meaningful, skip upload
+            if (metrics.frames <= 0) {
+                Log.d(LOG_TAG, "No frames captured — skip upload")
+                return@withContext Result.success()
+            }
+
+            val flags = buildMap<String, String> {
+                put("frames", metrics.frames.toString())
+                put("source", "android")
+            }
+
+            SupabaseAmbientNoiseService().insertAmbientNoiseSample(
+                accessToken = access,
+                userId = userId,
+                startTsIso = startTsIso,
+                durationS = durationS,
+                lMean = metrics.lMean,
+                lP90 = metrics.lP90,
+                lMax = metrics.lMax,
+                qualityFlags = flags
+            )
+
+            Log.d(LOG_TAG, "Uploaded ambient noise sample frames=${metrics.frames}")
+            Result.success()
+        } catch (t: Throwable) {
+            Log.w(LOG_TAG, "Worker error: ${t.message}")
+            // Keep it non-fatal; we don’t want retries to spam mic usage.
+            Result.success()
+        }
+    }
+
+    private fun createForegroundInfo(context: Context): ForegroundInfo {
+        ensureChannel(context)
+
+        val notif = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .setContentTitle("Measuring ambient sound level")
+            .setContentText("MigraineMe is sampling loudness (no audio stored).")
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .build()
+
+        return ForegroundInfo(FOREGROUND_NOTIF_ID, notif)
+    }
+
+    private fun ensureChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val ch = NotificationChannel(
+                CHANNEL_ID,
+                "MigraineMe sensor sampling",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            nm.createNotificationChannel(ch)
+        }
+    }
+
+    companion object {
+        private const val LOG_TAG = "AmbientNoiseWorker"
+        private const val UNIQUE = "ambient_noise_samples_periodic"
+        private const val CHANNEL_ID = "migraineme_sensor_sampling"
+        private const val FOREGROUND_NOTIF_ID = 92001
+
+        /**
+         * WorkManager periodic minimum is 15 minutes. 30 minutes is fine.
+         * This is not exact scheduling; it’s “best effort” periodic.
+         */
+        fun schedule(context: Context) {
+            val req = PeriodicWorkRequestBuilder<AmbientNoiseSampleWorker>(30, TimeUnit.MINUTES)
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                UNIQUE,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                req
+            )
+        }
+
+        fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(UNIQUE)
+        }
+    }
+}
+
 title: AppContext.kt
 text:
 // app/src/main/java/com/migraineme/AppContext.kt
@@ -1460,7 +1735,6 @@ object DataCollectionSettings {
 
 title: DataSettingsScreen.kt
 text:
-// FILE: app/src/main/java/com/migraineme/DataSettingsScreen.kt
 package com.migraineme
 
 import android.content.Context
@@ -1509,13 +1783,19 @@ import kotlinx.coroutines.launch
  *   (client-side PostgREST; no edge function needed).
  *
  * ADDITION (Stress):
- * - Added a wearable metric row for `stress_daily`
+ * - Added a wearable metric row for `stress_index_daily`
  * - Stress toggle is only available when BOTH `hrv_daily` and `resting_hr_daily` are enabled
  *   for the same selected wearable source (e.g., WHOOP). If either is off, Stress is forced off.
  *
  * ADDITION (Refresh):
  * - After any toggle or wearable dropdown change, we force a screen refresh (repull) by re-reading
  *   stored preferences into Compose state.
+ *
+ * ADDITION (Ambient noise):
+ * - Added phone metric row for `ambient_noise_samples`
+ * - When enabled, schedules AmbientNoiseSampleWorker
+ * - When disabled, cancels AmbientNoiseSampleWorker
+ * - Defaults to ON (unless user explicitly turned it off)
  */
 @Composable
 fun DataSettingsScreen() {
@@ -1540,6 +1820,20 @@ fun DataSettingsScreen() {
     var refreshTick by remember { mutableIntStateOf(0) }
     fun bumpRefresh() {
         refreshTick += 1
+    }
+
+    // Ensure the ambient noise worker scheduling matches current setting (including default-on).
+    LaunchedEffect(Unit, refreshTick) {
+        val ambientOn = store.getActive(
+            table = "ambient_noise_samples",
+            wearable = null,
+            defaultValue = true
+        )
+        if (ambientOn) {
+            AmbientNoiseSampleWorker.schedule(context)
+        } else {
+            AmbientNoiseSampleWorker.cancel(context)
+        }
     }
 
     // Define all rows (tables) grouped into the 5 sections you requested.
@@ -1579,7 +1873,7 @@ fun DataSettingsScreen() {
                 title = "Mental Health",
                 rows = listOf(
                     // Wearable-derived computed metric (standalone), gated by HRV + Resting HR.
-                    wearableRow("stress_daily", "Computed mental stress (requires HRV + Resting HR)"),
+                    wearableRow("stress_index_daily", "Computed mental stress (requires HRV + Resting HR)"),
 
                     // These are user-entered via the logging flow (not worker collection).
                     manualRow("migraines", "User log entry"),
@@ -1593,13 +1887,19 @@ fun DataSettingsScreen() {
                 rows = listOf(
                     phoneRow("user_location_daily", "Phone GPS/location"),
                     // Read-only reference tables; shown for completeness.
-                    referenceRow("city", "Reference dataset (read-only)"),
-                    referenceRow("city_weather_daily", "Reference dataset (read-only)")
+                    referenceRow("cities", "Reference"),
+                    referenceRow("weather_daily", "Reference"),
+                    referenceRow("aqi_daily", "Reference"),
+                    referenceRow("pollen_daily", "Reference"),
+                    phoneRow("ambient_noise_samples", "Phone ambient noise samples")
                 )
             ),
             DataSection(
-                title = "Diet",
-                rows = emptyList()
+                title = "Misc",
+                rows = listOf(
+                    // Placeholder for any future tables; keep section to satisfy the 5-section requirement.
+                    referenceRow("app_config", "Reference (internal)")
+                )
             )
         )
     }
@@ -1610,117 +1910,49 @@ fun DataSettingsScreen() {
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        Text("Data", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Control which data tables are collected. Wearable options appear only after you connect a wearable.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(Modifier.height(16.dp))
-
-        sections.forEachIndexed { idx, section ->
-            SectionCard(
-                section = section,
-                store = store,
-                connectedWearables = connectedWearables,
-                hasAnyWearable = hasAnyWearable,
-                refreshTick = refreshTick,
-                onAnyChange = { bumpRefresh() }
-            )
-
-            if (idx != sections.lastIndex) Spacer(Modifier.height(14.dp))
-        }
-
-        // A little bottom padding so the last card isn't flush with the screen edge.
+        Text("Data Settings", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(12.dp))
-    }
-}
 
-@Composable
-private fun SectionCard(
-    section: DataSection,
-    store: DataSettingsStore,
-    connectedWearables: List<WearableSource>,
-    hasAnyWearable: Boolean,
-    refreshTick: Int,
-    onAnyChange: () -> Unit
-) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(section.title, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(10.dp))
+        for (section in sections) {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(section.title, style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(10.dp))
 
-            // Header row
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    "Type",
-                    modifier = Modifier.weight(0.46f),
-                    style = MaterialTheme.typography.labelMedium
-                )
-                Text(
-                    "Collected By",
-                    modifier = Modifier.weight(0.34f),
-                    style = MaterialTheme.typography.labelMedium
-                )
-                Text(
-                    "Active",
-                    modifier = Modifier.weight(0.20f),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-            Spacer(Modifier.height(6.dp))
-            Divider()
+                    for ((idx, row) in section.rows.withIndex()) {
+                        val greyOutWearableRow = row.collectedByKind == CollectedByKind.WEARABLE && !hasAnyWearable
+                        DataRowUi(
+                            row = row,
+                            store = store,
+                            connectedWearables = connectedWearables,
+                            enabled = true,
+                            greyOut = greyOutWearableRow,
+                            refreshTick = refreshTick,
+                            onAnyChange = { bumpRefresh() }
+                        )
 
-            if (section.rows.isEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "No tables configured in this section.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.alpha(0.7f)
-                )
-                Spacer(Modifier.height(6.dp))
-                return@Column
-            }
-
-            section.rows.forEachIndexed { i, row ->
-                val isWearableRow = row.collectedByKind == CollectedByKind.WEARABLE
-                val isReferenceRow = row.collectedByKind == CollectedByKind.REFERENCE
-
-                // Grey out wearable rows when no wearable connected
-                val enabled =
-                    when {
-                        isReferenceRow -> false
-                        isWearableRow -> hasAnyWearable
-                        else -> true
+                        if (idx != section.rows.lastIndex) {
+                            Spacer(Modifier.height(10.dp))
+                            Divider()
+                        }
                     }
 
-                Spacer(Modifier.height(10.dp))
-                DataRowUi(
-                    row = row,
-                    store = store,
-                    connectedWearables = connectedWearables,
-                    enabled = enabled,
-                    greyOut = isWearableRow && !hasAnyWearable,
-                    refreshTick = refreshTick,
-                    onAnyChange = onAnyChange
-                )
-
-                if (i != section.rows.lastIndex) {
-                    Spacer(Modifier.height(10.dp))
-                    Divider()
+                    // Wearable hint per section if none connected and section contains wearable rows
+                    val containsWearable = section.rows.any { it.collectedByKind == CollectedByKind.WEARABLE }
+                    if (containsWearable && !hasAnyWearable) {
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "Connect a wearable to enable these settings.",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.alpha(0.7f)
+                        )
+                    }
                 }
             }
 
-            // Wearable hint per section if none connected and section contains wearable rows
-            val containsWearable = section.rows.any { it.collectedByKind == CollectedByKind.WEARABLE }
-            if (containsWearable && !hasAnyWearable) {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "Connect a wearable to enable these settings.",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.alpha(0.7f)
-                )
-            }
+            Spacer(Modifier.height(14.dp))
         }
     }
 }
@@ -1773,7 +2005,7 @@ private fun DataRowUi(
     }
 
     // Stress gating: only available if BOTH HRV + Resting HR are enabled for the same wearable source.
-    val isStressRow = row.table == "stress_daily" && row.collectedByKind == CollectedByKind.WEARABLE
+    val isStressRow = row.table == "stress_index_daily" && row.collectedByKind == CollectedByKind.WEARABLE
     val depsOkForStress =
         if (!isStressRow) {
             true
@@ -1919,31 +2151,37 @@ private fun DataRowUi(
                                 enabled = new
                             )
 
-                            // If HRV or Resting HR is turned OFF, force stress_daily OFF (local + Supabase),
+                            // If HRV or Resting HR is turned OFF, force stress_index_daily OFF (local + Supabase),
                             // for the same selected wearable source as the stress row.
                             if (!new && row.collectedByKind == CollectedByKind.WEARABLE &&
                                 (row.table == "hrv_daily" || row.table == "resting_hr_daily")
                             ) {
-                                val stressWearable = store.getSelectedWearable("stress_daily", WearableSource.WHOOP)
+                                val stressWearable = store.getSelectedWearable("stress_index_daily", WearableSource.WHOOP)
                                 if (stressWearable == selectedWearable) {
                                     val stressCurrentlyOn = store.getActive(
-                                        table = "stress_daily",
+                                        table = "stress_index_daily",
                                         wearable = stressWearable,
                                         defaultValue = true
                                     )
                                     if (stressCurrentlyOn) {
                                         store.setActive(
-                                            table = "stress_daily",
+                                            table = "stress_index_daily",
                                             wearable = stressWearable,
                                             value = false
                                         )
                                         edge.upsertMetricSetting(
                                             context = context,
-                                            metric = "stress_daily",
+                                            metric = "stress_index_daily",
                                             enabled = false
                                         )
                                     }
                                 }
+                            }
+
+                            // Ambient noise worker scheduling
+                            if (row.collectedByKind == CollectedByKind.PHONE && row.table == "ambient_noise_samples") {
+                                if (new) AmbientNoiseSampleWorker.schedule(context)
+                                else AmbientNoiseSampleWorker.cancel(context)
                             }
 
                             onAnyChange()
@@ -2036,24 +2274,18 @@ private class DataSettingsStore(context: Context) {
     }
 
     fun setSelectedWearable(table: String, wearable: WearableSource) {
-        prefs.edit().putString("data_source_$table", wearable.key).apply()
+        val key = "data_source_$table"
+        prefs.edit().putString(key, wearable.key).apply()
     }
 
-    fun getActive(
-        table: String,
-        wearable: WearableSource?,
-        defaultValue: Boolean
-    ): Boolean {
+    fun getActive(table: String, wearable: WearableSource?, defaultValue: Boolean): Boolean {
         val key = activeKey(table, wearable)
         return prefs.getBoolean(key, defaultValue)
     }
 
-    fun setActive(
-        table: String,
-        wearable: WearableSource?,
-        value: Boolean
-    ) {
-        prefs.edit().putBoolean(activeKey(table, wearable), value).apply()
+    fun setActive(table: String, wearable: WearableSource?, value: Boolean) {
+        val key = activeKey(table, wearable)
+        prefs.edit().putBoolean(key, value).apply()
     }
 
     private fun activeKey(table: String, wearable: WearableSource?): String {
@@ -8460,6 +8692,21 @@ object MetricsSyncManager {
                     LocationDailySyncWorker.backfillUpToToday(appCtx, token)
                 }
 
+                // Ambient noise sampling (device mic -> derived numbers -> Supabase)
+                val noiseEnabled =
+                    DataCollectionSettings.isActive(
+                        context = appCtx,
+                        table = "ambient_noise_samples",
+                        wearable = null,
+                        defaultValue = false
+                    )
+
+                if (noiseEnabled) {
+                    AmbientNoiseSampleWorker.schedule(appCtx)
+                } else {
+                    AmbientNoiseSampleWorker.cancel(appCtx)
+                }
+
             } catch (t: Throwable) {
                 Log.w("MetricsSyncManager", "onLogin error: ${t.message}")
             }
@@ -10312,6 +10559,99 @@ private fun prioritizeWorkStates(states: List<WorkInfo.State>): String {
     }
 }
 
+title: SupabaseAmbientNoiseService.kt
+text:
+package com.migraineme
+
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+/**
+ * Writes derived ambient noise samples to:
+ * - public.ambient_noise_samples
+ *
+ * Table (as created earlier):
+ * - id uuid default gen_random_uuid()
+ * - user_id uuid NOT NULL
+ * - start_ts timestamptz NOT NULL
+ * - duration_s int NOT NULL
+ * - l_mean double precision NOT NULL
+ * - l_p90 double precision NULL
+ * - l_max double precision NULL
+ * - quality_flags jsonb default {}
+ * - created_at timestamptz default now()
+ */
+class SupabaseAmbientNoiseService {
+
+    private val supabaseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
+    private val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
+
+    private val client = HttpClient {
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true; encodeDefaults = true; explicitNulls = false })
+        }
+    }
+
+    @Serializable
+    private data class AmbientNoiseInsert(
+        @SerialName("user_id") val userId: String,
+        @SerialName("start_ts") val startTs: String,
+        @SerialName("duration_s") val durationS: Int,
+        @SerialName("l_mean") val lMean: Double,
+        @SerialName("l_p90") val lP90: Double? = null,
+        @SerialName("l_max") val lMax: Double? = null,
+        @SerialName("quality_flags") val qualityFlags: Map<String, String> = emptyMap()
+    )
+
+    suspend fun insertAmbientNoiseSample(
+        accessToken: String,
+        userId: String,
+        startTsIso: String,
+        durationS: Int,
+        lMean: Double,
+        lP90: Double?,
+        lMax: Double?,
+        qualityFlags: Map<String, String>
+    ) {
+        val payload = AmbientNoiseInsert(
+            userId = userId,
+            startTs = startTsIso,
+            durationS = durationS,
+            lMean = lMean,
+            lP90 = lP90,
+            lMax = lMax,
+            qualityFlags = qualityFlags
+        )
+
+        val resp: HttpResponse = client.post("$supabaseUrl/rest/v1/ambient_noise_samples") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            // No need to return rows; keeps bandwidth low.
+            header("Prefer", "return=minimal")
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+        }
+
+        if (!resp.status.isSuccess()) {
+            error("Insert ambient_noise_samples failed: ${resp.bodyAsText()}")
+        }
+    }
+}
+
 title: SupabaseAuthService.kt
 text:
 package com.migraineme
@@ -11688,6 +12028,7 @@ class SupabasePersonalService(context: Context) {
 
 title: SupabasePhysicalHealthService.kt
 text:
+// FILE: app/src/main/java/com/migraineme/SupabasePhysicalHealthService.kt
 package com.migraineme
 
 import android.content.Context
@@ -11719,6 +12060,7 @@ import kotlinx.serialization.json.Json
  * - skin_temp_daily
  * - spo2_daily
  * - time_in_high_hr_zones_daily
+ * - stress_index_daily
  *
  * NOTE:
  * - time_in_high_hr_zones_daily now also carries "activities" fields:
@@ -11768,6 +12110,14 @@ class SupabasePhysicalHealthService(context: Context) {
     data class Spo2DailyRead(
         val date: String,
         @SerialName("value_pct") val value_pct: Double
+    )
+
+    @Serializable
+    data class StressIndexDailyRead(
+        val date: String,
+        @SerialName("value_pct") val value_pct: Double,
+        val source: String? = null,
+        @SerialName("updated_at") val updated_at: String? = null
     )
 
     @Serializable
@@ -11887,6 +12237,9 @@ class SupabasePhysicalHealthService(context: Context) {
 
     suspend fun fetchSpo2Daily(access: String, days: Int = 14): List<Spo2DailyRead> =
         getList("$supabaseUrl/rest/v1/spo2_daily", access, "date,value_pct", days)
+
+    suspend fun fetchStressIndexDaily(access: String, days: Int = 30): List<StressIndexDailyRead> =
+        getList("$supabaseUrl/rest/v1/stress_index_daily", access, "date,value_pct,source,updated_at", days)
 
     /**
      * Daily-style fetch (still ordered by date.desc).
@@ -12241,25 +12594,36 @@ object SupabaseProfileService {
 
 title: TestingScreen.kt
 text:
+// FILE: app/src/main/java/com/migraineme/TestingScreen.kt
 package com.migraineme
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 
 /**
  * PH-only debug screen.
- * NOW ONLY SHOWS: High HR Zones
- * (Recovery, RHR, HRV, Skin Temp, SPO2 were moved to TestingScreenComplete)
+ * NOW SHOWS:
+ * - Stress Index (computed): stress_index_daily
+ * - High HR Zones: time_in_high_hr_zones_daily
  */
 @Composable
 fun TestingScreen(
@@ -12268,16 +12632,21 @@ fun TestingScreen(
     val ctx = LocalContext.current
     val state by authVm.state.collectAsState()
 
-    // ONLY HR ZONES LEFT
-    var zones by remember { mutableStateOf(emptyList<SupabasePhysicalHealthService.HighHrZonesDailyRead>()) }
+    var stressIndex by remember {
+        mutableStateOf<List<SupabasePhysicalHealthService.StressIndexDailyRead>>(emptyList())
+    }
+    var zones by remember {
+        mutableStateOf<List<SupabasePhysicalHealthService.HighHrZonesDailyRead>>(emptyList())
+    }
 
     val access = state.accessToken
 
     LaunchedEffect(access) {
-        if (access == null) return@LaunchedEffect
-
+        val token = access ?: return@LaunchedEffect
         val svc = SupabasePhysicalHealthService(ctx)
-        zones = svc.fetchHighHrDaily(access)
+
+        stressIndex = svc.fetchStressIndexDaily(token)
+        zones = svc.fetchHighHrDaily(token)
     }
 
     Column(
@@ -12291,7 +12660,12 @@ fun TestingScreen(
         Spacer(Modifier.height(20.dp))
 
         DataSection(
-            "High HR Zones",
+            "Stress Index (computed) — stress_index_daily",
+            stressIndex.map { "${it.date}: value_pct=${it.value_pct}, source=${it.source ?: "-"}" }
+        )
+
+        DataSection(
+            "High HR Zones — time_in_high_hr_zones_daily",
             zones.map {
                 "${it.date}: total=${it.value_minutes}, z4=${it.zone_four_minutes}, z5=${it.zone_five_minutes}, z6=${it.zone_six_minutes}"
             }

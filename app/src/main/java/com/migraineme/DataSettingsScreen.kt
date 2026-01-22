@@ -1,13 +1,6 @@
-// FILE: app/src/main/java/com/migraineme/DataSettingsScreen.kt
 package com.migraineme
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,17 +19,16 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import kotlinx.coroutines.launch
 
 /**
@@ -54,7 +46,7 @@ import kotlinx.coroutines.launch
  *   (client-side PostgREST; no edge function needed).
  *
  * ADDITION (Stress):
- * - Added a wearable metric row for `stress_daily`
+ * - Added a wearable metric row for `stress_index_daily`
  * - Stress toggle is only available when BOTH `hrv_daily` and `resting_hr_daily` are enabled
  *   for the same selected wearable source (e.g., WHOOP). If either is off, Stress is forced off.
  *
@@ -62,11 +54,11 @@ import kotlinx.coroutines.launch
  * - After any toggle or wearable dropdown change, we force a screen refresh (repull) by re-reading
  *   stored preferences into Compose state.
  *
- * ADDITION (Noise permissions + default OFF):
- * - Added phone row for `ambient_noise_samples`
- * - Defaults to OFF (opt-in)
- * - When enabling, request RECORD_AUDIO (+ POST_NOTIFICATIONS on Android 13+)
- * - If denied, force OFF (local + Supabase)
+ * ADDITION (Ambient noise):
+ * - Added phone metric row for `ambient_noise_samples`
+ * - When enabled, schedules AmbientNoiseSampleWorker
+ * - When disabled, cancels AmbientNoiseSampleWorker
+ * - Defaults to ON (unless user explicitly turned it off)
  */
 @Composable
 fun DataSettingsScreen() {
@@ -91,6 +83,20 @@ fun DataSettingsScreen() {
     var refreshTick by remember { mutableIntStateOf(0) }
     fun bumpRefresh() {
         refreshTick += 1
+    }
+
+    // Ensure the ambient noise worker scheduling matches current setting (including default-on).
+    LaunchedEffect(Unit, refreshTick) {
+        val ambientOn = store.getActive(
+            table = "ambient_noise_samples",
+            wearable = null,
+            defaultValue = true
+        )
+        if (ambientOn) {
+            AmbientNoiseSampleWorker.schedule(context)
+        } else {
+            AmbientNoiseSampleWorker.cancel(context)
+        }
     }
 
     // Define all rows (tables) grouped into the 5 sections you requested.
@@ -130,7 +136,7 @@ fun DataSettingsScreen() {
                 title = "Mental Health",
                 rows = listOf(
                     // Wearable-derived computed metric (standalone), gated by HRV + Resting HR.
-                    wearableRow("stress_daily", "Computed mental stress (requires HRV + Resting HR)"),
+                    wearableRow("stress_index_daily", "Computed mental stress (requires HRV + Resting HR)"),
 
                     // These are user-entered via the logging flow (not worker collection).
                     manualRow("migraines", "User log entry"),
@@ -143,16 +149,20 @@ fun DataSettingsScreen() {
                 title = "Environment",
                 rows = listOf(
                     phoneRow("user_location_daily", "Phone GPS/location"),
-                    // NEW: microphone-backed metric (opt-in, permission-gated)
-                    phoneRow("ambient_noise_samples", "Phone microphone loudness (no audio stored)"),
                     // Read-only reference tables; shown for completeness.
-                    referenceRow("city", "Reference dataset (read-only)"),
-                    referenceRow("city_weather_daily", "Reference dataset (read-only)")
+                    referenceRow("cities", "Reference"),
+                    referenceRow("weather_daily", "Reference"),
+                    referenceRow("aqi_daily", "Reference"),
+                    referenceRow("pollen_daily", "Reference"),
+                    phoneRow("ambient_noise_samples", "Phone ambient noise samples")
                 )
             ),
             DataSection(
-                title = "Diet",
-                rows = emptyList()
+                title = "Misc",
+                rows = listOf(
+                    // Placeholder for any future tables; keep section to satisfy the 5-section requirement.
+                    referenceRow("app_config", "Reference (internal)")
+                )
             )
         )
     }
@@ -163,116 +173,49 @@ fun DataSettingsScreen() {
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        Text("Data", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Control which data tables are collected. Wearable options appear only after you connect a wearable.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(Modifier.height(16.dp))
-
-        sections.forEachIndexed { idx, section ->
-            SectionCard(
-                section = section,
-                store = store,
-                connectedWearables = connectedWearables,
-                hasAnyWearable = hasAnyWearable,
-                refreshTick = refreshTick,
-                onAnyChange = { bumpRefresh() }
-            )
-
-            if (idx != sections.lastIndex) Spacer(Modifier.height(14.dp))
-        }
-
+        Text("Data Settings", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(12.dp))
-    }
-}
 
-@Composable
-private fun SectionCard(
-    section: DataSection,
-    store: DataSettingsStore,
-    connectedWearables: List<WearableSource>,
-    hasAnyWearable: Boolean,
-    refreshTick: Int,
-    onAnyChange: () -> Unit
-) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(section.title, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(10.dp))
+        for (section in sections) {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(section.title, style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(10.dp))
 
-            // Header row
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    "Type",
-                    modifier = Modifier.weight(0.46f),
-                    style = MaterialTheme.typography.labelMedium
-                )
-                Text(
-                    "Collected By",
-                    modifier = Modifier.weight(0.34f),
-                    style = MaterialTheme.typography.labelMedium
-                )
-                Text(
-                    "Active",
-                    modifier = Modifier.weight(0.20f),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-            Spacer(Modifier.height(6.dp))
-            Divider()
+                    for ((idx, row) in section.rows.withIndex()) {
+                        val greyOutWearableRow = row.collectedByKind == CollectedByKind.WEARABLE && !hasAnyWearable
+                        DataRowUi(
+                            row = row,
+                            store = store,
+                            connectedWearables = connectedWearables,
+                            enabled = true,
+                            greyOut = greyOutWearableRow,
+                            refreshTick = refreshTick,
+                            onAnyChange = { bumpRefresh() }
+                        )
 
-            if (section.rows.isEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "No tables configured in this section.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.alpha(0.7f)
-                )
-                Spacer(Modifier.height(6.dp))
-                return@Column
-            }
-
-            section.rows.forEachIndexed { i, row ->
-                val isWearableRow = row.collectedByKind == CollectedByKind.WEARABLE
-                val isReferenceRow = row.collectedByKind == CollectedByKind.REFERENCE
-
-                // Grey out wearable rows when no wearable connected
-                val enabled =
-                    when {
-                        isReferenceRow -> false
-                        isWearableRow -> hasAnyWearable
-                        else -> true
+                        if (idx != section.rows.lastIndex) {
+                            Spacer(Modifier.height(10.dp))
+                            Divider()
+                        }
                     }
 
-                Spacer(Modifier.height(10.dp))
-                DataRowUi(
-                    row = row,
-                    store = store,
-                    connectedWearables = connectedWearables,
-                    enabled = enabled,
-                    greyOut = isWearableRow && !hasAnyWearable,
-                    refreshTick = refreshTick,
-                    onAnyChange = onAnyChange
-                )
-
-                if (i != section.rows.lastIndex) {
-                    Spacer(Modifier.height(10.dp))
-                    Divider()
+                    // Wearable hint per section if none connected and section contains wearable rows
+                    val containsWearable = section.rows.any { it.collectedByKind == CollectedByKind.WEARABLE }
+                    if (containsWearable && !hasAnyWearable) {
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "Connect a wearable to enable these settings.",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.alpha(0.7f)
+                        )
+                    }
                 }
             }
 
-            // Wearable hint per section if none connected and section contains wearable rows
-            val containsWearable = section.rows.any { it.collectedByKind == CollectedByKind.WEARABLE }
-            if (containsWearable && !hasAnyWearable) {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "Connect a wearable to enable these settings.",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.alpha(0.7f)
-                )
-            }
+            Spacer(Modifier.height(14.dp))
         }
     }
 }
@@ -308,90 +251,6 @@ private fun DataRowUi(
         )
     }
 
-    // NEW: Noise permissions (only applies to this phone metric)
-    val isNoiseRow = row.table == "ambient_noise_samples" && row.collectedByKind == CollectedByKind.PHONE
-    var pendingNoiseEnable by remember(row.table) { mutableStateOf(false) }
-
-    fun requiredNoisePermissions(): Array<String> {
-        val perms = mutableListOf<String>()
-        perms.add(Manifest.permission.RECORD_AUDIO)
-        if (Build.VERSION.SDK_INT >= 33) perms.add(Manifest.permission.POST_NOTIFICATIONS)
-        return perms.toTypedArray()
-    }
-
-    fun hasAll(perms: Array<String>): Boolean {
-        return perms.all { p ->
-            ContextCompat.checkSelfPermission(context, p) == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    fun persistToggle(newValue: Boolean) {
-        active = newValue
-
-        store.setActive(
-            table = row.table,
-            wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
-            value = newValue
-        )
-
-        scope.launch {
-            edge.upsertMetricSetting(
-                context = context,
-                metric = row.table,
-                enabled = newValue
-            )
-
-            // If HRV or Resting HR is turned OFF, force stress_daily OFF (local + Supabase),
-            // for the same selected wearable source as the stress row.
-            if (!newValue && row.collectedByKind == CollectedByKind.WEARABLE &&
-                (row.table == "hrv_daily" || row.table == "resting_hr_daily")
-            ) {
-                val stressWearable = store.getSelectedWearable("stress_daily", WearableSource.WHOOP)
-                if (stressWearable == selectedWearable) {
-                    val stressCurrentlyOn = store.getActive(
-                        table = "stress_daily",
-                        wearable = stressWearable,
-                        defaultValue = true
-                    )
-                    if (stressCurrentlyOn) {
-                        store.setActive(
-                            table = "stress_daily",
-                            wearable = stressWearable,
-                            value = false
-                        )
-                        edge.upsertMetricSetting(
-                            context = context,
-                            metric = "stress_daily",
-                            enabled = false
-                        )
-                    }
-                }
-            }
-
-            onAnyChange()
-        }
-    }
-
-    val noisePermLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        val allGranted = results.values.all { it }
-        if (pendingNoiseEnable) {
-            pendingNoiseEnable = false
-            if (allGranted) {
-                persistToggle(true)
-            } else {
-                // Force OFF if denied (local + Supabase)
-                persistToggle(false)
-                Toast.makeText(
-                    context,
-                    "Microphone permission is required to enable noise sampling.",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
-    }
-
     // If connected wearables change and current selection is no longer allowed, snap to first available.
     if (row.collectedByKind == CollectedByKind.WEARABLE) {
         val allowed = connectedWearables
@@ -409,7 +268,7 @@ private fun DataRowUi(
     }
 
     // Stress gating: only available if BOTH HRV + Resting HR are enabled for the same wearable source.
-    val isStressRow = row.table == "stress_daily" && row.collectedByKind == CollectedByKind.WEARABLE
+    val isStressRow = row.table == "stress_index_daily" && row.collectedByKind == CollectedByKind.WEARABLE
     val depsOkForStress =
         if (!isStressRow) {
             true
@@ -537,19 +396,59 @@ private fun DataRowUi(
                     onCheckedChange = { new ->
                         if (!canToggle) return@Switch
 
-                        // NEW: If enabling noise sampling, request permissions first.
-                        if (isNoiseRow && new) {
-                            val perms = requiredNoisePermissions()
-                            if (!hasAll(perms)) {
-                                pendingNoiseEnable = true
-                                // Keep UI OFF until permission result returns
-                                persistToggle(false)
-                                noisePermLauncher.launch(perms)
-                                return@Switch
-                            }
-                        }
+                        active = new
 
-                        persistToggle(new)
+                        // Local persistence (existing)
+                        store.setActive(
+                            table = row.table,
+                            wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
+                            value = new
+                        )
+
+                        // Supabase persistence (new): update metric_settings.enabled
+                        // Metric key is the table name (row.table), matching your metric_settings.metric convention.
+                        scope.launch {
+                            edge.upsertMetricSetting(
+                                context = context,
+                                metric = row.table,
+                                enabled = new
+                            )
+
+                            // If HRV or Resting HR is turned OFF, force stress_index_daily OFF (local + Supabase),
+                            // for the same selected wearable source as the stress row.
+                            if (!new && row.collectedByKind == CollectedByKind.WEARABLE &&
+                                (row.table == "hrv_daily" || row.table == "resting_hr_daily")
+                            ) {
+                                val stressWearable = store.getSelectedWearable("stress_index_daily", WearableSource.WHOOP)
+                                if (stressWearable == selectedWearable) {
+                                    val stressCurrentlyOn = store.getActive(
+                                        table = "stress_index_daily",
+                                        wearable = stressWearable,
+                                        defaultValue = true
+                                    )
+                                    if (stressCurrentlyOn) {
+                                        store.setActive(
+                                            table = "stress_index_daily",
+                                            wearable = stressWearable,
+                                            value = false
+                                        )
+                                        edge.upsertMetricSetting(
+                                            context = context,
+                                            metric = "stress_index_daily",
+                                            enabled = false
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Ambient noise worker scheduling
+                            if (row.collectedByKind == CollectedByKind.PHONE && row.table == "ambient_noise_samples") {
+                                if (new) AmbientNoiseSampleWorker.schedule(context)
+                                else AmbientNoiseSampleWorker.cancel(context)
+                            }
+
+                            onAnyChange()
+                        }
                     },
                     enabled = canToggle
                 )
@@ -560,11 +459,8 @@ private fun DataRowUi(
 }
 
 private fun defaultActiveFor(row: DataRow): Boolean {
-    return when {
-        // NEW: microphone-backed metric must be opt-in
-        row.table == "ambient_noise_samples" -> false
-
-        row.collectedByKind == CollectedByKind.REFERENCE -> false
+    return when (row.collectedByKind) {
+        CollectedByKind.REFERENCE -> false
         else -> true
     }
 }
@@ -641,24 +537,18 @@ private class DataSettingsStore(context: Context) {
     }
 
     fun setSelectedWearable(table: String, wearable: WearableSource) {
-        prefs.edit().putString("data_source_$table", wearable.key).apply()
+        val key = "data_source_$table"
+        prefs.edit().putString(key, wearable.key).apply()
     }
 
-    fun getActive(
-        table: String,
-        wearable: WearableSource?,
-        defaultValue: Boolean
-    ): Boolean {
+    fun getActive(table: String, wearable: WearableSource?, defaultValue: Boolean): Boolean {
         val key = activeKey(table, wearable)
         return prefs.getBoolean(key, defaultValue)
     }
 
-    fun setActive(
-        table: String,
-        wearable: WearableSource?,
-        value: Boolean
-    ) {
-        prefs.edit().putBoolean(activeKey(table, wearable), value).apply()
+    fun setActive(table: String, wearable: WearableSource?, value: Boolean) {
+        val key = activeKey(table, wearable)
+        prefs.edit().putBoolean(key, value).apply()
     }
 
     private fun activeKey(table: String, wearable: WearableSource?): String {
