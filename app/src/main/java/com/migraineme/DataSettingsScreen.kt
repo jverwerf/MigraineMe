@@ -1,6 +1,8 @@
 package com.migraineme
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.core.content.ContextCompat
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -234,6 +237,28 @@ private fun DataRowUi(
     val scope = rememberCoroutineScope()
     val edge = remember { EdgeFunctionsService() }
 
+    val isLocationRow = row.table == "user_location_daily" && row.collectedByKind == CollectedByKind.PHONE
+    val isAmbientNoiseRow = row.table == "ambient_noise_samples" && row.collectedByKind == CollectedByKind.PHONE
+
+    val locationPermissionGranted = remember(refreshTick) {
+        val fine = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        fine || coarse
+    }
+
+    val microphonePermissionGranted = remember(refreshTick) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     // Wearable selection (dropdown) is stored per-table.
     // Phone/manual/reference rows don’t use it.
     var selectedWearable by remember(row.table, refreshTick) {
@@ -243,11 +268,15 @@ private fun DataRowUi(
     // Active is stored per table + (wearable if applicable)
     var active by remember(row.table, refreshTick, selectedWearable) {
         mutableStateOf(
-            store.getActive(
-                table = row.table,
-                wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
-                defaultValue = defaultActiveFor(row)
-            )
+            if (isLocationRow) {
+                true
+            } else {
+                store.getActive(
+                    table = row.table,
+                    wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
+                    defaultValue = defaultActiveFor(row)
+                )
+            }
         )
     }
 
@@ -264,6 +293,30 @@ private fun DataRowUi(
                 wearable = selectedWearable,
                 defaultValue = defaultActiveFor(row)
             )
+        }
+    }
+
+    // Location is a prerequisite (Option A): ensure it cannot be turned off.
+    // If an older preference stored it as OFF, force it back ON (local + Supabase) once.
+    LaunchedEffect(isLocationRow, refreshTick) {
+        if (isLocationRow) {
+            val stored = store.getActive(
+                table = row.table,
+                wearable = null,
+                defaultValue = true
+            )
+            if (!stored) {
+                store.setActive(table = row.table, wearable = null, value = true)
+                active = true
+                scope.launch {
+                    edge.upsertMetricSetting(
+                        context = context,
+                        metric = row.table,
+                        enabled = true
+                    )
+                    onAnyChange()
+                }
+            }
         }
     }
 
@@ -329,6 +382,22 @@ private fun DataRowUi(
                     modifier = Modifier.alpha(0.75f)
                 )
             }
+            if (isLocationRow) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Permission: " + if (locationPermissionGranted) "Granted" else "Not granted",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.alpha(0.75f)
+                )
+            }
+            if (isAmbientNoiseRow) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Permission: " + if (microphonePermissionGranted) "Granted" else "Not granted",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.alpha(0.75f)
+                )
+            }
             if (isStressRow && !depsOkForStress) {
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -387,7 +456,7 @@ private fun DataRowUi(
 
         // Active column
         Column(modifier = Modifier.weight(0.20f)) {
-            val canToggleBase = enabled && row.collectedByKind != CollectedByKind.REFERENCE
+            val canToggleBase = enabled && row.collectedByKind != CollectedByKind.REFERENCE && !isLocationRow
             val canToggle = canToggleBase && (!isStressRow || depsOkForStress)
 
             Row {

@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -115,7 +116,13 @@ class AmbientNoiseSampleWorker(
             .setOnlyAlertOnce(true)
             .build()
 
-        return ForegroundInfo(FOREGROUND_NOTIF_ID, notif)
+        val fgsType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        } else {
+            0
+        }
+
+        return ForegroundInfo(FOREGROUND_NOTIF_ID, notif, fgsType)
     }
 
     private fun ensureChannel(context: Context) {

@@ -21,7 +21,6 @@ import kotlinx.serialization.json.Json
 
 /**
  * Supabase service for Physical Health metrics.
- * Mirrors SupabaseMetricsServiceSleep.kt (structure, behavior, upsert style).
  *
  * Tables:
  * - recovery_score_daily
@@ -29,11 +28,11 @@ import kotlinx.serialization.json.Json
  * - hrv_daily
  * - skin_temp_daily
  * - spo2_daily
- * - time_in_high_hr_zones_daily
  * - stress_index_daily
+ * - time_in_high_hr_zones_daily
  *
  * NOTE:
- * - time_in_high_hr_zones_daily now also carries "activities" fields:
+ * - time_in_high_hr_zones_daily also carries "activities" fields:
  *   activity_type, start_at, end_at, plus zone_zero/one/two minutes when available.
  *
  * Unique key everywhere: (user_id, source, date)
@@ -85,9 +84,8 @@ class SupabasePhysicalHealthService(context: Context) {
     @Serializable
     data class StressIndexDailyRead(
         val date: String,
-        @SerialName("value_pct") val value_pct: Double,
-        val source: String? = null,
-        @SerialName("updated_at") val updated_at: String? = null
+        val value: Double,
+        @SerialName("computed_at") val computed_at: String? = null
     )
 
     @Serializable
@@ -208,14 +206,9 @@ class SupabasePhysicalHealthService(context: Context) {
     suspend fun fetchSpo2Daily(access: String, days: Int = 14): List<Spo2DailyRead> =
         getList("$supabaseUrl/rest/v1/spo2_daily", access, "date,value_pct", days)
 
-    suspend fun fetchStressIndexDaily(access: String, days: Int = 30): List<StressIndexDailyRead> =
-        getList("$supabaseUrl/rest/v1/stress_index_daily", access, "date,value_pct,source,updated_at", days)
+    suspend fun fetchStressIndexDaily(access: String, days: Int = 14): List<StressIndexDailyRead> =
+        getList("$supabaseUrl/rest/v1/stress_index_daily", access, "date,value,computed_at", days)
 
-    /**
-     * Daily-style fetch (still ordered by date.desc).
-     * We also select activity + zone0..2 fields so TestingScreenComplete can display "activities"
-     * from the SAME table without changing auth patterns.
-     */
     suspend fun fetchHighHrDaily(access: String, days: Int = 14): List<HighHrZonesDailyRead> =
         getList(
             "$supabaseUrl/rest/v1/time_in_high_hr_zones_daily",
@@ -224,9 +217,6 @@ class SupabasePhysicalHealthService(context: Context) {
             days
         )
 
-    /**
-     * Activities-style view: same table, just ordered by start_at (most recent first).
-     */
     suspend fun fetchHighHrActivities(access: String, limitRows: Int = 50): List<HighHrZonesDailyRead> =
         getList(
             "$supabaseUrl/rest/v1/time_in_high_hr_zones_daily",

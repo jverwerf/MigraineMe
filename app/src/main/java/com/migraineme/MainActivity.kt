@@ -39,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,7 +50,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -168,6 +172,7 @@ fun AppRoot() {
 
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val authVm: AuthViewModel = viewModel()
     val logVm: LogViewModel = viewModel()
@@ -178,33 +183,45 @@ fun AppRoot() {
 
     val authState by authVm.state.collectAsState()
     val token = authState.accessToken
-    var preloaded by remember { mutableStateOf(false) }
 
+    // Track which token we've used to preload, so we don't re-load endlessly on refresh updates.
+    var lastPreloadedToken by remember { mutableStateOf<String?>(null) }
+
+    // Always sync UI state from SessionStore on cold start.
     LaunchedEffect(Unit) {
-        val persistedToken = SessionStore.getValidAccessToken(appCtx)
-
-        if (!persistedToken.isNullOrBlank() && authState.accessToken.isNullOrBlank()) {
-            var persistedUserId = SessionStore.readUserId(appCtx)
-
-            if (persistedUserId.isNullOrBlank()) {
-                persistedUserId = JwtUtils.extractUserIdFromAccessToken(persistedToken)
-                if (!persistedUserId.isNullOrBlank()) {
-                    SessionStore.saveUserId(appCtx, persistedUserId)
-                }
-            }
-
-            if (!persistedUserId.isNullOrBlank()) {
-                authVm.setSession(persistedToken, persistedUserId)
-            }
-        }
+        authVm.syncFromSessionStore(appCtx)
     }
 
+    // Also sync on every resume. (Fixes UI using an expired in-memory token.)
+    // NOTE: lifecycleOwner MUST be read in composable scope (above), not inside DisposableEffect block.
+    DisposableEffect(lifecycleOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    authVm.syncFromSessionStore(appCtx)
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
+
+    // Preload journal using a VALID token (refreshing if needed).
     LaunchedEffect(token) {
         if (token.isNullOrBlank()) {
-            preloaded = false
-        } else if (!preloaded) {
-            logVm.loadJournal(token)
-            preloaded = true
+            lastPreloadedToken = null
+            return@LaunchedEffect
+        }
+
+        val valid = authVm.getValidAccessToken(appCtx)
+        if (valid.isNullOrBlank()) {
+            lastPreloadedToken = null
+            return@LaunchedEffect
+        }
+
+        if (lastPreloadedToken != valid) {
+            logVm.loadJournal(valid)
+            lastPreloadedToken = valid
         }
     }
 

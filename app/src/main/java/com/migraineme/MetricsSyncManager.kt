@@ -28,13 +28,13 @@ import java.util.Date
  * Responsibilities:
  * - Best-effort WHOOP token refresh (does not change auth approach)
  * - Upload WHOOP token to Supabase (server worker source of truth)
- * - Schedule WHOOP daily workers (sleep + physical) if enabled + connected
  * - Schedule Location worker if enabled
  * - Best-effort enqueue of server-side WHOOP backfill jobs on login
  *
  * Does NOT:
  * - Change Supabase auth
  * - Change Whoop auth structure
+ * - Run/schedule on-device WHOOP daily sync workers (WHOOP ingestion is backend-driven now)
  */
 object MetricsSyncManager {
 
@@ -168,7 +168,9 @@ object MetricsSyncManager {
                 // WHOOP connection = token exists locally
                 val whoopConnected = runCatching { WhoopTokenStore(appCtx).load() != null }.getOrDefault(false)
 
-                // Determine if ANY WHOOP tables are enabled (sleep / physical)
+                // Determine if ANY WHOOP tables are enabled (sleep / physical).
+                // NOTE: WHOOP ingestion now happens in the backend (sync_jobs + sync-worker).
+                // The app keeps: (1) token refresh best-effort, (2) token upload, (3) UX prompt if not connected.
                 val whoopSleepEnabled =
                     DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_duration_daily") ||
                             DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_score_daily") ||
@@ -187,20 +189,11 @@ object MetricsSyncManager {
                             DataCollectionSettings.isEnabledForWhoop(appCtx, "time_in_high_hr_zones_daily") ||
                             DataCollectionSettings.isEnabledForWhoop(appCtx, "steps_daily")
 
-                // If WHOOP connected, refresh Whoop token once (best-effort).
+                // If WHOOP connected, refresh WHOOP token once (best-effort).
+                // IMPORTANT: Do NOT schedule on-device WHOOP workers here anymore.
                 if (whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
                     runCatching { WhoopAuthService().refresh(appCtx) }.onFailure {
                         Log.w("MetricsSyncManager", "WHOOP refresh failed: ${it.message}")
-                    }
-
-                    if (whoopSleepEnabled) {
-                        WhoopDailySyncWorkerSleepFields.runOnceNow(appCtx)
-                        WhoopDailySyncWorkerSleepFields.scheduleNext(appCtx)
-                    }
-
-                    if (whoopPhysicalEnabled) {
-                        WhoopDailyPhysicalHealthWorker.runOnceNow(appCtx)
-                        WhoopDailyPhysicalHealthWorker.scheduleNext(appCtx)
                     }
                 } else if (!whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
                     withContext(Dispatchers.Main) {
@@ -226,7 +219,7 @@ object MetricsSyncManager {
                     LocationDailySyncWorker.backfillUpToToday(appCtx, token)
                 }
 
-                // Ambient noise sampling (device mic -> derived numbers -> Supabase)
+                // Ambient noise sampling (device mic -> raw samples -> Supabase; backend computes daily index)
                 val noiseEnabled =
                     DataCollectionSettings.isActive(
                         context = appCtx,

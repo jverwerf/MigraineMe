@@ -1,0 +1,263 @@
+// supabase/functions/enqueue-login-backfill/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+type ResolveRow = {
+  city_id: number;
+  timezone: string | null;
+  resolved_date?: string | null;
+};
+
+type MetricSettingRow = {
+  user_id: string;
+  metric: string;
+  enabled: boolean;
+  preferred_source: string | null;
+  allowed_sources: string[] | null;
+};
+
+type SyncJobInsert = {
+  job_type: string;
+  user_id: string;
+  local_date: string;
+  status: string;
+  updated_at: string;
+  created_by: string;
+  timezone: string;
+  city_id: number | null;
+  attempts?: number;
+  locked_at?: string | null;
+  last_error?: string | null;
+};
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveWithDateFallback(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string,
+): Promise<{ row: ResolveRow | null; usedDate: string | null }> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase.rpc("resolve_user_city_for_date", {
+      p_user_id: userId,
+      p_date: d,
+    });
+
+    if (error) throw new Error(`resolve_user_city_for_date failed for date=${d}: ${error.message}`);
+
+    const row: ResolveRow | undefined = Array.isArray(data) ? data[0] : data;
+    if (row?.timezone) return { row, usedDate: row.resolved_date ?? d };
+  }
+
+  return { row: null, usedDate: null };
+}
+
+function whoopIsNeeded(enabledMetrics: MetricSettingRow[]): boolean {
+  return enabledMetrics.some((m) => {
+    const pref = (m.preferred_source ?? "").toLowerCase();
+    const allowed = (m.allowed_sources ?? []).map((s) => String(s).toLowerCase());
+    return pref === "whoop" || allowed.includes("whoop");
+  });
+}
+
+function dateRangeInclusive(startIso: string, endIso: string) {
+  const out: string[] = [];
+  let cur = startIso;
+  for (let guard = 0; guard < 500; guard++) {
+    out.push(cur);
+    if (cur === endIso) break;
+    cur = addDaysIsoDate(cur, +1);
+  }
+  return out;
+}
+
+serve(async (req) => {
+  console.log("[enqueue-login-backfill] start", {
+    nowUtc: new Date().toISOString(),
+    method: req.method,
+    url: req.url,
+  });
+
+  try {
+    if (req.method !== "POST") return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const anonKey = requireEnv("SUPABASE_ANON_KEY");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.toLowerCase().startsWith("bearer ")) {
+      return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+    }
+
+    // Identify user via JWT (RLS-safe reads)
+    const userClient = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false },
+      global: {
+        headers: { Authorization: authHeader, "X-Client-Info": "enqueue-login-backfill-user" },
+      },
+    });
+
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+    const userId = userData.user.id;
+
+    // Admin client for writing sync_jobs (bypasses RLS)
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "enqueue-login-backfill-admin" } },
+    });
+
+    const nowUtc = new Date();
+    const nowIso = nowUtc.toISOString();
+    const utcDate = nowIso.slice(0, 10);
+
+    // Resolve timezone using the user client (safer if resolver has RLS dependencies)
+    const out = await resolveWithDateFallback(userClient, userId, utcDate);
+    if (!out.row?.timezone) return jsonResponse({ ok: true, enqueued: false, reason: "no_timezone" });
+
+    const tz = out.row.timezone;
+    const cityId = typeof out.row.city_id === "number" ? out.row.city_id : null;
+    const { localDate } = getLocalTimeParts(tz, nowUtc);
+
+    // Only enqueue if WHOOP is needed for any enabled metric
+    const { data: metrics, error: metErr } = await userClient
+      .from("metric_settings")
+      .select("user_id,metric,enabled,preferred_source,allowed_sources")
+      .eq("user_id", userId)
+      .eq("enabled", true);
+
+    if (metErr) throw new Error(`metric_settings query failed: ${metErr.message}`);
+
+    const enabledMetrics = (metrics ?? []) as MetricSettingRow[];
+    if (!whoopIsNeeded(enabledMetrics)) {
+      return jsonResponse({ ok: true, enqueued: false, reason: "no_whoop_needed", userId, timezone: tz, localDate });
+    }
+
+    // 30 days inclusive: today-29 .. today (LOCAL)
+    const startLocalDate = addDaysIsoDate(localDate, -29);
+    const endLocalDate = localDate;
+    const days = dateRangeInclusive(startLocalDate, endLocalDate);
+
+    // Cost-effective: only enqueue missing days (based on backend_daily_runs finalization)
+    const { data: alreadyRan, error: ranErr } = await admin
+      .from("backend_daily_runs")
+      .select("local_date")
+      .eq("user_id", userId)
+      .in("local_date", days);
+
+    if (ranErr) throw new Error(`backend_daily_runs query failed: ${ranErr.message}`);
+
+    const ranSet = new Set((alreadyRan ?? []).map((r: any) => String(r.local_date)));
+
+    const jobs: SyncJobInsert[] = [];
+
+    for (const d of days) {
+      if (ranSet.has(d)) continue;
+      jobs.push({
+        job_type: "whoop_daily",
+        user_id: userId,
+        local_date: d,
+        status: "queued",
+        updated_at: nowIso,
+        created_by: "login-backfill",
+        timezone: tz,
+        city_id: cityId,
+        // Self-heal stuck jobs
+        attempts: 0,
+        locked_at: null,
+        last_error: null,
+      });
+    }
+
+    if (!jobs.length) {
+      return jsonResponse({
+        ok: true,
+        enqueued: false,
+        reason: "nothing_missing",
+        userId,
+        timezone: tz,
+        localDate,
+        startLocalDate,
+        endLocalDate,
+        jobs: 0,
+      });
+    }
+
+    // IMPORTANT: do NOT ignoreDuplicates here; we want to repair existing rows (e.g. timezone null, attempts cap)
+    const { error: insErr } = await admin.from("sync_jobs").upsert(jobs, {
+      onConflict: "job_type,user_id,local_date",
+    });
+
+    if (insErr) throw new Error(`sync_jobs upsert failed: ${insErr.message}`);
+
+    console.log("[enqueue-login-backfill] enqueued", { userId, startLocalDate, endLocalDate, jobs: jobs.length });
+
+    return jsonResponse({
+      ok: true,
+      enqueued: true,
+      userId,
+      timezone: tz,
+      localDate,
+      startLocalDate,
+      endLocalDate,
+      jobs: jobs.length,
+    });
+  } catch (e) {
+    console.log("[enqueue-login-backfill] error", { error: (e as Error).message });
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});

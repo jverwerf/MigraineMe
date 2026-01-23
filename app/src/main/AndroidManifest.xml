@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.migraineme">
 
     <!-- Network + Location -->
@@ -25,6 +26,13 @@
         android:theme="@style/Theme.Material3.DayNight.NoActionBar"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
+
+        <!-- WorkManager foreground service must declare a type on targetSdk 34+ -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="microphone"
+            tools:node="merge" />
 
         <activity
             android:name=".MainActivity"

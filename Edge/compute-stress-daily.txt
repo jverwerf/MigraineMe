@@ -1,0 +1,244 @@
+// FILE: supabase/functions/compute-stress-daily/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function median(xs: number[]): number | null {
+  const a = xs.filter((n) => Number.isFinite(n)).slice().sort((p, q) => p - q);
+  if (!a.length) return null;
+  const mid = Math.floor(a.length / 2);
+  return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+}
+
+function mad(xs: number[], med: number): number | null {
+  const dev = xs.map((x) => Math.abs(x - med)).filter((n) => Number.isFinite(n));
+  return median(dev);
+}
+
+function robustZ(x: number, xs: number[]): number | null {
+  const med = median(xs);
+  if (med == null) return null;
+  const m = mad(xs, med);
+  if (m == null || m <= 1e-9) return null;
+  const robustStd = 1.4826 * m;
+  return (x - med) / robustStd;
+}
+
+function clamp(n: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, n));
+}
+
+function zToPct(z: number): number {
+  const pct = 100 / (1 + Math.exp(-z));
+  return clamp(pct, 0, 100);
+}
+
+type Body = {
+  user_id?: string;
+  local_date?: string; // YYYY-MM-DD
+};
+
+async function insertBackendMetricRun(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  localDate: string,
+): Promise<boolean> {
+  const { error } = await supabase.from("backend_metric_runs").insert({
+    user_id: userId,
+    local_date: localDate,
+    metric: "stress_index_daily",
+    source: "computed",
+  });
+
+  if (!error) return true;
+
+  const msg = (error.message ?? "").toLowerCase();
+  if (msg.includes("duplicate") || msg.includes("unique")) return false;
+
+  throw new Error(`backend_metric_runs insert failed: ${error.message}`);
+}
+
+serve(async (req) => {
+  try {
+    if (req.method !== "POST") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "compute-stress-index-daily" } },
+    });
+
+    const body = (await req.json().catch(() => null)) as Body | null;
+    const userId = typeof body?.user_id === "string" ? body.user_id.trim() : "";
+    const localDate = typeof body?.local_date === "string" ? body.local_date.trim() : "";
+
+    if (!userId || !localDate) {
+      return jsonResponse({ ok: false, error: "Missing user_id/local_date" }, 400);
+    }
+
+    // 1) Must be enabled (ONLY check stress_index_daily)
+    const { data: stressSetting, error: msErr } = await supabase
+      .from("metric_settings")
+      .select("enabled")
+      .eq("user_id", userId)
+      .eq("metric", "stress_index_daily")
+      .maybeSingle();
+
+    if (msErr) throw new Error(`metric_settings read failed: ${msErr.message}`);
+    if (!stressSetting?.enabled) {
+      return jsonResponse({ ok: true, skipped: true, reason: "stress_index_disabled", userId, localDate });
+    }
+
+    // 2) Inputs
+    const [{ data: hrvRow, error: hrvErr }, { data: rhrRow, error: rhrErr }] = await Promise.all([
+      supabase
+        .from("hrv_daily")
+        .select("value_rmssd_ms")
+        .eq("user_id", userId)
+        .eq("date", localDate)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("resting_hr_daily")
+        .select("value_bpm")
+        .eq("user_id", userId)
+        .eq("date", localDate)
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (hrvErr) throw new Error(`hrv_daily read failed: ${hrvErr.message}`);
+    if (rhrErr) throw new Error(`resting_hr_daily read failed: ${rhrErr.message}`);
+
+    const hrv = typeof (hrvRow as any)?.value_rmssd_ms === "number" ? (hrvRow as any).value_rmssd_ms : null;
+    const rhr = typeof (rhrRow as any)?.value_bpm === "number" ? (rhrRow as any).value_bpm : null;
+
+    if (hrv == null || rhr == null) {
+      return jsonResponse({
+        ok: true,
+        skipped: true,
+        reason: "missing_inputs",
+        userId,
+        localDate,
+        hasHrv: hrv != null,
+        hasRhr: rhr != null,
+      });
+    }
+
+    // 3) Baseline window (prior 14 days)
+    const startDate = addDaysIsoDate(localDate, -14);
+    const endDate = addDaysIsoDate(localDate, -1);
+
+    const [{ data: hrvBase, error: hrvBaseErr }, { data: rhrBase, error: rhrBaseErr }] = await Promise.all([
+      supabase
+        .from("hrv_daily")
+        .select("date,value_rmssd_ms")
+        .eq("user_id", userId)
+        .gte("date", startDate)
+        .lte("date", endDate),
+      supabase
+        .from("resting_hr_daily")
+        .select("date,value_bpm")
+        .eq("user_id", userId)
+        .gte("date", startDate)
+        .lte("date", endDate),
+    ]);
+
+    if (hrvBaseErr) throw new Error(`hrv baseline read failed: ${hrvBaseErr.message}`);
+    if (rhrBaseErr) throw new Error(`rhr baseline read failed: ${rhrBaseErr.message}`);
+
+    const hrvXs = (hrvBase ?? [])
+      .map((r: any) => (typeof r.value_rmssd_ms === "number" ? r.value_rmssd_ms : null))
+      .filter((n: any) => typeof n === "number") as number[];
+
+    const rhrXs = (rhrBase ?? [])
+      .map((r: any) => (typeof r.value_bpm === "number" ? r.value_bpm : null))
+      .filter((n: any) => typeof n === "number") as number[];
+
+    if (hrvXs.length < 5 || rhrXs.length < 5) {
+      return jsonResponse({
+        ok: true,
+        skipped: true,
+        reason: "insufficient_baseline",
+        userId,
+        localDate,
+        baselineDays: { hrv: hrvXs.length, rhr: rhrXs.length },
+      });
+    }
+
+    const zRhr = robustZ(rhr, rhrXs);
+    const zHrv = robustZ(hrv, hrvXs);
+
+    if (zRhr == null || zHrv == null) {
+      return jsonResponse({
+        ok: true,
+        skipped: true,
+        reason: "baseline_zero_variance",
+        userId,
+        localDate,
+      });
+    }
+
+    const zCombined = (0.55 * zRhr) + (0.45 * (-zHrv));
+    const stressValue = zToPct(zCombined);
+
+    // 4) De-dupe
+    const proceed = await insertBackendMetricRun(supabase, userId, localDate);
+    if (!proceed) {
+      return jsonResponse({ ok: true, status: "already_done", userId, localDate });
+    }
+
+    const computedAt = new Date().toISOString();
+    const baselineWindowDays = Math.min(hrvXs.length, rhrXs.length);
+
+    // 5) Write to stress_index_daily (NO created_at/updated_at)
+    const { error: upErr } = await supabase.from("stress_index_daily").upsert(
+      {
+        user_id: userId,
+        date: localDate,
+        value: stressValue,
+        hrv_z: zHrv,
+        rhr_z: zRhr,
+        baseline_window_days: baselineWindowDays,
+        computed_at: computedAt,
+      },
+      { onConflict: "user_id,date" },
+    );
+
+    if (upErr) throw new Error(`stress_index_daily upsert failed: ${upErr.message}`);
+
+    return jsonResponse({
+      ok: true,
+      status: "written",
+      userId,
+      localDate,
+      value: stressValue,
+      debug: { zRhr, zHrv, zCombined, baselineWindowDays },
+    });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});

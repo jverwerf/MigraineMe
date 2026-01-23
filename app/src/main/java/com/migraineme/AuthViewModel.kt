@@ -1,12 +1,11 @@
 // FILE: app/src/main/java/com/migraineme/AuthViewModel.kt
 package com.migraineme
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 data class AuthState(
     val accessToken: String? = null,
@@ -26,26 +25,67 @@ class AuthViewModel : ViewModel() {
         _state.update { AuthState() }
     }
 
+    fun setError(message: String?) {
+        _state.update { it.copy(error = message) }
+    }
+
     /**
-     * Fixes "needs two taps" logout:
-     * - Clear local session immediately so UI updates / navigation guards stop treating user as signed in
-     * - Perform remote signout in background (best-effort)
+     * UI-safe token accessor.
+     *
+     * The core problem you hit is: workers refresh tokens via SessionStore.getValidAccessToken(),
+     * but the UI continues using authVm.state.accessToken which may have expired.
+     *
+     * This method:
+     *  - fetches a valid token (refreshing if needed),
+     *  - ensures userId is persisted + present,
+     *  - updates AuthViewModel state if token/userId changed.
+     *
+     * Use this for any UI fetch path (tables/cards/screens) that currently relies on authState.accessToken.
      */
-    fun signOut() {
-        val token = _state.value.accessToken
+    suspend fun getValidAccessToken(context: Context): String? {
+        val appCtx = context.applicationContext
 
-        // Clear local session immediately (prevents Login screen from auto-routing back to Home)
-        clearSession()
+        val valid = SessionStore.getValidAccessToken(appCtx)
+        if (valid.isNullOrBlank()) {
+            // If we cannot refresh, reflect that to UI by clearing session.
+            // (LogoutScreen already clears SessionStore; this mirrors that state.)
+            _state.update { it.copy(accessToken = null, userId = null) }
+            return null
+        }
 
-        // Best-effort remote sign-out (does not block UI)
-        if (!token.isNullOrBlank()) {
-            viewModelScope.launch {
-                try {
-                    SupabaseAuthService.signOut(token)
-                } catch (_: Exception) {
-                    // ignore remote signout errors
-                }
+        // Ensure user id is present and stable.
+        var uid = SessionStore.readUserId(appCtx)
+        if (uid.isNullOrBlank()) {
+            uid = JwtUtils.extractUserIdFromAccessToken(valid)
+            if (!uid.isNullOrBlank()) {
+                SessionStore.saveUserId(appCtx, uid)
             }
         }
+
+        // If SessionStore refreshed/rotated the access token, push it into UI state.
+        _state.update { st ->
+            val tokenChanged = st.accessToken != valid
+            val userChanged = (!uid.isNullOrBlank() && st.userId != uid)
+            if (tokenChanged || userChanged) {
+                st.copy(accessToken = valid, userId = uid, error = null)
+            } else {
+                st
+            }
+        }
+
+        return valid
+    }
+
+    /**
+     * Convenience: update state from persisted SessionStore without forcing an immediate refresh.
+     * (Still uses getValidAccessToken under the hood so it stays correct if token is expired.)
+     */
+    suspend fun syncFromSessionStore(context: Context) {
+        getValidAccessToken(context)
+    }
+
+    fun signOut() {
+        // UI-only signout state. Callers already clear SessionStore explicitly (see LogoutScreen).
+        clearSession()
     }
 }

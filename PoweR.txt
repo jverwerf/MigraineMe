@@ -24,3 +24,14 @@ Get-ChildItem -Path $sourceDir -File -Recurse | ForEach-Object {
     # Blank line between files
     Add-Content -Path $outputFile -Value ""
 }
+
+$sourceDir = "C:\Users\verwe\Projects\MigraineMe\Edge"
+$outputFile = "C:\Users\verwe\Projects\MigraineMe\Edge\combined.txt"
+
+Get-ChildItem $sourceDir -Filter *.txt | ForEach-Object {
+    "===== TITLE: $($_.Name) ====="
+    ""
+    Get-Content $_.FullName
+    ""
+    ""
+} | Set-Content $outputFile
