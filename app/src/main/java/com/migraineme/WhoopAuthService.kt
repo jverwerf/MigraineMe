@@ -330,10 +330,11 @@ data class WhoopToken(
             val refresh = jo.optString("refresh_token", "")
             val type = jo.optString("token_type", "Bearer")
 
-            val expiresInSec = jo.optLong("expires_in", 0L)
-            val expiresAt = if (expiresInSec > 0L) {
-                System.currentTimeMillis() + expiresInSec * 1000L
-            } else 0L
+            val nowMs = System.currentTimeMillis()
+
+            val expiresInSecRaw = jo.optLong("expires_in", 0L)
+            val expiresInSec = if (expiresInSecRaw > 0L) expiresInSecRaw else 3600L
+            val expiresAt = nowMs + expiresInSec * 1000L
 
             return WhoopToken(
                 accessToken = access,

@@ -45,6 +45,14 @@ class SupabasePersonalService(context: Context) {
         val source_measure_id: String? = null
     )
 
+    @Serializable
+    private data class ScreenTimeDailyWrite(
+        val date: String,
+        val total_hours: Double,
+        val source: String,
+        val quality_flags: Map<String, String>? = null
+    )
+
     suspend fun upsertUserLocationDaily(
         accessToken: String,
         date: String,
@@ -126,6 +134,49 @@ class SupabasePersonalService(context: Context) {
             parameter("select", "date")
             parameter("source", "eq.$source")
             parameter("order", "date.asc")
+            parameter("limit", "1")
+        }
+        if (!resp.status.isSuccess()) return null
+        val body = resp.bodyAsText().trim()
+        if (body.isEmpty() || body == "[]") return null
+        return try {
+            val arr = JSONArray(body)
+            if (arr.length() == 0) null else arr.getJSONObject(0).getString("date")
+        } catch (_: Throwable) { null }
+    }
+
+    // ========== SCREEN TIME METHODS ==========
+
+    /**
+     * Upsert daily screen time directly to screen_time_daily table.
+     * No intermediate processing needed - Android already computed the daily total.
+     */
+    suspend fun upsertScreenTimeDaily(
+        accessToken: String,
+        date: String,
+        totalHours: Double,
+        source: String = "android",
+        qualityFlags: Map<String, String>? = null
+    ) {
+        val row = ScreenTimeDailyWrite(date, totalHours, source, qualityFlags)
+        postgrestInsert(
+            accessToken = accessToken,
+            table = "screen_time_daily",
+            body = listOf(row),
+            onConflict = "user_id,date,source"
+        )
+    }
+
+    suspend fun latestScreenTimeDate(
+        accessToken: String,
+        source: String = "android"
+    ): String? {
+        val resp = client.get("$supabaseUrl/rest/v1/screen_time_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "date")
+            parameter("source", "eq.$source")
+            parameter("order", "date.desc")
             parameter("limit", "1")
         }
         if (!resp.status.isSuccess()) return null

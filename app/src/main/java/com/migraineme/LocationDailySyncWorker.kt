@@ -31,13 +31,11 @@ class LocationDailySyncWorker(
 
             val access = SessionStore.getValidAccessToken(applicationContext)
             if (access == null) {
-                // If we're logged out / token refresh failed temporarily, retry instead of silently "succeeding".
                 Log.w(LOG_TAG, "No valid access token; will retry")
                 shouldScheduleNext = false
                 return@withContext Result.retry()
             }
 
-            // Gate entire location collection by the single table toggle.
             if (!DataCollectionSettings.isActive(applicationContext, "user_location_daily", wearable = null, defaultValue = true)) {
                 Log.d(LOG_TAG, "user_location_daily disabled — skip")
                 return@withContext Result.success()
@@ -48,8 +46,9 @@ class LocationDailySyncWorker(
 
             val loc = getDeviceLocation(applicationContext)
             if (loc == null) {
-                Log.d(LOG_TAG, "No location found → skip")
-                return@withContext Result.success()
+                Log.w(LOG_TAG, "No location found; will retry")
+                shouldScheduleNext = false
+                return@withContext Result.retry()
             }
 
             val lat = loc.latitude
@@ -74,6 +73,8 @@ class LocationDailySyncWorker(
                 }
 
             var ok = 0
+            var fail = 0
+
             toWrite.forEach { d ->
                 runCatching {
                     svc.upsertUserLocationDaily(
@@ -84,19 +85,27 @@ class LocationDailySyncWorker(
                         source = "device"
                     )
                     ok++
+                }.onFailure { e ->
+                    fail++
+                    Log.e(LOG_TAG, "Upsert failed for ${d} (lat=$lat lon=$lon)", e)
                 }
             }
 
-            Log.d(LOG_TAG, "Inserted $ok of ${toWrite.size} days")
+            Log.d(LOG_TAG, "Inserted $ok of ${toWrite.size} days (fail=$fail)")
+
+            if (fail > 0) {
+                // Treat as retryable: common causes are transient network/auth.
+                shouldScheduleNext = false
+                return@withContext Result.retry()
+            }
+
             Result.success()
 
         } catch (t: Throwable) {
-            // Treat transient failures (network, service) as retryable; don't silently "succeed".
             Log.w(LOG_TAG, "Worker error", t)
             shouldScheduleNext = false
             Result.retry()
         } finally {
-            // If WorkManager will retry soon, don't replace the work with a next-9am run (it cancels the retry).
             if (shouldScheduleNext) {
                 scheduleNext(applicationContext)
             }
@@ -111,6 +120,7 @@ class LocationDailySyncWorker(
         fun runOnceNow(context: Context) {
             val req = OneTimeWorkRequestBuilder<LocationDailySyncWorker>()
                 .setInitialDelay(0, TimeUnit.MILLISECONDS)
+                .setBackoffCriteria(androidx.work.BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
@@ -127,17 +137,14 @@ class LocationDailySyncWorker(
 
             val req = OneTimeWorkRequestBuilder<LocationDailySyncWorker>()
                 .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .setBackoffCriteria(androidx.work.BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
                 .build()
 
             WorkManager.getInstance(context)
                 .enqueueUniqueWork(UNIQUE, ExistingWorkPolicy.REPLACE, req)
         }
 
-        /**
-         * Same as WHOOP: backfill runs manually without needing a Worker instance.
-         */
         suspend fun backfillUpToToday(context: Context, accessToken: String) {
-            // Gate backfill too; otherwise disabling would still write history.
             if (!DataCollectionSettings.isActive(context, "user_location_daily", wearable = null, defaultValue = true)) {
                 return
             }
@@ -156,6 +163,8 @@ class LocationDailySyncWorker(
             val lon = loc.longitude
 
             var d = start
+            var fail = 0
+
             while (!d.isAfter(today)) {
                 runCatching {
                     svc.upsertUserLocationDaily(
@@ -165,14 +174,18 @@ class LocationDailySyncWorker(
                         longitude = lon,
                         source = "device"
                     )
+                }.onFailure { e ->
+                    fail++
+                    Log.e(LOG_TAG, "Backfill upsert failed for ${d} (lat=$lat lon=$lon)", e)
                 }
                 d = d.plusDays(1)
             }
+
+            if (fail > 0) {
+                Log.w(LOG_TAG, "Backfill finished with failures: $fail")
+            }
         }
 
-        /**
-         * Public location fetcher so backfill can use it.
-         */
         fun getDeviceLocation(ctx: Context): Location? {
             val lm = ctx.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
 
@@ -187,8 +200,6 @@ class LocationDailySyncWorker(
             if (!fine && !coarse) return null
 
             val gps = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            if (gps != null) return gps
-
             val net = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
             val pass = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
 

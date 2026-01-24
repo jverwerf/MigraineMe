@@ -3,6 +3,7 @@ package com.migraineme
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.util.Log
 import kotlin.math.ln
 import kotlin.math.sqrt
 
@@ -25,6 +26,8 @@ data class AmbientNoiseMetrics(
  */
 object AmbientNoiseSampler {
 
+    private const val TAG = "AmbientNoiseSampler"
+
     fun capture(durationMs: Long = 60_000L): AmbientNoiseMetrics {
         val sampleRate = 16_000
         val channelConfig = AudioFormat.CHANNEL_IN_MONO
@@ -33,66 +36,114 @@ object AmbientNoiseSampler {
         val minBuf = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
         val bufferSize = maxOf(minBuf, sampleRate * 2) // ~1 second buffer (16-bit mono)
 
-        val recorder = AudioRecord(
-            MediaRecorder.AudioSource.VOICE_RECOGNITION,
-            sampleRate,
-            channelConfig,
-            audioFormat,
-            bufferSize
-        )
+        var recorder: AudioRecord? = null
 
-        if (recorder.state != AudioRecord.STATE_INITIALIZED) {
-            runCatching { recorder.release() }
-            return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
-        }
+        try {
+            recorder = AudioRecord(
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                sampleRate,
+                channelConfig,
+                audioFormat,
+                bufferSize
+            )
 
-        val readBuf = ShortArray(bufferSize / 2)
+            if (recorder.state != AudioRecord.STATE_INITIALIZED) {
+                Log.w(TAG, "AudioRecord failed to initialize")
+                return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
+            }
 
-        val frameMs = 200L
-        val frameSamples = (sampleRate * frameMs / 1000).toInt()
-        val frameBuf = ShortArray(frameSamples)
-        var frameFill = 0
+            val readBuf = ShortArray(bufferSize / 2)
 
-        val frameAcc = ArrayList<Double>(512)
+            val frameMs = 200L
+            val frameSamples = (sampleRate * frameMs / 1000).toInt()
+            val frameBuf = ShortArray(frameSamples)
+            var frameFill = 0
 
-        recorder.startRecording()
-        val start = System.currentTimeMillis()
+            val frameAcc = ArrayList<Double>(512)
 
-        while (System.currentTimeMillis() - start < durationMs) {
-            val read = recorder.read(readBuf, 0, readBuf.size)
-            if (read <= 0) continue
+            recorder.startRecording()
+            val start = System.currentTimeMillis()
 
-            var i = 0
-            while (i < read) {
-                val take = minOf(read - i, frameSamples - frameFill)
-                for (k in 0 until take) {
-                    frameBuf[frameFill + k] = readBuf[i + k]
+            var iterationCount = 0
+            while (System.currentTimeMillis() - start < durationMs) {
+                // Check for thread interruption
+                if (Thread.currentThread().isInterrupted) {
+                    Log.d(TAG, "Thread interrupted during capture")
+                    break
                 }
-                frameFill += take
-                i += take
 
-                if (frameFill == frameSamples) {
-                    frameAcc.add(computeLogRms(frameBuf))
-                    frameFill = 0
+                val read = recorder.read(readBuf, 0, readBuf.size)
+                if (read <= 0) {
+                    iterationCount++
+                    // If we consistently fail to read, don't loop forever
+                    if (iterationCount > 100) {
+                        Log.w(TAG, "Too many failed reads, aborting")
+                        break
+                    }
+                    continue
+                }
+
+                iterationCount = 0 // Reset counter on successful read
+
+                var i = 0
+                while (i < read) {
+                    val take = minOf(read - i, frameSamples - frameFill)
+                    for (k in 0 until take) {
+                        frameBuf[frameFill + k] = readBuf[i + k]
+                    }
+                    frameFill += take
+                    i += take
+
+                    if (frameFill == frameSamples) {
+                        frameAcc.add(computeLogRms(frameBuf))
+                        frameFill = 0
+                    }
+                }
+            }
+
+            if (frameAcc.isEmpty()) {
+                Log.d(TAG, "No frames captured")
+                return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
+            }
+
+            frameAcc.sort()
+            val p90Index = ((frameAcc.size - 1) * 0.90).toInt().coerceIn(0, frameAcc.size - 1)
+
+            val lP90 = frameAcc[p90Index]
+            val lMax = frameAcc.last()
+            val lMean = frameAcc.average()
+
+            Log.d(TAG, "Captured ${frameAcc.size} frames successfully")
+            return AmbientNoiseMetrics(lMean = lMean, lP90 = lP90, lMax = lMax, frames = frameAcc.size)
+
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Security exception - microphone permission denied: ${e.message}")
+            return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "IllegalStateException during recording: ${e.message}")
+            return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error during capture: ${e.message}", e)
+            return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
+        } finally {
+            // CRITICAL: Always release the recorder, regardless of how we exit
+            recorder?.let {
+                try {
+                    // Only stop if we're still recording
+                    if (it.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
+                        it.stop()
+                    }
+                } catch (e: IllegalStateException) {
+                    Log.w(TAG, "Error stopping recorder: ${e.message}")
+                }
+
+                try {
+                    it.release()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error releasing recorder: ${e.message}")
                 }
             }
         }
-
-        runCatching { recorder.stop() }
-        runCatching { recorder.release() }
-
-        if (frameAcc.isEmpty()) {
-            return AmbientNoiseMetrics(lMean = 0.0, lP90 = 0.0, lMax = 0.0, frames = 0)
-        }
-
-        frameAcc.sort()
-        val p90Index = ((frameAcc.size - 1) * 0.90).toInt().coerceIn(0, frameAcc.size - 1)
-
-        val lP90 = frameAcc[p90Index]
-        val lMax = frameAcc.last()
-        val lMean = frameAcc.average()
-
-        return AmbientNoiseMetrics(lMean = lMean, lP90 = lP90, lMax = lMax, frames = frameAcc.size)
     }
 
     private fun computeLogRms(frame: ShortArray): Double {

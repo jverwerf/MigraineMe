@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.core.content.ContextCompat
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -62,6 +64,13 @@ import kotlinx.coroutines.launch
  * - When enabled, schedules AmbientNoiseSampleWorker
  * - When disabled, cancels AmbientNoiseSampleWorker
  * - Defaults to ON (unless user explicitly turned it off)
+ *
+ * ADDITION (Screen time):
+ * - Added phone metric row for `screen_time_daily`
+ * - When enabled, schedules ScreenTimeDailySyncWorker
+ * - When disabled, cancels ScreenTimeDailySyncWorker
+ * - Requests PACKAGE_USAGE_STATS permission when user toggles ON
+ * - Defaults to ON (unless user explicitly turned it off)
  */
 @Composable
 fun DataSettingsScreen() {
@@ -89,7 +98,8 @@ fun DataSettingsScreen() {
     }
 
     // Ensure the ambient noise worker scheduling matches current setting (including default-on).
-    LaunchedEffect(Unit, refreshTick) {
+    // IMPORTANT: do not re-run this on refreshTick; rescheduling periodic work can keep pushing out the next run.
+    LaunchedEffect(Unit) {
         val ambientOn = store.getActive(
             table = "ambient_noise_samples",
             wearable = null,
@@ -99,6 +109,21 @@ fun DataSettingsScreen() {
             AmbientNoiseSampleWorker.schedule(context)
         } else {
             AmbientNoiseSampleWorker.cancel(context)
+        }
+    }
+
+    // Screen time worker scheduling
+    LaunchedEffect(Unit) {
+        val screenTimeOn = store.getActive(
+            table = "screen_time_daily",
+            wearable = null,
+            defaultValue = true
+        )
+        if (screenTimeOn && ScreenTimePermissionHelper.hasPermission(context)) {
+            ScreenTimeDailySyncWorker.scheduleNext(context)
+        } else if (!ScreenTimePermissionHelper.hasPermission(context)) {
+            // Permission not granted - don't start worker
+            ScreenTimeDailySyncWorker.cancel(context)
         }
     }
 
@@ -141,11 +166,8 @@ fun DataSettingsScreen() {
                     // Wearable-derived computed metric (standalone), gated by HRV + Resting HR.
                     wearableRow("stress_index_daily", "Computed mental stress (requires HRV + Resting HR)"),
 
-                    // These are user-entered via the logging flow (not worker collection).
-                    manualRow("migraines", "User log entry"),
-                    manualRow("triggers", "User log entry"),
-                    manualRow("medicines", "User log entry"),
-                    manualRow("reliefs", "User log entry")
+                    // Phone-collected screen time
+                    phoneRow("screen_time_daily", "Phone screen time tracking")
                 )
             ),
             DataSection(
@@ -237,9 +259,14 @@ private fun DataRowUi(
     val scope = rememberCoroutineScope()
     val edge = remember { EdgeFunctionsService() }
 
-    val isLocationRow = row.table == "user_location_daily" && row.collectedByKind == CollectedByKind.PHONE
-    val isAmbientNoiseRow = row.table == "ambient_noise_samples" && row.collectedByKind == CollectedByKind.PHONE
+    // Screen time permission handling
+    val isScreenTimeRow = row.table == "screen_time_daily" && row.collectedByKind == CollectedByKind.PHONE
+    var showScreenTimePermissionDialog by remember { mutableStateOf(false) }
+    val screenTimePermissionGranted = remember(refreshTick) {
+        if (isScreenTimeRow) ScreenTimePermissionHelper.hasPermission(context) else true
+    }
 
+    val isLocationRow = row.table == "user_location_daily" && row.collectedByKind == CollectedByKind.PHONE
     val locationPermissionGranted = remember(refreshTick) {
         val fine = ContextCompat.checkSelfPermission(
             context,
@@ -252,15 +279,8 @@ private fun DataRowUi(
         fine || coarse
     }
 
-    val microphonePermissionGranted = remember(refreshTick) {
-        ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
     // Wearable selection (dropdown) is stored per-table.
-    // Phone/manual/reference rows don’t use it.
+    // Phone/manual/reference rows don't use it.
     var selectedWearable by remember(row.table, refreshTick) {
         mutableStateOf(store.getSelectedWearable(row.table, row.defaultWearable))
     }
@@ -390,12 +410,16 @@ private fun DataRowUi(
                     modifier = Modifier.alpha(0.75f)
                 )
             }
-            if (isAmbientNoiseRow) {
+            if (isScreenTimeRow) {
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    "Permission: " + if (microphonePermissionGranted) "Granted" else "Not granted",
+                    "Permission: " + if (screenTimePermissionGranted) "Granted" else "Not granted",
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.alpha(0.75f)
+                    color = if (screenTimePermissionGranted)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.error,
+                    modifier = Modifier.alpha(0.85f)
                 )
             }
             if (isStressRow && !depsOkForStress) {
@@ -516,6 +540,25 @@ private fun DataRowUi(
                                 else AmbientNoiseSampleWorker.cancel(context)
                             }
 
+                            // Screen time worker scheduling
+                            if (row.collectedByKind == CollectedByKind.PHONE && row.table == "screen_time_daily") {
+                                if (new) {
+                                    // Check permission before enabling
+                                    if (!ScreenTimePermissionHelper.hasPermission(context)) {
+                                        // Show permission dialog
+                                        showScreenTimePermissionDialog = true
+                                        // Don't enable yet - wait for permission
+                                        active = false
+                                        store.setActive(table = row.table, wearable = null, value = false)
+                                    } else {
+                                        // Permission granted - schedule worker
+                                        ScreenTimeDailySyncWorker.scheduleNext(context)
+                                    }
+                                } else {
+                                    ScreenTimeDailySyncWorker.cancel(context)
+                                }
+                            }
+
                             onAnyChange()
                         }
                     },
@@ -525,6 +568,45 @@ private fun DataRowUi(
             }
         }
     }
+
+    // Screen time permission dialog
+    if (showScreenTimePermissionDialog) {
+        ScreenTimePermissionDialog(
+            onDismiss = { showScreenTimePermissionDialog = false },
+            onOpenSettings = {
+                ScreenTimePermissionHelper.openUsageAccessSettings(context)
+                showScreenTimePermissionDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun ScreenTimePermissionDialog(
+    onDismiss: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Screen Time Permission") },
+        text = {
+            Text(
+                "To track your screen time, MigraineMe needs access to usage statistics.\n\n" +
+                        "This permission allows the app to see how much time you spend on your phone each day.\n\n" +
+                        "You'll be taken to Android Settings where you can grant this permission."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onOpenSettings) {
+                Text("Open Settings")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Not Now")
+            }
+        }
+    )
 }
 
 private fun defaultActiveFor(row: DataRow): Boolean {
