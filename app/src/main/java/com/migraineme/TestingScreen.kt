@@ -1,265 +1,254 @@
-// FILE: app/src/main/java/com/migraineme/TestingScreen.kt
 package com.migraineme
 
+import android.Manifest
 import android.content.Context
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import android.content.pm.PackageManager
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
-import io.ktor.http.HttpHeaders
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
 
-/**
- * PH-only debug screen.
- * NOW SHOWS:
- * - Stress Index (computed): stress_index_daily
- * - Noise Index (computed): ambient_noise_index_daily
- * - High HR Zones: time_in_high_hr_zones_daily
- * - Screen Time: screen_time_daily
- */
 @Composable
-fun TestingScreen(
-    authVm: AuthViewModel
-) {
-    val ctx = LocalContext.current
-    val state by authVm.state.collectAsState()
+fun TestingScreen(authVm: AuthViewModel) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
 
-    var stressIndex by remember {
-        mutableStateOf<List<SupabasePhysicalHealthService.StressIndexDailyRead>>(emptyList())
-    }
-    var noiseIndex by remember {
-        mutableStateOf<List<SupabaseNoiseIndexService.AmbientNoiseIndexDailyRead>>(emptyList())
-    }
-    var zones by remember {
-        mutableStateOf<List<SupabasePhysicalHealthService.HighHrZonesDailyRead>>(emptyList())
-    }
-    var screenTimeDaily by remember {
-        mutableStateOf<List<SupabaseScreenTimeService.ScreenTimeDailyRead>>(emptyList())
-    }
-
-    val access = state.accessToken
-
-    LaunchedEffect(access) {
-        val token = access ?: return@LaunchedEffect
-        val phSvc = SupabasePhysicalHealthService(ctx)
-        val noiseSvc = SupabaseNoiseIndexService(ctx)
-        val screenTimeSvc = SupabaseScreenTimeService(ctx)
-
-        stressIndex = phSvc.fetchStressIndexDaily(token)
-        noiseIndex = noiseSvc.fetchAmbientNoiseIndexDaily(token)
-        zones = phSvc.fetchHighHrDaily(token)
-        screenTimeDaily = screenTimeSvc.fetchScreenTimeDaily(token)
-    }
-
-    var buttonStatus by remember { mutableStateOf("") }
+    var testResult by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.Start
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Physical Health Debug (Testing)", textAlign = TextAlign.Start)
-        Spacer(Modifier.height(20.dp))
+        Text(
+            text = "Testing Screen",
+            style = MaterialTheme.typography.titleLarge
+        )
 
-        // Permission status
-        val hasPermission = remember { ScreenTimeCollector.hasUsageStatsPermission(ctx) }
+        HorizontalDivider()
+
+        // TIMEZONE TEST CARD
         Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (hasPermission)
-                    MaterialTheme.colorScheme.primaryContainer
-                else
-                    MaterialTheme.colorScheme.errorContainer
-            ),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(Modifier.padding(12.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Text(
-                    if (hasPermission) "✓ Screen Time Permission Granted" else "✗ Screen Time Permission Required",
-                    style = MaterialTheme.typography.titleSmall
+                    text = "Timezone Upload Test",
+                    style = MaterialTheme.typography.titleMedium
                 )
-                if (!hasPermission) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "Enable in Settings → Apps → Special Access → Usage Access",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+
+                Text(
+                    text = "Tests if timezone is being sent to Supabase correctly",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isLoading = true
+                            testResult = testTimezoneUpload(context)
+                            isLoading = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Testing...")
+                    } else {
+                        Text("Test Timezone Upload")
+                    }
+                }
+
+                if (testResult.isNotEmpty()) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (testResult.contains("✅"))
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = testResult,
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
-
-        // Manual trigger button for screen time worker
-        Button(
-            onClick = {
-                if (!ScreenTimeCollector.hasUsageStatsPermission(ctx)) {
-                    buttonStatus = "❌ Permission not granted - enable in Settings first"
-                } else {
-                    buttonStatus = "🔄 Triggering worker... Check Logcat for 'ScreenTimeDailySync'"
-                    ScreenTimeDailySyncWorker.runOnceNow(ctx)
-                }
-            },
+        // SCREEN TIME TEST CARD
+        Card(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Trigger Screen Time Collection Now")
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Screen Time Test",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isLoading = true
+                            testResult = testScreenTimeUpload(context)
+                            isLoading = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
+                ) {
+                    Text("Test Screen Time Upload")
+                }
+            }
         }
 
-        if (buttonStatus.isNotEmpty()) {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                buttonStatus,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (buttonStatus.startsWith("❌"))
-                    MaterialTheme.colorScheme.error
-                else
-                    MaterialTheme.colorScheme.primary
-            )
+        // AMBIENT NOISE TEST CARD
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Ambient Noise Test",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isLoading = true
+                            testResult = testAmbientNoise(context)
+                            isLoading = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
+                ) {
+                    Text("Test Ambient Noise Sample")
+                }
+            }
         }
-
-        Spacer(Modifier.height(16.dp))
-
-        DataSection(
-            "Stress Index (computed) — stress_index_daily",
-            stressIndex.map { "${it.date}: value=${it.value}, computed_at=${it.computed_at ?: "-"}" }
-        )
-
-        DataSection(
-            "Noise Index (computed) — ambient_noise_index_daily",
-            noiseIndex.map {
-                "${it.date}: value_index_pct=${it.value_index_pct}, samples=${it.samples_count ?: 0}, source=${it.source ?: "-"}"
-            }
-        )
-
-        DataSection(
-            "High HR Zones — time_in_high_hr_zones_daily",
-            zones.map {
-                "${it.date}: total=${it.value_minutes}, z4=${it.zone_four_minutes}, z5=${it.zone_five_minutes}, z6=${it.zone_six_minutes}"
-            }
-        )
-
-        DataSection(
-            "Screen Time — screen_time_daily",
-            screenTimeDaily.map {
-                "${it.date}: ${it.total_hours}h, source=${it.source ?: "android"}"
-            }
-        )
     }
 }
 
-@Composable
-private fun DataSection(title: String, rows: List<String>) {
-    Text(title)
-    Spacer(Modifier.height(6.dp))
-    if (rows.isEmpty()) {
-        Text("  (no data)")
-    } else {
-        for (line in rows) {
-            Text("  $line")
+private suspend fun testTimezoneUpload(context: Context): String {
+    return try {
+        val hasLocationPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasLocationPermission) {
+            return "❌ Location permission not granted"
         }
+
+        val location = LocationDailySyncWorker.getDeviceLocation(context)
+        if (location == null) {
+            return "❌ Could not get device location"
+        }
+
+        val accessToken = SessionStore.getValidAccessToken(context)
+        if (accessToken == null) {
+            return "❌ Not logged in (no access token)"
+        }
+
+        val deviceTimezone = ZoneId.systemDefault().id
+        val today = LocalDate.now()
+
+        val svc = SupabasePersonalService(context)
+        svc.upsertUserLocationDaily(
+            accessToken = accessToken,
+            date = today.toString(),
+            latitude = location.latitude,
+            longitude = location.longitude,
+            source = "device_test",
+            timezone = deviceTimezone
+        )
+
+        """
+        ✅ SUCCESS!
+        
+        Uploaded to Supabase:
+        • Date: $today
+        • Timezone: $deviceTimezone
+        • Latitude: ${location.latitude}
+        • Longitude: ${location.longitude}
+        
+        Check your database:
+        SELECT date, timezone, latitude, longitude 
+        FROM user_location_daily 
+        WHERE source = 'device_test' 
+        ORDER BY date DESC 
+        LIMIT 1;
+        """.trimIndent()
+
+    } catch (e: Exception) {
+        "❌ ERROR: ${e.message}"
     }
-    Divider(Modifier.padding(vertical = 12.dp))
 }
 
-/**
- * Small read-only helper for ambient_noise_index_daily used by TestingScreen.
- * Keeps the same REST auth pattern used elsewhere:
- * - Authorization: Bearer <access>
- * - apikey: SUPABASE_ANON_KEY
- */
-private class SupabaseNoiseIndexService(context: Context) {
-
-    private val supabaseUrl = BuildConfig.SUPABASE_URL
-    private val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
-
-    private val client = HttpClient {
-        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
-    }
-
-    @Serializable
-    data class AmbientNoiseIndexDailyRead(
-        val date: String,
-        @SerialName("value_index_pct") val value_index_pct: Double,
-        @SerialName("samples_count") val samples_count: Int? = null,
-        val source: String? = null,
-        @SerialName("computed_at") val computed_at: String? = null
-    )
-
-    suspend fun fetchAmbientNoiseIndexDaily(access: String, days: Int = 14): List<AmbientNoiseIndexDailyRead> {
-        val resp = client.get("$supabaseUrl/rest/v1/ambient_noise_index_daily") {
-            header(HttpHeaders.Authorization, "Bearer $access")
-            header("apikey", supabaseKey)
-            parameter("select", "date,value_index_pct,samples_count,source,computed_at")
-            parameter("order", "date.desc")
-            parameter("limit", days.toString())
+private suspend fun testScreenTimeUpload(context: Context): String {
+    return try {
+        if (!ScreenTimePermissionHelper.hasPermission(context)) {
+            return "❌ Screen time permission not granted"
         }
-        if (!resp.status.isSuccess()) return emptyList()
-        return runCatching { resp.body<List<AmbientNoiseIndexDailyRead>>() }.getOrDefault(emptyList())
+
+        val accessToken = SessionStore.getValidAccessToken(context)
+        if (accessToken == null) {
+            return "❌ Not logged in"
+        }
+
+        ScreenTimeDailySyncWorker.runOnceNow(context)
+        "✅ Screen time worker triggered! Check logs."
+
+    } catch (e: Exception) {
+        "❌ ERROR: ${e.message}"
     }
 }
 
-/**
- * Small read-only helper for screen_time_daily used by TestingScreen.
- */
-private class SupabaseScreenTimeService(context: Context) {
-
-    private val supabaseUrl = BuildConfig.SUPABASE_URL
-    private val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
-
-    private val client = HttpClient {
-        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
-    }
-
-    @Serializable
-    data class ScreenTimeDailyRead(
-        val date: String,
-        @SerialName("total_hours") val total_hours: Double,
-        val source: String? = null,
-        @SerialName("computed_at") val computed_at: String? = null
-    )
-
-    suspend fun fetchScreenTimeDaily(access: String, days: Int = 14): List<ScreenTimeDailyRead> {
-        val resp = client.get("$supabaseUrl/rest/v1/screen_time_daily") {
-            header(HttpHeaders.Authorization, "Bearer $access")
-            header("apikey", supabaseKey)
-            parameter("select", "date,total_hours,source,computed_at")
-            parameter("order", "date.desc")
-            parameter("limit", days.toString())
+private suspend fun testAmbientNoise(context: Context): String {
+    return try {
+        if (!MicrophonePermissionHelper.hasPermission(context)) {
+            return "❌ Microphone permission not granted"
         }
-        if (!resp.status.isSuccess()) return emptyList()
-        return runCatching { resp.body<List<ScreenTimeDailyRead>>() }.getOrDefault(emptyList())
+
+        AmbientNoiseSampleWorker.schedule(context)
+        "✅ Ambient noise worker scheduled! Will run in ~30 seconds."
+
+    } catch (e: Exception) {
+        "❌ ERROR: ${e.message}"
     }
 }

@@ -18,10 +18,9 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Daily worker that collects yesterday's screen time and uploads directly to screen_time_daily.
- * 
- * Runs daily at 10 AM (device time) and handles backfill for missing days.
+ * Runs daily at 9 AM (device time) and handles backfill for missing days.
  * Follows the same pattern as LocationDailySyncWorker.
- * 
+ *
  * Unlike ambient noise (which uploads samples then processes them), screen time is uploaded
  * directly to the daily table since Android already computed the daily total.
  */
@@ -32,9 +31,8 @@ class ScreenTimeDailySyncWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         Log.d(LOG_TAG, "Worker started")
-        
-        var shouldScheduleNext = true
 
+        var shouldScheduleNext = true
         try {
             // Check if user has granted PACKAGE_USAGE_STATS permission
             if (!ScreenTimeCollector.hasUsageStatsPermission(applicationContext)) {
@@ -97,10 +95,10 @@ class ScreenTimeDailySyncWorker(
             toWrite.forEach { date ->
                 runCatching {
                     val dateStr = date.toString()
-                    
+
                     // Collect screen time for this date
                     val screenTime = ScreenTimeCollector.getDailyScreenTime(applicationContext, dateStr)
-                    
+
                     if (screenTime == null) {
                         Log.w(LOG_TAG, "Failed to collect screen time for $dateStr")
                         fail++
@@ -124,10 +122,10 @@ class ScreenTimeDailySyncWorker(
                         source = "android",
                         qualityFlags = flags
                     )
-                    
+
                     Log.d(LOG_TAG, "Uploaded screen time for $dateStr: ${String.format("%.2f", totalHours)}h (${screenTime.appCount} apps)")
                     ok++
-                    
+
                 }.onFailure { e ->
                     fail++
                     Log.e(LOG_TAG, "Upload failed for $date", e)
@@ -156,7 +154,6 @@ class ScreenTimeDailySyncWorker(
     }
 
     companion object {
-
         private const val UNIQUE = "screen_time_daily_worker"
         private const val LOG_TAG = "ScreenTimeDailySync"
 
@@ -175,34 +172,34 @@ class ScreenTimeDailySyncWorker(
         }
 
         /**
-         * Schedule the next run at 10 AM tomorrow (device time).
+         * Schedule the next run at 9 AM tomorrow (device time).
          * This is called automatically after each successful run.
          */
         fun scheduleNext(context: Context) {
             val now = ZonedDateTime.now()
-            
-            // Target: 10:00 AM device time
-            val targetHour = 10
+
+            // Target: 9:00 AM device time
+            val targetHour = 9
             val targetMinute = 0
-            
+
             var nextRun = now
                 .with(LocalTime.of(targetHour, targetMinute, 0))
                 .truncatedTo(ChronoUnit.MINUTES)
-            
-            // If 10 AM today has already passed, schedule for 10 AM tomorrow
+
+            // If 9 AM today has already passed, schedule for 9 AM tomorrow
             if (!nextRun.isAfter(now)) {
                 nextRun = nextRun.plusDays(1)
             }
-            
+
             val delayMinutes = ChronoUnit.MINUTES.between(now, nextRun)
-            
+
             Log.d(LOG_TAG, "Scheduling next run at $nextRun (in $delayMinutes minutes)")
-            
+
             val req = OneTimeWorkRequestBuilder<ScreenTimeDailySyncWorker>()
                 .setInitialDelay(delayMinutes, TimeUnit.MINUTES)
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
                 .build()
-            
+
             WorkManager.getInstance(context).enqueueUniqueWork(
                 UNIQUE, ExistingWorkPolicy.REPLACE, req
             )

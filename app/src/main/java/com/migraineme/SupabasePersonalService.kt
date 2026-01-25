@@ -33,7 +33,8 @@ class SupabasePersonalService(context: Context) {
         val latitude: Double,
         val longitude: Double,
         val source: String,
-        val source_measure_id: String? = null
+        val source_measure_id: String? = null,
+        val timezone: String? = null
     )
 
     @Serializable
@@ -42,7 +43,8 @@ class SupabasePersonalService(context: Context) {
         val latitude: Double,
         val longitude: Double,
         val source: String? = null,
-        val source_measure_id: String? = null
+        val source_measure_id: String? = null,
+        val timezone: String? = null
     )
 
     @Serializable
@@ -59,9 +61,10 @@ class SupabasePersonalService(context: Context) {
         latitude: Double,
         longitude: Double,
         source: String = "device",
-        sourceId: String? = null
+        sourceId: String? = null,
+        timezone: String? = null
     ) {
-        val row = LocationWriteRow(date, latitude, longitude, source, sourceId)
+        val row = LocationWriteRow(date, latitude, longitude, source, sourceId, timezone)
         postgrestInsert(
             accessToken = accessToken,
             table = "user_location_daily",

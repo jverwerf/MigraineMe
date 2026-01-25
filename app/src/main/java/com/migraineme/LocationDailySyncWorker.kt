@@ -18,6 +18,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
+/**
+ * Daily worker that uploads device location to user_location_daily.
+ * Runs at 9 AM device time and handles backfill for missing days.
+ */
 class LocationDailySyncWorker(
     appContext: Context,
     params: WorkerParameters
@@ -25,7 +29,6 @@ class LocationDailySyncWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         var shouldScheduleNext = true
-
         try {
             Log.d(LOG_TAG, "---- Running LocationDailySyncWorker ----")
 
@@ -37,7 +40,7 @@ class LocationDailySyncWorker(
             }
 
             if (!DataCollectionSettings.isActive(applicationContext, "user_location_daily", wearable = null, defaultValue = true)) {
-                Log.d(LOG_TAG, "user_location_daily disabled — skip")
+                Log.d(LOG_TAG, "user_location_daily disabled – skip")
                 return@withContext Result.success()
             }
 
@@ -53,6 +56,9 @@ class LocationDailySyncWorker(
 
             val lat = loc.latitude
             val lon = loc.longitude
+
+            // Get device timezone once
+            val deviceTimezone = ZoneId.systemDefault().id  // e.g., "Europe/London"
 
             val latestStr = svc.latestUserLocationDate(access, "device")
             val latest = latestStr?.let { LocalDate.parse(it) }
@@ -82,12 +88,13 @@ class LocationDailySyncWorker(
                         date = d.toString(),
                         latitude = lat,
                         longitude = lon,
-                        source = "device"
+                        source = "device",
+                        timezone = deviceTimezone  // Send timezone from device
                     )
                     ok++
                 }.onFailure { e ->
                     fail++
-                    Log.e(LOG_TAG, "Upsert failed for ${d} (lat=$lat lon=$lon)", e)
+                    Log.e(LOG_TAG, "Upsert failed for $d (lat=$lat lon=$lon)", e)
                 }
             }
 
@@ -113,7 +120,6 @@ class LocationDailySyncWorker(
     }
 
     companion object {
-
         private const val UNIQUE = "location_daily_worker"
         private const val LOG_TAG = "LocationDailySync"
 
@@ -150,8 +156,8 @@ class LocationDailySyncWorker(
             }
 
             val svc = SupabasePersonalService(context)
-
             val today = LocalDate.now(ZoneId.systemDefault())
+
             val latestStr = svc.latestUserLocationDate(accessToken, "device")
             val latest = latestStr?.let { LocalDate.parse(it) }
 
@@ -161,6 +167,9 @@ class LocationDailySyncWorker(
             val loc = getDeviceLocation(context) ?: return
             val lat = loc.latitude
             val lon = loc.longitude
+
+            // Get device timezone
+            val deviceTimezone = ZoneId.systemDefault().id
 
             var d = start
             var fail = 0
@@ -172,11 +181,12 @@ class LocationDailySyncWorker(
                         date = d.toString(),
                         latitude = lat,
                         longitude = lon,
-                        source = "device"
+                        source = "device",
+                        timezone = deviceTimezone  // Send timezone from device
                     )
                 }.onFailure { e ->
                     fail++
-                    Log.e(LOG_TAG, "Backfill upsert failed for ${d} (lat=$lat lon=$lon)", e)
+                    Log.e(LOG_TAG, "Backfill upsert failed for $d (lat=$lat lon=$lon)", e)
                 }
                 d = d.plusDays(1)
             }

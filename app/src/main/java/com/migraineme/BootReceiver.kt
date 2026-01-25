@@ -6,21 +6,17 @@ import android.content.Intent
 import android.util.Log
 
 /**
- * Reschedules background workers after device boot, app update, or process death.
+ * Restarts workers after device boot/reboot or app update.
  *
- * This ensures that ambient noise sampling and other workers continue running
- * even after the phone restarts or the app is killed.
- *
- * Registered in AndroidManifest.xml to receive:
- * - BOOT_COMPLETED (after device fully boots)
- * - LOCKED_BOOT_COMPLETED (direct boot mode on Android 7+)
- * - MY_PACKAGE_REPLACED (after app update)
+ * This ensures ambient noise continues collecting even after:
+ * - Phone restart
+ * - Phone dies and reboots
+ * - App is updated
  */
 class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         val action = intent?.action ?: return
-
         Log.d(TAG, "Received broadcast: $action")
 
         when (action) {
@@ -39,7 +35,6 @@ class BootReceiver : BroadcastReceiver() {
         rescheduleAmbientNoiseSampling(appContext)
 
         // Add other workers here as needed in the future
-
         Log.d(TAG, "Worker rescheduling complete")
     }
 
@@ -56,9 +51,11 @@ class BootReceiver : BroadcastReceiver() {
             if (enabled) {
                 Log.d(TAG, "Ambient noise sampling is enabled - rescheduling worker")
                 AmbientNoiseSampleWorker.schedule(context)
+                AmbientNoiseWatchdogWorker.schedule(context) // Start watchdog!
             } else {
                 Log.d(TAG, "Ambient noise sampling is disabled - ensuring worker is cancelled")
                 AmbientNoiseSampleWorker.cancel(context)
+                AmbientNoiseWatchdogWorker.cancel(context) // Stop watchdog!
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error rescheduling ambient noise sampling: ${e.message}", e)

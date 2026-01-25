@@ -3,6 +3,8 @@ package com.migraineme
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -77,6 +79,17 @@ fun DataSettingsScreen() {
     val context = LocalContext.current.applicationContext
     val scrollState = rememberScrollState()
 
+    // Microphone permission launcher for ambient noise
+    val micPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            // Permission denied - user can't enable ambient noise without it
+            // The toggle will remain OFF
+        }
+        // If granted, the DataRowUi will detect it and proceed
+    }
+
     // Connected wearables (only WHOOP is implemented in the codebase right now)
     val whoopConnected = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -107,8 +120,10 @@ fun DataSettingsScreen() {
         )
         if (ambientOn) {
             AmbientNoiseSampleWorker.schedule(context)
+            AmbientNoiseWatchdogWorker.schedule(context) // Ensure watchdog is running
         } else {
             AmbientNoiseSampleWorker.cancel(context)
+            AmbientNoiseWatchdogWorker.cancel(context)
         }
     }
 
@@ -121,10 +136,17 @@ fun DataSettingsScreen() {
         )
         if (screenTimeOn && ScreenTimePermissionHelper.hasPermission(context)) {
             ScreenTimeDailySyncWorker.scheduleNext(context)
-        } else if (!ScreenTimePermissionHelper.hasPermission(context)) {
-            // Permission not granted - don't start worker
+            ScreenTimeWatchdogWorker.schedule(context) // Ensure watchdog is running
+        } else {
             ScreenTimeDailySyncWorker.cancel(context)
+            ScreenTimeWatchdogWorker.cancel(context)
         }
+    }
+
+    // Location worker scheduling - always on
+    LaunchedEffect(Unit) {
+        LocationDailySyncWorker.scheduleNext(context)
+        LocationWatchdogWorker.schedule(context)
     }
 
     // Define all rows (tables) grouped into the 5 sections you requested.
@@ -218,6 +240,7 @@ fun DataSettingsScreen() {
                             enabled = true,
                             greyOut = greyOutWearableRow,
                             refreshTick = refreshTick,
+                            micPermissionLauncher = micPermissionLauncher,
                             onAnyChange = { bumpRefresh() }
                         )
 
@@ -253,11 +276,15 @@ private fun DataRowUi(
     enabled: Boolean,
     greyOut: Boolean,
     refreshTick: Int,
+    micPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
     onAnyChange: () -> Unit
 ) {
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
     val edge = remember { EdgeFunctionsService() }
+
+    // Battery optimization dialog state
+    var showBatteryOptDialog by remember { mutableStateOf(false) }
 
     // Screen time permission handling
     val isScreenTimeRow = row.table == "screen_time_daily" && row.collectedByKind == CollectedByKind.PHONE
@@ -534,10 +561,30 @@ private fun DataRowUi(
                                 }
                             }
 
-                            // Ambient noise worker scheduling
+                            // Ambient noise worker scheduling + watchdog
                             if (row.collectedByKind == CollectedByKind.PHONE && row.table == "ambient_noise_samples") {
-                                if (new) AmbientNoiseSampleWorker.schedule(context)
-                                else AmbientNoiseSampleWorker.cancel(context)
+                                if (new) {
+                                    // Step 1: Check microphone permission FIRST
+                                    if (!MicrophonePermissionHelper.hasPermission(context)) {
+                                        // Request microphone permission
+                                        micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                        // Don't enable yet - wait for permission
+                                        active = false
+                                        store.setActive(table = row.table, wearable = null, value = false)
+                                    } else {
+                                        // Step 2: Check battery optimization
+                                        if (BatteryOptimizationHelper.shouldRequestBatteryOptimization(context)) {
+                                            showBatteryOptDialog = true
+                                        }
+
+                                        // Both permissions OK - start workers
+                                        AmbientNoiseSampleWorker.schedule(context)
+                                        AmbientNoiseWatchdogWorker.schedule(context) // Start watchdog!
+                                    }
+                                } else {
+                                    AmbientNoiseSampleWorker.cancel(context)
+                                    AmbientNoiseWatchdogWorker.cancel(context) // Stop watchdog!
+                                }
                             }
 
                             // Screen time worker scheduling
@@ -553,9 +600,11 @@ private fun DataRowUi(
                                     } else {
                                         // Permission granted - schedule worker
                                         ScreenTimeDailySyncWorker.scheduleNext(context)
+                                        ScreenTimeWatchdogWorker.schedule(context) // Start watchdog!
                                     }
                                 } else {
                                     ScreenTimeDailySyncWorker.cancel(context)
+                                    ScreenTimeWatchdogWorker.cancel(context) // Stop watchdog!
                                 }
                             }
 
@@ -576,6 +625,21 @@ private fun DataRowUi(
             onOpenSettings = {
                 ScreenTimePermissionHelper.openUsageAccessSettings(context)
                 showScreenTimePermissionDialog = false
+            }
+        )
+    }
+
+    // Battery optimization dialog
+    if (showBatteryOptDialog) {
+        BatteryOptimizationDialog(
+            onDismiss = {
+                showBatteryOptDialog = false
+                BatteryOptimizationHelper.markAsAsked(context)
+            },
+            onOpenSettings = {
+                BatteryOptimizationHelper.requestBatteryOptimizationExemption(context)
+                BatteryOptimizationHelper.markAsAsked(context)
+                showBatteryOptDialog = false
             }
         )
     }
