@@ -3,6 +3,7 @@ package com.migraineme
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.PowerManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +37,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.launch
 
 /**
@@ -110,6 +115,19 @@ fun DataSettingsScreen() {
         refreshTick += 1
     }
 
+    // Used to refresh permission-related UI state when user returns from Android Settings.
+    var permissionRefreshTick by remember { mutableIntStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                permissionRefreshTick += 1
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     // Ensure the ambient noise worker scheduling matches current setting (including default-on).
     // IMPORTANT: do not re-run this on refreshTick; rescheduling periodic work can keep pushing out the next run.
     LaunchedEffect(Unit) {
@@ -118,7 +136,11 @@ fun DataSettingsScreen() {
             wearable = null,
             defaultValue = true
         )
-        if (ambientOn) {
+
+        val micGranted = MicrophonePermissionHelper.hasPermission(context)
+        val batteryExempt = isBatteryOptimizationExempt(context)
+
+        if (ambientOn && micGranted && batteryExempt) {
             AmbientNoiseSampleWorker.schedule(context)
             AmbientNoiseWatchdogWorker.schedule(context) // Ensure watchdog is running
         } else {
@@ -241,6 +263,7 @@ fun DataSettingsScreen() {
                             greyOut = greyOutWearableRow,
                             refreshTick = refreshTick,
                             micPermissionLauncher = micPermissionLauncher,
+                            permissionRefreshTick = permissionRefreshTick,
                             onAnyChange = { bumpRefresh() }
                         )
 
@@ -277,6 +300,7 @@ private fun DataRowUi(
     greyOut: Boolean,
     refreshTick: Int,
     micPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    permissionRefreshTick: Int,
     onAnyChange: () -> Unit
 ) {
     val context = LocalContext.current.applicationContext
@@ -306,6 +330,14 @@ private fun DataRowUi(
         fine || coarse
     }
 
+    val isAmbientNoiseRow = row.table == "ambient_noise_samples" && row.collectedByKind == CollectedByKind.PHONE
+    val micPermissionGranted = remember(refreshTick, permissionRefreshTick) {
+        if (isAmbientNoiseRow) MicrophonePermissionHelper.hasPermission(context) else true
+    }
+    val batteryOptimizationExempt = remember(refreshTick, permissionRefreshTick) {
+        if (isAmbientNoiseRow) isBatteryOptimizationExempt(context) else true
+    }
+
     // Wearable selection (dropdown) is stored per-table.
     // Phone/manual/reference rows don't use it.
     var selectedWearable by remember(row.table, refreshTick) {
@@ -325,6 +357,33 @@ private fun DataRowUi(
                 )
             }
         )
+    }
+
+    // Ambient noise requires BOTH prerequisites before it can remain ON.
+    // If it was previously enabled (or defaulted ON) but prerequisites are missing, force it OFF to keep state consistent.
+    LaunchedEffect(isAmbientNoiseRow, micPermissionGranted, batteryOptimizationExempt, refreshTick) {
+        if (isAmbientNoiseRow) {
+            val stored = store.getActive(
+                table = row.table,
+                wearable = null,
+                defaultValue = defaultActiveFor(row)
+            )
+            if (stored && (!micPermissionGranted || !batteryOptimizationExempt)) {
+                active = false
+                store.setActive(table = row.table, wearable = null, value = false)
+
+                scope.launch {
+                    edge.upsertMetricSetting(
+                        context = context,
+                        metric = row.table,
+                        enabled = false
+                    )
+                    AmbientNoiseSampleWorker.cancel(context)
+                    AmbientNoiseWatchdogWorker.cancel(context)
+                    onAnyChange()
+                }
+            }
+        }
     }
 
     // If connected wearables change and current selection is no longer allowed, snap to first available.
@@ -457,6 +516,59 @@ private fun DataRowUi(
                     modifier = Modifier.alpha(0.70f)
                 )
             }
+
+            if (isAmbientNoiseRow) {
+                Spacer(Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Microphone permission",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.alpha(0.75f)
+                    )
+                    Switch(
+                        checked = micPermissionGranted,
+                        onCheckedChange = { newVal ->
+                            if (newVal && !micPermissionGranted) {
+                                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            }
+                        },
+                        enabled = !micPermissionGranted
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Battery optimization exemption",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.alpha(0.75f)
+                    )
+                    Switch(
+                        checked = batteryOptimizationExempt,
+                        onCheckedChange = { newVal ->
+                            if (newVal && !batteryOptimizationExempt) {
+                                showBatteryOptDialog = true
+                            }
+                        },
+                        enabled = !batteryOptimizationExempt
+                    )
+                }
+
+                if (!micPermissionGranted || !batteryOptimizationExempt) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Enable both switches to turn on ambient noise.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.alpha(0.70f)
+                    )
+                }
+            }
         }
 
         // Collected By column
@@ -508,13 +620,18 @@ private fun DataRowUi(
         // Active column
         Column(modifier = Modifier.weight(0.20f)) {
             val canToggleBase = enabled && row.collectedByKind != CollectedByKind.REFERENCE && !isLocationRow
-            val canToggle = canToggleBase && (!isStressRow || depsOkForStress)
+            val canToggle =
+                canToggleBase &&
+                        (!isStressRow || depsOkForStress) &&
+                        (!isAmbientNoiseRow || (micPermissionGranted && batteryOptimizationExempt))
 
             Row {
                 Switch(
                     checked = active,
                     onCheckedChange = { new ->
                         if (!canToggle) return@Switch
+
+                        if (isAmbientNoiseRow && new && (!micPermissionGranted || !batteryOptimizationExempt)) return@Switch
 
                         active = new
 
@@ -525,9 +642,32 @@ private fun DataRowUi(
                             value = new
                         )
 
-                        // Supabase persistence (new): update metric_settings.enabled
-                        // Metric key is the table name (row.table), matching your metric_settings.metric convention.
                         scope.launch {
+                            if (isAmbientNoiseRow) {
+                                if (new) {
+                                    // Prerequisites (mic + battery) are required before enabling ambient noise.
+                                    // At this point the main switch is only enabled when both are satisfied.
+                                    edge.upsertMetricSetting(
+                                        context = context,
+                                        metric = row.table,
+                                        enabled = true
+                                    )
+                                    AmbientNoiseSampleWorker.schedule(context)
+                                    AmbientNoiseWatchdogWorker.schedule(context)
+                                } else {
+                                    edge.upsertMetricSetting(
+                                        context = context,
+                                        metric = row.table,
+                                        enabled = false
+                                    )
+                                    AmbientNoiseSampleWorker.cancel(context)
+                                    AmbientNoiseWatchdogWorker.cancel(context)
+                                }
+
+                                onAnyChange()
+                                return@launch
+                            }
+
                             edge.upsertMetricSetting(
                                 context = context,
                                 metric = row.table,
@@ -558,32 +698,6 @@ private fun DataRowUi(
                                             enabled = false
                                         )
                                     }
-                                }
-                            }
-
-                            // Ambient noise worker scheduling + watchdog
-                            if (row.collectedByKind == CollectedByKind.PHONE && row.table == "ambient_noise_samples") {
-                                if (new) {
-                                    // Step 1: Check microphone permission FIRST
-                                    if (!MicrophonePermissionHelper.hasPermission(context)) {
-                                        // Request microphone permission
-                                        micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                        // Don't enable yet - wait for permission
-                                        active = false
-                                        store.setActive(table = row.table, wearable = null, value = false)
-                                    } else {
-                                        // Step 2: Check battery optimization
-                                        if (BatteryOptimizationHelper.shouldRequestBatteryOptimization(context)) {
-                                            showBatteryOptDialog = true
-                                        }
-
-                                        // Both permissions OK - start workers
-                                        AmbientNoiseSampleWorker.schedule(context)
-                                        AmbientNoiseWatchdogWorker.schedule(context) // Start watchdog!
-                                    }
-                                } else {
-                                    AmbientNoiseSampleWorker.cancel(context)
-                                    AmbientNoiseWatchdogWorker.cancel(context) // Stop watchdog!
                                 }
                             }
 
@@ -732,6 +846,11 @@ private enum class CollectedByKind {
 
 private enum class WearableSource(val key: String, val label: String) {
     WHOOP("whoop", "WHOOP")
+}
+
+private fun isBatteryOptimizationExempt(context: Context): Boolean {
+    val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return false
+    return pm.isIgnoringBatteryOptimizations(context.packageName)
 }
 
 /**
