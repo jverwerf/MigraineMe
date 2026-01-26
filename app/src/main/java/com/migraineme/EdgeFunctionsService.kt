@@ -1,11 +1,12 @@
-// FILE: app/src/main/java/com/migraineme/EdgeFunctionsService.kt
 package com.migraineme
 
 import android.content.Context
 import android.util.Log
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -26,7 +27,6 @@ class EdgeFunctionsService {
         @SerialName("access_token") val accessToken: String,
         @SerialName("refresh_token") val refreshToken: String,
         @SerialName("token_type") val tokenType: String,
-        // timestamptz in Supabase. Send ISO8601 or null.
         @SerialName("expires_at") val expiresAtIso: String? = null
     )
 
@@ -35,7 +35,17 @@ class EdgeFunctionsService {
         @SerialName("user_id") val userId: String,
         val metric: String,
         val enabled: Boolean,
+        @SerialName("preferred_source") val preferredSource: String? = null,
         @SerialName("updated_at") val updatedAtIso: String
+    )
+
+    @Serializable
+    data class MetricSettingResponse(
+        @SerialName("user_id") val userId: String,
+        val metric: String,
+        val enabled: Boolean,
+        @SerialName("preferred_source") val preferredSource: String? = null,
+        @SerialName("updated_at") val updatedAt: String
     )
 
     private fun buildClient(): HttpClient {
@@ -52,11 +62,6 @@ class EdgeFunctionsService {
         }
     }
 
-    /**
-     * Upserts WHOOP token into Supabase (public.whoop_tokens) via edge function.
-     *
-     * Returns true if request succeeded (2xx), false otherwise.
-     */
     suspend fun upsertWhoopTokenToSupabase(context: Context, token: WhoopToken): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
@@ -97,70 +102,28 @@ class EdgeFunctionsService {
         }
     }
 
-    /**
-     * NEW:
-     * Client-side upsert into public.metric_settings via PostgREST.
-     *
-     * Requires:
-     * - RLS policies allowing authenticated users to select/insert/update their own rows
-     * - grants for authenticated on public.metric_settings
-     */
-    suspend fun upsertMetricSetting(context: Context, metric: String, enabled: Boolean): Boolean {
+    suspend fun enqueueLoginBackfill(context: Context): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
-        val userId = SessionStore.readUserId(appCtx) ?: return false
-
-        val body = MetricSettingUpsertBody(
-            userId = userId,
-            metric = metric,
-            enabled = enabled,
-            updatedAtIso = Instant.now().toString()
-        )
 
         val client = buildClient()
         return try {
-            val url =
-                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?on_conflict=user_id,metric"
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/enqueue-login-backfill"
 
             val res = client.post(url) {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
-                header("Prefer", "resolution=merge-duplicates")
                 contentType(ContentType.Application.Json)
-                setBody(body)
             }
 
             val ok = res.status.value in 200..299
             if (!ok) {
-                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
-                Log.e("EdgeFunctionsService", "upsertMetricSetting failed: ${res.status.value} $bodyText")
+                Log.e("EdgeFunctionsService", "enqueueLoginBackfill failed: ${res.status.value}")
             }
             ok
         } catch (t: Throwable) {
-            Log.e("EdgeFunctionsService", "upsertMetricSetting exception", t)
+            Log.e("EdgeFunctionsService", "enqueueLoginBackfill exception", t)
             false
-        } finally {
-            client.close()
-        }
-    }
-
-    /**
-     * Best-effort enqueue of login backfill. Does not throw.
-     */
-    suspend fun enqueueLoginBackfill(context: Context) {
-        val appCtx = context.applicationContext
-        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return
-
-        val client = HttpClient(Android)
-        try {
-            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/enqueue-login-backfill"
-            client.post(url) {
-                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                header("Authorization", "Bearer $supaAccessToken")
-                header("Content-Type", "application/json")
-            }
-        } catch (_: Throwable) {
-            // best-effort
         } finally {
             client.close()
         }
@@ -173,7 +136,7 @@ class EdgeFunctionsService {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
 
-        val client = HttpClient(Android)
+        val client = buildClient()
         return try {
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/enqueue-login-backfill"
             val res = client.post(url) {
@@ -192,6 +155,81 @@ class EdgeFunctionsService {
         } catch (t: Throwable) {
             Log.w("EdgeFunctionsService", "enqueueLoginBackfill exception", t)
             false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertMetricSetting(
+        context: Context,
+        metric: String,
+        enabled: Boolean,
+        preferredSource: String? = null
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = MetricSettingUpsertBody(
+            userId = userId,
+            metric = metric,
+            enabled = enabled,
+            preferredSource = preferredSource,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?on_conflict=user_id,metric"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e(
+                    "EdgeFunctionsService",
+                    "upsertMetricSetting failed: ${res.status} - ${res.bodyAsText()}"
+                )
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "upsertMetricSetting exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun getMetricSettings(context: Context): List<MetricSettingResponse> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val userId = SessionStore.readUserId(appCtx) ?: return emptyList()
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?user_id=eq.$userId&select=*"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<MetricSettingResponse>>()
+            } else {
+                Log.e("EdgeFunctionsService", "getMetricSettings failed: ${res.status}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getMetricSettings error: ${e.message}", e)
+            emptyList()
         } finally {
             client.close()
         }

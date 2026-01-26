@@ -4,6 +4,7 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
+import android.os.Build
 import kotlin.math.ln
 import kotlin.math.sqrt
 
@@ -28,6 +29,44 @@ object AmbientNoiseSampler {
 
     private const val TAG = "AmbientNoiseSampler"
 
+    /**
+     * Prefer an unprocessed microphone stream when available (avoids speech-focused DSP that can
+     * suppress to zeros on some devices). Fallback to MIC, then (last resort) VOICE_RECOGNITION.
+     */
+    private fun createAudioRecord(
+        sampleRate: Int,
+        channelConfig: Int,
+        audioFormat: Int,
+        bufferSize: Int
+    ): AudioRecord {
+        val sources = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                add(MediaRecorder.AudioSource.UNPROCESSED)
+            }
+            add(MediaRecorder.AudioSource.MIC)
+            // Last resort for devices that refuse MIC/UNPROCESSED.
+            add(MediaRecorder.AudioSource.VOICE_RECOGNITION)
+        }
+
+        var lastErr: Throwable? = null
+        for (src in sources) {
+            try {
+                val r = AudioRecord(src, sampleRate, channelConfig, audioFormat, bufferSize)
+                if (r.state == AudioRecord.STATE_INITIALIZED) {
+                    Log.d(TAG, "AudioRecord initialized with source=$src")
+                    return r
+                }
+                Log.w(TAG, "AudioRecord not initialized with source=$src")
+                runCatching { r.release() }
+            } catch (t: Throwable) {
+                lastErr = t
+                Log.w(TAG, "AudioRecord failed with source=$src: ${t.message}")
+            }
+        }
+
+        throw IllegalStateException("Unable to initialize AudioRecord with available sources", lastErr)
+    }
+
     fun capture(durationMs: Long = 60_000L): AmbientNoiseMetrics {
         val sampleRate = 16_000
         val channelConfig = AudioFormat.CHANNEL_IN_MONO
@@ -39,12 +78,11 @@ object AmbientNoiseSampler {
         var recorder: AudioRecord? = null
 
         try {
-            recorder = AudioRecord(
-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                sampleRate,
-                channelConfig,
-                audioFormat,
-                bufferSize
+            recorder = createAudioRecord(
+                sampleRate = sampleRate,
+                channelConfig = channelConfig,
+                audioFormat = audioFormat,
+                bufferSize = bufferSize
             )
 
             if (recorder.state != AudioRecord.STATE_INITIALIZED) {

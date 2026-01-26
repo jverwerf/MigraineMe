@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.core.content.ContextCompat
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -28,61 +28,75 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.MenstruationPeriodRecord
+import androidx.health.connect.client.records.NutritionRecord
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
- * Data Settings Screen
- *
- * Displays the 5 requested sections and lets the user toggle per-table collection.
- * - Phone-collected tables: Collected By fixed to "Phone"
- * - Wearable-collected tables: Collected By is a dropdown, limited to connected wearables
- * - If no wearable is connected, wearable rows are greyed out + disabled
- *
- * Settings are persisted locally (SharedPreferences). Workers will be gated in the next step.
- *
- * CHANGE:
- * - When a toggle is switched, also upsert metric_settings in Supabase via EdgeFunctionsService
- *   (client-side PostgREST; no edge function needed).
- *
- * ADDITION (Stress):
- * - Added a wearable metric row for `stress_index_daily`
- * - Stress toggle is only available when BOTH `hrv_daily` and `resting_hr_daily` are enabled
- *   for the same selected wearable source (e.g., WHOOP). If either is off, Stress is forced off.
- *
- * ADDITION (Refresh):
- * - After any toggle or wearable dropdown change, we force a screen refresh (repull) by re-reading
- *   stored preferences into Compose state.
- *
- * ADDITION (Ambient noise):
- * - Added phone metric row for `ambient_noise_samples`
- * - When enabled, schedules AmbientNoiseSampleWorker
- * - When disabled, cancels AmbientNoiseSampleWorker
- * - Defaults to ON (unless user explicitly turned it off)
- *
- * ADDITION (Screen time):
- * - Added phone metric row for `screen_time_daily`
- * - When enabled, schedules ScreenTimeDailySyncWorker
- * - When disabled, cancels ScreenTimeDailySyncWorker
- * - Requests PACKAGE_USAGE_STATS permission when user toggles ON
- * - Defaults to ON (unless user explicitly turned it off)
+ * Data Settings Screen - Uses Supabase as source of truth
  */
 @Composable
 fun DataSettingsScreen() {
     val context = LocalContext.current.applicationContext
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val edge = remember { EdgeFunctionsService() }
+
+    // Supabase metric settings (source of truth)
+    val metricSettingsMap = remember { mutableStateOf<Map<String, EdgeFunctionsService.MetricSettingResponse>>(emptyMap()) }
+    val settingsLoading = remember { mutableStateOf(true) }
+
+    // Load settings from Supabase on start
+    LaunchedEffect(Unit) {
+        settingsLoading.value = true
+        withContext(Dispatchers.IO) {
+            try {
+                val settings = edge.getMetricSettings(context)
+                android.util.Log.d("DataSettings", "=== RAW SETTINGS FROM SUPABASE ===")
+                settings.forEach { setting ->
+                    android.util.Log.d("DataSettings", "  metric=${setting.metric}, enabled=${setting.enabled}, preferredSource=${setting.preferredSource}")
+                }
+
+                // Create map with key format: "metric_preferredSource"
+                metricSettingsMap.value = settings.associateBy {
+                    val key = if (it.preferredSource != null) {
+                        "${it.metric}_${it.preferredSource}"
+                    } else {
+                        "${it.metric}_null"
+                    }
+                    android.util.Log.d("DataSettings", "  Created key: $key for metric ${it.metric}")
+                    key
+                }
+                android.util.Log.d("DataSettings", "=== FINAL MAP ===")
+                metricSettingsMap.value.forEach { (key, value) ->
+                    android.util.Log.d("DataSettings", "  $key -> enabled=${value.enabled}")
+                }
+                android.util.Log.d("DataSettings", "Loaded ${settings.size} settings from Supabase")
+            } catch (e: Exception) {
+                android.util.Log.e("DataSettings", "Failed to load settings from Supabase: ${e.message}", e)
+            }
+        }
+        settingsLoading.value = false
+    }
 
     // Microphone permission launcher for ambient noise
     val micPermissionLauncher = rememberLauncherForActivityResult(
@@ -90,12 +104,10 @@ fun DataSettingsScreen() {
     ) { isGranted ->
         if (!isGranted) {
             // Permission denied - user can't enable ambient noise without it
-            // The toggle will remain OFF
         }
-        // If granted, the DataRowUi will detect it and proceed
     }
 
-    // Connected wearables (only WHOOP is implemented in the codebase right now)
+    // Connected wearables
     val whoopConnected = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         whoopConnected.value = WhoopTokenStore(context).load() != null
@@ -109,13 +121,32 @@ fun DataSettingsScreen() {
 
     val store = remember { DataSettingsStore(context) }
 
-    // Increment to force "repull" (reload) from prefs after any change.
     var refreshTick by remember { mutableIntStateOf(0) }
     fun bumpRefresh() {
         refreshTick += 1
     }
 
-    // Used to refresh permission-related UI state when user returns from Android Settings.
+    // Reload settings when refreshTick changes
+    LaunchedEffect(refreshTick) {
+        if (refreshTick > 0) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val settings = edge.getMetricSettings(context)
+                    metricSettingsMap.value = settings.associateBy {
+                        if (it.preferredSource != null) {
+                            "${it.metric}_${it.preferredSource}"
+                        } else {
+                            "${it.metric}_null"
+                        }
+                    }
+                    android.util.Log.d("DataSettings", "Reloaded ${settings.size} settings from Supabase")
+                } catch (e: Exception) {
+                    android.util.Log.e("DataSettings", "Failed to reload settings: ${e.message}")
+                }
+            }
+        }
+    }
+
     var permissionRefreshTick by remember { mutableIntStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -128,21 +159,114 @@ fun DataSettingsScreen() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Ensure the ambient noise worker scheduling matches current setting (including default-on).
-    // IMPORTANT: do not re-run this on refreshTick; rescheduling periodic work can keep pushing out the next run.
-    LaunchedEffect(Unit) {
-        val ambientOn = store.getActive(
-            table = "ambient_noise_samples",
-            wearable = null,
-            defaultValue = true
-        )
+    // Reload settings from Supabase when screen resumes
+    LaunchedEffect(permissionRefreshTick) {
+        if (permissionRefreshTick > 0) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val settings = edge.getMetricSettings(context)
+                    metricSettingsMap.value = settings.associateBy {
+                        if (it.preferredSource != null) {
+                            "${it.metric}_${it.preferredSource}"
+                        } else {
+                            "${it.metric}_null"
+                        }
+                    }
+                    android.util.Log.d("DataSettings", "Reloaded on resume: ${settings.size} settings from Supabase")
+                } catch (e: Exception) {
+                    android.util.Log.e("DataSettings", "Failed to reload on resume: ${e.message}")
+                }
+            }
+        }
+    }
+
+    // Health Connect connection state (Diet permissions are tracked separately)
+    val healthConnectNutritionConnected = remember { mutableStateOf(false) }
+    val healthConnectMenstruationConnected = remember { mutableStateOf(false) }
+    LaunchedEffect(permissionRefreshTick) {
+        healthConnectNutritionConnected.value = hasHealthConnectNutritionPermission(context)
+        healthConnectMenstruationConnected.value = hasHealthConnectMenstruationPermission(context)
+    }
+
+    // ===== MENSTRUATION SETTINGS STATE =====
+    val menstruationSettings = remember { mutableStateOf<MenstruationSettings?>(null) }
+    val showMenstruationSetupDialog = remember { mutableStateOf(false) }
+    val showMenstruationEditDialog = remember { mutableStateOf(false) }
+    var menstruationRefreshTick by remember { mutableIntStateOf(0) }
+
+    // Load menstruation settings when Menstruation permission is granted
+    LaunchedEffect(healthConnectMenstruationConnected.value, menstruationRefreshTick) {
+        if (healthConnectMenstruationConnected.value) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val accessToken = SessionStore.getValidAccessToken(context)
+                    if (accessToken != null) {
+                        val service = SupabaseMenstruationService(context)
+                        menstruationSettings.value = service.getSettings(accessToken)
+                        android.util.Log.d("DataSettings", "Loaded menstruation settings: ${menstruationSettings.value}")
+                    } else {
+                        android.util.Log.w("DataSettings", "No access token available")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DataSettings", "Failed to load menstruation settings: ${e.message}")
+                }
+            }
+        }
+    }
+
+    // Auto-enable screen time when permission is granted
+    LaunchedEffect(permissionRefreshTick) {
+        if (permissionRefreshTick > 0) {
+            if (ScreenTimePermissionHelper.hasPermission(context)) {
+                // Check Supabase state
+                val settingKey = "screen_time_daily_null"
+                val screenTimeOn = metricSettingsMap.value[settingKey]?.enabled ?: true
+
+                if (!screenTimeOn) {
+                    android.util.Log.d("DataSettings", "Auto-enabling screen time after permission grant")
+
+                    ScreenTimeDailySyncWorker.scheduleNext(context)
+                    ScreenTimeWatchdogWorker.schedule(context)
+
+                    val accessToken = SessionStore.getValidAccessToken(context)
+                    if (accessToken != null) {
+                        scope.launch(Dispatchers.IO) {
+                            try {
+                                edge.upsertMetricSetting(
+                                    context = context,
+                                    metric = "screen_time_daily",
+                                    enabled = true,
+                                    preferredSource = null
+                                )
+                            } catch (e: Exception) {
+                                android.util.Log.e("DataSettings", "Supabase sync failed: ${e.message}")
+                            }
+                        }
+                    }
+
+                    bumpRefresh()
+
+                    android.widget.Toast.makeText(
+                        context,
+                        "Screen time tracking enabled!",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    // Ambient noise worker scheduling
+    LaunchedEffect(metricSettingsMap.value) {
+        val ambientKey = "ambient_noise_samples_null"
+        val ambientOn = metricSettingsMap.value[ambientKey]?.enabled ?: true
 
         val micGranted = MicrophonePermissionHelper.hasPermission(context)
         val batteryExempt = isBatteryOptimizationExempt(context)
 
         if (ambientOn && micGranted && batteryExempt) {
             AmbientNoiseSampleWorker.schedule(context)
-            AmbientNoiseWatchdogWorker.schedule(context) // Ensure watchdog is running
+            AmbientNoiseWatchdogWorker.schedule(context)
         } else {
             AmbientNoiseSampleWorker.cancel(context)
             AmbientNoiseWatchdogWorker.cancel(context)
@@ -150,90 +274,102 @@ fun DataSettingsScreen() {
     }
 
     // Screen time worker scheduling
-    LaunchedEffect(Unit) {
-        val screenTimeOn = store.getActive(
-            table = "screen_time_daily",
-            wearable = null,
-            defaultValue = true
-        )
+    LaunchedEffect(metricSettingsMap.value) {
+        val screenTimeKey = "screen_time_daily_null"
+        val screenTimeOn = metricSettingsMap.value[screenTimeKey]?.enabled ?: true
+
         if (screenTimeOn && ScreenTimePermissionHelper.hasPermission(context)) {
             ScreenTimeDailySyncWorker.scheduleNext(context)
-            ScreenTimeWatchdogWorker.schedule(context) // Ensure watchdog is running
+            ScreenTimeWatchdogWorker.schedule(context)
         } else {
             ScreenTimeDailySyncWorker.cancel(context)
             ScreenTimeWatchdogWorker.cancel(context)
         }
     }
 
-    // Location worker scheduling - always on
+    // Location worker scheduling
     LaunchedEffect(Unit) {
         LocationDailySyncWorker.scheduleNext(context)
         LocationWatchdogWorker.schedule(context)
     }
 
-    // Define all rows (tables) grouped into the 5 sections you requested.
-    val sections = remember {
-        listOf(
-            DataSection(
-                title = "Sleep",
-                rows = listOf(
-                    wearableRow("sleep_duration_daily", "Wearable sleep sync"),
-                    wearableRow("sleep_score_daily", "Wearable sleep sync"),
-                    wearableRow("sleep_efficiency_daily", "Wearable sleep sync"),
-                    wearableRow("sleep_stages_daily", "Wearable sleep sync"),
-                    wearableRow("sleep_disturbances_daily", "Wearable sleep sync"),
-                    wearableRow("fell_asleep_time_daily", "Wearable sleep sync"),
-                    wearableRow("woke_up_time_daily", "Wearable sleep sync")
-                )
-            ),
-            DataSection(
-                title = "Physical Health",
-                rows = listOf(
-                    wearableRow("recovery_score_daily", "Wearable recovery sync"),
-                    wearableRow("resting_hr_daily", "Wearable recovery sync"),
-                    wearableRow("hrv_daily", "Wearable recovery sync"),
-                    wearableRow("skin_temp_daily", "Wearable recovery sync"),
-                    wearableRow("spo2_daily", "Wearable recovery sync"),
-                    wearableRow("time_in_high_hr_zones_daily", "Wearable workout sync"),
-                    // Present in schema; no collector in provided Kotlin yet.
-                    DataRow(
-                        table = "steps_daily",
-                        collectedByKind = CollectedByKind.WEARABLE,
-                        collectedByLabel = "Wearable steps sync (not implemented)",
-                        defaultWearable = WearableSource.WHOOP
+    val sections = remember(healthConnectNutritionConnected.value, healthConnectMenstruationConnected.value) {
+        buildList {
+            add(
+                DataSection(
+                    title = "Sleep",
+                    rows = listOf(
+                        wearableRow("sleep_duration_daily", "Wearable sleep sync"),
+                        wearableRow("sleep_score_daily", "Wearable sleep sync"),
+                        wearableRow("sleep_efficiency_daily", "Wearable sleep sync"),
+                        wearableRow("sleep_stages_daily", "Wearable sleep sync"),
+                        wearableRow("sleep_disturbances_daily", "Wearable sleep sync"),
+                        wearableRow("fell_asleep_time_daily", "Wearable sleep sync"),
+                        wearableRow("woke_up_time_daily", "Wearable sleep sync")
                     )
                 )
-            ),
-            DataSection(
-                title = "Mental Health",
-                rows = listOf(
-                    // Wearable-derived computed metric (standalone), gated by HRV + Resting HR.
-                    wearableRow("stress_index_daily", "Computed mental stress (requires HRV + Resting HR)"),
-
-                    // Phone-collected screen time
-                    phoneRow("screen_time_daily", "Phone screen time tracking")
-                )
-            ),
-            DataSection(
-                title = "Environment",
-                rows = listOf(
-                    phoneRow("user_location_daily", "Phone GPS/location"),
-                    // Read-only reference tables; shown for completeness.
-                    referenceRow("cities", "Reference"),
-                    referenceRow("weather_daily", "Reference"),
-                    referenceRow("aqi_daily", "Reference"),
-                    referenceRow("pollen_daily", "Reference"),
-                    phoneRow("ambient_noise_samples", "Phone ambient noise samples")
-                )
-            ),
-            DataSection(
-                title = "Misc",
-                rows = listOf(
-                    // Placeholder for any future tables; keep section to satisfy the 5-section requirement.
-                    referenceRow("app_config", "Reference (internal)")
+            )
+            add(
+                DataSection(
+                    title = "Physical Health",
+                    rows = listOf(
+                        wearableRow("recovery_score_daily", "Wearable recovery sync"),
+                        wearableRow("resting_hr_daily", "Wearable recovery sync"),
+                        wearableRow("hrv_daily", "Wearable recovery sync"),
+                        wearableRow("skin_temp_daily", "Wearable recovery sync"),
+                        wearableRow("spo2_daily", "Wearable recovery sync"),
+                        wearableRow("time_in_high_hr_zones_daily", "Wearable workout sync"),
+                        DataRow(
+                            table = "steps_daily",
+                            collectedByKind = CollectedByKind.WEARABLE,
+                            collectedByLabel = "Wearable steps sync (not implemented)",
+                            defaultWearable = WearableSource.WHOOP
+                        )
+                    )
                 )
             )
-        )
+            add(
+                DataSection(
+                    title = "Mental Health",
+                    rows = listOf(
+                        wearableRow("stress_index_daily", "Computed mental stress (requires HRV + Resting HR)"),
+                        phoneRow("screen_time_daily", "Phone screen time tracking")
+                    )
+                )
+            )
+            add(
+                DataSection(
+                    title = "Environment",
+                    rows = listOf(
+                        phoneRow("user_location_daily", "Phone GPS/location"),
+                        referenceRow("cities", "Reference"),
+                        referenceRow("weather_daily", "Reference"),
+                        referenceRow("aqi_daily", "Reference"),
+                        referenceRow("pollen_daily", "Reference"),
+                        phoneRow("ambient_noise_samples", "Phone ambient noise samples")
+                    )
+                )
+            )
+
+            add(
+                DataSection(
+                    title = "Diet",
+                    rows = listOf(
+                        phoneRow("nutrition", "Nutrition (Health Connect)"),
+                        phoneRow("menstruation", "Menstruation (Health Connect)")
+                    )
+                )
+            )
+
+            add(
+                DataSection(
+                    title = "Misc",
+                    rows = listOf(
+                        referenceRow("app_config", "Reference (internal)")
+                    )
+                )
+            )
+        }
     }
 
     Column(
@@ -245,6 +381,11 @@ fun DataSettingsScreen() {
         Text("Data Settings", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(12.dp))
 
+        if (settingsLoading.value) {
+            Text("Loading settings...", style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.height(12.dp))
+        }
+
         for (section in sections) {
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth()
@@ -255,16 +396,26 @@ fun DataSettingsScreen() {
 
                     for ((idx, row) in section.rows.withIndex()) {
                         val greyOutWearableRow = row.collectedByKind == CollectedByKind.WEARABLE && !hasAnyWearable
+                        val greyOutDietRow =
+                            row.collectedByKind == CollectedByKind.PHONE && (
+                                    (row.table == "nutrition" && !healthConnectNutritionConnected.value) ||
+                                            (row.table == "menstruation" && !healthConnectMenstruationConnected.value)
+                                    )
+
                         DataRowUi(
                             row = row,
                             store = store,
                             connectedWearables = connectedWearables,
+                            metricSettingsMap = metricSettingsMap.value,
                             enabled = true,
-                            greyOut = greyOutWearableRow,
+                            greyOut = greyOutWearableRow || greyOutDietRow,
                             refreshTick = refreshTick,
                             micPermissionLauncher = micPermissionLauncher,
                             permissionRefreshTick = permissionRefreshTick,
-                            onAnyChange = { bumpRefresh() }
+                            onAnyChange = { bumpRefresh() },
+                            menstruationSettings = menstruationSettings.value,
+                            showMenstruationSetupDialog = showMenstruationSetupDialog,
+                            showMenstruationEditDialog = showMenstruationEditDialog
                         )
 
                         if (idx != section.rows.lastIndex) {
@@ -273,7 +424,6 @@ fun DataSettingsScreen() {
                         }
                     }
 
-                    // Wearable hint per section if none connected and section contains wearable rows
                     val containsWearable = section.rows.any { it.collectedByKind == CollectedByKind.WEARABLE }
                     if (containsWearable && !hasAnyWearable) {
                         Spacer(Modifier.height(10.dp))
@@ -289,6 +439,111 @@ fun DataSettingsScreen() {
             Spacer(Modifier.height(14.dp))
         }
     }
+
+    // ===== MENSTRUATION DIALOGS =====
+
+    // Setup dialog (first time)
+    if (showMenstruationSetupDialog.value) {
+        MenstruationSetupDialog(
+            onConfirm = { lastDate, avgCycle, autoUpdate ->
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        val accessToken = SessionStore.getValidAccessToken(context)
+                        if (accessToken != null) {
+                            val service = SupabaseMenstruationService(context)
+
+                            service.updateSettings(
+                                accessToken = accessToken,
+                                lastMenstruationDate = lastDate,
+                                avgCycleLength = avgCycle,
+                                autoUpdateAverage = autoUpdate
+                            )
+
+                            menstruationSettings.value = MenstruationSettings(
+                                lastMenstruationDate = lastDate,
+                                avgCycleLength = avgCycle,
+                                autoUpdateAverage = autoUpdate
+                            )
+
+                            // Toggle ON via MetricToggleHelper
+                            MetricToggleHelper.toggle(context, "menstruation", true)
+
+                            edge.upsertMetricSetting(
+                                context = context,
+                                metric = "menstruation",
+                                enabled = true,
+                                preferredSource = null
+                            )
+
+                            withContext(Dispatchers.Main) {
+                                showMenstruationSetupDialog.value = false
+                                menstruationRefreshTick++
+                                bumpRefresh()
+
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Menstruation tracking enabled!",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("DataSettings", "Failed to save menstruation settings: ${e.message}", e)
+                    }
+                }
+            },
+            onDismiss = {
+                showMenstruationSetupDialog.value = false
+                bumpRefresh()
+            }
+        )
+    }
+
+    // Edit dialog
+    if (showMenstruationEditDialog.value && menstruationSettings.value != null) {
+        MenstruationEditDialog(
+            currentSettings = menstruationSettings.value!!,
+            onConfirm = { newLastDate, newAvgCycle ->
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        val accessToken = SessionStore.getValidAccessToken(context)
+                        if (accessToken != null) {
+                            val service = SupabaseMenstruationService(context)
+                            val current = menstruationSettings.value!!
+
+                            service.updateSettings(
+                                accessToken = accessToken,
+                                lastMenstruationDate = newLastDate,
+                                avgCycleLength = newAvgCycle,
+                                autoUpdateAverage = current.autoUpdateAverage
+                            )
+
+                            menstruationSettings.value = current.copy(
+                                lastMenstruationDate = newLastDate,
+                                avgCycleLength = newAvgCycle
+                            )
+
+                            withContext(Dispatchers.Main) {
+                                showMenstruationEditDialog.value = false
+                                menstruationRefreshTick++
+
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Settings updated!",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("DataSettings", "Failed to update settings: ${e.message}", e)
+                    }
+                }
+            },
+            onDismiss = {
+                showMenstruationEditDialog.value = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -296,24 +551,26 @@ private fun DataRowUi(
     row: DataRow,
     store: DataSettingsStore,
     connectedWearables: List<WearableSource>,
+    metricSettingsMap: Map<String, EdgeFunctionsService.MetricSettingResponse>,
     enabled: Boolean,
     greyOut: Boolean,
     refreshTick: Int,
     micPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
     permissionRefreshTick: Int,
-    onAnyChange: () -> Unit
+    onAnyChange: () -> Unit,
+    menstruationSettings: MenstruationSettings? = null,
+    showMenstruationSetupDialog: androidx.compose.runtime.MutableState<Boolean>? = null,
+    showMenstruationEditDialog: androidx.compose.runtime.MutableState<Boolean>? = null
 ) {
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
     val edge = remember { EdgeFunctionsService() }
 
-    // Battery optimization dialog state
     var showBatteryOptDialog by remember { mutableStateOf(false) }
 
-    // Screen time permission handling
     val isScreenTimeRow = row.table == "screen_time_daily" && row.collectedByKind == CollectedByKind.PHONE
     var showScreenTimePermissionDialog by remember { mutableStateOf(false) }
-    val screenTimePermissionGranted = remember(refreshTick) {
+    val screenTimePermissionGranted = remember(refreshTick, permissionRefreshTick) {
         if (isScreenTimeRow) ScreenTimePermissionHelper.hasPermission(context) else true
     }
 
@@ -338,45 +595,76 @@ private fun DataRowUi(
         if (isAmbientNoiseRow) isBatteryOptimizationExempt(context) else true
     }
 
-    // Wearable selection (dropdown) is stored per-table.
-    // Phone/manual/reference rows don't use it.
-    var selectedWearable by remember(row.table, refreshTick) {
-        mutableStateOf(store.getSelectedWearable(row.table, row.defaultWearable))
+    val isNutritionRow = row.table == "nutrition" && row.collectedByKind == CollectedByKind.PHONE
+    val isMenstruationRow = row.table == "menstruation" && row.collectedByKind == CollectedByKind.PHONE
+
+    var nutritionPermissionGranted by remember { mutableStateOf(false) }
+    var menstruationPermissionGranted by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isNutritionRow, isMenstruationRow, permissionRefreshTick) {
+        if (isNutritionRow) {
+            nutritionPermissionGranted = hasHealthConnectNutritionPermission(context)
+        }
+        if (isMenstruationRow) {
+            menstruationPermissionGranted = hasHealthConnectMenstruationPermission(context)
+        }
     }
 
-    // Active is stored per table + (wearable if applicable)
-    var active by remember(row.table, refreshTick, selectedWearable) {
+    val dietPermissionGranted =
+        when {
+            isNutritionRow -> nutritionPermissionGranted
+            isMenstruationRow -> menstruationPermissionGranted
+            else -> true
+        }
+
+    // Read selected wearable from Supabase first, fallback to local
+    var selectedWearable by remember(row.table, refreshTick, metricSettingsMap) {
+        // First check Supabase for preferred_source
+        val supabaseSource = metricSettingsMap.values
+            .firstOrNull { it.metric == row.table && it.preferredSource != null }
+            ?.preferredSource
+            ?.let { sourceKey ->
+                WearableSource.values().firstOrNull { it.key == sourceKey }
+            }
+
+        mutableStateOf(supabaseSource ?: row.defaultWearable ?: WearableSource.WHOOP)
+    }
+
+    // Read active state from Supabase
+    var active by remember(row.table, refreshTick, selectedWearable, metricSettingsMap) {
         mutableStateOf(
             if (isLocationRow) {
                 true
             } else {
-                store.getActive(
-                    table = row.table,
-                    wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
-                    defaultValue = defaultActiveFor(row)
-                )
+                // Get from Supabase
+                val settingKey = if (row.collectedByKind == CollectedByKind.WEARABLE) {
+                    "${row.table}_${selectedWearable.key}"
+                } else {
+                    "${row.table}_null"
+                }
+
+                val value = metricSettingsMap[settingKey]?.enabled ?: defaultActiveFor(row)
+                android.util.Log.d("DataSettings", "Row ${row.table}: looking for key='$settingKey', found=${metricSettingsMap[settingKey]}, using value=$value")
+                value
             }
         )
     }
 
-    // Ambient noise requires BOTH prerequisites before it can remain ON.
-    // If it was previously enabled (or defaulted ON) but prerequisites are missing, force it OFF to keep state consistent.
+    // Auto-disable if permissions lost
     LaunchedEffect(isAmbientNoiseRow, micPermissionGranted, batteryOptimizationExempt, refreshTick) {
         if (isAmbientNoiseRow) {
-            val stored = store.getActive(
-                table = row.table,
-                wearable = null,
-                defaultValue = defaultActiveFor(row)
-            )
+            val settingKey = "ambient_noise_samples_null"
+            val stored = metricSettingsMap[settingKey]?.enabled ?: true
+
             if (stored && (!micPermissionGranted || !batteryOptimizationExempt)) {
                 active = false
-                store.setActive(table = row.table, wearable = null, value = false)
 
-                scope.launch {
+                scope.launch(Dispatchers.IO) {
                     edge.upsertMetricSetting(
                         context = context,
                         metric = row.table,
-                        enabled = false
+                        enabled = false,
+                        preferredSource = null
                     )
                     AmbientNoiseSampleWorker.cancel(context)
                     AmbientNoiseWatchdogWorker.cancel(context)
@@ -386,39 +674,44 @@ private fun DataRowUi(
         }
     }
 
-    // If connected wearables change and current selection is no longer allowed, snap to first available.
+    // Auto-disable if diet permission lost
+    // REMOVED: This was causing a race condition where toggles would be set to false
+    // before permission check completed. Grey-out is sufficient.
+
+    // Update selected wearable if not in allowed list
     if (row.collectedByKind == CollectedByKind.WEARABLE) {
         val allowed = connectedWearables
         if (allowed.isEmpty()) {
-            // keep selection but row disabled; no action needed
+            // keep selection but row disabled
         } else if (!allowed.contains(selectedWearable)) {
             selectedWearable = allowed.first()
-            store.setSelectedWearable(row.table, selectedWearable)
-            active = store.getActive(
-                table = row.table,
-                wearable = selectedWearable,
-                defaultValue = defaultActiveFor(row)
-            )
+
+            // Update Supabase with new wearable
+            scope.launch(Dispatchers.IO) {
+                edge.upsertMetricSetting(
+                    context = context,
+                    metric = row.table,
+                    enabled = active,
+                    preferredSource = selectedWearable.key
+                )
+            }
         }
     }
 
-    // Location is a prerequisite (Option A): ensure it cannot be turned off.
-    // If an older preference stored it as OFF, force it back ON (local + Supabase) once.
+    // Location row always ON
     LaunchedEffect(isLocationRow, refreshTick) {
         if (isLocationRow) {
-            val stored = store.getActive(
-                table = row.table,
-                wearable = null,
-                defaultValue = true
-            )
+            val settingKey = "user_location_daily_null"
+            val stored = metricSettingsMap[settingKey]?.enabled ?: true
+
             if (!stored) {
-                store.setActive(table = row.table, wearable = null, value = true)
                 active = true
-                scope.launch {
+                scope.launch(Dispatchers.IO) {
                     edge.upsertMetricSetting(
                         context = context,
                         metric = row.table,
-                        enabled = true
+                        enabled = true,
+                        preferredSource = null
                     )
                     onAnyChange()
                 }
@@ -426,313 +719,457 @@ private fun DataRowUi(
         }
     }
 
-    // Stress gating: only available if BOTH HRV + Resting HR are enabled for the same wearable source.
+    // Stress dependency check
     val isStressRow = row.table == "stress_index_daily" && row.collectedByKind == CollectedByKind.WEARABLE
     val depsOkForStress =
         if (!isStressRow) {
             true
         } else {
-            val hrvOn = store.getActive(
-                table = "hrv_daily",
-                wearable = selectedWearable,
-                defaultValue = true
-            )
-            val rrOn = store.getActive(
-                table = "resting_hr_daily",
-                wearable = selectedWearable,
-                defaultValue = true
-            )
+            val hrvKey = "hrv_daily_${selectedWearable.key}"
+            val rrKey = "resting_hr_daily_${selectedWearable.key}"
+            val hrvOn = metricSettingsMap[hrvKey]?.enabled ?: true
+            val rrOn = metricSettingsMap[rrKey]?.enabled ?: true
             hrvOn && rrOn
         }
 
-    // If Stress is ON but dependencies turn OFF, force Stress OFF (local + Supabase).
     LaunchedEffect(isStressRow, depsOkForStress, selectedWearable, refreshTick) {
         if (isStressRow && !depsOkForStress && active) {
             active = false
 
-            store.setActive(
-                table = row.table,
-                wearable = selectedWearable,
-                value = false
-            )
-
-            scope.launch {
+            scope.launch(Dispatchers.IO) {
                 edge.upsertMetricSetting(
                     context = context,
                     metric = row.table,
-                    enabled = false
+                    enabled = false,
+                    preferredSource = selectedWearable.key
                 )
                 onAnyChange()
             }
         }
     }
 
-    // Grey out Stress when deps are not satisfied.
     val effectiveGreyOut = greyOut || (isStressRow && !depsOkForStress)
     val alpha = if (effectiveGreyOut) 0.55f else 1.0f
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(alpha),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Type column
-        Column(modifier = Modifier.weight(0.46f)) {
-            Text(row.table, style = MaterialTheme.typography.bodyMedium)
-            if (row.collectedByLabel.isNotBlank()) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    row.collectedByLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.alpha(0.75f)
-                )
-            }
-            if (isLocationRow) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "Permission: " + if (locationPermissionGranted) "Granted" else "Not granted",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.alpha(0.75f)
-                )
-            }
-            if (isScreenTimeRow) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "Permission: " + if (screenTimePermissionGranted) "Granted" else "Not granted",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (screenTimePermissionGranted)
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        MaterialTheme.colorScheme.error,
-                    modifier = Modifier.alpha(0.85f)
-                )
-            }
-            if (isStressRow && !depsOkForStress) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "Enable hrv_daily and resting_hr_daily to use stress.",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.alpha(0.70f)
-                )
-            }
-
-            if (isAmbientNoiseRow) {
-                Spacer(Modifier.height(6.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Microphone permission",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.alpha(0.75f)
-                    )
-                    Switch(
-                        checked = micPermissionGranted,
-                        onCheckedChange = { newVal ->
-                            if (newVal && !micPermissionGranted) {
-                                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            }
-                        },
-                        enabled = !micPermissionGranted
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Battery optimization exemption",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.alpha(0.75f)
-                    )
-                    Switch(
-                        checked = batteryOptimizationExempt,
-                        onCheckedChange = { newVal ->
-                            if (newVal && !batteryOptimizationExempt) {
-                                showBatteryOptDialog = true
-                            }
-                        },
-                        enabled = !batteryOptimizationExempt
-                    )
-                }
-
-                if (!micPermissionGranted || !batteryOptimizationExempt) {
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(alpha),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Column(modifier = Modifier.weight(0.46f)) {
+                Text(row.table, style = MaterialTheme.typography.bodyMedium)
+                if (row.collectedByLabel.isNotBlank()) {
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        "Enable both switches to turn on ambient noise.",
+                        row.collectedByLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.alpha(0.75f)
+                    )
+                }
+                if (isLocationRow) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Permission: " + if (locationPermissionGranted) "Granted" else "Not granted",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.alpha(0.75f)
+                    )
+                }
+                if (isScreenTimeRow) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Permission: " + if (screenTimePermissionGranted) "Granted" else "Not granted",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (screenTimePermissionGranted)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.error,
+                        modifier = Modifier.alpha(0.85f)
+                    )
+                }
+
+                if (isNutritionRow || isMenstruationRow) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Health Connect: " + if (dietPermissionGranted) "Connected" else "Not connected",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (dietPermissionGranted)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.error,
+                        modifier = Modifier.alpha(0.85f)
+                    )
+                }
+
+                if (isStressRow && !depsOkForStress) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Enable hrv_daily and resting_hr_daily to use stress.",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.alpha(0.70f)
                     )
                 }
+
+                if (isAmbientNoiseRow) {
+                    Spacer(Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Microphone permission",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.alpha(0.75f)
+                        )
+                        Switch(
+                            checked = micPermissionGranted,
+                            onCheckedChange = { newVal ->
+                                if (newVal && !micPermissionGranted) {
+                                    micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
+                            },
+                            enabled = !micPermissionGranted
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Battery optimization exemption",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.alpha(0.75f)
+                        )
+                        Switch(
+                            checked = batteryOptimizationExempt,
+                            onCheckedChange = { newVal ->
+                                if (newVal && !batteryOptimizationExempt) {
+                                    showBatteryOptDialog = true
+                                }
+                            },
+                            enabled = !batteryOptimizationExempt
+                        )
+                    }
+
+                    if (!micPermissionGranted || !batteryOptimizationExempt) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            "Enable both switches to turn on ambient noise.",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.alpha(0.70f)
+                        )
+                    }
+                }
             }
-        }
 
-        // Collected By column
-        Column(modifier = Modifier.weight(0.34f)) {
-            when (row.collectedByKind) {
-                CollectedByKind.PHONE -> {
-                    Text("Phone", style = MaterialTheme.typography.bodyMedium)
+            Column(modifier = Modifier.weight(0.34f)) {
+                when (row.collectedByKind) {
+                    CollectedByKind.PHONE -> {
+                        if (isNutritionRow || isMenstruationRow) {
+                            Text("Health Connect", style = MaterialTheme.typography.bodyMedium)
+                        } else {
+                            Text("Phone", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    CollectedByKind.MANUAL -> {
+                        Text("User", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    CollectedByKind.REFERENCE -> {
+                        Text("Reference", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    CollectedByKind.WEARABLE -> {
+                        val options = connectedWearables.map { it.label }
+                        val selectedIndex = options.indexOf(selectedWearable.label).coerceAtLeast(0)
+
+                        if (options.isEmpty()) {
+                            Text("No wearable", style = MaterialTheme.typography.bodyMedium)
+                        } else {
+                            AppDropdown(
+                                options = options,
+                                selectedIndex = selectedIndex,
+                                onSelected = { idx ->
+                                    val newSel = connectedWearables.getOrNull(idx) ?: return@AppDropdown
+                                    selectedWearable = newSel
+
+                                    // Update Supabase with new preferred source
+                                    scope.launch(Dispatchers.IO) {
+                                        edge.upsertMetricSetting(
+                                            context = context,
+                                            metric = row.table,
+                                            enabled = active,
+                                            preferredSource = newSel.key
+                                        )
+                                    }
+
+                                    onAnyChange()
+                                }
+                            )
+                        }
+                    }
                 }
+            }
 
-                CollectedByKind.MANUAL -> {
-                    Text("User", style = MaterialTheme.typography.bodyMedium)
-                }
+            Column(modifier = Modifier.weight(0.20f)) {
+                val canToggleBase = enabled && row.collectedByKind != CollectedByKind.REFERENCE && !isLocationRow
+                val canToggle =
+                    canToggleBase &&
+                            !effectiveGreyOut &&
+                            (!isAmbientNoiseRow || (micPermissionGranted && batteryOptimizationExempt))
 
-                CollectedByKind.REFERENCE -> {
-                    Text("Reference", style = MaterialTheme.typography.bodyMedium)
-                }
+                Row {
+                    Switch(
+                        checked = active,
+                        onCheckedChange = { new ->
+                            if (!canToggle) return@Switch
 
-                CollectedByKind.WEARABLE -> {
-                    val options = connectedWearables.map { it.label }
-                    val selectedIndex = options.indexOf(selectedWearable.label).coerceAtLeast(0)
+                            if (isAmbientNoiseRow && new && (!micPermissionGranted || !batteryOptimizationExempt)) return@Switch
 
-                    if (options.isEmpty()) {
-                        Text("No wearable", style = MaterialTheme.typography.bodyMedium)
-                    } else {
-                        // Reuse existing dropdown helper to stay consistent with the codebase.
-                        AppDropdown(
-                            options = options,
-                            selectedIndex = selectedIndex,
-                            onSelected = { idx ->
-                                val newSel = connectedWearables.getOrNull(idx) ?: return@AppDropdown
-                                selectedWearable = newSel
-                                store.setSelectedWearable(row.table, newSel)
+                            active = new
 
-                                // Reload active for the new wearable/source
-                                active = store.getActive(
-                                    table = row.table,
-                                    wearable = newSel,
-                                    defaultValue = defaultActiveFor(row)
+                            scope.launch(Dispatchers.IO) {
+                                if (isAmbientNoiseRow) {
+                                    MetricToggleHelper.toggle(context, row.table, new)
+
+                                    edge.upsertMetricSetting(
+                                        context = context,
+                                        metric = row.table,
+                                        enabled = new,
+                                        preferredSource = null
+                                    )
+
+                                    onAnyChange()
+                                    return@launch
+                                }
+
+                                if (isNutritionRow) {
+                                    MetricToggleHelper.toggle(context, row.table, new)
+
+                                    edge.upsertMetricSetting(
+                                        context = context,
+                                        metric = row.table,
+                                        enabled = new,
+                                        preferredSource = null
+                                    )
+
+                                    onAnyChange()
+                                    return@launch
+                                }
+
+                                if (isMenstruationRow) {
+                                    if (new) {
+                                        if (menstruationSettings == null && showMenstruationSetupDialog != null) {
+                                            showMenstruationSetupDialog.value = true
+                                        } else {
+                                            MetricToggleHelper.toggle(context, row.table, true)
+
+                                            edge.upsertMetricSetting(
+                                                context = context,
+                                                metric = row.table,
+                                                enabled = true,
+                                                preferredSource = null
+                                            )
+                                        }
+                                    } else {
+                                        MetricToggleHelper.toggle(context, row.table, false)
+
+                                        edge.upsertMetricSetting(
+                                            context = context,
+                                            metric = row.table,
+                                            enabled = false,
+                                            preferredSource = null
+                                        )
+                                    }
+
+                                    onAnyChange()
+                                    return@launch
+                                }
+
+                                // Generic metric (wearable or other phone metrics)
+                                edge.upsertMetricSetting(
+                                    context = context,
+                                    metric = row.table,
+                                    enabled = new,
+                                    preferredSource = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable.key else null
                                 )
+
+                                // Stress dependency auto-disable
+                                if (!new && row.collectedByKind == CollectedByKind.WEARABLE &&
+                                    (row.table == "hrv_daily" || row.table == "resting_hr_daily")
+                                ) {
+                                    val stressKey = "stress_index_daily_${selectedWearable.key}"
+                                    val stressCurrentlyOn = metricSettingsMap[stressKey]?.enabled ?: false
+
+                                    if (stressCurrentlyOn) {
+                                        edge.upsertMetricSetting(
+                                            context = context,
+                                            metric = "stress_index_daily",
+                                            enabled = false,
+                                            preferredSource = selectedWearable.key
+                                        )
+                                    }
+                                }
+
+                                // Screen time special handling
+                                if (row.collectedByKind == CollectedByKind.PHONE && row.table == "screen_time_daily") {
+                                    if (new) {
+                                        if (!ScreenTimePermissionHelper.hasPermission(context)) {
+                                            showScreenTimePermissionDialog = true
+                                            active = false
+                                        } else {
+                                            ScreenTimeDailySyncWorker.scheduleNext(context)
+                                            ScreenTimeWatchdogWorker.schedule(context)
+                                        }
+                                    } else {
+                                        ScreenTimeDailySyncWorker.cancel(context)
+                                        ScreenTimeWatchdogWorker.cancel(context)
+                                    }
+                                }
 
                                 onAnyChange()
                             }
+                        },
+                        enabled = canToggle
+                    )
+                    Spacer(Modifier.width(2.dp))
+                }
+            }
+        }
+
+        // ===== MENSTRUATION EXPANDED SETTINGS =====
+        if (isMenstruationRow && active && menstruationSettings != null && showMenstruationEditDialog != null) {
+            Spacer(Modifier.height(12.dp))
+
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Last Period",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                menstruationSettings.lastMenstruationDate?.toString() ?: "Not set",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        TextButton(onClick = { showMenstruationEditDialog.value = true }) {
+                            Text("Edit")
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    Divider()
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Average Cycle",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "${menstruationSettings.avgCycleLength} days",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "Weighted average of last 6 cycles",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.alpha(0.7f)
+                            )
+                        }
+                        TextButton(onClick = { showMenstruationEditDialog.value = true }) {
+                            Text("Edit")
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    Divider()
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Auto-update average",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                "Recalculate when new periods logged",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.alpha(0.7f)
+                            )
+                        }
+                        Switch(
+                            checked = menstruationSettings.autoUpdateAverage,
+                            onCheckedChange = { newValue ->
+                                scope.launch(Dispatchers.IO) {
+                                    try {
+                                        val accessToken = SessionStore.getValidAccessToken(context)
+                                        if (accessToken != null) {
+                                            val service = SupabaseMenstruationService(context)
+                                            service.updateSettings(
+                                                accessToken = accessToken,
+                                                lastMenstruationDate = menstruationSettings.lastMenstruationDate,
+                                                avgCycleLength = menstruationSettings.avgCycleLength,
+                                                autoUpdateAverage = newValue
+                                            )
+                                            android.util.Log.d("DataSettings", "Auto-update set to: $newValue")
+                                            onAnyChange()
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("DataSettings", "Failed to update auto-update: ${e.message}")
+                                    }
+                                }
+                            }
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    val nextPeriod = menstruationSettings.lastMenstruationDate?.plusDays(
+                        menstruationSettings.avgCycleLength.toLong()
+                    )
+
+                    if (nextPeriod != null) {
+                        Text(
+                            "Next expected: $nextPeriod",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
                 }
             }
         }
-
-        // Active column
-        Column(modifier = Modifier.weight(0.20f)) {
-            val canToggleBase = enabled && row.collectedByKind != CollectedByKind.REFERENCE && !isLocationRow
-            val canToggle =
-                canToggleBase &&
-                        (!isStressRow || depsOkForStress) &&
-                        (!isAmbientNoiseRow || (micPermissionGranted && batteryOptimizationExempt))
-
-            Row {
-                Switch(
-                    checked = active,
-                    onCheckedChange = { new ->
-                        if (!canToggle) return@Switch
-
-                        if (isAmbientNoiseRow && new && (!micPermissionGranted || !batteryOptimizationExempt)) return@Switch
-
-                        active = new
-
-                        // Local persistence (existing)
-                        store.setActive(
-                            table = row.table,
-                            wearable = if (row.collectedByKind == CollectedByKind.WEARABLE) selectedWearable else null,
-                            value = new
-                        )
-
-                        scope.launch {
-                            if (isAmbientNoiseRow) {
-                                if (new) {
-                                    // Prerequisites (mic + battery) are required before enabling ambient noise.
-                                    // At this point the main switch is only enabled when both are satisfied.
-                                    edge.upsertMetricSetting(
-                                        context = context,
-                                        metric = row.table,
-                                        enabled = true
-                                    )
-                                    AmbientNoiseSampleWorker.schedule(context)
-                                    AmbientNoiseWatchdogWorker.schedule(context)
-                                } else {
-                                    edge.upsertMetricSetting(
-                                        context = context,
-                                        metric = row.table,
-                                        enabled = false
-                                    )
-                                    AmbientNoiseSampleWorker.cancel(context)
-                                    AmbientNoiseWatchdogWorker.cancel(context)
-                                }
-
-                                onAnyChange()
-                                return@launch
-                            }
-
-                            edge.upsertMetricSetting(
-                                context = context,
-                                metric = row.table,
-                                enabled = new
-                            )
-
-                            // If HRV or Resting HR is turned OFF, force stress_index_daily OFF (local + Supabase),
-                            // for the same selected wearable source as the stress row.
-                            if (!new && row.collectedByKind == CollectedByKind.WEARABLE &&
-                                (row.table == "hrv_daily" || row.table == "resting_hr_daily")
-                            ) {
-                                val stressWearable = store.getSelectedWearable("stress_index_daily", WearableSource.WHOOP)
-                                if (stressWearable == selectedWearable) {
-                                    val stressCurrentlyOn = store.getActive(
-                                        table = "stress_index_daily",
-                                        wearable = stressWearable,
-                                        defaultValue = true
-                                    )
-                                    if (stressCurrentlyOn) {
-                                        store.setActive(
-                                            table = "stress_index_daily",
-                                            wearable = stressWearable,
-                                            value = false
-                                        )
-                                        edge.upsertMetricSetting(
-                                            context = context,
-                                            metric = "stress_index_daily",
-                                            enabled = false
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Screen time worker scheduling
-                            if (row.collectedByKind == CollectedByKind.PHONE && row.table == "screen_time_daily") {
-                                if (new) {
-                                    // Check permission before enabling
-                                    if (!ScreenTimePermissionHelper.hasPermission(context)) {
-                                        // Show permission dialog
-                                        showScreenTimePermissionDialog = true
-                                        // Don't enable yet - wait for permission
-                                        active = false
-                                        store.setActive(table = row.table, wearable = null, value = false)
-                                    } else {
-                                        // Permission granted - schedule worker
-                                        ScreenTimeDailySyncWorker.scheduleNext(context)
-                                        ScreenTimeWatchdogWorker.schedule(context) // Start watchdog!
-                                    }
-                                } else {
-                                    ScreenTimeDailySyncWorker.cancel(context)
-                                    ScreenTimeWatchdogWorker.cancel(context) // Stop watchdog!
-                                }
-                            }
-
-                            onAnyChange()
-                        }
-                    },
-                    enabled = canToggle
-                )
-                Spacer(Modifier.width(2.dp))
-            }
-        }
     }
 
-    // Screen time permission dialog
     if (showScreenTimePermissionDialog) {
         ScreenTimePermissionDialog(
             onDismiss = { showScreenTimePermissionDialog = false },
@@ -743,7 +1180,6 @@ private fun DataRowUi(
         )
     }
 
-    // Battery optimization dialog
     if (showBatteryOptDialog) {
         BatteryOptimizationDialog(
             onDismiss = {
@@ -794,7 +1230,6 @@ private fun defaultActiveFor(row: DataRow): Boolean {
     }
 }
 
-/** Helpers to build rows consistently */
 private fun wearableRow(table: String, label: String): DataRow =
     DataRow(
         table = table,
@@ -810,13 +1245,6 @@ private fun phoneRow(table: String, label: String): DataRow =
         collectedByLabel = label
     )
 
-private fun manualRow(table: String, label: String): DataRow =
-    DataRow(
-        table = table,
-        collectedByKind = CollectedByKind.MANUAL,
-        collectedByLabel = label
-    )
-
 private fun referenceRow(table: String, label: String): DataRow =
     DataRow(
         table = table,
@@ -824,7 +1252,6 @@ private fun referenceRow(table: String, label: String): DataRow =
         collectedByLabel = label
     )
 
-/** Data model */
 private data class DataSection(
     val title: String,
     val rows: List<DataRow>
@@ -844,8 +1271,38 @@ private enum class CollectedByKind {
     REFERENCE
 }
 
-private enum class WearableSource(val key: String, val label: String) {
+internal enum class WearableSource(val key: String, val label: String) {
     WHOOP("whoop", "WHOOP")
+}
+
+private suspend fun hasHealthConnectNutritionPermission(context: Context): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            val status = HealthConnectClient.getSdkStatus(context)
+            if (status != HealthConnectClient.SDK_AVAILABLE) return@withContext false
+
+            val client = HealthConnectClient.getOrCreate(context)
+            val granted = client.permissionController.getGrantedPermissions()
+            HealthPermission.getReadPermission(NutritionRecord::class) in granted
+        } catch (_: Exception) {
+            false
+        }
+    }
+}
+
+private suspend fun hasHealthConnectMenstruationPermission(context: Context): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            val status = HealthConnectClient.getSdkStatus(context)
+            if (status != HealthConnectClient.SDK_AVAILABLE) return@withContext false
+
+            val client = HealthConnectClient.getOrCreate(context)
+            val granted = client.permissionController.getGrantedPermissions()
+            HealthPermission.getReadPermission(MenstruationPeriodRecord::class) in granted
+        } catch (_: Exception) {
+            false
+        }
+    }
 }
 
 private fun isBatteryOptimizationExempt(context: Context): Boolean {
@@ -853,15 +1310,7 @@ private fun isBatteryOptimizationExempt(context: Context): Boolean {
     return pm.isIgnoringBatteryOptimizations(context.packageName)
 }
 
-/**
- * Local persistence for Data settings.
- * Stores:
- * - Selected wearable per table: data_source_<table> = whoop
- * - Active per table:
- *    - phone/manual/reference: data_active_<table>
- *    - wearable: data_active_<table>_<source>
- */
-private class DataSettingsStore(context: Context) {
+internal class DataSettingsStore(context: Context) {
     private val prefs = context.getSharedPreferences("data_settings", Context.MODE_PRIVATE)
 
     fun getSelectedWearable(table: String, fallback: WearableSource?): WearableSource {

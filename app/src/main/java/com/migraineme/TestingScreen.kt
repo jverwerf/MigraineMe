@@ -39,6 +39,67 @@ fun TestingScreen(authVm: AuthViewModel) {
 
         HorizontalDivider()
 
+        // NUTRITION SYNC TEST CARD (Health Connect Changes -> Outbox -> Supabase Push)
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Nutrition Sync Test",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text = "Runs one-time: HealthConnectNutritionChangesWorker then NutritionOutboxPushWorker.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isLoading = true
+                            testResult = runNutritionSyncNow(context)
+                            isLoading = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Running...")
+                    } else {
+                        Text("Run Nutrition Sync Now")
+                    }
+                }
+
+                if (testResult.isNotEmpty()) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (testResult.contains("✅"))
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = testResult,
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+
         // TIMEZONE TEST CARD
         Card(
             modifier = Modifier.fillMaxWidth()
@@ -157,6 +218,37 @@ fun TestingScreen(authVm: AuthViewModel) {
                 }
             }
         }
+    }
+}
+
+private suspend fun runNutritionSyncNow(context: Context): String {
+    return try {
+        val accessToken = SessionStore.getValidAccessToken(context)
+        if (accessToken == null) {
+            return "❌ Not logged in (no access token)"
+        }
+
+        val wm = androidx.work.WorkManager.getInstance(context)
+
+        val changes = androidx.work.OneTimeWorkRequestBuilder<HealthConnectNutritionChangesWorker>()
+            .addTag("debug_nutrition_changes")
+            .build()
+
+        val push = androidx.work.OneTimeWorkRequestBuilder<NutritionOutboxPushWorker>()
+            .addTag("debug_nutrition_push")
+            .build()
+
+        wm.beginWith(changes).then(push).enqueue()
+
+        """
+        ✅ Enqueued one-time nutrition sync.
+        
+        Check Logcat tags:
+        • HcNutritionChanges
+        • NutritionOutboxPush
+        """.trimIndent()
+    } catch (e: Exception) {
+        "❌ ERROR: ${e.message}"
     }
 }
 

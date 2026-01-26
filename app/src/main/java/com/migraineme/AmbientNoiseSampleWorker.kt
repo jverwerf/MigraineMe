@@ -43,8 +43,6 @@ class AmbientNoiseSampleWorker(
 
         Log.d(LOG_TAG, "Worker started - checking settings")
 
-        // Gate collection by your standard settings toggle.
-        // If disabled, stop the loop entirely.
         val enabled = DataCollectionSettings.isActive(
             context = ctx,
             table = "ambient_noise_samples",
@@ -58,8 +56,9 @@ class AmbientNoiseSampleWorker(
         }
 
         try {
-            val hasMicPerm = ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) ==
-                    PackageManager.PERMISSION_GRANTED
+            val hasMicPerm =
+                ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) ==
+                        PackageManager.PERMISSION_GRANTED
             if (!hasMicPerm) {
                 Log.d(LOG_TAG, "RECORD_AUDIO not granted — skip")
                 return@withContext Result.success()
@@ -71,7 +70,6 @@ class AmbientNoiseSampleWorker(
                 return@withContext Result.success()
             }
 
-            // Table requires user_id; prefer persisted value, fallback to auth lookup.
             val userId = SessionStore.readUserId(ctx)
                 ?: runCatching { SupabaseAuthService.getUser(access).id }.getOrNull()
                 ?: run {
@@ -79,9 +77,6 @@ class AmbientNoiseSampleWorker(
                     return@withContext Result.success()
                 }
 
-            // Foreground (notification visible only during recording).
-            // If the OS disallows elevating to mic foreground at this moment, we cannot sample.
-            // Per your preference: do NOT post any "tap to record" notification; we just skip.
             try {
                 setForeground(createForegroundInfo(ctx))
             } catch (t: Throwable) {
@@ -122,8 +117,6 @@ class AmbientNoiseSampleWorker(
             Log.w(LOG_TAG, "Worker error: ${t.message}", t)
             Result.success()
         } finally {
-            // Keep the production cadence alive while enabled.
-            // (If the user toggles off, the next run will cancel itself immediately.)
             scheduleNext(ctx)
         }
     }
@@ -150,7 +143,8 @@ class AmbientNoiseSampleWorker(
 
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val nm =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val ch = NotificationChannel(
                 CHANNEL_ID,
                 "MigraineMe sensor sampling",
@@ -162,27 +156,14 @@ class AmbientNoiseSampleWorker(
 
     companion object {
         private const val LOG_TAG = "AmbientNoiseWorker"
-
-        /**
-         * Used for the 30-minute self-rescheduling production loop.
-         * (This replaces periodic work; WorkManager minimum periodic interval is 15 minutes.)
-         */
         private const val UNIQUE = "ambient_noise_samples_loop"
 
         private const val CHANNEL_ID = "migraineme_sensor_sampling"
         private const val FOREGROUND_NOTIF_ID = 92001
-
-        // Production cadence: schedule the next run 30 minutes after this run completes.
         private const val LOOP_DELAY_MINUTES = 30L
 
-        /**
-         * Start the production loop immediately (then it re-enqueues itself every ~30 minutes while enabled).
-         *
-         * This method now checks if sampling is actually enabled before scheduling.
-         */
         fun schedule(context: Context) {
             try {
-                // Verify that sampling is actually enabled before scheduling
                 val enabled = DataCollectionSettings.isActive(
                     context = context,
                     table = "ambient_noise_samples",
@@ -203,7 +184,7 @@ class AmbientNoiseSampleWorker(
 
                 WorkManager.getInstance(context).enqueueUniqueWork(
                     UNIQUE,
-                    ExistingWorkPolicy.REPLACE,
+                    ExistingWorkPolicy.KEEP,
                     req
                 )
 
@@ -215,7 +196,6 @@ class AmbientNoiseSampleWorker(
 
         private fun scheduleNext(context: Context) {
             try {
-                // Double-check that sampling is still enabled before rescheduling
                 val enabled = DataCollectionSettings.isActive(
                     context = context,
                     table = "ambient_noise_samples",
@@ -229,7 +209,7 @@ class AmbientNoiseSampleWorker(
                     return
                 }
 
-                Log.d(LOG_TAG, "Scheduling next run in ${LOOP_DELAY_MINUTES} minutes")
+                Log.d(LOG_TAG, "Scheduling next run in $LOOP_DELAY_MINUTES minutes")
 
                 val req = OneTimeWorkRequestBuilder<AmbientNoiseSampleWorker>()
                     .setInitialDelay(LOOP_DELAY_MINUTES, TimeUnit.MINUTES)
@@ -237,7 +217,7 @@ class AmbientNoiseSampleWorker(
 
                 WorkManager.getInstance(context).enqueueUniqueWork(
                     UNIQUE,
-                    ExistingWorkPolicy.REPLACE,
+                    ExistingWorkPolicy.KEEP,
                     req
                 )
             } catch (e: Exception) {

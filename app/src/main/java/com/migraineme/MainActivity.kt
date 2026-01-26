@@ -109,6 +109,9 @@ class MainActivity : ComponentActivity() {
         handleWhoopOAuthIntent(intent)
         handleSupabaseOAuthIntent(intent)
 
+        // Nutrition sync scheduling should happen after Health Connect permission is granted
+        // (e.g., in ThirdPartyConnectionsScreen). Do not schedule old NutritionDailySyncWorker here.
+
         setContent { MaterialTheme { AppRoot() } }
     }
 
