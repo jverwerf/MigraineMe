@@ -244,7 +244,7 @@ fun LogHomeScreen(navController: NavController, authVm: AuthViewModel, vm: LogVi
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedButton(onClick = { navController.navigate(Routes.HOME) }) {
+            OutlinedButton(onClick = { navController.navigate(Routes.MIGRAINE) }) {
                 Text("Back")
             }
             Button(onClick = { navController.navigate(Routes.TRIGGERS) }) {

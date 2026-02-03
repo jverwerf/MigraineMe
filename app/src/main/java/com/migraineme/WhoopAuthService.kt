@@ -16,33 +16,20 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import kotlin.math.max
 
-/**
- * WHOOP OAuth + token refresh.
- *
- * IMPORTANT: This class intentionally keeps compatibility methods used by your app:
- *  - startAuth(activity)
- *  - completeAuth(context): Boolean
- *  - refresh(context): Boolean
- */
 class WhoopAuthService {
 
     companion object {
         private const val TAG = "WHOOP"
 
-        // Must match WHOOP dashboard
         private const val CLIENT_ID = "354e4d44-3780-4e99-a655-a306776879ee"
-
-        // Client secret (required by WHOOP token endpoint for confidential clients)
         private const val CLIENT_SECRET =
             "ce7314f4cdfab97a16467747a174a0ba8f1a8c561bc1dcc149674171ccd85d00"
 
-        // Must match:
-        //  - AndroidManifest intent-filter for migraineme://whoop/callback
-        //  - WHOOP app registered redirect
-        private const val REDIRECT_URI = "migraineme://whoop/callback"
+        private const val REDIRECT_URI = "whoop://migraineme/callback"
 
         private const val AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth"
         private const val TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token"
+        private const val REVOKE_URL = "https://api.prod.whoop.com/developer/v2/user/access"
 
         private const val PREFS = "whoop_oauth"
         private const val KEY_STATE = "state"
@@ -52,28 +39,20 @@ class WhoopAuthService {
 
         private const val EXPIRY_SKEW_MS = 60_000L
 
-        // FIX:
-        // WHOOP returns a refresh token only when requesting the `offline` scope.
-        // Without it, refresh_token will be empty and upsert-whoop-token will (correctly) reject.
+        // WHOOP returns a refresh_token only if the auth request includes the "offline" scope.
         private const val SCOPE =
             "offline read:recovery read:sleep read:workout read:cycles read:body_measurement"
     }
 
-    /**
-     * Compatibility: called by ThirdPartyConnectionsScreen.
-     * Launches browser.
-     */
     fun startAuth(activity: Activity) {
         val uri = buildAuthUri(activity.applicationContext)
+        Log.e(TAG, "Opening WHOOP auth URL: $uri")
         val intent = Intent(Intent.ACTION_VIEW, uri).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         activity.startActivity(intent)
     }
 
-    /**
-     * Builds auth Uri and stores PKCE + state.
-     */
     fun buildAuthUri(context: Context): Uri {
         val appCtx = context.applicationContext
         val prefs = appCtx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -92,21 +71,14 @@ class WhoopAuthService {
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("client_id", CLIENT_ID)
             .appendQueryParameter("redirect_uri", REDIRECT_URI)
-            .appendQueryParameter("scope", SCOPE)
+            .appendQueryParameter("scope", SCOPE.replace("+", " "))
+            // Force a fresh auth + consent; ignore any existing session
             .appendQueryParameter("state", state)
             .appendQueryParameter("code_challenge", challenge)
             .appendQueryParameter("code_challenge_method", "S256")
             .build()
     }
 
-    /**
-     * Compatibility: called by ThirdPartyConnectionsScreen.
-     *
-     * Reads stored callback uri from prefs ("whoop_oauth" / "last_uri"),
-     * validates state + verifier, exchanges code for token, saves token.
-     *
-     * Returns true if token saved.
-     */
     fun completeAuth(context: Context): Boolean {
         val appCtx = context.applicationContext
         val prefs = appCtx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -156,8 +128,6 @@ class WhoopAuthService {
         return if (res.isSuccess) {
             val tok = res.getOrThrow()
 
-            // CRITICAL: WhoopTokenStore binds tokens to SessionStore.userId.
-            // Ensure userId is persisted before saving, derived from the already-stored Supabase access token.
             val currentUserId = SessionStore.readUserId(appCtx)
             if (currentUserId.isNullOrBlank()) {
                 val access = SessionStore.readAccessToken(appCtx)
@@ -169,7 +139,24 @@ class WhoopAuthService {
                 }
             }
 
-            WhoopTokenStore(appCtx).save(tok)
+            val store = WhoopTokenStore(appCtx)
+            val existing = store.load()
+
+            // Defensive: never overwrite a valid refresh token with an empty one.
+            // If WHOOP didn't return a refresh_token, keep the existing one (if any) so refresh/upload still works.
+            val merged = when {
+                tok.refreshToken.isNotBlank() -> tok
+                existing?.refreshToken?.isNotBlank() == true -> tok.copy(refreshToken = existing.refreshToken)
+                else -> {
+                    prefs.edit().putString(
+                        KEY_TOKEN_ERROR,
+                        "WHOOP did not return refresh_token. Reconnect and ensure offline scope is granted."
+                    ).apply()
+                    return false
+                }
+            }
+
+            store.save(merged)
 
             prefs.edit()
                 .remove(KEY_STATE)
@@ -179,7 +166,6 @@ class WhoopAuthService {
                 .apply()
 
             WhoopTokenUploadWorker.enqueueNow(appCtx)
-
             true
         } else {
             prefs.edit().putString(KEY_TOKEN_ERROR, res.exceptionOrNull()?.message ?: "WHOOP authentication failed").apply()
@@ -187,11 +173,6 @@ class WhoopAuthService {
         }
     }
 
-    /**
-     * Compatibility: called by MetricsSyncManager.
-     * Best-effort refresh of WHOOP token if expired soon.
-     * Returns true if token is valid after this call.
-     */
     fun refresh(context: Context): Boolean {
         val appCtx = context.applicationContext
         val store = WhoopTokenStore(appCtx)
@@ -207,39 +188,26 @@ class WhoopAuthService {
                 "client_id" to CLIENT_ID,
                 "client_secret" to CLIENT_SECRET,
                 "refresh_token" to current.refreshToken,
-                // WHOOP recommends requesting offline when refreshing as well.
                 "scope" to "offline"
             )
         )
 
         return if (res.isSuccess) {
             val refreshed = res.getOrThrow()
-
-            // Preserve existing refresh token if WHOOP omits it in refresh response.
             val merged = if (refreshed.refreshToken.isBlank()) {
                 refreshed.copy(refreshToken = current.refreshToken)
             } else {
                 refreshed
             }
-
             store.save(merged)
+
+            // Keep Supabase whoop_tokens in sync after refresh.
+            WhoopTokenUploadWorker.enqueueNow(appCtx)
+
             true
         } else {
             Log.w(TAG, "refresh failed: ${res.exceptionOrNull()?.message}")
             false
-        }
-    }
-
-    fun getValidAccessToken(context: Context): String? {
-        val appCtx = context.applicationContext
-        val store = WhoopTokenStore(appCtx)
-        val tok = store.load() ?: return null
-
-        return if (!tok.isExpiredSoon(EXPIRY_SKEW_MS)) {
-            tok.accessToken
-        } else {
-            val ok = refresh(appCtx)
-            store.load()?.accessToken?.takeIf { ok }
         }
     }
 
@@ -254,6 +222,56 @@ class WhoopAuthService {
             val ok = refresh(appCtx)
             store.load()?.takeIf { ok }
         }
+    }
+
+    suspend fun revokeAccessWithDebug(context: Context): Pair<Boolean, String> {
+        val appCtx = context.applicationContext
+        val tok = refreshIfNeeded(appCtx)
+
+        if (tok == null || tok.accessToken.isBlank()) {
+            return false to "No local WHOOP access token available to revoke."
+        }
+
+        val conn = (URL(REVOKE_URL).openConnection() as HttpURLConnection).apply {
+            requestMethod = "DELETE"
+            setRequestProperty("Authorization", "${tok.tokenType} ${tok.accessToken}")
+            setRequestProperty("Accept", "application/json")
+        }
+
+        return try {
+            val code = conn.responseCode
+            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+            val body = stream?.use { s ->
+                BufferedReader(InputStreamReader(s)).readText()
+            }.orEmpty()
+
+            val ok = (code == 204) || (code in 200..299)
+            if (!ok) {
+                Log.w(TAG, "WHOOP revoke failed HTTP $code: $body")
+            }
+
+            ok to "HTTP $code${if (body.isNotBlank()) ": $body" else ""}"
+        } catch (t: Throwable) {
+            Log.w(TAG, "WHOOP revoke exception: ${t.message}", t)
+            false to "Exception: ${t.javaClass.simpleName}: ${t.message ?: "unknown"}"
+        } finally {
+            runCatching { conn.disconnect() }
+        }
+    }
+
+    suspend fun disconnectWithDebug(context: Context): Pair<Boolean, String> {
+        val appCtx = context.applicationContext
+
+        val (revoked, debug) = runCatching { revokeAccessWithDebug(appCtx) }
+            .getOrElse { false to "Exception: ${it.javaClass.simpleName}: ${it.message ?: "unknown"}" }
+
+        runCatching { WhoopTokenStore(appCtx).clear() }
+        runCatching {
+            appCtx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().clear().apply()
+        }
+
+        return revoked to debug
     }
 
     private fun postForm(url: String, form: Map<String, String>): Result<WhoopToken> {

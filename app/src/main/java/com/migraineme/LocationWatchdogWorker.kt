@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -14,10 +15,15 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Watchdog worker that periodically checks if location sync worker is scheduled,
- * and restarts it if needed.
+ * and schedules it if needed.
+ * 
+ * This is the SAFETY NET for location scheduling:
+ * - Login schedules the 9AM worker
+ * - Toggle ON schedules the 9AM worker
+ * - If something goes wrong, watchdog fixes it
  * 
  * Uses PeriodicWorkRequest which SURVIVES phone death/reboot automatically.
- * Runs every 6 hours (daily worker, so less frequent checks are fine).
+ * Runs every 1 hour.
  */
 class LocationWatchdogWorker(
     appContext: Context,
@@ -28,20 +34,23 @@ class LocationWatchdogWorker(
         Log.d(TAG, "Watchdog: Checking location sync worker status")
         
         try {
-            // Check if location sync is enabled in settings
-            val enabled = DataCollectionSettings.isActive(
-                context = applicationContext,
-                table = "user_location_daily",
-                wearable = null,
-                defaultValue = true
-            )
+            // Check Supabase metric_settings for location enabled
+            val enabled = try {
+                val edge = EdgeFunctionsService()
+                val settings = edge.getMetricSettings(applicationContext)
+                settings.find { it.metric == "user_location_daily" }?.enabled ?: false
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to check Supabase settings: ${e.message}")
+                // If we can't reach Supabase, assume enabled and let worker check
+                true
+            }
             
             if (!enabled) {
-                Log.d(TAG, "Watchdog: Location sync disabled - skipping check")
+                Log.d(TAG, "Watchdog: Location sync disabled in Supabase - skipping check")
                 return@withContext Result.success()
             }
             
-            // Check if the worker is actually scheduled
+            // Check if the 9AM worker is scheduled
             val workManager = WorkManager.getInstance(applicationContext)
             val workInfos = workManager
                 .getWorkInfosForUniqueWork("location_daily_worker")
@@ -54,11 +63,13 @@ class LocationWatchdogWorker(
                               }
             
             if (!isScheduled) {
-                Log.w(TAG, "⚠️ Watchdog: Location sync worker is NOT scheduled! Restarting...")
+                Log.w(TAG, "⚠️ Watchdog: Location sync worker is NOT scheduled! Scheduling now...")
                 LocationDailySyncWorker.scheduleNext(applicationContext)
-                Log.d(TAG, "✅ Watchdog: Location worker restarted successfully")
+                Log.d(TAG, "✅ Watchdog: Location worker scheduled for next 9AM")
             } else {
-                val state = workInfos.first().state
+                val state = workInfos.firstOrNull { 
+                    it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING 
+                }?.state
                 Log.d(TAG, "✅ Watchdog: Location worker is scheduled (state: $state)")
             }
             
@@ -73,29 +84,48 @@ class LocationWatchdogWorker(
     companion object {
         private const val TAG = "LocationWatchdog"
         private const val UNIQUE_NAME = "location_watchdog"
+        private const val UNIQUE_NAME_ONCE = "location_watchdog_once"
         
         /**
          * Schedule the watchdog as PERIODIC work.
-         * Runs every 6 hours (less frequent than ambient noise since this is daily sync).
+         * Runs every 1 hour.
          */
         fun schedule(context: Context) {
             try {
-                Log.d(TAG, "Scheduling watchdog worker (periodic, every 6 hours)")
+                Log.d(TAG, "Scheduling watchdog worker (periodic, every 1 hour)")
                 
                 val request = PeriodicWorkRequestBuilder<LocationWatchdogWorker>(
-                    repeatInterval = 6,
+                    repeatInterval = 1,
                     repeatIntervalTimeUnit = TimeUnit.HOURS
                 ).build()
                 
                 WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                     UNIQUE_NAME,
-                    ExistingPeriodicWorkPolicy.KEEP,
+                    ExistingPeriodicWorkPolicy.UPDATE,
                     request
                 )
                 
-                Log.d(TAG, "✅ Watchdog scheduled successfully (survives phone death)")
+                Log.d(TAG, "✅ Watchdog scheduled successfully")
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Error scheduling watchdog: ${e.message}", e)
+            }
+        }
+        
+        /**
+         * Run watchdog check once immediately (e.g., on app resume).
+         */
+        fun runOnce(context: Context) {
+            try {
+                Log.d(TAG, "Running watchdog once (immediate)")
+                
+                val request = OneTimeWorkRequestBuilder<LocationWatchdogWorker>()
+                    .build()
+                
+                WorkManager.getInstance(context).enqueue(request)
+                
+                Log.d(TAG, "✅ Watchdog one-time check enqueued")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Error running watchdog once: ${e.message}", e)
             }
         }
         

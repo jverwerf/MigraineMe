@@ -554,6 +554,8 @@ private fun TriggersPage(
         item { Text("Triggers", style = MaterialTheme.typography.titleMedium) }
         items(linked, key = { it.id }) { t ->
             val mark = deleteIds.contains(t.id)
+            val isPredicted = t.type == "menstruation_predicted"
+            
             ElevatedCard(Modifier.fillMaxWidth()) {
                 Row(
                     Modifier
@@ -566,11 +568,21 @@ private fun TriggersPage(
                         Text("Time: ${formatIsoDdMmYyHm(t.startAt)}")
                         if (!t.notes.isNullOrBlank()) Text("Notes: ${t.notes}")
                         if (mark) Text("Marked for deletion", color = MaterialTheme.colorScheme.error)
+                        if (isPredicted) {
+                            Text(
+                                "Predicted",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
                     }
-                    Row {
-                        TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
-                        IconButton(onClick = { toggleDelete(t.id) }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Toggle delete trigger")
+                    // Only show Edit/Delete for non-predicted triggers
+                    if (!isPredicted) {
+                        Row {
+                            TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
+                            IconButton(onClick = { toggleDelete(t.id) }) {
+                                Icon(Icons.Filled.Delete, contentDescription = "Toggle delete trigger")
+                            }
                         }
                     }
                 }

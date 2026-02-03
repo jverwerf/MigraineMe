@@ -86,6 +86,12 @@ object MenstruationTrackingHelper {
                 autoUpdateAverage = autoUpdate
             )
 
+            // Persist manual log as a trigger (used by prediction + backend conversion logic)
+            ensureManualMenstruationTrigger(
+                accessToken = accessToken,
+                lastDate = lastDate
+            )
+
             PredictedMenstruationHelper.ensureExists(context.applicationContext)
             MetricToggleHelper.toggle(context.applicationContext, "menstruation", true)
             MenstruationSyncScheduler.schedule(context.applicationContext)
@@ -122,9 +128,54 @@ object MenstruationTrackingHelper {
                 avgCycleLength = avgCycle,
                 autoUpdateAverage = autoUpdate
             )
+
+            // Persist manual log as a trigger (used by prediction + backend conversion logic)
+            ensureManualMenstruationTrigger(
+                accessToken = accessToken,
+                lastDate = lastDate
+            )
+
             true
         }.onFailure {
             android.util.Log.e("MenstruationHelper", "updateSettingsOnly failed: ${it.message}", it)
         }.getOrDefault(false)
+    }
+
+    /**
+     * When the user logs a "last period date" via the menstruation settings UI, persist it as a real trigger.
+     *
+     * This supports:
+     * - prediction logic that looks at last real "menstruation" triggers
+     * - backend jobs (e.g., convert-predicted-menstruations) that skip auto-conversion if a manual period was logged
+     */
+    private suspend fun ensureManualMenstruationTrigger(
+        accessToken: String,
+        lastDate: LocalDate?
+    ) {
+        if (lastDate == null) return
+
+        val db = SupabaseDbService(
+            BuildConfig.SUPABASE_URL,
+            BuildConfig.SUPABASE_ANON_KEY
+        )
+
+        val day = lastDate.toString()
+
+        // Avoid duplicates if user taps Save multiple times for the same date.
+        val alreadyLogged = db.getAllTriggers(accessToken).any { t ->
+            t.type == "menstruation" &&
+                    (t.source ?: "manual") == "manual" &&
+                    t.startAt.startsWith(day)
+        }
+
+        if (alreadyLogged) return
+
+        db.insertTrigger(
+            accessToken = accessToken,
+            migraineId = null,
+            type = "menstruation",
+            startAt = "${day}T09:00:00Z",
+            notes = "Logged via menstruation settings"
+        )
     }
 }

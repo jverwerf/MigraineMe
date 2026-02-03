@@ -23,15 +23,6 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Captures ~60 seconds of ambient loudness metrics and uploads numbers to Supabase.
- *
- * This worker runs in the foreground (notification visible only during recording) so microphone
- * access is allowed.
- *
- * NOTE (production cadence):
- * - WorkManager periodic work cannot run every 30 minutes (15 minutes is the platform minimum).
- * - This worker "self-reschedules" as one-time work every ~30 minutes while the
- *   ambient_noise_samples toggle is enabled.
- * - Android may still defer runs under battery optimizations / background restrictions.
  */
 class AmbientNoiseSampleWorker(
     appContext: Context,
@@ -43,14 +34,22 @@ class AmbientNoiseSampleWorker(
 
         Log.d(LOG_TAG, "Worker started - checking settings")
 
-        val enabled = DataCollectionSettings.isActive(
-            context = ctx,
-            table = "ambient_noise_samples",
-            wearable = null,
-            defaultValue = true
-        )
+        // Check Supabase metric_settings for ambient noise enabled
+        val enabled = try {
+            val edge = EdgeFunctionsService()
+            val settings = edge.getMetricSettings(ctx)
+            val isEnabled = settings.find { it.metric == "ambient_noise_samples" }?.enabled ?: false
+            // Cache locally for ScreenOnReceiver
+            AmbientNoisePrefs.setEnabled(ctx, isEnabled)
+            isEnabled
+        } catch (e: Exception) {
+            Log.w(LOG_TAG, "Failed to check Supabase settings: ${e.message}, assuming disabled")
+            false
+        }
+
         if (!enabled) {
-            Log.d(LOG_TAG, "ambient_noise_samples disabled — cancel loop")
+            Log.d(LOG_TAG, "ambient_noise_samples disabled in Supabase — cancel loop")
+            AmbientNoisePrefs.setEnabled(ctx, false)
             cancel(ctx)
             return@withContext Result.success()
         }
@@ -95,6 +94,12 @@ class AmbientNoiseSampleWorker(
                 return@withContext Result.success()
             }
 
+            // Skip silent samples (screen off / mic blocked)
+            if (metrics.lMean == 0.0 && metrics.lMax == 0.0) {
+                Log.d(LOG_TAG, "Silent sample detected (likely screen off) — skip upload")
+                return@withContext Result.success()
+            }
+
             val flags = buildMap<String, String> {
                 put("frames", metrics.frames.toString())
                 put("source", "android")
@@ -110,6 +115,9 @@ class AmbientNoiseSampleWorker(
                 lMax = metrics.lMax,
                 qualityFlags = flags
             )
+
+            // Record successful sample time locally for ScreenOnReceiver
+            AmbientNoisePrefs.recordSuccessfulSample(ctx, metrics.lMean, metrics.lMax)
 
             Log.d(LOG_TAG, "Uploaded ambient noise sample frames=${metrics.frames}")
             Result.success()
@@ -162,21 +170,12 @@ class AmbientNoiseSampleWorker(
         private const val FOREGROUND_NOTIF_ID = 92001
         private const val LOOP_DELAY_MINUTES = 30L
 
+        /**
+         * Schedule worker to run soon (used by regular loop).
+         * Uses KEEP policy - won't interrupt if already running/queued.
+         */
         fun schedule(context: Context) {
             try {
-                val enabled = DataCollectionSettings.isActive(
-                    context = context,
-                    table = "ambient_noise_samples",
-                    wearable = null,
-                    defaultValue = true
-                )
-
-                if (!enabled) {
-                    Log.d(LOG_TAG, "schedule() called but sampling is disabled - cancelling instead")
-                    cancel(context)
-                    return
-                }
-
                 Log.d(LOG_TAG, "Scheduling ambient noise sampling worker")
 
                 val req = OneTimeWorkRequestBuilder<AmbientNoiseSampleWorker>()
@@ -194,21 +193,31 @@ class AmbientNoiseSampleWorker(
             }
         }
 
-        private fun scheduleNext(context: Context) {
+        /**
+         * Schedule worker to run immediately (used by ScreenOnReceiver).
+         * Uses REPLACE policy - cancels any pending delayed work to run now.
+         */
+        fun scheduleImmediate(context: Context) {
             try {
-                val enabled = DataCollectionSettings.isActive(
-                    context = context,
-                    table = "ambient_noise_samples",
-                    wearable = null,
-                    defaultValue = true
+                Log.d(LOG_TAG, "Scheduling IMMEDIATE ambient noise sampling")
+
+                val req = OneTimeWorkRequestBuilder<AmbientNoiseSampleWorker>()
+                    .build()
+
+                WorkManager.getInstance(context).enqueueUniqueWork(
+                    UNIQUE,
+                    ExistingWorkPolicy.REPLACE,
+                    req
                 )
 
-                if (!enabled) {
-                    Log.d(LOG_TAG, "scheduleNext() detected sampling is now disabled - stopping loop")
-                    cancel(context)
-                    return
-                }
+                Log.d(LOG_TAG, "Immediate worker scheduled")
+            } catch (e: Exception) {
+                Log.e(LOG_TAG, "Error scheduling immediate worker: ${e.message}", e)
+            }
+        }
 
+        private fun scheduleNext(context: Context) {
+            try {
                 Log.d(LOG_TAG, "Scheduling next run in $LOOP_DELAY_MINUTES minutes")
 
                 val req = OneTimeWorkRequestBuilder<AmbientNoiseSampleWorker>()

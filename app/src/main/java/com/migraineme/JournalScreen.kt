@@ -1,3 +1,4 @@
+// FILE: app/src/main/java/com/migraineme/JournalScreen.kt
 package com.migraineme
 
 import androidx.compose.foundation.layout.Arrangement
@@ -5,23 +6,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,13 +33,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import androidx.compose.foundation.layout.width
-
 
 @Composable
 fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: LogViewModel) {
@@ -67,161 +65,236 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
         else -> journal
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Replaces the duplicate "Journal" title: a filter control
-        Box(Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = selectedFilter,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Filter") },
-                trailingIcon = {
-                    IconButton(onClick = { filterOpen = true }) {
-                        Text("▼")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            DropdownMenu(
-                expanded = filterOpen,
-                onDismissRequest = { filterOpen = false }
-            ) {
-                filters.forEachIndexed { i, f ->
-                    if (i == 5) Divider()
-                    DropdownMenuItem(
-                        text = { Text(f) },
-                        onClick = {
-                            selectedFilter = f
-                            filterOpen = false
+    val scrollState = rememberScrollState()
+
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll) {
+            // Filter Card (Hero style like Home)
+            HeroCard {
+                Text(
+                    "Filter",
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+
+                Box(Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = selectedFilter,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { filterOpen = true }) {
+                                Text("▼", color = Color.White)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
+                        )
+                    )
+                    DropdownMenu(
+                        expanded = filterOpen,
+                        onDismissRequest = { filterOpen = false }
+                    ) {
+                        filters.forEachIndexed { i, f ->
+                            if (i == 5) Divider()
+                            DropdownMenuItem(
+                                text = { Text(f) },
+                                onClick = {
+                                    selectedFilter = f
+                                    filterOpen = false
+                                }
+                            )
                         }
+                    }
+                }
+
+                Text(
+                    "${filtered.size} entries",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            // Journal Entries
+            if (filtered.isEmpty()) {
+                BaseCard {
+                    Text(
+                        "No logs found",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Start logging migraines, triggers, medicines, and reliefs to see them here.",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            } else {
+                filtered.forEach { ev ->
+                    JournalEntryCard(
+                        event = ev,
+                        authState = authState,
+                        navController = navController,
+                        vm = vm
                     )
                 }
             }
         }
+    }
+}
 
-        Spacer(Modifier.height(16.dp))
+@Composable
+private fun JournalEntryCard(
+    event: JournalEvent,
+    authState: AuthState,
+    navController: NavHostController,
+    vm: LogViewModel
+) {
+    val needsAttn = needsAttention(event)
+    var confirmDelete by rememberSaveable((event as? Any)?.hashCode() ?: 0) { mutableStateOf(false) }
 
-        if (filtered.isEmpty()) {
-            Text("No logs.")
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(filtered) { ev ->
-                    val needsAttn = needsAttention(ev)
-                    var confirmDelete by rememberSaveable((ev as? Any)?.hashCode() ?: 0) { mutableStateOf(false) }
-
-                    ElevatedCard(Modifier.fillMaxWidth()) {
-                        Box(Modifier.fillMaxWidth()) {
-                            Column(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                when (ev) {
-                                    is JournalEvent.Migraine -> {
-                                        Text("Migraine", style = MaterialTheme.typography.titleMedium)
-                                        rowLine("Type", ev.row.type ?: "-")
-                                        rowLine("Severity", ev.row.severity?.toString() ?: "Not set")
-                                        rowTime("Start", ev.row.startAt)
-                                        rowTime("End", ev.row.endAt)
-                                        if (!ev.row.notes.isNullOrBlank()) rowLine("Notes", ev.row.notes!!)
-                                        CardActions(
-                                            onEdit = { navController.navigate("${Routes.EDIT_MIGRAINE}/${ev.row.id}") },
-                                            onDelete = { confirmDelete = true }
-                                        )
-                                        if (confirmDelete) {
-                                            DeleteDialog(
-                                                onDismiss = { confirmDelete = false },
-                                                onConfirm = {
-                                                    val token = authState.accessToken
-                                                    if (!token.isNullOrBlank()) vm.removeMigraine(token, ev.row.id)
-                                                    confirmDelete = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                    is JournalEvent.Trigger -> {
-                                        Text("Trigger", style = MaterialTheme.typography.titleMedium)
-                                        rowLine("Type", ev.row.type ?: "-")
-                                        rowTime("Start", ev.row.startAt)
-                                        if (!ev.row.notes.isNullOrBlank()) rowLine("Notes", ev.row.notes!!)
-                                        CardActions(
-                                            onEdit = { navController.navigate("${Routes.EDIT_TRIGGER}/${ev.row.id}") },
-                                            onDelete = { confirmDelete = true }
-                                        )
-                                        if (confirmDelete) {
-                                            DeleteDialog(
-                                                onDismiss = { confirmDelete = false },
-                                                onConfirm = {
-                                                    val token = authState.accessToken
-                                                    if (!token.isNullOrBlank()) vm.removeTrigger(token, ev.row.id)
-                                                    confirmDelete = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                    is JournalEvent.Medicine -> {
-                                        Text("Medicine", style = MaterialTheme.typography.titleMedium)
-                                        rowLine("Name", ev.row.name ?: "-")
-                                        rowAmount("Amount", ev.row.amount)
-                                        rowTime("Start", ev.row.startAt)
-                                        if (!ev.row.notes.isNullOrBlank()) rowLine("Notes", ev.row.notes!!)
-                                        CardActions(
-                                            onEdit = { navController.navigate("${Routes.EDIT_MEDICINE}/${ev.row.id}") },
-                                            onDelete = { confirmDelete = true }
-                                        )
-                                        if (confirmDelete) {
-                                            DeleteDialog(
-                                                onDismiss = { confirmDelete = false },
-                                                onConfirm = {
-                                                    val token = authState.accessToken
-                                                    if (!token.isNullOrBlank()) vm.removeMedicine(token, ev.row.id)
-                                                    confirmDelete = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                    is JournalEvent.Relief -> {
-                                        Text("Relief", style = MaterialTheme.typography.titleMedium)
-                                        rowLine("Type", ev.row.type ?: "-")
-                                        rowDuration("Duration", ev.row.durationMinutes)
-                                        rowTime("Start", ev.row.startAt)
-                                        if (!ev.row.notes.isNullOrBlank()) rowLine("Notes", ev.row.notes!!)
-                                        CardActions(
-                                            onEdit = { navController.navigate("${Routes.EDIT_RELIEF}/${ev.row.id}") },
-                                            onDelete = { confirmDelete = true }
-                                        )
-                                        if (confirmDelete) {
-                                            DeleteDialog(
-                                                onDismiss = { confirmDelete = false },
-                                                onConfirm = {
-                                                    val token = authState.accessToken
-                                                    if (!token.isNullOrBlank()) vm.removeRelief(token, ev.row.id)
-                                                    confirmDelete = false
-                                                }
-                                            )
-                                        }
-                                    }
+    BaseCard {
+        Box(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                when (event) {
+                    is JournalEvent.Migraine -> {
+                        Text(
+                            "Migraine",
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        JournalRowLine("Type", event.row.type ?: "-")
+                        JournalRowLine("Severity", event.row.severity?.toString() ?: "Not set")
+                        JournalRowTime("Start", event.row.startAt)
+                        JournalRowTime("End", event.row.endAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        JournalCardActions(
+                            onEdit = { navController.navigate("${Routes.EDIT_MIGRAINE}/${event.row.id}") },
+                            onDelete = { confirmDelete = true }
+                        )
+                        if (confirmDelete) {
+                            DeleteDialog(
+                                onDismiss = { confirmDelete = false },
+                                onConfirm = {
+                                    val token = authState.accessToken
+                                    if (!token.isNullOrBlank()) vm.removeMigraine(token, event.row.id)
+                                    confirmDelete = false
                                 }
+                            )
+                        }
+                    }
+                    is JournalEvent.Trigger -> {
+                        val isPredicted = event.row.type == "menstruation_predicted"
+                        
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Trigger",
+                                color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            if (isPredicted) {
+                                Text(
+                                    "Predicted",
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
-
-                            if (needsAttn) {
-                                Icon(
-                                    imageVector = Icons.Filled.Error,
-                                    contentDescription = "Missing data",
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(8.dp)
+                        }
+                        JournalRowLine("Type", event.row.type ?: "-")
+                        JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        
+                        // Only show Edit/Delete for non-predicted triggers
+                        if (!isPredicted) {
+                            JournalCardActions(
+                                onEdit = { navController.navigate("${Routes.EDIT_TRIGGER}/${event.row.id}") },
+                                onDelete = { confirmDelete = true }
+                            )
+                            if (confirmDelete) {
+                                DeleteDialog(
+                                    onDismiss = { confirmDelete = false },
+                                    onConfirm = {
+                                        val token = authState.accessToken
+                                        if (!token.isNullOrBlank()) vm.removeTrigger(token, event.row.id)
+                                        confirmDelete = false
+                                    }
                                 )
                             }
                         }
                     }
+                    is JournalEvent.Medicine -> {
+                        Text(
+                            "Medicine",
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        JournalRowLine("Name", event.row.name ?: "-")
+                        JournalRowAmount("Amount", event.row.amount)
+                        JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        JournalCardActions(
+                            onEdit = { navController.navigate("${Routes.EDIT_MEDICINE}/${event.row.id}") },
+                            onDelete = { confirmDelete = true }
+                        )
+                        if (confirmDelete) {
+                            DeleteDialog(
+                                onDismiss = { confirmDelete = false },
+                                onConfirm = {
+                                    val token = authState.accessToken
+                                    if (!token.isNullOrBlank()) vm.removeMedicine(token, event.row.id)
+                                    confirmDelete = false
+                                }
+                            )
+                        }
+                    }
+                    is JournalEvent.Relief -> {
+                        Text(
+                            "Relief",
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        JournalRowLine("Type", event.row.type ?: "-")
+                        JournalRowDuration("Duration", event.row.durationMinutes)
+                        JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        JournalCardActions(
+                            onEdit = { navController.navigate("${Routes.EDIT_RELIEF}/${event.row.id}") },
+                            onDelete = { confirmDelete = true }
+                        )
+                        if (confirmDelete) {
+                            DeleteDialog(
+                                onDismiss = { confirmDelete = false },
+                                onConfirm = {
+                                    val token = authState.accessToken
+                                    if (!token.isNullOrBlank()) vm.removeRelief(token, event.row.id)
+                                    confirmDelete = false
+                                }
+                            )
+                        }
+                    }
                 }
+            }
+
+            if (needsAttn) {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Missing data",
+                    tint = AppTheme.AccentPink,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                )
             }
         }
     }
@@ -241,19 +314,65 @@ private fun needsAttention(ev: JournalEvent): Boolean {
 /* ---------- UI helpers ---------- */
 
 @Composable
-private fun CardActions(
+private fun JournalCardActions(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Spacer(Modifier.height(8.dp))
+    Divider(color = Color.White.copy(alpha = 0.1f))
+    Spacer(Modifier.height(4.dp))
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
-        TextButton(onClick = onEdit) { Text("Edit") }
-        Spacer(Modifier.width(4.dp))
-        TextButton(onClick = onDelete) { Text("Delete") }
+        TextButton(onClick = onEdit) {
+            Text("Edit", color = AppTheme.AccentPurple)
+        }
+        Spacer(Modifier.width(8.dp))
+        TextButton(onClick = onDelete) {
+            Text("Delete", color = Color(0xFFFF6B6B))
+        }
     }
+}
+
+@Composable
+private fun JournalRowLine(label: String, value: String) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(value, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun JournalRowTime(label: String, isoTime: String?) {
+    val display = isoTime?.let {
+        try {
+            val zdt = ZonedDateTime.parse(it)
+            zdt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+        } catch (_: Exception) {
+            it
+        }
+    } ?: "-"
+    JournalRowLine(label, display)
+}
+
+@Composable
+private fun JournalRowAmount(label: String, amount: String?) {
+    JournalRowLine(label, amount ?: "-")
+}
+
+@Composable
+private fun JournalRowDuration(label: String, minutes: Int?) {
+    val display = minutes?.let {
+        when {
+            it >= 60 -> "${it / 60}h ${it % 60}m"
+            else -> "${it}m"
+        }
+    } ?: "-"
+    JournalRowLine(label, display)
 }
 
 @Composable
@@ -263,54 +382,17 @@ private fun DeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Confirm") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        title = { Text("Delete entry") },
-        text = { Text("Are you sure you want to remove this entry?") }
+        title = { Text("Delete Entry") },
+        text = { Text("Are you sure you want to delete this entry? This cannot be undone.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Delete", color = Color(0xFFFF6B6B))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
     )
-}
-
-@Composable
-private fun rowLine(label: String, value: String) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("$label:")
-        Text(value)
-    }
-}
-
-@Composable
-private fun rowTime(label: String, iso: String?) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("$label:")
-        Text(formatIsoDdMmYyHm(iso))
-    }
-}
-
-@Composable
-private fun rowAmount(label: String, amount: String?) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("$label:")
-        Text(if (amount.isNullOrBlank()) "Not set" else amount)
-    }
-}
-
-@Composable
-private fun rowDuration(label: String, minutes: Int?) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("$label:")
-        Text(if (minutes == null) "Not set" else "$minutes min")
-    }
-}
-
-/* ---------- Format helper ---------- */
-
-private fun formatIsoDdMmYyHm(iso: String?): String {
-    if (iso.isNullOrBlank()) return "Not set"
-    return try {
-        val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
-        ldt.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
-    } catch (_: Exception) {
-        "Not set"
-    }
 }

@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -57,6 +58,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.foundation.layout.Spacer
 
 private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://www.andlane.co.uk/migraineme-recover"
+private const val LOG_TAG = "LoginScreen"
 
 @Composable
 fun LoginScreen(
@@ -69,7 +71,7 @@ fun LoginScreen(
     val appCtx = ctx.applicationContext
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var loginCompleted by remember { mutableStateOf(false) }
+    var needsPermissionPrompt by remember { mutableStateOf(false) }
 
     var showEmailForm by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
@@ -87,39 +89,43 @@ fun LoginScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
-        if (grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        ) {
-            LocationDailySyncWorker.runOnceNow(appCtx)
-            LocationDailySyncWorker.scheduleNext(appCtx)
+        Log.d(LOG_TAG, "permissionLauncher callback: grants=$grants")
+        val granted = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        if (granted) {
+            Log.d(LOG_TAG, "Permission granted, enabling location metric")
+            scope.launch {
+                withContext(Dispatchers.IO) {
+                    EdgeFunctionsService().upsertMetricSetting(
+                        context = appCtx,
+                        metric = "user_location_daily",
+                        enabled = true
+                    )
+                }
+                // Run now - worker's finally block will schedule next 9AM
+                Log.d(LOG_TAG, "Starting location worker from permissionLauncher")
+                LocationDailySyncWorker.runOnceNow(appCtx)
+                LocationWatchdogWorker.schedule(appCtx)
+                Log.d(LOG_TAG, "Calling onLoggedIn from permissionLauncher")
+                onLoggedIn()
+            }
+        } else {
+            Log.d(LOG_TAG, "Permission denied, calling onLoggedIn")
+            onLoggedIn()
         }
     }
 
-    LaunchedEffect(loginCompleted) {
-        if (!loginCompleted) return@LaunchedEffect
-
-        val fine = ContextCompat.checkSelfPermission(
-            ctx,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val coarse = ContextCompat.checkSelfPermission(
-            ctx,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (fine || coarse) {
-            LocationDailySyncWorker.runOnceNow(appCtx)
-            LocationDailySyncWorker.scheduleNext(appCtx)
-            onLoggedIn()
-        } else {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+    // Only used to trigger permission prompt after login completes
+    LaunchedEffect(needsPermissionPrompt) {
+        if (!needsPermissionPrompt) return@LaunchedEffect
+        Log.d(LOG_TAG, "Launching permission prompt")
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
-        }
+        )
     }
 
     fun handleSuccessfulSession(
@@ -130,15 +136,18 @@ fun LoginScreen(
         avatarUrlHint: String? = null,
         providerHint: String? = null
     ) {
+        Log.d(LOG_TAG, "handleSuccessfulSession called, provider=$providerHint")
+
         val userId = JwtUtils.extractUserIdFromAccessToken(token)
         if (userId.isNullOrBlank()) {
+            Log.e(LOG_TAG, "No userId in access token")
             scope.launch {
                 snackbarHostState.showSnackbar("Login failed: no userId in access token")
             }
             return
         }
 
-        // Store provider (+ refresh/expires) so app can restore + refresh for workers.
+        Log.d(LOG_TAG, "userId=$userId, saving session")
         SessionStore.saveSession(
             context = appCtx,
             accessToken = token,
@@ -152,6 +161,7 @@ fun LoginScreen(
 
         scope.launch {
             try {
+                Log.d(LOG_TAG, "Ensuring profile")
                 withContext(Dispatchers.IO) {
                     SupabaseProfileService.ensureProfile(
                         accessToken = token,
@@ -160,12 +170,46 @@ fun LoginScreen(
                         avatarUrlHint = avatarUrlHint
                     )
                 }
-            } catch (_: Throwable) {
-                // Never block login on profile hydration.
+                Log.d(LOG_TAG, "Profile ensured")
+            } catch (t: Throwable) {
+                Log.w(LOG_TAG, "Profile hydration failed (non-blocking)", t)
             }
 
+            Log.d(LOG_TAG, "Calling MetricsSyncManager.onLogin")
             MetricsSyncManager.onLogin(appCtx, token, snackbarHostState)
-            loginCompleted = true
+            Log.d(LOG_TAG, "MetricsSyncManager.onLogin completed")
+
+            // Check permissions and start worker
+            val fine = ContextCompat.checkSelfPermission(
+                appCtx,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            val coarse = ContextCompat.checkSelfPermission(
+                appCtx,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            Log.d(LOG_TAG, "Permissions: fine=$fine, coarse=$coarse")
+
+            if (fine || coarse) {
+                Log.d(LOG_TAG, "Permission already granted, enabling location metric and starting worker")
+                withContext(Dispatchers.IO) {
+                    EdgeFunctionsService().upsertMetricSetting(
+                        context = appCtx,
+                        metric = "user_location_daily",
+                        enabled = true
+                    )
+                }
+                // Run now - worker's finally block will schedule next 9AM
+                LocationDailySyncWorker.runOnceNow(appCtx)
+                LocationWatchdogWorker.schedule(appCtx)
+                Log.d(LOG_TAG, "Calling onLoggedIn")
+                onLoggedIn()
+            } else {
+                Log.d(LOG_TAG, "No permission, will prompt")
+                needsPermissionPrompt = true
+            }
         }
     }
 
@@ -188,7 +232,6 @@ fun LoginScreen(
         val prefs = ctx.getSharedPreferences("supabase_oauth", android.content.Context.MODE_PRIVATE)
         val last = prefs.getString("last_uri", null) ?: return false
 
-        // Clear immediately to avoid double-processing on recomposition.
         prefs.edit().remove("last_uri").apply()
 
         val uri = Uri.parse(last)
@@ -222,12 +265,11 @@ fun LoginScreen(
     }
 
     LaunchedEffect(Unit) {
-        // If the app was opened via migraineme://auth/callback, MainActivity stored it.
-        // Complete login here using the existing post-login flow.
         tryCompleteSupabaseOAuthReturn()
     }
 
     fun signInWithGoogle() {
+        Log.d(LOG_TAG, "signInWithGoogle called")
         error = null
         busy = true
 
@@ -262,12 +304,15 @@ fun LoginScreen(
                 val idToken = googleCred?.idToken
 
                 if (idToken.isNullOrBlank()) {
+                    Log.e(LOG_TAG, "Google sign-in failed: no idToken")
                     error = "Google sign-in failed."
                     return@launch
                 }
 
+                Log.d(LOG_TAG, "Got Google idToken, calling SupabaseAuthService.signInWithGoogleIdToken")
                 val ses = SupabaseAuthService.signInWithGoogleIdToken(idToken)
                 ses.accessToken?.let {
+                    Log.d(LOG_TAG, "Got Supabase accessToken, calling handleSuccessfulSession")
                     handleSuccessfulSession(
                         token = it,
                         refreshToken = ses.refreshToken,
@@ -277,11 +322,14 @@ fun LoginScreen(
                         providerHint = "google"
                     )
                 } ?: run {
+                    Log.e(LOG_TAG, "Invalid login response: no accessToken")
                     error = "Invalid login response."
                 }
             } catch (e: GetCredentialException) {
+                Log.e(LOG_TAG, "GetCredentialException", e)
                 error = e.message
             } catch (t: Throwable) {
+                Log.e(LOG_TAG, "Google sign-in error", t)
                 error = t.message ?: "Google sign-in failed."
             } finally {
                 busy = false
@@ -298,7 +346,6 @@ fun LoginScreen(
             return
         }
 
-        // Browser handoff is immediate; completion happens when we return via deep link.
         FacebookAuthService().startAuth(activity)
     }
 
@@ -313,7 +360,7 @@ fun LoginScreen(
             title = { Text("Reset password") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Enter your email and we’ll send you a reset link.")
+                    Text("Enter your email and we'll send you a reset link.")
                     OutlinedTextField(
                         value = forgotEmail,
                         onValueChange = { forgotEmail = it },
@@ -377,7 +424,6 @@ fun LoginScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // App logo (app/src/main/res/drawable/logo.png)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center

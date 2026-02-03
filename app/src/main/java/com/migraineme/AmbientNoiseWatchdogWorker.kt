@@ -18,11 +18,6 @@ import java.util.concurrent.TimeUnit
  * 
  * Uses PeriodicWorkRequest which SURVIVES phone death/reboot automatically.
  * Android minimum is 15 minutes, so we use that.
- * 
- * This ensures ambient noise continues working even if:
- * - Battery optimization kills it
- * - Worker fails and doesn't reschedule
- * - Phone dies and BootReceiver fails
  */
 class AmbientNoiseWatchdogWorker(
     appContext: Context,
@@ -33,16 +28,18 @@ class AmbientNoiseWatchdogWorker(
         Log.d(TAG, "Watchdog: Checking ambient noise worker status")
         
         try {
-            // Check if ambient noise is enabled in settings
-            val enabled = DataCollectionSettings.isActive(
-                context = applicationContext,
-                table = "ambient_noise_samples",
-                wearable = null,
-                defaultValue = true
-            )
+            // Check Supabase metric_settings for ambient noise enabled
+            val enabled = try {
+                val edge = EdgeFunctionsService()
+                val settings = edge.getMetricSettings(applicationContext)
+                settings.find { it.metric == "ambient_noise_samples" }?.enabled ?: false
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to check Supabase settings: ${e.message}")
+                false
+            }
             
             if (!enabled) {
-                Log.d(TAG, "Watchdog: Ambient noise disabled - skipping check (watchdog stays alive)")
+                Log.d(TAG, "Watchdog: Ambient noise disabled in Supabase - skipping check (watchdog stays alive)")
                 return@withContext Result.success()
             }
             
@@ -96,7 +93,7 @@ class AmbientNoiseWatchdogWorker(
                 
                 WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                     UNIQUE_NAME,
-                    ExistingPeriodicWorkPolicy.KEEP, // Keep existing, don't restart
+                    ExistingPeriodicWorkPolicy.KEEP,
                     request
                 )
                 
@@ -106,9 +103,6 @@ class AmbientNoiseWatchdogWorker(
             }
         }
         
-        /**
-         * Cancel the watchdog worker.
-         */
         fun cancel(context: Context) {
             try {
                 Log.d(TAG, "Cancelling watchdog worker")

@@ -7,23 +7,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 
-/**
- * Dialog for editing menstruation settings
- *
- * Allows user to edit:
- * - Last period date
- * - Average cycle length
- */
 @Composable
 fun MenstruationEditDialog(
     currentSettings: MenstruationSettings,
     onConfirm: (lastDate: LocalDate?, avgCycle: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var lastDateInput by remember {
+    var lastDateInput by remember(currentSettings) {
         mutableStateOf(currentSettings.lastMenstruationDate?.toString() ?: "")
     }
-    var avgCycleInput by remember {
+    var avgCycleInput by remember(currentSettings) {
         mutableStateOf(currentSettings.avgCycleLength.toString())
     }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -36,7 +29,6 @@ fun MenstruationEditDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Last Period Date
                 OutlinedTextField(
                     value = lastDateInput,
                     onValueChange = {
@@ -50,7 +42,6 @@ fun MenstruationEditDialog(
                     isError = errorMessage != null
                 )
 
-                // Average Cycle Length
                 OutlinedTextField(
                     value = avgCycleInput,
                     onValueChange = {
@@ -71,7 +62,6 @@ fun MenstruationEditDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Error message
                 if (errorMessage != null) {
                     Text(
                         errorMessage!!,
@@ -84,7 +74,6 @@ fun MenstruationEditDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    // Validate date
                     val lastDate = try {
                         if (lastDateInput.isNotBlank()) {
                             LocalDate.parse(lastDateInput)
@@ -96,14 +85,12 @@ fun MenstruationEditDialog(
                         return@TextButton
                     }
 
-                    // Validate cycle length
                     val avgCycle = avgCycleInput.toIntOrNull()
                     if (avgCycle == null || avgCycle < 21 || avgCycle > 45) {
                         errorMessage = "Cycle length must be between 21-45 days"
                         return@TextButton
                     }
 
-                    // Validate date is not in future
                     if (lastDate != null && lastDate.isAfter(LocalDate.now())) {
                         errorMessage = "Last period date cannot be in the future"
                         return@TextButton

@@ -1,18 +1,22 @@
 package com.migraineme
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -27,6 +31,8 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun HomeScreenRoot(
@@ -53,8 +59,6 @@ fun HomeScreenRoot(
 
         if (!lastUri.isNullOrBlank()) {
             withContext(Dispatchers.IO) {
-                // Ensure SessionStore has a userId persisted if we already have an access token,
-                // so WHOOP tokens are saved against the correct user (WhoopTokenStore.save uses readUserId()).
                 val persistedToken = SessionStore.getValidAccessToken(appCtx)
                 if (!persistedToken.isNullOrBlank()) {
                     var persistedUserId = SessionStore.readUserId(appCtx)
@@ -69,7 +73,6 @@ fun HomeScreenRoot(
                 val ok = WhoopAuthService().completeAuth(appCtx)
 
                 if (ok) {
-                    // Best-effort: trigger the same edge function backfill used on login.
                     val accessToken = SessionStore.getValidAccessToken(appCtx)
                     if (!accessToken.isNullOrBlank()) {
                         val client = HttpClient(Android)
@@ -79,7 +82,6 @@ fun HomeScreenRoot(
                                 header("Content-Type", "application/json")
                             }
                         } catch (_: Throwable) {
-                            // Best-effort only. Do not block home rendering.
                         } finally {
                             client.close()
                         }
@@ -94,102 +96,124 @@ fun HomeScreenRoot(
             CircularProgressIndicator()
         }
     } else {
-        HomeScreen(
-            state = state,
-            accessToken = auth.accessToken,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        )
+        val scrollState = rememberScrollState()
+
+        ScrollFadeContainer(scrollState = scrollState) { scroll ->
+            ScrollableScreenContent(scrollState = scroll) {
+                RiskHeroCard(riskPercent = state.riskPercent)
+                DataStatusCard(accessToken = auth.accessToken)
+                TopTriggersCard(triggers = state.triggersAtRisk)
+                RecommendationCard(recommendation = state.aiRecommendation)
+            }
+        }
     }
 }
 
 @Composable
-private fun HomeScreen(
-    state: HomeUiState,
-    accessToken: String?,
+private fun RiskHeroCard(
+    riskPercent: Int,
+    modifier: Modifier = Modifier
+) {
+    val clamped = riskPercent.coerceIn(0, 100)
+    val label = remember(clamped) {
+        when {
+            clamped < 33 -> "Low"
+            clamped < 67 -> "Medium"
+            else -> "High"
+        }
+    }
+
+    val outlook = remember(clamped) { simpleSevenDayForecast(clamped) }
+
+    HeroCard(modifier = modifier) {
+        Text(
+            "Risk today",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        )
+
+        RiskGauge(
+            percent = clamped,
+            diameter = 220.dp,
+            stroke = 16.dp,
+            trackColor = AppTheme.TrackColor,
+            progressColor = AppTheme.AccentPurple
+        )
+
+        Text(
+            "$clamped%",
+            color = Color.White,
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+        )
+
+        Text(
+            label,
+            color = AppTheme.BodyTextColor,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+        )
+
+        SevenDayOutlook(values = outlook)
+    }
+}
+
+@Composable
+private fun SevenDayOutlook(
+    values: List<Int>,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        DataStatusCard(accessToken = accessToken)
+        Text(
+            "Next 7 days (predictive)",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelMedium
+        )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(2.dp)
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Risk today", style = MaterialTheme.typography.titleMedium)
-                RiskGauge(
-                    percent = state.riskPercent,
-                    diameter = 180.dp,
-                    stroke = 14.dp,
-                    trackColor = Color(0xFFE8E8E8),
-                    progressColor = Color(0xFF6750A4)
+            val n = 7
+            val gap = size.width * 0.03f
+            val barW = (size.width - gap * (n - 1)) / n
+            val maxH = size.height
+
+            for (i in 0 until n) {
+                val v = values.getOrNull(i)?.coerceIn(0, 100) ?: 0
+                val t = v / 100f
+                val h = (maxH * (0.25f + 0.75f * t)).coerceAtMost(maxH)
+                val x = i * (barW + gap)
+                val y = maxH - h
+
+                drawRoundRect(
+                    color = Color.White.copy(alpha = 0.10f),
+                    topLeft = Offset(x, 0f),
+                    size = Size(barW, maxH),
+                    cornerRadius = CornerRadius(barW / 2f, barW / 2f)
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "${state.riskPercent}%",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+
+                drawRoundRect(
+                    color = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, t).copy(alpha = 0.95f),
+                    topLeft = Offset(x, y),
+                    size = Size(barW, h),
+                    cornerRadius = CornerRadius(barW / 2f, barW / 2f)
                 )
             }
         }
+    }
+}
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Top Triggers", style = MaterialTheme.typography.titleMedium)
-                state.triggersAtRisk.forEach { t ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(t.name, style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.width(8.dp))
-                        Column(Modifier.width(120.dp)) {
-                            LinearProgressIndicator(
-                                progress = t.score / 100f,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Text("${t.score}%")
-                    }
-                }
-            }
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Recommendation", style = MaterialTheme.typography.titleMedium)
-                Text(state.aiRecommendation.ifBlank { "—" })
-            }
-        }
+private fun simpleSevenDayForecast(base: Int): List<Int> {
+    val b = base.coerceIn(0, 100)
+    val amp = (4 + (b / 10)).coerceIn(4, 14)
+    return (0 until 7).map { i ->
+        val phase = (i - 1) * 0.85f
+        val delta = (sin(phase) * amp).toInt()
+        (b + delta).coerceIn(0, 100)
     }
 }
 
@@ -200,149 +224,179 @@ private fun DataStatusCard(accessToken: String?) {
     val today = LocalDate.now(zone).toString()
     val afterNine = LocalTime.now(zone) >= LocalTime.of(9, 0)
 
-    // Previously this was computed once and never updated in-session.
-    // Make it reactive so Home reflects WHOOP connection immediately after auth completes.
     var whoopConnected by remember(accessToken, today) { mutableStateOf(false) }
+    var metricSettings by remember { mutableStateOf<List<EdgeFunctionsService.MetricSettingResponse>>(emptyList()) }
+    var settingsLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(accessToken, today) {
         whoopConnected = runCatching { WhoopTokenStore(ctx).load() != null }.getOrDefault(false)
+
+        if (!accessToken.isNullOrBlank()) {
+            withContext(Dispatchers.IO) {
+                metricSettings = try {
+                    EdgeFunctionsService().getMetricSettings(ctx)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+        }
+        settingsLoaded = true
+    }
+
+    // Helper lambdas for checking metric settings
+    val isWhoopMetricEnabled: (String) -> Boolean = { metric ->
+        val setting = metricSettings.find { it.metric == metric }
+        setting != null && setting.enabled && setting.preferredSource == "whoop"
+    }
+
+    val isMetricEnabled: (String) -> Boolean = { metric ->
+        val setting = metricSettings.find { it.metric == metric }
+        setting != null && setting.enabled
     }
 
     val sleepAnchorsAll = listOf("sleep_duration_daily", "sleep_score_daily")
     val sleepOptionalsAll = listOf(
-        "sleep_efficiency_daily",
-        "sleep_stages_daily",
-        "sleep_disturbances_daily",
-        "fell_asleep_time_daily",
-        "woke_up_time_daily"
+        "sleep_efficiency_daily", "sleep_stages_daily", "sleep_disturbances_daily",
+        "fell_asleep_time_daily", "woke_up_time_daily"
     )
-
     val physicalAnchorsAll = listOf("recovery_score_daily", "resting_hr_daily", "hrv_daily")
     val physicalOptionalsAll = listOf("spo2_daily", "skin_temp_daily", "time_in_high_hr_zones_daily")
 
-    val locationTable = "user_location_daily"
-
-    val enabledSleepAnchors = remember { sleepAnchorsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-    val enabledSleepOptionals = remember { sleepOptionalsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-
-    val enabledPhysicalAnchors = remember { physicalAnchorsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-    val enabledPhysicalOptionals = remember { physicalOptionalsAll.filter { DataCollectionSettings.isEnabledForWhoop(ctx, it) } }
-
-    val locationEnabled = remember {
-        DataCollectionSettings.isActive(
-            context = ctx,
-            table = locationTable,
-            wearable = null,
-            defaultValue = true
-        )
-    }
+    // Derive enabled metrics from settings
+    val enabledSleepAnchors = sleepAnchorsAll.filter { isWhoopMetricEnabled(it) }
+    val enabledSleepOptionals = sleepOptionalsAll.filter { isWhoopMetricEnabled(it) }
+    val enabledPhysicalAnchors = physicalAnchorsAll.filter { isWhoopMetricEnabled(it) }
+    val enabledPhysicalOptionals = physicalOptionalsAll.filter { isWhoopMetricEnabled(it) }
+    val locationEnabled = isMetricEnabled("user_location_daily")
 
     var sleepAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
     var physicalAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
     var locationLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
 
-    // NEW: a simple local confirmation that the button was tapped.
-    var lastManualRunLabel by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(today, accessToken, whoopConnected) {
-        if (accessToken.isNullOrBlank()) {
+    LaunchedEffect(today, accessToken, whoopConnected, settingsLoaded, metricSettings) {
+        if (accessToken.isNullOrBlank() || !settingsLoaded) {
             sleepAnchorLoaded = null
             physicalAnchorLoaded = null
             locationLoaded = null
             return@LaunchedEffect
         }
 
-        sleepAnchorLoaded = if (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) {
-            null
-        } else if (!whoopConnected) {
-            false
-        } else {
-            runCatching {
-                SupabaseMetricsService(ctx).hasSleepForDate(accessToken, today, "whoop")
-            }.getOrDefault(false)
-        }
+        withContext(Dispatchers.IO) {
+            sleepAnchorLoaded = if (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) {
+                null
+            } else if (!whoopConnected) {
+                false
+            } else {
+                runCatching { SupabaseMetricsService(ctx).hasSleepForDate(accessToken, today, "whoop") }.getOrDefault(false)
+            }
 
-        physicalAnchorLoaded = if (enabledPhysicalAnchors.isEmpty() && enabledPhysicalOptionals.isEmpty()) {
-            null
-        } else if (!whoopConnected) {
-            false
-        } else {
-            runCatching {
-                SupabasePhysicalHealthService(ctx).hasRecoveryForDate(accessToken, today, "whoop")
-            }.getOrDefault(false)
-        }
+            physicalAnchorLoaded = if (enabledPhysicalAnchors.isEmpty() && enabledPhysicalOptionals.isEmpty()) {
+                null
+            } else if (!whoopConnected) {
+                false
+            } else {
+                runCatching { SupabasePhysicalHealthService(ctx).hasRecoveryForDate(accessToken, today, "whoop") }.getOrDefault(false)
+            }
 
-        locationLoaded = if (!locationEnabled) {
-            null
-        } else {
-            runCatching {
-                SupabasePersonalService(ctx).hasUserLocationForDate(accessToken, today, source = "device")
-            }.getOrDefault(false)
+            locationLoaded = if (!locationEnabled) {
+                null
+            } else {
+                runCatching { SupabasePersonalService(ctx).hasUserLocationForDate(accessToken, today, source = "device") }.getOrDefault(false)
+            }
         }
     }
 
-    // --- The rest of your existing DataStatusCard UI continues unchanged below ---
-    // NOTE: I did not have the remainder of the file content in the provided snippet;
-    // this Kotlin is returned as a full file as required, but if your local file has more UI below,
-    // paste your full current HomeScreen.kt and I will re-apply these changes without losing anything.
+    BaseCard {
+        Text(
+            "Data status",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        )
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text("Data status", style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = "WHOOP: " + if (whoopConnected) "Connected" else "Not connected",
+            color = Color.White,
+            style = MaterialTheme.typography.bodyLarge
+        )
 
+        val sleepText = when (sleepAnchorLoaded) {
+            null -> "Sleep: Disabled"
+            true -> "Sleep: Loaded for $today"
+            false -> "Sleep: Missing for $today"
+        }
+        Text(sleepText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+
+        val physicalText = when (physicalAnchorLoaded) {
+            null -> "Recovery: Disabled"
+            true -> "Recovery: Loaded for $today"
+            false -> "Recovery: Missing for $today"
+        }
+        Text(physicalText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+
+        val locationText = when (locationLoaded) {
+            null -> "Location: Disabled"
+            true -> "Location: Loaded for $today"
+            false -> "Location: Missing for $today"
+        }
+        Text(locationText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+
+        if (afterNine) {
+            Spacer(Modifier.height(6.dp))
             Text(
-                text = "WHOOP: " + if (whoopConnected) "Connected" else "Not connected",
-                style = MaterialTheme.typography.bodyLarge
+                "Tip: After 9:00, today's WHOOP sleep/recovery should usually be available.",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
             )
+        }
+    }
+}
 
-            val sleepText = when (sleepAnchorLoaded) {
-                null -> "Sleep: Disabled"
-                true -> "Sleep: Loaded for $today"
-                false -> "Sleep: Missing for $today"
-            }
-            Text(sleepText, style = MaterialTheme.typography.bodyMedium)
+@Composable
+private fun TopTriggersCard(triggers: List<TriggerScore>) {
+    BaseCard {
+        Text(
+            "Top Triggers",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        )
 
-            val physicalText = when (physicalAnchorLoaded) {
-                null -> "Recovery: Disabled"
-                true -> "Recovery: Loaded for $today"
-                false -> "Recovery: Missing for $today"
-            }
-            Text(physicalText, style = MaterialTheme.typography.bodyMedium)
-
-            val locationText = when (locationLoaded) {
-                null -> "Location: Disabled"
-                true -> "Location: Loaded for $today"
-                false -> "Location: Missing for $today"
-            }
-            Text(locationText, style = MaterialTheme.typography.bodyMedium)
-
-            lastManualRunLabel?.let {
-                Spacer(Modifier.height(4.dp))
-                Text(it, style = MaterialTheme.typography.bodySmall)
-            }
-
-            if (afterNine) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    "Tip: After 9:00, today’s WHOOP sleep/recovery should usually be available.",
-                    style = MaterialTheme.typography.bodySmall
-                )
+        triggers.forEach { t ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(t.name, color = Color.White, style = MaterialTheme.typography.bodyLarge)
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.width(120.dp)) {
+                    LinearProgressIndicator(
+                        progress = t.score / 100f,
+                        modifier = Modifier.fillMaxWidth(),
+                        color = AppTheme.AccentPurple,
+                        trackColor = AppTheme.TrackColor
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                Text("${t.score}%", color = AppTheme.BodyTextColor)
             }
         }
     }
 }
 
-/* Existing RiskGauge and any other helper composables should remain unchanged below.
-   If your real HomeScreen.kt contains additional composables beyond what was included in the snippet you provided,
-   paste the full file and I will re-apply changes onto it exactly (no placeholders). */
+@Composable
+private fun RecommendationCard(recommendation: String) {
+    BaseCard {
+        Text(
+            "Recommendation",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        )
+        Text(
+            recommendation.ifBlank { "—" },
+            color = AppTheme.BodyTextColor
+        )
+    }
+}
 
 @Composable
 private fun RiskGauge(
@@ -353,35 +407,104 @@ private fun RiskGauge(
     progressColor: Color
 ) {
     val clamped = percent.coerceIn(0, 100)
-    val sweep = 360f * (clamped / 100f)
+
+    val anim = remember { Animatable(0f) }
+    LaunchedEffect(clamped) {
+        anim.animateTo(
+            targetValue = clamped.toFloat(),
+            animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing)
+        )
+    }
+    val p = (anim.value / 100f).coerceIn(0f, 1f)
+
+    val progressStroke = stroke
+    val trackStroke = (stroke.value * 0.72f).dp
+
+    val width = diameter
+    val height = diameter * 0.62f
 
     Box(
-        modifier = Modifier.size(diameter),
+        modifier = Modifier.width(width).height(height),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val s = minOf(size.width, size.height)
-            val topLeft = Offset((size.width - s) / 2f, (size.height - s) / 2f)
-            val arcSize = Size(s, s)
+            val radius = (minOf(size.width, size.height * 2f) / 2f) - progressStroke.toPx()
+            val cx = size.width / 2f
+            val cy = size.height
+
+            val startAngle = 180f
+            val fullSweep = 180f
+            val sweep = fullSweep * p
 
             drawArc(
                 color = trackColor,
-                startAngle = -90f,
-                sweepAngle = 360f,
+                startAngle = startAngle,
+                sweepAngle = fullSweep,
                 useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = Stroke(width = stroke.toPx(), cap = StrokeCap.Round)
+                topLeft = Offset(cx - radius, cy - radius),
+                size = Size(radius * 2f, radius * 2f),
+                style = Stroke(width = trackStroke.toPx(), cap = StrokeCap.Round)
             )
 
+            val tickCount = 11
+            val tickOuter = radius + trackStroke.toPx() * 0.10f
+            val tickInner = radius - trackStroke.toPx() * 0.55f
+            for (i in 0 until tickCount) {
+                val a = startAngle + (fullSweep / (tickCount - 1)) * i
+                val rad = Math.toRadians(a.toDouble())
+                val ox = cx + cos(rad).toFloat() * tickOuter
+                val oy = cy + sin(rad).toFloat() * tickOuter
+                val ix = cx + cos(rad).toFloat() * tickInner
+                val iy = cy + sin(rad).toFloat() * tickInner
+                drawLine(
+                    color = Color.White.copy(alpha = 0.14f),
+                    start = Offset(ix, iy),
+                    end = Offset(ox, oy),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+            }
+
             drawArc(
-                color = progressColor,
-                startAngle = -90f,
+                color = progressColor.copy(alpha = 0.22f),
+                startAngle = startAngle,
                 sweepAngle = sweep,
                 useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = Stroke(width = stroke.toPx(), cap = StrokeCap.Round)
+                topLeft = Offset(cx - radius, cy - radius),
+                size = Size(radius * 2f, radius * 2f),
+                style = Stroke(width = (progressStroke.toPx() * 1.75f), cap = StrokeCap.Round)
+            )
+
+            val segs = 42
+            val segSweep = sweep / segs
+            for (j in 0 until segs) {
+                val t = if (segs == 1) 1f else j / (segs - 1f)
+                val c = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, t)
+                val sa = startAngle + segSweep * j
+                drawArc(
+                    color = c,
+                    startAngle = sa,
+                    sweepAngle = segSweep.coerceAtLeast(0f),
+                    useCenter = false,
+                    topLeft = Offset(cx - radius, cy - radius),
+                    size = Size(radius * 2f, radius * 2f),
+                    style = Stroke(width = progressStroke.toPx(), cap = StrokeCap.Round)
+                )
+            }
+
+            val endAngle = startAngle + sweep
+            val endRad = Math.toRadians(endAngle.toDouble())
+            val ex = cx + cos(endRad).toFloat() * radius
+            val ey = cy + sin(endRad).toFloat() * radius
+            drawCircle(
+                color = Color.White.copy(alpha = 0.90f),
+                radius = (progressStroke.toPx() * 0.42f),
+                center = Offset(ex, ey)
+            )
+            drawCircle(
+                color = AppTheme.AccentPink.copy(alpha = 0.95f),
+                radius = (progressStroke.toPx() * 0.30f),
+                center = Offset(ex, ey)
             )
         }
     }

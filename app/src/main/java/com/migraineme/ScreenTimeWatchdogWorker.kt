@@ -28,16 +28,18 @@ class ScreenTimeWatchdogWorker(
         Log.d(TAG, "Watchdog: Checking screen time sync worker status")
         
         try {
-            // Check if screen time is enabled in settings
-            val enabled = DataCollectionSettings.isActive(
-                context = applicationContext,
-                table = "screen_time_daily",
-                wearable = null,
-                defaultValue = true
-            )
+            // Check Supabase metric_settings for screen time enabled
+            val enabled = try {
+                val edge = EdgeFunctionsService()
+                val settings = edge.getMetricSettings(applicationContext)
+                settings.find { it.metric == "screen_time_daily" }?.enabled ?: false
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to check Supabase settings: ${e.message}")
+                false
+            }
             
             if (!enabled) {
-                Log.d(TAG, "Watchdog: Screen time disabled - skipping check")
+                Log.d(TAG, "Watchdog: Screen time disabled in Supabase - skipping check")
                 return@withContext Result.success()
             }
             

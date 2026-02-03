@@ -45,9 +45,27 @@ class EdgeFunctionsService {
         val metric: String,
         val enabled: Boolean,
         @SerialName("preferred_source") val preferredSource: String? = null,
+        @SerialName("allowed_sources") val allowedSources: List<String>? = null,
         @SerialName("updated_at") val updatedAt: String
     )
 
+    @Serializable
+    private data class TriggerSettingUpsertBody(
+        @SerialName("user_id") val userId: String,
+        @SerialName("trigger_type") val triggerType: String,
+        val enabled: Boolean,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
+    @Serializable
+    data class TriggerSettingResponse(
+        @SerialName("user_id") val userId: String,
+        @SerialName("trigger_type") val triggerType: String,
+        val enabled: Boolean,
+        @SerialName("updated_at") val updatedAt: String
+    )
+
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     private fun buildClient(): HttpClient {
         return HttpClient(Android) {
             install(ContentNegotiation) {
@@ -129,9 +147,6 @@ class EdgeFunctionsService {
         }
     }
 
-    /**
-     * Guaranteed-mode enqueue (returns success/failure so WorkManager can retry).
-     */
     suspend fun enqueueLoginBackfillGuaranteed(context: Context): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
@@ -149,11 +164,11 @@ class EdgeFunctionsService {
             val ok = res.status.value in 200..299
             if (!ok) {
                 val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
-                Log.w("EdgeFunctionsService", "enqueueLoginBackfill failed: ${res.status.value} $bodyText")
+                Log.w("EdgeFunctionsService", "enqueue-login-backfill failed: ${res.status.value} $bodyText")
             }
             ok
         } catch (t: Throwable) {
-            Log.w("EdgeFunctionsService", "enqueueLoginBackfill exception", t)
+            Log.w("EdgeFunctionsService", "enqueue-login-backfill exception", t)
             false
         } finally {
             client.close()
@@ -214,7 +229,8 @@ class EdgeFunctionsService {
 
         val client = buildClient()
         return try {
-            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?user_id=eq.$userId&select=*"
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?user_id=eq.$userId&select=*"
 
             val res = client.get(url) {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
@@ -233,5 +249,401 @@ class EdgeFunctionsService {
         } finally {
             client.close()
         }
+    }
+
+    suspend fun enableDefaultWhoopMetricSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val whoopKey = "whoop"
+
+        val metrics = listOf(
+            "sleep_duration_daily",
+            "sleep_score_daily",
+            "sleep_efficiency_daily",
+            "sleep_stages_daily",
+            "sleep_disturbances_daily",
+            "fell_asleep_time_daily",
+            "woke_up_time_daily",
+            "recovery_score_daily",
+            "resting_hr_daily",
+            "hrv_daily",
+            "skin_temp_daily",
+            "spo2_daily",
+            "time_in_high_hr_zones_daily",
+            "activity_hr_zones_sessions",
+            "steps_daily",
+            "stress_index_daily"
+        )
+
+        var allOk = true
+        for (metric in metrics) {
+            val ok = runCatching {
+                upsertMetricSetting(
+                    context = appCtx,
+                    metric = metric,
+                    enabled = true,
+                    preferredSource = whoopKey
+                )
+            }.getOrDefault(false)
+
+            if (!ok) {
+                allOk = false
+                Log.w("EdgeFunctionsService", "Failed to enable WHOOP metric setting: $metric")
+            }
+        }
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Health Connect Metric Settings
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Enable all Health Connect-compatible metrics with preferred source = "health_connect".
+     * Called when user connects Health Connect wearables (sleep, HRV, etc.)
+     */
+    suspend fun enableDefaultHealthConnectMetricSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val hcKey = "health_connect"
+
+        val metrics = listOf(
+            // Sleep
+            "sleep_duration_daily",
+            "sleep_stages_daily",
+            "fell_asleep_time_daily",
+            "woke_up_time_daily",
+            
+            // Heart / Vitals
+            "resting_hr_daily",
+            "hrv_daily",
+            "spo2_daily",
+            "skin_temp_daily",
+            
+            // Activity
+            "steps_daily",
+            "time_in_high_hr_zones_daily",
+            
+            // Body measurements
+            "weight_daily",
+            "body_fat_daily",
+            
+            // Other
+            "hydration_daily",
+            "blood_pressure_daily",
+            "blood_glucose_daily",
+            "respiratory_rate_daily",
+            
+            // Computed
+            "stress_index_daily"
+        )
+
+        var allOk = true
+        for (metric in metrics) {
+            val ok = runCatching {
+                upsertMetricSetting(
+                    context = appCtx,
+                    metric = metric,
+                    enabled = true,
+                    preferredSource = hcKey
+                )
+            }.getOrDefault(false)
+
+            if (!ok) {
+                allOk = false
+                Log.w("EdgeFunctionsService", "Failed to enable Health Connect metric: $metric")
+            }
+        }
+        return allOk
+    }
+
+    /**
+     * Disable all Health Connect metrics (when user disconnects).
+     */
+    suspend fun disableHealthConnectMetricSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+
+        val metrics = listOf(
+            "sleep_duration_daily",
+            "sleep_stages_daily",
+            "fell_asleep_time_daily",
+            "woke_up_time_daily",
+            "resting_hr_daily",
+            "hrv_daily",
+            "spo2_daily",
+            "skin_temp_daily",
+            "steps_daily",
+            "time_in_high_hr_zones_daily",
+            "weight_daily",
+            "body_fat_daily",
+            "hydration_daily",
+            "blood_pressure_daily",
+            "blood_glucose_daily",
+            "respiratory_rate_daily",
+            "stress_index_daily"
+        )
+
+        var allOk = true
+        for (metric in metrics) {
+            val ok = runCatching {
+                upsertMetricSetting(
+                    context = appCtx,
+                    metric = metric,
+                    enabled = false,
+                    preferredSource = null
+                )
+            }.getOrDefault(false)
+
+            if (!ok) allOk = false
+        }
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun hasAnyMetricData(
+        context: Context,
+        metric: String
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/has-metric-data"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("metric" to metric))
+            }
+
+            if (res.status.value in 200..299) {
+                val body = res.body<Map<String, Boolean>>()
+                body["hasData"] == true
+            } else {
+                false
+            }
+        } catch (_: Throwable) {
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Trigger Settings
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun getTriggerSettings(context: Context): List<TriggerSettingResponse> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val userId = SessionStore.readUserId(appCtx) ?: return emptyList()
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/trigger_settings?user_id=eq.$userId&select=*"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<TriggerSettingResponse>>()
+            } else {
+                Log.e("EdgeFunctionsService", "getTriggerSettings failed: ${res.status}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getTriggerSettings error: ${e.message}", e)
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertTriggerSetting(
+        context: Context,
+        triggerType: String,
+        enabled: Boolean
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = TriggerSettingUpsertBody(
+            userId = userId,
+            triggerType = triggerType,
+            enabled = enabled,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/trigger_settings?on_conflict=user_id,trigger_type"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e(
+                    "EdgeFunctionsService",
+                    "upsertTriggerSetting failed: ${res.status} - ${res.bodyAsText()}"
+                )
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "upsertTriggerSetting exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun seedDefaultTriggerSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val defaultTriggers = listOf(
+            "recovery_low" to true,
+            "recovery_unusually_low" to true
+        )
+
+        val client = buildClient()
+        var allOk = true
+
+        try {
+            for ((triggerType, enabled) in defaultTriggers) {
+                val body = TriggerSettingUpsertBody(
+                    userId = userId,
+                    triggerType = triggerType,
+                    enabled = enabled,
+                    updatedAtIso = Instant.now().toString()
+                )
+
+                val url =
+                    "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/trigger_settings?on_conflict=user_id,trigger_type"
+
+                val res = client.post(url) {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                    header("Prefer", "resolution=ignore-duplicates")
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+
+                val ok = res.status.value in 200..299
+                if (!ok) {
+                    allOk = false
+                    Log.w("EdgeFunctionsService", "Failed to seed trigger setting: $triggerType")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "seedDefaultTriggerSettings exception", e)
+            allOk = false
+        } finally {
+            client.close()
+        }
+
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Metric Settings Seeding
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Seeds all metric settings with enabled=false on first login.
+     * Uses ignore-duplicates so existing settings are not overwritten.
+     */
+    suspend fun seedDefaultMetricSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        // All metrics with default enabled=false
+        val metrics = listOf(
+            // Sleep (WHOOP)
+            "sleep_duration_daily",
+            "sleep_score_daily",
+            "sleep_efficiency_daily",
+            "sleep_stages_daily",
+            "sleep_disturbances_daily",
+            "fell_asleep_time_daily",
+            "woke_up_time_daily",
+            // Physical (WHOOP)
+            "recovery_score_daily",
+            "resting_hr_daily",
+            "hrv_daily",
+            "skin_temp_daily",
+            "spo2_daily",
+            "time_in_high_hr_zones_daily",
+            "activity_hr_zones_sessions",
+            "steps_daily",
+            // Computed
+            "stress_index_daily",
+            // Phone
+            "screen_time_daily",
+            "user_location_daily",
+            "ambient_noise_samples",
+            "nutrition",
+            "menstruation",
+            // Weather (reference)
+            "temperature_daily",
+            "pressure_daily",
+            "humidity_daily",
+            "wind_daily",
+            "uv_daily",
+            "thunderstorm_daily"
+        )
+
+        val client = buildClient()
+        var allOk = true
+
+        try {
+            for (metric in metrics) {
+                val body = MetricSettingUpsertBody(
+                    userId = userId,
+                    metric = metric,
+                    enabled = false,
+                    preferredSource = null,
+                    updatedAtIso = Instant.now().toString()
+                )
+
+                val url =
+                    "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/metric_settings?on_conflict=user_id,metric"
+
+                val res = client.post(url) {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                    header("Prefer", "resolution=ignore-duplicates")
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+
+                val ok = res.status.value in 200..299
+                if (!ok) {
+                    allOk = false
+                    Log.w("EdgeFunctionsService", "Failed to seed metric setting: $metric")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "seedDefaultMetricSettings exception", e)
+            allOk = false
+        } finally {
+            client.close()
+        }
+
+        return allOk
     }
 }

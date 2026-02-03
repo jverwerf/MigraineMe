@@ -135,14 +135,18 @@ class SupabaseDbService(
         val type: String? = null,
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual",  // ADD THIS LINE
+        val active: Boolean = true       // ADD THIS LINE
     )
     @Serializable
     data class TriggerInsert(
         val type: String? = null,
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual",  // ADD THIS LINE
+        val active: Boolean = true       // ADD THIS LINE
     )
     suspend fun insertTrigger(
         accessToken: String,

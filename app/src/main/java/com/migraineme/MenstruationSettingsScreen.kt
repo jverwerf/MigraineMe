@@ -1,5 +1,6 @@
 package com.migraineme
 
+import android.app.DatePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -35,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +60,7 @@ import java.time.format.DateTimeFormatter
 fun MenstruationSettingsScreen(
     onBack: (() -> Unit)? = null
 ) {
-    val context = LocalContext.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
 
     val loading = remember { mutableStateOf(true) }
@@ -159,18 +160,39 @@ fun MenstruationSettingsScreen(
 
             Divider()
 
-            OutlinedTextField(
-                value = lastDateText.value,
-                onValueChange = { lastDateText.value = it },
-                label = { Text("Last period date") },
-                placeholder = { Text("YYYY-MM-DD (optional)") },
-                supportingText = {
-                    Text("Leave blank if unknown. Format: YYYY-MM-DD")
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !saving.value
-            )
+            // Date picker (like the migraine date picker pattern), stored as ISO yyyy-MM-dd in lastDateText.
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Last period date",
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppDatePicker(
+                        isoDate = lastDateText.value,
+                        enabled = !saving.value,
+                        onDateSelected = { lastDateText.value = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (lastDateText.value.isNotBlank()) {
+                        TextButton(
+                            onClick = { lastDateText.value = "" },
+                            enabled = !saving.value
+                        ) {
+                            Text("Clear")
+                        }
+                    }
+                }
+                Text(
+                    text = "Optional. Leave blank if unknown.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             OutlinedTextField(
                 value = avgCycleText.value,
@@ -182,9 +204,7 @@ fun MenstruationSettingsScreen(
                 },
                 label = { Text("Average cycle length (days)") },
                 placeholder = { Text("28") },
-                supportingText = {
-                    Text("Used for prediction and averaging. Typical range 15–60.")
-                },
+                supportingText = { Text("Used for prediction and averaging. Typical range 15–60.") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !saving.value
@@ -233,8 +253,7 @@ fun MenstruationSettingsScreen(
                             if (validationError != null) {
                                 withContext(Dispatchers.Main) {
                                     saving.value = false
-                                    Toast.makeText(context, validationError, Toast.LENGTH_LONG)
-                                        .show()
+                                    Toast.makeText(context, validationError, Toast.LENGTH_LONG).show()
                                 }
                                 return@launch
                             }
@@ -254,8 +273,7 @@ fun MenstruationSettingsScreen(
                                         avgCycleLength = parsedAvg,
                                         autoUpdateAverage = autoUpdateAvg.value
                                     )
-                                    Toast.makeText(context, "Menstruation settings saved.", Toast.LENGTH_SHORT)
-                                        .show()
+                                    Toast.makeText(context, "Menstruation settings saved.", Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(
                                         context,
@@ -312,6 +330,42 @@ fun MenstruationSettingsScreen(
     }
 }
 
+@Composable
+private fun AppDatePicker(
+    isoDate: String,
+    enabled: Boolean,
+    onDateSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+
+    val parsed = isoDate.trim().takeIf { it.isNotBlank() }?.let { raw ->
+        runCatching { LocalDate.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
+    }
+
+    val initial = parsed ?: LocalDate.now()
+    val displayText = if (isoDate.isBlank()) "Select date" else isoDate
+
+    OutlinedButton(
+        onClick = {
+            DatePickerDialog(
+                ctx,
+                { _, y, m, d ->
+                    val picked = "%04d-%02d-%02d".format(y, m + 1, d)
+                    onDateSelected(picked)
+                },
+                initial.year,
+                initial.monthValue - 1,
+                initial.dayOfMonth
+            ).show()
+        },
+        enabled = enabled,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Text(displayText)
+    }
+}
+
 private fun validateInputs(
     lastDateText: String,
     avgCycleText: String
@@ -328,7 +382,6 @@ private fun validateInputs(
     val avg = avgCycleText.trim().toIntOrNull()
         ?: return Triple(null, 0, "Average cycle length must be a number (e.g. 28).")
 
-    // Conservative range validation (can be adjusted if your existing logic expects wider).
     if (avg < 15 || avg > 60) {
         return Triple(null, 0, "Average cycle length looks wrong. Use a value between 15 and 60.")
     }

@@ -28,8 +28,8 @@ import java.util.Date
  * Responsibilities:
  * - Best-effort WHOOP token refresh (does not change auth approach)
  * - Upload WHOOP token to Supabase (server worker source of truth)
- * - Schedule Location worker if enabled
- * - Best-effort enqueue of server-side WHOOP backfill jobs on login
+ * - Seed default metric settings for new users
+ * - Seed default trigger settings for new users
  *
  * Does NOT:
  * - Change Supabase auth
@@ -65,15 +65,6 @@ object MetricsSyncManager {
         val expires_at: String?
     )
 
-    /**
-     * Triggers the Edge Function:
-     * POST {SUPABASE_URL}/functions/v1/enqueue-login-backfill
-     *
-     * Requires:
-     * - Authorization: Bearer <user access token>
-     *
-     * Best-effort: failures are logged, never block login.
-     */
     private suspend fun enqueueLoginBackfillBestEffort(accessToken: String) {
         val url = "$baseUrl/functions/v1/enqueue-login-backfill"
 
@@ -99,13 +90,6 @@ object MetricsSyncManager {
         }
     }
 
-    /**
-     * CRITICAL: Upload local WHOOP token to Supabase so Edge Worker can run.
-     *
-     * POST {SUPABASE_URL}/functions/v1/upsert-whoop-token
-     *
-     * Best-effort: never blocks login.
-     */
     private suspend fun upsertWhoopTokenToSupabaseBestEffort(
         context: Context,
         accessToken: String
@@ -150,6 +134,40 @@ object MetricsSyncManager {
         }
     }
 
+    private suspend fun seedMetricSettingsBestEffort(context: Context) {
+        try {
+            val ok = EdgeFunctionsService().seedDefaultMetricSettings(context)
+            if (ok) {
+                Log.d("MetricsSyncManager", "seedDefaultMetricSettings ok")
+            } else {
+                Log.w("MetricsSyncManager", "seedDefaultMetricSettings partial failure")
+            }
+        } catch (t: Throwable) {
+            Log.w("MetricsSyncManager", "seedDefaultMetricSettings error: ${t.message}")
+        }
+    }
+
+    private suspend fun seedTriggerSettingsBestEffort(context: Context) {
+        try {
+            val ok = EdgeFunctionsService().seedDefaultTriggerSettings(context)
+            if (ok) {
+                Log.d("MetricsSyncManager", "seedDefaultTriggerSettings ok")
+            } else {
+                Log.w("MetricsSyncManager", "seedDefaultTriggerSettings partial failure")
+            }
+        } catch (t: Throwable) {
+            Log.w("MetricsSyncManager", "seedDefaultTriggerSettings error: ${t.message}")
+        }
+    }
+
+    private fun isWhoopMetricEnabled(
+        settings: List<EdgeFunctionsService.MetricSettingResponse>,
+        metric: String
+    ): Boolean {
+        val setting = settings.find { it.metric == metric } ?: return false
+        return setting.enabled && setting.preferredSource == "whoop"
+    }
+
     suspend fun onLogin(
         context: Context,
         token: String,
@@ -165,32 +183,41 @@ object MetricsSyncManager {
                 // If WHOOP token exists locally, upload it to Supabase (best-effort)
                 upsertWhoopTokenToSupabaseBestEffort(appCtx, token)
 
+                // Seed default metric settings (best-effort, ignores duplicates)
+                seedMetricSettingsBestEffort(appCtx)
+
+                // Seed default trigger settings (best-effort, ignores duplicates)
+                seedTriggerSettingsBestEffort(appCtx)
+
                 // WHOOP connection = token exists locally
                 val whoopConnected = runCatching { WhoopTokenStore(appCtx).load() != null }.getOrDefault(false)
 
-                // Determine if ANY WHOOP tables are enabled (sleep / physical).
-                // NOTE: WHOOP ingestion now happens in the backend (sync_jobs + sync-worker).
-                // The app keeps: (1) token refresh best-effort, (2) token upload, (3) UX prompt if not connected.
+                // Get metric settings from Supabase
+                val settings = try {
+                    EdgeFunctionsService().getMetricSettings(appCtx)
+                } catch (e: Exception) {
+                    Log.w("MetricsSyncManager", "Failed to get metric settings: ${e.message}")
+                    emptyList()
+                }
+
                 val whoopSleepEnabled =
-                    DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_duration_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_score_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_efficiency_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_stages_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "sleep_disturbances_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "fell_asleep_time_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "woke_up_time_daily")
+                    isWhoopMetricEnabled(settings, "sleep_duration_daily") ||
+                    isWhoopMetricEnabled(settings, "sleep_score_daily") ||
+                    isWhoopMetricEnabled(settings, "sleep_efficiency_daily") ||
+                    isWhoopMetricEnabled(settings, "sleep_stages_daily") ||
+                    isWhoopMetricEnabled(settings, "sleep_disturbances_daily") ||
+                    isWhoopMetricEnabled(settings, "fell_asleep_time_daily") ||
+                    isWhoopMetricEnabled(settings, "woke_up_time_daily")
 
                 val whoopPhysicalEnabled =
-                    DataCollectionSettings.isEnabledForWhoop(appCtx, "recovery_score_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "resting_hr_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "hrv_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "skin_temp_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "spo2_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "time_in_high_hr_zones_daily") ||
-                            DataCollectionSettings.isEnabledForWhoop(appCtx, "steps_daily")
+                    isWhoopMetricEnabled(settings, "recovery_score_daily") ||
+                    isWhoopMetricEnabled(settings, "resting_hr_daily") ||
+                    isWhoopMetricEnabled(settings, "hrv_daily") ||
+                    isWhoopMetricEnabled(settings, "skin_temp_daily") ||
+                    isWhoopMetricEnabled(settings, "spo2_daily") ||
+                    isWhoopMetricEnabled(settings, "time_in_high_hr_zones_daily") ||
+                    isWhoopMetricEnabled(settings, "steps_daily")
 
-                // If WHOOP connected, refresh WHOOP token once (best-effort).
-                // IMPORTANT: Do NOT schedule on-device WHOOP workers here anymore.
                 if (whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
                     runCatching { WhoopAuthService().refresh(appCtx) }.onFailure {
                         Log.w("MetricsSyncManager", "WHOOP refresh failed: ${it.message}")
@@ -204,35 +231,9 @@ object MetricsSyncManager {
                     }
                 }
 
-                // Location (NOT Whoop-specific)
-                val locationEnabled =
-                    DataCollectionSettings.isActive(
-                        context = appCtx,
-                        table = "user_location_daily",
-                        wearable = null,
-                        defaultValue = true
-                    )
-
-                if (locationEnabled) {
-                    LocationDailySyncWorker.runOnceNow(appCtx)
-                    LocationDailySyncWorker.scheduleNext(appCtx)
-                    LocationDailySyncWorker.backfillUpToToday(appCtx, token)
-                }
-
-                // Ambient noise sampling (device mic -> raw samples -> Supabase; backend computes daily index)
-                val noiseEnabled =
-                    DataCollectionSettings.isActive(
-                        context = appCtx,
-                        table = "ambient_noise_samples",
-                        wearable = null,
-                        defaultValue = false
-                    )
-
-                if (noiseEnabled) {
-                    AmbientNoiseSampleWorker.schedule(appCtx)
-                } else {
-                    AmbientNoiseSampleWorker.cancel(appCtx)
-                }
+                // NOTE: Location and noise workers are NOT started here anymore.
+                // They are only started when user explicitly enables them in DataSettings
+                // and grants permission.
 
             } catch (t: Throwable) {
                 Log.w("MetricsSyncManager", "onLogin error: ${t.message}")

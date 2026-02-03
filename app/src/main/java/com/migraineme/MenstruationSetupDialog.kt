@@ -1,212 +1,253 @@
 package com.migraineme
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.MenstruationPeriodRecord
-import androidx.health.connect.client.request.ReadRecordsRequest
-import androidx.health.connect.client.time.TimeRangeFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
+import java.util.Calendar
 
 /**
- * Dialog shown on first menstruation toggle ON
- *
- * Reads historical periods from Health Connect
- * Calculates weighted average (last 6 cycles)
- * Allows user to confirm or edit values
+ * Setup dialog for menstruation tracking with date picker
  */
 @Composable
 fun MenstruationSetupDialog(
-    onConfirm: (lastDate: LocalDate?, avgCycle: Int, autoUpdate: Boolean) -> Unit,
-    onDismiss: () -> Unit
+    onConfirm: (LocalDate?, Int, Boolean) -> Unit,
+    onDismiss: () -> Unit,
+    autoFetchHistory: Boolean = false
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var isLoading by remember { mutableStateOf(true) }
-    var calculatedLastDate by remember { mutableStateOf<LocalDate?>(null) }
-    var calculatedAvgCycle by remember { mutableIntStateOf(28) }
-    var hasHistoricalData by remember { mutableStateOf(false) }
+    // Loading state
+    var isLoading by remember { mutableStateOf(autoFetchHistory) }
+    var historicalData by remember { mutableStateOf<HealthConnectMenstruationHistoryFetcher.HistoricalData?>(null) }
 
-    var lastDateInput by remember { mutableStateOf("") }
-    var avgCycleInput by remember { mutableStateOf("28") }
+    // Form state
+    var lastDate by remember { mutableStateOf<LocalDate?>(null) }
+    var lastDateDisplay by remember { mutableStateOf("Tap to select date") }
+    var avgCycleText by remember { mutableStateOf("28") }
     var autoUpdate by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
 
-    var showDatePicker by remember { mutableStateOf(false) }
+    // Fetch historical data on launch if requested
+    LaunchedEffect(autoFetchHistory) {
+        if (autoFetchHistory) {
+            isLoading = true
+            withContext(Dispatchers.IO) {
+                try {
+                    val data = HealthConnectMenstruationHistoryFetcher.fetchHistoricalData(context)
+                    historicalData = data
 
-    // Load historical data from Health Connect
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            try {
-                val hc = HealthConnectClient.getOrCreate(context)
-                val granted = hc.permissionController.getGrantedPermissions()
-
-                if (HealthPermission.getReadPermission(MenstruationPeriodRecord::class) !in granted) {
-                    isLoading = false
-                    return@withContext
-                }
-
-                // Read last 2 years of periods
-                val end = Instant.now()
-                val start = end.minus(730, ChronoUnit.DAYS)
-
-                val request = ReadRecordsRequest(
-                    recordType = MenstruationPeriodRecord::class,
-                    timeRangeFilter = TimeRangeFilter.between(start, end)
-                )
-
-                val response = hc.readRecords(request)
-
-                if (response.records.isNotEmpty()) {
-                    hasHistoricalData = true
-
-                    // Convert to MenstruationPeriod objects
-                    val periods = response.records.map { record ->
-                        MenstruationPeriod(
-                            startDate = record.startTime.atZone(ZoneOffset.UTC).toLocalDate(),
-                            endDate = record.endTime.atZone(ZoneOffset.UTC).toLocalDate()
-                        )
-                    }.sortedBy { it.startDate }
-
-                    // Find most recent period
-                    calculatedLastDate = periods.maxByOrNull { it.startDate }?.startDate
-
-                    // Calculate weighted average (last 6 cycles)
-                    if (periods.size >= 2) {
-                        calculatedAvgCycle = MenstruationCalculator.calculateWeightedAverage(periods)
+                    // Pre-fill form with suggestions
+                    withContext(Dispatchers.Main) {
+                        if (data.suggestedLastDate != null) {
+                            lastDate = data.suggestedLastDate
+                            lastDateDisplay = data.suggestedLastDate.toString()
+                        }
+                        if (data.suggestedAvgCycle != null) {
+                            avgCycleText = data.suggestedAvgCycle.toString()
+                        }
                     }
-
-                    // Set input fields
-                    lastDateInput = calculatedLastDate?.toString() ?: ""
-                    avgCycleInput = calculatedAvgCycle.toString()
-
-                    android.util.Log.d("MenstruationSetup", "Found ${periods.size} historical periods")
-                    android.util.Log.d("MenstruationSetup", "Last period: $calculatedLastDate, Avg cycle: $calculatedAvgCycle")
+                } catch (e: Exception) {
+                    android.util.Log.e("MenstruationSetup", "Failed to fetch history: ${e.message}")
+                } finally {
+                    withContext(Dispatchers.Main) {
+                        isLoading = false
+                    }
                 }
-
-            } catch (e: Exception) {
-                android.util.Log.e("MenstruationSetup", "Failed to load history: ${e.message}", e)
-            } finally {
-                isLoading = false
             }
         }
     }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Menstruation Cycle Setup") },
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        title = { Text("Menstruation Tracking Setup") },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator()
-                    Text("Loading your period data from Health Connect...")
-                } else {
-                    if (hasHistoricalData) {
+                    // Loading state
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator()
                         Text(
-                            "Based on your last 6 cycles",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                            "Analyzing your cycle history...",
+                            style = MaterialTheme.typography.bodyLarge
                         )
-                    } else {
                         Text(
-                            "No historical data found. Please enter manually.",
+                            "This may take up to 30 seconds",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                } else {
+                    // Show result message
+                    if (historicalData != null) {
+                        val data = historicalData!!
+                        if (data.periods.isNotEmpty()) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        "✓ Found ${data.periods.size} periods in your history!",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        "We've pre-filled your information below. You can edit if needed.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        } else {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        "We couldn't find any period data",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        "Please enter your information manually below.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
 
-                    Spacer(Modifier.height(8.dp))
-
-                    // Last Period Date
-                    OutlinedTextField(
-                        value = lastDateInput,
-                        onValueChange = { lastDateInput = it },
-                        label = { Text("Last Period Date") },
-                        placeholder = { Text("YYYY-MM-DD") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                    // Form fields
+                    Text(
+                        "Help us track your cycle by providing some basic information:",
+                        style = MaterialTheme.typography.bodyMedium
                     )
 
-                    // Average Cycle Length
+                    // Date picker button for last period
+                    Column {
+                        Text(
+                            "Last Period Start Date",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedButton(
+                            onClick = {
+                                val cal = Calendar.getInstance()
+                                if (lastDate != null) {
+                                    cal.set(lastDate!!.year, lastDate!!.monthValue - 1, lastDate!!.dayOfMonth)
+                                }
+
+                                DatePickerDialog(
+                                    context,
+                                    { _, year, month, day ->
+                                        lastDate = LocalDate.of(year, month + 1, day)
+                                        lastDateDisplay = lastDate.toString()
+                                        error = null
+                                    },
+                                    cal.get(Calendar.YEAR),
+                                    cal.get(Calendar.MONTH),
+                                    cal.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(lastDateDisplay)
+                        }
+                    }
+
                     OutlinedTextField(
-                        value = avgCycleInput,
+                        value = avgCycleText,
                         onValueChange = {
-                            if (it.all { char -> char.isDigit() } && it.length <= 2) {
-                                avgCycleInput = it
-                            }
+                            avgCycleText = it
+                            error = null
                         },
-                        label = { Text("Average Cycle (days)") },
+                        label = { Text("Average Cycle Length (days)") },
                         placeholder = { Text("28") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        isError = error != null
                     )
 
-                    Text(
-                        "Weighted average of last 6 cycles",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    // Auto-update toggle
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "Auto-update average",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Auto-update average",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                "Recalculate when new periods are logged",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Switch(
                             checked = autoUpdate,
                             onCheckedChange = { autoUpdate = it }
                         )
                     }
 
-                    Text(
-                        "Recalculate average when new periods are logged",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (error != null) {
+                        Text(
+                            error!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = {
-                    val lastDate = try {
-                        if (lastDateInput.isNotBlank()) LocalDate.parse(lastDateInput) else null
-                    } catch (e: Exception) {
-                        null
+            if (!isLoading) {
+                TextButton(
+                    onClick = {
+                        // Validate
+                        val avgCycle = avgCycleText.toIntOrNull()
+                        if (avgCycle == null || avgCycle !in 14..60) {
+                            error = "Average cycle must be between 14-60 days"
+                            return@TextButton
+                        }
+
+                        onConfirm(lastDate, avgCycle, autoUpdate)
                     }
-
-                    val avgCycle = avgCycleInput.toIntOrNull() ?: 28
-
-                    onConfirm(lastDate, avgCycle, autoUpdate)
+                ) {
+                    Text("Start Tracking")
                 }
-            ) {
-                Text("Confirm")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            if (!isLoading) {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel")
+                }
             }
         }
     )
