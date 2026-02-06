@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -38,72 +39,61 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-// Metric colors
-private val metricColors = mapOf(
-    WeatherCardConfig.METRIC_TEMPERATURE to Color(0xFFFF7043),
-    WeatherCardConfig.METRIC_PRESSURE to Color(0xFF42A5F5),
-    WeatherCardConfig.METRIC_HUMIDITY to Color(0xFF26C6DA),
-    WeatherCardConfig.METRIC_WIND_SPEED to Color(0xFF66BB6A),
-    WeatherCardConfig.METRIC_UV_INDEX to Color(0xFFFFCA28)
+data class SleepGraphDay(
+    val date: String,
+    val duration: Double?,
+    val score: Double?,
+    val efficiency: Double?,
+    val disturbances: Int?,
+    val stagesDeep: Double?,
+    val stagesRem: Double?,
+    val stagesLight: Double?
 )
 
-// Get metric value from day data
-private fun getDayValue(day: WeatherDayData, metric: String): Float {
-    return when (metric) {
-        WeatherCardConfig.METRIC_TEMPERATURE -> day.tempMean.toFloat()
-        WeatherCardConfig.METRIC_PRESSURE -> day.pressureMean.toFloat()
-        WeatherCardConfig.METRIC_HUMIDITY -> day.humidityMean.toFloat()
-        WeatherCardConfig.METRIC_WIND_SPEED -> day.windSpeedMean.toFloat()
-        WeatherCardConfig.METRIC_UV_INDEX -> day.uvIndexMax.toFloat()
-        else -> 0f
-    }
-}
+data class SleepGraphResult(
+    val days: List<SleepGraphDay>,
+    val allTimeMin: Map<String, Float>,
+    val allTimeMax: Map<String, Float>
+)
 
-// Check if day has data (at least one metric is non-zero)
-private fun hasData(day: WeatherDayData): Boolean {
-    return day.tempMean != 0.0 || day.pressureMean != 0.0 || day.humidityMean != 0.0
-}
-
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun WeatherHistoryGraph(
+fun SleepHistoryGraph(
     days: Int = 14,
     endDate: java.time.LocalDate = java.time.LocalDate.now(),
     onClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val weatherService = remember { WeatherHistoryService(context) }
 
-    var historyData by remember { mutableStateOf<List<WeatherDayData>>(emptyList()) }
-    var allTimeMin by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
-    var allTimeMax by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
+    var graphResult by remember { mutableStateOf<SleepGraphResult?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    var selectedMetrics by remember { mutableStateOf(setOf(WeatherCardConfig.METRIC_TEMPERATURE)) }
+    var selectedMetrics by remember { mutableStateOf<Set<String>>(setOf(SleepCardConfig.METRIC_DURATION)) }
     var migraineDates by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    // Load history data
     LaunchedEffect(days, endDate) {
         scope.launch {
-            val result = weatherService.getWeatherHistory(days, endDate)
-            historyData = result.days
-            allTimeMin = result.allTimeMin
-            allTimeMax = result.allTimeMax
+            graphResult = loadSleepGraphData(context, days, endDate)
             migraineDates = MigraineOverlayHelper.fetchMigraineDates(context, days, endDate)
             isLoading = false
         }
     }
 
+    val historyData: List<SleepGraphDay> = graphResult?.days ?: emptyList()
+    val allTimeMin: Map<String, Float> = graphResult?.allTimeMin ?: emptyMap()
+    val allTimeMax: Map<String, Float> = graphResult?.allTimeMax ?: emptyMap()
     val isNormalized = selectedMetrics.size >= 2
-    val daysWithData = historyData.filter { hasData(it) }
+    val daysWithData: List<SleepGraphDay> = historyData.filter { it.duration != null && it.duration > 0.0 }
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
         Text(
-            "$days-Day History",
+            text = "$days-Day Sleep History",
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
         )
@@ -118,9 +108,9 @@ fun WeatherHistoryGraph(
             ) {
                 CircularProgressIndicator(Modifier.size(24.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
             }
-        } else if (historyData.isEmpty()) {
+        } else if (historyData.isEmpty() || daysWithData.isEmpty()) {
             Text(
-                "No data available",
+                text = "No sleep data available",
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -128,7 +118,7 @@ fun WeatherHistoryGraph(
             )
         } else if (selectedMetrics.isEmpty()) {
             Text(
-                "Select a metric below",
+                text = "Select a metric below",
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -141,11 +131,11 @@ fun WeatherHistoryGraph(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                selectedMetrics.forEach { metric ->
-                    val color = metricColors[metric] ?: AppTheme.AccentPurple
-                    val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
-                    val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
-                    val values = daysWithData.map { getDayValue(it, metric) }
+                for (metric in selectedMetrics) {
+                    val color = SleepCardConfig.colorFor(metric)
+                    val label = SleepCardConfig.labelFor(metric)
+                    val unit = SleepCardConfig.unitFor(metric)
+                    val values: List<Float> = daysWithData.mapNotNull { getSleepDayValue(it, metric) }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Canvas(Modifier.size(8.dp)) { drawCircle(color) }
@@ -153,10 +143,18 @@ fun WeatherHistoryGraph(
                         if (isNormalized) {
                             val minVal = allTimeMin[metric] ?: 0f
                             val maxVal = allTimeMax[metric] ?: 1f
-                            Text("$label [${formatValue(minVal, unit)}-${formatValue(maxVal, unit)}]", color = color, style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                text = "$label [${formatSleepValue(minVal, unit)}-${formatSleepValue(maxVal, unit)}]",
+                                color = color,
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         } else {
                             val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
-                            Text("$label (avg: ${formatValue(avg, unit)})", color = color, style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                text = "$label (avg: ${formatSleepValue(avg, unit)})",
+                                color = color,
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         }
                     }
                 }
@@ -164,10 +162,18 @@ fun WeatherHistoryGraph(
 
             if (isNormalized) {
                 Spacer(Modifier.height(4.dp))
-                Text("⚠️ Normalized 0-1 scale • Dotted = last $days days avg", color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
+                Text(
+                    text = "⚠️ Normalized 0-1 scale • Dotted = $days days avg",
+                    color = Color(0xFFFFB74D),
+                    style = MaterialTheme.typography.labelSmall
+                )
             } else if (daysWithData.isNotEmpty()) {
                 Spacer(Modifier.height(4.dp))
-                Text("Dotted line = last $days days average", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                Text(
+                    text = "Dotted line = $days-day average",
+                    color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelSmall
+                )
             }
 
             if (migraineDates.isNotEmpty()) {
@@ -175,7 +181,11 @@ fun WeatherHistoryGraph(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
                     Spacer(Modifier.width(4.dp))
-                    Text("Red bands = migraine days", color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        text = "Red bands = migraine days",
+                        color = Color(0xFFE57373),
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
 
@@ -183,7 +193,7 @@ fun WeatherHistoryGraph(
 
             if (daysWithData.isEmpty()) {
                 Text(
-                    "No logged days in this period",
+                    text = "No logged days in this period",
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 16.dp)
@@ -191,7 +201,6 @@ fun WeatherHistoryGraph(
             } else {
                 val yAxisWidth = 50.dp
 
-                // Y-axis values depend on normalization
                 val yTop: String
                 val yMid: String
                 val yBot: String
@@ -202,27 +211,25 @@ fun WeatherHistoryGraph(
                     yBot = "0.0"
                 } else {
                     val metric = selectedMetrics.first()
-                    val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
-                    val values = daysWithData.map { getDayValue(it, metric) }
+                    val unit = SleepCardConfig.unitFor(metric)
+                    val values: List<Float> = daysWithData.mapNotNull { getSleepDayValue(it, metric) }
                     val max = values.maxOrNull() ?: 1f
                     val min = values.minOrNull() ?: 0f
-                    yTop = formatValue(max, unit)
-                    yMid = formatValue((max + min) / 2, unit)
-                    yBot = formatValue(min, unit)
+                    yTop = formatSleepValue(max, unit)
+                    yMid = formatSleepValue((max + min) / 2, unit)
+                    yBot = formatSleepValue(min, unit)
                 }
 
                 Row(modifier = Modifier.fillMaxWidth().height(150.dp)) {
-                    // Y-axis labels
                     Column(
                         modifier = Modifier.width(yAxisWidth).fillMaxHeight(),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = yTop, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = yMid, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = yBot, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
 
-                    // Graph canvas
                     Canvas(modifier = Modifier.weight(1f).fillMaxHeight()) {
                         val padding = 8.dp.toPx()
                         val graphWidth = size.width - padding * 2
@@ -241,20 +248,18 @@ fun WeatherHistoryGraph(
                             )
                         }
 
-                        selectedMetrics.forEach { metric ->
-                            val color = metricColors[metric] ?: Color.White
+                        for (metric in selectedMetrics) {
+                            val color = SleepCardConfig.colorFor(metric)
 
-                            // Get indexed values for X positioning
-                            val indexedValues = historyData.mapIndexedNotNull { i, day ->
-                                if (hasData(day)) i to getDayValue(day, metric) else null
+                            val indexedValues: List<Pair<Int, Float>> = historyData.mapIndexedNotNull { i, day ->
+                                val value = getSleepDayValue(day, metric)
+                                if (value != null && day.duration != null && day.duration > 0.0) Pair(i, value) else null
                             }
 
-                            if (indexedValues.isEmpty()) return@forEach
+                            if (indexedValues.isEmpty()) continue
 
-                            val values = indexedValues.map { it.second }
+                            val values: List<Float> = indexedValues.map { it.second }
 
-                            // For single metric: use window min/max (actual values)
-                            // For multi metric: use all-time min/max (normalized)
                             val minVal: Float
                             val maxVal: Float
                             if (isNormalized) {
@@ -266,16 +271,14 @@ fun WeatherHistoryGraph(
                             }
                             val range = maxVal - minVal
 
-                            // Normalize values to 0-1 scale for plotting
-                            val plotPoints = indexedValues.map { (idx, value) ->
-                                idx to ((value - minVal) / range).coerceIn(0f, 1f)
+                            val plotPoints: List<Pair<Int, Float>> = indexedValues.map { (idx, value) ->
+                                Pair(idx, ((value - minVal) / range).coerceIn(0f, 1f))
                             }
 
-                            // Draw dotted average line (always show)
+                            // Dotted average
                             if (plotPoints.isNotEmpty()) {
                                 val avgNormalized = plotPoints.map { it.second }.average().toFloat()
                                 val avgY = padding + graphHeight - (avgNormalized * graphHeight)
-
                                 var x = padding
                                 while (x < size.width - padding) {
                                     drawLine(
@@ -288,21 +291,21 @@ fun WeatherHistoryGraph(
                                 }
                             }
 
-                            // Draw line
+                            // Line
                             if (plotPoints.size > 1) {
                                 val path = Path()
-                                plotPoints.forEachIndexed { i, (dayIdx, normalizedValue) ->
-                                    val x = padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                    val y = padding + graphHeight - (normalizedValue * graphHeight)
+                                plotPoints.forEachIndexed { i, pair ->
+                                    val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                    val y = padding + graphHeight - (pair.second * graphHeight)
                                     if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
                                 }
                                 drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                             }
 
-                            // Draw dots
-                            plotPoints.forEach { (dayIdx, normalizedValue) ->
-                                val x = padding + (dayIdx.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                val y = padding + graphHeight - (normalizedValue * graphHeight)
+                            // Dots
+                            for (pair in plotPoints) {
+                                val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                val y = padding + graphHeight - (pair.second * graphHeight)
                                 drawCircle(color, 4.dp.toPx(), Offset(x, y))
                             }
                         }
@@ -316,17 +319,20 @@ fun WeatherHistoryGraph(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     val fmt = DateTimeFormatter.ofPattern("MMM d")
-                    Text(LocalDate.parse(historyData.first().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Text(LocalDate.parse(historyData.last().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    if (historyData.isNotEmpty()) {
+                        val firstLabel = try { LocalDate.parse(historyData.first().date).format(fmt) } catch (_: Exception) { historyData.first().date }
+                        val lastLabel = try { LocalDate.parse(historyData.last().date).format(fmt) } catch (_: Exception) { historyData.last().date }
+                        Text(text = firstLabel, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = lastLabel, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }
 
         Spacer(Modifier.height(12.dp))
 
-        // Metric selector - multi-select
         Text(
-            "Select Metrics${if (selectedMetrics.size > 1) " (${selectedMetrics.size} selected)" else ""}",
+            text = "Select Metrics" + if (selectedMetrics.size > 1) " (${selectedMetrics.size} selected)" else "",
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )
@@ -337,21 +343,21 @@ fun WeatherHistoryGraph(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
+            for (metric in SleepCardConfig.GRAPHABLE_METRICS) {
                 val isSelected = metric in selectedMetrics
-                val chipColor = metricColors[metric] ?: AppTheme.AccentPurple
-                val chipLabel = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                val chipColor = SleepCardConfig.colorFor(metric)
+                val chipLabel = SleepCardConfig.labelFor(metric)
 
                 FilterChip(
                     selected = isSelected,
                     onClick = {
                         selectedMetrics = if (isSelected) {
-                            selectedMetrics - metric
+                            selectedMetrics.minus(metric)
                         } else {
-                            selectedMetrics + metric
+                            selectedMetrics.plus(metric)
                         }
                     },
-                    label = { Text(chipLabel, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(text = chipLabel, style = MaterialTheme.typography.labelSmall) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = chipColor.copy(alpha = 0.3f),
                         selectedLabelColor = chipColor,
@@ -370,11 +376,87 @@ fun WeatherHistoryGraph(
     }
 }
 
-private fun formatValue(value: Float, unit: String): String {
-    return when (unit) {
-        "hPa" -> "${value.toInt()}$unit"
-        "%" -> "${value.toInt()}$unit"
-        else -> String.format("%.1f%s", value, unit)
+private fun getSleepDayValue(day: SleepGraphDay, metric: String): Float? {
+    return when (metric) {
+        SleepCardConfig.METRIC_DURATION -> day.duration?.toFloat()
+        SleepCardConfig.METRIC_SCORE -> day.score?.toFloat()
+        SleepCardConfig.METRIC_EFFICIENCY -> day.efficiency?.toFloat()
+        SleepCardConfig.METRIC_DISTURBANCES -> day.disturbances?.toFloat()
+        SleepCardConfig.METRIC_STAGES_DEEP -> day.stagesDeep?.toFloat()
+        SleepCardConfig.METRIC_STAGES_REM -> day.stagesRem?.toFloat()
+        SleepCardConfig.METRIC_STAGES_LIGHT -> day.stagesLight?.toFloat()
+        else -> null
     }
 }
 
+private fun formatSleepValue(value: Float, unit: String): String {
+    return when (unit) {
+        "h" -> String.format("%.1f%s", value, unit)
+        "%" -> "${value.toInt()}%"
+        else -> value.toInt().toString()
+    }
+}
+
+private suspend fun loadSleepGraphData(
+    ctx: android.content.Context,
+    days: Int,
+    endDate: java.time.LocalDate = java.time.LocalDate.now()
+): SleepGraphResult = withContext(Dispatchers.IO) {
+    try {
+        val token = SessionStore.getValidAccessToken(ctx) ?: return@withContext SleepGraphResult(emptyList(), emptyMap(), emptyMap())
+        val metrics = SupabaseMetricsService(ctx)
+
+        val startDate = endDate.minusDays(days.toLong() - 1)
+
+        // Fetch enough data to cover the window (fetch extra to be safe)
+        val fetchLimit = days + 14
+        val durations = try { metrics.fetchSleepDurationDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
+        val scores = try { metrics.fetchSleepScoreDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
+        val efficiencies = try { metrics.fetchSleepEfficiencyDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
+        val disturbances = try { metrics.fetchSleepDisturbancesDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
+        val stages = try { metrics.fetchSleepStagesDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
+
+        val scoreMap = scores.associateBy { it.date }
+        val effMap = efficiencies.associateBy { it.date }
+        val distMap = disturbances.associateBy { it.date }
+        val stagesMap = stages.associateBy { it.date }
+
+        // Build all days in the window, filter to date range
+        val startStr = startDate.toString()
+        val endStr = endDate.toString()
+
+        val graphDays: List<SleepGraphDay> = durations
+            .filter { it.date >= startStr && it.date <= endStr }
+            .map { dur ->
+                val score = scoreMap[dur.date]
+                val eff = effMap[dur.date]
+                val dist = distMap[dur.date]
+                val stg = stagesMap[dur.date]
+                SleepGraphDay(
+                    date = dur.date,
+                    duration = dur.value_hours,
+                    score = score?.value_pct,
+                    efficiency = eff?.value_pct,
+                    disturbances = dist?.value_count,
+                    stagesDeep = stg?.value_sws_hm,
+                    stagesRem = stg?.value_rem_hm,
+                    stagesLight = stg?.value_light_hm
+                )
+            }.sortedBy { it.date }
+
+        val allTimeMin = mutableMapOf<String, Float>()
+        val allTimeMax = mutableMapOf<String, Float>()
+
+        for (metric in SleepCardConfig.GRAPHABLE_METRICS) {
+            val values: List<Float> = graphDays.mapNotNull { getSleepDayValue(it, metric) }
+            if (values.isNotEmpty()) {
+                allTimeMin[metric] = values.minOrNull() ?: 0f
+                allTimeMax[metric] = values.maxOrNull() ?: 1f
+            }
+        }
+
+        SleepGraphResult(graphDays, allTimeMin, allTimeMax)
+    } catch (_: Exception) {
+        SleepGraphResult(emptyList(), emptyMap(), emptyMap())
+    }
+}

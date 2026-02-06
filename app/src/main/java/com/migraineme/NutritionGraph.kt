@@ -1,6 +1,7 @@
 package com.migraineme
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -97,7 +98,9 @@ private fun getDayValue(day: NutritionDayData, metric: String): Float {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NutritionHistoryGraph(
-    days: Int = 14
+    days: Int = 14,
+    endDate: java.time.LocalDate = java.time.LocalDate.now(),
+    onClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -108,14 +111,16 @@ fun NutritionHistoryGraph(
     var allTimeMax by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
     var isLoading by remember { mutableStateOf(true) }
     var selectedMetrics by remember { mutableStateOf(setOf(MonitorCardConfig.METRIC_CALORIES)) }
+    var migraineDates by remember { mutableStateOf<Set<String>>(emptySet()) }
     
     // Load history data
-    LaunchedEffect(Unit) {
+    LaunchedEffect(days, endDate) {
         scope.launch {
-            val result = searchService.getNutritionHistory(days)
+            val result = searchService.getNutritionHistory(days, endDate)
             historyData = result.days
             allTimeMin = result.allTimeMin
             allTimeMax = result.allTimeMax
+            migraineDates = MigraineOverlayHelper.fetchMigraineDates(context, days, endDate)
             isLoading = false
         }
     }
@@ -136,7 +141,7 @@ fun NutritionHistoryGraph(
         else -> "calories"
     }
     
-    BaseCard {
+    BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
         Text(
             "$days-Day History",
             color = AppTheme.TitleColor,
@@ -205,6 +210,15 @@ fun NutritionHistoryGraph(
                 Spacer(Modifier.height(4.dp))
                 Text("Dotted line = last $days days average", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
             }
+
+            if (migraineDates.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
+                    Spacer(Modifier.width(4.dp))
+                    Text("Red bands = migraine days", color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
+                }
+            }
             
             Spacer(Modifier.height(8.dp))
             
@@ -256,6 +270,17 @@ fun NutritionHistoryGraph(
                         val graphHeight = size.height - padding * 2
                         val dashWidth = 6.dp.toPx()
                         val gapWidth = 4.dp.toPx()
+
+                        // Draw migraine bands (behind everything)
+                        with(MigraineOverlayHelper) {
+                            drawMigraineBands(
+                                dateList = historyData.map { it.date },
+                                migraineDates = migraineDates,
+                                padding = padding,
+                                graphWidth = graphWidth,
+                                graphHeight = graphHeight
+                            )
+                        }
                         
                         selectedMetrics.forEach { metric ->
                             val color = metricColors[metric] ?: Color.White
@@ -386,3 +411,4 @@ fun NutritionHistoryGraph(
         }
     }
 }
+

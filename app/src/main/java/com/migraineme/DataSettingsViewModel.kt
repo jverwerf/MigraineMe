@@ -33,13 +33,9 @@ class DataSettingsViewModel(
                 val settings = edge.getMetricSettings(context)
                 Log.d(TAG, "Loaded ${settings.size} settings from Supabase")
 
-                _metricSettings.value = settings.associateBy { setting ->
-                    if (setting.preferredSource != null) {
-                        "${setting.metric}_${setting.preferredSource}"
-                    } else {
-                        "${setting.metric}_null"
-                    }
-                }
+                // FIX: Key by metric name only, since Supabase has unique constraint on (user_id, metric)
+                // The preferred_source is a column in that row, not part of the key
+                _metricSettings.value = settings.associateBy { it.metric }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load settings: ${e.message}", e)
             } finally {

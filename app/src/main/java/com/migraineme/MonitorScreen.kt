@@ -16,7 +16,6 @@ import androidx.compose.material.icons.outlined.BubbleChart
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Hearing
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
@@ -62,15 +61,17 @@ fun MonitorScreen(
     // Card configuration
     var cardConfig by remember { mutableStateOf(MonitorCardConfigStore.load(ctx)) }
     var weatherConfig by remember { mutableStateOf(WeatherCardConfigStore.load(ctx)) }
+    var sleepConfig by remember { mutableStateOf(SleepCardConfigStore.load(ctx)) }
     
     // Refresh config when returning to screen
     LaunchedEffect(Unit) {
         cardConfig = MonitorCardConfigStore.load(ctx)
         weatherConfig = WeatherCardConfigStore.load(ctx)
+        sleepConfig = SleepCardConfigStore.load(ctx)
     }
     
-    // Nutrition data
-    var nutritionSummary by remember { mutableStateOf<NutritionSummary?>(null) }
+    // Nutrition data — use same service as MonitorNutritionScreen for full metric coverage
+    var nutritionItems by remember { mutableStateOf<List<NutritionLogItem>>(emptyList()) }
     var nutritionLoading by remember { mutableStateOf(true) }
     
     // Weather data
@@ -101,12 +102,12 @@ fun MonitorScreen(
             return@LaunchedEffect
         }
         
-        // Load nutrition summary
+        // Load nutrition items (same as MonitorNutritionScreen — supports all 34 nutrients)
         withContext(Dispatchers.IO) {
-            nutritionSummary = try {
-                loadNutritionSummary(ctx, token, today)
+            nutritionItems = try {
+                USDAFoodSearchService(ctx).getTodayNutritionItems()
             } catch (_: Exception) {
-                null
+                emptyList()
             }
             nutritionLoading = false
         }
@@ -207,17 +208,17 @@ fun MonitorScreen(
                         MonitorCardConfig.CARD_NUTRITION -> {
                             NutritionCard(
                                 nutritionLoading = nutritionLoading,
-                                nutritionSummary = nutritionSummary,
+                                nutritionItems = nutritionItems,
                                 displayMetrics = cardConfig.nutritionDisplayMetrics,
                                 onClick = { navController.navigate(Routes.MONITOR_NUTRITION) }
                             )
                         }
-                        MonitorCardConfig.CARD_WEATHER -> {
-                            WeatherCard(
+                        MonitorCardConfig.CARD_ENVIRONMENT -> {
+                            EnvironmentCard(
                                 weatherLoading = weatherLoading,
                                 weatherSummary = weatherSummary,
                                 displayMetrics = weatherConfig.weatherDisplayMetrics.take(3),
-                                onClick = { navController.navigate(Routes.MONITOR_WEATHER) }
+                                onClick = { navController.navigate(Routes.MONITOR_ENVIRONMENT) }
                             )
                         }
                         MonitorCardConfig.CARD_PHYSICAL -> {
@@ -231,6 +232,7 @@ fun MonitorScreen(
                             SleepCard(
                                 sleepLoading = sleepLoading,
                                 sleepSummary = sleepSummary,
+                                displayMetrics = sleepConfig.sleepDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_SLEEP) }
                             )
                         }
@@ -239,11 +241,7 @@ fun MonitorScreen(
                                 onClick = { navController.navigate(Routes.MONITOR_MENTAL) }
                             )
                         }
-                        MonitorCardConfig.CARD_ENVIRONMENT -> {
-                            EnvironmentCard(
-                                onClick = { navController.navigate(Routes.MONITOR_ENVIRONMENT) }
-                            )
-                        }
+
                         MonitorCardConfig.CARD_MENSTRUATION -> {
                             if (menstruationEnabled || menstruationLoading) {
                                 MenstruationCard(
@@ -264,7 +262,7 @@ fun MonitorScreen(
 @Composable
 private fun NutritionCard(
     nutritionLoading: Boolean,
-    nutritionSummary: NutritionSummary?,
+    nutritionItems: List<NutritionLogItem>,
     displayMetrics: List<String>,
     onClick: () -> Unit
 ) {
@@ -277,25 +275,21 @@ private fun NutritionCard(
         if (nutritionLoading) {
             Text("Loading...", color = AppTheme.SubtleTextColor)
         } else {
-            // Always show metrics even if no data
-            val summary = nutritionSummary
-            
+            val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                displayMetrics.forEach { metric ->
-                    val todayValue = summary?.todayValues?.get(metric) ?: 0
-                    val yesterdayValue = summary?.yesterdayValues?.get(metric)
+                displayMetrics.forEachIndexed { index, metric ->
+                    val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
                     val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
                     val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
-                    val color = getNutritionMetricColor(metric)
+                    val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
+                    val color = slotColors.getOrElse(index) { slotColors.last() }
                     
                     NutritionMetric(
                         label = label,
-                        value = "$todayValue$unit",
-                        unit = "",
-                        yesterdayValue = yesterdayValue ?: 0,
+                        value = formatted,
                         color = color
                     )
                 }
@@ -303,10 +297,9 @@ private fun NutritionCard(
             
             Spacer(Modifier.height(6.dp))
             
-            val mealCount = summary?.todayMealCount ?: 0
-            val recordCount = summary?.todayRecordCount ?: 0
+            val mealTypes = nutritionItems.mapNotNull { it.mealType?.takeIf { m -> m.isNotBlank() && m != "unknown" } }.toSet()
             Text(
-                "$mealCount meals • $recordCount items today",
+                "${mealTypes.size} meals • ${nutritionItems.size} items today",
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -314,28 +307,8 @@ private fun NutritionCard(
     }
 }
 
-private fun getNutritionMetricColor(metric: String): Color {
-    return when (metric) {
-        MonitorCardConfig.METRIC_CALORIES -> Color(0xFFFFB74D)
-        MonitorCardConfig.METRIC_PROTEIN -> Color(0xFF4FC3F7)
-        MonitorCardConfig.METRIC_CARBS -> Color(0xFF81C784)
-        MonitorCardConfig.METRIC_FAT -> Color(0xFFFF8A65)
-        MonitorCardConfig.METRIC_FIBER -> Color(0xFFA5D6A7)
-        MonitorCardConfig.METRIC_SUGAR -> Color(0xFFFFAB91)
-        MonitorCardConfig.METRIC_SODIUM -> Color(0xFF90A4AE)
-        MonitorCardConfig.METRIC_CAFFEINE -> Color(0xFFBA68C8)
-        MonitorCardConfig.METRIC_CHOLESTEROL -> Color(0xFFE57373)
-        MonitorCardConfig.METRIC_SATURATED_FAT -> Color(0xFFFFCC80)
-        MonitorCardConfig.METRIC_IRON -> Color(0xFF8D6E63)
-        MonitorCardConfig.METRIC_CALCIUM -> Color(0xFFE0E0E0)
-        MonitorCardConfig.METRIC_VITAMIN_C -> Color(0xFFFFEB3B)
-        MonitorCardConfig.METRIC_VITAMIN_D -> Color(0xFFFFF176)
-        else -> Color(0xFF4FC3F7)
-    }
-}
-
 @Composable
-private fun WeatherCard(
+private fun EnvironmentCard(
     weatherLoading: Boolean,
     weatherSummary: WeatherSummary?,
     displayMetrics: List<String>,
@@ -343,7 +316,7 @@ private fun WeatherCard(
 ) {
     MonitorCategoryCard(
         icon = Icons.Outlined.Cloud,
-        title = "Weather",
+        title = "Environment",
         iconTint = Color(0xFF4FC3F7),
         onClick = onClick
     ) {
@@ -366,14 +339,14 @@ private fun WeatherCard(
                     Text(weather.condition, color = AppTheme.SubtleTextColor)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    // Show selected metrics (max 3)
-                    displayMetrics.take(3).forEach { metric ->
+                    val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+                    displayMetrics.take(3).forEachIndexed { index, metric ->
                         val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
                         val value = getWeatherMetricValue(weather, metric)
                         val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
                         Text(
                             "$label: $value$unit",
-                            color = AppTheme.BodyTextColor,
+                            color = slotColors.getOrElse(index) { slotColors.last() },
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -410,7 +383,7 @@ private fun PhysicalHealthCard(
             Text("Loading...", color = AppTheme.SubtleTextColor)
         } else if (physicalSummary == null) {
             Text("No physical health data", color = AppTheme.SubtleTextColor)
-            Text("Connect WHOOP to see data", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            Text("Connect a wearable to see data", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
         } else {
             val physical = physicalSummary
             Row(
@@ -429,6 +402,7 @@ private fun PhysicalHealthCard(
 private fun SleepCard(
     sleepLoading: Boolean,
     sleepSummary: SleepSummary?,
+    displayMetrics: List<String>,
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
@@ -441,16 +415,20 @@ private fun SleepCard(
             Text("Loading...", color = AppTheme.SubtleTextColor)
         } else if (sleepSummary == null) {
             Text("No sleep data", color = AppTheme.SubtleTextColor)
-            Text("Connect WHOOP to see data", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            Text("Enable phone sleep or connect a wearable", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
         } else {
             val sleep = sleepSummary
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                SleepMetric("Duration", String.format("%.1fh", sleep.durationHours), Color(0xFF7986CB))
-                SleepMetric("Score", "${sleep.sleepScore}%", Color(0xFF4FC3F7))
-                SleepMetric("Efficiency", "${sleep.efficiency}%", Color(0xFF81C784))
+                val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+                displayMetrics.forEachIndexed { index, metric ->
+                    val label = SleepCardConfig.labelFor(metric)
+                    val color = slotColors.getOrElse(index) { slotColors.last() }
+                    val value = getSleepSummaryMetricValue(sleep, metric)
+                    SleepMetric(label, value, color)
+                }
             }
         }
     }
@@ -469,18 +447,7 @@ private fun MentalHealthCard(onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun EnvironmentCard(onClick: () -> Unit) {
-    MonitorCategoryCard(
-        icon = Icons.Outlined.Hearing,
-        title = "Environment",
-        iconTint = Color(0xFF90A4AE),
-        onClick = onClick
-    ) {
-        Text("Ambient noise, screen time & more", color = AppTheme.SubtleTextColor)
-        Text("Coming soon", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
-    }
-}
+
 
 @Composable
 private fun MenstruationCard(
@@ -552,8 +519,6 @@ private fun MenstruationCard(
 private fun NutritionMetric(
     label: String,
     value: String,
-    unit: String,
-    yesterdayValue: Int?,
     color: Color
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -566,11 +531,6 @@ private fun NutritionMetric(
             label,
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall
-        )
-        Text(
-            "yday: ${yesterdayValue ?: 0}",
-            color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
-            style = MaterialTheme.typography.labelSmall
         )
     }
 }
@@ -651,16 +611,29 @@ private fun SleepMetric(label: String, value: String, color: Color) {
     }
 }
 
+private fun getSleepSummaryMetricValue(sleep: SleepSummary, metric: String): String {
+    return when (metric) {
+        SleepCardConfig.METRIC_DURATION -> String.format("%.1fh", sleep.durationHours)
+        SleepCardConfig.METRIC_FELL_ASLEEP -> sleep.fellAsleepDisplay ?: "—"
+        SleepCardConfig.METRIC_WOKE_UP -> sleep.wokeUpDisplay ?: "—"
+        SleepCardConfig.METRIC_SCORE -> if (sleep.sleepScore > 0) "${sleep.sleepScore}%" else "—"
+        SleepCardConfig.METRIC_EFFICIENCY -> if (sleep.efficiency > 0) "${sleep.efficiency}%" else "—"
+        SleepCardConfig.METRIC_DISTURBANCES -> sleep.disturbances?.toString() ?: "—"
+        SleepCardConfig.METRIC_STAGES_DEEP -> sleep.stagesDeep?.let { formatSleepHM(it) } ?: "—"
+        SleepCardConfig.METRIC_STAGES_REM -> sleep.stagesRem?.let { formatSleepHM(it) } ?: "—"
+        SleepCardConfig.METRIC_STAGES_LIGHT -> sleep.stagesLight?.let { formatSleepHM(it) } ?: "—"
+        else -> "—"
+    }
+}
+
+private fun formatSleepHM(hm: Double): String {
+    val totalMinutes = (hm * 60).toInt()
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return if (hours > 0) "${hours}h${minutes}m" else "${minutes}m"
+}
+
 // Data classes for summaries
-data class NutritionSummary(
-    // Today's values (aggregated from nutrition_records)
-    val todayValues: Map<String, Int?>,
-    val todayMealCount: Int,
-    val todayRecordCount: Int,
-    
-    // Yesterday's values (from nutrition_daily)
-    val yesterdayValues: Map<String, Int?>
-)
 
 data class WeatherSummary(
     val temperature: Int,
@@ -680,146 +653,17 @@ data class PhysicalSummary(
 data class SleepSummary(
     val durationHours: Double,
     val sleepScore: Int,
-    val efficiency: Int
+    val efficiency: Int,
+    val fellAsleepDisplay: String? = null,
+    val wokeUpDisplay: String? = null,
+    val sourceLabel: String = "",
+    val disturbances: Int? = null,
+    val stagesDeep: Double? = null,
+    val stagesRem: Double? = null,
+    val stagesLight: Double? = null
 )
 
 // Data loading functions
-private suspend fun loadNutritionSummary(ctx: android.content.Context, token: String, date: String): NutritionSummary? {
-    return withContext(Dispatchers.IO) {
-        try {
-            val userId = SessionStore.readUserId(ctx) ?: return@withContext null
-            val client = OkHttpClient()
-            
-            val today = LocalDate.parse(date)
-            val yesterday = today.minusDays(1).toString()
-            
-            // 1. Get yesterday's data from nutrition_daily
-            val yesterdayValues = mutableMapOf<String, Int?>()
-            
-            try {
-                val yesterdayUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_daily?" +
-                    "user_id=eq.$userId&date=eq.$yesterday&select=*"
-                
-                val yesterdayRequest = Request.Builder()
-                    .url(yesterdayUrl)
-                    .get()
-                    .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                    .addHeader("Authorization", "Bearer $token")
-                    .build()
-                
-                val yesterdayResponse = client.newCall(yesterdayRequest).execute()
-                val yesterdayBody = yesterdayResponse.body?.string()
-                
-                if (yesterdayResponse.isSuccessful && !yesterdayBody.isNullOrBlank()) {
-                    val arr = org.json.JSONArray(yesterdayBody)
-                    if (arr.length() > 0) {
-                        val obj = arr.getJSONObject(0)
-                        yesterdayValues[MonitorCardConfig.METRIC_CALORIES] = obj.optDouble("total_calories", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_PROTEIN] = obj.optDouble("total_protein_g", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_CARBS] = obj.optDouble("total_carbs_g", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_FAT] = obj.optDouble("total_fat_g", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_FIBER] = obj.optDouble("total_fiber_g", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_SUGAR] = obj.optDouble("total_sugar_g", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_SODIUM] = obj.optDouble("total_sodium_mg", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_CAFFEINE] = obj.optDouble("total_caffeine_mg", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_CHOLESTEROL] = obj.optDouble("total_cholesterol_mg", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_SATURATED_FAT] = obj.optDouble("total_saturated_fat_g", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_IRON] = obj.optDouble("total_iron_mg", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_CALCIUM] = obj.optDouble("total_calcium_mg", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_VITAMIN_C] = obj.optDouble("total_vitamin_c_mg", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                        yesterdayValues[MonitorCardConfig.METRIC_VITAMIN_D] = obj.optDouble("total_vitamin_d_mcg", Double.NaN).takeIf { !it.isNaN() }?.toInt()
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.w("MonitorScreen", "Failed to load yesterday nutrition: ${e.message}")
-            }
-            
-            // 2. Get today's data by aggregating nutrition_records
-            val todayValues = mutableMapOf<String, Int?>()
-            var todayMealCount = 0
-            var todayRecordCount = 0
-            
-            try {
-                // Get today's start/end in ISO format
-                val todayStart = "${date}T00:00:00Z"
-                val todayEnd = "${date}T23:59:59Z"
-                
-                val todayUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                    "user_id=eq.$userId&timestamp=gte.$todayStart&timestamp=lte.$todayEnd" +
-                    "&select=calories,protein,total_carbohydrate,total_fat,dietary_fiber,sugar,sodium,caffeine,cholesterol,saturated_fat,iron,calcium,vitamin_c,vitamin_d,meal_type"
-                
-                val todayRequest = Request.Builder()
-                    .url(todayUrl)
-                    .get()
-                    .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                    .addHeader("Authorization", "Bearer $token")
-                    .build()
-                
-                val todayResponse = client.newCall(todayRequest).execute()
-                val todayBody = todayResponse.body?.string()
-                
-                if (todayResponse.isSuccessful && !todayBody.isNullOrBlank()) {
-                    val arr = org.json.JSONArray(todayBody)
-                    
-                    val sums = mutableMapOf<String, Double>()
-                    val mealTypes = mutableSetOf<String>()
-                    
-                    for (i in 0 until arr.length()) {
-                        val obj = arr.getJSONObject(i)
-                        todayRecordCount++
-                        
-                        fun addToSum(key: String, jsonKey: String) {
-                            val v = obj.optDouble(jsonKey, 0.0)
-                            if (!v.isNaN()) sums[key] = (sums[key] ?: 0.0) + v
-                        }
-                        
-                        addToSum(MonitorCardConfig.METRIC_CALORIES, "calories")
-                        addToSum(MonitorCardConfig.METRIC_PROTEIN, "protein")
-                        addToSum(MonitorCardConfig.METRIC_CARBS, "total_carbohydrate")
-                        addToSum(MonitorCardConfig.METRIC_FAT, "total_fat")
-                        addToSum(MonitorCardConfig.METRIC_FIBER, "dietary_fiber")
-                        addToSum(MonitorCardConfig.METRIC_SUGAR, "sugar")
-                        addToSum(MonitorCardConfig.METRIC_SODIUM, "sodium")
-                        addToSum(MonitorCardConfig.METRIC_CAFFEINE, "caffeine")
-                        addToSum(MonitorCardConfig.METRIC_CHOLESTEROL, "cholesterol")
-                        addToSum(MonitorCardConfig.METRIC_SATURATED_FAT, "saturated_fat")
-                        addToSum(MonitorCardConfig.METRIC_IRON, "iron")
-                        addToSum(MonitorCardConfig.METRIC_CALCIUM, "calcium")
-                        addToSum(MonitorCardConfig.METRIC_VITAMIN_C, "vitamin_c")
-                        addToSum(MonitorCardConfig.METRIC_VITAMIN_D, "vitamin_d")
-                        
-                        val meal = obj.optString("meal_type", "")
-                        if (meal.isNotBlank() && meal != "unknown") mealTypes.add(meal)
-                    }
-                    
-                    if (todayRecordCount > 0) {
-                        sums.forEach { (key, value) ->
-                            todayValues[key] = value.toInt()
-                        }
-                        todayMealCount = mealTypes.size
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.w("MonitorScreen", "Failed to load today nutrition: ${e.message}")
-            }
-            
-            // Return null if no data at all
-            if (todayRecordCount == 0 && yesterdayValues.isEmpty()) {
-                return@withContext null
-            }
-            
-            NutritionSummary(
-                todayValues = todayValues,
-                todayMealCount = todayMealCount,
-                todayRecordCount = todayRecordCount,
-                yesterdayValues = yesterdayValues
-            )
-        } catch (e: Exception) {
-            android.util.Log.e("MonitorScreen", "Error loading nutrition summary: ${e.message}", e)
-            null
-        }
-    }
-}
 
 private suspend fun loadWeatherSummary(ctx: android.content.Context, token: String, date: String): WeatherSummary? {
     return withContext(Dispatchers.IO) {
@@ -952,9 +796,106 @@ private suspend fun loadSleepSummary(ctx: android.content.Context, token: String
         return null
     }
     
+    // Fetch fell asleep / woke up / source via raw query
+    val userId = SessionStore.readUserId(ctx)
+    var fellAsleepDisplay: String? = null
+    var wokeUpDisplay: String? = null
+    var sourceLabel = ""
+    
+    if (userId != null) {
+        val client = okhttp3.OkHttpClient()
+        
+        // Fell asleep
+        try {
+            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/fell_asleep_time_daily?" +
+                    "user_id=eq.$userId&date=eq.$date&select=value_at&limit=1"
+            val request = okhttp3.Request.Builder().url(url).get()
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token").build()
+            val response = client.newCall(request).execute()
+            val body = response.body?.string()
+            if (response.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val valueAt = arr.getJSONObject(0).optString("value_at", "")
+                    if (valueAt.isNotBlank()) {
+                        fellAsleepDisplay = try {
+                            val zdt = java.time.ZonedDateTime.parse(valueAt)
+                            val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
+                            local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+                        } catch (_: Exception) { valueAt.take(5) }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        
+        // Woke up
+        try {
+            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/woke_up_time_daily?" +
+                    "user_id=eq.$userId&date=eq.$date&select=value_at&limit=1"
+            val request = okhttp3.Request.Builder().url(url).get()
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token").build()
+            val response = client.newCall(request).execute()
+            val body = response.body?.string()
+            if (response.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val valueAt = arr.getJSONObject(0).optString("value_at", "")
+                    if (valueAt.isNotBlank()) {
+                        wokeUpDisplay = try {
+                            val zdt = java.time.ZonedDateTime.parse(valueAt)
+                            val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
+                            local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+                        } catch (_: Exception) { valueAt.take(5) }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        
+        // Source
+        try {
+            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/sleep_duration_daily?" +
+                    "user_id=eq.$userId&date=eq.$date&select=source&limit=1"
+            val request = okhttp3.Request.Builder().url(url).get()
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token").build()
+            val response = client.newCall(request).execute()
+            val body = response.body?.string()
+            if (response.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val src = arr.getJSONObject(0).optString("source", "")
+                    sourceLabel = when (src) {
+                        "phone" -> "Phone"
+                        "whoop" -> "WHOOP"
+                        "health_connect" -> "Health Connect"
+                        else -> ""
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+    }
+    
+    // Fetch disturbances and stages (wearable-only, may be null)
+    val todayDisturbances = try {
+        db.fetchSleepDisturbancesDaily(token, 1).find { it.date == date }
+    } catch (_: Exception) { null }
+    
+    val todayStages = try {
+        db.fetchSleepStagesDaily(token, 1).find { it.date == date }
+    } catch (_: Exception) { null }
+    
     return SleepSummary(
         durationHours = todayDuration?.value_hours ?: 0.0,
         sleepScore = todayScore?.value_pct?.toInt() ?: 0,
-        efficiency = todayEfficiency?.value_pct?.toInt() ?: 0
+        efficiency = todayEfficiency?.value_pct?.toInt() ?: 0,
+        fellAsleepDisplay = fellAsleepDisplay,
+        wokeUpDisplay = wokeUpDisplay,
+        sourceLabel = sourceLabel,
+        disturbances = todayDisturbances?.value_count,
+        stagesDeep = todayStages?.value_sws_hm,
+        stagesRem = todayStages?.value_rem_hm,
+        stagesLight = todayStages?.value_light_hm
     )
 }

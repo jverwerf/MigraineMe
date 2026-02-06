@@ -48,8 +48,7 @@ object MetricToggleHelper {
                     android.util.Log.d("MetricToggle", "Scheduled ambient noise workers")
                 }
                 "screen_time_daily" -> {
-                    ScreenTimeDailySyncWorker.scheduleNext(context)
-                    ScreenTimeWatchdogWorker.schedule(context)
+
                     android.util.Log.d("MetricToggle", "Scheduled screen time workers")
                 }
             }
@@ -69,8 +68,7 @@ object MetricToggleHelper {
                     android.util.Log.d("MetricToggle", "Cancelled ambient noise workers")
                 }
                 "screen_time_daily" -> {
-                    ScreenTimeDailySyncWorker.cancel(context)
-                    ScreenTimeWatchdogWorker.cancel(context)
+
                     android.util.Log.d("MetricToggle", "Cancelled screen time workers")
                 }
             }

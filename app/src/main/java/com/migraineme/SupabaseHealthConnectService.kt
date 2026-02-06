@@ -14,6 +14,12 @@ import kotlinx.serialization.json.Json
 /**
  * Supabase service for uploading Health Connect data.
  * Handles all record types with source = "health_connect".
+ *
+ * IMPORTANT: Different tables have different unique constraints:
+ * - Most tables: (user_id, source, date)
+ * - time_in_high_hr_zones_daily: (user_id, source, source_measure_id) - stores individual sessions
+ *
+ * This service handles both patterns appropriately.
  */
 class SupabaseHealthConnectService(context: Context) {
 
@@ -22,37 +28,132 @@ class SupabaseHealthConnectService(context: Context) {
         private const val SOURCE = "health_connect"
     }
 
-    private val supabaseUrl = BuildConfig.SUPABASE_URL
+    private val supabaseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
     private val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
 
     private val client = HttpClient {
-        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = true  // CRITICAL: Always include fields with defaults like 'source'
+            })
+        }
+    }
+
+    /**
+     * Result of an upsert operation with error classification.
+     */
+    sealed class UpsertResult {
+        object Success : UpsertResult()
+        data class RetryableError(val message: String) : UpsertResult()      // Network issues, 5xx - retry later
+        data class PermanentError(val message: String) : UpsertResult()      // 4xx client errors - don't retry
     }
 
     // ============================================================
-    // Generic upsert helper
+    // Table-aware upsert helpers
     // ============================================================
 
-    private suspend inline fun <reified T> upsert(
+    /**
+     * Standard upsert for daily tables with (user_id, source, date) uniqueness.
+     * Used by: sleep_duration_daily, hrv_daily, resting_hr_daily, steps_daily,
+     *          weight_daily, body_fat_daily, hydration_daily, blood_pressure_daily,
+     *          blood_glucose_daily, spo2_daily, respiratory_rate_daily, skin_temp_daily,
+     *          fell_asleep_time_daily, woke_up_time_daily, sleep_stages_daily
+     */
+    private suspend inline fun <reified T> upsertDaily(
         accessToken: String,
         table: String,
         row: T
-    ): Boolean {
+    ): UpsertResult {
+        return upsertWithConflict(accessToken, table, row, "user_id,source,date")
+    }
+
+    /**
+     * Upsert for session-based tables with (user_id, source, source_measure_id) uniqueness.
+     * Used by: time_in_high_hr_zones_daily (stores individual exercise sessions)
+     */
+    private suspend inline fun <reified T> upsertSession(
+        accessToken: String,
+        table: String,
+        row: T
+    ): UpsertResult {
+        return upsertWithConflict(accessToken, table, row, "user_id,source,source_measure_id")
+    }
+
+    /**
+     * Generic upsert with explicit conflict resolution.
+     */
+    private suspend inline fun <reified T> upsertWithConflict(
+        accessToken: String,
+        table: String,
+        row: T,
+        onConflict: String
+    ): UpsertResult {
         return try {
             val resp = client.post("$supabaseUrl/rest/v1/$table") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 header("apikey", supabaseKey)
-                header("Prefer", "resolution=merge-duplicates")
+                header("Prefer", "resolution=merge-duplicates,return=minimal")
+                parameter("on_conflict", onConflict)
                 contentType(ContentType.Application.Json)
                 setBody(row)
             }
-            if (!resp.status.isSuccess()) {
-                Log.e(TAG, "Upsert to $table failed: ${resp.status} - ${resp.bodyAsText()}")
+
+            when {
+                resp.status.isSuccess() -> UpsertResult.Success
+
+                resp.status.value in 400..499 -> {
+                    val body = resp.bodyAsText()
+                    Log.e(TAG, "Upsert to $table failed (permanent): ${resp.status} - $body")
+                    
+                    // Check if it's a constraint violation we can ignore (duplicate that somehow slipped through)
+                    if (body.contains("duplicate") || body.contains("unique")) {
+                        Log.w(TAG, "Duplicate detected for $table, treating as success")
+                        UpsertResult.Success
+                    } else {
+                        UpsertResult.PermanentError("${resp.status.value}: $body")
+                    }
+                }
+
+                else -> {
+                    // 5xx or other - retryable
+                    val body = resp.bodyAsText()
+                    Log.e(TAG, "Upsert to $table failed (retryable): ${resp.status} - $body")
+                    UpsertResult.RetryableError("${resp.status.value}: $body")
+                }
             }
-            resp.status.isSuccess()
         } catch (e: Exception) {
             Log.e(TAG, "Upsert to $table exception: ${e.message}")
-            false
+            // Network errors are retryable
+            UpsertResult.RetryableError(e.message ?: "Unknown error")
+        }
+    }
+
+    /**
+     * Legacy boolean-returning upsert for backward compatibility.
+     * Converts UpsertResult to simple boolean.
+     */
+    private suspend inline fun <reified T> upsertDailyCompat(
+        accessToken: String,
+        table: String,
+        row: T
+    ): Boolean {
+        return when (upsertDaily(accessToken, table, row)) {
+            is UpsertResult.Success -> true
+            is UpsertResult.RetryableError -> false
+            is UpsertResult.PermanentError -> false
+        }
+    }
+
+    private suspend inline fun <reified T> upsertSessionCompat(
+        accessToken: String,
+        table: String,
+        row: T
+    ): Boolean {
+        return when (upsertSession(accessToken, table, row)) {
+            is UpsertResult.Success -> true
+            is UpsertResult.RetryableError -> false
+            is UpsertResult.PermanentError -> false
         }
     }
 
@@ -66,7 +167,7 @@ class SupabaseHealthConnectService(context: Context) {
         sourceMeasureId: String
     ): Boolean {
         val table = recordTypeToTable(recordType) ?: return false
-        
+
         return try {
             val resp = client.delete("$supabaseUrl/rest/v1/$table") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -146,24 +247,24 @@ class SupabaseHealthConnectService(context: Context) {
         val results = mutableListOf<Boolean>()
 
         // Duration
-        results.add(upsert(accessToken, "sleep_duration_daily",
+        results.add(upsertDailyCompat(accessToken, "sleep_duration_daily",
             SleepDurationRow(date, durationHours, SOURCE, sourceId)))
 
         // Fell asleep time
         if (startTime.isNotEmpty()) {
-            results.add(upsert(accessToken, "fell_asleep_time_daily",
+            results.add(upsertDailyCompat(accessToken, "fell_asleep_time_daily",
                 SleepTimeRow(date, startTime, SOURCE, sourceId)))
         }
 
         // Woke up time
         if (endTime.isNotEmpty()) {
-            results.add(upsert(accessToken, "woke_up_time_daily",
+            results.add(upsertDailyCompat(accessToken, "woke_up_time_daily",
                 SleepTimeRow(date, endTime, SOURCE, sourceId)))
         }
 
         // Sleep stages (if available)
         if (remMinutes > 0 || deepMinutes > 0 || lightMinutes > 0) {
-            results.add(upsert(accessToken, "sleep_stages_daily",
+            results.add(upsertDailyCompat(accessToken, "sleep_stages_daily",
                 SleepStagesRow(date, remMinutes, deepMinutes, lightMinutes, awakeMinutes, SOURCE, sourceId)))
         }
 
@@ -183,7 +284,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertHrv(accessToken: String, date: String, valueMs: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "hrv_daily", HrvRow(date, valueMs, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "hrv_daily", HrvRow(date, valueMs, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -199,7 +300,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertRestingHr(accessToken: String, date: String, valueBpm: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "resting_hr_daily", RestingHrRow(date, valueBpm, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "resting_hr_daily", RestingHrRow(date, valueBpm, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -215,11 +316,11 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertSteps(accessToken: String, date: String, count: Long, sourceId: String): Boolean {
-        return upsert(accessToken, "steps_daily", StepsRow(date, count, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "steps_daily", StepsRow(date, count, SOURCE, sourceId))
     }
 
     // ============================================================
-    // Exercise
+    // Exercise (Session-based - uses source_measure_id for uniqueness)
     // ============================================================
 
     @Serializable
@@ -228,17 +329,44 @@ class SupabaseHealthConnectService(context: Context) {
         val value_minutes: Int,
         val activity_type: String? = null,
         val source: String = SOURCE,
-        val source_measure_id: String? = null
+        val source_measure_id: String? = null,
+        // Include start/end times to match WHOOP schema
+        val start_at: String? = null,
+        val end_at: String? = null
     )
 
-    suspend fun upsertExercise(accessToken: String, date: String, durationMinutes: Int, exerciseType: Int, sourceId: String): Boolean {
+    /**
+     * Upsert exercise session.
+     * 
+     * IMPORTANT: time_in_high_hr_zones_daily uses (user_id, source, source_measure_id) as unique key
+     * because it stores individual exercise sessions, not daily totals.
+     */
+    suspend fun upsertExercise(
+        accessToken: String,
+        date: String,
+        durationMinutes: Int,
+        exerciseType: Int,
+        sourceId: String,
+        startTime: String? = null,
+        endTime: String? = null
+    ): Boolean {
         val activityName = exerciseTypeToName(exerciseType)
-        return upsert(accessToken, "time_in_high_hr_zones_daily",
-            ExerciseRow(date, durationMinutes, activityName, SOURCE, sourceId))
+        return upsertSessionCompat(
+            accessToken,
+            "time_in_high_hr_zones_daily",
+            ExerciseRow(
+                date = date,
+                value_minutes = durationMinutes,
+                activity_type = activityName,
+                source = SOURCE,
+                source_measure_id = sourceId,
+                start_at = startTime,
+                end_at = endTime
+            )
+        )
     }
 
     private fun exerciseTypeToName(type: Int): String {
-        // Map Health Connect exercise types to readable names
         return when (type) {
             1 -> "BACK_EXTENSION"
             2 -> "BADMINTON"
@@ -325,7 +453,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertWeight(accessToken: String, date: String, valueKg: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "weight_daily", WeightRow(date, valueKg, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "weight_daily", WeightRow(date, valueKg, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -341,7 +469,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertBodyFat(accessToken: String, date: String, valuePct: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "body_fat_daily", BodyFatRow(date, valuePct, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "body_fat_daily", BodyFatRow(date, valuePct, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -357,7 +485,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertHydration(accessToken: String, date: String, valueMl: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "hydration_daily", HydrationRow(date, valueMl, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "hydration_daily", HydrationRow(date, valueMl, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -374,7 +502,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertBloodPressure(accessToken: String, date: String, systolic: Double, diastolic: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "blood_pressure_daily", BloodPressureRow(date, systolic, diastolic, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "blood_pressure_daily", BloodPressureRow(date, systolic, diastolic, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -391,7 +519,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertBloodGlucose(accessToken: String, date: String, valueMmol: Double, mealType: String, sourceId: String): Boolean {
-        return upsert(accessToken, "blood_glucose_daily", BloodGlucoseRow(date, valueMmol, mealType, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "blood_glucose_daily", BloodGlucoseRow(date, valueMmol, mealType, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -407,7 +535,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertSpo2(accessToken: String, date: String, valuePct: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "spo2_daily", Spo2Row(date, valuePct, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "spo2_daily", Spo2Row(date, valuePct, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -423,7 +551,7 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertRespiratoryRate(accessToken: String, date: String, valueBpm: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "respiratory_rate_daily", RespiratoryRateRow(date, valueBpm, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "respiratory_rate_daily", RespiratoryRateRow(date, valueBpm, SOURCE, sourceId))
     }
 
     // ============================================================
@@ -439,6 +567,6 @@ class SupabaseHealthConnectService(context: Context) {
     )
 
     suspend fun upsertSkinTemp(accessToken: String, date: String, valueCelsius: Double, sourceId: String): Boolean {
-        return upsert(accessToken, "skin_temp_daily", SkinTempRow(date, valueCelsius, SOURCE, sourceId))
+        return upsertDailyCompat(accessToken, "skin_temp_daily", SkinTempRow(date, valueCelsius, SOURCE, sourceId))
     }
 }

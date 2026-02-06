@@ -1,7 +1,12 @@
 package com.migraineme
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
@@ -24,9 +29,7 @@ import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,7 +39,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
 /**
@@ -44,6 +46,13 @@ import kotlin.reflect.KClass
  * Handles ALL supported Health Connect record types.
  * 
  * Pattern: Health Connect → Changes Worker → Room Outbox → Push Worker → Supabase
+ * 
+ * TRIGGERING: This worker is triggered by FCM push (sync_hourly) from the backend.
+ * It is NOT scheduled locally - the backend controls when syncs happen.
+ * 
+ * FILTERING: This worker checks metric_settings from Supabase before collecting.
+ * If a metric is disabled, data will NOT be collected for that record type.
+ * This means user toggles in DataSettings actually control what gets synced.
  */
 class HealthConnectChangesWorker(
     context: Context,
@@ -52,8 +61,11 @@ class HealthConnectChangesWorker(
 
     companion object {
         private const val TAG = "HCChangesWorker"
-        private const val UNIQUE_WORK_NAME = "health_connect_changes_worker"
         private const val BACKFILL_DAYS = 14L
+        
+        // Notification constants for foreground service
+        private const val NOTIFICATION_CHANNEL_ID = "health_connect_sync"
+        private const val NOTIFICATION_ID = 1001
 
         // All supported record types with their permissions
         val SUPPORTED_RECORDS: Map<KClass<out Record>, String> = mapOf(
@@ -72,34 +84,80 @@ class HealthConnectChangesWorker(
             BodyTemperatureRecord::class to HealthConnectRecordTypes.SKIN_TEMP
         )
 
+        /**
+         * Maps Health Connect record types to their corresponding metric names in metric_settings.
+         * This is used to check if a metric is enabled before collecting data.
+         */
+        private val RECORD_TYPE_TO_METRIC: Map<String, String> = mapOf(
+            HealthConnectRecordTypes.SLEEP to "sleep_duration_daily",
+            HealthConnectRecordTypes.HRV to "hrv_daily",
+            HealthConnectRecordTypes.RESTING_HR to "resting_hr_daily",
+            HealthConnectRecordTypes.STEPS to "steps_daily",
+            HealthConnectRecordTypes.EXERCISE to "time_in_high_hr_zones_daily",
+            HealthConnectRecordTypes.WEIGHT to "weight_daily",
+            HealthConnectRecordTypes.BODY_FAT to "body_fat_daily",
+            HealthConnectRecordTypes.HYDRATION to "hydration_daily",
+            HealthConnectRecordTypes.BLOOD_PRESSURE to "blood_pressure_daily",
+            HealthConnectRecordTypes.BLOOD_GLUCOSE to "blood_glucose_daily",
+            HealthConnectRecordTypes.SPO2 to "spo2_daily",
+            HealthConnectRecordTypes.RESPIRATORY_RATE to "respiratory_rate_daily",
+            HealthConnectRecordTypes.SKIN_TEMP to "skin_temp_daily"
+        )
+
         fun getRequiredPermissions(): Set<String> = SUPPORTED_RECORDS.keys.map {
             HealthPermission.getReadPermission(it)
         }.toSet()
-
-        fun schedule(context: Context) {
-            Log.d(TAG, "Scheduling Health Connect changes worker")
-
-            val request = PeriodicWorkRequestBuilder<HealthConnectChangesWorker>(
-                repeatInterval = 1,
-                repeatIntervalTimeUnit = TimeUnit.HOURS
-            ).build()
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                UNIQUE_WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
-                request
-            )
-        }
-
-        fun cancel(context: Context) {
-            Log.d(TAG, "Cancelling Health Connect changes worker")
-            WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_WORK_NAME)
-        }
     }
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Creates notification channel for Android O+
+     */
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                "Health Data Sync",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Syncing health data from Health Connect"
+            }
+            val notificationManager = applicationContext.getSystemService(NotificationManager::class.java)
+            notificationManager?.createNotificationChannel(channel)
+        }
+    }
+
+    /**
+     * Provides ForegroundInfo for running as a foreground service.
+     * This is required for Health Connect background access.
+     */
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        createNotificationChannel()
+        
+        val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_health_connect)
+            .setContentTitle("Syncing Health Data")
+            .setContentText("Reading data from Health Connect...")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            ForegroundInfo(NOTIFICATION_ID, notification)
+        }
+    }
+
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        // Run as foreground service to get Health Connect access
+        setForeground(getForegroundInfo())
+        
         Log.d(TAG, "Starting Health Connect changes sync")
 
         try {
@@ -116,10 +174,21 @@ class HealthConnectChangesWorker(
             
             var syncState = dao.getSyncState() ?: HealthConnectSyncStateEntity()
 
-            // Process each record type that has permission granted
+            // Fetch enabled metrics from Supabase metric_settings
+            val enabledMetrics = fetchEnabledHealthConnectMetrics()
+            Log.d(TAG, "Enabled HC metrics: $enabledMetrics")
+
+            // Process each record type that has permission granted AND is enabled
             for ((recordClass, recordType) in SUPPORTED_RECORDS) {
                 val permission = HealthPermission.getReadPermission(recordClass)
                 if (permission !in granted) {
+                    continue
+                }
+
+                // Check if this metric is enabled in metric_settings
+                val metricName = RECORD_TYPE_TO_METRIC[recordType]
+                if (metricName != null && metricName !in enabledMetrics) {
+                    Log.d(TAG, "Skipping $recordType - metric '$metricName' is disabled")
                     continue
                 }
 
@@ -140,6 +209,44 @@ class HealthConnectChangesWorker(
             Log.e(TAG, "Changes worker failed: ${e.message}", e)
             Result.retry()
         }
+    }
+
+    /**
+     * Fetches the set of enabled metric names from Supabase metric_settings.
+     * Only returns metrics where:
+     * - enabled = true
+     * - preferred_source = "health_connect" OR allowed_sources contains "health_connect"
+     * 
+     * @return Set of enabled metric names (e.g., "hrv_daily", "weight_daily")
+     */
+    private suspend fun fetchEnabledHealthConnectMetrics(): Set<String> {
+        return try {
+            val edge = EdgeFunctionsService()
+            val settings = edge.getMetricSettings(applicationContext)
+            
+            settings
+                .filter { setting ->
+                    setting.enabled && isHealthConnectSource(setting)
+                }
+                .map { it.metric }
+                .toSet()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch metric_settings: ${e.message}")
+            // On error, return ALL metrics as enabled to avoid blocking data collection
+            // This is a fail-open approach to prevent data loss on network issues
+            RECORD_TYPE_TO_METRIC.values.toSet()
+        }
+    }
+
+    /**
+     * Checks if a metric setting is configured to use Health Connect as source.
+     */
+    private fun isHealthConnectSource(setting: EdgeFunctionsService.MetricSettingResponse): Boolean {
+        val preferredSource = setting.preferredSource?.lowercase() ?: ""
+        val allowedSources = setting.allowedSources?.map { it.lowercase() } ?: emptyList()
+        
+        return preferredSource == "health_connect" || 
+               allowedSources.contains("health_connect")
     }
 
     private suspend fun processRecordType(

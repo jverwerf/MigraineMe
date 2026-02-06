@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationManager
+import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.work.BackoffPolicy
@@ -12,26 +14,35 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.time.Duration
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
 
 /**
- * Daily worker that uploads device location to user_location_daily.
+ * Worker that uploads device location to:
+ * - user_location_hourly (every sync, with timestamp)
+ * - user_location_daily (once per day, for weather)
  * 
- * Scheduling strategy:
- * - Login: runOnceNow() + scheduleNext()
- * - Toggle ON: cancelAll() + runOnceNow() + scheduleNext()
- * - LocationWatchdogWorker: checks if scheduled, calls scheduleNext() if not
- * - This worker: just does the work, NO scheduling
+ * Triggered by:
+ * - FCM push notification (primary - server sends every hour)
+ * - User toggles location ON in app
+ * - Login (initial sync)
+ * 
+ * NO self-scheduling - FCM handles timing.
  */
 class LocationDailySyncWorker(
     appContext: Context,
@@ -58,9 +69,6 @@ class LocationDailySyncWorker(
                 return@withContext Result.success()
             }
 
-            val svc = SupabasePersonalService(applicationContext)
-            val today = LocalDate.now(ZoneId.systemDefault())
-
             val loc = getDeviceLocation(applicationContext)
             if (loc == null) {
                 Log.w(LOG_TAG, "No location found; will retry")
@@ -69,57 +77,54 @@ class LocationDailySyncWorker(
 
             val lat = loc.latitude
             val lon = loc.longitude
+            val deviceTimezone = ZoneId.systemDefault().id
+            val now = ZonedDateTime.now()
+            
+            val svc = SupabasePersonalService(applicationContext)
 
-            // Get device timezone once
-            val deviceTimezone = ZoneId.systemDefault().id  // e.g. "Europe/London"
+            // 1. Always insert into user_location_hourly
+            val hourlySuccess = insertHourlyLocation(
+                svc = svc,
+                accessToken = access,
+                timestamp = now,
+                latitude = lat,
+                longitude = lon,
+                timezone = deviceTimezone
+            )
+            
+            if (hourlySuccess) {
+                Log.d(LOG_TAG, "✅ Inserted hourly location for ${now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)}")
+            } else {
+                Log.w(LOG_TAG, "⚠️ Failed to insert hourly location")
+            }
 
+            // 2. Also upsert into user_location_daily (for weather sync)
+            val today = LocalDate.now(ZoneId.systemDefault())
             val latestStr = svc.latestUserLocationDate(access, "device")
             val latest = latestStr?.let { LocalDate.parse(it) }
 
-            val toWrite: List<LocalDate> =
-                when {
-                    latest == null -> listOf(today)
-                    latest.isBefore(today) -> {
-                        val out = mutableListOf<LocalDate>()
-                        var d = latest.plusDays(1)
-                        while (!d.isAfter(today)) {
-                            out.add(d)
-                            d = d.plusDays(1)
-                        }
-                        out
-                    }
-                    else -> emptyList()
-                }
-
-            if (toWrite.isEmpty()) {
-                Log.d(LOG_TAG, "No days to write (already up to date)")
-                return@withContext Result.success()
-            }
-
-            var ok = 0
-            var fail = 0
-
-            toWrite.forEach { d ->
-                runCatching {
+            // Only insert daily if not already done today
+            if (latest == null || latest.isBefore(today)) {
+                val dailySuccess = runCatching {
                     svc.upsertUserLocationDaily(
                         accessToken = access,
-                        date = d.toString(),
+                        date = today.toString(),
                         latitude = lat,
                         longitude = lon,
                         source = "device",
                         timezone = deviceTimezone
                     )
-                    ok++
                 }.onFailure { e ->
-                    fail++
-                    Log.e(LOG_TAG, "Upsert failed for $d (lat=$lat lon=$lon)", e)
+                    Log.e(LOG_TAG, "Daily upsert error: ${e.message}")
+                }.isSuccess
+                
+                if (dailySuccess) {
+                    Log.d(LOG_TAG, "✅ Upserted daily location for $today")
+                } else {
+                    Log.w(LOG_TAG, "⚠️ Failed to upsert daily location")
                 }
-            }
-
-            Log.d(LOG_TAG, "Inserted $ok of ${toWrite.size} days (fail=$fail)")
-
-            if (fail > 0) {
-                return@withContext Result.retry()
+            } else {
+                Log.d(LOG_TAG, "Daily location already exists for $today - skipping daily upsert")
             }
 
             Result.success()
@@ -127,17 +132,40 @@ class LocationDailySyncWorker(
         } catch (t: Throwable) {
             Log.w(LOG_TAG, "Worker error", t)
             Result.retry()
-        } finally {
-            // Always schedule next 9AM run (watchdog is just a safety net)
-            scheduleNext(applicationContext)
+        }
+    }
+
+    private suspend fun insertHourlyLocation(
+        svc: SupabasePersonalService,
+        accessToken: String,
+        timestamp: ZonedDateTime,
+        latitude: Double,
+        longitude: Double,
+        timezone: String
+    ): Boolean {
+        return try {
+            svc.insertUserLocationHourly(
+                accessToken = accessToken,
+                timestamp = timestamp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                latitude = latitude,
+                longitude = longitude,
+                timezone = timezone
+            )
+            true
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "Failed to insert hourly location", e)
+            false
         }
     }
 
     companion object {
-        private const val UNIQUE = "location_daily_worker"
-        private const val UNIQUE_NOW = "location_daily_worker_now"
+        private const val UNIQUE_WORK = "location_daily_worker"
         private const val LOG_TAG = "LocationDailySync"
 
+        /**
+         * Run location sync immediately.
+         * Called from: FCM push, login, toggle ON
+         */
         fun runOnceNow(context: Context) {
             Log.d(LOG_TAG, "runOnceNow called")
             val req = OneTimeWorkRequestBuilder<LocationDailySyncWorker>()
@@ -146,33 +174,36 @@ class LocationDailySyncWorker(
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
-                UNIQUE_NOW, ExistingWorkPolicy.REPLACE, req
+                UNIQUE_WORK, ExistingWorkPolicy.REPLACE, req
             )
         }
 
-        fun scheduleNext(context: Context) {
-            val now = ZonedDateTime.now()
-            var next = now.withHour(9).withMinute(0).withSecond(0)
-            if (!next.isAfter(now)) next = next.plusDays(1)
+        // Alias for FCM service
+        fun runOnce(context: Context) = runOnceNow(context)
 
-            val delay = Duration.between(now, next).toMillis()
-            Log.d(LOG_TAG, "Scheduling next run at $next (delay=${delay}ms)")
-
-            val req = OneTimeWorkRequestBuilder<LocationDailySyncWorker>()
-                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
-                .build()
-
-            WorkManager.getInstance(context)
-                .enqueueUniqueWork(UNIQUE, ExistingWorkPolicy.REPLACE, req)
-        }
-
+        /**
+         * Cancel any pending work
+         */
         fun cancelAll(context: Context) {
-            Log.d(LOG_TAG, "Cancelling all location workers")
-            WorkManager.getInstance(context).cancelUniqueWork(UNIQUE)
-            WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_NOW)
+            Log.d(LOG_TAG, "Cancelling location worker")
+            WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_WORK)
         }
 
+        /**
+         * Get device location with multiple fallback strategies.
+         * 
+         * Uses PRIORITY_BALANCED_POWER_ACCURACY (cell/WiFi) instead of GPS because:
+         * - Works instantly (no satellite acquisition needed)
+         * - Works indoors
+         * - ~100m accuracy is plenty for weather data
+         * - Much better battery life
+         * 
+         * Fallback order:
+         * 1. getCurrentLocation() (active request)
+         * 2. lastLocation (cached)
+         * 3. requestLocationUpdates with timeout
+         * 4. Legacy LocationManager
+         */
         suspend fun getDeviceLocation(context: Context): Location? {
             val hasFine = ContextCompat.checkSelfPermission(
                 context, Manifest.permission.ACCESS_FINE_LOCATION
@@ -187,15 +218,137 @@ class LocationDailySyncWorker(
                 return null
             }
 
-            return try {
-                val client = LocationServices.getFusedLocationProviderClient(context)
-                val priority = if (hasFine) Priority.PRIORITY_HIGH_ACCURACY else Priority.PRIORITY_BALANCED_POWER_ACCURACY
+            val client = LocationServices.getFusedLocationProviderClient(context)
+            
+            // Use balanced power (cell/WiFi) - works instantly, good enough for weather
+            val priority = Priority.PRIORITY_BALANCED_POWER_ACCURACY
+
+            // Strategy 1: getCurrentLocation (active request, best option)
+            try {
+                Log.d(LOG_TAG, "Trying getCurrentLocation (balanced/cell+WiFi)...")
                 val cts = CancellationTokenSource()
-                client.getCurrentLocation(priority, cts.token).await()
+                val loc = withTimeoutOrNull(10_000L) {
+                    client.getCurrentLocation(priority, cts.token).await()
+                }
+                if (loc != null) {
+                    Log.d(LOG_TAG, "✅ Got location via getCurrentLocation: ${loc.latitude}, ${loc.longitude}")
+                    return loc
+                }
+                Log.d(LOG_TAG, "getCurrentLocation returned null")
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "Error getting location", e)
-                null
+                Log.w(LOG_TAG, "getCurrentLocation failed: ${e.message}")
             }
+
+            // Strategy 2: lastLocation (cached)
+            try {
+                Log.d(LOG_TAG, "Trying lastLocation (cached)...")
+                val cached = client.lastLocation.await()
+                if (cached != null) {
+                    Log.d(LOG_TAG, "✅ Got cached location: ${cached.latitude}, ${cached.longitude}")
+                    return cached
+                }
+                Log.d(LOG_TAG, "lastLocation returned null")
+            } catch (e: Exception) {
+                Log.w(LOG_TAG, "lastLocation failed: ${e.message}")
+            }
+
+            // Strategy 3: requestLocationUpdates with timeout
+            try {
+                Log.d(LOG_TAG, "Trying requestLocationUpdates...")
+                val loc = withTimeoutOrNull(15_000L) {
+                    requestSingleLocationUpdate(context, priority)
+                }
+                if (loc != null) {
+                    Log.d(LOG_TAG, "✅ Got location via requestLocationUpdates: ${loc.latitude}, ${loc.longitude}")
+                    return loc
+                }
+                Log.d(LOG_TAG, "requestLocationUpdates returned null")
+            } catch (e: Exception) {
+                Log.w(LOG_TAG, "requestLocationUpdates failed: ${e.message}")
+            }
+
+            // Strategy 4: Legacy LocationManager fallback (network provider preferred)
+            try {
+                Log.d(LOG_TAG, "Trying legacy LocationManager...")
+                val loc = getLegacyLocation(context)
+                if (loc != null) {
+                    Log.d(LOG_TAG, "✅ Got location via LocationManager: ${loc.latitude}, ${loc.longitude}")
+                    return loc
+                }
+                Log.d(LOG_TAG, "LocationManager returned null")
+            } catch (e: Exception) {
+                Log.w(LOG_TAG, "LocationManager failed: ${e.message}")
+            }
+
+            Log.e(LOG_TAG, "❌ All location strategies failed")
+            return null
+        }
+
+        /**
+         * Request a single location update using FusedLocationProviderClient
+         */
+        @Suppress("MissingPermission")
+        private suspend fun requestSingleLocationUpdate(context: Context, priority: Int): Location? {
+            return suspendCancellableCoroutine { cont ->
+                val client = LocationServices.getFusedLocationProviderClient(context)
+                
+                val request = LocationRequest.Builder(priority, 0L)
+                    .setMaxUpdates(1)
+                    .setMinUpdateIntervalMillis(0)
+                    .setWaitForAccurateLocation(false)
+                    .build()
+
+                val callback = object : LocationCallback() {
+                    override fun onLocationResult(result: LocationResult) {
+                        client.removeLocationUpdates(this)
+                        if (cont.isActive) {
+                            cont.resume(result.lastLocation)
+                        }
+                    }
+                }
+
+                try {
+                    client.requestLocationUpdates(request, callback, Looper.getMainLooper())
+                } catch (e: Exception) {
+                    if (cont.isActive) {
+                        cont.resume(null)
+                    }
+                }
+
+                cont.invokeOnCancellation {
+                    client.removeLocationUpdates(callback)
+                }
+            }
+        }
+
+        /**
+         * Legacy LocationManager fallback - prioritizes network provider (cell/WiFi)
+         * since we want fast, battery-efficient location for weather data.
+         */
+        @Suppress("MissingPermission")
+        private fun getLegacyLocation(context: Context): Location? {
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                ?: return null
+
+            // Network provider first (cell/WiFi - fast, battery efficient)
+            try {
+                val network = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                if (network != null) return network
+            } catch (_: Exception) { }
+
+            // Passive provider (uses locations from other apps)
+            try {
+                val passive = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
+                if (passive != null) return passive
+            } catch (_: Exception) { }
+
+            // GPS last resort (might be stale but better than nothing)
+            try {
+                val gps = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                if (gps != null) return gps
+            } catch (_: Exception) { }
+
+            return null
         }
     }
 }

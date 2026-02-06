@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import com.google.firebase.messaging.FirebaseMessaging
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -94,17 +96,23 @@ object Routes {
     const val QUICK_LOG_TRIGGER = "quick_log_trigger"
     const val QUICK_LOG_MEDICINE = "quick_log_medicine"
     const val QUICK_LOG_RELIEF = "quick_log_relief"
-
+    
     const val MONITOR_NUTRITION = "monitor_nutrition"
     const val NUTRITION_CONFIG = "nutrition_config"
     const val NUTRITION_HISTORY = "nutrition_history"
-    const val MONITOR_WEATHER = "monitor_weather"
     const val WEATHER_CONFIG = "weather_config"
+    const val SLEEP_DATA_HISTORY = "sleep_data_history"
+    const val ENV_DATA_HISTORY = "env_data_history"
     const val MONITOR_PHYSICAL = "monitor_physical"
     const val MONITOR_SLEEP = "monitor_sleep"
+    const val SLEEP_CONFIG = "sleep_config"
+    const val FULL_GRAPH = "full_graph"
+    const val FULL_GRAPH_SLEEP = "full_graph_sleep"
+    const val FULL_GRAPH_WEATHER = "full_graph_weather"
+    const val FULL_GRAPH_NUTRITION = "full_graph_nutrition"
     const val MONITOR_MENTAL = "monitor_mental"
     const val MONITOR_ENVIRONMENT = "monitor_environment"
-
+    
     const val TRIGGERS = "triggers"
     const val ADJUST_TRIGGERS = "adjust_triggers"
     const val MEDICINES = "medicines"
@@ -131,6 +139,9 @@ object Routes {
     const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
 
     const val CHANGE_PASSWORD = "change_password"
+    
+    const val TRIGGERS_SETTINGS = "triggers_settings"
+    const val CUSTOMIZE_TRIGGERS = "customize_triggers"
 }
 
 class MainActivity : ComponentActivity() {
@@ -235,6 +246,19 @@ fun AppRoot() {
 
     LaunchedEffect(Unit) {
         authVm.syncFromSessionStore(appCtx)
+        
+        // Get and save FCM token
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                android.util.Log.d("FCM", "FCM Token: $token")
+                // Save token locally
+                SessionStore.saveFcmToken(appCtx, token)
+                // Save to Supabase (needs to be done after login, handled in MigraineMeFirebaseService)
+            } else {
+                android.util.Log.e("FCM", "Failed to get FCM token", task.exception)
+            }
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -243,8 +267,13 @@ fun AppRoot() {
                 scope.launch {
                     authVm.syncFromSessionStore(appCtx)
                 }
-                // Run location watchdog check on app resume
-                LocationWatchdogWorker.runOnce(appCtx)
+                // Run location sync on app resume
+                LocationDailySyncWorker.runOnceNow(appCtx)
+                
+                // Run Health Connect sync on app resume
+                // This is the primary sync method - always works when app is open
+                // FCM-triggered syncs are secondary (only work when app is in foreground)
+                HealthConnectSyncManager.triggerSyncIfEnabled(appCtx)
             }
         }
         lifecycleOwner.lifecycle.addObserver(obs)
@@ -266,6 +295,42 @@ fun AppRoot() {
         if (lastPreloadedToken != valid) {
             logVm.loadJournal(valid)
             lastPreloadedToken = valid
+            
+            // Save FCM token to Supabase now that we have a valid access token
+            val fcmToken = SessionStore.readFcmToken(appCtx)
+            if (!fcmToken.isNullOrBlank()) {
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        val userId = SessionStore.readUserId(appCtx)
+                        if (!userId.isNullOrBlank()) {
+                            val client = okhttp3.OkHttpClient()
+                            val json = org.json.JSONObject().apply {
+                                put("fcm_token", fcmToken)
+                            }
+                            val request = okhttp3.Request.Builder()
+                                .url("${BuildConfig.SUPABASE_URL}/rest/v1/profiles?user_id=eq.$userId")
+                                .header("Authorization", "Bearer $valid")
+                                .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                                .header("Content-Type", "application/json")
+                                .header("Prefer", "return=minimal")
+                                .patch(okhttp3.RequestBody.create(
+                                    "application/json".toMediaTypeOrNull(),
+                                    json.toString()
+                                ))
+                                .build()
+                            client.newCall(request).execute().use { response ->
+                                if (response.isSuccessful) {
+                                    android.util.Log.d("FCM", "FCM token saved to Supabase")
+                                } else {
+                                    android.util.Log.e("FCM", "Failed to save FCM token: ${response.code}")
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("FCM", "Error saving FCM token to Supabase", e)
+                    }
+                }
+            }
         }
     }
 
@@ -309,30 +374,35 @@ fun AppRoot() {
     ) {
         val backStack by nav.currentBackStackEntryAsState()
         val current = backStack?.destination?.route ?: Routes.LOGIN
-
+        
         // Updated to include JOURNAL and Migraine screens
         val showHomeBackground =
-            current == Routes.HOME ||
-                    current == Routes.INSIGHTS ||
-                    current == Routes.INSIGHTS_DETAIL ||
-                    current == Routes.JOURNAL ||
-                    current == Routes.MIGRAINE ||
-                    current == Routes.QUICK_LOG_TRIGGER ||
-                    current == Routes.QUICK_LOG_MEDICINE ||
-                    current == Routes.QUICK_LOG_RELIEF ||
-                    current == Routes.MONITOR ||
-                    current == Routes.MONITOR_CONFIG ||
-                    current == Routes.MONITOR_NUTRITION ||
-                    current == Routes.NUTRITION_CONFIG ||
-                    current == Routes.NUTRITION_HISTORY ||
-                    current == Routes.MONITOR_WEATHER ||
-                    current == Routes.WEATHER_CONFIG ||
-                    current == Routes.MONITOR_PHYSICAL ||
-                    current == Routes.MONITOR_SLEEP ||
-                    current == Routes.MONITOR_MENTAL ||
-                    current == Routes.MONITOR_ENVIRONMENT ||
-                    current == Routes.LOCATION_DEBUG ||
-                    current == Routes.THIRD_PARTY_CONNECTIONS
+            current == Routes.HOME || 
+            current == Routes.INSIGHTS || 
+            current == Routes.INSIGHTS_DETAIL ||
+            current == Routes.JOURNAL ||
+            current == Routes.MIGRAINE ||
+            current == Routes.QUICK_LOG_TRIGGER ||
+            current == Routes.QUICK_LOG_MEDICINE ||
+            current == Routes.QUICK_LOG_RELIEF ||
+            current == Routes.MONITOR ||
+            current == Routes.MONITOR_CONFIG ||
+            current == Routes.MONITOR_NUTRITION ||
+            current == Routes.NUTRITION_CONFIG ||
+            current == Routes.NUTRITION_HISTORY ||
+            current == Routes.WEATHER_CONFIG ||
+            current == Routes.SLEEP_DATA_HISTORY ||
+            current == Routes.ENV_DATA_HISTORY ||
+            current == Routes.MONITOR_PHYSICAL ||
+            current == Routes.MONITOR_SLEEP ||
+            current == Routes.SLEEP_CONFIG ||
+            current == Routes.FULL_GRAPH_SLEEP ||
+            current == Routes.FULL_GRAPH_WEATHER ||
+            current == Routes.FULL_GRAPH_NUTRITION ||
+            current == Routes.MONITOR_MENTAL ||
+            current == Routes.MONITOR_ENVIRONMENT ||
+            current == Routes.LOCATION_DEBUG ||
+            current == Routes.THIRD_PARTY_CONNECTIONS
 
         // Insights background
         val insightsBgResId = remember {
@@ -364,10 +434,10 @@ fun AppRoot() {
         var migraineBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
         LaunchedEffect(current, migraineBgResId) {
-            val isMigraine = current == Routes.MIGRAINE ||
-                    current == Routes.QUICK_LOG_TRIGGER ||
-                    current == Routes.QUICK_LOG_MEDICINE ||
-                    current == Routes.QUICK_LOG_RELIEF
+            val isMigraine = current == Routes.MIGRAINE || 
+                current == Routes.QUICK_LOG_TRIGGER || 
+                current == Routes.QUICK_LOG_MEDICINE || 
+                current == Routes.QUICK_LOG_RELIEF
             if (!isMigraine) return@LaunchedEffect
             if (migraineBgResId != 0) return@LaunchedEffect
             if (migraineBgBitmap != null) return@LaunchedEffect
@@ -390,19 +460,24 @@ fun AppRoot() {
         var monitorBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
         LaunchedEffect(current, monitorBgResId) {
-            val isMonitor = current == Routes.MONITOR ||
-                    current == Routes.MONITOR_CONFIG ||
-                    current == Routes.MONITOR_NUTRITION ||
-                    current == Routes.NUTRITION_CONFIG ||
-                    current == Routes.NUTRITION_HISTORY ||
-                    current == Routes.MONITOR_WEATHER ||
-                    current == Routes.WEATHER_CONFIG ||
-                    current == Routes.MONITOR_PHYSICAL ||
-                    current == Routes.MONITOR_SLEEP ||
-                    current == Routes.MONITOR_MENTAL ||
-                    current == Routes.MONITOR_ENVIRONMENT ||
-                    current == Routes.LOCATION_DEBUG ||
-                    current == Routes.THIRD_PARTY_CONNECTIONS
+            val isMonitor = current == Routes.MONITOR || 
+                current == Routes.MONITOR_CONFIG ||
+                current == Routes.MONITOR_NUTRITION ||
+                current == Routes.NUTRITION_CONFIG ||
+                current == Routes.NUTRITION_HISTORY ||
+                current == Routes.WEATHER_CONFIG ||
+                current == Routes.SLEEP_DATA_HISTORY ||
+                current == Routes.ENV_DATA_HISTORY ||
+                current == Routes.MONITOR_PHYSICAL ||
+                current == Routes.MONITOR_SLEEP ||
+                current == Routes.SLEEP_CONFIG ||
+                current == Routes.FULL_GRAPH_SLEEP ||
+                current == Routes.FULL_GRAPH_WEATHER ||
+                current == Routes.FULL_GRAPH_NUTRITION ||
+                current == Routes.MONITOR_MENTAL ||
+                current == Routes.MONITOR_ENVIRONMENT ||
+                current == Routes.LOCATION_DEBUG ||
+            current == Routes.THIRD_PARTY_CONNECTIONS
             if (!isMonitor) return@LaunchedEffect
             if (monitorBgResId != 0) return@LaunchedEffect
             if (monitorBgBitmap != null) return@LaunchedEffect
@@ -537,7 +612,7 @@ fun AppRoot() {
                     }
                 }
 
-                Routes.MONITOR, Routes.MONITOR_CONFIG, Routes.MONITOR_NUTRITION, Routes.NUTRITION_CONFIG, Routes.NUTRITION_HISTORY, Routes.MONITOR_WEATHER, Routes.WEATHER_CONFIG, Routes.MONITOR_PHYSICAL, Routes.MONITOR_SLEEP, Routes.MONITOR_MENTAL, Routes.MONITOR_ENVIRONMENT, Routes.LOCATION_DEBUG -> {
+                Routes.MONITOR, Routes.MONITOR_CONFIG, Routes.MONITOR_NUTRITION, Routes.NUTRITION_CONFIG, Routes.NUTRITION_HISTORY, Routes.WEATHER_CONFIG, Routes.SLEEP_DATA_HISTORY, Routes.ENV_DATA_HISTORY, Routes.MONITOR_PHYSICAL, Routes.MONITOR_SLEEP, Routes.SLEEP_CONFIG, Routes.FULL_GRAPH_SLEEP, Routes.FULL_GRAPH_WEATHER, Routes.FULL_GRAPH_NUTRITION, Routes.MONITOR_MENTAL, Routes.MONITOR_ENVIRONMENT, Routes.LOCATION_DEBUG -> {
                     when {
                         monitorBgResId != 0 -> {
                             Image(
@@ -669,12 +744,17 @@ fun AppRoot() {
                                     Routes.MONITOR_NUTRITION -> "Nutrition"
                                     Routes.NUTRITION_CONFIG -> "Customize Nutrition"
                                     Routes.NUTRITION_HISTORY -> "Nutrition History"
-                                    Routes.MONITOR_WEATHER -> "Weather"
-                                    Routes.WEATHER_CONFIG -> "Customize Weather"
+                                    Routes.MONITOR_ENVIRONMENT -> "Environment"
+                                    Routes.WEATHER_CONFIG -> "Customize Environment"
+                                    Routes.SLEEP_DATA_HISTORY -> "Sleep Data"
+                                    Routes.ENV_DATA_HISTORY -> "Environment Data"
+                                    Routes.SLEEP_CONFIG -> "Customize Sleep"
+                                    Routes.FULL_GRAPH_SLEEP -> "Sleep History"
+                                    Routes.FULL_GRAPH_WEATHER -> "Environment History"
+                                    Routes.FULL_GRAPH_NUTRITION -> "Nutrition History"
                                     Routes.MONITOR_PHYSICAL -> "Physical Health"
                                     Routes.MONITOR_SLEEP -> "Sleep"
                                     Routes.MONITOR_MENTAL -> "Mental Health"
-                                    Routes.MONITOR_ENVIRONMENT -> "Environment"
                                     Routes.COMMUNITY -> "Community"
                                     Routes.JOURNAL -> "Journal"
                                     Routes.LOGIN -> "Sign in"
@@ -735,20 +815,27 @@ fun AppRoot() {
                 ) {
                     composable(Routes.MONITOR) { MonitorScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_CONFIG) { MonitorConfigScreen(onBack = { nav.popBackStack() }) }
-
+                    
                     // Monitor detail screens (placeholders for now)
                     composable(Routes.MONITOR_NUTRITION) { MonitorNutritionScreen(navController = nav, authVm = authVm) }
                     composable(Routes.NUTRITION_CONFIG) { NutritionConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.NUTRITION_HISTORY) { NutritionHistoryScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.MONITOR_WEATHER) { MonitorWeatherScreen(navController = nav, authVm = authVm) }
                     composable(Routes.WEATHER_CONFIG) { WeatherConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.SLEEP_DATA_HISTORY) { SleepDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.ENV_DATA_HISTORY) { EnvironmentDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.MONITOR_PHYSICAL) { MonitorPhysicalScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_SLEEP) { MonitorSleepScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.SLEEP_CONFIG) { SleepConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.FULL_GRAPH_SLEEP) { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }) }
+                    composable(Routes.FULL_GRAPH_WEATHER) { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }) }
+                    composable(Routes.FULL_GRAPH_NUTRITION) { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
                     composable(Routes.MONITOR_MENTAL) { MonitorMentalScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_ENVIRONMENT) { MonitorEnvironmentScreen(navController = nav, authVm = authVm) }
-
+                    
                     composable(Routes.INSIGHTS) { InsightsScreen(navController = nav) }
                     composable(Routes.INSIGHTS_DETAIL) { InsightsDetailScreen() }
+                    composable(Routes.TRIGGERS_SETTINGS) { TriggersSettingsScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.CUSTOMIZE_TRIGGERS) { CustomizeTriggersScreen() }
                     composable(Routes.HOME) {
                         HomeScreenRoot(
                             onLogout = { nav.navigate(Routes.LOGOUT) { launchSingleTop = true } },
@@ -762,7 +849,7 @@ fun AppRoot() {
 
                     // Migraine Hub (main migraine tab)
                     composable(Routes.MIGRAINE) { MigraineHubScreen(navController = nav) }
-
+                    
                     // Full migraine wizard flow
                     composable(Routes.LOG_MIGRAINE) { LogHomeScreen(navController = nav, authVm = authVm, vm = logVm) }
 
@@ -962,3 +1049,4 @@ private fun BottomBar(
         }
     }
 }
+

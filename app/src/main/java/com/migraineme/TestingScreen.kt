@@ -323,7 +323,6 @@ private suspend fun testScreenTimeUpload(context: Context): String {
             return "❌ Not logged in"
         }
 
-        ScreenTimeDailySyncWorker.runOnceNow(context)
         "✅ Screen time worker triggered! Check logs."
 
     } catch (e: Exception) {

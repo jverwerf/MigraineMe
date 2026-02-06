@@ -19,7 +19,6 @@ import androidx.compose.material.icons.outlined.BubbleChart
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Hearing
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -194,11 +193,10 @@ private fun CardConfigItem(
 private fun getCardIcon(cardId: String): ImageVector {
     return when (cardId) {
         MonitorCardConfig.CARD_NUTRITION -> Icons.Outlined.Restaurant
-        MonitorCardConfig.CARD_WEATHER -> Icons.Outlined.Cloud
         MonitorCardConfig.CARD_PHYSICAL -> Icons.Outlined.FitnessCenter
         MonitorCardConfig.CARD_SLEEP -> Icons.Outlined.Bedtime
         MonitorCardConfig.CARD_MENTAL -> Icons.Outlined.BubbleChart
-        MonitorCardConfig.CARD_ENVIRONMENT -> Icons.Outlined.Hearing
+        MonitorCardConfig.CARD_ENVIRONMENT -> Icons.Outlined.Cloud
         MonitorCardConfig.CARD_MENSTRUATION -> Icons.Outlined.FavoriteBorder
         else -> Icons.Outlined.Cloud
     }
@@ -207,12 +205,12 @@ private fun getCardIcon(cardId: String): ImageVector {
 private fun getCardIconTint(cardId: String): Color {
     return when (cardId) {
         MonitorCardConfig.CARD_NUTRITION -> Color(0xFFFFB74D)
-        MonitorCardConfig.CARD_WEATHER -> Color(0xFF4FC3F7)
         MonitorCardConfig.CARD_PHYSICAL -> Color(0xFF81C784)
         MonitorCardConfig.CARD_SLEEP -> Color(0xFF7986CB)
         MonitorCardConfig.CARD_MENTAL -> Color(0xFFBA68C8)
-        MonitorCardConfig.CARD_ENVIRONMENT -> Color(0xFF90A4AE)
+        MonitorCardConfig.CARD_ENVIRONMENT -> Color(0xFF4FC3F7)
         MonitorCardConfig.CARD_MENSTRUATION -> Color(0xFFE57373)
         else -> Color(0xFF4FC3F7)
     }
 }
+

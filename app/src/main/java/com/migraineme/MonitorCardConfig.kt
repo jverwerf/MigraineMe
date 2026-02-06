@@ -17,7 +17,6 @@ data class MonitorCardConfig(
     companion object {
         // Card identifiers
         const val CARD_NUTRITION = "nutrition"
-        const val CARD_WEATHER = "weather"
         const val CARD_PHYSICAL = "physical"
         const val CARD_SLEEP = "sleep"
         const val CARD_MENTAL = "mental"
@@ -26,17 +25,15 @@ data class MonitorCardConfig(
         
         val DEFAULT_ORDER = listOf(
             CARD_NUTRITION,
-            CARD_WEATHER,
+            CARD_ENVIRONMENT,
             CARD_PHYSICAL,
             CARD_SLEEP,
             CARD_MENTAL,
-            CARD_ENVIRONMENT,
             CARD_MENSTRUATION
         )
         
         val CARD_LABELS = mapOf(
             CARD_NUTRITION to "Nutrition",
-            CARD_WEATHER to "Weather",
             CARD_PHYSICAL to "Physical Health",
             CARD_SLEEP to "Sleep",
             CARD_MENTAL to "Mental Health",
@@ -268,3 +265,4 @@ object MonitorCardConfigStore {
         prefs.edit().putString(KEY_CONFIG, jsonStr).apply()
     }
 }
+

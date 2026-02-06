@@ -41,7 +41,7 @@ class WhoopAuthService {
 
         // WHOOP returns a refresh_token only if the auth request includes the "offline" scope.
         private const val SCOPE =
-            "offline read:recovery read:sleep read:workout read:cycles read:body_measurement"
+            "offline read:recovery read:sleep read:workout read:cycles read:body_measurement read:profile"
     }
 
     fun startAuth(activity: Activity) {

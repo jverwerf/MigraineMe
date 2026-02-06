@@ -1,7 +1,9 @@
 package com.migraineme
 
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -104,6 +106,11 @@ fun InsightsScreen(
                 onTimeSpanSelected = { timeSpan = it },
                 onTapMoreDetails = { navController.navigate(Routes.INSIGHTS_DETAIL) }
             )
+            
+            // Triggers Card
+            TriggersInsightCard(
+                onTap = { navController.navigate(Routes.TRIGGERS_SETTINGS) }
+            )
         }
     }
 }
@@ -167,5 +174,37 @@ private fun InsightsTimelinePreviewCard(
                 .height(260.dp),
             onTapMoreDetails = onTapMoreDetails
         )
+    }
+}
+
+@Composable
+private fun TriggersInsightCard(
+    onTap: () -> Unit
+) {
+    HeroCard(
+        modifier = Modifier.clickable { onTap() }
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Triggers",
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    "View and customize your triggers",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Text(
+                "→",
+                color = AppTheme.AccentPurple,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
     }
 }

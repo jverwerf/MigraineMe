@@ -1,21 +1,25 @@
 package com.migraineme
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -66,6 +70,7 @@ fun NutritionHistoryScreen(
     var editMealType by remember { mutableStateOf("lunch") }
     
     val searchService = remember { USDAFoodSearchService(context) }
+    val nutritionConfig = remember { MonitorCardConfigStore.load(context) }
     
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
     val today = LocalDate.now()
@@ -113,8 +118,14 @@ fun NutritionHistoryScreen(
         )
     }
 
-    ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppTheme.FadeColor)
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
             // Back navigation
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -219,32 +230,31 @@ fun NutritionHistoryScreen(
                             .padding(vertical = 16.dp)
                     )
                 } else {
-                    // Group by meal type
                     val grouped = items.groupBy { it.mealType }
                     val mealOrder = listOf("breakfast", "lunch", "dinner", "snack", "unknown")
-                    
-                    var totalCalories = 0.0
-                    items.forEach { item -> item.calories?.let { totalCalories += it } }
-                    
-                    // Summary row
+                    val selectedMetrics = nutritionConfig.nutritionDisplayMetrics.take(3)
+
+                    val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+
+                    // Top 3 selected metrics
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Text(
-                            "${items.size} items",
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Text(
-                            "${totalCalories.toInt()} cal total",
-                            color = Color(0xFFFFB74D),
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
-                        )
+                        selectedMetrics.forEachIndexed { index, metric ->
+                            val total = items.sumOf { it.metricValue(metric) ?: 0.0 }
+                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                            val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                            val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
+                            HistorySummaryValue(formatted, label, slotColors.getOrElse(index) { slotColors.last() })
+                        }
                     }
                     
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(4.dp))
+                    HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                    Spacer(Modifier.height(4.dp))
                     
+                    // Food items grouped by meal
                     mealOrder.forEach { mealType ->
                         val mealItems = grouped[mealType] ?: return@forEach
                         
@@ -278,11 +288,32 @@ fun NutritionHistoryScreen(
                         
                         Spacer(Modifier.height(12.dp))
                     }
+
+                    // All metrics breakdown
+                    HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                    Spacer(Modifier.height(8.dp))
+                    Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(4.dp))
+
+                    MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
+                        val total = items.sumOf { it.metricValue(metric) ?: 0.0 }
+                        if (total > 0) {
+                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                            val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                            val formatted = if (total >= 10) "${total.toInt()}" else String.format("%.1f", total)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text("$formatted $unit", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-}
 
 @Composable
 private fun HistoryLogItem(
@@ -474,4 +505,12 @@ private fun HistoryEditFoodDialog(
         },
         containerColor = Color(0xFF1E0A2E)
     )
+}
+
+@Composable
+private fun HistorySummaryValue(value: String, label: String, color: Color = AppTheme.TitleColor) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+    }
 }

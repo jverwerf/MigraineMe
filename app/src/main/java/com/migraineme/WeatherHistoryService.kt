@@ -68,7 +68,13 @@ class WeatherHistoryService(context: Context) {
      * Fetches weather history for the last N days.
      * Also calculates all-time min/max for normalization.
      */
-    suspend fun getWeatherHistory(days: Int): WeatherHistoryResult = withContext(Dispatchers.IO) {
+    suspend fun getWeatherHistory(days: Int): WeatherHistoryResult = getWeatherHistory(days, LocalDate.now())
+
+    /**
+     * Fetches weather history for the given window.
+     * endDate is the last date to include; startDate = endDate - days + 1.
+     */
+    suspend fun getWeatherHistory(days: Int, endDate: LocalDate): WeatherHistoryResult = withContext(Dispatchers.IO) {
         try {
             val token = SessionStore.getValidAccessToken(appContext)
                 ?: return@withContext WeatherHistoryResult(emptyList(), emptyMap(), emptyMap())
@@ -76,7 +82,6 @@ class WeatherHistoryService(context: Context) {
             val userId = SessionStore.readUserId(appContext)
                 ?: return@withContext WeatherHistoryResult(emptyList(), emptyMap(), emptyMap())
 
-            val endDate = LocalDate.now()
             val startDate = endDate.minusDays(days.toLong() - 1)
 
             // Fetch data for the requested window
@@ -207,3 +212,4 @@ class WeatherHistoryService(context: Context) {
         }
     }
 }
+

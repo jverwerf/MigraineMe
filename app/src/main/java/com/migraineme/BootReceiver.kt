@@ -11,13 +11,7 @@ import kotlinx.coroutines.launch
 /**
  * Restarts workers after device boot/reboot or app update.
  *
- * This ensures data collection continues even after:
- * - Phone restart
- * - Phone dies and reboots
- * - App is updated
- * 
- * NOTE: Location scheduling is handled by LocationWatchdogWorker, not here.
- * This avoids duplicate scheduling issues.
+ * NOTE: Location scheduling is now handled by FCM push notifications from the server.
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -37,7 +31,6 @@ class BootReceiver : BroadcastReceiver() {
     private fun rescheduleWorkersIfNeeded(context: Context) {
         val appContext = context.applicationContext
 
-        // Use coroutine since we need to call Supabase
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val edge = EdgeFunctionsService()
@@ -46,13 +39,13 @@ class BootReceiver : BroadcastReceiver() {
 
                 rescheduleAmbientNoiseSampling(appContext, settingsMap)
                 rescheduleScreenTimeSync(appContext, settingsMap)
-                // Location is handled by LocationWatchdogWorker - just schedule the watchdog
-                scheduleLocationWatchdog(appContext, settingsMap)
+                reschedulePhoneSleepSync(appContext, settingsMap)
+                // Location is handled by FCM - just run once to catch up
+                runLocationSyncIfEnabled(appContext, settingsMap)
 
                 Log.d(TAG, "Worker rescheduling complete")
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching settings for rescheduling: ${e.message}", e)
-                // Fallback: schedule workers if we can't reach Supabase (rely on worker to check)
                 rescheduleAllFallback(appContext)
             }
         }
@@ -72,7 +65,7 @@ class BootReceiver : BroadcastReceiver() {
                 AmbientNoiseSampleWorker.schedule(context)
                 AmbientNoiseWatchdogWorker.schedule(context)
             } else {
-                Log.d(TAG, "Ambient noise sampling is disabled - cancelling (enabled=$enabled, mic=$hasMic, battery=$hasBattery)")
+                Log.d(TAG, "Ambient noise sampling is disabled - cancelling")
                 AmbientNoiseSampleWorker.cancel(context)
                 AmbientNoiseWatchdogWorker.cancel(context)
             }
@@ -91,12 +84,8 @@ class BootReceiver : BroadcastReceiver() {
 
             if (enabled && hasPerm) {
                 Log.d(TAG, "Screen time sync is enabled - rescheduling worker")
-                ScreenTimeDailySyncWorker.scheduleNext(context)
-                ScreenTimeWatchdogWorker.schedule(context)
             } else {
-                Log.d(TAG, "Screen time sync is disabled - cancelling (enabled=$enabled, perm=$hasPerm)")
-                ScreenTimeDailySyncWorker.cancel(context)
-                ScreenTimeWatchdogWorker.cancel(context)
+                Log.d(TAG, "Screen time sync is disabled - cancelling")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error rescheduling screen time sync: ${e.message}", e)
@@ -104,45 +93,72 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Only schedule the watchdog - it will handle checking/scheduling the actual worker.
+     * Run phone sleep sync once on boot if enabled.
+     * Checks if sleep_duration_daily is enabled with phone as source.
      */
-    private fun scheduleLocationWatchdog(
+    private fun reschedulePhoneSleepSync(
+        context: Context,
+        settings: Map<String, EdgeFunctionsService.MetricSettingResponse>
+    ) {
+        try {
+            val sleepSetting = settings["sleep_duration_daily"]
+            val enabled = sleepSetting?.enabled ?: false
+            val hasPerm = ScreenTimeCollector.hasUsageStatsPermission(context)
+
+            val preferred = sleepSetting?.preferredSource?.lowercase() ?: ""
+            val allowed = sleepSetting?.allowedSources?.map { it.lowercase() } ?: emptyList()
+            val isPhoneSource = preferred == "phone" || allowed.contains("phone")
+
+            if (enabled && hasPerm && isPhoneSource) {
+                Log.d(TAG, "Phone sleep sync is enabled - running once to catch up")
+                PhoneSleepSyncWorker.runOnce(context)
+            } else {
+                Log.d(TAG, "Phone sleep sync is disabled")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error rescheduling phone sleep sync: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Run location sync once on boot if enabled (FCM handles regular scheduling)
+     */
+    private fun runLocationSyncIfEnabled(
         context: Context,
         settings: Map<String, EdgeFunctionsService.MetricSettingResponse>
     ) {
         try {
             val enabled = settings["user_location_daily"]?.enabled ?: false
-            
+
             if (enabled) {
-                Log.d(TAG, "Location sync is enabled - scheduling watchdog only")
-                LocationWatchdogWorker.schedule(context)
+                Log.d(TAG, "Location sync is enabled - running once to catch up")
+                LocationDailySyncWorker.runOnceNow(context)
             } else {
-                Log.d(TAG, "Location sync is disabled - cancelling all location workers")
-                LocationDailySyncWorker.cancelAll(context)
-                LocationWatchdogWorker.cancel(context)
+                Log.d(TAG, "Location sync is disabled")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error scheduling location watchdog: ${e.message}", e)
+            Log.e(TAG, "Error running location sync: ${e.message}", e)
         }
     }
 
     private fun rescheduleAllFallback(context: Context) {
-        Log.d(TAG, "Fallback: Scheduling workers that have permissions (couldn't reach Supabase)")
-        
-        // Ambient noise
+        Log.d(TAG, "Fallback: Scheduling workers that have permissions")
+
         if (MicrophonePermissionHelper.hasPermission(context) && isBatteryOptimizationExempt(context)) {
             AmbientNoiseSampleWorker.schedule(context)
             AmbientNoiseWatchdogWorker.schedule(context)
         }
-        
-        // Screen time
+
         if (ScreenTimePermissionHelper.hasPermission(context)) {
-            ScreenTimeDailySyncWorker.scheduleNext(context)
-            ScreenTimeWatchdogWorker.schedule(context)
         }
-        
-        // Location - only schedule watchdog, it will handle the rest
-        LocationWatchdogWorker.schedule(context)
+
+        // Phone sleep - run once on fallback if usage stats permission exists
+        if (ScreenTimeCollector.hasUsageStatsPermission(context)) {
+            PhoneSleepSyncWorker.runOnce(context)
+        }
+
+        // Location - run once, FCM handles scheduling
+        LocationDailySyncWorker.runOnceNow(context)
     }
 
     companion object {

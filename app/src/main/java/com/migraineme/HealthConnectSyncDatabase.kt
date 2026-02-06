@@ -10,17 +10,17 @@ import androidx.room.RoomDatabase
         HealthConnectSyncStateEntity::class,
         HealthConnectOutboxEntity::class
     ],
-    version = 1,
+    version = 2,  // Incremented from 1 to 2
     exportSchema = false
 )
 abstract class HealthConnectSyncDatabase : RoomDatabase() {
-    
+
     abstract fun dao(): HealthConnectSyncDao
-    
+
     companion object {
         @Volatile
         private var INSTANCE: HealthConnectSyncDatabase? = null
-        
+
         fun get(context: Context): HealthConnectSyncDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -28,7 +28,7 @@ abstract class HealthConnectSyncDatabase : RoomDatabase() {
                     HealthConnectSyncDatabase::class.java,
                     "health_connect_sync_db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(HealthConnectOutboxMigration.MIGRATION_1_2)  // Add migration
                     .build()
                 INSTANCE = instance
                 instance

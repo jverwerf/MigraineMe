@@ -13,23 +13,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Required by Health Connect to explain why the app needs nutrition permissions
- * before showing the actual permission dialog.
+ * Rationale activity shown when user taps the (i) info button on ANY permission dialog.
+ * This explains ALL permissions the app may request.
  */
 class HealthConnectRationaleActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        android.util.Log.d("HealthConnect", "===== RATIONALE ACTIVITY STARTED =====")
-        android.util.Log.d("HealthConnect", "Intent: ${intent.action}")
-        android.util.Log.d("HealthConnect", "Extras: ${intent.extras}")
+        android.util.Log.d("PermissionRationale", "===== RATIONALE ACTIVITY STARTED =====")
+        android.util.Log.d("PermissionRationale", "Intent: ${intent.action}")
+        android.util.Log.d("PermissionRationale", "Extras: ${intent.extras}")
 
         setContent {
             MaterialTheme {
                 RationaleScreen(
                     onContinue = {
-                        // Return success to trigger the actual permission dialog
                         setResult(RESULT_OK)
                         finish()
                     },
@@ -56,53 +55,84 @@ private fun RationaleScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(Modifier.weight(0.5f))
+            Spacer(Modifier.weight(0.3f))
 
             Text(
-                "Nutrition Tracking",
+                "App Permissions",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                "MigraineMe would like to track your nutrition data to help identify migraine triggers.",
+                "MigraineMe collects various data to help identify your migraine triggers. Here's what we use and why:",
                 style = MaterialTheme.typography.bodyLarge
             )
 
             Spacer(Modifier.height(8.dp))
 
+            // Location Section
             Text(
-                "We'll read nutrition data from:",
+                "📍 Location",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
+            Text(
+                "Used to get local weather data (temperature, pressure, humidity) which can trigger migraines. Requires \"Allow all the time\" for background updates.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                BulletPoint("Cronometer")
-                BulletPoint("MyFitnessPal")
-                BulletPoint("Other nutrition tracking apps")
-            }
+            Spacer(Modifier.height(8.dp))
+
+            // Microphone Section
+            Text(
+                "🎤 Microphone",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "Used to sample ambient noise levels. We only measure volume (decibels), not actual audio content.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // Health Connect Section
+            Text(
+                "❤️ Health Connect",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "Used to read nutrition, sleep, heart rate, HRV, steps, menstruation, and other health data from apps like Cronometer, WHOOP, Samsung Health, etc.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // Screen Time Section
+            Text(
+                "📱 Usage Access",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "Used to track screen time which may correlate with migraines.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Divider()
 
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "This includes:",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                BulletPoint("Calories and macronutrients")
-                BulletPoint("Vitamins and minerals")
-                BulletPoint("Caffeine intake")
-                BulletPoint("Meal timing")
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                "Your data is only used to analyze potential migraine triggers and is never shared.",
-                style = MaterialTheme.typography.bodyMedium,
+                "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties.",
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
@@ -121,7 +151,7 @@ private fun RationaleScreen(
 
                 Button(
                     onClick = {
-                        android.util.Log.d("HealthConnect", "Rationale: User clicked CONTINUE")
+                        android.util.Log.d("PermissionRationale", "User clicked CONTINUE")
                         onContinue()
                     },
                     modifier = Modifier.weight(1f)
@@ -132,16 +162,5 @@ private fun RationaleScreen(
 
             Spacer(Modifier.height(16.dp))
         }
-    }
-}
-
-@Composable
-private fun BulletPoint(text: String) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Text("•", style = MaterialTheme.typography.bodyLarge)
-        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }

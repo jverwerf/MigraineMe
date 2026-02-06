@@ -16,6 +16,7 @@ object SessionStore {
 
     private const val KEY_USER_ID = "user_id"
     private const val KEY_AUTH_PROVIDER = "auth_provider" // "email" | "google" | "facebook" | null
+    private const val KEY_FCM_TOKEN = "fcm_token"
 
     // Small skew so we refresh a bit before expiry to avoid edge failures in workers.
     private const val EXPIRY_SKEW_MS = 60_000L
@@ -78,6 +79,24 @@ object SessionStore {
     fun readAuthProvider(context: Context): String? {
         return context.getSharedPreferences(PREFS, MODE_PRIVATE)
             .getString(KEY_AUTH_PROVIDER, null)
+    }
+
+    /**
+     * Save FCM token for push notifications
+     */
+    fun saveFcmToken(context: Context, token: String?) {
+        context.getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putString(KEY_FCM_TOKEN, token)
+            .apply()
+    }
+
+    /**
+     * Read FCM token
+     */
+    fun readFcmToken(context: Context): String? {
+        return context.getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getString(KEY_FCM_TOKEN, null)
     }
 
     /**

@@ -23,6 +23,51 @@ class USDAFoodSearchService(private val context: Context) {
         private const val TAG = "USDAFoodSearch"
         private const val API_KEY = BuildConfig.USDA_API_KEY
         private const val BASE_URL = "https://api.nal.usda.gov/fdc/v1"
+
+        private fun dbl(obj: org.json.JSONObject, key: String): Double? =
+            obj.optDouble(key).takeIf { !it.isNaN() }
+
+        fun parseNutritionLogItem(obj: org.json.JSONObject): NutritionLogItem = NutritionLogItem(
+            id = obj.getString("id"),
+            foodName = obj.optString("food_name", "Unknown"),
+            mealType = obj.optString("meal_type", "unknown"),
+            calories = dbl(obj, "calories"),
+            protein = dbl(obj, "protein"),
+            totalCarbohydrate = dbl(obj, "total_carbohydrate"),
+            totalFat = dbl(obj, "total_fat"),
+            sugar = dbl(obj, "sugar"),
+            sodium = dbl(obj, "sodium"),
+            caffeine = dbl(obj, "caffeine"),
+            dietaryFiber = dbl(obj, "dietary_fiber"),
+            cholesterol = dbl(obj, "cholesterol"),
+            saturatedFat = dbl(obj, "saturated_fat"),
+            unsaturatedFat = dbl(obj, "unsaturated_fat"),
+            transFat = dbl(obj, "trans_fat"),
+            potassium = dbl(obj, "potassium"),
+            calcium = dbl(obj, "calcium"),
+            iron = dbl(obj, "iron"),
+            magnesium = dbl(obj, "magnesium"),
+            zinc = dbl(obj, "zinc"),
+            selenium = dbl(obj, "selenium"),
+            phosphorus = dbl(obj, "phosphorus"),
+            copper = dbl(obj, "copper"),
+            manganese = dbl(obj, "manganese"),
+            vitaminA = dbl(obj, "vitamin_a"),
+            vitaminC = dbl(obj, "vitamin_c"),
+            vitaminD = dbl(obj, "vitamin_d"),
+            vitaminE = dbl(obj, "vitamin_e"),
+            vitaminK = dbl(obj, "vitamin_k"),
+            vitaminB6 = dbl(obj, "vitamin_b6"),
+            vitaminB12 = dbl(obj, "vitamin_b12"),
+            thiamin = dbl(obj, "thiamin"),
+            riboflavin = dbl(obj, "riboflavin"),
+            niacin = dbl(obj, "niacin"),
+            folate = dbl(obj, "folate"),
+            biotin = dbl(obj, "biotin"),
+            pantothenicAcid = dbl(obj, "pantothenic_acid"),
+            timestamp = obj.getString("timestamp"),
+            source = obj.optString("source", "")
+        )
     }
 
     private val httpClient = OkHttpClient.Builder()
@@ -382,7 +427,7 @@ class USDAFoodSearchService(private val context: Context) {
             
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                 "user_id=eq.$userId&timestamp=gte.$todayStart&timestamp=lte.$todayEnd" +
-                "&select=id,food_name,meal_type,calories,timestamp,source&order=timestamp.desc"
+                "&select=*&order=timestamp.desc"
             
             val request = Request.Builder()
                 .url(url)
@@ -402,15 +447,7 @@ class USDAFoodSearchService(private val context: Context) {
                 
                 val items = mutableListOf<NutritionLogItem>()
                 for (i in 0 until arr.length()) {
-                    val obj = arr.getJSONObject(i)
-                    items.add(NutritionLogItem(
-                        id = obj.getString("id"),
-                        foodName = obj.optString("food_name", "Unknown"),
-                        mealType = obj.optString("meal_type", "unknown"),
-                        calories = obj.optDouble("calories").takeIf { !it.isNaN() },
-                        timestamp = obj.getString("timestamp"),
-                        source = obj.optString("source", "")
-                    ))
+                    items.add(parseNutritionLogItem(arr.getJSONObject(i)))
                 }
                 items
             }
@@ -433,7 +470,7 @@ class USDAFoodSearchService(private val context: Context) {
             
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                 "user_id=eq.$userId&timestamp=gte.$dateStart&timestamp=lte.$dateEnd" +
-                "&select=id,food_name,meal_type,calories,timestamp,source&order=timestamp.desc"
+                "&select=*&order=timestamp.desc"
             
             val request = Request.Builder()
                 .url(url)
@@ -453,15 +490,7 @@ class USDAFoodSearchService(private val context: Context) {
                 
                 val items = mutableListOf<NutritionLogItem>()
                 for (i in 0 until arr.length()) {
-                    val obj = arr.getJSONObject(i)
-                    items.add(NutritionLogItem(
-                        id = obj.getString("id"),
-                        foodName = obj.optString("food_name", "Unknown"),
-                        mealType = obj.optString("meal_type", "unknown"),
-                        calories = obj.optDouble("calories").takeIf { !it.isNaN() },
-                        timestamp = obj.getString("timestamp"),
-                        source = obj.optString("source", "")
-                    ))
+                    items.add(parseNutritionLogItem(arr.getJSONObject(i)))
                 }
                 items
             }
@@ -619,7 +648,7 @@ class USDAFoodSearchService(private val context: Context) {
     /**
      * Get ALL nutrition history and calculate normalization in memory
      */
-    suspend fun getNutritionHistory(days: Int = 14): NutritionHistoryResult = withContext(Dispatchers.IO) {
+    suspend fun getNutritionHistory(days: Int = 14, endDateOverride: java.time.LocalDate? = null): NutritionHistoryResult = withContext(Dispatchers.IO) {
         try {
             val token = SessionStore.readAccessToken(context) ?: return@withContext NutritionHistoryResult()
             val userId = SessionStore.readUserId(context) ?: return@withContext NutritionHistoryResult()
@@ -738,7 +767,7 @@ class USDAFoodSearchService(private val context: Context) {
             }
             
             // Get last N days for display
-            val endDate = java.time.LocalDate.now()
+            val endDate = endDateOverride ?: java.time.LocalDate.now()
             val startDate = endDate.minusDays(days.toLong() - 1)
             
             val displayDays = mutableListOf<NutritionDayData>()
@@ -803,6 +832,39 @@ data class NutritionLogItem(
     val foodName: String,
     val mealType: String,
     val calories: Double?,
+    val protein: Double?,
+    val totalCarbohydrate: Double?,
+    val totalFat: Double?,
+    val sugar: Double?,
+    val sodium: Double?,
+    val caffeine: Double?,
+    val dietaryFiber: Double?,
+    val cholesterol: Double?,
+    val saturatedFat: Double?,
+    val unsaturatedFat: Double?,
+    val transFat: Double?,
+    val potassium: Double?,
+    val calcium: Double?,
+    val iron: Double?,
+    val magnesium: Double?,
+    val zinc: Double?,
+    val selenium: Double?,
+    val phosphorus: Double?,
+    val copper: Double?,
+    val manganese: Double?,
+    val vitaminA: Double?,
+    val vitaminC: Double?,
+    val vitaminD: Double?,
+    val vitaminE: Double?,
+    val vitaminK: Double?,
+    val vitaminB6: Double?,
+    val vitaminB12: Double?,
+    val thiamin: Double?,
+    val riboflavin: Double?,
+    val niacin: Double?,
+    val folate: Double?,
+    val biotin: Double?,
+    val pantothenicAcid: Double?,
     val timestamp: String,
     val source: String
 )
@@ -852,3 +914,42 @@ data class USDANutrientInfo(
     val name: String,
     val unitName: String = ""
 )
+
+
+fun NutritionLogItem.metricValue(metric: String): Double? = when (metric) {
+    MonitorCardConfig.METRIC_CALORIES -> calories
+    MonitorCardConfig.METRIC_PROTEIN -> protein
+    MonitorCardConfig.METRIC_CARBS -> totalCarbohydrate
+    MonitorCardConfig.METRIC_FAT -> totalFat
+    MonitorCardConfig.METRIC_SUGAR -> sugar
+    MonitorCardConfig.METRIC_SODIUM -> sodium
+    MonitorCardConfig.METRIC_CAFFEINE -> caffeine
+    MonitorCardConfig.METRIC_FIBER -> dietaryFiber
+    MonitorCardConfig.METRIC_CHOLESTEROL -> cholesterol
+    MonitorCardConfig.METRIC_SATURATED_FAT -> saturatedFat
+    MonitorCardConfig.METRIC_UNSATURATED_FAT -> unsaturatedFat
+    MonitorCardConfig.METRIC_TRANS_FAT -> transFat
+    MonitorCardConfig.METRIC_POTASSIUM -> potassium
+    MonitorCardConfig.METRIC_CALCIUM -> calcium
+    MonitorCardConfig.METRIC_IRON -> iron
+    MonitorCardConfig.METRIC_MAGNESIUM -> magnesium
+    MonitorCardConfig.METRIC_ZINC -> zinc
+    MonitorCardConfig.METRIC_SELENIUM -> selenium
+    MonitorCardConfig.METRIC_PHOSPHORUS -> phosphorus
+    MonitorCardConfig.METRIC_COPPER -> copper
+    MonitorCardConfig.METRIC_MANGANESE -> manganese
+    MonitorCardConfig.METRIC_VITAMIN_A -> vitaminA
+    MonitorCardConfig.METRIC_VITAMIN_C -> vitaminC
+    MonitorCardConfig.METRIC_VITAMIN_D -> vitaminD
+    MonitorCardConfig.METRIC_VITAMIN_E -> vitaminE
+    MonitorCardConfig.METRIC_VITAMIN_K -> vitaminK
+    MonitorCardConfig.METRIC_VITAMIN_B6 -> vitaminB6
+    MonitorCardConfig.METRIC_VITAMIN_B12 -> vitaminB12
+    MonitorCardConfig.METRIC_THIAMIN -> thiamin
+    MonitorCardConfig.METRIC_RIBOFLAVIN -> riboflavin
+    MonitorCardConfig.METRIC_NIACIN -> niacin
+    MonitorCardConfig.METRIC_FOLATE -> folate
+    MonitorCardConfig.METRIC_BIOTIN -> biotin
+    MonitorCardConfig.METRIC_PANTOTHENIC_ACID -> pantothenicAcid
+    else -> null
+}

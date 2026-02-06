@@ -27,11 +27,9 @@ object DataSettingsWorkerSyncHelper {
         val hasUsageAccess = ScreenTimePermissionHelper.hasPermission(context)
 
         if (screenTimeEnabled && hasUsageAccess) {
-            ScreenTimeDailySyncWorker.scheduleNext(context)
-            ScreenTimeWatchdogWorker.schedule(context)
+
         } else {
-            ScreenTimeDailySyncWorker.cancel(context)
-            ScreenTimeWatchdogWorker.cancel(context)
+
         }
 
         // ===== Ambient Noise workers =====

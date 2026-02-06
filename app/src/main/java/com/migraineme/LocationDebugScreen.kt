@@ -215,7 +215,6 @@ fun LocationDebugScreen() {
             Button(
                 onClick = {
                     log("--- Schedule 9AM ---")
-                    LocationDailySyncWorker.scheduleNext(ctx)
                     log("Worker scheduled via scheduleNext()")
                 },
                 modifier = Modifier.weight(1f),

@@ -3,6 +3,7 @@ package com.migraineme
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -117,12 +118,12 @@ fun ThirdPartyConnectionsScreen(
 
     val anyWearablePermissionGranted = remember {
         derivedStateOf {
-            sleepPermissionGranted.value || hrvPermissionGranted.value || 
-            stepsPermissionGranted.value || restingHrPermissionGranted.value ||
-            weightPermissionGranted.value || spo2PermissionGranted.value
+            sleepPermissionGranted.value || hrvPermissionGranted.value ||
+                    stepsPermissionGranted.value || restingHrPermissionGranted.value ||
+                    weightPermissionGranted.value || spo2PermissionGranted.value
         }
     }
-    
+
     val anyHCConnected by remember {
         derivedStateOf {
             nutritionPermissionGranted.value || menstruationPermissionGranted.value || anyWearablePermissionGranted.value
@@ -160,6 +161,43 @@ fun ThirdPartyConnectionsScreen(
                     }
                 }
             } catch (_: Exception) { }
+        }
+    }
+
+    /**
+     * Switch phone sleep metrics (duration, fell_asleep, woke_up) to a new source.
+     * Called when wearable connects (switch away from phone) or disconnects (switch back to phone).
+     * Does NOT auto-enable disabled metrics — only switches preferred_source.
+     */
+    suspend fun switchPhoneSleepSource(newSource: String) {
+        withContext(Dispatchers.IO) {
+            val edge = EdgeFunctionsService()
+            val sleepMetrics = listOf(
+                "sleep_duration_daily",
+                "fell_asleep_time_daily",
+                "woke_up_time_daily"
+            )
+            val settings = edge.getMetricSettings(context.applicationContext)
+            val settingsMap = settings.associateBy { it.metric }
+
+            for (metric in sleepMetrics) {
+                val current = settingsMap[metric]
+                val isEnabled = current?.enabled ?: false
+                runCatching {
+                    edge.upsertMetricSetting(
+                        context = context.applicationContext,
+                        metric = metric,
+                        enabled = isEnabled,
+                        preferredSource = newSource
+                    )
+                }
+            }
+            Log.d("ThirdPartyConnections", "Switched phone sleep metrics to source: $newSource")
+
+            // If switching back to phone and metrics are enabled, trigger sync
+            if (newSource == "phone") {
+                PhoneSleepSyncWorker.runOnce(context.applicationContext)
+            }
         }
     }
 
@@ -203,8 +241,10 @@ fun ThirdPartyConnectionsScreen(
         withContext(Dispatchers.IO) {
             val edge = EdgeFunctionsService()
             runCatching { edge.enableDefaultHealthConnectMetricSettings(context.applicationContext) }
-            HealthConnectChangesWorker.schedule(context.applicationContext)
-            HealthConnectPushWorker.schedule(context.applicationContext)
+            // Use SyncManager instead of scheduling periodic workers
+            HealthConnectSyncManager.markAsConnected(context.applicationContext)
+            // Switch phone sleep metrics to Health Connect source
+            runCatching { switchPhoneSleepSource("health_connect") }
         }
         withContext(Dispatchers.Main) {
             android.widget.Toast.makeText(context, "Health Connect wearables connected!", android.widget.Toast.LENGTH_LONG).show()
@@ -276,6 +316,8 @@ fun ThirdPartyConnectionsScreen(
                 val stored = edge.upsertWhoopTokenToSupabase(context.applicationContext, localToken)
                 if (stored) {
                     runCatching { edge.enableDefaultWhoopMetricSettings(context.applicationContext) }
+                    // Switch phone sleep metrics to WHOOP source
+                    runCatching { switchPhoneSleepSource("whoop") }
                     edge.enqueueLoginBackfill(context.applicationContext)
                 }
             }
@@ -320,6 +362,20 @@ fun ThirdPartyConnectionsScreen(
                     showWhoopDisconnectDialog.value = false
                     scope.launch(Dispatchers.IO) {
                         WhoopAuthService().disconnectWithDebug(context.applicationContext)
+
+                        // Check if HC wearables still connected; if not, fall back to phone
+                        val hcStillConnected = try {
+                            val hc = HealthConnectClient.getOrCreate(context)
+                            val granted = hc.permissionController.getGrantedPermissions()
+                            granted.contains(sleepPermission)
+                        } catch (_: Exception) { false }
+
+                        if (hcStillConnected) {
+                            runCatching { switchPhoneSleepSource("health_connect") }
+                        } else {
+                            runCatching { switchPhoneSleepSource("phone") }
+                        }
+
                         withContext(Dispatchers.Main) {
                             hasWhoop.value = false
                             lastProcessedUri.value = null
@@ -340,8 +396,8 @@ fun ThirdPartyConnectionsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     NutritionSyncScheduler.cancel(context)
-                    HealthConnectChangesWorker.cancel(context.applicationContext)
-                    HealthConnectPushWorker.cancel(context.applicationContext)
+                    // Use SyncManager instead of cancelling workers directly
+                    HealthConnectSyncManager.markAsDisconnected(context.applicationContext)
 
                     scope.launch(Dispatchers.IO) {
                         try { NutritionSyncDatabase.get(context).clearAllTables() } catch (_: Exception) {}
@@ -350,11 +406,19 @@ fun ThirdPartyConnectionsScreen(
                             hcDb.dao().clearSyncState()
                             hcDb.dao().clearOutbox()
                         } catch (_: Exception) {}
-                        
+
                         val edge = EdgeFunctionsService()
                         edge.upsertMetricSetting(context.applicationContext, "nutrition", false, null)
                         edge.upsertMetricSetting(context.applicationContext, "menstruation", false, null)
                         edge.disableHealthConnectMetricSettings(context.applicationContext)
+
+                        // Check if WHOOP still connected; if not, fall back to phone
+                        val whoopStillConnected = WhoopTokenStore(context.applicationContext).load() != null
+                        if (whoopStillConnected) {
+                            runCatching { switchPhoneSleepSource("whoop") }
+                        } else {
+                            runCatching { switchPhoneSleepSource("phone") }
+                        }
                     }
 
                     try {
@@ -384,9 +448,9 @@ fun ThirdPartyConnectionsScreen(
     val allHCConnected by remember {
         derivedStateOf {
             nutritionPermissionGranted.value && menstruationPermissionGranted.value &&
-            sleepPermissionGranted.value && hrvPermissionGranted.value && 
-            stepsPermissionGranted.value && restingHrPermissionGranted.value &&
-            weightPermissionGranted.value && spo2PermissionGranted.value
+                    sleepPermissionGranted.value && hrvPermissionGranted.value &&
+                    stepsPermissionGranted.value && restingHrPermissionGranted.value &&
+                    weightPermissionGranted.value && spo2PermissionGranted.value
         }
     }
 

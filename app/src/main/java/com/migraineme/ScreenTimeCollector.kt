@@ -17,7 +17,7 @@ data class ScreenTimeData(
 
 /**
  * Utility to extract daily screen time from Android's UsageStatsManager.
- * 
+ *
  * Requires PACKAGE_USAGE_STATS permission (granted via Settings > Apps > Special Access).
  */
 object ScreenTimeCollector {
@@ -26,7 +26,7 @@ object ScreenTimeCollector {
 
     /**
      * Get total screen time for a specific date in the device's timezone.
-     * 
+     *
      * @param context Application context
      * @param date The date to query (YYYY-MM-DD format)
      * @return ScreenTimeData with total seconds and app count, or null if permission denied or error
@@ -47,10 +47,10 @@ object ScreenTimeCollector {
             // Parse the date and get start/end of day in device timezone
             val localDate = LocalDate.parse(date)
             val zoneId = ZoneId.systemDefault()
-            
+
             val startOfDay = localDate.atStartOfDay(zoneId)
             val endOfDay = localDate.plusDays(1).atStartOfDay(zoneId)
-            
+
             val startMillis = startOfDay.toInstant().toEpochMilli()
             val endMillis = endOfDay.toInstant().toEpochMilli()
 
@@ -87,6 +87,73 @@ object ScreenTimeCollector {
 
         } catch (e: Exception) {
             Log.e(TAG, "Error getting screen time for $date", e)
+            return null
+        }
+    }
+
+    /**
+     * Get screen time during late-night window: 22:00 on [date] to 06:00 on [date+1].
+     * Uses INTERVAL_BEST to get finer-grained buckets that can be filtered by hour.
+     *
+     * @param context Application context
+     * @param date The evening date (YYYY-MM-DD). Window = this date 22:00 → next day 06:00.
+     * @return ScreenTimeData with total seconds and app count for the late-night window, or null on error
+     */
+    fun getLateNightScreenTime(context: Context, date: String): ScreenTimeData? {
+        try {
+            if (!hasUsageStatsPermission(context)) {
+                Log.w(TAG, "PACKAGE_USAGE_STATS permission not granted")
+                return null
+            }
+
+            val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
+            if (usageStatsManager == null) {
+                Log.e(TAG, "UsageStatsManager not available")
+                return null
+            }
+
+            val localDate = LocalDate.parse(date)
+            val zoneId = ZoneId.systemDefault()
+
+            // Window: 22:00 on date → 06:00 on date+1
+            val windowStart = localDate.atTime(22, 0).atZone(zoneId)
+            val windowEnd = localDate.plusDays(1).atTime(6, 0).atZone(zoneId)
+
+            val startMillis = windowStart.toInstant().toEpochMilli()
+            val endMillis = windowEnd.toInstant().toEpochMilli()
+
+            Log.d(TAG, "Querying late-night screen time for $date (22:00-06:00): $startMillis to $endMillis")
+
+            // INTERVAL_BEST gives us the finest granularity available
+            val usageStatsList = usageStatsManager.queryUsageStats(
+                UsageStatsManager.INTERVAL_BEST,
+                startMillis,
+                endMillis
+            )
+
+            if (usageStatsList.isNullOrEmpty()) {
+                Log.d(TAG, "No late-night usage stats for $date")
+                return ScreenTimeData(date, 0, 0)
+            }
+
+            var totalTimeInForeground = 0L
+            var appCount = 0
+
+            for (usageStats in usageStatsList) {
+                val timeInForeground = usageStats.totalTimeInForeground
+                if (timeInForeground > 0) {
+                    totalTimeInForeground += timeInForeground
+                    appCount++
+                }
+            }
+
+            val totalSeconds = (totalTimeInForeground / 1000).toInt()
+            Log.d(TAG, "Late-night screen time for $date: ${totalSeconds}s across $appCount apps")
+
+            return ScreenTimeData(date, totalSeconds, appCount)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting late-night screen time for $date", e)
             return null
         }
     }

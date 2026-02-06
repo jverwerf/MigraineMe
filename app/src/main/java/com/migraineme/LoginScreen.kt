@@ -103,10 +103,9 @@ fun LoginScreen(
                         enabled = true
                     )
                 }
-                // Run now - worker's finally block will schedule next 9AM
+                // Run location sync now (FCM handles hourly scheduling)
                 Log.d(LOG_TAG, "Starting location worker from permissionLauncher")
                 LocationDailySyncWorker.runOnceNow(appCtx)
-                LocationWatchdogWorker.schedule(appCtx)
                 Log.d(LOG_TAG, "Calling onLoggedIn from permissionLauncher")
                 onLoggedIn()
             }
@@ -201,9 +200,8 @@ fun LoginScreen(
                         enabled = true
                     )
                 }
-                // Run now - worker's finally block will schedule next 9AM
+                // Run location sync now (FCM handles hourly scheduling)
                 LocationDailySyncWorker.runOnceNow(appCtx)
-                LocationWatchdogWorker.schedule(appCtx)
                 Log.d(LOG_TAG, "Calling onLoggedIn")
                 onLoggedIn()
             } else {

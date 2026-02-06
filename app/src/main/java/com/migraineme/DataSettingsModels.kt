@@ -11,7 +11,9 @@ enum class CollectedByKind {
     PHONE,
     WEARABLE,
     MANUAL,
-    REFERENCE
+    REFERENCE,
+    PHONE_OR_WEARABLE,
+    COMPUTED
 }
 
 enum class WearableSource(val key: String, val label: String) {
@@ -82,6 +84,32 @@ fun referenceRow(table: String, label: String): DataRow =
     DataRow(
         table = table,
         collectedByKind = CollectedByKind.REFERENCE,
+        collectedByLabel = label
+    )
+
+/**
+ * Row that can be collected by either phone (usage stats) or wearable.
+ * Never greyed out — phone is always a valid fallback source.
+ * When wearable is connected, user can choose wearable or phone.
+ * When no wearable, defaults to phone source.
+ */
+fun phoneOrWearableRow(table: String, label: String): DataRow =
+    DataRow(
+        table = table,
+        collectedByKind = CollectedByKind.PHONE_OR_WEARABLE,
+        collectedByLabel = label,
+        defaultWearable = WearableSource.WHOOP
+    )
+
+/**
+ * Row for computed/derived metrics (e.g. stress index from HRV + resting HR).
+ * Shows "Computed" label instead of a source selector.
+ * May have dependency requirements on other metrics.
+ */
+fun computedRow(table: String, label: String): DataRow =
+    DataRow(
+        table = table,
+        collectedByKind = CollectedByKind.COMPUTED,
         collectedByLabel = label
     )
 

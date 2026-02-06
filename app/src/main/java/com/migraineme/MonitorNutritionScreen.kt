@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -213,7 +215,7 @@ fun MonitorNutritionScreen(
                 }
             }
             
-         
+
 
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.NUTRITION_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -298,18 +300,76 @@ fun MonitorNutritionScreen(
                         CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
                     }
                     todayItems.isEmpty() -> Text("No food logged today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    else -> todayItems.forEach { item ->
-                        TodayLogItem(
-                            item = item,
-                            onEdit = if (item.source == "manual_usda") {{ editingItem = item; editMealType = item.mealType }} else null,
-                            onDelete = if (item.source == "manual_usda") {{ scope.launch { searchService.deleteNutritionItem(item.id); reloadTodayItems() } }} else null
-                        )
+                    else -> {
+                        val selectedMetrics = config.nutritionDisplayMetrics.take(3)
+                        val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+
+                        // Top 3 selected metrics
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            selectedMetrics.forEachIndexed { index, metric ->
+                                val total = todayItems.sumOf { it.metricValue(metric) ?: 0.0 }
+                                val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                                val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                                val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
+                                NutritionSummaryValue(formatted, label, slotColors.getOrElse(index) { slotColors.last() })
+                            }
+                        }
+
+                        Spacer(Modifier.height(4.dp))
+                        HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                        Spacer(Modifier.height(4.dp))
+
+                        // Individual food items
+                        todayItems.forEach { item ->
+                            TodayLogItem(
+                                item = item,
+                                onEdit = if (item.source == "manual_usda") {{ editingItem = item; editMealType = item.mealType }} else null,
+                                onDelete = if (item.source == "manual_usda") {{ scope.launch { searchService.deleteNutritionItem(item.id); reloadTodayItems() } }} else null
+                            )
+                        }
+
+                        // All metrics breakdown
+                        Spacer(Modifier.height(4.dp))
+                        HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                        Spacer(Modifier.height(8.dp))
+                        Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(4.dp))
+
+                        MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
+                            val total = todayItems.sumOf { it.metricValue(metric) ?: 0.0 }
+                            if (total > 0) {
+                                val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                                val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                                val formatted = if (total >= 10) "${total.toInt()}" else String.format("%.1f", total)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text("$formatted $unit", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
                     }
                 }
             }
             
             // History Graph
-            NutritionHistoryGraph(days = 14)
+            NutritionHistoryGraph(
+                days = 14,
+                onClick = { navController.navigate(Routes.FULL_GRAPH_NUTRITION) }
+            )
         }
+    }
+}
+
+@Composable
+private fun NutritionSummaryValue(value: String, label: String, color: Color = AppTheme.TitleColor) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
