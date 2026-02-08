@@ -1,268 +1,312 @@
 package com.migraineme
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.Icons
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Notes
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun LogHomeScreen(navController: NavController, authVm: AuthViewModel, vm: LogViewModel) {
+fun LogHomeScreen(
+    navController: NavController,
+    authVm: AuthViewModel,
+    vm: LogViewModel,
+    symptomVm: SymptomViewModel,
+    onClose: () -> Unit = {}
+) {
     val draft by vm.draft.collectAsState()
-    val scroll = rememberScrollState()
-
     val authState by authVm.state.collectAsState()
+    val scrollState = rememberScrollState()
+
+    // Load symptoms from Supabase
+    val painCharacter by symptomVm.painCharacter.collectAsState()
+    val accompanying by symptomVm.accompanying.collectAsState()
+    val favorites by symptomVm.favorites.collectAsState()
+    val favoriteIds by symptomVm.favoriteIds.collectAsState()
+
     LaunchedEffect(authState.accessToken) {
-        val token = authState.accessToken
-        if (!token.isNullOrBlank()) vm.loadMigraineOptions(token)
+        authState.accessToken?.let { symptomVm.loadAll(it) }
     }
-    val frequent by vm.migraineOptionsFrequent.collectAsState()
-    val all by vm.migraineOptionsAll.collectAsState()
 
     // UI state
-    var menuOpen by rememberSaveable { mutableStateOf(false) }
-    var selectedLabel by rememberSaveable { mutableStateOf("Not logging migraine") }
-    var severityValue by rememberSaveable { mutableStateOf(5f) } // 1..10
-    var beganAt by rememberSaveable { mutableStateOf<String?>(null) }
-    var endedAt by rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedSymptoms = remember { mutableStateListOf<String>() }
     var notes by rememberSaveable { mutableStateOf("") }
 
-    // Reflect existing draft once
+    // Sync from existing draft once
     LaunchedEffect(draft.migraine) {
-        draft.migraine?.let {
-            selectedLabel = it.type ?: "Migraine"
-            severityValue = (it.severity ?: 5).coerceIn(1, 10).toFloat()
-            beganAt = it.beganAtIso
-            endedAt = it.endedAtIso
-            notes = it.note ?: ""
-        } ?: run {
-            selectedLabel = "Not logging migraine"
-            severityValue = 5f
-            beganAt = null
-            endedAt = null
-            notes = ""
+        draft.migraine?.let { m ->
+            if (selectedSymptoms.isEmpty() && m.symptoms.isNotEmpty()) {
+                selectedSymptoms.addAll(m.symptoms)
+            }
+            notes = m.note ?: ""
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .padding(16.dp)
-    ) {
-        // Selector row: dropdown + Manage
-        Column(Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = selectedLabel,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Migraine selection") },
-                trailingIcon = {
-                    IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose migraine")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(
-                    text = { Text("Not logging migraine") },
-                    onClick = {
-                        selectedLabel = "Not logging migraine"
-                        menuOpen = false
-                        // remove migraine from draft, preserve others
-                        val d = draft
-                        vm.clearDraft()
-                        d.triggers.forEach { t -> vm.addTriggerDraft(t.type, t.startAtIso, t.note) }
-                        d.meds.forEach { m -> m.name?.let { nm -> vm.addMedicineDraft(nm, m.amount, m.notes, m.startAtIso) } }
-                        d.rels.forEach { r -> vm.addReliefDraft(r.type, r.durationMinutes, r.notes, r.startAtIso) }
-                    }
-                )
-                if (frequent.isNotEmpty()) {
-                    Divider()
-                    DropdownMenuItem(text = { Text("Frequent") }, onClick = {}, enabled = false)
-                    frequent.forEach { label ->
-                        DropdownMenuItem(
-                            text = { Text(label) },
-                            onClick = {
-                                selectedLabel = label
-                                menuOpen = false
-                                vm.setMigraineDraft(
-                                    type = label,
-                                    severity = severityValue.toInt(),
-                                    beganAtIso = beganAt,
-                                    endedAtIso = endedAt,
-                                    note = notes.ifBlank { null }
-                                )
-                            }
-                        )
-                    }
-                }
-                if (all.isNotEmpty()) {
-                    Divider()
-                    DropdownMenuItem(text = { Text("All") }, onClick = {}, enabled = false)
-                    all.forEach { label ->
-                        DropdownMenuItem(
-                            text = { Text(label) },
-                            onClick = {
-                                selectedLabel = label
-                                menuOpen = false
-                                vm.setMigraineDraft(
-                                    type = label,
-                                    severity = severityValue.toInt(),
-                                    beganAtIso = beganAt,
-                                    endedAtIso = endedAt,
-                                    note = notes.ifBlank { null }
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(onClick = { navController.navigate(Routes.ADJUST_MIGRAINES) }) {
-                    Text("Manage")
-                }
-            }
+    // Auto-init draft
+    LaunchedEffect(Unit) {
+        if (draft.migraine == null) {
+            vm.setMigraineDraft(type = "Migraine", severity = 5, beganAtIso = null, endedAtIso = null, note = null)
         }
+    }
 
-        Spacer(Modifier.height(12.dp))
+    fun syncDraft() {
+        val typeLabel = if (selectedSymptoms.isEmpty()) "Migraine" else selectedSymptoms.joinToString(", ")
+        vm.setMigraineDraft(
+            type = typeLabel,
+            note = notes.ifBlank { null },
+            symptoms = selectedSymptoms.toList()
+        )
+    }
 
-        // Fields auto-commit if a selection exists
-        val hasSelection = selectedLabel != "Not logging migraine"
-        if (hasSelection) {
-            OutlinedTextField(
-                value = selectedLabel,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Type") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(8.dp))
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
 
-            // Severity slider 1..10
-            Text("Severity: ${severityValue.toInt()}", style = MaterialTheme.typography.bodyMedium)
-            Slider(
-                value = severityValue,
-                onValueChange = { v ->
-                    severityValue = v.coerceIn(1f, 10f)
-                    vm.setMigraineDraft(
-                        type = selectedLabel,
-                        severity = severityValue.toInt(),
-                        beganAtIso = beganAt,
-                        endedAtIso = endedAt,
-                        note = notes.ifBlank { null }
-                    )
-                },
-                valueRange = 1f..10f,
-                steps = 8, // 2..9 midpoints
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(8.dp))
+            // Top bar: ← Previous | Title | X Close
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onClose() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Home", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                }
+                Text("Log Migraine", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                }
+            }
 
-            AppDateTimePicker(label = "Start time") {
-                beganAt = it
-                vm.setMigraineDraft(
-                    type = selectedLabel,
-                    severity = severityValue.toInt(),
-                    beganAtIso = beganAt,
-                    endedAtIso = endedAt,
-                    note = notes.ifBlank { null }
+            // Hero
+            HeroCard {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .drawBehind { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
+                )
+                Text(
+                    "What are you experiencing?",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    if (selectedSymptoms.isEmpty()) "Select all that apply"
+                    else "${selectedSymptoms.size} symptom${if (selectedSymptoms.size > 1) "s" else ""} selected",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
                 )
             }
-            Spacer(Modifier.height(8.dp))
 
-            AppDateTimePicker(label = "End time") {
-                endedAt = it
-                vm.setMigraineDraft(
-                    type = selectedLabel,
-                    severity = severityValue.toInt(),
-                    beganAtIso = beganAt,
-                    endedAtIso = endedAt,
-                    note = notes.ifBlank { null }
+            // Manage card (always on top)
+            BaseCard {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Symptoms", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_SYMPTOMS) })
+                }
+            }
+
+            // Split frequent by category
+            val freqPainIds = favorites.filter { it.symptom?.category == "pain_character" }.mapNotNull { it.symptom?.label }.toSet()
+            val freqAccompIds = favorites.filter { it.symptom?.category == "accompanying" }.mapNotNull { it.symptom?.label }.toSet()
+
+            // Pain character card
+            BaseCard {
+                Text("Pain character", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+
+                // Frequent pain symptoms first
+                if (freqPainIds.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        painCharacter.filter { it.label in freqPainIds }.forEach { symptom ->
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
+                                syncDraft()
+                            }
+                        }
+                    }
+                    // Divider between frequent and rest
+                    val remainingPain = painCharacter.filter { it.label !in freqPainIds }
+                    if (remainingPain.isNotEmpty()) {
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    }
+                }
+
+                // Remaining pain symptoms
+                val remainingPain = painCharacter.filter { it.label !in freqPainIds }
+                if (remainingPain.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        remainingPain.forEach { symptom ->
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
+                                syncDraft()
+                            }
+                        }
+                    }
+                } else if (freqPainIds.isEmpty()) {
+                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
+            // Accompanying experience card
+            BaseCard {
+                Text("Accompanying experience", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+
+                // Frequent accompanying symptoms first
+                if (freqAccompIds.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        accompanying.filter { it.label in freqAccompIds }.forEach { symptom ->
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
+                                syncDraft()
+                            }
+                        }
+                    }
+                    // Divider between frequent and rest
+                    val remainingAccomp = accompanying.filter { it.label !in freqAccompIds }
+                    if (remainingAccomp.isNotEmpty()) {
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    }
+                }
+
+                // Remaining accompanying symptoms
+                val remainingAccomp = accompanying.filter { it.label !in freqAccompIds }
+                if (remainingAccomp.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        remainingAccomp.forEach { symptom ->
+                            SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
+                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
+                                syncDraft()
+                            }
+                        }
+                    }
+                } else if (freqAccompIds.isEmpty()) {
+                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
+            // Notes Card
+            BaseCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Notes, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Notes", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { v -> notes = v; syncDraft() },
+                    placeholder = { Text("Add notes about this migraine…", color = AppTheme.SubtleTextColor) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
+                        cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.15f)
+                    ),
+                    minLines = 2
                 )
             }
-            Spacer(Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { v ->
-                    notes = v
-                    vm.setMigraineDraft(
-                        type = selectedLabel,
-                        severity = severityValue.toInt(),
-                        beganAtIso = beganAt,
-                        endedAtIso = endedAt,
-                        note = notes.ifBlank { null }
-                    )
-                },
-                label = { Text("Notes") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(8.dp))
-        }
-
-        Spacer(Modifier.weight(1f))
-
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            OutlinedButton(onClick = { navController.navigate(Routes.MIGRAINE) }) {
-                Text("Back")
+            // Navigation
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Button(
+                    onClick = { navController.navigate(Routes.TIMING) },
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                ) { Text("Next") }
             }
-            Button(onClick = { navController.navigate(Routes.TRIGGERS) }) {
-                Text("Next")
-            }
+
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
 
-/* ---------- helpers ---------- */
+@Composable
+private fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
+    val icon = SymptomIcons.forLabel(label, iconKey)
+    val circleColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
+    val borderColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
+    val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
+    val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
 
-private fun formatIsoDdMmYyHm(iso: String?): String {
-    if (iso.isNullOrBlank()) return "-"
-    return try {
-        val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
-        ldt.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
-    } catch (_: Exception) {
-        "-"
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(72.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+    ) {
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(circleColor)
+                .then(
+                    Modifier.border(width = 1.5.dp, color = borderColor, shape = CircleShape)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(26.dp))
+            } else {
+                Text(
+                    label.take(2).uppercase(),
+                    color = iconTint,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            label,
+            color = textColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

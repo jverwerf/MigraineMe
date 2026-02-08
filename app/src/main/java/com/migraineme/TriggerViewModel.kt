@@ -42,10 +42,10 @@ class TriggerViewModel : ViewModel() {
         }
     }
 
-    fun addNewToPool(accessToken: String, label: String) {
+    fun addNewToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE") {
         viewModelScope.launch {
             try {
-                db.upsertTriggerToPool(accessToken, label.trim())
+                db.upsertTriggerToPool(accessToken, label.trim(), category, predictionValue)
                 loadAll(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -80,6 +80,28 @@ class TriggerViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 db.deleteTriggerPref(accessToken, prefId)
+                loadAll(accessToken)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun setPrediction(accessToken: String, triggerId: String, value: String) {
+        viewModelScope.launch {
+            try {
+                db.updateTriggerPoolItem(accessToken, triggerId, predictionValue = value)
+                loadAll(accessToken)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun setCategory(accessToken: String, triggerId: String, category: String?) {
+        viewModelScope.launch {
+            try {
+                db.updateTriggerPoolItem(accessToken, triggerId, category = category)
                 loadAll(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BubbleChart
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -58,9 +60,9 @@ fun MonitorConfigScreen(
 
     val reorderState = rememberReorderableLazyListState(
         onMove = { from, to ->
-            // Adjust for header items (just the header now = 2 items: spacer + header)
-            val fromIndex = from.index - 2
-            val toIndex = to.index - 2
+            // Adjust for header items (spacer + back button + header = 3 items)
+            val fromIndex = from.index - 3
+            val toIndex = to.index - 3
             if (fromIndex >= 0 && toIndex >= 0) {
                 updateConfig(config.moveCard(fromIndex, toIndex))
             }
@@ -78,6 +80,18 @@ fun MonitorConfigScreen(
         // Top spacer for logo reveal area
         item {
             Spacer(Modifier.height(AppTheme.LogoRevealHeight))
+        }
+
+        // Back button
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+            }
         }
 
         // Header in HeroCard
@@ -213,4 +227,5 @@ private fun getCardIconTint(cardId: String): Color {
         else -> Color(0xFF4FC3F7)
     }
 }
+
 

@@ -142,11 +142,20 @@ fun NutritionHistoryGraph(
     }
     
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        Text(
-            "$days-Day History",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "$days-Day History",
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+            )
+            if (onClick != null) {
+                Text("View Full →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            }
+        }
         
         Spacer(Modifier.height(8.dp))
         
@@ -411,4 +420,3 @@ fun NutritionHistoryGraph(
         }
     }
 }
-

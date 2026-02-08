@@ -1,3 +1,4 @@
+
 package com.migraineme
 
 import android.content.Context
@@ -61,6 +62,22 @@ class EdgeFunctionsService {
     data class TriggerSettingResponse(
         @SerialName("user_id") val userId: String,
         @SerialName("trigger_type") val triggerType: String,
+        val enabled: Boolean,
+        @SerialName("updated_at") val updatedAt: String
+    )
+
+    @Serializable
+    private data class ProdromeSettingUpsertBody(
+        @SerialName("user_id") val userId: String,
+        @SerialName("prodrome_type") val prodromeType: String,
+        val enabled: Boolean,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
+    @Serializable
+    data class ProdromeSettingResponse(
+        @SerialName("user_id") val userId: String,
+        @SerialName("prodrome_type") val prodromeType: String,
         val enabled: Boolean,
         @SerialName("updated_at") val updatedAt: String
     )
@@ -297,42 +314,27 @@ class EdgeFunctionsService {
     // Health Connect Metric Settings
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Enable all Health Connect-compatible metrics with preferred source = "health_connect".
-     * Called when user connects Health Connect wearables (sleep, HRV, etc.)
-     */
     suspend fun enableDefaultHealthConnectMetricSettings(context: Context): Boolean {
         val appCtx = context.applicationContext
         val hcKey = "health_connect"
 
         val metrics = listOf(
-            // Sleep
             "sleep_duration_daily",
             "sleep_stages_daily",
             "fell_asleep_time_daily",
             "woke_up_time_daily",
-            
-            // Heart / Vitals
             "resting_hr_daily",
             "hrv_daily",
             "spo2_daily",
             "skin_temp_daily",
-            
-            // Activity
             "steps_daily",
             "time_in_high_hr_zones_daily",
-            
-            // Body measurements
             "weight_daily",
             "body_fat_daily",
-            
-            // Other
             "hydration_daily",
             "blood_pressure_daily",
             "blood_glucose_daily",
             "respiratory_rate_daily",
-            
-            // Computed
             "stress_index_daily"
         )
 
@@ -355,9 +357,6 @@ class EdgeFunctionsService {
         return allOk
     }
 
-    /**
-     * Disable all Health Connect metrics (when user disconnects).
-     */
     suspend fun disableHealthConnectMetricSettings(context: Context): Boolean {
         val appCtx = context.applicationContext
 
@@ -559,21 +558,143 @@ class EdgeFunctionsService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Prodrome Settings
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun getProdromeSettings(context: Context): List<ProdromeSettingResponse> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val userId = SessionStore.readUserId(appCtx) ?: return emptyList()
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/prodrome_settings?user_id=eq.$userId&select=*"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<ProdromeSettingResponse>>()
+            } else {
+                Log.e("EdgeFunctionsService", "getProdromeSettings failed: ${res.status}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getProdromeSettings error: ${e.message}", e)
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertProdromeSetting(
+        context: Context,
+        prodromeType: String,
+        enabled: Boolean
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = ProdromeSettingUpsertBody(
+            userId = userId,
+            prodromeType = prodromeType,
+            enabled = enabled,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/prodrome_settings?on_conflict=user_id,prodrome_type"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e(
+                    "EdgeFunctionsService",
+                    "upsertProdromeSetting failed: ${res.status} - ${res.bodyAsText()}"
+                )
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "upsertProdromeSetting exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun seedDefaultProdromeSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val defaultProdromes = listOf(
+            "fatigue_yawning" to false,
+            "neck_stiffness" to false,
+            "mood_changes" to false
+        )
+
+        val client = buildClient()
+        var allOk = true
+
+        try {
+            for ((prodromeType, enabled) in defaultProdromes) {
+                val body = ProdromeSettingUpsertBody(
+                    userId = userId,
+                    prodromeType = prodromeType,
+                    enabled = enabled,
+                    updatedAtIso = Instant.now().toString()
+                )
+
+                val url =
+                    "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/prodrome_settings?on_conflict=user_id,prodrome_type"
+
+                val res = client.post(url) {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                    header("Prefer", "resolution=ignore-duplicates")
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+
+                val ok = res.status.value in 200..299
+                if (!ok) {
+                    allOk = false
+                    Log.w("EdgeFunctionsService", "Failed to seed prodrome setting: $prodromeType")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "seedDefaultProdromeSettings exception", e)
+            allOk = false
+        } finally {
+            client.close()
+        }
+
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Metric Settings Seeding
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Seeds all metric settings with enabled=false on first login.
-     * Uses ignore-duplicates so existing settings are not overwritten.
-     */
     suspend fun seedDefaultMetricSettings(context: Context): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
         val userId = SessionStore.readUserId(appCtx) ?: return false
 
-        // All metrics with default enabled=false
         val metrics = listOf(
-            // Sleep (WHOOP)
             "sleep_duration_daily",
             "sleep_score_daily",
             "sleep_efficiency_daily",
@@ -581,7 +702,6 @@ class EdgeFunctionsService {
             "sleep_disturbances_daily",
             "fell_asleep_time_daily",
             "woke_up_time_daily",
-            // Physical (WHOOP)
             "recovery_score_daily",
             "resting_hr_daily",
             "hrv_daily",
@@ -590,15 +710,18 @@ class EdgeFunctionsService {
             "time_in_high_hr_zones_daily",
             "activity_hr_zones_sessions",
             "steps_daily",
-            // Computed
             "stress_index_daily",
-            // Phone
             "screen_time_daily",
             "user_location_daily",
             "ambient_noise_samples",
+            "ambient_noise_index_daily",
+            "screen_time_late_night",
+            "phone_brightness_daily",
+            "phone_volume_daily",
+            "phone_dark_mode_daily",
+            "phone_unlock_daily",
             "nutrition",
             "menstruation",
-            // Weather (reference)
             "temperature_daily",
             "pressure_daily",
             "humidity_daily",
@@ -647,3 +770,4 @@ class EdgeFunctionsService {
         return allOk
     }
 }
+

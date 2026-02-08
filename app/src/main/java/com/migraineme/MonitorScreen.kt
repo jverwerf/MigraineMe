@@ -62,12 +62,16 @@ fun MonitorScreen(
     var cardConfig by remember { mutableStateOf(MonitorCardConfigStore.load(ctx)) }
     var weatherConfig by remember { mutableStateOf(WeatherCardConfigStore.load(ctx)) }
     var sleepConfig by remember { mutableStateOf(SleepCardConfigStore.load(ctx)) }
+    var physicalConfig by remember { mutableStateOf(PhysicalCardConfigStore.load(ctx)) }
+    var mentalConfig by remember { mutableStateOf(MentalCardConfigStore.load(ctx)) }
     
     // Refresh config when returning to screen
     LaunchedEffect(Unit) {
         cardConfig = MonitorCardConfigStore.load(ctx)
         weatherConfig = WeatherCardConfigStore.load(ctx)
         sleepConfig = SleepCardConfigStore.load(ctx)
+        physicalConfig = PhysicalCardConfigStore.load(ctx)
+        mentalConfig = MentalCardConfigStore.load(ctx)
     }
     
     // Nutrition data — use same service as MonitorNutritionScreen for full metric coverage
@@ -81,6 +85,10 @@ fun MonitorScreen(
     // Physical health data
     var physicalSummary by remember { mutableStateOf<PhysicalSummary?>(null) }
     var physicalLoading by remember { mutableStateOf(true) }
+    
+    // Mental health data
+    var mentalSummary by remember { mutableStateOf<MentalSummary?>(null) }
+    var mentalLoading by remember { mutableStateOf(true) }
     
     // Sleep data
     var sleepSummary by remember { mutableStateOf<SleepSummary?>(null) }
@@ -98,6 +106,7 @@ fun MonitorScreen(
             weatherLoading = false
             physicalLoading = false
             sleepLoading = false
+            mentalLoading = false
             menstruationLoading = false
             return@LaunchedEffect
         }
@@ -130,6 +139,16 @@ fun MonitorScreen(
                 null
             }
             physicalLoading = false
+        }
+        
+        // Load mental health summary
+        withContext(Dispatchers.IO) {
+            mentalSummary = try {
+                loadMentalSummary(ctx, token, today)
+            } catch (_: Exception) {
+                null
+            }
+            mentalLoading = false
         }
         
         // Load sleep summary
@@ -225,6 +244,7 @@ fun MonitorScreen(
                             PhysicalHealthCard(
                                 physicalLoading = physicalLoading,
                                 physicalSummary = physicalSummary,
+                                displayMetrics = physicalConfig.physicalDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_PHYSICAL) }
                             )
                         }
@@ -238,6 +258,9 @@ fun MonitorScreen(
                         }
                         MonitorCardConfig.CARD_MENTAL -> {
                             MentalHealthCard(
+                                mentalLoading = mentalLoading,
+                                mentalSummary = mentalSummary,
+                                displayMetrics = mentalConfig.mentalDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_MENTAL) }
                             )
                         }
@@ -363,6 +386,8 @@ private fun getWeatherMetricValue(weather: WeatherSummary, metric: String): Stri
         WeatherCardConfig.METRIC_HUMIDITY -> weather.humidity.toString()
         WeatherCardConfig.METRIC_WIND_SPEED -> String.format("%.1f", weather.windSpeed)
         WeatherCardConfig.METRIC_UV_INDEX -> weather.uvIndex.toString()
+        WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM?.let { String.format("%.0f", it) } ?: "—"
+        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM?.let { String.format("%.0f", it) } ?: "—"
         else -> "—"
     }
 }
@@ -371,6 +396,7 @@ private fun getWeatherMetricValue(weather: WeatherSummary, metric: String): Stri
 private fun PhysicalHealthCard(
     physicalLoading: Boolean,
     physicalSummary: PhysicalSummary?,
+    displayMetrics: List<String>,
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
@@ -386,13 +412,32 @@ private fun PhysicalHealthCard(
             Text("Connect a wearable to see data", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
         } else {
             val physical = physicalSummary
+            val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                PhysicalMetric("Recovery", "${physical.recoveryScore}%", Color(0xFF81C784))
-                PhysicalMetric("HRV", "${physical.hrv} ms", Color(0xFF4FC3F7))
-                PhysicalMetric("RHR", "${physical.restingHr} bpm", Color(0xFFFF8A65))
+                displayMetrics.forEachIndexed { index, metric ->
+                    val label = PhysicalCardConfig.labelFor(metric)
+                    val color = slotColors.getOrElse(index) { slotColors.last() }
+                    val value = when (metric) {
+                        PhysicalCardConfig.METRIC_RECOVERY -> physical.recoveryScore?.let { "${it.toInt()}%" } ?: "—"
+                        PhysicalCardConfig.METRIC_HRV -> physical.hrv?.let { "${it.toInt()} ms" } ?: "—"
+                        PhysicalCardConfig.METRIC_RESTING_HR -> physical.restingHr?.let { "${it.toInt()} bpm" } ?: "—"
+                        PhysicalCardConfig.METRIC_SPO2 -> physical.spo2?.let { "${it.toInt()}%" } ?: "—"
+                        PhysicalCardConfig.METRIC_SKIN_TEMP -> physical.skinTemp?.let { String.format("%.1f°C", it) } ?: "—"
+                        PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> physical.respiratoryRate?.let { String.format("%.1f", it) } ?: "—"
+                        PhysicalCardConfig.METRIC_STRESS -> physical.stress?.let { String.format("%.0f", it) } ?: "—"
+                        PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> physical.highHrZones?.let { "${it.toInt()} min" } ?: "—"
+                        PhysicalCardConfig.METRIC_STEPS -> physical.steps?.let { "%,d".format(it) } ?: "—"
+                        PhysicalCardConfig.METRIC_WEIGHT -> physical.weight?.let { String.format("%.1f kg", it) } ?: "—"
+                        PhysicalCardConfig.METRIC_BODY_FAT -> physical.bodyFat?.let { String.format("%.1f%%", it) } ?: "—"
+                        PhysicalCardConfig.METRIC_BLOOD_PRESSURE -> if (physical.bpSystolic != null) "${physical.bpSystolic}/${physical.bpDiastolic}" else "—"
+                        PhysicalCardConfig.METRIC_BLOOD_GLUCOSE -> physical.bloodGlucose?.let { String.format("%.0f", it) } ?: "—"
+                        else -> "—"
+                    }
+                    PhysicalMetric(label, value, color)
+                }
             }
         }
     }
@@ -435,15 +480,46 @@ private fun SleepCard(
 }
 
 @Composable
-private fun MentalHealthCard(onClick: () -> Unit) {
+private fun MentalHealthCard(
+    mentalLoading: Boolean,
+    mentalSummary: MentalSummary?,
+    displayMetrics: List<String>,
+    onClick: () -> Unit
+) {
     MonitorCategoryCard(
         icon = Icons.Outlined.BubbleChart,
         title = "Mental Health",
         iconTint = Color(0xFFBA68C8),
         onClick = onClick
     ) {
-        Text("Track mood, stress & anxiety", color = AppTheme.SubtleTextColor)
-        Text("Coming soon", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+        if (mentalLoading) {
+            Text("Loading...", color = AppTheme.SubtleTextColor)
+        } else if (mentalSummary == null) {
+            Text("No mental health data", color = AppTheme.SubtleTextColor)
+            Text("Enable metrics in Data Settings", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+        } else {
+            val mental = mentalSummary
+            val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                displayMetrics.forEachIndexed { index, metric ->
+                    val label = MentalCardConfig.labelFor(metric)
+                    val color = slotColors.getOrElse(index) { slotColors.last() }
+                    val value = mental.displayValue(metric)
+                    MentalMetric(label, value, color)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MentalMetric(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -641,13 +717,26 @@ data class WeatherSummary(
     val humidity: Int,
     val pressure: Int,
     val uvIndex: Int,
-    val windSpeed: Double = 0.0
+    val windSpeed: Double = 0.0,
+    val altitudeMaxM: Double? = null,
+    val altitudeChangeM: Double? = null
 )
 
 data class PhysicalSummary(
-    val recoveryScore: Int,
-    val hrv: Int,
-    val restingHr: Int
+    val recoveryScore: Double? = null,
+    val hrv: Double? = null,
+    val restingHr: Double? = null,
+    val spo2: Double? = null,
+    val skinTemp: Double? = null,
+    val respiratoryRate: Double? = null,
+    val stress: Double? = null,
+    val highHrZones: Double? = null,
+    val steps: Int? = null,
+    val weight: Double? = null,
+    val bodyFat: Double? = null,
+    val bpSystolic: Int? = null,
+    val bpDiastolic: Int? = null,
+    val bloodGlucose: Double? = null
 )
 
 data class SleepSummary(
@@ -690,6 +779,26 @@ private suspend fun loadWeatherSummary(ctx: android.content.Context, token: Stri
             
             val weatherCode = obj.optInt("weather_code", 0)
             val condition = weatherCodeToCondition(weatherCode)
+
+            // Fetch altitude from user_location_daily
+            var altitudeMaxM: Double? = null
+            var altitudeChangeM: Double? = null
+            try {
+                val locUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/user_location_daily?user_id=eq.${SessionStore.readUserId(ctx)}&date=eq.$date&select=altitude_max_m,altitude_change_m&limit=1"
+                val locReq = Request.Builder().url(locUrl).get()
+                    .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    .addHeader("Authorization", "Bearer $token").build()
+                val locResp = client.newCall(locReq).execute()
+                val locBody = locResp.body?.string()
+                if (locResp.isSuccessful && !locBody.isNullOrBlank()) {
+                    val locArr = org.json.JSONArray(locBody)
+                    if (locArr.length() > 0) {
+                        val locObj = locArr.getJSONObject(0)
+                        altitudeMaxM = locObj.optDouble("altitude_max_m").takeIf { !it.isNaN() }
+                        altitudeChangeM = locObj.optDouble("altitude_change_m").takeIf { !it.isNaN() }
+                    }
+                }
+            } catch (_: Exception) { }
             
             WeatherSummary(
                 temperature = obj.optDouble("temp_c_mean", 0.0).toInt(),
@@ -697,7 +806,9 @@ private suspend fun loadWeatherSummary(ctx: android.content.Context, token: Stri
                 humidity = obj.optInt("humidity_pct_mean", 0),
                 pressure = obj.optDouble("pressure_hpa_mean", 0.0).toInt(),
                 uvIndex = obj.optDouble("uv_index_max", 0.0).toInt(),
-                windSpeed = obj.optDouble("wind_speed_mps_mean", 0.0)
+                windSpeed = obj.optDouble("wind_speed_mps_mean", 0.0),
+                altitudeMaxM = altitudeMaxM,
+                altitudeChangeM = altitudeChangeM
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -728,40 +839,101 @@ private fun weatherCodeToCondition(code: Int): String {
 }
 
 private suspend fun loadPhysicalSummary(ctx: android.content.Context, token: String, date: String): PhysicalSummary? {
-    val db = SupabasePhysicalHealthService(ctx)
-    
-    // Fetch individual metrics for today
-    val recoveryList = try {
-        db.fetchRecoveryScoreDaily(token, 1)
-    } catch (_: Exception) {
-        emptyList()
+    val userId = SessionStore.readUserId(ctx) ?: return null
+    val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+    val key = BuildConfig.SUPABASE_ANON_KEY
+    val client = OkHttpClient()
+
+    fun fetchDouble(table: String, column: String): Double? {
+        return try {
+            val url = "$base/rest/v1/$table?user_id=eq.$userId&date=eq.$date&select=$column&limit=1"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val v = arr.getJSONObject(0).optDouble(column)
+                    if (!v.isNaN()) v else null
+                } else null
+            } else null
+        } catch (_: Exception) { null }
     }
-    
-    val hrvList = try {
-        db.fetchHrvDaily(token, 1)
-    } catch (_: Exception) {
-        emptyList()
+
+    fun fetchInt(table: String, column: String): Int? {
+        return try {
+            val url = "$base/rest/v1/$table?user_id=eq.$userId&date=eq.$date&select=$column&limit=1"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val v = arr.getJSONObject(0).optInt(column, Int.MIN_VALUE)
+                    if (v != Int.MIN_VALUE) v else null
+                } else null
+            } else null
+        } catch (_: Exception) { null }
     }
-    
-    val rhrList = try {
-        db.fetchRestingHrDaily(token, 1)
-    } catch (_: Exception) {
-        emptyList()
-    }
-    
-    // Check if we have data for today
-    val todayRecovery = recoveryList.find { it.date == date }
-    val todayHrv = hrvList.find { it.date == date }
-    val todayRhr = rhrList.find { it.date == date }
-    
-    if (todayRecovery == null && todayHrv == null && todayRhr == null) {
+
+    val recovery = fetchDouble("recovery_score_daily", "value_pct")
+    val hrv = fetchDouble("hrv_daily", "value_rmssd_ms")
+    val rhr = fetchDouble("resting_hr_daily", "value_bpm")
+    val spo2 = fetchDouble("spo2_daily", "value_pct")
+    val skinTemp = fetchDouble("skin_temp_daily", "value_celsius")
+    val respiratoryRate = fetchDouble("respiratory_rate_daily", "value_bpm")
+    val stress = fetchDouble("stress_index_daily", "value")
+    val highHrZones = fetchDouble("time_in_high_hr_zones_daily", "value_minutes")
+    val steps = fetchInt("steps_daily", "value_count")
+    val weight = fetchDouble("weight_daily", "value_kg")
+    val bodyFat = fetchDouble("body_fat_daily", "value_pct")
+    val bloodGlucose = fetchDouble("blood_glucose_daily", "value_mgdl")
+
+    // Blood pressure needs two columns
+    var bpSys: Int? = null
+    var bpDia: Int? = null
+    try {
+        val url = "$base/rest/v1/blood_pressure_daily?user_id=eq.$userId&date=eq.$date&select=value_systolic,value_diastolic&limit=1"
+        val req = Request.Builder().url(url).get()
+            .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+        val resp = client.newCall(req).execute()
+        val body = resp.body?.string()
+        if (resp.isSuccessful && !body.isNullOrBlank()) {
+            val arr = org.json.JSONArray(body)
+            if (arr.length() > 0) {
+                val obj = arr.getJSONObject(0)
+                val s = obj.optDouble("value_systolic")
+                val d = obj.optDouble("value_diastolic")
+                if (!s.isNaN()) bpSys = s.toInt()
+                if (!d.isNaN()) bpDia = d.toInt()
+            }
+        }
+    } catch (_: Exception) {}
+
+    // If nothing at all, return null
+    if (recovery == null && hrv == null && rhr == null && spo2 == null && skinTemp == null &&
+        respiratoryRate == null && stress == null && highHrZones == null && steps == null &&
+        weight == null && bodyFat == null && bpSys == null && bloodGlucose == null) {
         return null
     }
-    
+
     return PhysicalSummary(
-        recoveryScore = todayRecovery?.value_pct?.toInt() ?: 0,
-        hrv = todayHrv?.value_rmssd_ms?.toInt() ?: 0,
-        restingHr = todayRhr?.value_bpm?.toInt() ?: 0
+        recoveryScore = recovery,
+        hrv = hrv,
+        restingHr = rhr,
+        spo2 = spo2,
+        skinTemp = skinTemp,
+        respiratoryRate = respiratoryRate,
+        stress = stress,
+        highHrZones = highHrZones,
+        steps = steps,
+        weight = weight,
+        bodyFat = bodyFat,
+        bpSystolic = bpSys,
+        bpDiastolic = bpDia,
+        bloodGlucose = bloodGlucose
     )
 }
 
@@ -898,4 +1070,151 @@ private suspend fun loadSleepSummary(ctx: android.content.Context, token: String
         stagesRem = todayStages?.value_rem_hm,
         stagesLight = todayStages?.value_light_hm
     )
+}
+
+// ─── Mental Health Summary ──────────────────────────────────────────────────
+
+data class MentalSummary(
+    val stress: Double?,
+    val screenTimeHours: Double?,
+    val lateScreenTimeHours: Double?,
+    val noiseIndex: Double?,
+    val brightness: Double?,
+    val volumePct: Double?,
+    val darkModeHours: Double?,
+    val unlockCount: Int?
+) {
+    fun displayValue(metric: String): String = when (metric) {
+        MentalCardConfig.METRIC_STRESS -> stress?.let { String.format("%.0f", it) } ?: "—"
+        MentalCardConfig.METRIC_SCREEN_TIME -> screenTimeHours?.let { String.format("%.1fh", it) } ?: "—"
+        MentalCardConfig.METRIC_LATE_SCREEN_TIME -> lateScreenTimeHours?.let { String.format("%.1fh", it) } ?: "—"
+        MentalCardConfig.METRIC_NOISE -> noiseIndex?.let { String.format("%.0f dB", it) } ?: "—"
+        MentalCardConfig.METRIC_BRIGHTNESS -> brightness?.let { String.format("%.0f", it) } ?: "—"
+        MentalCardConfig.METRIC_VOLUME -> volumePct?.let { "${it.toInt()}%" } ?: "—"
+        MentalCardConfig.METRIC_DARK_MODE -> darkModeHours?.let { String.format("%.1fh", it) } ?: "—"
+        MentalCardConfig.METRIC_UNLOCKS -> unlockCount?.let { "$it" } ?: "—"
+        else -> "—"
+    }
+}
+
+private suspend fun loadMentalSummary(ctx: android.content.Context, token: String, date: String): MentalSummary? {
+    val userId = SessionStore.readUserId(ctx) ?: return null
+    val client = OkHttpClient()
+    val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+    val key = BuildConfig.SUPABASE_ANON_KEY
+
+    fun fetchDouble(table: String, column: String): Double? {
+        return try {
+            val url = "$base/rest/v1/$table?user_id=eq.$userId&date=eq.$date&select=$column&limit=1"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) arr.getJSONObject(0).optDouble(column).takeIf { !it.isNaN() } else null
+            } else null
+        } catch (_: Exception) { null }
+    }
+
+    fun fetchInt(table: String, column: String): Int? {
+        return try {
+            val url = "$base/rest/v1/$table?user_id=eq.$userId&date=eq.$date&select=$column&limit=1"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val v = arr.getJSONObject(0).optInt(column, Int.MIN_VALUE)
+                    if (v != Int.MIN_VALUE) v else null
+                } else null
+            } else null
+        } catch (_: Exception) { null }
+    }
+
+    /** Fetch today's samples from a _samples table, compute AVG of a numeric column */
+    fun fetchSamplesAvg(table: String, column: String, tsColumn: String = "sampled_at"): Double? {
+        return try {
+            val url = "$base/rest/v1/$table?user_id=eq.$userId&${tsColumn}=gte.${date}T00:00:00&${tsColumn}=lt.${date}T23:59:59&select=$column"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val values = (0 until arr.length()).mapNotNull {
+                        arr.getJSONObject(it).optDouble(column).takeIf { v -> !v.isNaN() }
+                    }
+                    if (values.isNotEmpty()) values.average() else null
+                } else null
+            } else null
+        } catch (_: Exception) { null }
+    }
+
+    /** Fetch today's samples and return MAX of integer column */
+    fun fetchSamplesMax(table: String, column: String, tsColumn: String = "sampled_at"): Int? {
+        return try {
+            val url = "$base/rest/v1/$table?user_id=eq.$userId&${tsColumn}=gte.${date}T00:00:00&${tsColumn}=lt.${date}T23:59:59&select=$column"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val values = (0 until arr.length()).mapNotNull {
+                        val v = arr.getJSONObject(it).optInt(column, Int.MIN_VALUE)
+                        if (v != Int.MIN_VALUE) v else null
+                    }
+                    values.maxOrNull()
+                } else null
+            } else null
+        } catch (_: Exception) { null }
+    }
+
+    /** Fetch dark mode samples, estimate hours as (dark_count / total) * 24 */
+    fun fetchDarkModeSamplesHours(): Double? {
+        return try {
+            val url = "$base/rest/v1/phone_dark_mode_samples?user_id=eq.$userId&sampled_at=gte.${date}T00:00:00&sampled_at=lt.${date}T23:59:59&select=is_dark"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                val total = arr.length()
+                if (total > 0) {
+                    val darkCount = (0 until total).count { arr.getJSONObject(it).optBoolean("is_dark", false) }
+                    (darkCount.toDouble() / total) * 24.0
+                } else null
+            } else null
+        } catch (_: Exception) { null }
+    }
+
+    val stress = fetchDouble("stress_index_daily", "value")
+    val screenTime = fetchDouble("screen_time_daily", "total_hours")
+        ?: fetchDouble("screen_time_live", "value_hours")
+    val lateScreen = fetchDouble("screen_time_late_night", "value_hours")
+    val noise = fetchDouble("ambient_noise_index_daily", "day_mean_lmean")
+        ?: fetchSamplesAvg("ambient_noise_samples", "l_mean", "start_ts")
+
+    // Phone behavior: try daily table first, fall back to live samples
+    val brightness = fetchDouble("phone_brightness_daily", "value_mean")
+        ?: fetchSamplesAvg("phone_brightness_samples", "value")
+    val volume = fetchDouble("phone_volume_daily", "value_mean_pct")
+        ?: fetchSamplesAvg("phone_volume_samples", "value_pct")
+    val darkMode = fetchDouble("phone_dark_mode_daily", "value_hours")
+        ?: fetchDarkModeSamplesHours()
+    val unlocks = fetchInt("phone_unlock_daily", "value_count")
+        ?: fetchSamplesMax("phone_unlock_samples", "value_count")
+
+    if (stress == null && screenTime == null && lateScreen == null && noise == null &&
+        brightness == null && volume == null && darkMode == null && unlocks == null) {
+        return null
+    }
+
+    return MentalSummary(stress, screenTime, lateScreen, noise, brightness, volume, darkMode, unlocks)
 }

@@ -276,7 +276,6 @@ fun QuickLogReliefScreen(
                                                 accessToken = token,
                                                 migraineId = null, // Standalone relief
                                                 type = relief,
-                                                durationMinutes = durationMinutes.toIntOrNull(),
                                                 startAt = startAtIso ?: Instant.now().toString(),
                                                 notes = notes.ifBlank { null }
                                             )

@@ -34,7 +34,11 @@ class SupabasePersonalService(context: Context) {
         val longitude: Double,
         val source: String,
         val source_measure_id: String? = null,
-        val timezone: String? = null
+        val timezone: String? = null,
+        val altitude_m: Double? = null,
+        val altitude_max_m: Double? = null,
+        val altitude_min_m: Double? = null,
+        val altitude_change_m: Double? = null
     )
 
     @Serializable
@@ -43,7 +47,8 @@ class SupabasePersonalService(context: Context) {
         val latitude: Double,
         val longitude: Double,
         val source: String = "device",
-        val timezone: String? = null
+        val timezone: String? = null,
+        val altitude_m: Double? = null
     )
 
     @Serializable
@@ -53,7 +58,8 @@ class SupabasePersonalService(context: Context) {
         val longitude: Double,
         val source: String? = null,
         val source_measure_id: String? = null,
-        val timezone: String? = null
+        val timezone: String? = null,
+        val altitude_m: Double? = null
     )
 
     @Serializable
@@ -98,6 +104,39 @@ class SupabasePersonalService(context: Context) {
         val source_measure_id: String? = null
     )
 
+    @Serializable
+    private data class PhoneBrightnessSampleWrite(
+        val user_id: String,
+        val sampled_at: String,
+        val value: Int,
+        val source: String = "android"
+    )
+
+    @Serializable
+    private data class PhoneVolumeSampleWrite(
+        val user_id: String,
+        val sampled_at: String,
+        val value_pct: Int,
+        val stream_type: String? = "media",
+        val source: String = "android"
+    )
+
+    @Serializable
+    private data class PhoneDarkModeSampleWrite(
+        val user_id: String,
+        val sampled_at: String,
+        val is_dark: Boolean,
+        val source: String = "android"
+    )
+
+    @Serializable
+    private data class PhoneUnlockSampleWrite(
+        val user_id: String,
+        val sampled_at: String,
+        val value_count: Int,
+        val source: String = "android"
+    )
+
     suspend fun upsertUserLocationDaily(
         accessToken: String,
         date: String,
@@ -105,9 +144,13 @@ class SupabasePersonalService(context: Context) {
         longitude: Double,
         source: String = "device",
         sourceId: String? = null,
-        timezone: String? = null
+        timezone: String? = null,
+        altitudeM: Double? = null,
+        altitudeMaxM: Double? = null,
+        altitudeMinM: Double? = null,
+        altitudeChangeM: Double? = null
     ) {
-        val row = LocationWriteRow(date, latitude, longitude, source, sourceId, timezone)
+        val row = LocationWriteRow(date, latitude, longitude, source, sourceId, timezone, altitudeM, altitudeMaxM, altitudeMinM, altitudeChangeM)
         postgrestInsert(
             accessToken = accessToken,
             table = "user_location_daily",
@@ -126,9 +169,10 @@ class SupabasePersonalService(context: Context) {
         latitude: Double,
         longitude: Double,
         source: String = "device",
-        timezone: String? = null
+        timezone: String? = null,
+        altitudeM: Double? = null
     ) {
-        val row = LocationHourlyWriteRow(timestamp, latitude, longitude, source, timezone)
+        val row = LocationHourlyWriteRow(timestamp, latitude, longitude, source, timezone, altitudeM)
         postgrestInsert(
             accessToken = accessToken,
             table = "user_location_hourly",
@@ -144,7 +188,7 @@ class SupabasePersonalService(context: Context) {
         val resp = client.get("$supabaseUrl/rest/v1/user_location_daily") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
-            parameter("select", "date,latitude,longitude,source,source_measure_id")
+            parameter("select", "date,latitude,longitude,source,source_measure_id,altitude_m")
             parameter("order", "date.desc")
             parameter("limit", limitDays.toString())
         }
@@ -168,6 +212,39 @@ class SupabasePersonalService(context: Context) {
         if (!resp.status.isSuccess()) return false
         val txt = resp.bodyAsText().trim()
         return txt.startsWith("[{")
+    }
+
+    /**
+     * Fetch all hourly altitude readings for a given date.
+     * Returns list of altitude values (non-null only).
+     * Used to compute running max/min/change for daily aggregation.
+     */
+    suspend fun fetchHourlyAltitudesForDate(
+        accessToken: String,
+        date: String
+    ): List<Double> {
+        val resp = client.get("$supabaseUrl/rest/v1/user_location_hourly") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "altitude_m")
+            parameter("altitude_m", "not.is.null")
+            // Filter by date portion of timestamp
+            parameter("timestamp", "gte.${date}T00:00:00")
+            parameter("timestamp", "lt.${date}T23:59:59.999")
+            parameter("order", "timestamp.asc")
+        }
+        if (!resp.status.isSuccess()) return emptyList()
+        val body = resp.bodyAsText().trim()
+        if (body.isEmpty() || body == "[]") return emptyList()
+        return try {
+            val arr = JSONArray(body)
+            (0 until arr.length()).mapNotNull { i ->
+                val obj = arr.getJSONObject(i)
+                if (obj.isNull("altitude_m")) null else obj.getDouble("altitude_m")
+            }
+        } catch (_: Throwable) {
+            emptyList()
+        }
     }
 
     suspend fun latestUserLocationDate(
@@ -214,10 +291,6 @@ class SupabasePersonalService(context: Context) {
 
     // ========== SCREEN TIME METHODS ==========
 
-    /**
-     * Upsert daily screen time directly to screen_time_daily table.
-     * No intermediate processing needed - Android already computed the daily total.
-     */
     suspend fun upsertScreenTimeDaily(
         accessToken: String,
         date: String,
@@ -234,10 +307,6 @@ class SupabasePersonalService(context: Context) {
         )
     }
 
-    /**
-     * Upsert live screen time for today.
-     * This is called hourly by FCM and overwrites the same row for today.
-     */
     suspend fun upsertScreenTimeLive(
         accessToken: String,
         date: String,
@@ -278,10 +347,6 @@ class SupabasePersonalService(context: Context) {
 
     // ========== LATE-NIGHT SCREEN TIME METHODS ==========
 
-    /**
-     * Upsert late-night screen time (22:00–06:00 window).
-     * Date represents the evening date (22:00 on this date through 06:00 next day).
-     */
     suspend fun upsertScreenTimeLateNight(
         accessToken: String,
         date: String,
@@ -322,10 +387,6 @@ class SupabasePersonalService(context: Context) {
 
     // ========== PHONE SLEEP METHODS ==========
 
-    /**
-     * Upsert phone-estimated sleep data to sleep tables with source = "phone".
-     * Writes to three tables: sleep_duration_daily, fell_asleep_time_daily, woke_up_time_daily.
-     */
     suspend fun upsertPhoneSleepData(
         accessToken: String,
         date: String,
@@ -334,23 +395,18 @@ class SupabasePersonalService(context: Context) {
         wokeUpIso: String,
         timezone: String? = null
     ) {
-        // 1. Sleep duration
         postgrestInsert(
             accessToken = accessToken,
             table = "sleep_duration_daily",
             body = listOf(PhoneSleepDurationWrite(date, durationHours)),
             onConflict = "user_id,source,date"
         )
-
-        // 2. Fell asleep time
         postgrestInsert(
             accessToken = accessToken,
             table = "fell_asleep_time_daily",
             body = listOf(PhoneSleepTimeWrite(date, fellAsleepIso)),
             onConflict = "user_id,source,date"
         )
-
-        // 3. Woke up time
         postgrestInsert(
             accessToken = accessToken,
             table = "woke_up_time_daily",
@@ -359,9 +415,6 @@ class SupabasePersonalService(context: Context) {
         )
     }
 
-    /**
-     * Get latest phone sleep date from sleep_duration_daily where source = "phone".
-     */
     suspend fun latestPhoneSleepDate(
         accessToken: String
     ): String? {
@@ -380,6 +433,78 @@ class SupabasePersonalService(context: Context) {
             val arr = JSONArray(body)
             if (arr.length() == 0) null else arr.getJSONObject(0).getString("date")
         } catch (_: Throwable) { null }
+    }
+
+    // ========== PHONE BEHAVIOR METHODS ==========
+
+    suspend fun insertPhoneBrightnessSample(
+        accessToken: String,
+        userId: String,
+        sampledAtIso: String,
+        brightness: Int
+    ) {
+        postgrestInsert(
+            accessToken = accessToken,
+            table = "phone_brightness_samples",
+            body = PhoneBrightnessSampleWrite(
+                user_id = userId,
+                sampled_at = sampledAtIso,
+                value = brightness
+            )
+        )
+    }
+
+    suspend fun insertPhoneVolumeSample(
+        accessToken: String,
+        userId: String,
+        sampledAtIso: String,
+        volumePct: Int,
+        streamType: String = "media"
+    ) {
+        postgrestInsert(
+            accessToken = accessToken,
+            table = "phone_volume_samples",
+            body = PhoneVolumeSampleWrite(
+                user_id = userId,
+                sampled_at = sampledAtIso,
+                value_pct = volumePct,
+                stream_type = streamType
+            )
+        )
+    }
+
+    suspend fun insertPhoneDarkModeSample(
+        accessToken: String,
+        userId: String,
+        sampledAtIso: String,
+        isDark: Boolean
+    ) {
+        postgrestInsert(
+            accessToken = accessToken,
+            table = "phone_dark_mode_samples",
+            body = PhoneDarkModeSampleWrite(
+                user_id = userId,
+                sampled_at = sampledAtIso,
+                is_dark = isDark
+            )
+        )
+    }
+
+    suspend fun insertPhoneUnlockSample(
+        accessToken: String,
+        userId: String,
+        sampledAtIso: String,
+        unlockCount: Int
+    ) {
+        postgrestInsert(
+            accessToken = accessToken,
+            table = "phone_unlock_samples",
+            body = PhoneUnlockSampleWrite(
+                user_id = userId,
+                sampled_at = sampledAtIso,
+                value_count = unlockCount
+            )
+        )
     }
 
     private suspend inline fun <reified T> postgrestInsert(

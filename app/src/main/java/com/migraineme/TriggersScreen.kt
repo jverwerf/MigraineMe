@@ -1,19 +1,35 @@
 package com.migraineme
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -22,290 +38,380 @@ fun TriggersScreen(
     navController: NavController,
     vm: TriggerViewModel,
     authVm: AuthViewModel,
-    logVm: LogViewModel
+    logVm: LogViewModel,
+    onClose: () -> Unit = {}
 ) {
     val pool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
     val authState by authVm.state.collectAsState()
     val draft by logVm.draft.collectAsState()
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(authState.accessToken) {
         authState.accessToken?.let { token -> vm.loadAll(token) }
     }
 
-    val frequentIds = remember(frequent) { frequent.map { it.triggerId }.toSet() }
-    val remaining = remember(pool, frequentIds) { pool.filter { it.id !in frequentIds } }
-
-    // Add dialog: pick time before adding a trigger
-    var showAddDialog by remember { mutableStateOf(false) }
-    var pendingLabel by remember { mutableStateOf<String?>(null) }
-    fun openAdd(label: String) {
-        pendingLabel = label
-        showAddDialog = true
-    }
-    if (showAddDialog) {
-        TimeAddDialog(
-            initialIso = null,
-            onDismiss = { showAddDialog = false },
-            onConfirm = { iso ->
-                val label = pendingLabel ?: return@TimeAddDialog
-                logVm.addTriggerDraft(trigger = label, startAtIso = iso)
-                showAddDialog = false
-            }
-        )
-    }
-
-    // Edit time dialog for existing cards
-    var showEditTime by remember { mutableStateOf(false) }
-    var timeEditIndex by remember { mutableStateOf<Int?>(null) }
-    if (showEditTime && timeEditIndex != null && timeEditIndex in draft.triggers.indices) {
-        TimeOnlyDialog(
-            initialIso = draft.triggers[timeEditIndex!!].startAtIso,
-            onDismiss = { showEditTime = false },
-            onConfirm = { newIso ->
-                val idx = timeEditIndex!!
-                val d = draft
-                logVm.clearDraft()
-                logVm.setMigraineDraft(
-                    d.migraine?.type, d.migraine?.severity,
-                    d.migraine?.beganAtIso, d.migraine?.endedAtIso, d.migraine?.note
-                )
-                d.triggers.forEachIndexed { i, tt ->
-                    val iso = if (i == idx) newIso else tt.startAtIso
-                    logVm.addTriggerDraft(tt.type, startAtIso = iso, note = tt.note)
-                }
-                d.meds.forEach { m ->
-                    m.name?.let { nm -> logVm.addMedicineDraft(nm, m.amount, m.notes, m.startAtIso) }
-                }
-                d.rels.forEach { r ->
-                    logVm.addReliefDraft(r.type, r.durationMinutes, r.notes, r.startAtIso)
-                }
-                showEditTime = false
-            }
-        )
-    }
-
-    Scaffold(
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(onClick = { navController.navigate(Routes.MIGRAINE) }) { Text("Back") }
-                Button(onClick = { navController.navigate(Routes.MEDICINES) }) { Text("Next") }
-            }
+    // ── Rebuild helpers ──
+    fun rebuildDraftWithTriggers(triggers: List<TriggerDraft>) {
+        val d = draft
+        logVm.clearDraft()
+        d.migraine?.let {
+            logVm.setMigraineDraft(it.type, it.severity, it.beganAtIso, it.endedAtIso, it.note, symptoms = it.symptoms)
         }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Header + Manage aligned with Frequent
-            if (frequent.isNotEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Frequent", style = MaterialTheme.typography.titleMedium)
-                        TextButton(onClick = { navController.navigate(Routes.ADJUST_TRIGGERS) }) {
-                            Text("Manage")
-                        }
-                    }
+        if (d.painLocations.isNotEmpty()) logVm.setPainLocationsDraft(d.painLocations)
+        d.prodromes.forEach { logVm.addProdromeDraft(it.type, it.startAtIso, it.note) }
+        triggers.forEach { logVm.addTriggerDraft(it.type, it.startAtIso, it.note) }
+        d.meds.forEach { m -> m.name?.let { logVm.addMedicineDraft(it, m.amount, m.notes, m.startAtIso) } }
+        d.rels.forEach { logVm.addReliefDraft(it.type, it.notes, it.startAtIso, it.endAtIso, it.reliefScale) }
+        d.locations.forEach { logVm.addLocationDraft(it.type, it.startAtIso, it.note) }
+        d.activities.forEach { logVm.addActivityDraft(it.type, it.startAtIso, it.note) }
+        d.missedActivities.forEach { logVm.addMissedActivityDraft(it.type, it.startAtIso, it.note) }
+    }
+
+    // ── Time dialog: add new ──
+    var showAddTimeDialog by remember { mutableStateOf(false) }
+    var pendingLabel by remember { mutableStateOf<String?>(null) }
+
+    // ── Time dialog: edit existing ──
+    var showEditTimeDialog by remember { mutableStateOf(false) }
+    var editIndex by remember { mutableStateOf<Int?>(null) }
+
+    fun onTriggerTap(label: String) {
+        val existingIdx = draft.triggers.indexOfFirst { it.type == label }
+        if (existingIdx >= 0) {
+            // Deselect
+            val updated = draft.triggers.toMutableList().apply { removeAt(existingIdx) }
+            rebuildDraftWithTriggers(updated)
+        } else {
+            pendingLabel = label
+            showAddTimeDialog = true
+        }
+    }
+
+    // Add dialog
+    if (showAddTimeDialog && pendingLabel != null) {
+        TriggerTimeDialog(
+            title = pendingLabel!!,
+            initialIso = null,
+            onDismiss = { showAddTimeDialog = false },
+            onSkip = {
+                val updated = draft.triggers + TriggerDraft(pendingLabel!!, startAtIso = null)
+                rebuildDraftWithTriggers(updated)
+                showAddTimeDialog = false
+            },
+            onConfirm = { iso ->
+                val updated = draft.triggers + TriggerDraft(pendingLabel!!, startAtIso = iso)
+                rebuildDraftWithTriggers(updated)
+                showAddTimeDialog = false
+            }
+        )
+    }
+
+    // Edit dialog
+    if (showEditTimeDialog && editIndex != null && editIndex!! in draft.triggers.indices) {
+        val editing = draft.triggers[editIndex!!]
+        TriggerTimeDialog(
+            title = editing.type,
+            initialIso = editing.startAtIso,
+            onDismiss = { showEditTimeDialog = false },
+            onSkip = {
+                val updated = draft.triggers.toMutableList().apply {
+                    set(editIndex!!, editing.copy(startAtIso = null))
                 }
-            } else {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { navController.navigate(Routes.ADJUST_TRIGGERS) }) {
-                            Text("Manage")
+                rebuildDraftWithTriggers(updated)
+                showEditTimeDialog = false
+            },
+            onConfirm = { iso ->
+                val updated = draft.triggers.toMutableList().apply {
+                    set(editIndex!!, editing.copy(startAtIso = iso))
+                }
+                rebuildDraftWithTriggers(updated)
+                showEditTimeDialog = false
+            }
+        )
+    }
+
+    // Frequent labels
+    val frequentLabels = remember(frequent) { frequent.mapNotNull { it.trigger?.label }.toSet() }
+    val selectedLabels = remember(draft.triggers) { draft.triggers.map { it.type }.toSet() }
+
+    // Group pool by category
+    val grouped = remember(pool) {
+        pool.groupBy { it.category ?: "Other" }.toSortedMap()
+    }
+
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+
+            // Top bar: ← Previous | Title | X Close
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Prodromes", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                }
+                Text("Triggers", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                }
+            }
+
+            // ── HeroCard: icon + title + subtitle + selected list ──
+            HeroCard {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .drawBehind { HubIcons.run { drawTriggerBolt(Color(0xFFFFB74D)) } }
+                )
+                Text("Triggers", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(
+                    if (draft.triggers.isEmpty()) "Select triggers that may have contributed"
+                    else "${draft.triggers.size} trigger${if (draft.triggers.size > 1) "s" else ""} selected",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+                if (draft.triggers.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    draft.triggers.forEachIndexed { index, t ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White.copy(alpha = 0.06f))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    t.type,
+                                    color = AppTheme.BodyTextColor,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                                )
+                                Text(
+                                    if (t.startAtIso == null) "Same as migraine start"
+                                    else formatTriggerTime(t.startAtIso),
+                                    color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                            Icon(
+                                Icons.Outlined.Edit,
+                                contentDescription = "Edit time",
+                                tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .clickable {
+                                        editIndex = index
+                                        showEditTimeDialog = true
+                                    }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Icon(
+                                Icons.Outlined.Close,
+                                contentDescription = "Remove",
+                                tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .clickable {
+                                        val updated = draft.triggers.toMutableList().apply { removeAt(index) }
+                                        rebuildDraftWithTriggers(updated)
+                                    }
+                            )
                         }
                     }
                 }
             }
 
-            // Selected now
-            if (draft.triggers.isNotEmpty()) {
-                item {
-                    Column {
-                        Text("Selected now", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
-                        draft.triggers.asReversed().forEachIndexed { revIndex, t ->
-                            val actualIndex = draft.triggers.lastIndex - revIndex
-                            ElevatedCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                            ) {
-                                Column(Modifier.padding(12.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text("Trigger: ${t.type}", style = MaterialTheme.typography.bodyLarge)
-                                        IconButton(
-                                            onClick = {
-                                                val d = draft
-                                                logVm.clearDraft()
-                                                logVm.setMigraineDraft(
-                                                    d.migraine?.type, d.migraine?.severity,
-                                                    d.migraine?.beganAtIso, d.migraine?.endedAtIso, d.migraine?.note
-                                                )
-                                                d.triggers.forEachIndexed { i, tt ->
-                                                    if (i != actualIndex) {
-                                                        logVm.addTriggerDraft(tt.type, startAtIso = tt.startAtIso, note = tt.note)
-                                                    }
-                                                }
-                                                d.meds.forEach { m ->
-                                                    m.name?.let { nm -> logVm.addMedicineDraft(nm, m.amount, m.notes, m.startAtIso) }
-                                                }
-                                                d.rels.forEach { r ->
-                                                    logVm.addReliefDraft(r.type, r.durationMinutes, r.notes, r.startAtIso)
-                                                }
-                                            }
-                                        ) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Remove trigger")
-                                        }
-                                    }
+            // Manage card (own card)
+            BaseCard {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Triggers", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_TRIGGERS) })
+                }
+            }
 
-                                    // Time row: plain clickable "Edit"
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 6.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            "Time: ${formatIsoDdMmHm(t.startAtIso)}",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Text(
-                                            "Edit",
-                                            color = MaterialTheme.colorScheme.primary,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier.clickable {
-                                                timeEditIndex = actualIndex
-                                                showEditTime = true
-                                            }
-                                        )
-                                    }
-
-                                    if (!t.note.isNullOrBlank()) {
-                                        Spacer(Modifier.height(4.dp))
-                                        Text("Notes: ${t.note}", style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                }
+            // ── Single triggers card: Frequent → divider → categories with dividers ──
+            BaseCard {
+                // Frequent section
+                if (frequentLabels.isNotEmpty()) {
+                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        pool.filter { it.label in frequentLabels }.forEach { trig ->
+                            TriggerButton(trig.label, trig.label in selectedLabels) {
+                                onTriggerTap(trig.label)
                             }
                         }
                     }
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                 }
-            }
 
-            // Frequent chips → open time-add dialog
-            if (frequent.isNotEmpty()) {
-                item {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        frequent.forEach { pref ->
-                            val label = pref.trigger?.label ?: return@forEach
-                            AssistChip(
-                                onClick = { openAdd(label) },
-                                label = { Text(label) }
-                            )
+                // Category sections with dividers
+                val categoryEntries = grouped.entries.toList()
+                categoryEntries.forEachIndexed { catIndex, (category, items) ->
+                    val nonFreqItems = items.filter { it.label !in frequentLabels }
+                    if (nonFreqItems.isNotEmpty()) {
+                        Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            nonFreqItems.forEach { trig ->
+                                TriggerButton(trig.label, trig.label in selectedLabels) {
+                                    onTriggerTap(trig.label)
+                                }
+                            }
+                        }
+                        val hasMore = categoryEntries.drop(catIndex + 1).any { (_, its) -> its.any { it.label !in frequentLabels } }
+                        if (hasMore) {
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                         }
                     }
                 }
-            }
 
-            // All triggers chips → open time-add dialog
-            if (remaining.isNotEmpty()) {
-                item { Text("All Triggers", style = MaterialTheme.typography.titleMedium) }
-                item {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        remaining.forEach { trig ->
-                            AssistChip(
-                                onClick = { openAdd(trig.label) },
-                                label = { Text(trig.label) }
-                            )
-                        }
-                    }
+                if (pool.isEmpty()) {
+                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
-            item { Spacer(Modifier.height(80.dp)) }
+            // Navigation
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                OutlinedButton(
+                    onClick = { navController.popBackStack() },
+                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                ) { Text("Back") }
+                Button(
+                    onClick = { navController.navigate(Routes.MEDICINES) },
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
+                ) { Text("Next") }
+            }
+
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
 
-/** Format ISO string to "dd/MM HH:mm". Falls back to "Not set". */
-private fun formatIsoDdMmHm(iso: String?): String {
-    if (iso.isNullOrBlank()) return "Not set"
-    return try {
-        val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
-        val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
-        ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
-    } catch (_: Exception) {
-        "Not set"
-    }
-}
+/* ────────────────────────────────────────────────
+ *  Time dialog — Skip (use migraine start) or pick
+ * ──────────────────────────────────────────────── */
 
 @Composable
-private fun TimeAddDialog(
+private fun TriggerTimeDialog(
+    title: String,
     initialIso: String?,
     onDismiss: () -> Unit,
+    onSkip: () -> Unit,
     onConfirm: (String?) -> Unit
 ) {
     var pickedIso by remember { mutableStateOf(initialIso) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text("Confirm") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        title = { Text("Add trigger") },
+        containerColor = Color(0xFF1E0A2E),
+        titleContentColor = Color.White,
+        textContentColor = AppTheme.BodyTextColor,
+        title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Time: ${formatIsoDdMmHm(pickedIso)}")
+                Text(
+                    "When did this start?",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    "Time: ${formatTriggerTime(pickedIso)}",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 AppDateTimePicker(
                     label = "Select time",
                     onDateTimeSelected = { iso -> pickedIso = iso }
                 )
             }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(pickedIso) }) {
+                Text("Set time", color = AppTheme.AccentPurple)
+            }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                }
+                TextButton(onClick = onSkip) {
+                    Text("Skip", color = Color(0xFFFFB74D))
+                }
+            }
         }
     )
 }
 
+/* ────────────────────────────────────────────────
+ *  Trigger circle button
+ * ──────────────────────────────────────────────── */
+
 @Composable
-private fun TimeOnlyDialog(
-    initialIso: String?,
-    onDismiss: () -> Unit,
-    onConfirm: (String?) -> Unit
-) {
-    var pickedIso by remember { mutableStateOf(initialIso) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text("Confirm") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        title = { Text("Edit time") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Current: ${formatIsoDdMmHm(pickedIso)}")
-                AppDateTimePicker(
-                    label = "Select new time",
-                    onDateTimeSelected = { iso -> pickedIso = iso }
-                )
-            }
+private fun TriggerButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    val circleColor = if (isSelected) Color(0xFFFFB74D).copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
+    val borderColor = if (isSelected) Color(0xFFFFB74D).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
+    val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
+    val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(72.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+    ) {
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(circleColor)
+                .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                label.take(2).uppercase(),
+                color = iconTint,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+            )
         }
-    )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            label,
+            color = textColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+/* ────────────────────────────────────────────────
+ *  Format helper
+ * ──────────────────────────────────────────────── */
+
+private fun formatTriggerTime(iso: String?): String {
+    if (iso.isNullOrBlank()) return "Not set"
+    return try {
+        val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
+        val ldt = odt?.toLocalDateTime()
+            ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
+            ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
+            ?: return "Not set"
+        ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
+    } catch (_: Exception) {
+        "Not set"
+    }
 }

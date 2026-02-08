@@ -76,6 +76,7 @@ data class MonitorCardConfig(
         const val METRIC_FOLATE = "folate"
         const val METRIC_BIOTIN = "biotin"
         const val METRIC_PANTOTHENIC_ACID = "pantothenic_acid"
+        const val METRIC_TYRAMINE_EXPOSURE = "tyramine_exposure"
         
         val DEFAULT_NUTRITION_METRICS = listOf(
             METRIC_CALORIES,
@@ -117,7 +118,8 @@ data class MonitorCardConfig(
             METRIC_VITAMIN_D,
             METRIC_VITAMIN_E,
             METRIC_VITAMIN_K,
-            METRIC_ZINC
+            METRIC_ZINC,
+            METRIC_TYRAMINE_EXPOSURE
         )
         
         val NUTRITION_METRIC_LABELS = mapOf(
@@ -154,7 +156,8 @@ data class MonitorCardConfig(
             METRIC_NIACIN to "Niacin (B3)",
             METRIC_FOLATE to "Folate (B9)",
             METRIC_BIOTIN to "Biotin (B7)",
-            METRIC_PANTOTHENIC_ACID to "Pantothenic (B5)"
+            METRIC_PANTOTHENIC_ACID to "Pantothenic (B5)",
+            METRIC_TYRAMINE_EXPOSURE to "Tyramine Exposure"
         )
         
         val NUTRITION_METRIC_UNITS = mapOf(
@@ -191,7 +194,8 @@ data class MonitorCardConfig(
             METRIC_NIACIN to "mg",
             METRIC_FOLATE to "mcg",
             METRIC_BIOTIN to "mcg",
-            METRIC_PANTOTHENIC_ACID to "mg"
+            METRIC_PANTOTHENIC_ACID to "mg",
+            METRIC_TYRAMINE_EXPOSURE to ""
         )
     }
     
@@ -265,4 +269,5 @@ object MonitorCardConfigStore {
         prefs.edit().putString(KEY_CONFIG, jsonStr).apply()
     }
 }
+
 

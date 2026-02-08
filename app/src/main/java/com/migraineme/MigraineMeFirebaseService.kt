@@ -16,7 +16,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
  * Supported message types:
  * - sync_location: Triggers location sync
  * - sync_screen_time: Triggers screen time sync
- * - sync_hourly: Triggers location, screen time, phone sleep, and Health Connect
+ * - sync_hourly: Triggers location, screen time, phone sleep, phone behavior, and Health Connect
  * - sync_health_connect: Triggers Health Connect data sync
  */
 class MigraineMeFirebaseService : FirebaseMessagingService() {
@@ -47,11 +47,12 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                 ScreenTimeSyncWorker.runOnce(applicationContext)
             }
             "sync_hourly" -> {
-                // Hourly sync - triggers location, screen time, phone sleep, AND Health Connect
+                // Hourly sync - triggers location, screen time, phone sleep, phone behavior, AND Health Connect
                 Log.d(TAG, "Triggering hourly sync from FCM")
                 LocationDailySyncWorker.runOnceNow(applicationContext)
                 ScreenTimeSyncWorker.runOnce(applicationContext)
                 PhoneSleepSyncWorker.runOnce(applicationContext)
+                PhoneBehaviorSyncWorker.runOnce(applicationContext)
                 triggerHealthConnectSync()
             }
             "sync_health_connect" -> {

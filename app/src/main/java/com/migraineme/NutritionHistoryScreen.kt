@@ -296,18 +296,36 @@ fun NutritionHistoryScreen(
                     Spacer(Modifier.height(4.dp))
 
                     MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
-                        val total = items.sumOf { it.metricValue(metric) ?: 0.0 }
-                        if (total > 0) {
-                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
-                            val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
-                            val formatted = if (total >= 10) "${total.toInt()}" else String.format("%.1f", total)
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                                Text("$formatted $unit", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        val total = if (metric == MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
+                            items.maxOfOrNull { it.metricValue(metric) ?: 0.0 } ?: 0.0
+                        } else {
+                            items.sumOf { it.metricValue(metric) ?: 0.0 }
+                        }
+                        val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                        val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                        val formatted = if (metric == MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
+                            when (total.toInt()) {
+                                3 -> "🔴 High"
+                                2 -> "🟡 Medium"
+                                1 -> "🟢 Low"
+                                else -> "⚪ None"
                             }
+                        } else if (total > 0) {
+                            if (total >= 10) "${total.toInt()}" else String.format("%.1f", total)
+                        } else "—"
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                if (formatted.startsWith("🔴") || formatted.startsWith("🟡") ||
+                                    formatted.startsWith("🟢") || formatted.startsWith("⚪") ||
+                                    formatted == "—") formatted
+                                else "$formatted $unit",
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
                     }
                 }
@@ -514,3 +532,5 @@ private fun HistorySummaryValue(value: String, label: String, color: Color = App
         Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
+
+

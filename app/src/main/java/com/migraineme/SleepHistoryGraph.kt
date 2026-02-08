@@ -92,11 +92,20 @@ fun SleepHistoryGraph(
     val daysWithData: List<SleepGraphDay> = historyData.filter { it.duration != null && it.duration > 0.0 }
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
-        Text(
-            text = "$days-Day Sleep History",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "$days-Day Sleep History",
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+            )
+            if (onClick != null) {
+                Text("View Full →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            }
+        }
 
         Spacer(Modifier.height(8.dp))
 
@@ -460,3 +469,4 @@ private suspend fun loadSleepGraphData(
         SleepGraphResult(emptyList(), emptyMap(), emptyMap())
     }
 }
+

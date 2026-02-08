@@ -28,6 +28,8 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -93,6 +95,8 @@ object Routes {
 
     const val MIGRAINE = "migraine"
     const val LOG_MIGRAINE = "log_migraine"  // Full migraine wizard
+    const val PAIN_LOCATION = "pain_location"  // Pain location picker (wizard page 2)
+    const val PRODROMES_LOG = "prodromes_log"  // Prodromes picker (wizard page 3)
     const val QUICK_LOG_TRIGGER = "quick_log_trigger"
     const val QUICK_LOG_MEDICINE = "quick_log_medicine"
     const val QUICK_LOG_RELIEF = "quick_log_relief"
@@ -104,6 +108,9 @@ object Routes {
     const val SLEEP_DATA_HISTORY = "sleep_data_history"
     const val ENV_DATA_HISTORY = "env_data_history"
     const val MONITOR_PHYSICAL = "monitor_physical"
+    const val PHYSICAL_CONFIG = "physical_config"
+    const val PHYSICAL_DATA_HISTORY = "physical_data_history"
+    const val FULL_GRAPH_PHYSICAL = "full_graph_physical"
     const val MONITOR_SLEEP = "monitor_sleep"
     const val SLEEP_CONFIG = "sleep_config"
     const val FULL_GRAPH = "full_graph"
@@ -111,6 +118,9 @@ object Routes {
     const val FULL_GRAPH_WEATHER = "full_graph_weather"
     const val FULL_GRAPH_NUTRITION = "full_graph_nutrition"
     const val MONITOR_MENTAL = "monitor_mental"
+    const val MENTAL_CONFIG = "mental_config"
+    const val MENTAL_DATA_HISTORY = "mental_data_history"
+    const val FULL_GRAPH_MENTAL = "full_graph_mental"
     const val MONITOR_ENVIRONMENT = "monitor_environment"
     
     const val TRIGGERS = "triggers"
@@ -120,6 +130,7 @@ object Routes {
     const val RELIEFS = "reliefs"
     const val ADJUST_RELIEFS = "adjust_reliefs"
     const val REVIEW = "review"
+    const val NOTES = "notes"
 
     const val LOGIN = "login"
     const val SIGNUP = "signup"
@@ -131,6 +142,19 @@ object Routes {
     const val EDIT_RELIEF = "edit_relief"
 
     const val ADJUST_MIGRAINES = "adjust_migraines"
+    const val MANAGE_SYMPTOMS = "manage_symptoms"
+    const val MANAGE_ITEMS = "manage_items"
+    const val MANAGE_TRIGGERS = "manage_triggers"
+    const val MANAGE_MEDICINES = "manage_medicines"
+    const val MANAGE_RELIEFS = "manage_reliefs"
+    const val MANAGE_PRODROMES = "manage_prodromes"
+    const val LOCATIONS = "locations"
+    const val ACTIVITIES = "activities"
+    const val MANAGE_LOCATIONS = "manage_locations"
+    const val MANAGE_ACTIVITIES = "manage_activities"
+    const val MISSED_ACTIVITIES = "missed_activities"
+    const val MANAGE_MISSED_ACTIVITIES = "manage_missed_activities"
+    const val TIMING = "timing"
 
     const val TESTING = "testing"
     const val TESTING_COMPLETE = "testing_complete"
@@ -238,6 +262,7 @@ fun AppRoot() {
     val medVm: MedicineViewModel = viewModel()
     val reliefVm: ReliefViewModel = viewModel()
     val migraineVm: MigraineViewModel = viewModel()
+    val symptomVm: SymptomViewModel = viewModel()
 
     val authState by authVm.state.collectAsState()
     val token = authState.accessToken
@@ -343,6 +368,7 @@ fun AppRoot() {
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
+        DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
         DrawerItem("Location Debug", Routes.LOCATION_DEBUG, Icons.Outlined.LocationOn),
         DrawerItem("Testing", Routes.TESTING, Icons.Outlined.BarChart),
         DrawerItem("Testing Complete", Routes.TESTING_COMPLETE, Icons.Outlined.Assessment),
@@ -385,6 +411,26 @@ fun AppRoot() {
             current == Routes.QUICK_LOG_TRIGGER ||
             current == Routes.QUICK_LOG_MEDICINE ||
             current == Routes.QUICK_LOG_RELIEF ||
+            current == Routes.LOG_MIGRAINE ||
+            current == Routes.PAIN_LOCATION ||
+            current == Routes.TRIGGERS ||
+            current == Routes.MEDICINES ||
+            current == Routes.RELIEFS ||
+            current == Routes.NOTES ||
+            current == Routes.REVIEW ||
+            current == Routes.TIMING ||
+            current == Routes.MANAGE_SYMPTOMS ||
+            current == Routes.MANAGE_ITEMS ||
+            current == Routes.MANAGE_TRIGGERS ||
+            current == Routes.MANAGE_MEDICINES ||
+            current == Routes.MANAGE_RELIEFS ||
+            current == Routes.MANAGE_PRODROMES ||
+            current == Routes.LOCATIONS ||
+            current == Routes.ACTIVITIES ||
+            current == Routes.MANAGE_LOCATIONS ||
+            current == Routes.MANAGE_ACTIVITIES ||
+            current == Routes.MISSED_ACTIVITIES ||
+            current == Routes.MANAGE_MISSED_ACTIVITIES ||
             current == Routes.MONITOR ||
             current == Routes.MONITOR_CONFIG ||
             current == Routes.MONITOR_NUTRITION ||
@@ -394,15 +440,32 @@ fun AppRoot() {
             current == Routes.SLEEP_DATA_HISTORY ||
             current == Routes.ENV_DATA_HISTORY ||
             current == Routes.MONITOR_PHYSICAL ||
+            current == Routes.PHYSICAL_CONFIG ||
+            current == Routes.PHYSICAL_DATA_HISTORY ||
+            current == Routes.FULL_GRAPH_PHYSICAL ||
             current == Routes.MONITOR_SLEEP ||
             current == Routes.SLEEP_CONFIG ||
             current == Routes.FULL_GRAPH_SLEEP ||
             current == Routes.FULL_GRAPH_WEATHER ||
             current == Routes.FULL_GRAPH_NUTRITION ||
             current == Routes.MONITOR_MENTAL ||
+            current == Routes.MENTAL_CONFIG ||
+            current == Routes.MENTAL_DATA_HISTORY ||
+            current == Routes.FULL_GRAPH_MENTAL ||
             current == Routes.MONITOR_ENVIRONMENT ||
             current == Routes.LOCATION_DEBUG ||
             current == Routes.THIRD_PARTY_CONNECTIONS
+
+        // Wizard fullscreen: hide top bar + bottom nav for immersive logging
+        val isWizardFullscreen = current in setOf(
+            Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAIN_LOCATION,
+            Routes.TRIGGERS, Routes.MEDICINES,
+            Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES,
+            Routes.NOTES, Routes.REVIEW,
+            Routes.MANAGE_ITEMS, Routes.MANAGE_SYMPTOMS,
+            Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
+            Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES
+        )
 
         // Insights background
         val insightsBgResId = remember {
@@ -437,8 +500,22 @@ fun AppRoot() {
             val isMigraine = current == Routes.MIGRAINE || 
                 current == Routes.QUICK_LOG_TRIGGER || 
                 current == Routes.QUICK_LOG_MEDICINE || 
-                current == Routes.QUICK_LOG_RELIEF
-            if (!isMigraine) return@LaunchedEffect
+                current == Routes.QUICK_LOG_RELIEF ||
+                current == Routes.LOG_MIGRAINE ||
+                current == Routes.PAIN_LOCATION ||
+                current == Routes.TRIGGERS ||
+                current == Routes.MEDICINES ||
+                current == Routes.RELIEFS ||
+                current == Routes.NOTES ||
+                current == Routes.REVIEW ||
+                current == Routes.TIMING ||
+                current == Routes.MANAGE_SYMPTOMS
+            val isManageItems = current == Routes.MANAGE_ITEMS ||
+                current == Routes.MANAGE_TRIGGERS ||
+                current == Routes.MANAGE_MEDICINES ||
+                current == Routes.MANAGE_RELIEFS ||
+                current == Routes.MANAGE_PRODROMES
+            if (!isMigraine && !isManageItems) return@LaunchedEffect
             if (migraineBgResId != 0) return@LaunchedEffect
             if (migraineBgBitmap != null) return@LaunchedEffect
 
@@ -469,12 +546,18 @@ fun AppRoot() {
                 current == Routes.SLEEP_DATA_HISTORY ||
                 current == Routes.ENV_DATA_HISTORY ||
                 current == Routes.MONITOR_PHYSICAL ||
+                current == Routes.PHYSICAL_CONFIG ||
+                current == Routes.PHYSICAL_DATA_HISTORY ||
+                current == Routes.FULL_GRAPH_PHYSICAL ||
                 current == Routes.MONITOR_SLEEP ||
                 current == Routes.SLEEP_CONFIG ||
                 current == Routes.FULL_GRAPH_SLEEP ||
                 current == Routes.FULL_GRAPH_WEATHER ||
                 current == Routes.FULL_GRAPH_NUTRITION ||
                 current == Routes.MONITOR_MENTAL ||
+                current == Routes.MENTAL_CONFIG ||
+                current == Routes.MENTAL_DATA_HISTORY ||
+                current == Routes.FULL_GRAPH_MENTAL ||
                 current == Routes.MONITOR_ENVIRONMENT ||
                 current == Routes.LOCATION_DEBUG ||
             current == Routes.THIRD_PARTY_CONNECTIONS
@@ -548,7 +631,8 @@ fun AppRoot() {
                     )
                 }
 
-                Routes.MIGRAINE, Routes.QUICK_LOG_TRIGGER, Routes.QUICK_LOG_MEDICINE, Routes.QUICK_LOG_RELIEF -> {
+                Routes.MIGRAINE, Routes.QUICK_LOG_TRIGGER, Routes.QUICK_LOG_MEDICINE, Routes.QUICK_LOG_RELIEF,
+                Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAIN_LOCATION, Routes.PRODROMES_LOG, Routes.TRIGGERS, Routes.MEDICINES, Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES, Routes.NOTES, Routes.REVIEW, Routes.MANAGE_SYMPTOMS, Routes.MANAGE_ITEMS, Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES, Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES -> {
                     when {
                         migraineBgResId != 0 -> {
                             Image(
@@ -612,7 +696,7 @@ fun AppRoot() {
                     }
                 }
 
-                Routes.MONITOR, Routes.MONITOR_CONFIG, Routes.MONITOR_NUTRITION, Routes.NUTRITION_CONFIG, Routes.NUTRITION_HISTORY, Routes.WEATHER_CONFIG, Routes.SLEEP_DATA_HISTORY, Routes.ENV_DATA_HISTORY, Routes.MONITOR_PHYSICAL, Routes.MONITOR_SLEEP, Routes.SLEEP_CONFIG, Routes.FULL_GRAPH_SLEEP, Routes.FULL_GRAPH_WEATHER, Routes.FULL_GRAPH_NUTRITION, Routes.MONITOR_MENTAL, Routes.MONITOR_ENVIRONMENT, Routes.LOCATION_DEBUG -> {
+                Routes.MONITOR, Routes.MONITOR_CONFIG, Routes.MONITOR_NUTRITION, Routes.NUTRITION_CONFIG, Routes.NUTRITION_HISTORY, Routes.WEATHER_CONFIG, Routes.SLEEP_DATA_HISTORY, Routes.ENV_DATA_HISTORY, Routes.MONITOR_PHYSICAL, Routes.PHYSICAL_CONFIG, Routes.PHYSICAL_DATA_HISTORY, Routes.FULL_GRAPH_PHYSICAL, Routes.MONITOR_SLEEP, Routes.SLEEP_CONFIG, Routes.FULL_GRAPH_SLEEP, Routes.FULL_GRAPH_WEATHER, Routes.FULL_GRAPH_NUTRITION, Routes.MONITOR_MENTAL, Routes.MENTAL_CONFIG, Routes.MENTAL_DATA_HISTORY, Routes.FULL_GRAPH_MENTAL, Routes.MONITOR_ENVIRONMENT, Routes.LOCATION_DEBUG -> {
                     when {
                         monitorBgResId != 0 -> {
                             Image(
@@ -719,6 +803,7 @@ fun AppRoot() {
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 containerColor = Color.Transparent,
                 topBar = {
+                    if (!isWizardFullscreen) {
                     CenterAlignedTopAppBar(
                         scrollBehavior = scrollBehavior,
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -738,6 +823,7 @@ fun AppRoot() {
                                     Routes.HOME -> "Home"
                                     Routes.MIGRAINE -> "Migraine"
                                     Routes.LOG_MIGRAINE -> "Log Migraine"
+                                    Routes.PAIN_LOCATION -> "Pain Location"
                                     Routes.QUICK_LOG_TRIGGER -> "Log Trigger"
                                     Routes.QUICK_LOG_MEDICINE -> "Log Medicine"
                                     Routes.QUICK_LOG_RELIEF -> "Log Relief"
@@ -766,6 +852,7 @@ fun AppRoot() {
                                     Routes.MEDICINES -> "Medicines"
                                     Routes.ADJUST_MEDICINES -> "Adjust Medicines"
                                     Routes.RELIEFS -> "Reliefs"
+                                    Routes.NOTES -> "Notes"
                                     Routes.ADJUST_RELIEFS -> "Adjust Reliefs"
                                     Routes.TRIGGERS -> "Triggers"
                                     Routes.ADJUST_TRIGGERS -> "Adjust Triggers"
@@ -775,6 +862,13 @@ fun AppRoot() {
                                     Routes.EDIT_MEDICINE -> "Edit Medicine"
                                     Routes.EDIT_RELIEF -> "Edit Relief"
                                     Routes.ADJUST_MIGRAINES -> "Adjust Migraines"
+                                    Routes.MANAGE_SYMPTOMS -> "Manage Symptoms"
+                                    Routes.MANAGE_ITEMS -> "Manage Items"
+                                    Routes.MANAGE_TRIGGERS -> "Manage Triggers"
+                                    Routes.MANAGE_MEDICINES -> "Manage Medicines"
+                                    Routes.MANAGE_RELIEFS -> "Manage Reliefs"
+                                    Routes.MANAGE_PRODROMES -> "Manage Prodromes"
+                                    Routes.TIMING -> "Timing"
                                     Routes.TESTING -> "Testing"
                                     Routes.TESTING_COMPLETE -> "Testing Complete"
                                     Routes.LOCATION_DEBUG -> "Location Debug"
@@ -799,9 +893,10 @@ fun AppRoot() {
                             }
                         }
                     )
+                    } // end !isWizardFullscreen
                 },
                 bottomBar = {
-                    if (current != Routes.LOGIN && current != Routes.SIGNUP) {
+                    if (current != Routes.LOGIN && current != Routes.SIGNUP && !isWizardFullscreen) {
                         BottomBar(nav, attentionCount)
                     }
                 }
@@ -824,12 +919,18 @@ fun AppRoot() {
                     composable(Routes.SLEEP_DATA_HISTORY) { SleepDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.ENV_DATA_HISTORY) { EnvironmentDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.MONITOR_PHYSICAL) { MonitorPhysicalScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.PHYSICAL_CONFIG) { PhysicalConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.PHYSICAL_DATA_HISTORY) { PhysicalDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.FULL_GRAPH_PHYSICAL) { FullScreenGraphScreen(graphType = "physical", onBack = { nav.popBackStack() }) }
                     composable(Routes.MONITOR_SLEEP) { MonitorSleepScreen(navController = nav, authVm = authVm) }
                     composable(Routes.SLEEP_CONFIG) { SleepConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.FULL_GRAPH_SLEEP) { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }) }
                     composable(Routes.FULL_GRAPH_WEATHER) { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }) }
                     composable(Routes.FULL_GRAPH_NUTRITION) { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
                     composable(Routes.MONITOR_MENTAL) { MonitorMentalScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.MENTAL_CONFIG) { MentalConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.MENTAL_DATA_HISTORY) { MentalDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.FULL_GRAPH_MENTAL) { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }) }
                     composable(Routes.MONITOR_ENVIRONMENT) { MonitorEnvironmentScreen(navController = nav, authVm = authVm) }
                     
                     composable(Routes.INSIGHTS) { InsightsScreen(navController = nav) }
@@ -851,7 +952,17 @@ fun AppRoot() {
                     composable(Routes.MIGRAINE) { MigraineHubScreen(navController = nav) }
                     
                     // Full migraine wizard flow
-                    composable(Routes.LOG_MIGRAINE) { LogHomeScreen(navController = nav, authVm = authVm, vm = logVm) }
+                    val wizardClose: () -> Unit = {
+                        logVm.clearDraft()
+                        nav.popBackStack(Routes.MIGRAINE, inclusive = false)
+                    }
+                    composable(Routes.LOG_MIGRAINE) { LogHomeScreen(navController = nav, authVm = authVm, vm = logVm, symptomVm = symptomVm, onClose = wizardClose) }
+                    composable(Routes.TIMING) { TimingScreen(navController = nav, vm = logVm, onClose = wizardClose) }
+                    composable(Routes.PAIN_LOCATION) { PainLocationScreen(navController = nav, vm = logVm, onClose = wizardClose) }
+                    composable(Routes.PRODROMES_LOG) {
+                        val prodromeVm: ProdromeViewModel = viewModel()
+                        ProdromeLogScreen(navController = nav, vm = prodromeVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
+                    }
 
                     // Quick log screens (standalone)
                     composable(Routes.QUICK_LOG_TRIGGER) { QuickLogTriggerScreen(navController = nav, authVm = authVm) }
@@ -859,27 +970,41 @@ fun AppRoot() {
                     composable(Routes.QUICK_LOG_RELIEF) { QuickLogReliefScreen(navController = nav, authVm = authVm) }
 
                     composable(Routes.TRIGGERS) {
-                        TriggersScreen(navController = nav, vm = triggerVm, authVm = authVm, logVm = logVm)
+                        TriggersScreen(navController = nav, vm = triggerVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
                     }
                     composable(Routes.ADJUST_TRIGGERS) {
                         AdjustTriggersScreen(navController = nav, vm = triggerVm, authVm = authVm)
                     }
 
                     composable(Routes.MEDICINES) {
-                        MedicinesScreen(navController = nav, vm = medVm, authVm = authVm, logVm = logVm)
+                        MedicinesScreen(navController = nav, vm = medVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
                     }
                     composable(Routes.ADJUST_MEDICINES) {
                         AdjustMedicinesScreen(navController = nav, vm = medVm, authVm = authVm)
                     }
 
                     composable(Routes.RELIEFS) {
-                        ReliefsScreen(navController = nav, vm = reliefVm, authVm = authVm, logVm = logVm)
+                        ReliefsScreen(navController = nav, vm = reliefVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
                     }
                     composable(Routes.ADJUST_RELIEFS) {
                         AdjustReliefsScreen(navController = nav, vm = reliefVm, authVm = authVm)
                     }
 
-                    composable(Routes.REVIEW) { ReviewLogScreen(navController = nav, authVm = authVm, vm = logVm) }
+                    composable(Routes.LOCATIONS) {
+                        val locationVm: LocationViewModel = viewModel()
+                        LocationsScreen(navController = nav, vm = locationVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
+                    }
+                    composable(Routes.ACTIVITIES) {
+                        val activityVm: ActivityViewModel = viewModel()
+                        ActivitiesScreen(navController = nav, vm = activityVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
+                    }
+                    composable(Routes.MISSED_ACTIVITIES) {
+                        val missedVm: MissedActivityViewModel = viewModel()
+                        MissedActivitiesScreen(navController = nav, vm = missedVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
+                    }
+
+                    composable(Routes.NOTES) { NotesScreen(navController = nav, vm = logVm, onClose = wizardClose) }
+                    composable(Routes.REVIEW) { ReviewLogScreen(navController = nav, authVm = authVm, vm = logVm, onClose = wizardClose) }
 
                     composable("${Routes.EDIT_MIGRAINE}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
@@ -900,6 +1025,417 @@ fun AppRoot() {
 
                     composable(Routes.ADJUST_MIGRAINES) {
                         AdjustMigrainesScreen(navController = nav, vm = migraineVm, authVm = authVm)
+                    }
+                    composable(Routes.MANAGE_SYMPTOMS) {
+                        ManageSymptomsScreen(navController = nav, vm = symptomVm, authVm = authVm)
+                    }
+                    composable(Routes.MANAGE_ITEMS) {
+                        ManageItemsScreen(navController = nav)
+                    }
+                    composable(Routes.MANAGE_TRIGGERS) {
+                        val triggerVm: TriggerViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by triggerVm.pool.collectAsState()
+                        val frequent by triggerVm.frequent.collectAsState()
+                        val ctx = androidx.compose.ui.platform.LocalContext.current.applicationContext
+                        val edge = remember { EdgeFunctionsService() }
+                        val scope = rememberCoroutineScope()
+
+                        // Trigger automation settings: triggerType -> enabled
+                        var triggerSettings by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+
+                        // Map of pool label -> trigger_type key for automatable triggers
+                        // Add entries here when you add new automations
+                        val automatableMap = remember { mapOf(
+                            "Low recovery" to "recovery_low",
+                            "Unusually low recovery" to "recovery_unusually_low"
+                        ) }
+
+                        LaunchedEffect(authState.accessToken) {
+                            authState.accessToken?.let { triggerVm.loadAll(it) }
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                runCatching { edge.getTriggerSettings(ctx) }
+                                    .onSuccess { list ->
+                                        triggerSettings = list.associate { it.triggerType to it.enabled }
+                                    }
+                            }
+                        }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.triggerId }.toSet() }
+                        val items = remember(pool, frequentIds, triggerSettings) {
+                            pool.map { row ->
+                                val autoKey = automatableMap[row.label]
+                                PoolItem(
+                                    id = row.id,
+                                    label = row.label,
+                                    category = row.category,
+                                    isFavorite = row.id in frequentIds,
+                                    prediction = PredictionValue.fromString(row.predictionValue),
+                                    isAutomatable = autoKey != null,
+                                    isAutomated = autoKey?.let { triggerSettings[it] } ?: false
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Triggers",
+                                subtitle = "Add, star, or remove triggers",
+                                iconColor = Color(0xFFFFB74D),
+                                drawHeroIcon = { HubIcons.run { drawTriggerBolt(it) } },
+                                items = items,
+                                showPrediction = true,
+                                categories = listOf("Body", "Cognitive", "Diet", "Environment", "Menstrual Cycle", "Physical", "Sleep"),
+                                onAdd = { label, category, prediction ->
+                                    authState.accessToken?.let { triggerVm.addNewToPool(it, label, category, prediction.name) }
+                                },
+                                onDelete = { id -> authState.accessToken?.let { triggerVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) triggerVm.addToFrequent(token, id)
+                                    else {
+                                        val pref = frequent.find { it.triggerId == id }
+                                        pref?.let { triggerVm.removeFromFrequent(token, it.id) }
+                                    }
+                                },
+                                onSetPrediction = { id, pv ->
+                                    authState.accessToken?.let { triggerVm.setPrediction(it, id, pv.name) }
+                                },
+                                onToggleAutomation = { id, enabled ->
+                                    val label = pool.find { it.id == id }?.label ?: return@PoolConfig
+                                    val autoKey = automatableMap[label] ?: return@PoolConfig
+                                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        val ok = edge.upsertTriggerSetting(ctx, autoKey, enabled)
+                                        if (ok) {
+                                            runCatching { edge.getTriggerSettings(ctx) }
+                                                .onSuccess { list ->
+                                                    triggerSettings = list.associate { it.triggerType to it.enabled }
+                                                }
+                                        }
+                                    }
+                                },
+                                onSetCategory = { id, category ->
+                                    authState.accessToken?.let { triggerVm.setCategory(it, id, category) }
+                                }
+                            )
+                        )
+                    }
+                    composable(Routes.MANAGE_MEDICINES) {
+                        val medicineVm: MedicineViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by medicineVm.pool.collectAsState()
+                        val frequent by medicineVm.frequent.collectAsState()
+
+                        LaunchedEffect(authState.accessToken) {
+                            authState.accessToken?.let { medicineVm.loadAll(it) }
+                        }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.medicineId }.toSet() }
+                        val items = remember(pool, frequentIds) {
+                            pool.map { row ->
+                                PoolItem(
+                                    id = row.id,
+                                    label = row.label,
+                                    category = row.category,
+                                    isFavorite = row.id in frequentIds
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Medicines",
+                                subtitle = "Add, star, or remove medicines",
+                                iconColor = Color(0xFF4FC3F7),
+                                drawHeroIcon = { HubIcons.run { drawMedicinePill(it) } },
+                                items = items,
+                                categories = listOf("Analgesic", "Anti-Nausea", "CGRP", "Preventive", "Supplement", "Triptan", "Other"),
+                                onAdd = { label, category, _ ->
+                                    authState.accessToken?.let { medicineVm.addNewToPool(it, label, category) }
+                                },
+                                onDelete = { id -> authState.accessToken?.let { medicineVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) medicineVm.addToFrequent(token, id)
+                                    else {
+                                        val pref = frequent.find { it.medicineId == id }
+                                        pref?.let { medicineVm.removeFromFrequent(token, it.id) }
+                                    }
+                                },
+                                onSetCategory = { id, category ->
+                                    authState.accessToken?.let { medicineVm.setCategory(it, id, category) }
+                                }
+                            )
+                        )
+                    }
+                    composable(Routes.MANAGE_RELIEFS) {
+                        val reliefVm: ReliefViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by reliefVm.pool.collectAsState()
+                        val frequent by reliefVm.frequent.collectAsState()
+
+                        LaunchedEffect(authState.accessToken) {
+                            authState.accessToken?.let { reliefVm.loadAll(it) }
+                        }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.reliefId }.toSet() }
+                        val items = remember(pool, frequentIds) {
+                            pool.map { row ->
+                                PoolItem(
+                                    id = row.id,
+                                    label = row.label,
+                                    category = row.category,
+                                    isFavorite = row.id in frequentIds,
+                                    isAutomatable = row.isAutomatable,
+                                    isAutomated = row.isAutomated
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Reliefs",
+                                subtitle = "Add, star, or remove reliefs",
+                                iconColor = Color(0xFF81C784),
+                                drawHeroIcon = { HubIcons.run { drawReliefLeaf(it) } },
+                                items = items,
+                                categories = listOf("Breathing", "Cold/Heat", "Darkness", "Hydration", "Massage", "Meditation", "Movement", "Rest", "Supplement", "Other"),
+                                onAdd = { label, category, _ ->
+                                    authState.accessToken?.let { reliefVm.addNewToPool(it, label, category) }
+                                },
+                                onDelete = { id -> authState.accessToken?.let { reliefVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) reliefVm.addToFrequent(token, id)
+                                    else {
+                                        val pref = frequent.find { it.reliefId == id }
+                                        pref?.let { reliefVm.removeFromFrequent(token, it.id) }
+                                    }
+                                },
+                                onSetCategory = { id, category ->
+                                    authState.accessToken?.let { reliefVm.setCategory(it, id, category) }
+                                },
+                                onToggleAutomation = { id, enabled ->
+                                    authState.accessToken?.let { reliefVm.setAutomation(it, id, enabled) }
+                                }
+                            )
+                        )
+                    }
+
+                    composable(Routes.MANAGE_PRODROMES) {
+                        val prodromeVm: ProdromeViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by prodromeVm.pool.collectAsState()
+                        val frequent by prodromeVm.frequent.collectAsState()
+                        val ctx = androidx.compose.ui.platform.LocalContext.current.applicationContext
+                        val edge = remember { EdgeFunctionsService() }
+                        val scope = rememberCoroutineScope()
+
+                        // Prodrome automation settings: prodromeType -> enabled
+                        var prodromeSettings by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+
+                        // Map of pool label -> prodrome_type key for automatable prodromes
+                        val automatableMap = remember { mapOf(
+                            "Fatigue / Yawning" to "fatigue_yawning",
+                            "Neck stiffness" to "neck_stiffness",
+                            "Mood changes" to "mood_changes"
+                        ) }
+
+                        LaunchedEffect(authState.accessToken) {
+                            authState.accessToken?.let { prodromeVm.loadAll(it) }
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                runCatching { edge.getProdromeSettings(ctx) }
+                                    .onSuccess { list ->
+                                        prodromeSettings = list.associate { it.prodromeType to it.enabled }
+                                    }
+                            }
+                        }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.prodromeId }.toSet() }
+                        val items = remember(pool, frequentIds, prodromeSettings) {
+                            pool.map { row ->
+                                val autoKey = automatableMap[row.label]
+                                PoolItem(
+                                    id = row.id,
+                                    label = row.label,
+                                    category = row.category,
+                                    isFavorite = row.id in frequentIds,
+                                    prediction = PredictionValue.fromString(row.predictionValue),
+                                    isAutomatable = autoKey != null,
+                                    isAutomated = autoKey?.let { prodromeSettings[it] } ?: false
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Prodromes",
+                                subtitle = "Early warning signs before a migraine",
+                                iconColor = Color(0xFFCE93D8),
+                                drawHeroIcon = { HubIcons.run { drawProdromeEye(it) } },
+                                items = items,
+                                showPrediction = true,
+                                categories = listOf("Cognitive", "Digestive", "Mood", "Physical", "Sensory", "Sleep", "Speech", "Visual"),
+                                onAdd = { label, category, prediction ->
+                                    authState.accessToken?.let { prodromeVm.addNewToPool(it, label, category, prediction.name) }
+                                },
+                                onDelete = { id -> authState.accessToken?.let { prodromeVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) prodromeVm.addToFrequent(token, id)
+                                    else {
+                                        val pref = frequent.find { it.prodromeId == id }
+                                        pref?.let { prodromeVm.removeFromFrequent(token, it.id) }
+                                    }
+                                },
+                                onSetPrediction = { id, pv ->
+                                    authState.accessToken?.let { prodromeVm.setPrediction(it, id, pv.name) }
+                                },
+                                onSetCategory = { id, category ->
+                                    authState.accessToken?.let { prodromeVm.setCategory(it, id, category) }
+                                },
+                                onToggleAutomation = { id, enabled ->
+                                    val label = pool.find { it.id == id }?.label ?: return@PoolConfig
+                                    val autoKey = automatableMap[label] ?: return@PoolConfig
+                                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        val ok = edge.upsertProdromeSetting(ctx, autoKey, enabled)
+                                        if (ok) {
+                                            runCatching { edge.getProdromeSettings(ctx) }
+                                                .onSuccess { list ->
+                                                    prodromeSettings = list.associate { it.prodromeType to it.enabled }
+                                                }
+                                        }
+                                    }
+                                }
+                            )
+                        )
+                    }
+
+                    composable(Routes.MANAGE_LOCATIONS) {
+                        val locationVm: LocationViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by locationVm.pool.collectAsState()
+                        val frequent by locationVm.frequent.collectAsState()
+
+                        LaunchedEffect(authState.accessToken) { authState.accessToken?.let { locationVm.loadAll(it) } }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.locationId }.toSet() }
+                        val items = remember(pool, frequentIds) {
+                            pool.map { row ->
+                                PoolItem(
+                                    id = row.id, label = row.label, category = row.category,
+                                    isFavorite = row.id in frequentIds,
+                                    isAutomatable = row.isAutomatable, isAutomated = row.isAutomated
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Locations",
+                                subtitle = "Where were you?",
+                                iconColor = Color(0xFF64B5F6),
+                                drawHeroIcon = { HubIcons.run { drawLocationPin(it) } },
+                                items = items,
+                                categories = listOf("Exercise", "Home", "Medical", "Outdoors", "Social", "Transport", "Work", "Other"),
+                                onAdd = { label, category, _ -> authState.accessToken?.let { locationVm.addNewToPool(it, label, category) } },
+                                onDelete = { id -> authState.accessToken?.let { locationVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) locationVm.addToFrequent(token, id)
+                                    else frequent.find { it.locationId == id }?.let { locationVm.removeFromFrequent(token, it.id) }
+                                },
+                                onSetCategory = { id, cat -> authState.accessToken?.let { locationVm.setCategory(it, id, cat) } },
+                                onToggleAutomation = { id, en -> authState.accessToken?.let { locationVm.setAutomation(it, id, en) } }
+                            )
+                        )
+                    }
+
+                    composable(Routes.MANAGE_ACTIVITIES) {
+                        val activityVm: ActivityViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by activityVm.pool.collectAsState()
+                        val frequent by activityVm.frequent.collectAsState()
+
+                        LaunchedEffect(authState.accessToken) { authState.accessToken?.let { activityVm.loadAll(it) } }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.activityId }.toSet() }
+                        val items = remember(pool, frequentIds) {
+                            pool.map { row ->
+                                PoolItem(
+                                    id = row.id, label = row.label, category = row.category,
+                                    isFavorite = row.id in frequentIds,
+                                    isAutomatable = row.isAutomatable, isAutomated = row.isAutomated
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Activities",
+                                subtitle = "What were you doing?",
+                                iconColor = Color(0xFFFF8A65),
+                                drawHeroIcon = { HubIcons.run { drawActivityPulse(it) } },
+                                items = items,
+                                categories = listOf("Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
+                                onAdd = { label, category, _ -> authState.accessToken?.let { activityVm.addNewToPool(it, label, category) } },
+                                onDelete = { id -> authState.accessToken?.let { activityVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) activityVm.addToFrequent(token, id)
+                                    else frequent.find { it.activityId == id }?.let { activityVm.removeFromFrequent(token, it.id) }
+                                },
+                                onSetCategory = { id, cat -> authState.accessToken?.let { activityVm.setCategory(it, id, cat) } },
+                                onToggleAutomation = { id, en -> authState.accessToken?.let { activityVm.setAutomation(it, id, en) } }
+                            )
+                        )
+                    }
+
+                    composable(Routes.MANAGE_MISSED_ACTIVITIES) {
+                        val missedVm: MissedActivityViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by missedVm.pool.collectAsState()
+                        val frequent by missedVm.frequent.collectAsState()
+
+                        LaunchedEffect(authState.accessToken) { authState.accessToken?.let { missedVm.loadAll(it) } }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.missedActivityId }.toSet() }
+                        val items = remember(pool, frequentIds) {
+                            pool.map { row ->
+                                PoolItem(
+                                    id = row.id, label = row.label, category = row.category,
+                                    isFavorite = row.id in frequentIds,
+                                    isAutomatable = row.isAutomatable, isAutomated = row.isAutomated
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Missed Activities",
+                                subtitle = "What did you miss?",
+                                iconColor = Color(0xFFEF9A9A),
+                                drawHeroIcon = { HubIcons.run { drawMissedActivity(it) } },
+                                items = items,
+                                categories = listOf("Care", "Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
+                                onAdd = { label, category, _ -> authState.accessToken?.let { missedVm.addNewToPool(it, label, category) } },
+                                onDelete = { id -> authState.accessToken?.let { missedVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) missedVm.addToFrequent(token, id)
+                                    else frequent.find { it.missedActivityId == id }?.let { missedVm.removeFromFrequent(token, it.id) }
+                                },
+                                onSetCategory = { id, cat -> authState.accessToken?.let { missedVm.setCategory(it, id, cat) } },
+                                onToggleAutomation = { id, en -> authState.accessToken?.let { missedVm.setAutomation(it, id, en) } }
+                            )
+                        )
                     }
 
                     composable(Routes.LOGIN) {

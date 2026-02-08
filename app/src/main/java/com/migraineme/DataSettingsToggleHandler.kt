@@ -26,6 +26,17 @@ object DataSettingsToggleHandler {
     )
 
     /**
+     * Phone behavior metrics collected by PhoneBehaviorSyncWorker.
+     * These are triggered via FCM sync_hourly — no dedicated worker scheduling needed.
+     */
+    private val phoneBehaviorMetrics = setOf(
+        "phone_brightness_daily",
+        "phone_volume_daily",
+        "phone_dark_mode_daily",
+        "phone_unlock_daily"
+    )
+
+    /**
      * Result of a toggle operation
      */
     sealed class ToggleResult {
@@ -82,6 +93,7 @@ object DataSettingsToggleHandler {
                 metric == "ambient_noise_samples" -> return@withContext toggleAmbientNoise(appContext, edge, enabled)
                 metric == "screen_time_daily" -> return@withContext toggleScreenTime(appContext, edge, enabled)
                 metric == "screen_time_late_night" -> return@withContext toggleScreenTimeLateNight(appContext, edge, enabled)
+                metric in phoneBehaviorMetrics -> return@withContext togglePhoneBehavior(appContext, edge, metric, enabled)
                 metric in phoneSleepMetrics -> return@withContext togglePhoneSleepMetric(appContext, edge, metric, enabled, preferredSource)
                 else -> {
                     // Standard metric toggle
@@ -126,6 +138,12 @@ object DataSettingsToggleHandler {
                 } else null
             }
             metric in phoneSleepMetrics && preferredSource == "phone" -> {
+                if (!DataSettingsPermissionHelper.hasScreenTimePermission(context)) {
+                    ToggleResult.NeedsPermission(PermissionType.SCREEN_TIME)
+                } else null
+            }
+            // Phone unlock metric needs PACKAGE_USAGE_STATS (same as screen time)
+            metric == "phone_unlock_daily" -> {
                 if (!DataSettingsPermissionHelper.hasScreenTimePermission(context)) {
                     ToggleResult.NeedsPermission(PermissionType.SCREEN_TIME)
                 } else null
@@ -342,6 +360,34 @@ object DataSettingsToggleHandler {
         } catch (e: Exception) {
             Log.e(TAG, "Late night screen time toggle failed: ${e.message}", e)
             ToggleResult.Error(e.message ?: "Failed to toggle late night screen time")
+        }
+    }
+
+    /**
+     * Toggle a phone behavior metric (brightness, volume, dark mode, unlocks).
+     * These are collected by PhoneBehaviorSyncWorker which runs on FCM sync_hourly.
+     * No dedicated worker scheduling needed — the worker checks metric_settings each run.
+     */
+    private suspend fun togglePhoneBehavior(
+        context: Context,
+        edge: EdgeFunctionsService,
+        metric: String,
+        enabled: Boolean
+    ): ToggleResult {
+        return try {
+            edge.upsertMetricSetting(
+                context = context,
+                metric = metric,
+                enabled = enabled,
+                preferredSource = null
+            )
+
+            MetricToggleHelper.toggle(context, metric, enabled)
+
+            ToggleResult.Success
+        } catch (e: Exception) {
+            Log.e(TAG, "Phone behavior toggle failed for $metric: ${e.message}", e)
+            ToggleResult.Error(e.message ?: "Failed to toggle $metric")
         }
     }
 

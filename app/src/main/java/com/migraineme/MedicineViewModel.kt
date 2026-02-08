@@ -37,10 +37,10 @@ class MedicineViewModel : ViewModel() {
         }
     }
 
-    fun addNewToPool(accessToken: String, label: String) {
+    fun addNewToPool(accessToken: String, label: String, category: String? = null) {
         viewModelScope.launch {
             try {
-                db.upsertMedicineToPool(accessToken, label.trim())
+                db.upsertMedicineToPool(accessToken, label.trim(), category)
                 loadAll(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -88,6 +88,17 @@ class MedicineViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 db.deleteMedicineFromPool(accessToken, medicineId)
+                loadAll(accessToken)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun setCategory(accessToken: String, medicineId: String, category: String?) {
+        viewModelScope.launch {
+            try {
+                db.setMedicineCategory(accessToken, medicineId, category)
                 loadAll(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()

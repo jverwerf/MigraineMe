@@ -77,6 +77,7 @@ class LocationDailySyncWorker(
 
             val lat = loc.latitude
             val lon = loc.longitude
+            val altitudeM = if (loc.hasAltitude()) loc.altitude else null
             val deviceTimezone = ZoneId.systemDefault().id
             val now = ZonedDateTime.now()
             
@@ -89,42 +90,44 @@ class LocationDailySyncWorker(
                 timestamp = now,
                 latitude = lat,
                 longitude = lon,
+                altitudeM = altitudeM,
                 timezone = deviceTimezone
             )
             
             if (hourlySuccess) {
-                Log.d(LOG_TAG, "✅ Inserted hourly location for ${now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)}")
+                Log.d(LOG_TAG, "✅ Inserted hourly location for ${now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)} alt=${altitudeM?.let { String.format("%.0fm", it) } ?: "N/A"}")
             } else {
                 Log.w(LOG_TAG, "⚠️ Failed to insert hourly location")
             }
 
-            // 2. Also upsert into user_location_daily (for weather sync)
+            // 2. Upsert into user_location_daily with altitude aggregation
             val today = LocalDate.now(ZoneId.systemDefault())
-            val latestStr = svc.latestUserLocationDate(access, "device")
-            val latest = latestStr?.let { LocalDate.parse(it) }
 
-            // Only insert daily if not already done today
-            if (latest == null || latest.isBefore(today)) {
-                val dailySuccess = runCatching {
-                    svc.upsertUserLocationDaily(
-                        accessToken = access,
-                        date = today.toString(),
-                        latitude = lat,
-                        longitude = lon,
-                        source = "device",
-                        timezone = deviceTimezone
-                    )
-                }.onFailure { e ->
-                    Log.e(LOG_TAG, "Daily upsert error: ${e.message}")
-                }.isSuccess
-                
-                if (dailySuccess) {
-                    Log.d(LOG_TAG, "✅ Upserted daily location for $today")
-                } else {
-                    Log.w(LOG_TAG, "⚠️ Failed to upsert daily location")
-                }
+            // Fetch all hourly altitude readings for today to compute max/min/change
+            val altAgg = fetchTodayAltitudeAgg(svc, access, today.toString())
+
+            val dailySuccess = runCatching {
+                svc.upsertUserLocationDaily(
+                    accessToken = access,
+                    date = today.toString(),
+                    latitude = lat,
+                    longitude = lon,
+                    source = "device",
+                    timezone = deviceTimezone,
+                    altitudeM = altitudeM,
+                    altitudeMaxM = altAgg?.max,
+                    altitudeMinM = altAgg?.min,
+                    altitudeChangeM = altAgg?.let { it.max - it.min }
+                )
+            }.onFailure { e ->
+                Log.e(LOG_TAG, "Daily upsert error: ${e.message}")
+            }.isSuccess
+            
+            if (dailySuccess) {
+                val changeStr = altAgg?.let { "max=${String.format("%.0f", it.max)}m min=${String.format("%.0f", it.min)}m Δ${String.format("%.0f", it.max - it.min)}m" } ?: "no alt data"
+                Log.d(LOG_TAG, "✅ Upserted daily location for $today ($changeStr)")
             } else {
-                Log.d(LOG_TAG, "Daily location already exists for $today - skipping daily upsert")
+                Log.w(LOG_TAG, "⚠️ Failed to upsert daily location")
             }
 
             Result.success()
@@ -141,6 +144,7 @@ class LocationDailySyncWorker(
         timestamp: ZonedDateTime,
         latitude: Double,
         longitude: Double,
+        altitudeM: Double?,
         timezone: String
     ): Boolean {
         return try {
@@ -149,12 +153,34 @@ class LocationDailySyncWorker(
                 timestamp = timestamp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 latitude = latitude,
                 longitude = longitude,
-                timezone = timezone
+                timezone = timezone,
+                altitudeM = altitudeM
             )
             true
         } catch (e: Exception) {
             Log.e(LOG_TAG, "Failed to insert hourly location", e)
             false
+        }
+    }
+
+    private data class AltitudeAgg(val max: Double, val min: Double)
+
+    /**
+     * Fetch all hourly altitude readings for a given date and compute max/min.
+     * Uses the hourly table to get running aggregation.
+     */
+    private suspend fun fetchTodayAltitudeAgg(
+        svc: SupabasePersonalService,
+        accessToken: String,
+        date: String
+    ): AltitudeAgg? {
+        return try {
+            val altitudes = svc.fetchHourlyAltitudesForDate(accessToken, date)
+            if (altitudes.isEmpty()) return null
+            AltitudeAgg(max = altitudes.max(), min = altitudes.min())
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "Failed to fetch altitude agg: ${e.message}")
+            null
         }
     }
 
@@ -352,3 +378,4 @@ class LocationDailySyncWorker(
         }
     }
 }
+

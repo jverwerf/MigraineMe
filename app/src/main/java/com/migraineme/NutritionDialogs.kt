@@ -47,6 +47,8 @@ fun AddFoodDialog(
     onServingsChange: (Double) -> Unit,
     isAdding: Boolean,
     monitorMetrics: List<String>,
+    tyramineRisk: String? = null,
+    isClassifyingTyramine: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -159,13 +161,40 @@ fun AddFoodDialog(
                         MonitorCardConfig.METRIC_FIBER to 1079,
                         MonitorCardConfig.METRIC_SUGAR to 2000,
                         MonitorCardConfig.METRIC_SODIUM to 1093,
-                        MonitorCardConfig.METRIC_CAFFEINE to 1057
+                        MonitorCardConfig.METRIC_CAFFEINE to 1057,
+                        MonitorCardConfig.METRIC_SATURATED_FAT to 1258,
+                        MonitorCardConfig.METRIC_UNSATURATED_FAT to 1292,
+                        MonitorCardConfig.METRIC_TRANS_FAT to 1257,
+                        MonitorCardConfig.METRIC_CHOLESTEROL to 1253,
+                        MonitorCardConfig.METRIC_POTASSIUM to 1092,
+                        MonitorCardConfig.METRIC_CALCIUM to 1087,
+                        MonitorCardConfig.METRIC_IRON to 1089,
+                        MonitorCardConfig.METRIC_MAGNESIUM to 1090,
+                        MonitorCardConfig.METRIC_ZINC to 1095,
+                        MonitorCardConfig.METRIC_SELENIUM to 1103,
+                        MonitorCardConfig.METRIC_PHOSPHORUS to 1091,
+                        MonitorCardConfig.METRIC_COPPER to 1098,
+                        MonitorCardConfig.METRIC_MANGANESE to 1101,
+                        MonitorCardConfig.METRIC_VITAMIN_A to 1106,
+                        MonitorCardConfig.METRIC_VITAMIN_C to 1162,
+                        MonitorCardConfig.METRIC_VITAMIN_D to 1114,
+                        MonitorCardConfig.METRIC_VITAMIN_E to 1109,
+                        MonitorCardConfig.METRIC_VITAMIN_K to 1185,
+                        MonitorCardConfig.METRIC_VITAMIN_B6 to 1175,
+                        MonitorCardConfig.METRIC_VITAMIN_B12 to 1178,
+                        MonitorCardConfig.METRIC_THIAMIN to 1165,
+                        MonitorCardConfig.METRIC_RIBOFLAVIN to 1166,
+                        MonitorCardConfig.METRIC_NIACIN to 1167,
+                        MonitorCardConfig.METRIC_FOLATE to 1177,
+                        MonitorCardConfig.METRIC_BIOTIN to 1176,
+                        MonitorCardConfig.METRIC_PANTOTHENIC_ACID to 1170
                     )
                     
                     fun getValue(metric: String): Double? {
                         return nutrientIdMap[metric]?.let { nutrients[it] }?.times(servings)
                     }
                     
+                    // Favorite metrics
                     Text(
                         "Nutrition (per serving × $servings)",
                         color = AppTheme.AccentPurple,
@@ -174,10 +203,53 @@ fun AddFoodDialog(
                     Spacer(Modifier.height(4.dp))
                     
                     monitorMetrics.forEach { metric ->
-                        val value = getValue(metric)
-                        val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
-                        val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
-                        NutrientRow(label, value, unit)
+                        if (metric != MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
+                            val value = getValue(metric)
+                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                            val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                            NutrientRow(label, value, unit)
+                        }
+                    }
+
+                    // Tyramine exposure row
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Tyramine Exposure", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                        if (isClassifyingTyramine) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(Modifier.size(12.dp), AppTheme.AccentPurple, strokeWidth = 1.5.dp)
+                                Spacer(Modifier.width(4.dp))
+                                Text("Classifying…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                        } else {
+                            val display = when (tyramineRisk) {
+                                "high" -> "🔴 High"
+                                "medium" -> "🟡 Medium"
+                                "low" -> "🟢 Low"
+                                else -> "⚪ None"
+                            }
+                            Text(display, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+
+                    // All Nutrients divider
+                    Spacer(Modifier.height(8.dp))
+                    androidx.compose.material3.HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                    Spacer(Modifier.height(6.dp))
+                    Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(4.dp))
+
+                    val shownMetrics = monitorMetrics.toSet()
+                    MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
+                        if (metric != MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE && metric !in shownMetrics) {
+                            val value = getValue(metric)
+                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                            val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                            NutrientRow(label, value, unit)
+                        }
                     }
                 }
                 
@@ -354,3 +426,4 @@ fun EditFoodDialog(
         containerColor = Color(0xFF1E0A2E)
     )
 }
+

@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.Instant
@@ -63,12 +64,16 @@ fun FullScreenGraphScreen(
 
     val isAtPresent = if (isCustomRange) false else periodOffset == 0
 
+    // For weather at present, extend end date to include forecast
+    val isWeatherForecast = graphType == "weather" && isAtPresent && !isCustomRange
+    val displayEndDate = if (isWeatherForecast) endDate.plusDays(6) else endDate
+
     val dateFormat = DateTimeFormatter.ofPattern("MMM d")
-    val dateRangeLabel = "${startDate.format(dateFormat)} – ${endDate.format(dateFormat)}"
+    val dateRangeLabel = "${startDate.format(dateFormat)} – ${displayEndDate.format(dateFormat)}"
 
     val title = when (graphType) {
         "sleep" -> "Sleep History"
-        "weather" -> "Weather History"
+        "weather" -> if (isWeatherForecast) "Weather History + Forecast" else "Weather History"
         "nutrition" -> "Nutrition History"
         else -> "History"
     }
@@ -177,7 +182,17 @@ fun FullScreenGraphScreen(
         // Graph
         when (graphType) {
             "sleep" -> SleepHistoryGraph(days = activeDays, endDate = endDate)
-            "weather" -> WeatherHistoryGraph(days = activeDays, endDate = endDate)
+            "weather" -> {
+                val isCurrent = isAtPresent && !isCustomRange
+                val weatherEndDate = if (isCurrent) endDate.plusDays(6) else endDate
+                val weatherDays = if (isCurrent) activeDays + 6 else activeDays
+                val forecastStart = if (isCurrent) endDate.plusDays(1).toString() else null
+                WeatherHistoryGraph(
+                    days = weatherDays,
+                    endDate = weatherEndDate,
+                    forecastStartDate = forecastStart
+                )
+            }
             "nutrition" -> NutritionHistoryGraph(days = activeDays, endDate = endDate)
         }
 
@@ -190,6 +205,9 @@ fun FullScreenGraphScreen(
 
         AlertDialog(
             onDismissRequest = { showCustomPicker = false },
+            containerColor = Color(0xFF1E0A2E),
+            titleContentColor = Color.White,
+            textContentColor = AppTheme.BodyTextColor,
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -209,12 +227,12 @@ fun FullScreenGraphScreen(
                     },
                     enabled = dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null
                 ) {
-                    Text(text = "Apply")
+                    Text(text = "Apply", color = if (dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCustomPicker = false }) {
-                    Text(text = "Cancel")
+                    Text(text = "Cancel", color = AppTheme.SubtleTextColor)
                 }
             },
             title = { Text(text = "Select date range") },
@@ -224,9 +242,11 @@ fun FullScreenGraphScreen(
                     modifier = Modifier.fillMaxWidth().height(450.dp),
                     title = null,
                     headline = null,
-                    showModeToggle = false
+                    showModeToggle = false,
+                    colors = appDatePickerColors()
                 )
             }
         )
     }
 }
+

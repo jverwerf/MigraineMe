@@ -48,7 +48,9 @@ private val metricColors = mapOf(
     WeatherCardConfig.METRIC_PRESSURE to Color(0xFF42A5F5),
     WeatherCardConfig.METRIC_HUMIDITY to Color(0xFF26C6DA),
     WeatherCardConfig.METRIC_WIND_SPEED to Color(0xFF66BB6A),
-    WeatherCardConfig.METRIC_UV_INDEX to Color(0xFFFFCA28)
+    WeatherCardConfig.METRIC_UV_INDEX to Color(0xFFFFCA28),
+    WeatherCardConfig.METRIC_ALTITUDE to Color(0xFFCE93D8),
+    WeatherCardConfig.METRIC_ALTITUDE_CHANGE to Color(0xFFBA68C8)
 )
 
 // Get metric value from day data
@@ -59,6 +61,8 @@ private fun getDayValue(day: WeatherDayData, metric: String): Float {
         WeatherCardConfig.METRIC_HUMIDITY -> day.humidityMean.toFloat()
         WeatherCardConfig.METRIC_WIND_SPEED -> day.windSpeedMean.toFloat()
         WeatherCardConfig.METRIC_UV_INDEX -> day.uvIndexMax.toFloat()
+        WeatherCardConfig.METRIC_ALTITUDE -> (day.altitudeMaxM ?: 0.0).toFloat()
+        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> (day.altitudeChangeM ?: 0.0).toFloat()
         else -> 0f
     }
 }
@@ -73,6 +77,7 @@ private fun hasData(day: WeatherDayData): Boolean {
 fun WeatherHistoryGraph(
     days: Int = 14,
     endDate: java.time.LocalDate = java.time.LocalDate.now(),
+    forecastStartDate: String? = null,
     onClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
@@ -101,9 +106,11 @@ fun WeatherHistoryGraph(
     val isNormalized = selectedMetrics.size >= 2
     val daysWithData = historyData.filter { hasData(it) }
 
+    val title = if (forecastStartDate != null) "History + Forecast" else "$days-Day History"
+
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
         Text(
-            "$days-Day History",
+            title,
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
         )
@@ -162,12 +169,13 @@ fun WeatherHistoryGraph(
                 }
             }
 
+            val avgLabel = if (forecastStartDate != null) "Dotted = history average" else "Dotted line = $days-day average"
             if (isNormalized) {
                 Spacer(Modifier.height(4.dp))
-                Text("⚠️ Normalized 0-1 scale • Dotted = last $days days avg", color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
+                Text("⚠️ Normalized 0-1 scale • $avgLabel", color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
             } else if (daysWithData.isNotEmpty()) {
                 Spacer(Modifier.height(4.dp))
-                Text("Dotted line = last $days days average", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                Text(avgLabel, color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
             }
 
             if (migraineDates.isNotEmpty()) {
@@ -176,6 +184,15 @@ fun WeatherHistoryGraph(
                     Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
                     Spacer(Modifier.width(4.dp))
                     Text("Red bands = migraine days", color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+
+            if (forecastStartDate != null) {
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFF4FC3F7).copy(alpha = 0.15f)) }
+                    Spacer(Modifier.width(4.dp))
+                    Text("Blue zone = forecast", color = Color(0xFF4FC3F7), style = MaterialTheme.typography.labelSmall)
                 }
             }
 
@@ -241,6 +258,32 @@ fun WeatherHistoryGraph(
                             )
                         }
 
+                        // Draw forecast divider line
+                        if (forecastStartDate != null && historyData.isNotEmpty()) {
+                            val forecastIdx = historyData.indexOfFirst { it.date >= forecastStartDate }
+                            if (forecastIdx > 0) {
+                                // Position between the last history day and first forecast day
+                                val divX = padding + ((forecastIdx - 0.5f) / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                // Dashed vertical line
+                                var yPos = padding
+                                while (yPos < padding + graphHeight) {
+                                    drawLine(
+                                        Color.White.copy(alpha = 0.4f),
+                                        Offset(divX, yPos),
+                                        Offset(divX, (yPos + dashWidth).coerceAtMost(padding + graphHeight)),
+                                        strokeWidth = 1.5.dp.toPx()
+                                    )
+                                    yPos += dashWidth + gapWidth
+                                }
+                                // "Forecast →" label background
+                                drawRect(
+                                    Color(0xFF4FC3F7).copy(alpha = 0.08f),
+                                    topLeft = Offset(divX, padding),
+                                    size = androidx.compose.ui.geometry.Size(size.width - padding - divX, graphHeight)
+                                )
+                            }
+                        }
+
                         selectedMetrics.forEach { metric ->
                             val color = metricColors[metric] ?: Color.White
 
@@ -272,8 +315,14 @@ fun WeatherHistoryGraph(
                             }
 
                             // Draw dotted average line (always show)
+                            // When forecast is shown, only average history points (not forecast)
                             if (plotPoints.isNotEmpty()) {
-                                val avgNormalized = plotPoints.map { it.second }.average().toFloat()
+                                val avgPoints = if (forecastStartDate != null) {
+                                    val forecastIdx = historyData.indexOfFirst { it.date >= forecastStartDate }
+                                    if (forecastIdx > 0) plotPoints.filter { it.first < forecastIdx }
+                                    else plotPoints
+                                } else plotPoints
+                                val avgNormalized = (if (avgPoints.isNotEmpty()) avgPoints else plotPoints).map { it.second }.average().toFloat()
                                 val avgY = padding + graphHeight - (avgNormalized * graphHeight)
 
                                 var x = padding
@@ -377,4 +426,5 @@ private fun formatValue(value: Float, unit: String): String {
         else -> String.format("%.1f%s", value, unit)
     }
 }
+
 

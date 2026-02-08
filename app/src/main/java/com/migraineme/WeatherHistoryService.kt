@@ -25,7 +25,9 @@ data class WeatherDayData(
     val windSpeedMean: Double,
     val uvIndexMax: Double,
     val weatherCode: Int,
-    val isThunderstormDay: Boolean
+    val isThunderstormDay: Boolean,
+    val altitudeMaxM: Double? = null,
+    val altitudeChangeM: Double? = null
 )
 
 /**
@@ -62,6 +64,13 @@ class WeatherHistoryService(context: Context) {
         @SerialName("uv_index_max") val uvIndexMax: Double? = null,
         @SerialName("weather_code") val weatherCode: Int? = null,
         @SerialName("is_thunderstorm_day") val isThunderstormDay: Boolean? = null
+    )
+
+    @Serializable
+    private data class LocationAltitudeRow(
+        val date: String? = null,
+        val altitude_max_m: Double? = null,
+        val altitude_change_m: Double? = null
     )
 
     /**
@@ -101,6 +110,9 @@ class WeatherHistoryService(context: Context) {
 
             val rows: List<WeatherRow> = response.body()
 
+            // Fetch altitude for the same date range
+            val altitudeMap = fetchAltitudeMap(token, userId, startDate, endDate)
+
             // Fetch ALL data for all-time min/max calculation
             val allResponse = client.get("$supabaseUrl/rest/v1/user_weather_daily") {
                 header(HttpHeaders.Authorization, "Bearer $token")
@@ -116,6 +128,19 @@ class WeatherHistoryService(context: Context) {
                 rows
             }
 
+            // Fetch all-time altitude for min/max
+            val allAltResponse = client.get("$supabaseUrl/rest/v1/user_location_daily") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header("apikey", supabaseKey)
+                parameter("user_id", "eq.$userId")
+                parameter("select", "altitude_max_m,altitude_change_m")
+                parameter("altitude_max_m", "not.is.null")
+                parameter("order", "date.asc")
+            }
+            val allAltRows: List<LocationAltitudeRow> = if (allAltResponse.status.isSuccess()) {
+                runCatching { allAltResponse.body<List<LocationAltitudeRow>>() }.getOrDefault(emptyList())
+            } else emptyList()
+
             // Calculate all-time min/max
             val allTimeMin = mutableMapOf<String, Float>()
             val allTimeMax = mutableMapOf<String, Float>()
@@ -125,6 +150,8 @@ class WeatherHistoryService(context: Context) {
             val humidityValues = allRows.mapNotNull { it.humidityMean?.toFloat() }
             val windValues = allRows.mapNotNull { it.windSpeedMean?.toFloat() }
             val uvValues = allRows.mapNotNull { it.uvIndexMax?.toFloat() }
+            val altMaxValues = allAltRows.mapNotNull { it.altitude_max_m?.toFloat() }
+            val altChangeValues = allAltRows.mapNotNull { it.altitude_change_m?.toFloat() }
 
             if (tempValues.isNotEmpty()) {
                 allTimeMin["temp_c_mean"] = tempValues.minOrNull() ?: 0f
@@ -146,6 +173,14 @@ class WeatherHistoryService(context: Context) {
                 allTimeMin["uv_index_max"] = uvValues.minOrNull() ?: 0f
                 allTimeMax["uv_index_max"] = uvValues.maxOrNull() ?: 1f
             }
+            if (altMaxValues.isNotEmpty()) {
+                allTimeMin["altitude_m"] = altMaxValues.minOrNull() ?: 0f
+                allTimeMax["altitude_m"] = altMaxValues.maxOrNull() ?: 1f
+            }
+            if (altChangeValues.isNotEmpty()) {
+                allTimeMin["altitude_change_m"] = altChangeValues.minOrNull() ?: 0f
+                allTimeMax["altitude_change_m"] = altChangeValues.maxOrNull() ?: 1f
+            }
 
             // Convert to WeatherDayData (filter out rows without date)
             val dayData = rows.filter { it.date != null }.map { row ->
@@ -157,7 +192,9 @@ class WeatherHistoryService(context: Context) {
                     windSpeedMean = row.windSpeedMean ?: 0.0,
                     uvIndexMax = row.uvIndexMax ?: 0.0,
                     weatherCode = row.weatherCode ?: 0,
-                    isThunderstormDay = row.isThunderstormDay ?: false
+                    isThunderstormDay = row.isThunderstormDay ?: false,
+                    altitudeMaxM = altitudeMap[row.date]?.maxM,
+                    altitudeChangeM = altitudeMap[row.date]?.changeM
                 )
             }
 
@@ -173,7 +210,7 @@ class WeatherHistoryService(context: Context) {
     }
 
     /**
-     * Get today's weather summary.
+     * Get today's weather summary including altitude.
      */
     suspend fun getTodayWeather(): WeatherDayData? = withContext(Dispatchers.IO) {
         try {
@@ -196,6 +233,9 @@ class WeatherHistoryService(context: Context) {
             val row = rows.firstOrNull() ?: return@withContext null
             if (row.date == null) return@withContext null
 
+            // Fetch today's altitude
+            val altAgg = fetchAltitudeForDate(token, userId, today)
+
             WeatherDayData(
                 date = row.date,
                 tempMean = row.tempMean ?: 0.0,
@@ -204,12 +244,69 @@ class WeatherHistoryService(context: Context) {
                 windSpeedMean = row.windSpeedMean ?: 0.0,
                 uvIndexMax = row.uvIndexMax ?: 0.0,
                 weatherCode = row.weatherCode ?: 0,
-                isThunderstormDay = row.isThunderstormDay ?: false
+                isThunderstormDay = row.isThunderstormDay ?: false,
+                altitudeMaxM = altAgg?.maxM,
+                altitudeChangeM = altAgg?.changeM
             )
         } catch (e: Exception) {
             android.util.Log.e("WeatherHistoryService", "Error fetching today's weather", e)
             null
         }
     }
-}
 
+    private data class AltitudeAggData(val maxM: Double?, val changeM: Double?)
+
+    /**
+     * Fetch altitude aggregation for a date range from user_location_daily.
+     */
+    private suspend fun fetchAltitudeMap(
+        token: String,
+        userId: String,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Map<String, AltitudeAggData> {
+        return try {
+            val resp = client.get("$supabaseUrl/rest/v1/user_location_daily") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header("apikey", supabaseKey)
+                parameter("user_id", "eq.$userId")
+                parameter("date", "gte.$startDate")
+                parameter("date", "lte.$endDate")
+                parameter("select", "date,altitude_max_m,altitude_change_m")
+                parameter("order", "date.asc")
+            }
+            if (!resp.status.isSuccess()) return emptyMap()
+            val rows: List<LocationAltitudeRow> = resp.body()
+            rows.filter { it.date != null }
+                .associate { it.date!! to AltitudeAggData(it.altitude_max_m, it.altitude_change_m) }
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
+
+    /**
+     * Fetch altitude for a single date.
+     */
+    private suspend fun fetchAltitudeForDate(
+        token: String,
+        userId: String,
+        date: String
+    ): AltitudeAggData? {
+        return try {
+            val resp = client.get("$supabaseUrl/rest/v1/user_location_daily") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header("apikey", supabaseKey)
+                parameter("user_id", "eq.$userId")
+                parameter("date", "eq.$date")
+                parameter("select", "altitude_max_m,altitude_change_m")
+                parameter("limit", "1")
+            }
+            if (!resp.status.isSuccess()) return null
+            val rows: List<LocationAltitudeRow> = resp.body()
+            val row = rows.firstOrNull() ?: return null
+            AltitudeAggData(row.altitude_max_m, row.altitude_change_m)
+        } catch (_: Exception) {
+            null
+        }
+    }
+}

@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter
 // --- drafts ---
 data class MigraineDraft(
     val type: String? = null,
+    val symptoms: List<String> = emptyList(),
     val severity: Int? = null,
     val beganAtIso: String? = null,
     val endedAtIso: String? = null,
@@ -28,21 +29,52 @@ data class MedicineDraft(
     val name: String? = null,
     val amount: String? = null,
     val notes: String? = null,
-    val startAtIso: String? = null
+    val startAtIso: String? = null,
+    val reliefScale: String? = "NONE"
 )
 
 data class ReliefDraft(
     val type: String,
-    val durationMinutes: Int? = null,
     val notes: String? = null,
-    val startAtIso: String? = null
+    val startAtIso: String? = null,
+    val endAtIso: String? = null,
+    val reliefScale: String? = "NONE"
+)
+
+data class ProdromeDraft(
+    val type: String,
+    val startAtIso: String? = null,
+    val note: String? = null
+)
+
+data class LocationDraft(
+    val type: String,
+    val startAtIso: String? = null,
+    val note: String? = null
+)
+
+data class ActivityDraft(
+    val type: String,
+    val startAtIso: String? = null,
+    val note: String? = null
+)
+
+data class MissedActivityDraft(
+    val type: String,
+    val startAtIso: String? = null,
+    val note: String? = null
 )
 
 data class Draft(
     val migraine: MigraineDraft? = null,
+    val painLocations: List<String> = emptyList(),
     val triggers: List<TriggerDraft> = emptyList(),
     val meds: List<MedicineDraft> = emptyList(),
-    val rels: List<ReliefDraft> = emptyList()
+    val rels: List<ReliefDraft> = emptyList(),
+    val prodromes: List<ProdromeDraft> = emptyList(),
+    val locations: List<LocationDraft> = emptyList(),
+    val activities: List<ActivityDraft> = emptyList(),
+    val missedActivities: List<MissedActivityDraft> = emptyList()
 )
 
 // --- journal event feed ---
@@ -118,15 +150,39 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     // ---- draft mutators ----
     fun setMigraineDraft(
-        type: String?,
-        severity: Int?,
-        beganAtIso: String?,
-        endedAtIso: String?,
-        note: String?
+        type: String? = null,
+        severity: Int? = null,
+        beganAtIso: String? = null,
+        endedAtIso: String? = null,
+        note: String? = null,
+        symptoms: List<String>? = null,
+        // Pass true to explicitly clear a nullable field to null
+        clearBeganAt: Boolean = false,
+        clearEndedAt: Boolean = false,
+        clearNote: Boolean = false
     ) {
+        val existing = _draft.value.migraine ?: MigraineDraft()
         _draft.value = _draft.value.copy(
-            migraine = MigraineDraft(type, severity, beganAtIso, endedAtIso, note)
+            migraine = existing.copy(
+                type = type ?: existing.type,
+                symptoms = symptoms ?: existing.symptoms,
+                severity = severity ?: existing.severity,
+                beganAtIso = if (clearBeganAt) null else (beganAtIso ?: existing.beganAtIso),
+                endedAtIso = if (clearEndedAt) null else (endedAtIso ?: existing.endedAtIso),
+                note = if (clearNote) null else (note ?: existing.note)
+            )
         )
+    }
+
+    fun setSymptomsDraft(symptoms: List<String>) {
+        val existing = _draft.value.migraine ?: MigraineDraft()
+        _draft.value = _draft.value.copy(
+            migraine = existing.copy(symptoms = symptoms)
+        )
+    }
+
+    fun setPainLocationsDraft(locations: List<String>) {
+        _draft.value = _draft.value.copy(painLocations = locations)
     }
 
     fun addTriggerDraft(trigger: String, startAtIso: String? = null, note: String? = null) {
@@ -135,15 +191,39 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun addMedicineDraft(name: String, amount: String?, notes: String?, startAtIso: String? = null) {
+    fun addMedicineDraft(name: String, amount: String?, notes: String?, startAtIso: String? = null, reliefScale: String? = "NONE") {
         _draft.value = _draft.value.copy(
-            meds = _draft.value.meds + MedicineDraft(name, amount, notes, startAtIso)
+            meds = _draft.value.meds + MedicineDraft(name, amount, notes, startAtIso, reliefScale)
         )
     }
 
-    fun addReliefDraft(type: String, durationMinutes: Int?, notes: String?, startAtIso: String? = null) {
+    fun addReliefDraft(type: String, notes: String? = null, startAtIso: String? = null, endAtIso: String? = null, reliefScale: String? = "NONE") {
         _draft.value = _draft.value.copy(
-            rels = _draft.value.rels + ReliefDraft(type, durationMinutes, notes, startAtIso)
+            rels = _draft.value.rels + ReliefDraft(type, notes, startAtIso, endAtIso, reliefScale)
+        )
+    }
+
+    fun addProdromeDraft(type: String, startAtIso: String? = null, note: String? = null) {
+        _draft.value = _draft.value.copy(
+            prodromes = _draft.value.prodromes + ProdromeDraft(type, startAtIso, note)
+        )
+    }
+
+    fun addLocationDraft(type: String, startAtIso: String? = null, note: String? = null) {
+        _draft.value = _draft.value.copy(
+            locations = _draft.value.locations + LocationDraft(type, startAtIso, note)
+        )
+    }
+
+    fun addActivityDraft(type: String, startAtIso: String? = null, note: String? = null) {
+        _draft.value = _draft.value.copy(
+            activities = _draft.value.activities + ActivityDraft(type, startAtIso, note)
+        )
+    }
+
+    fun addMissedActivityDraft(type: String, startAtIso: String? = null, note: String? = null) {
+        _draft.value = _draft.value.copy(
+            missedActivities = _draft.value.missedActivities + MissedActivityDraft(type, startAtIso, note)
         )
     }
 
@@ -174,11 +254,11 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun addRelief(accessToken: String, type: String, durationMinutes: Int? = null, notes: String? = null) {
+    fun addRelief(accessToken: String, type: String, notes: String? = null) {
         viewModelScope.launch {
             try {
                 val nowIso = Instant.now().toString()
-                db.insertRelief(accessToken, migraineId = null, type = type, durationMinutes = durationMinutes, startAt = nowIso, notes = notes)
+                db.insertRelief(accessToken, migraineId = null, type = type, startAt = nowIso, notes = notes)
                 loadJournal(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -194,10 +274,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         beganAtIso: String,
         endedAtIso: String?,
         note: String?,
+        painLocations: List<String>,
         meds: List<MedicineDraft>,
         rels: List<ReliefDraft>
     ) {
         val triggersSnapshot = _draft.value.triggers
+        val prodromesSnapshot = _draft.value.prodromes
+        val locationsSnapshot = _draft.value.locations
+        val activitiesSnapshot = _draft.value.activities
+        val missedActivitiesSnapshot = _draft.value.missedActivities
 
         viewModelScope.launch {
             try {
@@ -211,7 +296,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     severity = severity,
                     startAt = migraineStart,
                     endAt = endedAtIso,
-                    notes = note
+                    notes = note,
+                    painLocations = painLocations.takeIf { it.isNotEmpty() }
                 )
 
                 for (t in triggersSnapshot.filter { it.type.isNotBlank() }) {
@@ -234,7 +320,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             name = m.name,
                             amount = m.amount,
                             startAt = m.startAtIso ?: migraineStart,
-                            notes = m.notes
+                            notes = m.notes,
+                            reliefScale = m.reliefScale
                         )
                     } catch (e: Exception) { e.printStackTrace() }
                 }
@@ -245,9 +332,58 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             accessToken = accessToken,
                             migraineId = migraine.id,
                             type = r.type,
-                            durationMinutes = r.durationMinutes,
                             startAt = r.startAtIso ?: migraineStart,
-                            notes = r.notes
+                            notes = r.notes,
+                            endAt = r.endAtIso,
+                            reliefScale = r.reliefScale
+                        )
+                    } catch (e: Exception) { e.printStackTrace() }
+                }
+
+                for (p in prodromesSnapshot.filter { it.type.isNotBlank() }) {
+                    try {
+                        db.insertProdrome(
+                            accessToken = accessToken,
+                            migraineId = migraine.id,
+                            type = p.type,
+                            startAt = p.startAtIso ?: migraineStart,
+                            notes = p.note
+                        )
+                    } catch (e: Exception) { e.printStackTrace() }
+                }
+
+                for (loc in locationsSnapshot.filter { it.type.isNotBlank() }) {
+                    try {
+                        db.insertLocation(
+                            accessToken = accessToken,
+                            migraineId = migraine.id,
+                            type = loc.type,
+                            startAt = loc.startAtIso ?: migraineStart,
+                            notes = loc.note
+                        )
+                    } catch (e: Exception) { e.printStackTrace() }
+                }
+
+                for (act in activitiesSnapshot.filter { it.type.isNotBlank() }) {
+                    try {
+                        db.insertActivity(
+                            accessToken = accessToken,
+                            migraineId = migraine.id,
+                            type = act.type,
+                            startAt = act.startAtIso ?: migraineStart,
+                            notes = act.note
+                        )
+                    } catch (e: Exception) { e.printStackTrace() }
+                }
+
+                for (ma in missedActivitiesSnapshot.filter { it.type.isNotBlank() }) {
+                    try {
+                        db.insertMissedActivity(
+                            accessToken = accessToken,
+                            migraineId = migraine.id,
+                            type = ma.type,
+                            startAt = ma.startAtIso ?: migraineStart,
+                            notes = ma.note
                         )
                     } catch (e: Exception) { e.printStackTrace() }
                 }
@@ -427,14 +563,13 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         accessToken: String,
         id: String,
         type: String? = null,
-        durationMinutes: Int? = null,
         startAt: String? = null,
         notes: String? = null,
         migraineId: String? = null
     ) {
         viewModelScope.launch {
             try {
-                val updated = db.updateRelief(accessToken, id, type, durationMinutes, startAt, notes, migraineId)
+                val updated = db.updateRelief(accessToken, id, type, startAt, notes, migraineId)
                 _editRelief.value = updated
                 loadJournal(accessToken)
             } catch (e: Exception) { e.printStackTrace() }

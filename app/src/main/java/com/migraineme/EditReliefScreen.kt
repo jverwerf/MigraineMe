@@ -234,7 +234,6 @@ fun EditReliefScreen(
                         accessToken = token,
                         id = id,
                         type = type.ifBlank { null },
-                        durationMinutes = duration,
                         startAt = startAt.ifBlank { null },
                         notes = notes.ifBlank { null },
                         migraineId = migraineId.ifBlank { null }

@@ -56,7 +56,11 @@ object DataSettingsSections {
                 computedRow("stress_index_daily", "Stress index"),
                 phoneRow("screen_time_daily", "Phone screen time tracking"),
                 phoneRow("screen_time_late_night", "Late night screen time"),
-                phoneRow("ambient_noise_samples", "Noise Sampling")
+                phoneRow("ambient_noise_samples", "Noise Sampling"),
+                phoneRow("phone_brightness_daily", "Phone brightness"),
+                phoneRow("phone_volume_daily", "Phone volume"),
+                phoneRow("phone_dark_mode_daily", "Dark mode usage"),
+                phoneRow("phone_unlock_daily", "Phone unlocks")
             )
         ),
         DataSection(

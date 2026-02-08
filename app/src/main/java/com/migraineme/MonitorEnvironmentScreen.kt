@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun MonitorEnvironmentScreen(
@@ -52,10 +54,17 @@ fun MonitorEnvironmentScreen(
     var isLoadingToday by remember { mutableStateOf(true) }
     val weatherConfig = remember { WeatherCardConfigStore.load(context) }
 
-    // Load today's weather
+    // Forecast data (next 6 days)
+    var forecastDays by remember { mutableStateOf<List<WeatherDayData>>(emptyList()) }
+
+    // Load today's weather + forecast
     LaunchedEffect(Unit) {
         scope.launch {
             todayWeather = weatherService.getTodayWeather()
+            // Fetch 7 days ending 6 days from now to get forecast
+            val today = LocalDate.now()
+            val result = weatherService.getWeatherHistory(7, today.plusDays(6))
+            forecastDays = result.days.filter { it.date > today.toString() }
             isLoadingToday = false
         }
     }
@@ -194,25 +203,90 @@ fun MonitorEnvironmentScreen(
                     // All remaining metrics
                     WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
                         if (metric !in selectedMetrics) {
-                            val value = weatherMetricValue(todayWeather!!, metric)
-                            if (value != null) {
-                                val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                                    Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-                                }
+                            val value = weatherMetricValue(todayWeather!!, metric) ?: "—"
+                            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                             }
                         }
                     }
                 }
             }
 
-            // History Graph
+            // 7-Day Forecast
+            if (forecastDays.isNotEmpty()) {
+                BaseCard {
+                    Text(
+                        "7-Day Forecast",
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    val dayFormatter = DateTimeFormatter.ofPattern("EEE")
+                    val dateFormatter = DateTimeFormatter.ofPattern("d MMM")
+                    val selectedMetrics = weatherConfig.weatherDisplayMetrics.take(3)
+                    val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+
+                    forecastDays.forEach { day ->
+                        val date = LocalDate.parse(day.date)
+                        val dayLabel = if (date == LocalDate.now().plusDays(1)) "Tomorrow" else date.format(dayFormatter)
+                        val condition = weatherCodeToCondition(day.weatherCode)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { navController.navigate(Routes.ENV_DATA_HISTORY) }
+                                .padding(vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(0.8f)) {
+                                Text(
+                                    dayLabel,
+                                    color = Color(0xFF4FC3F7),
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                                Text(
+                                    date.format(dateFormatter),
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                            Text(
+                                condition,
+                                color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Column(horizontalAlignment = Alignment.End) {
+                                selectedMetrics.forEachIndexed { index, metric ->
+                                    val value = weatherMetricValue(day, metric) ?: "—"
+                                    val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                                    Text(
+                                        "$value",
+                                        color = slotColors.getOrElse(index) { slotColors.last() },
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                                    )
+                                }
+                            }
+                        }
+                        if (day != forecastDays.last()) {
+                            HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.1f))
+                        }
+                    }
+                }
+            }
+
+            // History + Forecast Graph
             WeatherHistoryGraph(
-                days = 14,
+                days = 21,
+                endDate = LocalDate.now().plusDays(6),
+                forecastStartDate = LocalDate.now().plusDays(1).toString(),
                 onClick = { navController.navigate(Routes.FULL_GRAPH_WEATHER) }
             )
 
@@ -228,12 +302,18 @@ private fun weatherMetricValue(weather: WeatherDayData, metric: String): String?
         WeatherCardConfig.METRIC_HUMIDITY -> weather.humidityMean
         WeatherCardConfig.METRIC_WIND_SPEED -> weather.windSpeedMean
         WeatherCardConfig.METRIC_UV_INDEX -> weather.uvIndexMax
+        WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM
+        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM
         else -> null
     } ?: return null
-    if (v == 0.0 && metric != WeatherCardConfig.METRIC_UV_INDEX) return null
+    if (v == 0.0 && metric != WeatherCardConfig.METRIC_UV_INDEX && metric != WeatherCardConfig.METRIC_ALTITUDE) return null
     val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
-    return if (metric == WeatherCardConfig.METRIC_PRESSURE) String.format("%.0f%s", v, unit)
-    else String.format("%.1f%s", v, unit)
+    return when (metric) {
+        WeatherCardConfig.METRIC_PRESSURE -> String.format("%.0f%s", v, unit)
+        WeatherCardConfig.METRIC_ALTITUDE -> String.format("%.0f%s", v, unit)
+        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> String.format("%.0f%s", v, unit)
+        else -> String.format("%.1f%s", v, unit)
+    }
 }
 
 private fun weatherMetricColor(metric: String): Color = when (metric) {
@@ -242,6 +322,8 @@ private fun weatherMetricColor(metric: String): Color = when (metric) {
     WeatherCardConfig.METRIC_HUMIDITY -> Color(0xFF4FC3F7)
     WeatherCardConfig.METRIC_WIND_SPEED -> Color(0xFF81C784)
     WeatherCardConfig.METRIC_UV_INDEX -> Color(0xFFFFB74D)
+    WeatherCardConfig.METRIC_ALTITUDE -> Color(0xFFCE93D8)
+    WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> Color(0xFFBA68C8)
     else -> Color(0xFF4FC3F7)
 }
 
@@ -265,4 +347,5 @@ private fun weatherCodeToCondition(code: Int): String {
         else -> "Unknown"
     }
 }
+
 

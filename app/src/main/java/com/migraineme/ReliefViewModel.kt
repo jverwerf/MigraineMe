@@ -33,11 +33,11 @@ class ReliefViewModel : ViewModel() {
         }
     }
 
-    fun addNewToPool(accessToken: String, label: String) {
+    fun addNewToPool(accessToken: String, label: String, category: String? = null) {
         viewModelScope.launch {
             runCatching {
-                db.upsertReliefToPool(accessToken, label)
-                _pool.value = db.getAllReliefPool(accessToken)
+                db.upsertReliefToPool(accessToken, label, category)
+                loadAll(accessToken)
             }.onFailure { it.printStackTrace() }
         }
     }
@@ -46,8 +46,7 @@ class ReliefViewModel : ViewModel() {
         viewModelScope.launch {
             runCatching {
                 db.deleteReliefFromPool(accessToken, reliefId)
-                _pool.value = db.getAllReliefPool(accessToken)
-                _frequent.value = sortPrefs(db.getReliefPrefs(accessToken))
+                loadAll(accessToken)
             }.onFailure { it.printStackTrace() }
         }
     }
@@ -57,7 +56,7 @@ class ReliefViewModel : ViewModel() {
             runCatching {
                 val pos = (_frequent.value.maxOfOrNull { it.position } ?: -1) + 1
                 db.insertReliefPref(accessToken, reliefId, pos, "frequent")
-                _frequent.value = sortPrefs(db.getReliefPrefs(accessToken))
+                loadAll(accessToken)
             }.onFailure { it.printStackTrace() }
         }
     }
@@ -66,7 +65,25 @@ class ReliefViewModel : ViewModel() {
         viewModelScope.launch {
             runCatching {
                 db.deleteReliefPref(accessToken, prefId)
-                _frequent.value = sortPrefs(db.getReliefPrefs(accessToken))
+                loadAll(accessToken)
+            }.onFailure { it.printStackTrace() }
+        }
+    }
+
+    fun setCategory(accessToken: String, reliefId: String, category: String?) {
+        viewModelScope.launch {
+            runCatching {
+                db.setReliefCategory(accessToken, reliefId, category)
+                loadAll(accessToken)
+            }.onFailure { it.printStackTrace() }
+        }
+    }
+
+    fun setAutomation(accessToken: String, reliefId: String, enabled: Boolean) {
+        viewModelScope.launch {
+            runCatching {
+                db.setReliefAutomation(accessToken, reliefId, enabled)
+                loadAll(accessToken)
             }.onFailure { it.printStackTrace() }
         }
     }

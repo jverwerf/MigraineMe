@@ -2,16 +2,6 @@ package com.migraineme
 
 import android.content.Context
 
-/**
- * Helper for toggling metrics ON/OFF with worker scheduling
- *
- * This is the SINGLE SOURCE OF TRUTH for worker scheduling.
- * Does NOT manage state - that's in Supabase.
- *
- * Used by:
- * - ThirdPartyConnectionsScreen (when granting permissions)
- * - DataSettingsScreen (when user manually toggles)
- */
 object MetricToggleHelper {
 
     /**
@@ -51,6 +41,14 @@ object MetricToggleHelper {
 
                     android.util.Log.d("MetricToggle", "Scheduled screen time workers")
                 }
+                "phone_brightness_daily",
+                "phone_volume_daily",
+                "phone_dark_mode_daily",
+                "phone_unlock_daily" -> {
+                    // No dedicated worker to schedule — collected by PhoneBehaviorSyncWorker
+                    // which is triggered by FCM sync_hourly
+                    android.util.Log.d("MetricToggle", "Phone behavior metric $metric enabled (uses FCM sync)")
+                }
             }
         } else {
             when (metric) {
@@ -70,6 +68,14 @@ object MetricToggleHelper {
                 "screen_time_daily" -> {
 
                     android.util.Log.d("MetricToggle", "Cancelled screen time workers")
+                }
+                "phone_brightness_daily",
+                "phone_volume_daily",
+                "phone_dark_mode_daily",
+                "phone_unlock_daily" -> {
+                    // No dedicated worker to cancel — PhoneBehaviorSyncWorker checks
+                    // metric_settings each run and skips disabled metrics
+                    android.util.Log.d("MetricToggle", "Phone behavior metric $metric disabled")
                 }
             }
         }

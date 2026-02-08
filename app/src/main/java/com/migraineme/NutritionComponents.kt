@@ -4,11 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +25,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FoodSearchResultItem(
     food: USDAFoodSearchResult,
+    tyramineRisk: String? = null,
+    isClassifyingTyramine: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
@@ -45,7 +50,7 @@ fun FoodSearchResultItem(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 food.calories?.let {
                     Text(
                         "${it.toInt()} cal",
@@ -58,6 +63,30 @@ fun FoodSearchResultItem(
                         " • ${food.servingSize.toInt()} ${food.servingSizeUnit}",
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                // Tyramine exposure badge
+                if (tyramineRisk != null && tyramineRisk != "none") {
+                    Spacer(Modifier.width(6.dp))
+                    val (emoji, badgeColor) = when (tyramineRisk) {
+                        "high" -> "🔴" to Color(0xFFEF5350)
+                        "medium" -> "🟡" to Color(0xFFFFA726)
+                        "low" -> "🟢" to Color(0xFF66BB6A)
+                        else -> "" to Color.Unspecified
+                    }
+                    Text(
+                        "$emoji Tyramine",
+                        color = badgeColor,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                } else if (isClassifyingTyramine && tyramineRisk == null) {
+                    Spacer(Modifier.width(6.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(10.dp),
+                        color = AppTheme.AccentPurple,
+                        strokeWidth = 1.5.dp
                     )
                 }
             }
@@ -123,3 +152,4 @@ fun NutrientRow(label: String, value: Double?, unit: String) {
         )
     }
 }
+

@@ -447,30 +447,29 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                     Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
-                    // Group by source
-                    val grouped = entries.groupBy { it.source }
-                    val sourceOrder = listOf("manual") + grouped.keys.filter { it != "manual" }.sorted()
+                    // All metrics — flat list, no source headers
+                    // Deduplicate: best entry per table (prefer non-manual)
+                    val bestByTable = mutableMapOf<String, SleepDataEntry>()
+                    entries.forEach { entry ->
+                        val existing = bestByTable[entry.table]
+                        if (existing == null || (existing.source == "manual" && entry.source != "manual")) {
+                            bestByTable[entry.table] = entry
+                        }
+                    }
 
-                    sourceOrder.forEach { source ->
-                        val items = grouped[source] ?: return@forEach
-                        Text(
-                            sourceLabel(source),
-                            color = if (source == "manual") AppTheme.AccentPurple else AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                        Spacer(Modifier.height(4.dp))
-
-                        items.forEach { entry ->
+                    bestByTable.values.forEach { entry ->
+                        val metricKey = tableToMetric[entry.table]
+                        if (metricKey != null && metricKey !in selectedMetrics.toSet()) {
                             SleepDataRow(
                                 entry = entry,
                                 valueColor = AppTheme.SubtleTextColor,
-                                onEdit = if (source == "manual") {
+                                onEdit = if (entry.source == "manual") {
                                     {
                                         editEntry = entry
                                         editValue = ""
                                     }
                                 } else null,
-                                onDelete = if (source == "manual") {
+                                onDelete = if (entry.source == "manual") {
                                     {
                                         scope.launch {
                                             val token = SessionStore.readAccessToken(context) ?: return@launch
@@ -482,7 +481,6 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                                 } else null
                             )
                         }
-                        Spacer(Modifier.height(12.dp))
                     }
                 }
             }
@@ -516,11 +514,4 @@ private fun SleepDataRow(
             )
         }
     }
-}
-
-private fun sourceLabel(source: String): String = when (source) {
-    "manual" -> "Manual"
-    "whoop" -> "WHOOP"
-    "health_connect" -> "Health Connect"
-    else -> source.replaceFirstChar { it.uppercase() }
 }

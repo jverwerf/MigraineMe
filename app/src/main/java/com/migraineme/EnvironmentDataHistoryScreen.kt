@@ -117,7 +117,7 @@ private suspend fun fetchWeatherEntriesForDate(
             header("apikey", BuildConfig.SUPABASE_ANON_KEY)
             parameter("user_id", "eq.$userId")
             parameter("date", "eq.$date")
-            parameter("select", "date,source,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,is_thunderstorm_day")
+            parameter("select", "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,is_thunderstorm_day")
         }.body()
 
         for (row in rows) {
@@ -144,6 +144,32 @@ private suspend fun fetchWeatherEntriesForDate(
     } catch (e: Exception) {
         Log.e("EnvDataHistory", "Failed to fetch weather: ${e.message}")
     }
+
+    // Fetch altitude from user_location_daily
+    try {
+        val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+        val locResp = client.get("$base/rest/v1/user_location_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            parameter("user_id", "eq.$userId")
+            parameter("date", "eq.$date")
+            parameter("select", "altitude_max_m,altitude_change_m")
+            parameter("limit", "1")
+        }
+        if (locResp.status.isSuccess()) {
+            val body = locResp.body<List<Map<String, Double?>>>()
+            val row = body.firstOrNull()
+            row?.get("altitude_max_m")?.let {
+                entries.add(WeatherDataEntry("user_location_daily", "Altitude", String.format("%.0f", it), "m", "device"))
+            }
+            row?.get("altitude_change_m")?.let {
+                entries.add(WeatherDataEntry("user_location_daily", "Altitude Change", String.format("%.0f", it), "m", "device"))
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("EnvDataHistory", "Failed to fetch altitude: ${e.message}")
+    }
+
     entries
 }
 
@@ -216,6 +242,8 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
     var editUv by remember { mutableStateOf("") }
 
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
+
+    val maxForecastDate = today.plusDays(7)
 
     fun loadEntries() {
         scope.launch {
@@ -339,6 +367,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                             when {
                                 selectedDate == today -> "Today"
                                 selectedDate == today.minusDays(1) -> "Yesterday"
+                                selectedDate == today.plusDays(1) -> "Tomorrow"
                                 else -> selectedDate.format(dateFormatter)
                             },
                             color = AppTheme.TitleColor,
@@ -347,12 +376,12 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     }
                     IconButton(
                         onClick = { selectedDateStr = selectedDate.plusDays(1).toString() },
-                        enabled = selectedDate < today
+                        enabled = selectedDate < maxForecastDate
                     ) {
                         Icon(
                             Icons.Default.ChevronRight,
                             contentDescription = "Next day",
-                            tint = if (selectedDate < today) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
+                            tint = if (selectedDate < maxForecastDate) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                         )
                     }
                 }
@@ -367,14 +396,6 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                     }
-                } else if (entries.isEmpty()) {
-                    Text(
-                        "No environment data for this day",
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
-                    )
                 } else {
                     // Map labels to metric keys
                     val labelToMetric = mapOf(
@@ -382,7 +403,9 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                         "Pressure" to WeatherCardConfig.METRIC_PRESSURE,
                         "Humidity" to WeatherCardConfig.METRIC_HUMIDITY,
                         "Wind Speed" to WeatherCardConfig.METRIC_WIND_SPEED,
-                        "UV Index" to WeatherCardConfig.METRIC_UV_INDEX
+                        "UV Index" to WeatherCardConfig.METRIC_UV_INDEX,
+                        "Altitude" to WeatherCardConfig.METRIC_ALTITUDE,
+                        "Altitude Change" to WeatherCardConfig.METRIC_ALTITUDE_CHANGE
                     )
 
                     // Best value per metric (prefer non-manual)
@@ -417,43 +440,38 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
-                    // Group by source
-                    val grouped = entries.groupBy { it.source }
-                    val sourceOrder = listOf("manual") + grouped.keys.filter { it != "manual" }.sorted()
-
-                    sourceOrder.forEach { source ->
-                        val items = grouped[source] ?: return@forEach
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                weatherSourceLabel(source),
-                                color = if (source == "manual") AppTheme.AccentPurple else AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
-                            )
-                            if (source == "manual") {
-                                Text(
-                                    "✎",
-                                    color = AppTheme.AccentPurple,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier
-                                        .clickable {
-                                            editTemp = items.find { it.label == "Temperature" }?.value ?: ""
-                                            editPressure = items.find { it.label == "Pressure" }?.value ?: ""
-                                            editHumidity = items.find { it.label == "Humidity" }?.value ?: ""
-                                            editWind = items.find { it.label == "Wind Speed" }?.value ?: ""
-                                            editUv = items.find { it.label == "UV Index" }?.value ?: ""
-                                            showEditDialog = true
-                                        }
-                                        .padding(8.dp)
-                                )
+                    // Show ALL metrics with "—" for missing
+                    WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
+                        if (metric !in selectedMetrics) {
+                            val entry = bestByMetric[metric]
+                            val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "—"
+                            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                                Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                             }
                         }
-                        Spacer(Modifier.height(4.dp))
+                    }
 
-                        items.forEach { entry ->
+                    // All entries flat (no source grouping)
+                    if (entries.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                        Spacer(Modifier.height(8.dp))
+
+                        // Deduplicate: prefer non-manual source
+                        val dedupedByLabel = mutableMapOf<String, WeatherDataEntry>()
+                        entries.forEach { entry ->
+                            val existing = dedupedByLabel[entry.label]
+                            if (existing == null || (existing.source == "manual" && entry.source != "manual")) {
+                                dedupedByLabel[entry.label] = entry
+                            }
+                        }
+
+                        dedupedByLabel.values.forEach { entry ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
@@ -466,7 +484,24 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                                 )
                             }
                         }
-                        Spacer(Modifier.height(12.dp))
+
+                        // Show edit button if manual entries exist
+                        if (entries.any { it.source == "manual" }) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "✎ Edit manual entry",
+                                color = AppTheme.AccentPurple,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.clickable {
+                                    editTemp = entries.find { it.label == "Temperature" }?.value ?: ""
+                                    editPressure = entries.find { it.label == "Pressure" }?.value ?: ""
+                                    editHumidity = entries.find { it.label == "Humidity" }?.value ?: ""
+                                    editWind = entries.find { it.label == "Wind Speed" }?.value ?: ""
+                                    editUv = entries.find { it.label == "UV Index" }?.value ?: ""
+                                    showEditDialog = true
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -506,3 +541,4 @@ private fun weatherSourceLabel(source: String): String = when (source) {
     "api" -> "Weather API"
     else -> source.replaceFirstChar { it.uppercase() }
 }
+

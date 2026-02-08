@@ -51,7 +51,8 @@ class NutritionOutboxPushWorker(
             }
 
             val service = SupabaseNutritionService(applicationContext)
-            val enrichmentService = USDAEnrichmentService() // NEW: USDA enrichment
+            val enrichmentService = USDAEnrichmentService() // USDA enrichment
+            val tyramineClassifier = TyramineClassifierService() // Tyramine classification
 
             val upserts = batch.filter { it.operation == "UPSERT" }
             val deletes = batch.filter { it.operation == "DELETE" }
@@ -59,21 +60,27 @@ class NutritionOutboxPushWorker(
             val succeededIds = mutableListOf<String>()
             val failedIds = mutableListOf<String>()
 
-            // 1) Push UPSERTs with USDA enrichment
+            // 1) Push UPSERTs with USDA enrichment + tyramine classification
             for (item in upserts) {
                 try {
                     val record = hc.readRecord(NutritionRecord::class, item.healthConnectId).record
                     val date: LocalDate = record.startTime.atZone(ZoneOffset.UTC).toLocalDate()
                     val nutrition = mapToNutritionData(record, date)
 
-                    // NEW: Enrich nutrition data if needed
-                    val finalNutrition = if (enrichmentService.needsEnrichment(nutrition)) {
+                    // Step 1: Enrich nutrition data if needed
+                    val enriched = if (enrichmentService.needsEnrichment(nutrition)) {
                         android.util.Log.d("NutritionOutboxPush", "Enriching: ${nutrition.foodName}")
                         enrichmentService.enrichNutrition(nutrition)
                     } else {
                         android.util.Log.d("NutritionOutboxPush", "No enrichment needed: ${nutrition.foodName}")
-                        nutrition.copy(enriched = true) // Already has complete data
+                        nutrition.copy(enriched = true)
                     }
+
+                    // Step 2: Classify tyramine exposure
+                    val tyramineRisk = if (!enriched.foodName.isNullOrBlank()) {
+                        tyramineClassifier.classify(accessToken, enriched.foodName)
+                    } else "none"
+                    val finalNutrition = enriched.copy(tyramineExposure = tyramineRisk)
 
                     service.uploadNutritionRecord(accessToken, finalNutrition, item.healthConnectId)
                     succeededIds.add(item.healthConnectId)
@@ -170,6 +177,8 @@ class NutritionOutboxPushWorker(
 
             caffeine = record.caffeine?.inGrams?.times(1000),
 
+            tyramineExposure = null, // Set by TyramineClassifierService after enrichment
+
             source = "health_connect",
             enriched = false // Will be set to true after enrichment
         )
@@ -185,3 +194,4 @@ class NutritionOutboxPushWorker(
         }
     }
 }
+

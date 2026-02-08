@@ -277,7 +277,6 @@ fun EditMigraineScreen(
                                                     accessToken = token,
                                                     migraineId = id,
                                                     type = r.type,
-                                                    durationMinutes = r.durationMinutes,
                                                     startAt = r.startIso ?: beganAt,
                                                     notes = r.notes
                                                 )

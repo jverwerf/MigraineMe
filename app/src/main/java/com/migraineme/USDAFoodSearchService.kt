@@ -65,6 +65,7 @@ class USDAFoodSearchService(private val context: Context) {
             folate = dbl(obj, "folate"),
             biotin = dbl(obj, "biotin"),
             pantothenicAcid = dbl(obj, "pantothenic_acid"),
+            tyramineExposure = obj.optString("tyramine_exposure", null),
             timestamp = obj.getString("timestamp"),
             source = obj.optString("source", "")
         )
@@ -249,6 +250,13 @@ class USDAFoodSearchService(private val context: Context) {
                 // Caffeine
                 getNutrient(1057)?.let { append("\"caffeine\":$it,") }
                 
+                // Tyramine exposure (classify via edge function)
+                try {
+                    val classifier = TyramineClassifierService()
+                    val risk = classifier.classify(token, foodName)
+                    if (risk != "none") append("\"tyramine_exposure\":\"$risk\",")
+                } catch (_: Exception) {}
+                
                 // Remove trailing comma and close
                 if (endsWith(",")) deleteCharAt(length - 1)
                 append("}")
@@ -378,6 +386,13 @@ class USDAFoodSearchService(private val context: Context) {
                 
                 // Caffeine
                 getNutrient(1057)?.let { append("\"caffeine\":$it,") }
+                
+                // Tyramine exposure (classify via edge function)
+                try {
+                    val classifier = TyramineClassifierService()
+                    val risk = classifier.classify(token, foodName)
+                    if (risk != "none") append("\"tyramine_exposure\":\"$risk\",")
+                } catch (_: Exception) {}
                 
                 // Remove trailing comma and close
                 if (endsWith(",")) deleteCharAt(length - 1)
@@ -865,6 +880,7 @@ data class NutritionLogItem(
     val folate: Double?,
     val biotin: Double?,
     val pantothenicAcid: Double?,
+    val tyramineExposure: String?,
     val timestamp: String,
     val source: String
 )
@@ -951,5 +967,12 @@ fun NutritionLogItem.metricValue(metric: String): Double? = when (metric) {
     MonitorCardConfig.METRIC_FOLATE -> folate
     MonitorCardConfig.METRIC_BIOTIN -> biotin
     MonitorCardConfig.METRIC_PANTOTHENIC_ACID -> pantothenicAcid
+    MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> when (tyramineExposure) {
+        "high" -> 3.0
+        "medium" -> 2.0
+        "low" -> 1.0
+        else -> 0.0
+    }
     else -> null
 }
+
