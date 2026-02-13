@@ -113,6 +113,8 @@ class SupabaseNutritionService(private val context: Context) {
             // Other
             nutrition.caffeine?.let { put("caffeine", it) }
             nutrition.tyramineExposure?.let { put("tyramine_exposure", it) }
+            nutrition.alcoholExposure?.let { put("alcohol_exposure", it) }
+            nutrition.glutenExposure?.let { put("gluten_exposure", it) }
 
             // Metadata
             put("source", nutrition.source)
@@ -231,6 +233,8 @@ data class NutritionData(
     // Other
     val caffeine: Double?, // mg
     val tyramineExposure: String? = null, // "none", "low", "medium", "high"
+    val alcoholExposure: String? = null,  // "none", "low", "medium", "high"
+    val glutenExposure: String? = null,   // "none", "low", "medium", "high"
 
     // Metadata
     val source: String,

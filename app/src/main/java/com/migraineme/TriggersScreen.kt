@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import java.time.Instant
 import java.time.LocalDateTime
@@ -39,33 +40,57 @@ fun TriggersScreen(
     vm: TriggerViewModel,
     authVm: AuthViewModel,
     logVm: LogViewModel,
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    quickLogMode: Boolean = false,
+    onSave: (() -> Unit)? = null,
+    linkedMigraineId: String? = null,
+    onMigraineSelect: ((String?) -> Unit)? = null
 ) {
-    val pool by vm.pool.collectAsState()
+    val rawPool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
+
+    // Hide triggers with prediction = NONE (user set to "None" in manage screen)
+    val pool = remember(rawPool) { rawPool.filter { it.predictionValue?.uppercase() != "NONE" } }
     val authState by authVm.state.collectAsState()
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(authState.accessToken) {
-        authState.accessToken?.let { token -> vm.loadAll(token) }
+    LaunchedEffect(authState.accessToken, draft.migraine?.beganAtIso) {
+        authState.accessToken?.let { token ->
+            vm.loadAll(token)
+            vm.loadRecent(token, draft.migraine?.beganAtIso)
+        }
+    }
+
+    // Recent triggers: type → days ago
+    val recentDaysAgo by vm.recentDaysAgo.collectAsState()
+    val recentStartAts by vm.recentStartAts.collectAsState()
+    var hasAutoSelected by remember { mutableStateOf(false) }
+
+    // Reset auto-select when migraine date changes
+    LaunchedEffect(draft.migraine?.beganAtIso) {
+        hasAutoSelected = false
     }
 
     // ── Rebuild helpers ──
     fun rebuildDraftWithTriggers(triggers: List<TriggerDraft>) {
-        val d = draft
-        logVm.clearDraft()
-        d.migraine?.let {
-            logVm.setMigraineDraft(it.type, it.severity, it.beganAtIso, it.endedAtIso, it.note, symptoms = it.symptoms)
+        logVm.replaceTriggers(triggers)
+    }
+
+    // ── Auto-select recent triggers (once, on first load — wizard only) ──
+    // Only auto-select when user has explicitly set a migraine date
+    LaunchedEffect(recentDaysAgo, pool) {
+        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty() && draft.migraine?.beganAtIso != null) {
+            val currentLabels = draft.triggers.map { it.type }.toSet()
+            val poolLabelsSet = pool.map { it.label }.toSet()
+            val toAdd = recentDaysAgo.keys
+                .filter { it in poolLabelsSet && it !in currentLabels }
+            if (toAdd.isNotEmpty()) {
+                val newTriggers = draft.triggers + toAdd.map { TriggerDraft(it, startAtIso = recentStartAts[it]) }
+                rebuildDraftWithTriggers(newTriggers)
+            }
+            hasAutoSelected = true
         }
-        if (d.painLocations.isNotEmpty()) logVm.setPainLocationsDraft(d.painLocations)
-        d.prodromes.forEach { logVm.addProdromeDraft(it.type, it.startAtIso, it.note) }
-        triggers.forEach { logVm.addTriggerDraft(it.type, it.startAtIso, it.note) }
-        d.meds.forEach { m -> m.name?.let { logVm.addMedicineDraft(it, m.amount, m.notes, m.startAtIso) } }
-        d.rels.forEach { logVm.addReliefDraft(it.type, it.notes, it.startAtIso, it.endAtIso, it.reliefScale) }
-        d.locations.forEach { logVm.addLocationDraft(it.type, it.startAtIso, it.note) }
-        d.activities.forEach { logVm.addActivityDraft(it.type, it.startAtIso, it.note) }
-        d.missedActivities.forEach { logVm.addMissedActivityDraft(it.type, it.startAtIso, it.note) }
     }
 
     // ── Time dialog: add new ──
@@ -132,7 +157,10 @@ fun TriggersScreen(
     }
 
     // Frequent labels
-    val frequentLabels = remember(frequent) { frequent.mapNotNull { it.trigger?.label }.toSet() }
+    val poolLabels = remember(pool) { pool.map { it.label }.toSet() }
+    val frequentLabels = remember(frequent, poolLabels) {
+        frequent.mapNotNull { it.trigger?.label }.filter { it in poolLabels }.toSet()
+    }
     val selectedLabels = remember(draft.triggers) { draft.triggers.map { it.type }.toSet() }
 
     // Group pool by category
@@ -145,14 +173,24 @@ fun TriggersScreen(
 
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Prodromes", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                if (!quickLogMode) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Prodromes", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
                 }
                 Text("Triggers", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                if (!quickLogMode) {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    }
+                } else {
+                    Spacer(Modifier.size(28.dp))
                 }
             }
 
@@ -234,6 +272,12 @@ fun TriggersScreen(
                 }
             }
 
+            // ── Migraine picker (quick log only) ──
+            if (quickLogMode && onMigraineSelect != null) {
+                val firstIso = draft.triggers.firstOrNull()?.startAtIso
+                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+            }
+
             // ── Single triggers card: Frequent → divider → categories with dividers ──
             BaseCard {
                 // Frequent section
@@ -241,7 +285,7 @@ fun TriggersScreen(
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { trig ->
-                            TriggerButton(trig.label, trig.label in selectedLabels) {
+                            TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recentDaysAgo[trig.label]) {
                                 onTriggerTap(trig.label)
                             }
                         }
@@ -257,7 +301,7 @@ fun TriggersScreen(
                         Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { trig ->
-                                TriggerButton(trig.label, trig.label in selectedLabels) {
+                                TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recentDaysAgo[trig.label]) {
                                     onTriggerTap(trig.label)
                                 }
                             }
@@ -283,11 +327,12 @@ fun TriggersScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(if (quickLogMode) "Cancel" else "Back") }
                 Button(
-                    onClick = { navController.navigate(Routes.MEDICINES) },
+                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.MEDICINES) },
+                    enabled = !quickLogMode || draft.triggers.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(if (quickLogMode) "Save" else "Next") }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -356,11 +401,20 @@ private fun TriggerTimeDialog(
  * ──────────────────────────────────────────────── */
 
 @Composable
-private fun TriggerButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    val circleColor = if (isSelected) Color(0xFFFFB74D).copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
-    val borderColor = if (isSelected) Color(0xFFFFB74D).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
+private fun TriggerButton(label: String, iconKey: String? = null, isSelected: Boolean, daysAgo: Int? = null, onClick: () -> Unit) {
+    val accent = Color(0xFFFFB74D)
+
+    val (circleColor, borderColor) = when {
+        isSelected && daysAgo == null -> accent.copy(alpha = 0.40f) to accent.copy(alpha = 0.7f)
+        isSelected && daysAgo == 0   -> accent.copy(alpha = 0.50f) to accent.copy(alpha = 0.85f)
+        isSelected && daysAgo == 1   -> Color(0xFFFF8A65).copy(alpha = 0.35f) to Color(0xFFFF8A65).copy(alpha = 0.65f) // deeper orange
+        isSelected && daysAgo == 2   -> Color(0xFFE57373).copy(alpha = 0.30f) to Color(0xFFE57373).copy(alpha = 0.55f) // salmon
+        isSelected && daysAgo == 3   -> Color(0xFFEF9A9A).copy(alpha = 0.25f) to Color(0xFFEF9A9A).copy(alpha = 0.45f) // faded red
+        else -> Color.White.copy(alpha = 0.08f) to Color.White.copy(alpha = 0.12f)
+    }
     val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
     val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
+    val icon = TriggerIcons.forKey(iconKey)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -380,11 +434,20 @@ private fun TriggerButton(label: String, isSelected: Boolean, onClick: () -> Uni
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                label.take(2).uppercase(),
-                color = iconTint,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
-            )
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = iconTint,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Text(
+                    label.take(2).uppercase(),
+                    color = iconTint,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                )
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(
@@ -395,6 +458,20 @@ private fun TriggerButton(label: String, isSelected: Boolean, onClick: () -> Uni
             maxLines = 2,
             modifier = Modifier.fillMaxWidth()
         )
+        if (isSelected && daysAgo != null && daysAgo > 0) {
+            Text(
+                when (daysAgo) {
+                    1 -> "yesterday"
+                    2 -> "2d ago"
+                    3 -> "3d ago"
+                    else -> ""
+                },
+                color = Color.White.copy(alpha = 0.5f),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -415,3 +492,6 @@ private fun formatTriggerTime(iso: String?): String {
         "Not set"
     }
 }
+
+
+

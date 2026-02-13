@@ -58,8 +58,11 @@ fun QuickLogTriggerScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     
     val authState by authVm.state.collectAsState()
-    val pool by triggerVm.pool.collectAsState()
+    val rawPool by triggerVm.pool.collectAsState()
     val frequent by triggerVm.frequent.collectAsState()
+
+    // Hide triggers with prediction = NONE
+    val pool = remember(rawPool) { rawPool.filter { it.predictionValue?.uppercase() != "NONE" } }
     
     // Load trigger options
     LaunchedEffect(authState.accessToken) {

@@ -13,8 +13,8 @@ class ReliefViewModel : ViewModel() {
         BuildConfig.SUPABASE_ANON_KEY
     )
 
-    private val _pool = MutableStateFlow<List<SupabaseDbService.AllReliefRow>>(emptyList())
-    val pool: StateFlow<List<SupabaseDbService.AllReliefRow>> = _pool
+    private val _pool = MutableStateFlow<List<SupabaseDbService.UserReliefRow>>(emptyList())
+    val pool: StateFlow<List<SupabaseDbService.UserReliefRow>> = _pool
 
     private val _frequent = MutableStateFlow<List<SupabaseDbService.ReliefPrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.ReliefPrefRow>> = _frequent
@@ -88,3 +88,4 @@ class ReliefViewModel : ViewModel() {
         }
     }
 }
+

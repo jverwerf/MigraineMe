@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FoodSearchResultItem(
     food: USDAFoodSearchResult,
-    tyramineRisk: String? = null,
-    isClassifyingTyramine: Boolean = false,
+    foodRisks: FoodRiskResult? = null,
+    isClassifyingRisks: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
@@ -65,23 +65,21 @@ fun FoodSearchResultItem(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-                // Tyramine exposure badge
-                if (tyramineRisk != null && tyramineRisk != "none") {
-                    Spacer(Modifier.width(6.dp))
-                    val (emoji, badgeColor) = when (tyramineRisk) {
-                        "high" -> "🔴" to Color(0xFFEF5350)
-                        "medium" -> "🟡" to Color(0xFFFFA726)
-                        "low" -> "🟢" to Color(0xFF66BB6A)
-                        else -> "" to Color.Unspecified
+                // Risk badges — geometric icon + vertical bar
+                if (foodRisks != null) {
+                    val tColor = when (foodRisks.tyramine) {
+                        "high" -> RiskColors.TyramineHigh; "medium" -> RiskColors.TyramineMedium; "low" -> RiskColors.TyramineLow; else -> null
                     }
-                    Text(
-                        "$emoji Tyramine",
-                        color = badgeColor,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                } else if (isClassifyingTyramine && tyramineRisk == null) {
+                    val aColor = when (foodRisks.alcohol) {
+                        "high" -> RiskColors.AlcoholHigh; "medium" -> RiskColors.AlcoholMedium; "low" -> RiskColors.AlcoholLow; else -> null
+                    }
+                    val gColor = when (foodRisks.gluten) {
+                        "high" -> RiskColors.GlutenHigh; "medium" -> RiskColors.GlutenMedium; "low" -> RiskColors.GlutenLow; else -> null
+                    }
+                    tColor?.let { TyramineRiskBadge(it, foodRisks.tyramine) }
+                    aColor?.let { AlcoholRiskBadge(it, foodRisks.alcohol) }
+                    gColor?.let { GlutenRiskBadge(it, foodRisks.gluten) }
+                } else if (isClassifyingRisks) {
                     Spacer(Modifier.width(6.dp))
                     CircularProgressIndicator(
                         modifier = Modifier.size(10.dp),
@@ -99,6 +97,27 @@ fun FoodSearchResultItem(
             modifier = Modifier.size(24.dp)
         )
     }
+}
+
+@Composable
+private fun RiskBadge(
+    letter: String,
+    level: String,
+    highColor: Color,
+    mediumColor: Color,
+    lowColor: Color
+) {
+    if (level == "none") return
+    val color = when (level) {
+        "high" -> highColor; "medium" -> mediumColor; "low" -> lowColor
+        else -> return
+    }
+    Spacer(Modifier.width(4.dp))
+    Text(
+        letter,
+        color = color,
+        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+    )
 }
 
 @Composable

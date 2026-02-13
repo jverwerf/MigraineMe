@@ -13,8 +13,8 @@ class MigraineViewModel : ViewModel() {
         BuildConfig.SUPABASE_ANON_KEY
     )
 
-    private val _pool = MutableStateFlow<List<SupabaseDbService.AllMigraineRow>>(emptyList())
-    val pool: StateFlow<List<SupabaseDbService.AllMigraineRow>> = _pool
+    private val _pool = MutableStateFlow<List<SupabaseDbService.UserMigrainePoolRow>>(emptyList())
+    val pool: StateFlow<List<SupabaseDbService.UserMigrainePoolRow>> = _pool
 
     private val _frequent = MutableStateFlow<List<SupabaseDbService.MigrainePrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.MigrainePrefRow>> = _frequent
@@ -87,3 +87,4 @@ class MigraineViewModel : ViewModel() {
         }
     }
 }
+

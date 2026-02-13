@@ -13,8 +13,8 @@ class MedicineViewModel : ViewModel() {
         BuildConfig.SUPABASE_ANON_KEY
     )
 
-    private val _pool = MutableStateFlow<List<SupabaseDbService.AllMedicineRow>>(emptyList())
-    val pool: StateFlow<List<SupabaseDbService.AllMedicineRow>> = _pool
+    private val _pool = MutableStateFlow<List<SupabaseDbService.UserMedicineRow>>(emptyList())
+    val pool: StateFlow<List<SupabaseDbService.UserMedicineRow>> = _pool
 
     private val _frequent = MutableStateFlow<List<SupabaseDbService.MedicinePrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.MedicinePrefRow>> = _frequent
@@ -106,3 +106,4 @@ class MedicineViewModel : ViewModel() {
         }
     }
 }
+

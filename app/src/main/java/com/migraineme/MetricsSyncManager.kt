@@ -160,6 +160,32 @@ object MetricsSyncManager {
         }
     }
 
+
+    private suspend fun seedRiskDecayWeightsBestEffort(context: Context) {
+        try {
+            val ok = EdgeFunctionsService().seedDefaultRiskDecayWeights(context)
+            if (ok) {
+                Log.d("MetricsSyncManager", "seedDefaultRiskDecayWeights ok")
+            } else {
+                Log.w("MetricsSyncManager", "seedDefaultRiskDecayWeights partial failure")
+            }
+        } catch (t: Throwable) {
+            Log.w("MetricsSyncManager", "seedDefaultRiskDecayWeights error: ${t.message}")
+        }
+    }
+
+    private suspend fun seedRiskGaugeThresholdsBestEffort(context: Context) {
+        try {
+            val ok = EdgeFunctionsService().seedDefaultRiskGaugeThresholds(context)
+            if (ok) {
+                Log.d("MetricsSyncManager", "seedDefaultRiskGaugeThresholds ok")
+            } else {
+                Log.w("MetricsSyncManager", "seedDefaultRiskGaugeThresholds partial failure")
+            }
+        } catch (t: Throwable) {
+            Log.w("MetricsSyncManager", "seedDefaultRiskGaugeThresholds error: ${t.message}")
+        }
+    }
     private fun isWhoopMetricEnabled(
         settings: List<EdgeFunctionsService.MetricSettingResponse>,
         metric: String
@@ -188,6 +214,12 @@ object MetricsSyncManager {
 
                 // Seed default trigger settings (best-effort, ignores duplicates)
                 seedTriggerSettingsBestEffort(appCtx)
+
+                // Seed default risk decay weights (best-effort, ignores duplicates)
+                seedRiskDecayWeightsBestEffort(appCtx)
+
+                // Seed default risk gauge thresholds (best-effort, ignores duplicates)
+                seedRiskGaugeThresholdsBestEffort(appCtx)
 
                 // WHOOP connection = token exists locally
                 val whoopConnected = runCatching { WhoopTokenStore(appCtx).load() != null }.getOrDefault(false)

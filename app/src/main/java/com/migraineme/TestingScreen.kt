@@ -1,345 +1,176 @@
 package com.migraineme
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 
 @Composable
 fun TestingScreen(authVm: AuthViewModel) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val auth by authVm.state.collectAsState()
     val scrollState = rememberScrollState()
 
-    var testResult by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Testing",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+
+            DataStatusCard(accessToken = auth.accessToken)
+        }
+    }
+}
+
+@Composable
+private fun DataStatusCard(accessToken: String?) {
+    val ctx = LocalContext.current.applicationContext
+    val zone = ZoneId.systemDefault()
+    val today = LocalDate.now(zone).toString()
+    val afterNine = LocalTime.now(zone) >= LocalTime.of(9, 0)
+
+    var whoopConnected by remember(accessToken, today) { mutableStateOf(false) }
+    var metricSettings by remember { mutableStateOf<List<EdgeFunctionsService.MetricSettingResponse>>(emptyList()) }
+    var settingsLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(accessToken, today) {
+        whoopConnected = runCatching { WhoopTokenStore(ctx).load() != null }.getOrDefault(false)
+
+        if (!accessToken.isNullOrBlank()) {
+            withContext(Dispatchers.IO) {
+                metricSettings = try {
+                    EdgeFunctionsService().getMetricSettings(ctx)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+        }
+        settingsLoaded = true
+    }
+
+    val isWhoopMetricEnabled: (String) -> Boolean = { metric ->
+        val setting = metricSettings.find { it.metric == metric }
+        setting != null && setting.enabled && setting.preferredSource == "whoop"
+    }
+
+    val isMetricEnabled: (String) -> Boolean = { metric ->
+        val setting = metricSettings.find { it.metric == metric }
+        setting != null && setting.enabled
+    }
+
+    val sleepAnchorsAll = listOf("sleep_duration_daily", "sleep_score_daily")
+    val sleepOptionalsAll = listOf(
+        "sleep_efficiency_daily", "sleep_stages_daily", "sleep_disturbances_daily",
+        "fell_asleep_time_daily", "woke_up_time_daily"
+    )
+    val physicalAnchorsAll = listOf("recovery_score_daily", "resting_hr_daily", "hrv_daily")
+    val physicalOptionalsAll = listOf("spo2_daily", "skin_temp_daily", "time_in_high_hr_zones_daily")
+
+    val enabledSleepAnchors = sleepAnchorsAll.filter { isWhoopMetricEnabled(it) }
+    val enabledSleepOptionals = sleepOptionalsAll.filter { isWhoopMetricEnabled(it) }
+    val enabledPhysicalAnchors = physicalAnchorsAll.filter { isWhoopMetricEnabled(it) }
+    val enabledPhysicalOptionals = physicalOptionalsAll.filter { isWhoopMetricEnabled(it) }
+    val locationEnabled = isMetricEnabled("user_location_daily")
+
+    var sleepAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
+    var physicalAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
+    var locationLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
+
+    LaunchedEffect(today, accessToken, whoopConnected, settingsLoaded, metricSettings) {
+        if (accessToken.isNullOrBlank() || !settingsLoaded) {
+            sleepAnchorLoaded = null
+            physicalAnchorLoaded = null
+            locationLoaded = null
+            return@LaunchedEffect
+        }
+
+        withContext(Dispatchers.IO) {
+            sleepAnchorLoaded = if (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) {
+                null
+            } else if (!whoopConnected) {
+                false
+            } else {
+                runCatching { SupabaseMetricsService(ctx).hasSleepForDate(accessToken, today, "whoop") }.getOrDefault(false)
+            }
+
+            physicalAnchorLoaded = if (enabledPhysicalAnchors.isEmpty() && enabledPhysicalOptionals.isEmpty()) {
+                null
+            } else if (!whoopConnected) {
+                false
+            } else {
+                runCatching { SupabasePhysicalHealthService(ctx).hasRecoveryForDate(accessToken, today, "whoop") }.getOrDefault(false)
+            }
+
+            locationLoaded = if (!locationEnabled) {
+                null
+            } else {
+                runCatching { SupabasePersonalService(ctx).hasUserLocationForDate(accessToken, today, source = "device") }.getOrDefault(false)
+            }
+        }
+    }
+
+    BaseCard {
         Text(
-            text = "Testing Screen",
-            style = MaterialTheme.typography.titleLarge
+            "Data status",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
 
-        HorizontalDivider()
-
-        // NUTRITION SYNC TEST CARD (Health Connect Changes -> Outbox -> Supabase Push)
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Nutrition Sync Test",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text = "Runs one-time: HealthConnectNutritionChangesWorker then NutritionOutboxPushWorker.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            isLoading = true
-                            testResult = runNutritionSyncNow(context)
-                            isLoading = false
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Running...")
-                    } else {
-                        Text("Run Nutrition Sync Now")
-                    }
-                }
-
-                if (testResult.isNotEmpty()) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (testResult.contains("✅"))
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.errorContainer
-                        )
-                    ) {
-                        Text(
-                            text = testResult,
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
-        }
-
-        // TIMEZONE TEST CARD
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Timezone Upload Test",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text = "Tests if timezone is being sent to Supabase correctly",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            isLoading = true
-                            testResult = testTimezoneUpload(context)
-                            isLoading = false
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Testing...")
-                    } else {
-                        Text("Test Timezone Upload")
-                    }
-                }
-
-                if (testResult.isNotEmpty()) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (testResult.contains("✅"))
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.errorContainer
-                        )
-                    ) {
-                        Text(
-                            text = testResult,
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
-        }
-
-        // SCREEN TIME TEST CARD
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Screen Time Test",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            isLoading = true
-                            testResult = testScreenTimeUpload(context)
-                            isLoading = false
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
-                ) {
-                    Text("Test Screen Time Upload")
-                }
-            }
-        }
-
-        // AMBIENT NOISE TEST CARD
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Ambient Noise Test",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            isLoading = true
-                            testResult = testAmbientNoise(context)
-                            isLoading = false
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
-                ) {
-                    Text("Test Ambient Noise Sample")
-                }
-            }
-        }
-    }
-}
-
-private suspend fun runNutritionSyncNow(context: Context): String {
-    return try {
-        val accessToken = SessionStore.getValidAccessToken(context)
-        if (accessToken == null) {
-            return "❌ Not logged in (no access token)"
-        }
-
-        val wm = androidx.work.WorkManager.getInstance(context)
-
-        val changes = androidx.work.OneTimeWorkRequestBuilder<HealthConnectNutritionChangesWorker>()
-            .addTag("debug_nutrition_changes")
-            .build()
-
-        val push = androidx.work.OneTimeWorkRequestBuilder<NutritionOutboxPushWorker>()
-            .addTag("debug_nutrition_push")
-            .build()
-
-        wm.beginWith(changes).then(push).enqueue()
-
-        """
-        ✅ Enqueued one-time nutrition sync.
-        
-        Check Logcat tags:
-        • HcNutritionChanges
-        • NutritionOutboxPush
-        """.trimIndent()
-    } catch (e: Exception) {
-        "❌ ERROR: ${e.message}"
-    }
-}
-
-private suspend fun testTimezoneUpload(context: Context): String {
-    return try {
-        val hasLocationPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-
-        if (!hasLocationPermission) {
-            return "❌ Location permission not granted"
-        }
-
-        val location = LocationDailySyncWorker.getDeviceLocation(context)
-        if (location == null) {
-            return "❌ Could not get device location"
-        }
-
-        val accessToken = SessionStore.getValidAccessToken(context)
-        if (accessToken == null) {
-            return "❌ Not logged in (no access token)"
-        }
-
-        val deviceTimezone = ZoneId.systemDefault().id
-        val today = LocalDate.now()
-
-        val svc = SupabasePersonalService(context)
-        svc.upsertUserLocationDaily(
-            accessToken = accessToken,
-            date = today.toString(),
-            latitude = location.latitude,
-            longitude = location.longitude,
-            source = "device_test",
-            timezone = deviceTimezone
+        Text(
+            text = "WHOOP: " + if (whoopConnected) "Connected" else "Not connected",
+            color = Color.White,
+            style = MaterialTheme.typography.bodyLarge
         )
 
-        """
-        ✅ SUCCESS!
-        
-        Uploaded to Supabase:
-        • Date: $today
-        • Timezone: $deviceTimezone
-        • Latitude: ${location.latitude}
-        • Longitude: ${location.longitude}
-        
-        Check your database:
-        SELECT date, timezone, latitude, longitude 
-        FROM user_location_daily 
-        WHERE source = 'device_test' 
-        ORDER BY date DESC 
-        LIMIT 1;
-        """.trimIndent()
-
-    } catch (e: Exception) {
-        "❌ ERROR: ${e.message}"
-    }
-}
-
-private suspend fun testScreenTimeUpload(context: Context): String {
-    return try {
-        if (!ScreenTimePermissionHelper.hasPermission(context)) {
-            return "❌ Screen time permission not granted"
+        val sleepText = when (sleepAnchorLoaded) {
+            null -> "Sleep: Disabled"
+            true -> "Sleep: Loaded for $today"
+            false -> "Sleep: Missing for $today"
         }
+        Text(sleepText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
 
-        val accessToken = SessionStore.getValidAccessToken(context)
-        if (accessToken == null) {
-            return "❌ Not logged in"
+        val physicalText = when (physicalAnchorLoaded) {
+            null -> "Recovery: Disabled"
+            true -> "Recovery: Loaded for $today"
+            false -> "Recovery: Missing for $today"
         }
+        Text(physicalText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
 
-        "✅ Screen time worker triggered! Check logs."
-
-    } catch (e: Exception) {
-        "❌ ERROR: ${e.message}"
-    }
-}
-
-private suspend fun testAmbientNoise(context: Context): String {
-    return try {
-        if (!MicrophonePermissionHelper.hasPermission(context)) {
-            return "❌ Microphone permission not granted"
+        val locationText = when (locationLoaded) {
+            null -> "Location: Disabled"
+            true -> "Location: Loaded for $today"
+            false -> "Location: Missing for $today"
         }
+        Text(locationText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
 
-        AmbientNoiseSampleWorker.schedule(context)
-        "✅ Ambient noise worker scheduled! Will run in ~30 seconds."
-
-    } catch (e: Exception) {
-        "❌ ERROR: ${e.message}"
+        if (afterNine) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Tip: After 9:00, today's WHOOP sleep/recovery should usually be available.",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }

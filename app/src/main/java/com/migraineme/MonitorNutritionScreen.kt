@@ -68,8 +68,8 @@ fun MonitorNutritionScreen(
     // Search state
     var searchQuery by remember { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<USDAFoodSearchResult>>(emptyList()) }
-    var tyramineRisks by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
-    var isClassifyingSearchTyramine by remember { mutableStateOf(false) }
+    var foodRisks by remember { mutableStateOf<Map<Int, FoodRiskResult>>(emptyMap()) }
+    var isClassifyingSearchRisks by remember { mutableStateOf(false) }
     var isSearching by remember { mutableStateOf(false) }
     var searchError by remember { mutableStateOf<String?>(null) }
     
@@ -82,8 +82,8 @@ fun MonitorNutritionScreen(
     var isAdding by remember { mutableStateOf(false) }
     var addSuccess by remember { mutableStateOf<String?>(null) }
     var addError by remember { mutableStateOf<String?>(null) }
-    var selectedFoodTyramineRisk by remember { mutableStateOf<String?>(null) }
-    var isClassifyingTyramine by remember { mutableStateOf(false) }
+    var selectedFoodRisks by remember { mutableStateOf<FoodRiskResult?>(null) }
+    var isClassifyingRisks by remember { mutableStateOf(false) }
     
     // Edit dialog state
     var editingItem by remember { mutableStateOf<NutritionLogItem?>(null) }
@@ -107,29 +107,29 @@ fun MonitorNutritionScreen(
         scope.launch {
             isSearching = true
             searchError = null
-            tyramineRisks = emptyMap()
+            foodRisks = emptyMap()
             searchResults = searchService.searchFoods(searchQuery)
             if (searchResults.isEmpty()) searchError = "No foods found for \"$searchQuery\""
             isSearching = false
 
-            // Classify tyramine in background on IO thread
+            // Classify food risks in background on IO thread
             if (searchResults.isNotEmpty()) {
-                isClassifyingSearchTyramine = true
-                val classifier = TyramineClassifierService()
-                val token = authState.accessToken ?: run { isClassifyingSearchTyramine = false; return@launch }
-                val risks = mutableMapOf<Int, String>()
+                isClassifyingSearchRisks = true
+                val classifier = FoodRiskClassifierService()
+                val token = authState.accessToken ?: run { isClassifyingSearchRisks = false; return@launch }
+                val risks = mutableMapOf<Int, FoodRiskResult>()
                 searchResults.forEach { food ->
                     try {
-                        val risk = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                             classifier.classify(token, food.description)
                         }
-                        risks[food.fdcId] = risk
-                        tyramineRisks = risks.toMap() // Update UI progressively
+                        risks[food.fdcId] = result
+                        foodRisks = risks.toMap()
                     } catch (e: Exception) {
-                        android.util.Log.e("NutritionScreen", "Tyramine classify failed: ${e.message}", e)
+                        android.util.Log.e("NutritionScreen", "Risk classify failed: ${e.message}", e)
                     }
                 }
-                isClassifyingSearchTyramine = false
+                isClassifyingSearchRisks = false
             }
         }
     }
@@ -139,30 +139,30 @@ fun MonitorNutritionScreen(
         selectedFoodDetails = null
         selectedServings = 1.0
         isLoadingDetails = true
-        selectedFoodTyramineRisk = null
-        isClassifyingTyramine = true
+        selectedFoodRisks = null
+        isClassifyingRisks = true
         scope.launch {
             selectedFoodDetails = searchService.getFoodDetails(food.fdcId)
             isLoadingDetails = false
         }
-        // Check if we already have the risk from search results
-        val cachedRisk = tyramineRisks[food.fdcId]
-        if (cachedRisk != null) {
-            selectedFoodTyramineRisk = cachedRisk
-            isClassifyingTyramine = false
+        // Check if we already have risks from search results
+        val cached = foodRisks[food.fdcId]
+        if (cached != null) {
+            selectedFoodRisks = cached
+            isClassifyingRisks = false
         } else {
             scope.launch {
                 try {
                     val token = authState.accessToken ?: return@launch
-                    val risk = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        TyramineClassifierService().classify(token, food.description)
+                    val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        FoodRiskClassifierService().classify(token, food.description)
                     }
-                    selectedFoodTyramineRisk = risk
+                    selectedFoodRisks = result
                 } catch (e: Exception) {
-                    selectedFoodTyramineRisk = "none"
-                    android.util.Log.e("NutritionScreen", "Tyramine classify failed: ${e.message}")
+                    selectedFoodRisks = FoodRiskResult()
+                    android.util.Log.e("NutritionScreen", "Risk classify failed: ${e.message}")
                 } finally {
-                    isClassifyingTyramine = false
+                    isClassifyingRisks = false
                 }
             }
         }
@@ -180,8 +180,10 @@ fun MonitorNutritionScreen(
             onServingsChange = { selectedServings = it },
             isAdding = isAdding,
             monitorMetrics = config.nutritionDisplayMetrics,
-            tyramineRisk = selectedFoodTyramineRisk,
-            isClassifyingTyramine = isClassifyingTyramine,
+            tyramineRisk = selectedFoodRisks?.tyramine,
+            alcoholRisk = selectedFoodRisks?.alcohol,
+            glutenRisk = selectedFoodRisks?.gluten,
+            isClassifyingRisks = isClassifyingRisks,
             onDismiss = { selectedFood = null; selectedFoodDetails = null },
             onConfirm = {
                 scope.launch {
@@ -334,8 +336,8 @@ fun MonitorNutritionScreen(
                     searchResults.forEach { food ->
                         FoodSearchResultItem(
                             food = food,
-                            tyramineRisk = tyramineRisks[food.fdcId],
-                            isClassifyingTyramine = isClassifyingSearchTyramine && tyramineRisks[food.fdcId] == null,
+                            foodRisks = foodRisks[food.fdcId],
+                            isClassifyingRisks = isClassifyingSearchRisks && foodRisks[food.fdcId] == null,
                             onClick = { selectFood(food) }
                         )
                     }
@@ -398,36 +400,50 @@ fun MonitorNutritionScreen(
                         Spacer(Modifier.height(4.dp))
 
                         MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
-                            val total = if (metric == MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
+                            val isRisk = MonitorCardConfig.isRiskMetric(metric)
+                            val total = if (isRisk) {
                                 todayItems.maxOfOrNull { it.metricValue(metric) ?: 0.0 } ?: 0.0
                             } else {
                                 todayItems.sumOf { it.metricValue(metric) ?: 0.0 }
                             }
                             val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
                             val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
-                            val formatted = if (metric == MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
-                                when (total.toInt()) {
-                                    3 -> "🔴 High"
-                                    2 -> "🟡 Medium"
-                                    1 -> "🟢 Low"
-                                    else -> "⚪ None"
+                            if (isRisk) {
+                                val (levelText, valueColor) = RiskColors.formatRiskLevel(metric, total.toInt())
+                                val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        when (metric) {
+                                            MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> CheeseIcon(valueColor, 12.dp)
+                                            MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> WineGlassIcon(valueColor, 12.dp)
+                                            MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> WheatIcon(valueColor, 12.dp)
+                                        }
+                                        Spacer(Modifier.width(5.dp))
+                                        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Row(verticalAlignment = Alignment.Bottom) {
+                                        Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
+                                        if (level != "none") {
+                                            Spacer(Modifier.width(4.dp))
+                                            RiskBar(valueColor, level, maxHeight = 12.dp)
+                                        }
+                                    }
                                 }
-                            } else if (total > 0) {
-                                if (total >= 10) "${total.toInt()}" else String.format("%.1f", total)
-                            } else "—"
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                                Text(
-                                    if (formatted.startsWith("🔴") || formatted.startsWith("🟡") ||
-                                        formatted.startsWith("🟢") || formatted.startsWith("⚪") ||
-                                        formatted == "—") formatted
-                                    else "$formatted $unit",
-                                    color = AppTheme.SubtleTextColor,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                            } else {
+                                val formatted = if (total > 0) {
+                                    if (total >= 10) "${total.toInt()} $unit" else "${String.format("%.1f", total)} $unit"
+                                } else "—"
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                         }
                     }
@@ -450,4 +466,7 @@ private fun NutritionSummaryValue(value: String, label: String, color: Color = A
         Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
+
+// Risk metric color scheme
+// Defined in RiskColors.kt
 

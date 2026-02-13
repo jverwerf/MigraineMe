@@ -1,0 +1,264 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const FIREBASE_SERVICE_ACCOUNT = JSON.parse(
+  Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!
+);
+
+// Get Firebase access token using service account
+async function getFirebaseAccessToken(): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = now + 3600;
+
+  // Create JWT header and payload
+  const header = { alg: "RS256", typ: "JWT" };
+  const payload = {
+    iss: FIREBASE_SERVICE_ACCOUNT.client_email,
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: expiry,
+  };
+
+  // Encode to base64url
+  const encoder = new TextEncoder();
+  const headerB64 = btoa(JSON.stringify(header))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+  const payloadB64 = btoa(JSON.stringify(payload))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+
+  const signatureInput = `${headerB64}.${payloadB64}`;
+
+  // Import private key and sign
+  const pemContents = FIREBASE_SERVICE_ACCOUNT.private_key
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s/g, "");
+
+  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    cryptoKey,
+    encoder.encode(signatureInput)
+  );
+
+  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+
+  const jwt = `${signatureInput}.${signatureB64}`;
+
+  // Exchange JWT for access token
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+  });
+
+  const tokenData = await tokenResponse.json();
+  return tokenData.access_token;
+}
+
+// Send FCM message to a single device
+async function sendFcmMessage(
+  accessToken: string,
+  fcmToken: string,
+  messageType: string
+): Promise<boolean> {
+  const projectId = FIREBASE_SERVICE_ACCOUNT.project_id;
+  const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+  const message = {
+    message: {
+      token: fcmToken,
+      data: {
+        type: messageType,
+      },
+      android: {
+        priority: "high",
+      },
+    },
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(message),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error(`FCM send failed for token ${fcmToken.slice(0, 20)}...: ${error}`);
+    return false;
+  }
+
+  return true;
+}
+
+serve(async (req) => {
+  try {
+    // Allow both POST (manual trigger) and GET (cron trigger)
+    const url = new URL(req.url);
+    let messageType = "sync_hourly";
+
+    if (req.method === "POST") {
+      const body = await req.json();
+      messageType = body.type || "sync_hourly";
+    } else {
+      messageType = url.searchParams.get("type") || "sync_hourly";
+    }
+
+    console.log(`Sending FCM push: type=${messageType}`);
+
+    // Get all users with FCM tokens who have this metric enabled
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Map message type to metric name for filtering users
+    // sync_health_connect checks if user has ANY health connect metric enabled
+    const metricMap: Record<string, string> = {
+      sync_hourly: "user_location_daily", // triggers location + screen time
+      sync_location: "user_location_daily",
+      sync_screen_time: "screen_time_daily",
+      sync_weather: "weather",
+      sync_noise: "ambient_noise_samples",
+      sync_health_connect: "hrv_daily", // Use HRV as proxy - if they have HC connected, they'll have this
+    };
+
+    const metric = metricMap[messageType] || "user_location_daily";
+
+    let enabledUserIds: Set<string>;
+
+    if (messageType === "sync_health_connect") {
+      // For Health Connect, get users who have ANY health_connect metric enabled
+      const healthConnectMetrics = [
+        "sleep_duration_daily",
+        "hrv_daily",
+        "resting_hr_daily",
+        "steps_daily",
+        "weight_daily",
+        "body_fat_daily",
+        "hydration_daily",
+        "blood_pressure_daily",
+        "blood_glucose_daily",
+        "spo2_daily",
+        "respiratory_rate_daily",
+        "skin_temp_daily",
+      ];
+
+      const { data: enabledUsers, error: settingsError } = await supabase
+        .from("metric_settings")
+        .select("user_id")
+        .in("metric", healthConnectMetrics)
+        .eq("enabled", true)
+        .eq("preferred_source", "health_connect");
+
+      if (settingsError) {
+        console.error("Error fetching metric_settings:", settingsError);
+        return new Response(JSON.stringify({ error: settingsError.message }), {
+          status: 500,
+        });
+      }
+
+      enabledUserIds = new Set((enabledUsers || []).map((u) => u.user_id));
+    } else {
+      // Standard single metric check
+      const { data: enabledUsers, error: settingsError } = await supabase
+        .from("metric_settings")
+        .select("user_id")
+        .eq("metric", metric)
+        .eq("enabled", true);
+
+      if (settingsError) {
+        console.error("Error fetching metric_settings:", settingsError);
+        return new Response(JSON.stringify({ error: settingsError.message }), {
+          status: 500,
+        });
+      }
+
+      enabledUserIds = new Set((enabledUsers || []).map((u) => u.user_id));
+    }
+
+    console.log(`Found ${enabledUserIds.size} users with ${messageType} enabled`);
+
+    if (enabledUserIds.size === 0) {
+      return new Response(
+        JSON.stringify({ success: true, sent: 0, message: "No users with metric enabled" }),
+        { status: 200 }
+      );
+    }
+
+    // Get FCM tokens for these users
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, fcm_token")
+      .not("fcm_token", "is", null);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      return new Response(JSON.stringify({ error: profilesError.message }), {
+        status: 500,
+      });
+    }
+
+    // Filter to only users who have the metric enabled
+    const tokensToSend = (profiles || [])
+      .filter((p) => p.fcm_token && enabledUserIds.has(p.user_id))
+      .map((p) => p.fcm_token);
+
+    console.log(`Sending to ${tokensToSend.length} devices`);
+
+    if (tokensToSend.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, sent: 0, message: "No FCM tokens found" }),
+        { status: 200 }
+      );
+    }
+
+    // Get Firebase access token
+    const firebaseToken = await getFirebaseAccessToken();
+
+    // Send to all devices
+    let sent = 0;
+    let failed = 0;
+
+    for (const fcmToken of tokensToSend) {
+      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType);
+      if (success) {
+        sent++;
+      } else {
+        failed++;
+      }
+    }
+
+    console.log(`FCM push complete: sent=${sent}, failed=${failed}`);
+
+    return new Response(
+      JSON.stringify({ success: true, sent, failed, type: messageType }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("FCM push error:", error);
+    return new Response(JSON.stringify({ error: String(error) }), {
+      status: 500,
+    });
+  }
+});

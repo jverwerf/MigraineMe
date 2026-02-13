@@ -91,13 +91,13 @@ fun EditMigraineScreen(
     var mgFrequent by remember { mutableStateOf(listOf<String>()) }
     var mgAll by remember { mutableStateOf(listOf<String>()) }
 
-    var trigPool by remember { mutableStateOf(listOf<SupabaseDbService.AllTriggerRow>()) }
+    var trigPool by remember { mutableStateOf(listOf<SupabaseDbService.UserTriggerRow>()) }
     var trigFreq by remember { mutableStateOf(listOf<String>()) }
 
-    var medPool by remember { mutableStateOf(listOf<SupabaseDbService.AllMedicineRow>()) }
+    var medPool by remember { mutableStateOf(listOf<SupabaseDbService.UserMedicineRow>()) }
     var medFreq by remember { mutableStateOf(listOf<String>()) }
 
-    var relPool by remember { mutableStateOf(listOf<SupabaseDbService.AllReliefRow>()) }
+    var relPool by remember { mutableStateOf(listOf<SupabaseDbService.UserReliefRow>()) }
     var relFreq by remember { mutableStateOf(listOf<String>()) }
 
     // Linked rows
@@ -338,7 +338,7 @@ fun EditMigraineScreen(
             )
             Step.TRIGGERS -> TriggersPage(
                 trigFreq = trigFreq,
-                trigPool = trigPool.map { it.label },
+                trigPool = trigPool.filter { it.predictionValue?.uppercase() != "NONE" }.map { it.label },
                 linked = linkedTriggers,
                 addQueue = addTriggers,
                 onQueueRemove = { addTriggers = addTriggers.filterNot { p -> p === it } },
@@ -950,3 +950,5 @@ private fun ReliefAddDialog(
         }
     )
 }
+
+

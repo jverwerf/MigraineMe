@@ -13,14 +13,14 @@ class SymptomViewModel : ViewModel() {
         BuildConfig.SUPABASE_ANON_KEY
     )
 
-    private val _painCharacter = MutableStateFlow<List<SupabaseDbService.AllSymptomRow>>(emptyList())
-    val painCharacter: StateFlow<List<SupabaseDbService.AllSymptomRow>> = _painCharacter
+    private val _painCharacter = MutableStateFlow<List<SupabaseDbService.UserSymptomRow>>(emptyList())
+    val painCharacter: StateFlow<List<SupabaseDbService.UserSymptomRow>> = _painCharacter
 
-    private val _accompanying = MutableStateFlow<List<SupabaseDbService.AllSymptomRow>>(emptyList())
-    val accompanying: StateFlow<List<SupabaseDbService.AllSymptomRow>> = _accompanying
+    private val _accompanying = MutableStateFlow<List<SupabaseDbService.UserSymptomRow>>(emptyList())
+    val accompanying: StateFlow<List<SupabaseDbService.UserSymptomRow>> = _accompanying
 
-    private val _pool = MutableStateFlow<List<SupabaseDbService.AllSymptomRow>>(emptyList())
-    val pool: StateFlow<List<SupabaseDbService.AllSymptomRow>> = _pool
+    private val _pool = MutableStateFlow<List<SupabaseDbService.UserSymptomRow>>(emptyList())
+    val pool: StateFlow<List<SupabaseDbService.UserSymptomRow>> = _pool
 
     private val _favorites = MutableStateFlow<List<SupabaseDbService.SymptomPrefRow>>(emptyList())
     val favorites: StateFlow<List<SupabaseDbService.SymptomPrefRow>> = _favorites
@@ -95,3 +95,4 @@ class SymptomViewModel : ViewModel() {
         }
     }
 }
+

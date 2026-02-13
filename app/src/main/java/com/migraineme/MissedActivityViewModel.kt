@@ -10,8 +10,8 @@ class MissedActivityViewModel : ViewModel() {
 
     private val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
 
-    private val _pool = MutableStateFlow<List<SupabaseDbService.AllMissedActivityRow>>(emptyList())
-    val pool: StateFlow<List<SupabaseDbService.AllMissedActivityRow>> = _pool
+    private val _pool = MutableStateFlow<List<SupabaseDbService.UserMissedActivityRow>>(emptyList())
+    val pool: StateFlow<List<SupabaseDbService.UserMissedActivityRow>> = _pool
 
     private val _frequent = MutableStateFlow<List<SupabaseDbService.MissedActivityPrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.MissedActivityPrefRow>> = _frequent
@@ -69,3 +69,4 @@ class MissedActivityViewModel : ViewModel() {
         }
     }
 }
+

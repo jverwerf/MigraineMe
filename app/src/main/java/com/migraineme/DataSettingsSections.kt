@@ -47,7 +47,8 @@ object DataSettingsSections {
                 wearableRow("spo2_daily", "Blood oxygen (SpO2)"),
                 wearableRow("time_in_high_hr_zones_daily", "Time in high HR zones"),
                 wearableRow("activity_hr_zones_sessions", "Workout HR zones"),
-                wearableRow("steps_daily", "Steps")
+                wearableRow("steps_daily", "Steps"),
+                wearableRow("strain_daily", "Strain")
             )
         ),
         DataSection(

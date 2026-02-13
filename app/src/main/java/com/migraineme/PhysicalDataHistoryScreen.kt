@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -57,7 +58,10 @@ data class PhysicalDataEntry(
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
 @Composable
-fun PhysicalDataHistoryScreen(onBack: () -> Unit) {
+fun PhysicalDataHistoryScreen(
+    onBack: () -> Unit,
+    onNavigateToActivities: ((String) -> Unit)? = null
+) {
     val context = LocalContext.current
     val scrollState = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
     val scope = rememberCoroutineScope()
@@ -69,6 +73,7 @@ fun PhysicalDataHistoryScreen(onBack: () -> Unit) {
     var entries by remember { mutableStateOf<List<PhysicalDataEntry>>(emptyList()) }
     val physicalConfig = remember { PhysicalCardConfigStore.load(context) }
     var isLoading by remember { mutableStateOf(true) }
+    var activityCount by remember { mutableStateOf(0) }
 
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
 
@@ -78,6 +83,7 @@ fun PhysicalDataHistoryScreen(onBack: () -> Unit) {
             val token = SessionStore.readAccessToken(context) ?: return@launch
             val userId = SessionStore.readUserId(context) ?: return@launch
             entries = fetchPhysicalEntriesForDate(selectedDateStr, token, userId)
+            activityCount = fetchActivityCount(context, selectedDateStr)
             isLoading = false
         }
     }
@@ -231,6 +237,34 @@ fun PhysicalDataHistoryScreen(onBack: () -> Unit) {
                     .forEach { entry ->
                         PhysicalDataRow(entry = entry)
                     }
+
+                // Activities row
+                if (activityCount > 0) {
+                    Spacer(Modifier.height(4.dp))
+                    HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                    Spacer(Modifier.height(8.dp))
+                    Text("Activities", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToActivities?.invoke(selectedDateStr) }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("💪", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "$activityCount ${if (activityCount == 1) "activity" else "activities"}",
+                                color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        Text("View →", color = Color(0xFFFF7043), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+                    }
+                }
             }
         }
     }

@@ -72,17 +72,23 @@ fun LogHomeScreen(
         authState.accessToken?.let { symptomVm.loadAll(it) }
     }
 
-    // UI state
-    val selectedSymptoms = remember { mutableStateListOf<String>() }
-    var notes by rememberSaveable { mutableStateOf("") }
+    // UI state — initialize from draft if available
+    val selectedSymptoms = remember {
+        mutableStateListOf<String>().apply {
+            draft.migraine?.symptoms?.let { addAll(it) }
+        }
+    }
+    var notes by rememberSaveable { mutableStateOf(draft.migraine?.note ?: "") }
 
-    // Sync from existing draft once
-    LaunchedEffect(draft.migraine) {
+    // Sync from existing draft when it changes
+    LaunchedEffect(draft.migraine?.symptoms, draft.migraine?.note) {
         draft.migraine?.let { m ->
             if (selectedSymptoms.isEmpty() && m.symptoms.isNotEmpty()) {
                 selectedSymptoms.addAll(m.symptoms)
             }
-            notes = m.note ?: ""
+            if (notes.isEmpty() && !m.note.isNullOrBlank()) {
+                notes = m.note ?: ""
+            }
         }
     }
 
@@ -310,3 +316,4 @@ private fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? =
         )
     }
 }
+

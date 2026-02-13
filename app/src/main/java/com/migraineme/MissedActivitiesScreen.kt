@@ -129,7 +129,7 @@ fun MissedActivitiesScreen(
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { ma ->
-                            MissedCircleButton(ma.label, ma.label in selectedLabels) { onTap(ma.label) }
+                            MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) }
                         }
                     }
                     HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
@@ -140,7 +140,7 @@ fun MissedActivitiesScreen(
                     if (nonFreq.isNotEmpty()) {
                         Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            nonFreq.forEach { ma -> MissedCircleButton(ma.label, ma.label in selectedLabels) { onTap(ma.label) } }
+                            nonFreq.forEach { ma -> MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) } }
                         }
                         if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
                             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
@@ -164,8 +164,9 @@ fun MissedActivitiesScreen(
 }
 
 @Composable
-private fun MissedCircleButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun MissedCircleButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
     val accent = Color(0xFFEF9A9A)
+    val icon = MissedActivityIcons.forKey(iconKey)
     val bg = if (isSelected) accent.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val border = if (isSelected) accent.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     Column(
@@ -173,8 +174,12 @@ private fun MissedCircleButton(label: String, isSelected: Boolean, onClick: () -
         modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)
     ) {
         Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(1.5.dp, border, CircleShape), contentAlignment = Alignment.Center) {
-            Text(label.take(2).uppercase(), color = if (isSelected) Color.White else AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = label, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor, modifier = Modifier.size(24.dp))
+            } else {
+                Text(label.take(2).uppercase(), color = if (isSelected) Color.White else AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(label, color = if (isSelected) Color.White else AppTheme.BodyTextColor,
@@ -214,3 +219,4 @@ private fun formatMissedTime(iso: String?): String {
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) { "Not set" }
 }
+

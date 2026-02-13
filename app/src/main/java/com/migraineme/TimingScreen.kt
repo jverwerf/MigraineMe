@@ -48,14 +48,14 @@ fun TimingScreen(
     val draft by vm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    var beganAt by rememberSaveable { mutableStateOf<String?>(null) }
-    var endedAt by rememberSaveable { mutableStateOf<String?>(null) }
+    var beganAt by rememberSaveable { mutableStateOf(draft.migraine?.beganAtIso) }
+    var endedAt by rememberSaveable { mutableStateOf(draft.migraine?.endedAtIso) }
 
-    // Sync from draft
-    LaunchedEffect(draft.migraine) {
+    // Sync from draft when it changes
+    LaunchedEffect(draft.migraine?.beganAtIso, draft.migraine?.endedAtIso) {
         draft.migraine?.let { m ->
-            beganAt = m.beganAtIso
-            endedAt = m.endedAtIso
+            if (m.beganAtIso != null && beganAt == null) beganAt = m.beganAtIso
+            if (m.endedAtIso != null && endedAt == null) endedAt = m.endedAtIso
         }
     }
 
@@ -180,3 +180,4 @@ private fun computeDurationText(startIso: String, endIso: String): String? {
         }
     } catch (_: Exception) { null }
 }
+

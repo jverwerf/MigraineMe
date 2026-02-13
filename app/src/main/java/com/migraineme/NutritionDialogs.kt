@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +49,9 @@ fun AddFoodDialog(
     isAdding: Boolean,
     monitorMetrics: List<String>,
     tyramineRisk: String? = null,
-    isClassifyingTyramine: Boolean = false,
+    alcoholRisk: String? = null,
+    glutenRisk: String? = null,
+    isClassifyingRisks: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -211,28 +214,25 @@ fun AddFoodDialog(
                         }
                     }
 
-                    // Tyramine exposure row
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Tyramine Exposure", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                        if (isClassifyingTyramine) {
+                    // Food risk rows (tyramine, alcohol, gluten)
+                    Spacer(Modifier.height(4.dp))
+                    if (isClassifyingRisks) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Food Risks", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 CircularProgressIndicator(Modifier.size(12.dp), AppTheme.AccentPurple, strokeWidth = 1.5.dp)
                                 Spacer(Modifier.width(4.dp))
                                 Text("Classifying…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
-                        } else {
-                            val display = when (tyramineRisk) {
-                                "high" -> "🔴 High"
-                                "medium" -> "🟡 Medium"
-                                "low" -> "🟢 Low"
-                                else -> "⚪ None"
-                            }
-                            Text(display, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
+                    } else {
+                        DialogRiskRowWithIcon("Tyramine", tyramineRisk, RiskColors.TyramineHigh, RiskColors.TyramineMedium, RiskColors.TyramineLow) { c, s -> CheeseIcon(c, s) }
+                        DialogRiskRowWithIcon("Alcohol", alcoholRisk, RiskColors.AlcoholHigh, RiskColors.AlcoholMedium, RiskColors.AlcoholLow) { c, s -> WineGlassIcon(c, s) }
+                        DialogRiskRowWithIcon("Gluten", glutenRisk, RiskColors.GlutenHigh, RiskColors.GlutenMedium, RiskColors.GlutenLow) { c, s -> WheatIcon(c, s) }
                     }
 
                     // All Nutrients divider
@@ -244,7 +244,7 @@ fun AddFoodDialog(
 
                     val shownMetrics = monitorMetrics.toSet()
                     MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
-                        if (metric != MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE && metric !in shownMetrics) {
+                        if (!MonitorCardConfig.isRiskMetric(metric) && metric !in shownMetrics) {
                             val value = getValue(metric)
                             val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
                             val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
@@ -427,3 +427,37 @@ fun EditFoodDialog(
     )
 }
 
+@Composable
+private fun DialogRiskRowWithIcon(
+    label: String,
+    risk: String?,
+    highColor: Color,
+    mediumColor: Color,
+    lowColor: Color,
+    icon: @Composable (Color, Dp) -> Unit
+) {
+    val level = risk ?: "none"
+    val display = when (level) { "high" -> "High"; "medium" -> "Medium"; "low" -> "Low"; else -> "None" }
+    val color = when (level) {
+        "high" -> highColor; "medium" -> mediumColor; "low" -> lowColor
+        else -> AppTheme.SubtleTextColor
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            icon(color, 14.dp)
+            Spacer(Modifier.width(6.dp))
+            Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+        }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(display, color = color, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+            if (level != "none") {
+                Spacer(Modifier.width(4.dp))
+                RiskBar(color, level, maxHeight = 14.dp)
+            }
+        }
+    }
+}

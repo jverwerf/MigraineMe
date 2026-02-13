@@ -65,7 +65,9 @@ class USDAFoodSearchService(private val context: Context) {
             folate = dbl(obj, "folate"),
             biotin = dbl(obj, "biotin"),
             pantothenicAcid = dbl(obj, "pantothenic_acid"),
-            tyramineExposure = obj.optString("tyramine_exposure", null),
+            tyramineExposure = if (!obj.has("tyramine_exposure") || obj.isNull("tyramine_exposure")) null else obj.optString("tyramine_exposure"),
+            alcoholExposure = if (!obj.has("alcohol_exposure") || obj.isNull("alcohol_exposure")) null else obj.optString("alcohol_exposure"),
+            glutenExposure = if (!obj.has("gluten_exposure") || obj.isNull("gluten_exposure")) null else obj.optString("gluten_exposure"),
             timestamp = obj.getString("timestamp"),
             source = obj.optString("source", "")
         )
@@ -82,85 +84,216 @@ class USDAFoodSearchService(private val context: Context) {
     }
 
     /**
-     * Search USDA database for foods matching query
-     * Prioritizes generic/foundation foods over branded products
+     * Search for foods — USDA API primary, local Supabase DB fallback on rate limit.
      */
     suspend fun searchFoods(query: String): List<USDAFoodSearchResult> = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
-        
-        try {
-            // dataType filter: Foundation, SR Legacy = generic foods; Branded = company products
-            // We search with Foundation and SR Legacy first for generic results
+
+        val result: List<USDAFoodSearchResult> = try {
             val url = "$BASE_URL/foods/search?api_key=$API_KEY" +
                 "&query=${query.replace(" ", "%20")}" +
                 "&pageSize=25" +
                 "&dataType=Foundation,SR%20Legacy,Survey%20(FNDDS)"
-            
-            val request = Request.Builder()
-                .url(url)
-                .get()
-                .build()
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    Log.e(TAG, "USDA search failed: ${response.code}")
-                    return@withContext emptyList()
-                }
-                
-                val body = response.body?.string() ?: return@withContext emptyList()
-                val searchResponse = json.decodeFromString<USDASearchResponseFull>(body)
-                
-                // Sort results: Foundation first, then SR Legacy, then others
-                val sortedFoods = searchResponse.foods.sortedBy { food ->
-                    when (food.dataType) {
-                        "Foundation" -> 0
-                        "SR Legacy" -> 1
-                        "Survey (FNDDS)" -> 2
-                        else -> 3
+            val request = Request.Builder().url(url).get().build()
+            val response = httpClient.newCall(request).execute()
+
+            if (response.code == 429 || response.code == 403) {
+                response.close()
+                Log.w(TAG, "USDA rate limited (${response.code}), falling back to local DB")
+                searchLocalFoods(query)
+            } else if (!response.isSuccessful) {
+                response.close()
+                Log.e(TAG, "USDA search failed: ${response.code}, trying local DB")
+                searchLocalFoods(query)
+            } else {
+                val body = response.body?.string()
+                response.close()
+                if (body == null) {
+                    searchLocalFoods(query)
+                } else {
+                    val searchResponse = json.decodeFromString<USDASearchResponseFull>(body)
+                    if (searchResponse.foods.isEmpty()) {
+                        emptyList()
+                    } else {
+                        val sortedFoods = searchResponse.foods.sortedBy { food ->
+                            when (food.dataType) {
+                                "Foundation" -> 0; "SR Legacy" -> 1; "Survey (FNDDS)" -> 2; else -> 3
+                            }
+                        }
+                        sortedFoods.take(20).map { food ->
+                            USDAFoodSearchResult(
+                                fdcId = food.fdcId,
+                                description = food.description,
+                                brandName = food.brandName,
+                                servingSize = food.servingSize,
+                                servingSizeUnit = food.servingSizeUnit,
+                                calories = food.foodNutrients.find { it.nutrientId == 1008 }?.value
+                            )
+                        }
                     }
-                }
-                
-                sortedFoods.take(20).map { food ->
-                    USDAFoodSearchResult(
-                        fdcId = food.fdcId,
-                        description = food.description,
-                        brandName = food.brandName,
-                        servingSize = food.servingSize,
-                        servingSizeUnit = food.servingSizeUnit,
-                        calories = food.foodNutrients.find { it.nutrientId == 1008 }?.value
-                    )
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Search failed: ${e.message}", e)
-            emptyList()
+            Log.e(TAG, "USDA search failed: ${e.message}, trying local DB", e)
+            searchLocalFoods(query)
+        }
+        result
+    }
+
+    /**
+     * Fallback: search local Supabase usda_foods table using RPC.
+     */
+    private fun searchLocalFoods(query: String): List<USDAFoodSearchResult> {
+        try {
+            val token = SessionStore.readAccessToken(context) ?: return emptyList()
+            val rpcUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/rpc/search_usda_foods"
+            val body = org.json.JSONObject().apply {
+                put("search_query", query)
+                put("result_limit", 20)
+            }
+
+            val request = Request.Builder()
+                .url(rpcUrl)
+                .post(body.toString().toRequestBody("application/json".toMediaType()))
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+
+            val response = httpClient.newCall(request).execute()
+            if (!response.isSuccessful) {
+                response.close()
+                Log.e(TAG, "Local search failed: ${response.code}")
+                return emptyList()
+            }
+
+            val respBody = response.body?.string()
+            response.close()
+            if (respBody == null) return emptyList()
+
+            val arr = org.json.JSONArray(respBody)
+            val results = mutableListOf<USDAFoodSearchResult>()
+
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                results.add(
+                    USDAFoodSearchResult(
+                        fdcId = obj.getInt("fdc_id"),
+                        description = obj.getString("description"),
+                        brandName = null,
+                        servingSize = if (obj.isNull("serving_size")) null else obj.optDouble("serving_size").takeIf { !it.isNaN() },
+                        servingSizeUnit = if (obj.isNull("serving_size_unit")) null else obj.optString("serving_size_unit"),
+                        calories = null
+                    )
+                )
+            }
+
+            Log.d(TAG, "Local DB search '$query': ${results.size} results")
+            return results
+        } catch (e: Exception) {
+            Log.e(TAG, "Local search failed: ${e.message}", e)
+            return emptyList()
         }
     }
 
     /**
-     * Get full nutrient details for a food
+     * Get full nutrient details — USDA API primary, local DB fallback.
      */
     suspend fun getFoodDetails(fdcId: Int): USDAFoodDetailsFull? = withContext(Dispatchers.IO) {
-        try {
+        val result: USDAFoodDetailsFull? = try {
             val url = "$BASE_URL/food/$fdcId?api_key=$API_KEY"
-            
-            val request = Request.Builder()
-                .url(url)
-                .get()
-                .build()
+            val request = Request.Builder().url(url).get().build()
+            val response = httpClient.newCall(request).execute()
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    Log.e(TAG, "USDA details failed: ${response.code}")
-                    return@withContext null
+            if (response.code == 429 || response.code == 403) {
+                response.close()
+                Log.w(TAG, "USDA rate limited (${response.code}), falling back to local DB")
+                getLocalFoodDetails(fdcId)
+            } else if (!response.isSuccessful) {
+                response.close()
+                Log.e(TAG, "USDA details failed: ${response.code}, trying local DB")
+                getLocalFoodDetails(fdcId)
+            } else {
+                val body = response.body?.string()
+                response.close()
+                if (body == null) {
+                    getLocalFoodDetails(fdcId)
+                } else {
+                    json.decodeFromString<USDAFoodDetailsFull>(body)
                 }
-                
-                val body = response.body?.string() ?: return@withContext null
-                json.decodeFromString<USDAFoodDetailsFull>(body)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Get details failed: ${e.message}", e)
-            null
+            Log.e(TAG, "USDA details failed: ${e.message}, trying local DB", e)
+            getLocalFoodDetails(fdcId)
+        }
+        result
+    }
+
+    /**
+     * Fallback: get nutrients from local Supabase usda_nutrients table.
+     */
+    private fun getLocalFoodDetails(fdcId: Int): USDAFoodDetailsFull? {
+        try {
+            val token = SessionStore.readAccessToken(context) ?: return null
+
+            // Get food info
+            val foodUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/usda_foods?fdc_id=eq.$fdcId&select=*"
+            val foodReq = Request.Builder()
+                .url(foodUrl).get()
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+
+            val foodResp = httpClient.newCall(foodReq).execute()
+            if (!foodResp.isSuccessful) { foodResp.close(); return null }
+            val foodBody = foodResp.body?.string()
+            foodResp.close()
+            if (foodBody == null) return null
+            val foodArr = org.json.JSONArray(foodBody)
+            if (foodArr.length() == 0) return null
+            val foodObj = foodArr.getJSONObject(0)
+
+            // Get nutrients
+            val nutUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/usda_nutrients?fdc_id=eq.$fdcId&select=nutrient_id,amount"
+            val nutReq = Request.Builder()
+                .url(nutUrl).get()
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+
+            val nutResp = httpClient.newCall(nutReq).execute()
+            if (!nutResp.isSuccessful) { nutResp.close(); return null }
+            val nutBody = nutResp.body?.string()
+            nutResp.close()
+            if (nutBody == null) return null
+            val nutArr = org.json.JSONArray(nutBody)
+
+            val nutrients = mutableListOf<USDAFoodNutrientFull>()
+            for (i in 0 until nutArr.length()) {
+                val n = nutArr.getJSONObject(i)
+                nutrients.add(
+                    USDAFoodNutrientFull(
+                        nutrient = USDANutrientInfo(
+                            id = n.getInt("nutrient_id"),
+                            name = "",
+                            unitName = ""
+                        ),
+                        amount = n.getDouble("amount")
+                    )
+                )
+            }
+
+            Log.d(TAG, "Local DB details for $fdcId: ${nutrients.size} nutrients")
+            return USDAFoodDetailsFull(
+                fdcId = fdcId,
+                description = foodObj.getString("description"),
+                servingSize = if (foodObj.isNull("serving_size")) null else foodObj.optDouble("serving_size").takeIf { !it.isNaN() },
+                servingSizeUnit = if (foodObj.isNull("serving_size_unit")) null else foodObj.optString("serving_size_unit"),
+                foodNutrients = nutrients
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Local details failed for $fdcId: ${e.message}", e)
+            return null
         }
     }
 
@@ -182,19 +315,19 @@ class USDAFoodSearchService(private val context: Context) {
                 Log.e(TAG, "No user ID")
                 return@withContext Pair(false, "No user ID")
             }
-            
+
             Log.d(TAG, "Adding food: $foodName for user: $userId")
-            
+
             // Build nutrients map from already-loaded USDA data
-            val nutrients = foodDetails.foodNutrients.associate { 
+            val nutrients = foodDetails.foodNutrients.associate {
                 it.nutrient.id to (it.amount ?: 0.0)
             }
-            
+
             Log.d(TAG, "Found ${nutrients.size} nutrients")
-            
+
             // Helper to get nutrient value multiplied by servings
             fun getNutrient(id: Int): Double? = nutrients[id]?.takeIf { it > 0 }?.times(servings)
-            
+
             // Create nutrition record JSON
             val today = java.time.LocalDate.now().toString()
             val nutritionRecord = buildString {
@@ -206,7 +339,7 @@ class USDAFoodSearchService(private val context: Context) {
                 append("\"food_name\":\"${foodName.replace("\"", "\\\"").replace("\n", " ")}\",")
                 append("\"meal_type\":\"$mealType\",")
                 append("\"source\":\"manual_usda\",")
-                
+
                 // Macros
                 getNutrient(1008)?.let { append("\"calories\":$it,") }
                 getNutrient(1003)?.let { append("\"protein\":$it,") }
@@ -219,7 +352,7 @@ class USDAFoodSearchService(private val context: Context) {
                 getNutrient(1293)?.let { append("\"polyunsaturated_fat\":$it,") }
                 getNutrient(1257)?.let { append("\"trans_fat\":$it,") }
                 getNutrient(1253)?.let { append("\"cholesterol\":$it,") }
-                
+
                 // Minerals
                 getNutrient(1087)?.let { append("\"calcium\":$it,") }
                 getNutrient(1089)?.let { append("\"iron\":$it,") }
@@ -231,7 +364,7 @@ class USDAFoodSearchService(private val context: Context) {
                 getNutrient(1098)?.let { append("\"copper\":$it,") }
                 getNutrient(1101)?.let { append("\"manganese\":$it,") }
                 getNutrient(1103)?.let { append("\"selenium\":$it,") }
-                
+
                 // Vitamins
                 getNutrient(1106)?.let { append("\"vitamin_a\":$it,") }
                 getNutrient(1162)?.let { append("\"vitamin_c\":$it,") }
@@ -246,29 +379,30 @@ class USDAFoodSearchService(private val context: Context) {
                 getNutrient(1178)?.let { append("\"vitamin_b12\":$it,") }
                 getNutrient(1170)?.let { append("\"pantothenic_acid\":$it,") }
                 getNutrient(1176)?.let { append("\"biotin\":$it,") }
-                
+
                 // Caffeine
                 getNutrient(1057)?.let { append("\"caffeine\":$it,") }
-                
-                // Tyramine exposure (classify via edge function)
+
+                // Food risk classification (tyramine, alcohol, gluten)
                 try {
-                    val classifier = TyramineClassifierService()
-                    val risk = classifier.classify(token, foodName)
-                    if (risk != "none") append("\"tyramine_exposure\":\"$risk\",")
+                    val risks = FoodRiskClassifierService().classify(token, foodName)
+                    if (risks.tyramine != "none") append("\"tyramine_exposure\":\"${risks.tyramine}\",")
+                    if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
+                    if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
                 } catch (_: Exception) {}
-                
+
                 // Remove trailing comma and close
                 if (endsWith(",")) deleteCharAt(length - 1)
                 append("}")
             }
-            
+
             Log.d(TAG, "Inserting nutrition record: $nutritionRecord")
-            
+
             // Insert to Supabase
             val supabaseUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records"
-            
+
             Log.d(TAG, "Posting to: $supabaseUrl")
-            
+
             val insertRequest = Request.Builder()
                 .url(supabaseUrl)
                 .post(nutritionRecord.toRequestBody("application/json".toMediaType()))
@@ -288,7 +422,7 @@ class USDAFoodSearchService(private val context: Context) {
                     return@withContext Pair(false, "Error ${response.code}: $responseBody")
                 }
             }
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add food: ${e.message}", e)
             Pair(false, e.message ?: "Unknown error")
@@ -307,10 +441,10 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: return@withContext false
             val userId = SessionStore.readUserId(context) ?: return@withContext false
-            
+
             // Get detailed nutrient data from USDA
             val url = "$BASE_URL/food/$fdcId?api_key=$API_KEY"
-            
+
             val request = Request.Builder()
                 .url(url)
                 .get()
@@ -321,19 +455,19 @@ class USDAFoodSearchService(private val context: Context) {
                     Log.e(TAG, "USDA details failed: ${response.code}")
                     return@withContext false
                 }
-                
+
                 val body = response.body?.string() ?: return@withContext false
                 json.decodeFromString<USDAFoodDetailsFull>(body)
             }
-            
+
             // Build nutrients map from USDA data
-            val nutrients = foodDetails.foodNutrients.associate { 
+            val nutrients = foodDetails.foodNutrients.associate {
                 it.nutrient.id to (it.amount ?: 0.0)
             }
-            
+
             // Helper to get nutrient value multiplied by servings
             fun getNutrient(id: Int): Double? = nutrients[id]?.takeIf { it > 0 }?.times(servings)
-            
+
             // Create nutrition record JSON
             val nutritionRecord = buildString {
                 append("{")
@@ -343,7 +477,7 @@ class USDAFoodSearchService(private val context: Context) {
                 append("\"food_name\":\"${foodName.replace("\"", "\\\"")}\",")
                 append("\"meal_type\":\"$mealType\",")
                 append("\"source\":\"manual_usda\",")
-                
+
                 // Macros
                 getNutrient(1008)?.let { append("\"calories\":$it,") }
                 getNutrient(1003)?.let { append("\"protein\":$it,") }
@@ -356,7 +490,7 @@ class USDAFoodSearchService(private val context: Context) {
                 getNutrient(1293)?.let { append("\"polyunsaturated_fat\":$it,") }
                 getNutrient(1257)?.let { append("\"trans_fat\":$it,") }
                 getNutrient(1253)?.let { append("\"cholesterol\":$it,") }
-                
+
                 // Minerals
                 getNutrient(1087)?.let { append("\"calcium\":$it,") }
                 getNutrient(1089)?.let { append("\"iron\":$it,") }
@@ -368,7 +502,7 @@ class USDAFoodSearchService(private val context: Context) {
                 getNutrient(1098)?.let { append("\"copper\":$it,") }
                 getNutrient(1101)?.let { append("\"manganese\":$it,") }
                 getNutrient(1103)?.let { append("\"selenium\":$it,") }
-                
+
                 // Vitamins
                 getNutrient(1106)?.let { append("\"vitamin_a\":$it,") }
                 getNutrient(1162)?.let { append("\"vitamin_c\":$it,") }
@@ -383,27 +517,28 @@ class USDAFoodSearchService(private val context: Context) {
                 getNutrient(1178)?.let { append("\"vitamin_b12\":$it,") }
                 getNutrient(1170)?.let { append("\"pantothenic_acid\":$it,") }
                 getNutrient(1176)?.let { append("\"biotin\":$it,") }
-                
+
                 // Caffeine
                 getNutrient(1057)?.let { append("\"caffeine\":$it,") }
-                
-                // Tyramine exposure (classify via edge function)
+
+                // Food risk classification (tyramine, alcohol, gluten)
                 try {
-                    val classifier = TyramineClassifierService()
-                    val risk = classifier.classify(token, foodName)
-                    if (risk != "none") append("\"tyramine_exposure\":\"$risk\",")
+                    val risks = FoodRiskClassifierService().classify(token, foodName)
+                    if (risks.tyramine != "none") append("\"tyramine_exposure\":\"${risks.tyramine}\",")
+                    if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
+                    if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
                 } catch (_: Exception) {}
-                
+
                 // Remove trailing comma and close
                 if (endsWith(",")) deleteCharAt(length - 1)
                 append("}")
             }
-            
+
             Log.d(TAG, "Inserting nutrition record: $nutritionRecord")
-            
+
             // Upsert to Supabase
             val supabaseUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records"
-            
+
             val upsertRequest = Request.Builder()
                 .url(supabaseUrl)
                 .post(nutritionRecord.toRequestBody("application/json".toMediaType()))
@@ -422,7 +557,7 @@ class USDAFoodSearchService(private val context: Context) {
                     return@withContext false
                 }
             }
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add food: ${e.message}", e)
             false
@@ -435,15 +570,15 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: return@withContext emptyList()
             val userId = SessionStore.readUserId(context) ?: return@withContext emptyList()
-            
+
             val today = java.time.LocalDate.now().toString()
             val todayStart = "${today}T00:00:00Z"
             val todayEnd = "${today}T23:59:59Z"
-            
+
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                 "user_id=eq.$userId&timestamp=gte.$todayStart&timestamp=lte.$todayEnd" +
                 "&select=*&order=timestamp.desc"
-            
+
             val request = Request.Builder()
                 .url(url)
                 .get()
@@ -456,10 +591,10 @@ class USDAFoodSearchService(private val context: Context) {
                     Log.e(TAG, "Failed to get today's items: ${response.code}")
                     return@withContext emptyList()
                 }
-                
+
                 val body = response.body?.string() ?: return@withContext emptyList()
                 val arr = org.json.JSONArray(body)
-                
+
                 val items = mutableListOf<NutritionLogItem>()
                 for (i in 0 until arr.length()) {
                     items.add(parseNutritionLogItem(arr.getJSONObject(i)))
@@ -471,7 +606,7 @@ class USDAFoodSearchService(private val context: Context) {
             emptyList()
         }
     }
-    
+
     /**
      * Get nutrition items for a specific date
      */
@@ -479,14 +614,14 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: return@withContext emptyList()
             val userId = SessionStore.readUserId(context) ?: return@withContext emptyList()
-            
+
             val dateStart = "${date}T00:00:00Z"
             val dateEnd = "${date}T23:59:59Z"
-            
+
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                 "user_id=eq.$userId&timestamp=gte.$dateStart&timestamp=lte.$dateEnd" +
                 "&select=*&order=timestamp.desc"
-            
+
             val request = Request.Builder()
                 .url(url)
                 .get()
@@ -499,10 +634,10 @@ class USDAFoodSearchService(private val context: Context) {
                     Log.e(TAG, "Failed to get items for date: ${response.code}")
                     return@withContext emptyList()
                 }
-                
+
                 val body = response.body?.string() ?: return@withContext emptyList()
                 val arr = org.json.JSONArray(body)
-                
+
                 val items = mutableListOf<NutritionLogItem>()
                 for (i in 0 until arr.length()) {
                     items.add(parseNutritionLogItem(arr.getJSONObject(i)))
@@ -514,7 +649,7 @@ class USDAFoodSearchService(private val context: Context) {
             emptyList()
         }
     }
-    
+
     /**
      * Delete a nutrition item (only manual entries)
      */
@@ -522,10 +657,10 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: return@withContext false
             val userId = SessionStore.readUserId(context) ?: return@withContext false
-            
+
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                 "id=eq.$id&user_id=eq.$userId&source=eq.manual_usda"
-            
+
             val request = Request.Builder()
                 .url(url)
                 .delete()
@@ -547,7 +682,7 @@ class USDAFoodSearchService(private val context: Context) {
             false
         }
     }
-    
+
     /**
      * Update a nutrition item (only manual entries) - meal type and servings
      * When servings changes, we scale all nutrient values proportionally
@@ -561,14 +696,14 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: return@withContext false
             val userId = SessionStore.readUserId(context) ?: return@withContext false
-            
+
             // If just updating meal type
             if (servingsMultiplier == null || servingsMultiplier == 1.0) {
                 val updateJson = """{"meal_type":"$mealType"}"""
-                
+
                 val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                     "id=eq.$id&user_id=eq.$userId&source=eq.manual_usda"
-                
+
                 val request = Request.Builder()
                     .url(url)
                     .patch(updateJson.toRequestBody("application/json".toMediaType()))
@@ -589,14 +724,14 @@ class USDAFoodSearchService(private val context: Context) {
             } else {
                 // Need to fetch current values and scale them
                 val getUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?id=eq.$id&user_id=eq.$userId"
-                
+
                 val getRequest = Request.Builder()
                     .url(getUrl)
                     .get()
                     .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
                     .addHeader("Authorization", "Bearer $token")
                     .build()
-                
+
                 val currentData = httpClient.newCall(getRequest).execute().use { response ->
                     if (!response.isSuccessful) return@withContext false
                     val body = response.body?.string() ?: return@withContext false
@@ -604,12 +739,12 @@ class USDAFoodSearchService(private val context: Context) {
                     if (arr.length() == 0) return@withContext false
                     arr.getJSONObject(0)
                 }
-                
+
                 // Build update JSON with scaled values
                 val updateJson = buildString {
                     append("{")
                     append("\"meal_type\":\"$mealType\"")
-                    
+
                     // Scale all nutrient columns
                     val nutrientColumns = listOf(
                         "calories", "protein", "total_carbohydrate", "total_fat",
@@ -621,7 +756,7 @@ class USDAFoodSearchService(private val context: Context) {
                         "thiamin", "riboflavin", "niacin", "vitamin_b6", "folate",
                         "vitamin_b12", "pantothenic_acid", "biotin", "caffeine"
                     )
-                    
+
                     nutrientColumns.forEach { col ->
                         val currentValue = currentData.optDouble(col, Double.NaN)
                         if (!currentValue.isNaN()) {
@@ -629,13 +764,13 @@ class USDAFoodSearchService(private val context: Context) {
                             append(",\"$col\":$newValue")
                         }
                     }
-                    
+
                     append("}")
                 }
-                
+
                 val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                     "id=eq.$id&user_id=eq.$userId&source=eq.manual_usda"
-                
+
                 val request = Request.Builder()
                     .url(url)
                     .patch(updateJson.toRequestBody("application/json".toMediaType()))
@@ -659,7 +794,7 @@ class USDAFoodSearchService(private val context: Context) {
             false
         }
     }
-    
+
     /**
      * Get ALL nutrition history and calculate normalization in memory
      */
@@ -667,25 +802,25 @@ class USDAFoodSearchService(private val context: Context) {
         try {
             val token = SessionStore.readAccessToken(context) ?: return@withContext NutritionHistoryResult()
             val userId = SessionStore.readUserId(context) ?: return@withContext NutritionHistoryResult()
-            
+
             // Get ALL data from nutrition_daily - one query, store everything
             val allDataUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_daily?" +
                 "user_id=eq.$userId&order=date.asc"
-            
+
             val allDataRequest = Request.Builder()
                 .url(allDataUrl)
                 .get()
                 .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 .addHeader("Authorization", "Bearer $token")
                 .build()
-            
+
             val allDays = mutableListOf<NutritionDayData>()
-            
+
             httpClient.newCall(allDataRequest).execute().use { response ->
                 if (response.isSuccessful) {
                     val body = response.body?.string() ?: return@use
                     val arr = org.json.JSONArray(body)
-                    
+
                     for (i in 0 until arr.length()) {
                         val obj = arr.getJSONObject(i)
                         allDays.add(NutritionDayData(
@@ -702,31 +837,31 @@ class USDAFoodSearchService(private val context: Context) {
                     }
                 }
             }
-            
+
             // Also get today's data from nutrition_records (not yet aggregated)
             val today = java.time.LocalDate.now().toString()
             val hasToday = allDays.any { it.date == today }
-            
+
             if (!hasToday) {
                 val todayUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
                     "user_id=eq.$userId&date=eq.$today&select=calories,protein,total_carbohydrate,total_fat,dietary_fiber,sugar,sodium,caffeine"
-                
+
                 val todayRequest = Request.Builder()
                     .url(todayUrl)
                     .get()
                     .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
                     .addHeader("Authorization", "Bearer $token")
                     .build()
-                
+
                 httpClient.newCall(todayRequest).execute().use { response ->
                     if (response.isSuccessful) {
                         val body = response.body?.string() ?: return@use
                         val arr = org.json.JSONArray(body)
-                        
+
                         if (arr.length() > 0) {
                             var calories = 0; var protein = 0; var carbs = 0; var fat = 0
                             var fiber = 0; var sugar = 0; var sodium = 0; var caffeine = 0
-                            
+
                             for (i in 0 until arr.length()) {
                                 val obj = arr.getJSONObject(i)
                                 calories += obj.optDouble("calories", 0.0).toInt()
@@ -738,7 +873,7 @@ class USDAFoodSearchService(private val context: Context) {
                                 sodium += obj.optDouble("sodium", 0.0).toInt()
                                 caffeine += obj.optDouble("caffeine", 0.0).toInt()
                             }
-                            
+
                             allDays.add(NutritionDayData(
                                 date = today,
                                 calories = calories, protein = protein, carbs = carbs, fat = fat,
@@ -748,11 +883,11 @@ class USDAFoodSearchService(private val context: Context) {
                     }
                 }
             }
-            
+
             // Calculate min/max from ALL data
             val allTimeMin = mutableMapOf<String, Float>()
             val allTimeMax = mutableMapOf<String, Float>()
-            
+
             if (allDays.isNotEmpty()) {
                 allTimeMin["calories"] = allDays.minOf { it.calories }.toFloat()
                 allTimeMax["calories"] = allDays.maxOf { it.calories }.toFloat()
@@ -771,7 +906,7 @@ class USDAFoodSearchService(private val context: Context) {
                 allTimeMin["caffeine"] = allDays.minOf { it.caffeine }.toFloat()
                 allTimeMax["caffeine"] = allDays.maxOf { it.caffeine }.toFloat()
             }
-            
+
             // Ensure min != max
             listOf("calories", "protein", "carbs", "fat", "fiber", "sugar", "sodium", "caffeine").forEach { metric ->
                 if (allTimeMin[metric] == null) allTimeMin[metric] = 0f
@@ -780,11 +915,11 @@ class USDAFoodSearchService(private val context: Context) {
                     allTimeMax[metric] = allTimeMin[metric]!! + 1f
                 }
             }
-            
+
             // Get last N days for display
             val endDate = endDateOverride ?: java.time.LocalDate.now()
             val startDate = endDate.minusDays(days.toLong() - 1)
-            
+
             val displayDays = mutableListOf<NutritionDayData>()
             var currentDate = startDate
             while (!currentDate.isAfter(endDate)) {
@@ -793,10 +928,10 @@ class USDAFoodSearchService(private val context: Context) {
                 displayDays.add(dayData)
                 currentDate = currentDate.plusDays(1)
             }
-            
+
             Log.d(TAG, "Nutrition history: ${allDays.size} total days, ${displayDays.size} display days")
             Log.d(TAG, "Calories min/max: ${allTimeMin["calories"]} - ${allTimeMax["calories"]}")
-            
+
             NutritionHistoryResult(
                 days = displayDays,
                 allDays = allDays,
@@ -881,6 +1016,8 @@ data class NutritionLogItem(
     val biotin: Double?,
     val pantothenicAcid: Double?,
     val tyramineExposure: String?,
+    val alcoholExposure: String?,
+    val glutenExposure: String?,
     val timestamp: String,
     val source: String
 )
@@ -968,10 +1105,13 @@ fun NutritionLogItem.metricValue(metric: String): Double? = when (metric) {
     MonitorCardConfig.METRIC_BIOTIN -> biotin
     MonitorCardConfig.METRIC_PANTOTHENIC_ACID -> pantothenicAcid
     MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> when (tyramineExposure) {
-        "high" -> 3.0
-        "medium" -> 2.0
-        "low" -> 1.0
-        else -> 0.0
+        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
+    }
+    MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> when (alcoholExposure) {
+        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
+    }
+    MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> when (glutenExposure) {
+        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
     }
     else -> null
 }

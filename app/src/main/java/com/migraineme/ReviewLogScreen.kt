@@ -156,18 +156,35 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                 onClick = {
                     val token = authState.accessToken ?: return@Button
                     val migraine = draft.migraine
+                    val editId = vm.editMigraineId.value ?: draft.editMigraineId
+                    println("DEBUG ReviewLogScreen Save: editMigraineId.value=${vm.editMigraineId.value}, draft.editMigraineId=${draft.editMigraineId}, resolved editId=$editId")
                     if (migraine != null) {
-                        vm.addFull(
-                            accessToken = token,
-                            type = migraine.type,
-                            severity = migraine.severity,
-                            beganAtIso = migraine.beganAtIso ?: "",
-                            endedAtIso = migraine.endedAtIso,
-                            note = migraine.note,
-                            meds = draft.meds,
-                            rels = draft.rels,
-                            painLocations = draft.painLocations
-                        )
+                        if (editId != null) {
+                            vm.updateFull(
+                                accessToken = token,
+                                migraineId = editId,
+                                type = migraine.type,
+                                severity = migraine.severity,
+                                beganAtIso = migraine.beganAtIso ?: "",
+                                endedAtIso = migraine.endedAtIso,
+                                note = migraine.note,
+                                meds = draft.meds,
+                                rels = draft.rels,
+                                painLocations = draft.painLocations
+                            )
+                        } else {
+                            vm.addFull(
+                                accessToken = token,
+                                type = migraine.type,
+                                severity = migraine.severity,
+                                beganAtIso = migraine.beganAtIso ?: "",
+                                endedAtIso = migraine.endedAtIso,
+                                note = migraine.note,
+                                meds = draft.meds,
+                                rels = draft.rels,
+                                painLocations = draft.painLocations
+                            )
+                        }
                     }
                     vm.clearDraft()
                     navController.popBackStack(Routes.JOURNAL, inclusive = false)
@@ -176,7 +193,9 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                 shape = AppTheme.BaseCardShape
             ) {
-                Text("Save Log", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                val editId by vm.editMigraineId.collectAsState()
+                val isEdit = editId != null || draft.editMigraineId != null
+                Text(if (isEdit) "Update Log" else "Save Log", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             }
 
             // Back
@@ -233,3 +252,4 @@ private fun formatIsoDdMmYyHm(iso: String?): String {
         ldt.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
     } catch (_: Exception) { "-" }
 }
+

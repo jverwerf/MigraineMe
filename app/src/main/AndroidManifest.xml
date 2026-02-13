@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+﻿<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.migraineme">
 
@@ -6,18 +6,70 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <!-- Ambient noise sampling -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Health Connect nutrition tracking -->
+    <uses-permission android:name="android.permission.health.READ_NUTRITION" />
+
+    <!-- Health Connect menstruation tracking -->
+    <uses-permission android:name="android.permission.health.READ_MENSTRUATION" />
+
+    <!-- Health Connect - Sleep & Recovery -->
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+
+    <!-- Health Connect - Heart & Vitals -->
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
+    <uses-permission android:name="android.permission.health.READ_RESPIRATORY_RATE" />
+    <uses-permission android:name="android.permission.health.READ_BODY_TEMPERATURE" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />
+
+    <!-- Health Connect - Activity & Fitness -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+
+    <!-- Health Connect - Body Measurements -->
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+    <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
+    <uses-permission android:name="android.permission.health.READ_HEIGHT" />
+
+    <!-- Health Connect - Hydration & Wellness -->
+    <uses-permission android:name="android.permission.health.READ_HYDRATION" />
+
+    <!-- Screen time tracking -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Battery optimization exemption (for reliable background workers) -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Foreground execution for WorkManager foreground notification -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <!-- Android 14+ (safe to declare; only enforced on newer versions) -->
+    <!-- Android 14+ foreground service types (safe to declare; only enforced on newer versions) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- Android 13+ (needed to show the foreground notification) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Boot receiver - allows rescheduling workers after device restart -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- CRITICAL: Health Connect queries - allows app to interact with Health Connect -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -31,8 +83,38 @@
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:exported="false"
-            android:foregroundServiceType="microphone"
+            android:foregroundServiceType="microphone|dataSync"
             tools:node="merge" />
+
+        <!-- Firebase Cloud Messaging service -->
+        <service
+            android:name=".MigraineMeFirebaseService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Boot receiver - reschedules workers after boot/reboot/app update -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Screen unlock receiver - triggers ambient noise sampling when phone is unlocked -->
+        <receiver
+            android:name=".ScreenOnReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".MainActivity"
@@ -49,8 +131,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="migraineme"
-                    android:host="whoop"
+                    android:scheme="whoop"
+                    android:host="migraineme"
                     android:path="/callback" />
             </intent-filter>
 
@@ -66,5 +148,43 @@
             </intent-filter>
 
         </activity>
+
+        <!-- Health Connect Rationale Activity - used for pre-permission explanation -->
+        <activity
+            android:name=".HealthConnectRationaleActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+
+        <!-- Nutrition Diagnostic Activity - debugging tool for Health Connect backfill -->
+        <activity
+            android:name=".NutritionDiagnosticActivity"
+            android:exported="false" />
+
+        <!-- Android 14+: REQUIRED entrypoint for viewing permission usage -->
+        <activity-alias
+            android:name=".ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".HealthConnectRationaleActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
+
+    
+        <!-- FileProvider for sharing PDF reports -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 </manifest>

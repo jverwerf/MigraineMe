@@ -1,0 +1,285 @@
+// FILE: supabase/functions/weather-worker/index.ts
+//
+// Worker that processes jobs from sync_jobs_weather.
+// Looks up user's location, finds nearest city, copies weather to user_weather_daily.
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+/**
+ * Find nearest city to given coordinates using Haversine distance
+ */
+async function findNearestCity(
+  supabase: ReturnType<typeof createClient>,
+  lat: number,
+  lon: number
+): Promise<{ cityId: number; name: string; distance: number } | null> {
+  // Query cities within ~2 degrees (rough bounding box first for performance)
+  const { data: cities, error } = await supabase
+    .from("city")
+    .select("id, name, lat, lon")
+    .gte("lat", lat - 2)
+    .lte("lat", lat + 2)
+    .gte("lon", lon - 2)
+    .lte("lon", lon + 2)
+    .limit(100);
+
+  if (error || !cities || cities.length === 0) {
+    // Fallback: get any city (shouldn't happen often)
+    const { data: fallback } = await supabase
+      .from("city")
+      .select("id, name, lat, lon")
+      .limit(50);
+    
+    if (!fallback || fallback.length === 0) return null;
+    
+    // Find nearest from fallback
+    let nearest = fallback[0];
+    let minDist = haversine(lat, lon, nearest.lat, nearest.lon);
+    
+    for (const city of fallback) {
+      const dist = haversine(lat, lon, city.lat, city.lon);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = city;
+      }
+    }
+    
+    return { cityId: nearest.id, name: nearest.name, distance: minDist };
+  }
+
+  // Find nearest city
+  let nearest = cities[0];
+  let minDist = haversine(lat, lon, nearest.lat, nearest.lon);
+
+  for (const city of cities) {
+    const dist = haversine(lat, lon, city.lat, city.lon);
+    if (dist < minDist) {
+      minDist = dist;
+      nearest = city;
+    }
+  }
+
+  return { cityId: nearest.id, name: nearest.name, distance: minDist };
+}
+
+/**
+ * Haversine distance in km
+ */
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(deg: number): number {
+  return deg * (Math.PI / 180);
+}
+
+serve(async (req) => {
+  console.log("[weather-worker] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowIso = new Date().toISOString();
+    const MAX_ATTEMPTS = 3;
+    const BATCH_SIZE = 20;
+
+    // Fetch queued jobs
+    const { data: jobs, error: jobsErr } = await supabase
+      .from("sync_jobs_weather")
+      .select("*")
+      .eq("status", "queued")
+      .lt("attempts", MAX_ATTEMPTS)
+      .order("created_at", { ascending: true })
+      .limit(BATCH_SIZE);
+
+    if (jobsErr) throw new Error(`Failed to fetch jobs: ${jobsErr.message}`);
+
+    if (!jobs || jobs.length === 0) {
+      console.log("[weather-worker] no queued jobs");
+      return jsonResponse({ ok: true, processed: 0 });
+    }
+
+    console.log(`[weather-worker] processing ${jobs.length} jobs`);
+
+    const results: { jobId: string; status: string; error?: string; cityName?: string }[] = [];
+
+    for (const job of jobs) {
+      const jobId = job.id;
+      const userId = job.user_id;
+      const localDate = job.local_date;
+      const timezone = job.timezone;
+
+      try {
+        // Mark as processing
+        await supabase
+          .from("sync_jobs_weather")
+          .update({ status: "processing", attempts: job.attempts + 1, updated_at: nowIso })
+          .eq("id", jobId);
+
+        // Get user's location for this date (or nearby dates)
+        const candidates = [localDate, addDaysIsoDate(localDate, -1), addDaysIsoDate(localDate, +1)];
+        let userLat: number | null = null;
+        let userLon: number | null = null;
+
+        for (const d of candidates) {
+          const { data: locData } = await supabase
+            .from("user_location_daily")
+            .select("latitude, longitude")
+            .eq("user_id", userId)
+            .eq("date", d)
+            .maybeSingle();
+
+          if (locData?.latitude && locData?.longitude) {
+            userLat = locData.latitude;
+            userLon = locData.longitude;
+            break;
+          }
+        }
+
+        if (userLat == null || userLon == null) {
+          throw new Error("No location data found for user");
+        }
+
+        // Find nearest city
+        const nearestCity = await findNearestCity(supabase, userLat, userLon);
+        if (!nearestCity) {
+          throw new Error("No cities found in database");
+        }
+
+        console.log(`[weather-worker] job=${jobId} user=${userId} city=${nearestCity.name} (${nearestCity.distance.toFixed(1)}km)`);
+
+        // Get weather for this city and date
+        const { data: cityWeather, error: weatherErr } = await supabase
+          .from("city_weather_daily")
+          .select("*")
+          .eq("city_id", nearestCity.cityId)
+          .eq("day", localDate)
+          .maybeSingle();
+
+        if (weatherErr) {
+          throw new Error(`Failed to fetch city weather: ${weatherErr.message}`);
+        }
+
+        if (!cityWeather) {
+          // No weather data for this city/date yet - mark as done (will retry tomorrow or via backfill)
+          await supabase
+            .from("sync_jobs_weather")
+            .update({ status: "done", updated_at: nowIso })
+            .eq("id", jobId);
+
+          results.push({ jobId, status: "no_weather_data", cityName: nearestCity.name });
+          continue;
+        }
+
+        // Upsert to user_weather_daily
+        const { error: upsertErr } = await supabase
+          .from("user_weather_daily")
+          .upsert(
+            {
+              user_id: userId,
+              date: localDate,
+              temp_c_min: cityWeather.temp_c_min,
+              temp_c_max: cityWeather.temp_c_max,
+              temp_c_mean: cityWeather.temp_c_mean,
+              pressure_hpa_min: cityWeather.pressure_hpa_min,
+              pressure_hpa_max: cityWeather.pressure_hpa_max,
+              pressure_hpa_mean: cityWeather.pressure_hpa_mean,
+              humidity_pct_min: cityWeather.humidity_pct_min,
+              humidity_pct_max: cityWeather.humidity_pct_max,
+              humidity_pct_mean: cityWeather.humidity_pct_mean,
+              wind_speed_mps_mean: cityWeather.wind_speed_mps_mean,
+              wind_speed_mps_max: cityWeather.wind_speed_mps_max,
+              uv_index_max: cityWeather.uv_index_max,
+              weather_code: cityWeather.weather_code,
+              is_thunderstorm_day: cityWeather.is_thunderstorm_day,
+              city_id: nearestCity.cityId,
+              timezone: timezone,
+              updated_at: nowIso,
+            },
+            { onConflict: "user_id,date" }
+          );
+
+        if (upsertErr) {
+          throw new Error(`Failed to upsert user weather: ${upsertErr.message}`);
+        }
+
+        // Mark job as done
+        await supabase
+          .from("sync_jobs_weather")
+          .update({ status: "done", updated_at: nowIso })
+          .eq("id", jobId);
+
+        results.push({ jobId, status: "done", cityName: nearestCity.name });
+        console.log(`[weather-worker] job=${jobId} done`);
+
+      } catch (e: any) {
+        console.error(`[weather-worker] job=${jobId} error:`, e);
+
+        // Mark as failed or back to queued for retry
+        const newStatus = job.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "queued";
+        await supabase
+          .from("sync_jobs_weather")
+          .update({
+            status: newStatus,
+            last_error: String(e?.message ?? e),
+            updated_at: nowIso,
+          })
+          .eq("id", jobId);
+
+        results.push({ jobId, status: "error", error: String(e?.message ?? e) });
+      }
+    }
+
+    const summary = {
+      total: results.length,
+      done: results.filter((r) => r.status === "done").length,
+      noWeatherData: results.filter((r) => r.status === "no_weather_data").length,
+      errors: results.filter((r) => r.status === "error").length,
+    };
+
+    console.log("[weather-worker] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+
+  } catch (e: any) {
+    console.error("[weather-worker] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
+  }
+});

@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 type ResolveRow = {
-  city_id: number;
+  city_id: number | null;  // UPDATED: Now nullable
   timezone: string | null;
   resolved_date?: string | null;
 };
@@ -90,17 +90,29 @@ async function resolveWithDateFallback(
   const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
 
   for (const d of candidates) {
-    const { data, error } = await supabase.rpc("resolve_user_city_for_date", {
-      p_user_id: userId,
-      p_date: d,
-    });
+    // Direct query to user_location_daily - no RPC needed!
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone, date")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (error) {
-      throw new Error(`resolve_user_city_for_date failed for date=${d}: ${error.message}`);
+      throw new Error(`user_location_daily query failed for date=${d}: ${error.message}`);
     }
 
-    const row: ResolveRow | undefined = Array.isArray(data) ? data[0] : data;
-    if (row?.timezone) return { row, usedDate: row.resolved_date ?? d };
+    if (data?.timezone) {
+      const row: ResolveRow = {
+        city_id: null,  // No longer needed
+        timezone: data.timezone,
+        resolved_date: data.date
+      };
+      return { row, usedDate: data.date };
+    }
   }
 
   return { row: null, usedDate: null };

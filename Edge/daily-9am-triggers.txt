@@ -1,0 +1,200 @@
+// supabase/functions/daily-9am-triggers/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveUserTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+serve(async (req) => {
+  console.log("[daily-9am-triggers] start", {
+    nowUtc: new Date().toISOString(),
+    method: req.method,
+  });
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "daily-9am-triggers" } },
+    });
+
+    const nowUtc = new Date();
+    const nowIso = nowUtc.toISOString();
+    const utcDate = nowIso.slice(0, 10);
+
+    // Get all users with any trigger enabled
+    const { data: triggerSettings, error: tsErr } = await supabase
+      .from("trigger_settings")
+      .select("user_id")
+      .eq("enabled", true);
+
+    if (tsErr) {
+      throw new Error(`trigger_settings query failed: ${tsErr.message}`);
+    }
+
+    const userIds = [...new Set((triggerSettings ?? []).map((r) => r.user_id))];
+
+    if (userIds.length === 0) {
+      return jsonResponse({
+        ok: true,
+        message: "No users with triggers enabled",
+        enqueued: 0,
+      });
+    }
+
+    const results: unknown[] = [];
+    let enqueuedCount = 0;
+
+    for (const userId of userIds) {
+      const userResult: Record<string, unknown> = { userId };
+
+      // Resolve timezone
+      const timezone = await resolveUserTimezone(supabase, userId, utcDate);
+      if (!timezone) {
+        userResult.status = "no_timezone";
+        results.push(userResult);
+        continue;
+      }
+
+      userResult.timezone = timezone;
+
+      // Get local time
+      const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+      userResult.localTime = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+      userResult.localDate = localDate;
+
+      // Only enqueue if 9:00-9:09 AM local
+      if (hh !== 9 || mm >= 10) {
+        userResult.status = "outside_9am_window";
+        results.push(userResult);
+        continue;
+      }
+
+      // Enqueue trigger job
+      const { error: insErr } = await supabase.from("trigger_jobs").upsert(
+        {
+          job_type: "daily_triggers",
+          user_id: userId,
+          local_date: localDate,
+          status: "queued",
+          attempts: 0,
+          locked_at: null,
+          last_error: null,
+          created_by: "daily-9am-triggers",
+          timezone,
+          updated_at: nowIso,
+        },
+        { onConflict: "job_type,user_id,local_date", ignoreDuplicates: true }
+      );
+
+      if (insErr) {
+        userResult.status = "enqueue_error";
+        userResult.error = insErr.message;
+      } else {
+        userResult.status = "enqueued";
+        enqueuedCount++;
+      }
+
+      results.push(userResult);
+    }
+
+    const summary = {
+      totalUsers: userIds.length,
+      enqueued: enqueuedCount,
+      outside9am: results.filter((r: any) => r.status === "outside_9am_window").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      errors: results.filter((r: any) => r.status === "enqueue_error").length,
+    };
+
+    return jsonResponse({
+      ok: true,
+      nowUtc: nowIso,
+      utcDate,
+      summary,
+      results,
+    });
+  } catch (e) {
+    console.error("[daily-9am-triggers] error", e);
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});

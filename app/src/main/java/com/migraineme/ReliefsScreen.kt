@@ -43,7 +43,11 @@ fun ReliefsScreen(
     vm: ReliefViewModel,
     authVm: AuthViewModel,
     logVm: LogViewModel,
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    quickLogMode: Boolean = false,
+    onSave: (() -> Unit)? = null,
+    linkedMigraineId: String? = null,
+    onMigraineSelect: ((String?) -> Unit)? = null
 ) {
     val pool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
@@ -57,19 +61,7 @@ fun ReliefsScreen(
 
     // ── Rebuild helpers ──
     fun rebuildDraftWithRels(rels: List<ReliefDraft>) {
-        val d = draft
-        logVm.clearDraft()
-        d.migraine?.let {
-            logVm.setMigraineDraft(it.type, it.severity, it.beganAtIso, it.endedAtIso, it.note, symptoms = it.symptoms)
-        }
-        if (d.painLocations.isNotEmpty()) logVm.setPainLocationsDraft(d.painLocations)
-        d.prodromes.forEach { logVm.addProdromeDraft(it.type, it.startAtIso, it.note) }
-        d.triggers.forEach { logVm.addTriggerDraft(it.type, it.startAtIso, it.note) }
-        d.meds.forEach { m -> logVm.addMedicineDraft(m.name ?: "", m.amount, m.notes, m.startAtIso, m.reliefScale) }
-        rels.forEach { logVm.addReliefDraft(it.type, it.notes, it.startAtIso, it.endAtIso, it.reliefScale) }
-        d.locations.forEach { logVm.addLocationDraft(it.type, it.startAtIso, it.note) }
-        d.activities.forEach { logVm.addActivityDraft(it.type, it.startAtIso, it.note) }
-        d.missedActivities.forEach { logVm.addMissedActivityDraft(it.type, it.startAtIso, it.note) }
+        logVm.replaceReliefs(rels)
     }
 
     // ── Add dialog state ──
@@ -151,14 +143,24 @@ fun ReliefsScreen(
 
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Medicines", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                if (!quickLogMode) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Medicines", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
                 }
                 Text("Reliefs", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                if (!quickLogMode) {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    }
+                } else {
+                    Spacer(Modifier.size(28.dp))
                 }
             }
 
@@ -265,6 +267,11 @@ fun ReliefsScreen(
                 }
             }
 
+            if (quickLogMode && onMigraineSelect != null) {
+                val firstIso = draft.rels.firstOrNull()?.startAtIso
+                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+            }
+
             // ── Single reliefs card: Frequent → divider → categories ──
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
@@ -312,11 +319,12 @@ fun ReliefsScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(if (quickLogMode) "Cancel" else "Back") }
                 Button(
-                    onClick = { navController.navigate(Routes.LOCATIONS) },
+                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.LOCATIONS) },
+                    enabled = !quickLogMode || draft.rels.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(if (quickLogMode) "Save" else "Next") }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -547,3 +555,4 @@ private fun deriveDurationMinutes(startIso: String, endIso: String): Int? {
         if (mins >= 0) mins else null
     } catch (_: Exception) { null }
 }
+

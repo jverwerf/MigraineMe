@@ -1,7 +1,7 @@
-// FILE: app/src/main/java/com/migraineme/JournalScreen.kt
 package com.migraineme
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,6 +44,7 @@ import java.time.format.DateTimeFormatter
 fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: LogViewModel) {
     val authState by authVm.state.collectAsState()
     val journal by vm.journal.collectAsState()
+    val triggerLabelMap by vm.triggerLabelMap.collectAsState()
 
     LaunchedEffect(authState.accessToken) {
         val token = authState.accessToken
@@ -51,7 +52,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     }
 
     // Filter state
-    val filters = listOf("All", "Migraines", "Triggers", "Medicines", "Reliefs", "Needs attention")
+    val filters = listOf("All", "Migraines", "Triggers", "Prodromes", "Medicines", "Reliefs", "Activities", "Locations", "Needs attention")
     var filterOpen by rememberSaveable { mutableStateOf(false) }
     var selectedFilter by rememberSaveable { mutableStateOf("All") }
 
@@ -59,8 +60,12 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     val filtered = when (selectedFilter) {
         "Migraines" -> journal.filterIsInstance<JournalEvent.Migraine>()
         "Triggers" -> journal.filterIsInstance<JournalEvent.Trigger>()
+        "Prodromes" -> journal.filterIsInstance<JournalEvent.Prodrome>()
         "Medicines" -> journal.filterIsInstance<JournalEvent.Medicine>()
         "Reliefs" -> journal.filterIsInstance<JournalEvent.Relief>()
+        "Activities" -> journal.filterIsInstance<JournalEvent.Activity>()
+        "Missed Activities" -> journal.filterIsInstance<JournalEvent.MissedActivity>()
+        "Locations" -> journal.filterIsInstance<JournalEvent.Location>()
         "Needs attention" -> journal.filter { needsAttention(it) }
         else -> journal
     }
@@ -97,16 +102,28 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     )
                     DropdownMenu(
                         expanded = filterOpen,
-                        onDismissRequest = { filterOpen = false }
+                        onDismissRequest = { filterOpen = false },
+                        modifier = Modifier.background(Color(0xFF1E0A2E))
                     ) {
                         filters.forEachIndexed { i, f ->
-                            if (i == 5) Divider()
+                            if (i == filters.size - 1) Divider(color = Color.White.copy(alpha = 0.1f))
                             DropdownMenuItem(
-                                text = { Text(f) },
+                                text = {
+                                    Text(
+                                        f,
+                                        color = if (f == selectedFilter) AppTheme.AccentPurple else Color.White,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = if (f == selectedFilter) FontWeight.SemiBold else FontWeight.Normal
+                                        )
+                                    )
+                                },
                                 onClick = {
                                     selectedFilter = f
                                     filterOpen = false
-                                }
+                                },
+                                modifier = Modifier.background(
+                                    if (f == selectedFilter) AppTheme.AccentPurple.copy(alpha = 0.1f) else Color.Transparent
+                                )
                             )
                         }
                     }
@@ -139,7 +156,8 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         event = ev,
                         authState = authState,
                         navController = navController,
-                        vm = vm
+                        vm = vm,
+                        triggerLabelMap = triggerLabelMap
                     )
                 }
             }
@@ -152,7 +170,8 @@ private fun JournalEntryCard(
     event: JournalEvent,
     authState: AuthState,
     navController: NavHostController,
-    vm: LogViewModel
+    vm: LogViewModel,
+    triggerLabelMap: Map<String, String> = emptyMap()
 ) {
     val needsAttn = needsAttention(event)
     var confirmDelete by rememberSaveable((event as? Any)?.hashCode() ?: 0) { mutableStateOf(false) }
@@ -175,6 +194,41 @@ private fun JournalEntryCard(
                         JournalRowTime("Start", event.row.startAt)
                         JournalRowTime("End", event.row.endAt)
                         if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+
+                        // ── Linked items ──
+                        val linked = event.linked
+                        val hasLinked = linked.triggers.isNotEmpty() || linked.medicines.isNotEmpty() ||
+                                linked.reliefs.isNotEmpty() || linked.prodromes.isNotEmpty() ||
+                                linked.activities.isNotEmpty() || linked.locations.isNotEmpty()
+                        if (hasLinked) {
+                            Spacer(Modifier.height(4.dp))
+                            Divider(color = Color.White.copy(alpha = 0.1f))
+                            Spacer(Modifier.height(4.dp))
+                            if (linked.triggers.isNotEmpty()) {
+                                LinkedSection("Triggers", linked.triggers.mapNotNull { t ->
+                                    val label = t.type?.let { triggerLabelMap[it] ?: it.replace("_", " ").replaceFirstChar { c -> c.uppercase() } }
+                                    label
+                                })
+                            }
+                            if (linked.prodromes.isNotEmpty()) {
+                                LinkedSection("Prodromes", linked.prodromes.mapNotNull { it.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } })
+                            }
+                            if (linked.medicines.isNotEmpty()) {
+                                LinkedSection("Medicines", linked.medicines.mapNotNull { m ->
+                                    listOfNotNull(m.name, m.amount?.let { "($it)" }).joinToString(" ")
+                                })
+                            }
+                            if (linked.reliefs.isNotEmpty()) {
+                                LinkedSection("Reliefs", linked.reliefs.mapNotNull { it.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } })
+                            }
+                            if (linked.activities.isNotEmpty()) {
+                                LinkedSection("Activities", linked.activities.mapNotNull { it.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } })
+                            }
+                            if (linked.locations.isNotEmpty()) {
+                                LinkedSection("Locations", linked.locations.mapNotNull { it.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } })
+                            }
+                        }
+
                         JournalCardActions(
                             onEdit = { navController.navigate("${Routes.EDIT_MIGRAINE}/${event.row.id}") },
                             onDelete = { confirmDelete = true }
@@ -211,7 +265,14 @@ private fun JournalEntryCard(
                                 )
                             }
                         }
-                        JournalRowLine("Type", event.row.type ?: "-")
+                        val triggerDisplayLabel = event.row.type?.let { t ->
+                            triggerLabelMap[t] ?: t.replace("_", " ")
+                                .replaceFirstChar { c -> c.uppercase() }
+                        } ?: "-"
+                        JournalRowLine("Type", triggerDisplayLabel)
+                        if (event.row.source == "system") {
+                            JournalRowLine("Source", "Auto-detected")
+                        }
                         JournalRowTime("Start", event.row.startAt)
                         if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
                         
@@ -267,6 +328,7 @@ private fun JournalEntryCard(
                         JournalRowLine("Type", event.row.type ?: "-")
                         JournalRowDuration("Duration", event.row.durationMinutes)
                         JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.endAt.isNullOrBlank()) JournalRowTime("End", event.row.endAt)
                         if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
                         JournalCardActions(
                             onEdit = { navController.navigate("${Routes.EDIT_RELIEF}/${event.row.id}") },
@@ -278,6 +340,87 @@ private fun JournalEntryCard(
                                 onConfirm = {
                                     val token = authState.accessToken
                                     if (!token.isNullOrBlank()) vm.removeRelief(token, event.row.id)
+                                    confirmDelete = false
+                                }
+                            )
+                        }
+                    }
+                    is JournalEvent.Prodrome -> {
+                        Text("Prodrome", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        JournalRowLine("Type", event.row.type?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "-")
+                        JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        JournalCardActions(
+                            onEdit = { navController.navigate("${Routes.EDIT_PRODROME}/${event.row.id}") },
+                            onDelete = { confirmDelete = true }
+                        )
+                        if (confirmDelete) {
+                            DeleteDialog(
+                                onDismiss = { confirmDelete = false },
+                                onConfirm = {
+                                    val token = authState.accessToken
+                                    if (!token.isNullOrBlank()) vm.removeProdrome(token, event.row.id)
+                                    confirmDelete = false
+                                }
+                            )
+                        }
+                    }
+                    is JournalEvent.Location -> {
+                        Text("Location", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        JournalRowLine("Type", event.row.type?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "-")
+                        JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        JournalCardActions(
+                            onEdit = { navController.navigate("${Routes.EDIT_LOCATION}/${event.row.id}") },
+                            onDelete = { confirmDelete = true }
+                        )
+                        if (confirmDelete) {
+                            DeleteDialog(
+                                onDismiss = { confirmDelete = false },
+                                onConfirm = {
+                                    val token = authState.accessToken
+                                    if (!token.isNullOrBlank()) vm.removeLocation(token, event.row.id)
+                                    confirmDelete = false
+                                }
+                            )
+                        }
+                    }
+                    is JournalEvent.Activity -> {
+                        Text("Activity", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        JournalRowLine("Type", event.row.type?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "-")
+                        JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.endAt.isNullOrBlank()) JournalRowTime("End", event.row.endAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        JournalCardActions(
+                            onEdit = { navController.navigate("${Routes.EDIT_ACTIVITY}/${event.row.id}") },
+                            onDelete = { confirmDelete = true }
+                        )
+                        if (confirmDelete) {
+                            DeleteDialog(
+                                onDismiss = { confirmDelete = false },
+                                onConfirm = {
+                                    val token = authState.accessToken
+                                    if (!token.isNullOrBlank()) vm.removeActivity(token, event.row.id)
+                                    confirmDelete = false
+                                }
+                            )
+                        }
+                    }
+                    is JournalEvent.MissedActivity -> {
+                        Text("Missed Activity", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        JournalRowLine("Type", event.row.type?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "-")
+                        JournalRowTime("Start", event.row.startAt)
+                        if (!event.row.notes.isNullOrBlank()) JournalRowLine("Notes", event.row.notes!!)
+                        JournalCardActions(
+                            onEdit = null,
+                            onDelete = { confirmDelete = true }
+                        )
+                        if (confirmDelete) {
+                            DeleteDialog(
+                                onDismiss = { confirmDelete = false },
+                                onConfirm = {
+                                    val token = authState.accessToken
+                                    if (!token.isNullOrBlank()) vm.removeMissedActivity(token, event.row.id)
                                     confirmDelete = false
                                 }
                             )
@@ -308,6 +451,10 @@ private fun needsAttention(ev: JournalEvent): Boolean {
         is JournalEvent.Trigger -> ev.row.startAt.isNullOrBlank()
         is JournalEvent.Medicine -> ev.row.amount.isNullOrBlank() || ev.row.startAt.isNullOrBlank()
         is JournalEvent.Relief -> ev.row.durationMinutes == null || ev.row.startAt.isNullOrBlank()
+        is JournalEvent.Prodrome -> ev.row.startAt.isNullOrBlank()
+        is JournalEvent.Location -> false
+        is JournalEvent.Activity -> ev.row.startAt.isNullOrBlank()
+        is JournalEvent.MissedActivity -> false
     }
 }
 
@@ -315,7 +462,7 @@ private fun needsAttention(ev: JournalEvent): Boolean {
 
 @Composable
 private fun JournalCardActions(
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     onDelete: () -> Unit
 ) {
     Spacer(Modifier.height(8.dp))
@@ -325,13 +472,32 @@ private fun JournalCardActions(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
-        TextButton(onClick = onEdit) {
-            Text("Edit", color = AppTheme.AccentPurple)
+        if (onEdit != null) {
+            TextButton(onClick = onEdit) {
+                Text("Edit", color = AppTheme.AccentPurple)
+            }
+            Spacer(Modifier.width(8.dp))
         }
-        Spacer(Modifier.width(8.dp))
         TextButton(onClick = onDelete) {
             Text("Delete", color = Color(0xFFFF6B6B))
         }
+    }
+}
+
+@Composable
+private fun LinkedSection(label: String, items: List<String>) {
+    if (items.isEmpty()) return
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+        Text(
+            items.joinToString(", "),
+            color = AppTheme.BodyTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(start = 16.dp)
+        )
     }
 }
 
@@ -396,3 +562,5 @@ private fun DeleteDialog(
         }
     )
 }
+
+

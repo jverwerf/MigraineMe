@@ -188,7 +188,7 @@ fun ManageSymptomsScreen(
 
     // Delete confirmation
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var deleteTarget by remember { mutableStateOf<SupabaseDbService.AllSymptomRow?>(null) }
+    var deleteTarget by remember { mutableStateOf<SupabaseDbService.UserSymptomRow?>(null) }
 
     if (showDeleteDialog && deleteTarget != null) {
         AlertDialog(
@@ -368,3 +368,4 @@ private fun SymptomRow(
         }
     }
 }
+

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -296,36 +297,50 @@ fun NutritionHistoryScreen(
                     Spacer(Modifier.height(4.dp))
 
                     MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
-                        val total = if (metric == MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
+                        val isRisk = MonitorCardConfig.isRiskMetric(metric)
+                        val total = if (isRisk) {
                             items.maxOfOrNull { it.metricValue(metric) ?: 0.0 } ?: 0.0
                         } else {
                             items.sumOf { it.metricValue(metric) ?: 0.0 }
                         }
                         val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
                         val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
-                        val formatted = if (metric == MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
-                            when (total.toInt()) {
-                                3 -> "🔴 High"
-                                2 -> "🟡 Medium"
-                                1 -> "🟢 Low"
-                                else -> "⚪ None"
+                        if (isRisk) {
+                            val (levelText, valueColor) = RiskColors.formatRiskLevel(metric, total.toInt())
+                            val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    when (metric) {
+                                        MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> CheeseIcon(valueColor, 12.dp)
+                                        MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> WineGlassIcon(valueColor, 12.dp)
+                                        MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> WheatIcon(valueColor, 12.dp)
+                                    }
+                                    Spacer(Modifier.width(5.dp))
+                                    Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                }
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
+                                    if (level != "none") {
+                                        Spacer(Modifier.width(4.dp))
+                                        RiskBar(valueColor, level, maxHeight = 12.dp)
+                                    }
+                                }
                             }
-                        } else if (total > 0) {
-                            if (total >= 10) "${total.toInt()}" else String.format("%.1f", total)
-                        } else "—"
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                            Text(
-                                if (formatted.startsWith("🔴") || formatted.startsWith("🟡") ||
-                                    formatted.startsWith("🟢") || formatted.startsWith("⚪") ||
-                                    formatted == "—") formatted
-                                else "$formatted $unit",
-                                color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                        } else {
+                            val formatted = if (total > 0) {
+                                if (total >= 10) "${total.toInt()} $unit" else "${String.format("%.1f", total)} $unit"
+                            } else "—"
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
@@ -532,5 +547,6 @@ private fun HistorySummaryValue(value: String, label: String, color: Color = App
         Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
+
 
 

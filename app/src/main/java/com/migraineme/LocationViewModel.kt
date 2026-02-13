@@ -10,8 +10,8 @@ class LocationViewModel : ViewModel() {
 
     private val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
 
-    private val _pool = MutableStateFlow<List<SupabaseDbService.AllLocationRow>>(emptyList())
-    val pool: StateFlow<List<SupabaseDbService.AllLocationRow>> = _pool
+    private val _pool = MutableStateFlow<List<SupabaseDbService.UserLocationRow>>(emptyList())
+    val pool: StateFlow<List<SupabaseDbService.UserLocationRow>> = _pool
 
     private val _frequent = MutableStateFlow<List<SupabaseDbService.LocationPrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.LocationPrefRow>> = _frequent
@@ -69,3 +69,4 @@ class LocationViewModel : ViewModel() {
         }
     }
 }
+

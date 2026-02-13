@@ -22,17 +22,8 @@ type Body = {
   refresh_token?: string;
   token_type?: string;
   expires_at?: string | null;
-
-  // NEW: optional client-provided metric toggles
+  expires_in?: number | null;  // WHOOP OAuth returns this (seconds until expiry)
   metric_settings?: MetricToggle[] | null;
-};
-
-type EdgeAuditInsert = {
-  fn: string;
-  user_id: string | null;
-  ok: boolean;
-  stage: string;
-  message: string | null;
 };
 
 type ResolveRow = {
@@ -52,8 +43,6 @@ type SyncJobInsert = {
   city_id: number | null;
 };
 
-// Added two toggles (metric_settings rows) so WHOOP connect seeds them for new users.
-// Note: reconnect should NOT override user choices unless the client explicitly sends metric_settings.
 const WHOOP_METRICS = [
   "recovery_score_daily",
   "resting_hr_daily",
@@ -67,10 +56,11 @@ const WHOOP_METRICS = [
   "sleep_stages_daily",
   "fell_asleep_time_daily",
   "woke_up_time_daily",
-
-  // Activities toggles (these are YOUR internal metric keys; ingestion must consume them)
   "activity_hr_zones_sessions",
   "hr_zones_daily",
+  "steps_daily",
+  "time_in_high_hr_zones_daily",
+  "stress_index_daily",
 ] as const;
 
 const WHOOP_METRIC_SET = new Set<string>(WHOOP_METRICS as unknown as string[]);
@@ -172,7 +162,6 @@ function normalizeClientMetricToggles(raw: unknown): { applied: MetricToggle[]; 
     applied.push({ metric, enabled });
   }
 
-  // de-dupe by metric, last one wins
   const map = new Map<string, boolean>();
   for (const t of applied) map.set(t.metric, t.enabled);
   return {
@@ -181,27 +170,71 @@ function normalizeClientMetricToggles(raw: unknown): { applied: MetricToggle[]; 
   };
 }
 
-// PATCH: sanitize token fields (trim + remove embedded newlines)
 function sanitizeTokenField(raw: unknown): string {
   if (typeof raw !== "string") return "";
   return raw.replace(/\r?\n/g, "").replace(/\r/g, "").trim();
 }
 
-// PATCH: Only accept expires_at if it parses AND is in the future.
-// If client sends old/invalid, store null so we don't poison DB.
-function normalizeClientExpiresAt(raw: unknown, nowUtc: Date): string | null {
-  if (raw == null) return null;
-  if (typeof raw !== "string") return null;
+// FIXED: Now handles both expires_at (ISO string) and expires_in (seconds)
+function computeExpiresAt(expiresAtRaw: unknown, expiresInRaw: unknown, nowUtc: Date): string {
+  // First try expires_at (ISO timestamp string)
+  if (expiresAtRaw != null && typeof expiresAtRaw === "string") {
+    const s = expiresAtRaw.trim();
+    if (s) {
+      const ms = new Date(s).getTime();
+      if (!Number.isNaN(ms) && ms > nowUtc.getTime()) {
+        return new Date(ms).toISOString();
+      }
+    }
+  }
 
-  const s = raw.trim();
-  if (!s) return null;
+  // Then try expires_in (seconds until expiry) - this is what WHOOP OAuth returns
+  if (expiresInRaw != null) {
+    const seconds = typeof expiresInRaw === "number" ? expiresInRaw : Number(expiresInRaw);
+    if (!Number.isNaN(seconds) && seconds > 0) {
+      return new Date(nowUtc.getTime() + seconds * 1000).toISOString();
+    }
+  }
 
-  const ms = new Date(s).getTime();
-  if (Number.isNaN(ms)) return null;
+  // Default: 1 hour from now (WHOOP tokens typically last ~1 hour)
+  console.log("[upsert-whoop-token] No valid expires_at or expires_in provided, defaulting to 1 hour");
+  return new Date(nowUtc.getTime() + 3600 * 1000).toISOString();
+}
 
-  if (ms <= nowUtc.getTime()) return null;
+// Fetch WHOOP user ID from their API - WITH LOGGING
+async function fetchWhoopUserId(accessToken: string): Promise<number | null> {
+  try {
+    console.log("[upsert-whoop-token] fetching WHOOP user profile...");
+    
+    const res = await fetch("https://api.prod.whoop.com/developer/v2/user/profile/basic", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+    });
 
-  return new Date(ms).toISOString();
+    console.log("[upsert-whoop-token] WHOOP profile response status:", res.status);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.log("[upsert-whoop-token] WHOOP profile error:", text);
+      return null;
+    }
+
+    const data = await res.json();
+    console.log("[upsert-whoop-token] WHOOP profile data:", JSON.stringify(data));
+    
+    const whoopUserId = data?.user_id;
+    
+    if (typeof whoopUserId === "number") {
+      return whoopUserId;
+    }
+    
+    return null;
+  } catch (e) {
+    console.log("[upsert-whoop-token] fetch error:", (e as Error).message);
+    return null;
+  }
 }
 
 serve(async (req) => {
@@ -220,62 +253,40 @@ serve(async (req) => {
     global: { headers: { "X-Client-Info": "upsert-whoop-token-admin" } },
   });
 
-  async function audit(a: EdgeAuditInsert) {
+  async function audit(fn: string, userId: string | null, ok: boolean, stage: string, message: string | null) {
     try {
-      await admin.from("edge_audit").insert(a);
+      await admin.from("edge_audit").insert({ fn, user_id: userId, ok, stage, message });
     } catch (e) {
-      console.log("[upsert-whoop-token] audit_insert_failed", { error: (e as Error).message });
+      console.log("[upsert-whoop-token] audit failed", e);
     }
   }
 
   try {
     if (req.method !== "POST") {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: null,
-        ok: false,
-        stage: "method_not_allowed",
-        message: req.method,
-      });
+      await audit("upsert-whoop-token", null, false, "method_not_allowed", req.method);
       return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
     }
 
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.toLowerCase().startsWith("bearer ")) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: null,
-        ok: false,
-        stage: "missing_auth",
-        message: "Authorization header missing/invalid",
-      });
+      await audit("upsert-whoop-token", null, false, "missing_auth", "Authorization header missing/invalid");
       return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
     }
 
+    const jwt = authHeader.slice(7);
     const userClient = createClient(supabaseUrl, anonKey, {
       auth: { persistSession: false },
-      global: {
-        headers: {
-          Authorization: authHeader,
-          "X-Client-Info": "upsert-whoop-token-user",
-        },
-      },
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
     });
 
     const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData?.user) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: null,
-        ok: false,
-        stage: "auth_get_user_failed",
-        message: userErr?.message ?? "no user",
-      });
+    if (userErr || !userData?.user?.id) {
+      await audit("upsert-whoop-token", null, false, "auth_failed", userErr?.message ?? "no user");
       return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
     }
 
     const userId = userData.user.id;
-    await audit({ fn: "upsert-whoop-token", user_id: userId, ok: true, stage: "auth_ok", message: null });
+    await audit("upsert-whoop-token", userId, true, "auth_ok", null);
 
     const body = (await req.json().catch(() => null)) as Body | null;
 
@@ -283,13 +294,7 @@ serve(async (req) => {
     const refresh = sanitizeTokenField(body?.refresh_token);
 
     if (!access || !refresh) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "bad_body",
-        message: "missing access_token or refresh_token",
-      });
+      await audit("upsert-whoop-token", userId, false, "bad_body", "missing access_token or refresh_token");
       return jsonResponse({ ok: false, error: "Missing access_token/refresh_token" }, 400);
     }
 
@@ -299,156 +304,86 @@ serve(async (req) => {
     const nowIso = nowUtc.toISOString();
     const utcDate = nowIso.slice(0, 10);
 
-    const expiresAt = normalizeClientExpiresAt(body?.expires_at ?? null, nowUtc);
+    // FIXED: Now handles both expires_at and expires_in
+    const expiresAt = computeExpiresAt(body?.expires_at, body?.expires_in, nowUtc);
 
-    // 1) Upsert WHOOP tokens (auth only)
-    const { error: upsertErr } = await admin.from("whoop_tokens").upsert(
-      {
-        user_id: userId,
-        access_token: access,
-        refresh_token: refresh,
-        token_type: tokenType,
-        expires_at: expiresAt,
-        updated_at: nowIso,
-        created_at: nowIso,
-      },
-      { onConflict: "user_id" },
-    );
+    // Fetch WHOOP user ID for webhook mapping
+    const whoopUserId = await fetchWhoopUserId(access);
+    if (whoopUserId) {
+      await audit("upsert-whoop-token", userId, true, "whoop_user_id_fetched", `whoop_user_id=${whoopUserId}`);
+    } else {
+      await audit("upsert-whoop-token", userId, false, "whoop_user_id_fetch_failed", "see logs");
+    }
+
+    // Upsert WHOOP tokens
+    const tokenData: Record<string, unknown> = {
+      user_id: userId,
+      access_token: access,
+      refresh_token: refresh,
+      token_type: tokenType,
+      expires_at: expiresAt,
+      updated_at: nowIso,
+      created_at: nowIso,
+    };
+
+    if (whoopUserId) {
+      tokenData.whoop_user_id = whoopUserId;
+    }
+
+    const { error: upsertErr } = await admin.from("whoop_tokens").upsert(tokenData, { onConflict: "user_id" });
 
     if (upsertErr) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "whoop_tokens_upsert_failed",
-        message: upsertErr.message,
-      });
+      await audit("upsert-whoop-token", userId, false, "whoop_tokens_upsert_failed", upsertErr.message);
       return jsonResponse({ ok: false, error: upsertErr.message }, 500);
     }
 
-    await audit({
-      fn: "upsert-whoop-token",
-      user_id: userId,
-      ok: true,
-      stage: "whoop_tokens_upsert_ok",
-      message: null,
-    });
+    await audit("upsert-whoop-token", userId, true, "whoop_tokens_upsert_ok", `expires_at=${expiresAt}`);
 
-    // NEW: parse client-provided toggles (optional)
+    // Parse client-provided toggles
     const { applied: clientMetricToggles, ignored: ignoredClientMetrics } = normalizeClientMetricToggles(
       (body as any)?.metric_settings,
     );
 
-    if (ignoredClientMetrics.length) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: true,
-        stage: "metric_client_ignored",
-        message: `ignored=${ignoredClientMetrics.slice(0, 20).join(",")}`,
-      });
-    }
-
-    // 2a) If client sent toggles, upsert those rows with enabled=true/false (this UPDATES existing rows)
-    let clientAppliedCount = 0;
-    if (clientMetricToggles.length) {
-      const rows = clientMetricToggles.map((t) => ({
-        user_id: userId,
-        metric: t.metric,
-        enabled: t.enabled,
-        preferred_source: "whoop",
-        allowed_sources: ["whoop"],
-        created_at: nowIso,
-        updated_at: nowIso,
-      }));
-
-      const { error } = await admin.from("metric_settings").upsert(rows, { onConflict: "user_id,metric" });
-      if (error) {
-        await audit({
-          fn: "upsert-whoop-token",
-          user_id: userId,
-          ok: false,
-          stage: "metric_client_upsert_failed",
-          message: error.message,
-        });
-      } else {
-        clientAppliedCount = rows.length;
-        await audit({
-          fn: "upsert-whoop-token",
-          user_id: userId,
-          ok: true,
-          stage: "metric_client_upsert_ok",
-          message: `applied=${clientAppliedCount}`,
-        });
-      }
-    }
-
-    // 2b) Seed any missing WHOOP metrics without overriding existing user choices.
-    const seedRows = WHOOP_METRICS.map((metric) => ({
+    // Enable all WHOOP metrics
+    let enabledCount = 0;
+    const enableRows = WHOOP_METRICS.map((metric) => ({
       user_id: userId,
       metric,
       enabled: true,
       preferred_source: "whoop",
       allowed_sources: ["whoop"],
-      created_at: nowIso,
       updated_at: nowIso,
     }));
 
-    const { error: seedErr } = await admin.from("metric_settings").upsert(seedRows, {
+    const { error: enableErr } = await admin.from("metric_settings").upsert(enableRows, {
       onConflict: "user_id,metric",
-      ignoreDuplicates: true,
     });
 
-    if (seedErr) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "metric_bootstrap_failed",
-        message: seedErr.message,
-      });
-      // Do not fail connect if tokens succeeded
-    } else {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: true,
-        stage: "metric_bootstrap_ok",
-        message: `seeded_missing_metrics count=${WHOOP_METRICS.length}`,
-      });
+    if (!enableErr) {
+      enabledCount = WHOOP_METRICS.length;
+      await audit("upsert-whoop-token", userId, true, "metric_enable_ok", `enabled=${enabledCount}`);
     }
 
-    // 3) Enqueue initial backfill immediately (30 days local, skip finalized days)
+    // Enqueue backfill
     let enqueuedJobs = 0;
     try {
       const resolved = await resolveWithDateFallback(admin, userId, utcDate);
       const row = resolved.row;
 
-      if (!row?.timezone) {
-        await audit({
-          fn: "upsert-whoop-token",
-          user_id: userId,
-          ok: true,
-          stage: "backfill_skipped_no_timezone",
-          message: `usedResolveDate=${resolved.usedDate ?? "null"}`,
-        });
-      } else {
+      if (row?.timezone) {
         const tz = row.timezone;
         const cityId = typeof row.city_id === "number" ? row.city_id : null;
-
         const { localDate } = getLocalTimeParts(tz, nowUtc);
 
         const startLocalDate = addDaysIsoDate(localDate, -29);
         const endLocalDate = localDate;
         const days = dateRangeInclusive(startLocalDate, endLocalDate);
 
-        const { data: alreadyRan, error: ranErr } = await admin
+        const { data: alreadyRan } = await admin
           .from("backend_daily_runs")
           .select("local_date")
           .eq("user_id", userId)
           .in("local_date", days);
-
-        if (ranErr) throw new Error(`backend_daily_runs query failed: ${ranErr.message}`);
 
         const ranSet = new Set((alreadyRan ?? []).map((r: any) => String(r.local_date)));
 
@@ -468,53 +403,29 @@ serve(async (req) => {
         }
 
         if (jobs.length) {
-          const { error: insErr } = await admin.from("sync_jobs").upsert(jobs, {
+          await admin.from("sync_jobs").upsert(jobs, {
             onConflict: "job_type,user_id,local_date",
             ignoreDuplicates: true,
           });
-          if (insErr) throw new Error(`sync_jobs upsert failed: ${insErr.message}`);
-
           enqueuedJobs = jobs.length;
-          await audit({
-            fn: "upsert-whoop-token",
-            user_id: userId,
-            ok: true,
-            stage: "backfill_enqueued",
-            message: `local=${startLocalDate}..${endLocalDate} jobs=${enqueuedJobs} tz=${tz}`,
-          });
-        } else {
-          await audit({
-            fn: "upsert-whoop-token",
-            user_id: userId,
-            ok: true,
-            stage: "backfill_nothing_missing",
-            message: `local=${startLocalDate}..${endLocalDate} tz=${tz}`,
-          });
+          await audit("upsert-whoop-token", userId, true, "backfill_enqueued", `jobs=${enqueuedJobs}`);
         }
       }
     } catch (e) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "backfill_exception",
-        message: (e as Error).message,
-      });
+      await audit("upsert-whoop-token", userId, false, "backfill_exception", (e as Error).message);
     }
 
     return jsonResponse({
       ok: true,
       userId,
+      whoopUserId,
       enqueuedJobs,
-      metricSettings: {
-        clientApplied: clientAppliedCount,
-        clientIgnored: ignoredClientMetrics,
-        allowlisted: WHOOP_METRICS.length,
-      },
+      expiresAt,
+      metricSettings: { enabled: enabledCount },
     });
   } catch (e) {
     const msg = (e as Error).message;
-    await audit({ fn: "upsert-whoop-token", user_id: null, ok: false, stage: "exception", message: msg });
+    console.error("[upsert-whoop-token] exception", e);
     return jsonResponse({ ok: false, error: msg }, 500);
   }
 });

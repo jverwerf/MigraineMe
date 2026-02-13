@@ -228,9 +228,10 @@ async function whoopFetchPagedRecords(
 }
 
 function isExpiredSoon(expiresAtIso: string | null, nowUtc: Date): boolean {
-  if (!expiresAtIso) return false;
+  // If expires_at is NULL or invalid, assume expired and refresh to be safe
+  if (!expiresAtIso) return true;
   const exp = new Date(expiresAtIso).getTime();
-  if (Number.isNaN(exp)) return false;
+  if (Number.isNaN(exp)) return true;
   return exp <= nowUtc.getTime() + 5 * 60_000;
 }
 
@@ -419,12 +420,16 @@ function getForceFlag(req: Request): boolean {
   return raw === "1" || raw.toLowerCase() === "true" || raw.toLowerCase() === "yes";
 }
 
-// Retry window only matters for TODAY jobs
-const RETRY_START_HOUR = 10;
-const RETRY_END_HOUR = 12;
+// Retry window: 9:00 - 9:45 local time
+const RETRY_START_HOUR = 9;
+const RETRY_END_HOUR = 9;
+const RETRY_END_MINUTE = 45;
 
-function isWithinRetryHours(hh: number): boolean {
-  return hh >= RETRY_START_HOUR && hh <= RETRY_END_HOUR;
+function isWithinRetryWindow(hh: number, mm: number): boolean {
+  if (hh < RETRY_START_HOUR) return false;
+  if (hh > RETRY_END_HOUR) return false;
+  if (hh === RETRY_END_HOUR && mm > RETRY_END_MINUTE) return false;
+  return true;
 }
 
 const MAX_PICK_ATTEMPTS = 10;
@@ -443,6 +448,19 @@ serve(async (req) => {
     const whoopConfigured = Boolean(optionalEnv("WHOOP_CLIENT_ID") && optionalEnv("WHOOP_CLIENT_SECRET"));
     const force = getForceFlag(req);
 
+    // Also check for force in request body (for webhook invocation)
+    let bodyForce = false;
+    let bodyUserId: string | null = null;
+    try {
+      const body = await req.clone().json();
+      bodyForce = body?.force === true;
+      bodyUserId = typeof body?.userId === "string" ? body.userId : null;
+    } catch {
+      // No body or invalid JSON
+    }
+
+    const isForced = force || bodyForce;
+
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
       global: { headers: { "X-Client-Info": "sync-worker" } },
@@ -454,7 +472,7 @@ serve(async (req) => {
 
     // NOTE: attempts gating prevents hot-looping and runaway attempts.
     // Force mode bypasses this gate.
-    const { data: jobs, error: jobsErr } = await supabase
+    let jobsQuery = supabase
       .from("sync_jobs")
       .select("id,job_type,user_id,local_date,status,attempts,locked_at")
       .eq("job_type", "whoop_daily")
@@ -463,12 +481,19 @@ serve(async (req) => {
       .order("created_at", { ascending: true })
       .limit(50);
 
+    // If specific userId provided (from webhook), filter to just that user
+    if (bodyUserId) {
+      jobsQuery = jobsQuery.eq("user_id", bodyUserId);
+    }
+
+    const { data: jobs, error: jobsErr } = await jobsQuery;
+
     if (jobsErr) throw new Error(`sync_jobs select failed: ${jobsErr.message}`);
 
     const all = (jobs ?? []) as SyncJobRow[];
 
     // Filter attempts only here so we preserve the original select shape
-    const picked = all.filter((j) => force || (j.attempts ?? 0) < MAX_PICK_ATTEMPTS);
+    const picked = all.filter((j) => isForced || (j.attempts ?? 0) < MAX_PICK_ATTEMPTS);
 
     if (!picked.length) {
       return jsonResponse({
@@ -476,7 +501,7 @@ serve(async (req) => {
         summary: {
           picked: 0,
           whoopClientConfigured: whoopConfigured,
-          forced: force,
+          forced: isForced,
           maxPickAttempts: MAX_PICK_ATTEMPTS,
           filteredOut: all.length,
         },
@@ -684,11 +709,13 @@ serve(async (req) => {
           };
         }
 
-        // Gate by retry window ONLY for today jobs.
+        // Gate by retry window ONLY for today jobs (unless forced by webhook)
         // IMPORTANT: do not increment attempts for gating-only requeues.
-        if (isTodayJob && !force) {
-          if (!isWithinRetryHours(hh)) {
-            const reason = hh > RETRY_END_HOUR ? "after_retry_window_waiting_for_whoop_data" : "outside_retry_window";
+        if (isTodayJob && !isForced) {
+          if (!isWithinRetryWindow(hh, mm)) {
+            const reason = (hh > RETRY_END_HOUR || (hh === RETRY_END_HOUR && mm > RETRY_END_MINUTE))
+              ? "after_retry_window_waiting_for_whoop_data"
+              : "outside_retry_window";
             await markJobQueued(job.id, reason);
             return { jobId: job.id, userId, localDate: jobLocalDate, status: reason, timezone: tz, localTime };
           }
@@ -728,7 +755,8 @@ serve(async (req) => {
         try {
           if (isExpiredSoon(whoopToken.expires_at, nowUtc)) {
             const refreshed = await refreshWhoopToken(whoopToken.refresh_token);
-            const expiresAt = new Date(nowUtc.getTime() + (refreshed.expires_in || 0) * 1000).toISOString();
+            const expiresInSec = refreshed.expires_in || 3600; // Default 1 hour if missing
+            const expiresAt = new Date(nowUtc.getTime() + expiresInSec * 1000).toISOString();
 
             const { error: updErr } = await supabase
               .from("whoop_tokens")
@@ -750,9 +778,28 @@ serve(async (req) => {
               token_type: refreshed.token_type ?? whoopToken.token_type,
               expires_at: expiresAt,
             };
+            
+            // Log successful refresh to edge_audit
+            await supabase.from("edge_audit").insert({
+              fn: "sync-worker",
+              user_id: userId,
+              ok: true,
+              stage: "whoop_refresh_ok",
+              message: `expires_in=${expiresInSec}s`,
+            }).catch(() => {});
           }
         } catch (e) {
-          metricResults.push({ source: "whoop", status: "refresh_failed", error: (e as Error).message });
+          const errMsg = (e as Error).message;
+          metricResults.push({ source: "whoop", status: "refresh_failed", error: errMsg });
+          
+          // Log refresh failure to edge_audit - THIS IS CRITICAL TO MONITOR
+          await supabase.from("edge_audit").insert({
+            fn: "sync-worker",
+            user_id: userId,
+            ok: false,
+            stage: "whoop_refresh_failed",
+            message: errMsg.slice(0, 500),
+          }).catch(() => {});
         }
 
         const whoopEnabled = (metric: string) => {
@@ -1203,7 +1250,8 @@ serve(async (req) => {
 
         if (!hasWhoopData) {
           if (isTodayJob) {
-            const reason = (!force && hh > RETRY_END_HOUR)
+            const pastWindow = (hh > RETRY_END_HOUR || (hh === RETRY_END_HOUR && mm > RETRY_END_MINUTE));
+            const reason = (!isForced && pastWindow)
               ? "after_retry_window_waiting_for_whoop_data"
               : "retry_waiting_for_whoop_data";
             await markJobQueued(job.id, reason);
@@ -1304,8 +1352,8 @@ serve(async (req) => {
       errors: results.filter((r: any) => r.status === "error" || String(r.status).includes("error")).length,
       nowUtc: nowUtc.toISOString(),
       whoopClientConfigured: whoopConfigured,
-      forced: force,
-      retryHoursLocal: `${String(RETRY_START_HOUR).padStart(2, "0")}:00-${String(RETRY_END_HOUR).padStart(2, "0")}:00`,
+      forced: isForced,
+      retryWindowLocal: `${String(RETRY_START_HOUR).padStart(2, "0")}:00-${String(RETRY_END_HOUR).padStart(2, "0")}:${String(RETRY_END_MINUTE).padStart(2, "0")}`,
       staleReclaimMinutes: 30,
       maxPickAttempts: MAX_PICK_ATTEMPTS,
     };

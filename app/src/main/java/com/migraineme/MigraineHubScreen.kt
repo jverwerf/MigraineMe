@@ -235,11 +235,35 @@ fun MigraineHubScreen(navController: NavController) {
 
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
+                    title = "Activity",
+                    subtitle = "Log activity",
+                    iconColor = Color(0xFFFF8A65),
+                    drawIcon = { HubIcons.run { drawActivityPulse(it) } },
+                    onClick = { navController.navigate(Routes.QUICK_LOG_ACTIVITY) }
+                )
+            }
+
+            // Quick Log Cards Row 3
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                QuickLogCard(
+                    modifier = Modifier.weight(1f),
                     title = "Prodrome",
                     subtitle = "Log symptoms",
                     iconColor = AppTheme.AccentPurple,
                     drawIcon = { drawProdromeIcon(it) },
-                    onClick = { navController.navigate(Routes.LOG_MIGRAINE) }
+                    onClick = { navController.navigate(Routes.QUICK_LOG_PRODROME) }
+                )
+
+                QuickLogCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Migraine",
+                    subtitle = "Quick log",
+                    iconColor = AppTheme.AccentPink,
+                    drawIcon = { HubIcons.run { drawMigraineStarburst(it) } },
+                    onClick = { navController.navigate(Routes.QUICK_LOG_MIGRAINE) }
                 )
             }
         }
@@ -305,3 +329,4 @@ private fun QuickLogCard(
         }
     }
 }
+

@@ -56,6 +56,102 @@ class SupabaseDbService(
         val notes: String? = null,
         @SerialName("pain_locations") val painLocations: List<String>? = null
     )
+    /** Lightweight row for migraine linking. */
+    @Serializable data class MigraneSummaryRow(
+        val id: String,
+        val type: String? = null,
+        val severity: Int? = null,
+        @SerialName("start_at") val startAt: String
+    )
+
+    /** Fetch migraines within a date range for linking in quick log. */
+    suspend fun getNearbyMigraines(accessToken: String, fromDate: String, toDate: String): List<MigraneSummaryRow> {
+        val response = client.get("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "id,type,severity,start_at")
+            parameter("and", "(start_at.gte.${fromDate}T00:00:00Z,start_at.lte.${toDate}T23:59:59Z)")
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    /** All items linked to a specific migraine, for display on the journal card. */
+    data class MigraineLinkedItems(
+        val triggers: List<TriggerRow> = emptyList(),
+        val medicines: List<MedicineRow> = emptyList(),
+        val reliefs: List<ReliefRow> = emptyList(),
+        val prodromes: List<ProdromeLogRow> = emptyList(),
+        val activities: List<ActivityLogRow> = emptyList(),
+        val locations: List<LocationLogRow> = emptyList()
+    )
+
+    suspend fun getLinkedItems(accessToken: String, migraineId: String): MigraineLinkedItems {
+        suspend fun fetchTriggers(table: String): List<TriggerRow> {
+            val r = client.get("$supabaseUrl/rest/v1/$table") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "start_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
+        suspend fun fetchMedicines(table: String): List<MedicineRow> {
+            val r = client.get("$supabaseUrl/rest/v1/$table") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "start_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
+        suspend fun fetchReliefs(table: String): List<ReliefRow> {
+            val r = client.get("$supabaseUrl/rest/v1/$table") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "start_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
+        suspend fun fetchProdromes(table: String): List<ProdromeLogRow> {
+            val r = client.get("$supabaseUrl/rest/v1/$table") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "start_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
+        suspend fun fetchActivities(table: String): List<ActivityLogRow> {
+            val r = client.get("$supabaseUrl/rest/v1/$table") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "start_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
+        suspend fun fetchLocations(table: String): List<LocationLogRow> {
+            val r = client.get("$supabaseUrl/rest/v1/$table") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "start_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
+        return MigraineLinkedItems(
+            triggers = fetchTriggers("triggers"),
+            medicines = fetchMedicines("medicines"),
+            reliefs = fetchReliefs("reliefs"),
+            prodromes = fetchProdromes("prodromes"),
+            activities = fetchActivities("time_in_high_hr_zones_daily"),
+            locations = fetchLocations("locations")
+        )
+    }
+
     suspend fun insertMigraine(
         accessToken: String,
         type: String?,
@@ -103,7 +199,8 @@ class SupabaseDbService(
         severity: Int? = null,
         startAt: String? = null,
         endAt: String? = null,
-        notes: String? = null
+        notes: String? = null,
+        painLocations: List<String>? = null
     ): MigraineRow {
         val payload = buildJsonObject {
             type?.let { put("type", it) }
@@ -111,6 +208,9 @@ class SupabaseDbService(
             startAt?.let { put("start_at", it) }
             endAt?.let { put("ended_at", it) }
             notes?.let { put("notes", it) }
+            painLocations?.let { locs ->
+                put("pain_locations", kotlinx.serialization.json.JsonArray(locs.map { kotlinx.serialization.json.JsonPrimitive(it) }))
+            }
         }
         val response = client.patch("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -122,6 +222,26 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Update migraine failed: ${response.bodyAsText()}")
         return response.body()
     }
+    /** Set migraine_id to null on any table row, unlinking it from a migraine. */
+    suspend fun unlinkFromMigraine(accessToken: String, table: String, id: String) {
+        val payload = buildJsonObject { put("migraine_id", kotlinx.serialization.json.JsonNull) }
+        client.patch("$supabaseUrl/rest/v1/$table") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+    }
+
+    /** Set migraine_id on any table row, linking it to a migraine. */
+    suspend fun linkToMigraine(accessToken: String, table: String, id: String, migraineId: String) {
+        val payload = buildJsonObject { put("migraine_id", migraineId) }
+        client.patch("$supabaseUrl/rest/v1/$table") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+    }
+
     suspend fun deleteMigraine(accessToken: String, id: String) {
         val response = client.delete("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -171,6 +291,33 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Insert trigger failed: ${response.bodyAsText()}")
         return response.body()
     }
+
+    /** Lightweight row for recent trigger queries. */
+    @Serializable data class RecentTriggerRow(
+        val id: String,
+        val type: String? = null,
+        @SerialName("start_at") val startAt: String? = null
+    )
+
+    /** Fetch trigger types logged in the last [daysBack] days. */
+    suspend fun getRecentTriggers(accessToken: String, daysBack: Int = 3, referenceDate: String? = null): List<RecentTriggerRow> {
+        val refDate = referenceDate?.let {
+            try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
+        } ?: java.time.LocalDate.now()
+        val cutoffStart = refDate.minusDays(daysBack.toLong()).toString() + "T00:00:00Z"
+        val cutoffEnd = refDate.plusDays(1).toString() + "T00:00:00Z"
+        val response = client.get("$supabaseUrl/rest/v1/triggers") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "id,type,start_at")
+            parameter("start_at", "gte.$cutoffStart")
+            parameter("start_at", "lte.$cutoffEnd")
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
     suspend fun getAllTriggers(accessToken: String): List<TriggerRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -195,13 +342,15 @@ class SupabaseDbService(
         type: String? = null,
         startAt: String? = null,
         notes: String? = null,
-        migraineId: String? = null
+        migraineId: String? = null,
+        clearMigraineId: Boolean = false
     ): TriggerRow {
         val payload = buildJsonObject {
             type?.let { put("type", it) }
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
-            migraineId?.let { put("migraine_id", it) }
+            if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
+            else migraineId?.let { put("migraine_id", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -232,7 +381,8 @@ class SupabaseDbService(
         val notes: String? = null,
         val category: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual"
     )
     @Serializable
     data class MedicineInsert(
@@ -292,14 +442,16 @@ class SupabaseDbService(
         amount: String? = null,
         startAt: String? = null,
         notes: String? = null,
-        migraineId: String? = null
+        migraineId: String? = null,
+        clearMigraineId: Boolean = false
     ): MedicineRow {
         val payload = buildJsonObject {
             name?.let { put("name", it) }
             if (amount != null) put("amount", amount)
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
-            migraineId?.let { put("migraine_id", it) }
+            if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
+            else migraineId?.let { put("migraine_id", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -331,7 +483,8 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("end_at") val endAt: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual"
     )
     @Serializable
     data class ReliefInsert(
@@ -390,13 +543,17 @@ class SupabaseDbService(
         type: String? = null,
         startAt: String? = null,
         notes: String? = null,
-        migraineId: String? = null
+        migraineId: String? = null,
+        endAt: String? = null,
+        clearMigraineId: Boolean = false
     ): ReliefRow {
         val payload = buildJsonObject {
             type?.let { put("type", it) }
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
-            migraineId?.let { put("migraine_id", it) }
+            if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
+            else migraineId?.let { put("migraine_id", it) }
+            endAt?.let { put("end_at", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -417,11 +574,18 @@ class SupabaseDbService(
     }
 
     // ───────── TRIGGER POOL / PREFS ─────────
-    @Serializable data class AllTriggerRow(
+    @Serializable data class UserTriggerRow(
         val id: String,
         val label: String,
         val category: String? = null,
-        @SerialName("prediction_value") val predictionValue: String? = "NONE"
+        @SerialName("icon_key") val iconKey: String? = null,
+        @SerialName("prediction_value") val predictionValue: String? = "NONE",
+        val direction: String? = null,
+        @SerialName("default_threshold") val defaultThreshold: Double? = null,
+        val unit: String? = null,
+        @SerialName("enabled_by_default") val enabledByDefault: Boolean = false,
+        @SerialName("metric_table") val metricTable: String? = null,
+        @SerialName("metric_column") val metricColumn: String? = null
     )
     @Serializable
     data class TriggerPrefRow(
@@ -430,27 +594,27 @@ class SupabaseDbService(
         @SerialName("trigger_id") val triggerId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_triggers") val trigger: AllTriggerRow? = null
+        @SerialName("user_triggers") val trigger: UserTriggerRow? = null
     )
-    @Serializable private data class AllTriggerInsert(val label: String, val category: String? = null, @SerialName("prediction_value") val predictionValue: String? = "NONE")
+    @Serializable private data class UserTriggerInsert(val label: String, val category: String? = null, @SerialName("prediction_value") val predictionValue: String? = "NONE")
 
-    suspend fun getAllTriggerPool(accessToken: String): List<AllTriggerRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_triggers") {
+    suspend fun getAllTriggerPool(accessToken: String): List<UserTriggerRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,prediction_value"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_triggers failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_triggers failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertTriggerToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE"): AllTriggerRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_triggers") {
+    suspend fun upsertTriggerToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE"): UserTriggerRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllTriggerInsert(label, category, predictionValue))
+            contentType(ContentType.Application.Json); setBody(UserTriggerInsert(label, category, predictionValue))
         }
-        if (!response.status.isSuccess()) error("Upsert all_triggers failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_triggers failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteTriggerFromPool(accessToken: String, triggerId: String) {
@@ -458,11 +622,11 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("trigger_id", "eq.$triggerId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_triggers") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$triggerId")
         }
-        if (!response.status.isSuccess()) error("Delete all_triggers failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_triggers failed: ${response.bodyAsText()}")
     }
     suspend fun updateTriggerPoolItem(
         accessToken: String,
@@ -474,20 +638,20 @@ class SupabaseDbService(
             predictionValue?.let { put("prediction_value", it) }
             category?.let { put("category", it) }
         }
-        val response = client.patch("$supabaseUrl/rest/v1/all_triggers") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("id", "eq.$triggerId")
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        if (!response.status.isSuccess()) error("Update all_triggers failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Update user_triggers failed: ${response.bodyAsText()}")
     }
     @Serializable private data class TriggerPrefInsert(@SerialName("trigger_id") val triggerId: String, val position: Int, val status: String)
     suspend fun getTriggerPrefs(accessToken: String): List<TriggerPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/trigger_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,trigger_id,position,status,all_triggers(id,label)")
+            parameter("select", "id,user_id,trigger_id,position,status,user_triggers(id,label,icon_key)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch trigger prefs failed: ${response.bodyAsText()}")
@@ -531,7 +695,7 @@ class SupabaseDbService(
     }
 
     // ───────── MEDICINE POOL / PREFS ─────────
-    @Serializable data class AllMedicineRow(val id: String, val label: String, val category: String? = null)
+    @Serializable data class UserMedicineRow(val id: String, val label: String, val category: String? = null)
     @Serializable
     data class MedicinePrefRow(
         val id: String,
@@ -539,27 +703,27 @@ class SupabaseDbService(
         @SerialName("medicine_id") val medicineId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_medicines") val medicine: AllMedicineRow? = null
+        @SerialName("user_medicines") val medicine: UserMedicineRow? = null
     )
-    @Serializable private data class AllMedicineInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserMedicineInsert(val label: String, val category: String? = null)
 
-    suspend fun getAllMedicinePool(accessToken: String): List<AllMedicineRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_medicines") {
+    suspend fun getAllMedicinePool(accessToken: String): List<UserMedicineRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("select", "id,label,category"); parameter("order", "label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_medicines failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertMedicineToPool(accessToken: String, label: String, category: String? = null): AllMedicineRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_medicines") {
+    suspend fun upsertMedicineToPool(accessToken: String, label: String, category: String? = null): UserMedicineRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllMedicineInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserMedicineInsert(label, category))
         }
-        if (!response.status.isSuccess()) error("Upsert all_medicines failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteMedicineFromPool(accessToken: String, medicineId: String) {
@@ -567,15 +731,15 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("medicine_id", "eq.$medicineId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_medicines") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$medicineId")
         }
-        if (!response.status.isSuccess()) error("Delete all_medicines failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_medicines failed: ${response.bodyAsText()}")
     }
     suspend fun setMedicineCategory(accessToken: String, medicineId: String, category: String?) {
         val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_medicines") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$medicineId")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -586,7 +750,7 @@ class SupabaseDbService(
     suspend fun getMedicinePrefs(accessToken: String): List<MedicinePrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/medicine_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,medicine_id,position,status,all_medicines(id,label,category)")
+            parameter("select", "id,user_id,medicine_id,position,status,user_medicines(id,label,category)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch medicine prefs failed: ${response.bodyAsText()}")
@@ -625,7 +789,7 @@ class SupabaseDbService(
     }
 
     // ───────── RELIEF POOL / PREFS ─────────
-    @Serializable data class AllReliefRow(val id: String, val label: String, val category: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
+    @Serializable data class UserReliefRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class ReliefPrefRow(
         val id: String,
@@ -633,27 +797,27 @@ class SupabaseDbService(
         @SerialName("relief_id") val reliefId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_reliefs") val relief: AllReliefRow? = null
+        @SerialName("user_reliefs") val relief: UserReliefRow? = null
     )
-    @Serializable private data class AllReliefInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserReliefInsert(val label: String, val category: String? = null)
 
-    suspend fun getAllReliefPool(accessToken: String): List<AllReliefRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_reliefs") {
+    suspend fun getAllReliefPool(accessToken: String): List<UserReliefRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,is_automatable,is_automated"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,icon_key,is_automatable,is_automated"); parameter("order", "label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_reliefs failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_reliefs failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertReliefToPool(accessToken: String, label: String, category: String? = null): AllReliefRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_reliefs") {
+    suspend fun upsertReliefToPool(accessToken: String, label: String, category: String? = null): UserReliefRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllReliefInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserReliefInsert(label, category))
         }
-        if (!response.status.isSuccess()) error("Upsert all_reliefs failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_reliefs failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteReliefFromPool(accessToken: String, reliefId: String) {
@@ -661,15 +825,15 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("relief_id", "eq.$reliefId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_reliefs") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$reliefId")
         }
-        if (!response.status.isSuccess()) error("Delete all_reliefs failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_reliefs failed: ${response.bodyAsText()}")
     }
     suspend fun setReliefCategory(accessToken: String, reliefId: String, category: String?) {
         val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_reliefs") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$reliefId")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -678,7 +842,7 @@ class SupabaseDbService(
     }
     suspend fun setReliefAutomation(accessToken: String, reliefId: String, enabled: Boolean) {
         val payload = buildJsonObject { put("is_automated", enabled) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_reliefs") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$reliefId")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -689,7 +853,7 @@ class SupabaseDbService(
     suspend fun getReliefPrefs(accessToken: String): List<ReliefPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/relief_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,relief_id,position,status,all_reliefs(id,label,category,is_automatable,is_automated)")
+            parameter("select", "id,user_id,relief_id,position,status,user_reliefs(id,label,category,icon_key,is_automatable,is_automated)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch relief prefs failed: ${response.bodyAsText()}")
@@ -728,7 +892,7 @@ class SupabaseDbService(
     }
 
     // ───────── MIGRAINE POOL / PREFS ─────────
-    @Serializable data class AllMigraineRow(val id: String, val label: String)
+    @Serializable data class UserMigrainePoolRow(val id: String, val label: String)
     @Serializable
     data class MigrainePrefRow(
         val id: String,
@@ -736,27 +900,27 @@ class SupabaseDbService(
         @SerialName("migraine_id") val migraineId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_migraines") val migraine: AllMigraineRow? = null
+        @SerialName("user_migraines_pool") val migraine: UserMigrainePoolRow? = null
     )
-    @Serializable private data class AllMigraineInsert(val label: String)
+    @Serializable private data class UserMigrainePoolInsert(val label: String)
 
-    suspend fun getAllMigrainePool(accessToken: String): List<AllMigraineRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_migraines") {
+    suspend fun getAllMigrainePool(accessToken: String): List<UserMigrainePoolRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_migraines_pool") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("select", "id,label"); parameter("order", "label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_migraines failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_migraines_pool failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertMigraineToPool(accessToken: String, label: String): AllMigraineRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_migraines") {
+    suspend fun upsertMigraineToPool(accessToken: String, label: String): UserMigrainePoolRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_migraines_pool") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllMigraineInsert(label))
+            contentType(ContentType.Application.Json); setBody(UserMigrainePoolInsert(label))
         }
-        if (!response.status.isSuccess()) error("Upsert all_migraines failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_migraines_pool failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteMigraineFromPool(accessToken: String, migraineId: String) {
@@ -764,17 +928,17 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("migraine_id", "eq.$migraineId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_migraines") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_migraines_pool") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$migraineId")
         }
-        if (!response.status.isSuccess()) error("Delete all_migraines failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_migraines_pool failed: ${response.bodyAsText()}")
     }
     @Serializable private data class MigrainePrefInsert(@SerialName("migraine_id") val migraineId: String, val position: Int, val status: String)
     suspend fun getMigrainePrefs(accessToken: String): List<MigrainePrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/migraine_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,migraine_id,position,status,all_migraines(id,label)")
+            parameter("select", "id,user_id,migraine_id,position,status,user_migraines_pool(id,label)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch migraine prefs failed: ${response.bodyAsText()}")
@@ -836,7 +1000,7 @@ class SupabaseDbService(
     }
 
     // ───────── SYMPTOM POOL ─────────
-    @Serializable data class AllSymptomRow(
+    @Serializable data class UserSymptomRow(
         val id: String,
         val label: String,
         val category: String? = null,
@@ -849,31 +1013,31 @@ class SupabaseDbService(
         @SerialName("symptom_id") val symptomId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_symptoms") val symptom: AllSymptomRow? = null
+        @SerialName("user_symptoms") val symptom: UserSymptomRow? = null
     )
-    @Serializable private data class AllSymptomInsert(
+    @Serializable private data class UserSymptomInsert(
         val label: String,
         val category: String? = null,
         @SerialName("icon_key") val iconKey: String? = null
     )
 
-    suspend fun getAllSymptomPool(accessToken: String): List<AllSymptomRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_symptoms") {
+    suspend fun getAllSymptomPool(accessToken: String): List<UserSymptomRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("select", "id,label,category,icon_key"); parameter("order", "label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_symptoms failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_symptoms failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertSymptomToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null): AllSymptomRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_symptoms") {
+    suspend fun upsertSymptomToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null): UserSymptomRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllSymptomInsert(label, category, iconKey))
+            contentType(ContentType.Application.Json); setBody(UserSymptomInsert(label, category, iconKey))
         }
-        if (!response.status.isSuccess()) error("Upsert all_symptoms failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_symptoms failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteSymptomFromPool(accessToken: String, symptomId: String) {
@@ -881,17 +1045,17 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("symptom_id", "eq.$symptomId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_symptoms") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$symptomId")
         }
-        if (!response.status.isSuccess()) error("Delete all_symptoms failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_symptoms failed: ${response.bodyAsText()}")
     }
     @Serializable private data class SymptomPrefInsert(@SerialName("symptom_id") val symptomId: String, val position: Int, val status: String)
     suspend fun getSymptomPrefs(accessToken: String): List<SymptomPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/symptom_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,symptom_id,position,status,all_symptoms(id,label,category,icon_key)")
+            parameter("select", "id,user_id,symptom_id,position,status,user_symptoms(id,label,category,icon_key)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch symptom prefs failed: ${response.bodyAsText()}")
@@ -917,12 +1081,18 @@ class SupabaseDbService(
     }
 
     // ───────── PRODROME POOL ─────────
-    @Serializable data class AllProdromeRow(
+    @Serializable data class UserProdromeRow(
         val id: String,
         val label: String,
         val category: String? = null,
         @SerialName("icon_key") val iconKey: String? = null,
-        @SerialName("prediction_value") val predictionValue: String? = "NONE"
+        @SerialName("prediction_value") val predictionValue: String? = "NONE",
+        val direction: String? = null,
+        @SerialName("default_threshold") val defaultThreshold: Double? = null,
+        val unit: String? = null,
+        @SerialName("enabled_by_default") val enabledByDefault: Boolean = false,
+        @SerialName("metric_table") val metricTable: String? = null,
+        @SerialName("metric_column") val metricColumn: String? = null
     )
     @Serializable
     data class ProdromePrefRow(
@@ -931,31 +1101,31 @@ class SupabaseDbService(
         @SerialName("prodrome_id") val prodromeId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_prodromes") val prodrome: AllProdromeRow? = null
+        @SerialName("user_prodromes") val prodrome: UserProdromeRow? = null
     )
-    @Serializable private data class AllProdromeInsert(
+    @Serializable private data class UserProdromeInsert(
         val label: String,
         val category: String? = null,
         @SerialName("prediction_value") val predictionValue: String? = "NONE"
     )
 
-    suspend fun getAllProdromePool(accessToken: String): List<AllProdromeRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_prodromes") {
+    suspend fun getAllProdromePool(accessToken: String): List<UserProdromeRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,icon_key,prediction_value"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_prodromes failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_prodromes failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertProdromeToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE"): AllProdromeRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_prodromes") {
+    suspend fun upsertProdromeToPool(accessToken: String, label: String, category: String? = null, predictionValue: String? = "NONE"): UserProdromeRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllProdromeInsert(label, category, predictionValue))
+            contentType(ContentType.Application.Json); setBody(UserProdromeInsert(label, category, predictionValue))
         }
-        if (!response.status.isSuccess()) error("Upsert all_prodromes failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_prodromes failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteProdromeFromPool(accessToken: String, prodromeId: String) {
@@ -963,11 +1133,11 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("prodrome_id", "eq.$prodromeId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_prodromes") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$prodromeId")
         }
-        if (!response.status.isSuccess()) error("Delete all_prodromes failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_prodromes failed: ${response.bodyAsText()}")
     }
     suspend fun updateProdromePoolItem(
         accessToken: String,
@@ -979,20 +1149,20 @@ class SupabaseDbService(
             predictionValue?.let { put("prediction_value", it) }
             category?.let { put("category", it) }
         }
-        val response = client.patch("$supabaseUrl/rest/v1/all_prodromes") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("id", "eq.$prodromeId")
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        if (!response.status.isSuccess()) error("Update all_prodromes failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Update user_prodromes failed: ${response.bodyAsText()}")
     }
     @Serializable private data class ProdromePrefInsert(@SerialName("prodrome_id") val prodromeId: String, val position: Int, val status: String)
     suspend fun getProdromePrefs(accessToken: String): List<ProdromePrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/prodrome_user_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,prodrome_id,position,status,all_prodromes(id,label,category,icon_key,prediction_value)")
+            parameter("select", "id,user_id,prodrome_id,position,status,user_prodromes(id,label,category,icon_key,prediction_value)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch prodrome prefs failed: ${response.bodyAsText()}")
@@ -1030,7 +1200,8 @@ class SupabaseDbService(
         val type: String? = null,
         @SerialName("start_at") val startAt: String? = null,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual"
     )
     suspend fun insertProdrome(
         accessToken: String,
@@ -1053,8 +1224,59 @@ class SupabaseDbService(
         return response.body()
     }
 
+    /** Fetch distinct prodrome types logged in the last [daysBack] days. */
+    suspend fun getRecentProdromes(accessToken: String, daysBack: Int = 3, referenceDate: String? = null): List<ProdromeLogRow> {
+        val refDate = referenceDate?.let {
+            try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
+        } ?: java.time.LocalDate.now()
+        val cutoffStart = refDate.minusDays(daysBack.toLong()).toString() + "T00:00:00Z"
+        val cutoffEnd = refDate.plusDays(1).toString() + "T00:00:00Z"
+        val response = client.get("$supabaseUrl/rest/v1/prodromes") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "id,type,start_at")
+            parameter("start_at", "gte.$cutoffStart")
+            parameter("start_at", "lte.$cutoffEnd")
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    /** Fetch all prodrome log entries. */
+    suspend fun getAllProdromeLog(accessToken: String): List<ProdromeLogRow> {
+        val response = client.get("$supabaseUrl/rest/v1/prodromes") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "id,type,start_at,notes,migraine_id")
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    suspend fun deleteProdromeLog(accessToken: String, id: String) {
+        client.delete("$supabaseUrl/rest/v1/prodromes") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+    }
+
+    suspend fun updateProdromeLog(accessToken: String, id: String, type: String?, startAt: String?, notes: String?) {
+        val payload = buildJsonObject {
+            type?.let { put("type", it) }
+            startAt?.let { put("start_at", it) }
+            notes?.let { put("notes", it) }
+        }
+        client.patch("$supabaseUrl/rest/v1/prodromes") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+    }
+
     // ───────── LOCATION POOL / PREFS ─────────
-    @Serializable data class AllLocationRow(val id: String, val label: String, val category: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
+    @Serializable data class UserLocationRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class LocationPrefRow(
         val id: String,
@@ -1062,27 +1284,27 @@ class SupabaseDbService(
         @SerialName("location_id") val locationId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_locations") val location: AllLocationRow? = null
+        @SerialName("user_locations") val location: UserLocationRow? = null
     )
-    @Serializable private data class AllLocationInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserLocationInsert(val label: String, val category: String? = null)
 
-    suspend fun getAllLocationPool(accessToken: String): List<AllLocationRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_locations") {
+    suspend fun getAllLocationPool(accessToken: String): List<UserLocationRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,is_automatable,is_automated"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,icon_key,is_automatable,is_automated"); parameter("order", "label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_locations failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_locations failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertLocationToPool(accessToken: String, label: String, category: String? = null): AllLocationRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_locations") {
+    suspend fun upsertLocationToPool(accessToken: String, label: String, category: String? = null): UserLocationRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllLocationInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserLocationInsert(label, category))
         }
-        if (!response.status.isSuccess()) error("Upsert all_locations failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_locations failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteLocationFromPool(accessToken: String, locationId: String) {
@@ -1090,15 +1312,15 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("location_id", "eq.$locationId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_locations") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$locationId")
         }
-        if (!response.status.isSuccess()) error("Delete all_locations failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_locations failed: ${response.bodyAsText()}")
     }
     suspend fun setLocationCategory(accessToken: String, locationId: String, category: String?) {
         val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_locations") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$locationId")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -1107,7 +1329,7 @@ class SupabaseDbService(
     }
     suspend fun setLocationAutomation(accessToken: String, locationId: String, enabled: Boolean) {
         val payload = buildJsonObject { put("is_automated", enabled) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_locations") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$locationId")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -1118,7 +1340,7 @@ class SupabaseDbService(
     suspend fun getLocationPrefs(accessToken: String): List<LocationPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/location_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,location_id,position,status,all_locations(id,label,category,is_automatable,is_automated)")
+            parameter("select", "id,user_id,location_id,position,status,user_locations(id,label,category,icon_key,is_automatable,is_automated)")
         }
         if (!response.status.isSuccess()) error("Fetch location_preferences failed: ${response.bodyAsText()}")
         return response.body()
@@ -1150,7 +1372,8 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual"
     )
     @Serializable
     private data class LocationLogInsert(
@@ -1181,8 +1404,39 @@ class SupabaseDbService(
         return response.body()
     }
 
+    /** Fetch all location log entries. */
+    suspend fun getAllLocationLog(accessToken: String): List<LocationLogRow> {
+        val response = client.get("$supabaseUrl/rest/v1/locations") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    suspend fun deleteLocationLog(accessToken: String, id: String) {
+        client.delete("$supabaseUrl/rest/v1/locations") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+    }
+
+    suspend fun updateLocationLog(accessToken: String, id: String, type: String?, startAt: String?, notes: String?) {
+        val payload = buildJsonObject {
+            type?.let { put("type", it) }
+            startAt?.let { put("start_at", it) }
+            notes?.let { put("notes", it) }
+        }
+        client.patch("$supabaseUrl/rest/v1/locations") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+    }
+
     // ───────── ACTIVITY POOL / PREFS ─────────
-    @Serializable data class AllActivityRow(val id: String, val label: String, val category: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
+    @Serializable data class UserActivityRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class ActivityPrefRow(
         val id: String,
@@ -1190,27 +1444,27 @@ class SupabaseDbService(
         @SerialName("activity_id") val activityId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_activities") val activity: AllActivityRow? = null
+        @SerialName("user_activities") val activity: UserActivityRow? = null
     )
-    @Serializable private data class AllActivityInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserActivityInsert(val label: String, val category: String? = null)
 
-    suspend fun getAllActivityPool(accessToken: String): List<AllActivityRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_activities") {
+    suspend fun getAllActivityPool(accessToken: String): List<UserActivityRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,is_automatable,is_automated"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,icon_key,is_automatable,is_automated"); parameter("order", "label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_activities failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_activities failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertActivityToPool(accessToken: String, label: String, category: String? = null): AllActivityRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_activities") {
+    suspend fun upsertActivityToPool(accessToken: String, label: String, category: String? = null): UserActivityRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllActivityInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserActivityInsert(label, category))
         }
-        if (!response.status.isSuccess()) error("Upsert all_activities failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_activities failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteActivityFromPool(accessToken: String, activityId: String) {
@@ -1218,15 +1472,15 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("activity_id", "eq.$activityId")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_activities") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$activityId")
         }
-        if (!response.status.isSuccess()) error("Delete all_activities failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_activities failed: ${response.bodyAsText()}")
     }
     suspend fun setActivityCategory(accessToken: String, activityId: String, category: String?) {
         val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_activities") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$activityId")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -1235,7 +1489,7 @@ class SupabaseDbService(
     }
     suspend fun setActivityAutomation(accessToken: String, activityId: String, enabled: Boolean) {
         val payload = buildJsonObject { put("is_automated", enabled) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_activities") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$activityId")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -1246,7 +1500,7 @@ class SupabaseDbService(
     suspend fun getActivityPrefs(accessToken: String): List<ActivityPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/activity_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,activity_id,position,status,all_activities(id,label,category,is_automatable,is_automated)")
+            parameter("select", "id,user_id,activity_id,position,status,user_activities(id,label,category,icon_key,is_automatable,is_automated)")
         }
         if (!response.status.isSuccess()) error("Fetch activity_preferences failed: ${response.bodyAsText()}")
         return response.body()
@@ -1269,35 +1523,49 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete activity_pref failed: ${response.bodyAsText()}")
     }
 
-    // ── Activity log ──
+    // ── Activity log (writes to time_in_high_hr_zones_daily) ──
     @Serializable
     data class ActivityLogRow(
         val id: String,
         @SerialName("user_id") val userId: String,
-        val type: String? = null,
+        @SerialName("activity_type") val type: String? = null,
         val category: String? = null,
-        @SerialName("start_at") val startAt: String,
+        @SerialName("start_at") val startAt: String? = null,
+        @SerialName("end_at") val endAt: String? = null,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual"
     )
     @Serializable
     private data class ActivityLogInsert(
-        val type: String? = null,
-        val category: String? = null,
+        @SerialName("activity_type") val activityType: String? = null,
         @SerialName("start_at") val startAt: String,
+        @SerialName("end_at") val endAt: String? = null,
+        val date: String,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String = "manual",
+        @SerialName("value_minutes") val valueMinutes: Int = 0
     )
     suspend fun insertActivity(
         accessToken: String,
         migraineId: String?,
         type: String?,
         startAt: String?,
+        endAt: String? = null,
         notes: String?
     ): ActivityLogRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
-        val payload = ActivityLogInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId)
-        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/activities") {
+        val dateOnly = safeStart.substringBefore("T").take(10)
+        val payload = ActivityLogInsert(
+            activityType = type?.lowercase(),
+            startAt = safeStart,
+            endAt = endAt,
+            date = dateOnly,
+            notes = notes,
+            migraineId = migraineId
+        )
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             header("Prefer", "return=representation")
@@ -1309,8 +1577,67 @@ class SupabaseDbService(
         return response.body()
     }
 
+    /** Lightweight row for recent activity queries. */
+    @Serializable data class RecentActivityRow(
+        val id: String,
+        @SerialName("activity_type") val activityType: String? = null,
+        @SerialName("start_at") val startAt: String? = null,
+        val date: String? = null
+    )
+
+    /** Fetch activities logged in the last [daysBack] days from time_in_high_hr_zones_daily. */
+    suspend fun getRecentActivities(accessToken: String, daysBack: Int = 3, referenceDate: String? = null): List<RecentActivityRow> {
+        val refDate = referenceDate?.let {
+            try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
+        } ?: java.time.LocalDate.now()
+        val cutoffStart = refDate.minusDays(daysBack.toLong()).toString()
+        val cutoffEnd = refDate.plusDays(1).toString()
+        val response = client.get("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "id,activity_type,start_at,date")
+            parameter("date", "gte.$cutoffStart")
+            parameter("date", "lte.$cutoffEnd")
+            parameter("order", "date.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    /** Fetch all activity log entries. */
+    suspend fun getAllActivityLog(accessToken: String): List<ActivityLogRow> {
+        val response = client.get("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    suspend fun deleteActivityLog(accessToken: String, id: String) {
+        client.delete("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+    }
+
+    suspend fun updateActivityLog(accessToken: String, id: String, type: String?, startAt: String?, endAt: String? = null, notes: String?) {
+        val payload = buildJsonObject {
+            type?.let { put("activity_type", it) }
+            startAt?.let { put("start_at", it) }
+            endAt?.let { put("end_at", it) }
+            notes?.let { put("notes", it) }
+        }
+        client.patch("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+    }
+
     // ───────── MISSED ACTIVITY POOL / PREFS ─────────
-    @Serializable data class AllMissedActivityRow(val id: String, val label: String, val category: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
+    @Serializable data class UserMissedActivityRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class MissedActivityPrefRow(
         val id: String,
@@ -1318,27 +1645,27 @@ class SupabaseDbService(
         @SerialName("missed_activity_id") val missedActivityId: String,
         val position: Int,
         val status: String,
-        @SerialName("all_missed_activities") val missedActivity: AllMissedActivityRow? = null
+        @SerialName("user_missed_activities") val missedActivity: UserMissedActivityRow? = null
     )
-    @Serializable private data class AllMissedActivityInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserMissedActivityInsert(val label: String, val category: String? = null)
 
-    suspend fun getAllMissedActivityPool(accessToken: String): List<AllMissedActivityRow> {
-        val response = client.get("$supabaseUrl/rest/v1/all_missed_activities") {
+    suspend fun getAllMissedActivityPool(accessToken: String): List<UserMissedActivityRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,is_automatable,is_automated"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,icon_key,is_automatable,is_automated"); parameter("order", "label.asc")
         }
-        if (!response.status.isSuccess()) error("Fetch all_missed_activities failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Fetch user_missed_activities failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertMissedActivityToPool(accessToken: String, label: String, category: String? = null): AllMissedActivityRow {
-        val response = client.post("$supabaseUrl/rest/v1/all_missed_activities") {
+    suspend fun upsertMissedActivityToPool(accessToken: String, label: String, category: String? = null): UserMissedActivityRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(AllMissedActivityInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserMissedActivityInsert(label, category))
         }
-        if (!response.status.isSuccess()) error("Upsert all_missed_activities failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Upsert user_missed_activities failed: ${response.bodyAsText()}")
         return response.body()
     }
     suspend fun deleteMissedActivityFromPool(accessToken: String, id: String) {
@@ -1346,15 +1673,15 @@ class SupabaseDbService(
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("missed_activity_id", "eq.$id")
         }
-        val response = client.delete("$supabaseUrl/rest/v1/all_missed_activities") {
+        val response = client.delete("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$id")
         }
-        if (!response.status.isSuccess()) error("Delete all_missed_activities failed: ${response.bodyAsText()}")
+        if (!response.status.isSuccess()) error("Delete user_missed_activities failed: ${response.bodyAsText()}")
     }
     suspend fun setMissedActivityCategory(accessToken: String, id: String, category: String?) {
         val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_missed_activities") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$id")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -1363,7 +1690,7 @@ class SupabaseDbService(
     }
     suspend fun setMissedActivityAutomation(accessToken: String, id: String, enabled: Boolean) {
         val payload = buildJsonObject { put("is_automated", enabled) }
-        val response = client.patch("$supabaseUrl/rest/v1/all_missed_activities") {
+        val response = client.patch("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$id")
             contentType(ContentType.Application.Json); setBody(payload)
@@ -1374,7 +1701,7 @@ class SupabaseDbService(
     suspend fun getMissedActivityPrefs(accessToken: String): List<MissedActivityPrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/missed_activity_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,missed_activity_id,position,status,all_missed_activities(id,label,category,is_automatable,is_automated)")
+            parameter("select", "id,user_id,missed_activity_id,position,status,user_missed_activities(id,label,category,icon_key,is_automatable,is_automated)")
         }
         if (!response.status.isSuccess()) error("Fetch missed_activity_preferences failed: ${response.bodyAsText()}")
         return response.body()
@@ -1406,7 +1733,8 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val source: String? = "manual"
     )
     @Serializable
     private data class MissedActivityLogInsert(
@@ -1436,4 +1764,37 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Insert missed_activity failed: ${response.bodyAsText()}")
         return response.body()
     }
+
+    /** Fetch all missed activity log entries. */
+    suspend fun getAllMissedActivityLog(accessToken: String): List<MissedActivityLogRow> {
+        val response = client.get("$supabaseUrl/rest/v1/missed_activities") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    suspend fun deleteMissedActivityLog(accessToken: String, id: String) {
+        client.delete("$supabaseUrl/rest/v1/missed_activities") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+    }
+
+    suspend fun updateMissedActivityLog(accessToken: String, id: String, type: String?, startAt: String?, notes: String?) {
+        val payload = buildJsonObject {
+            type?.let { put("type", it) }
+            startAt?.let { put("start_at", it) }
+            notes?.let { put("notes", it) }
+        }
+        client.patch("$supabaseUrl/rest/v1/missed_activities") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+    }
 }
+
+

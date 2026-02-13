@@ -14,20 +14,21 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Link
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
@@ -89,6 +90,8 @@ object Routes {
     const val COMMUNITY = "community"
     const val INSIGHTS = "insights"
     const val INSIGHTS_DETAIL = "insights_detail"
+    const val INSIGHTS_REPORT = "insights_report"
+    const val INSIGHTS_BREAKDOWN = "insights_breakdown"
     const val MONITOR = "monitor"
     const val MONITOR_CONFIG = "monitor_config"
     const val JOURNAL = "journal"
@@ -100,6 +103,9 @@ object Routes {
     const val QUICK_LOG_TRIGGER = "quick_log_trigger"
     const val QUICK_LOG_MEDICINE = "quick_log_medicine"
     const val QUICK_LOG_RELIEF = "quick_log_relief"
+    const val QUICK_LOG_ACTIVITY = "quick_log_activity"
+    const val QUICK_LOG_PRODROME = "quick_log_prodrome"
+    const val QUICK_LOG_MIGRAINE = "quick_log_migraine"
     
     const val MONITOR_NUTRITION = "monitor_nutrition"
     const val NUTRITION_CONFIG = "nutrition_config"
@@ -140,6 +146,9 @@ object Routes {
     const val EDIT_TRIGGER = "edit_trigger"
     const val EDIT_MEDICINE = "edit_medicine"
     const val EDIT_RELIEF = "edit_relief"
+    const val EDIT_PRODROME = "edit_prodrome"
+    const val EDIT_ACTIVITY = "edit_activity"
+    const val EDIT_LOCATION = "edit_location"
 
     const val ADJUST_MIGRAINES = "adjust_migraines"
     const val MANAGE_SYMPTOMS = "manage_symptoms"
@@ -156,15 +165,14 @@ object Routes {
     const val MANAGE_MISSED_ACTIVITIES = "manage_missed_activities"
     const val TIMING = "timing"
 
-    const val TESTING = "testing"
-    const val TESTING_COMPLETE = "testing_complete"
-    const val LOCATION_DEBUG = "location_debug"
 
     const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
 
     const val CHANGE_PASSWORD = "change_password"
     
     const val TRIGGERS_SETTINGS = "triggers_settings"
+    const val RISK_WEIGHTS = "risk_weights"
+    const val TESTING = "testing"
     const val CUSTOMIZE_TRIGGERS = "customize_triggers"
 }
 
@@ -368,10 +376,9 @@ fun AppRoot() {
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
-        DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
-        DrawerItem("Location Debug", Routes.LOCATION_DEBUG, Icons.Outlined.LocationOn),
+        DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Testing", Routes.TESTING, Icons.Outlined.BarChart),
-        DrawerItem("Testing Complete", Routes.TESTING_COMPLETE, Icons.Outlined.Assessment),
+        DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout)
     )
 
@@ -406,11 +413,16 @@ fun AppRoot() {
             current == Routes.HOME || 
             current == Routes.INSIGHTS || 
             current == Routes.INSIGHTS_DETAIL ||
+            current == Routes.INSIGHTS_REPORT ||
+            current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true ||
             current == Routes.JOURNAL ||
             current == Routes.MIGRAINE ||
             current == Routes.QUICK_LOG_TRIGGER ||
             current == Routes.QUICK_LOG_MEDICINE ||
             current == Routes.QUICK_LOG_RELIEF ||
+            current == Routes.QUICK_LOG_ACTIVITY ||
+            current == Routes.QUICK_LOG_PRODROME ||
+            current == Routes.QUICK_LOG_MIGRAINE ||
             current == Routes.LOG_MIGRAINE ||
             current == Routes.PAIN_LOCATION ||
             current == Routes.TRIGGERS ||
@@ -453,7 +465,6 @@ fun AppRoot() {
             current == Routes.MENTAL_DATA_HISTORY ||
             current == Routes.FULL_GRAPH_MENTAL ||
             current == Routes.MONITOR_ENVIRONMENT ||
-            current == Routes.LOCATION_DEBUG ||
             current == Routes.THIRD_PARTY_CONNECTIONS
 
         // Wizard fullscreen: hide top bar + bottom nav for immersive logging
@@ -474,7 +485,7 @@ fun AppRoot() {
         var insightsBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
         LaunchedEffect(current, insightsBgResId) {
-            val isInsights = current == Routes.INSIGHTS || current == Routes.INSIGHTS_DETAIL
+            val isInsights = current == Routes.INSIGHTS || current == Routes.INSIGHTS_DETAIL || current == Routes.INSIGHTS_REPORT || current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true
             if (!isInsights) return@LaunchedEffect
             if (insightsBgResId != 0) return@LaunchedEffect
             if (insightsBgBitmap != null) return@LaunchedEffect
@@ -501,6 +512,9 @@ fun AppRoot() {
                 current == Routes.QUICK_LOG_TRIGGER || 
                 current == Routes.QUICK_LOG_MEDICINE || 
                 current == Routes.QUICK_LOG_RELIEF ||
+                current == Routes.QUICK_LOG_ACTIVITY ||
+                current == Routes.QUICK_LOG_PRODROME ||
+                current == Routes.QUICK_LOG_MIGRAINE ||
                 current == Routes.LOG_MIGRAINE ||
                 current == Routes.PAIN_LOCATION ||
                 current == Routes.TRIGGERS ||
@@ -559,7 +573,6 @@ fun AppRoot() {
                 current == Routes.MENTAL_DATA_HISTORY ||
                 current == Routes.FULL_GRAPH_MENTAL ||
                 current == Routes.MONITOR_ENVIRONMENT ||
-                current == Routes.LOCATION_DEBUG ||
             current == Routes.THIRD_PARTY_CONNECTIONS
             if (!isMonitor) return@LaunchedEffect
             if (monitorBgResId != 0) return@LaunchedEffect
@@ -631,7 +644,7 @@ fun AppRoot() {
                     )
                 }
 
-                Routes.MIGRAINE, Routes.QUICK_LOG_TRIGGER, Routes.QUICK_LOG_MEDICINE, Routes.QUICK_LOG_RELIEF,
+                Routes.MIGRAINE, Routes.QUICK_LOG_TRIGGER, Routes.QUICK_LOG_MEDICINE, Routes.QUICK_LOG_RELIEF, Routes.QUICK_LOG_ACTIVITY, Routes.QUICK_LOG_PRODROME, Routes.QUICK_LOG_MIGRAINE,
                 Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAIN_LOCATION, Routes.PRODROMES_LOG, Routes.TRIGGERS, Routes.MEDICINES, Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES, Routes.NOTES, Routes.REVIEW, Routes.MANAGE_SYMPTOMS, Routes.MANAGE_ITEMS, Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES, Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES -> {
                     when {
                         migraineBgResId != 0 -> {
@@ -696,7 +709,7 @@ fun AppRoot() {
                     }
                 }
 
-                Routes.MONITOR, Routes.MONITOR_CONFIG, Routes.MONITOR_NUTRITION, Routes.NUTRITION_CONFIG, Routes.NUTRITION_HISTORY, Routes.WEATHER_CONFIG, Routes.SLEEP_DATA_HISTORY, Routes.ENV_DATA_HISTORY, Routes.MONITOR_PHYSICAL, Routes.PHYSICAL_CONFIG, Routes.PHYSICAL_DATA_HISTORY, Routes.FULL_GRAPH_PHYSICAL, Routes.MONITOR_SLEEP, Routes.SLEEP_CONFIG, Routes.FULL_GRAPH_SLEEP, Routes.FULL_GRAPH_WEATHER, Routes.FULL_GRAPH_NUTRITION, Routes.MONITOR_MENTAL, Routes.MENTAL_CONFIG, Routes.MENTAL_DATA_HISTORY, Routes.FULL_GRAPH_MENTAL, Routes.MONITOR_ENVIRONMENT, Routes.LOCATION_DEBUG -> {
+                Routes.MONITOR, Routes.MONITOR_CONFIG, Routes.MONITOR_NUTRITION, Routes.NUTRITION_CONFIG, Routes.NUTRITION_HISTORY, Routes.WEATHER_CONFIG, Routes.SLEEP_DATA_HISTORY, Routes.ENV_DATA_HISTORY, Routes.MONITOR_PHYSICAL, Routes.PHYSICAL_CONFIG, Routes.PHYSICAL_DATA_HISTORY, Routes.FULL_GRAPH_PHYSICAL, Routes.MONITOR_SLEEP, Routes.SLEEP_CONFIG, Routes.FULL_GRAPH_SLEEP, Routes.FULL_GRAPH_WEATHER, Routes.FULL_GRAPH_NUTRITION, Routes.MONITOR_MENTAL, Routes.MENTAL_CONFIG, Routes.MENTAL_DATA_HISTORY, Routes.FULL_GRAPH_MENTAL, Routes.MONITOR_ENVIRONMENT -> {
                     when {
                         monitorBgResId != 0 -> {
                             Image(
@@ -760,7 +773,7 @@ fun AppRoot() {
                     }
                 }
 
-                Routes.INSIGHTS, Routes.INSIGHTS_DETAIL -> {
+                Routes.INSIGHTS, Routes.INSIGHTS_DETAIL, Routes.INSIGHTS_REPORT, "${Routes.INSIGHTS_BREAKDOWN}/{logType}" -> {
                     when {
                         insightsBgResId != 0 -> {
                             Image(
@@ -820,6 +833,8 @@ fun AppRoot() {
                                     Routes.MONITOR_CONFIG -> "Configure Monitor"
                                     Routes.INSIGHTS -> "Insights"
                                     Routes.INSIGHTS_DETAIL -> "Insights"
+                                    Routes.INSIGHTS_REPORT -> "Insights"
+                                    "${Routes.INSIGHTS_BREAKDOWN}/{logType}" -> "Insights"
                                     Routes.HOME -> "Home"
                                     Routes.MIGRAINE -> "Migraine"
                                     Routes.LOG_MIGRAINE -> "Log Migraine"
@@ -827,6 +842,9 @@ fun AppRoot() {
                                     Routes.QUICK_LOG_TRIGGER -> "Log Trigger"
                                     Routes.QUICK_LOG_MEDICINE -> "Log Medicine"
                                     Routes.QUICK_LOG_RELIEF -> "Log Relief"
+                                    Routes.QUICK_LOG_ACTIVITY -> "Log Activity"
+                                    Routes.QUICK_LOG_PRODROME -> "Log Prodrome"
+                                    Routes.QUICK_LOG_MIGRAINE -> "Quick Migraine"
                                     Routes.MONITOR_NUTRITION -> "Nutrition"
                                     Routes.NUTRITION_CONFIG -> "Customize Nutrition"
                                     Routes.NUTRITION_HISTORY -> "Nutrition History"
@@ -861,6 +879,9 @@ fun AppRoot() {
                                     Routes.EDIT_TRIGGER -> "Edit Trigger"
                                     Routes.EDIT_MEDICINE -> "Edit Medicine"
                                     Routes.EDIT_RELIEF -> "Edit Relief"
+                                    Routes.EDIT_PRODROME -> "Edit Prodrome"
+                                    Routes.EDIT_ACTIVITY -> "Edit Activity"
+                                    Routes.EDIT_LOCATION -> "Edit Location"
                                     Routes.ADJUST_MIGRAINES -> "Adjust Migraines"
                                     Routes.MANAGE_SYMPTOMS -> "Manage Symptoms"
                                     Routes.MANAGE_ITEMS -> "Manage Items"
@@ -869,9 +890,6 @@ fun AppRoot() {
                                     Routes.MANAGE_RELIEFS -> "Manage Reliefs"
                                     Routes.MANAGE_PRODROMES -> "Manage Prodromes"
                                     Routes.TIMING -> "Timing"
-                                    Routes.TESTING -> "Testing"
-                                    Routes.TESTING_COMPLETE -> "Testing Complete"
-                                    Routes.LOCATION_DEBUG -> "Location Debug"
                                     Routes.THIRD_PARTY_CONNECTIONS -> "Connections"
                                     Routes.CHANGE_PASSWORD -> "Change password"
                                     else -> ""
@@ -933,8 +951,27 @@ fun AppRoot() {
                     composable(Routes.FULL_GRAPH_MENTAL) { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }) }
                     composable(Routes.MONITOR_ENVIRONMENT) { MonitorEnvironmentScreen(navController = nav, authVm = authVm) }
                     
-                    composable(Routes.INSIGHTS) { InsightsScreen(navController = nav) }
-                    composable(Routes.INSIGHTS_DETAIL) { InsightsDetailScreen() }
+                    composable(Routes.INSIGHTS) {
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        InsightsScreen(navController = nav, vm = insightsVm)
+                    }
+                    composable(Routes.INSIGHTS_DETAIL) {
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        InsightsDetailScreen(navController = nav, vm = insightsVm)
+                    }
+                    composable(Routes.INSIGHTS_REPORT) {
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        InsightsReportScreen(navController = nav, vm = insightsVm)
+                    }
+                    composable("${Routes.INSIGHTS_BREAKDOWN}/{logType}") { backStack ->
+                        val logType = backStack.arguments?.getString("logType") ?: "Triggers"
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
+                    }
                     composable(Routes.TRIGGERS_SETTINGS) { TriggersSettingsScreen(navController = nav, authVm = authVm) }
                     composable(Routes.CUSTOMIZE_TRIGGERS) { CustomizeTriggersScreen() }
                     composable(Routes.HOME) {
@@ -965,9 +1002,129 @@ fun AppRoot() {
                     }
 
                     // Quick log screens (standalone)
-                    composable(Routes.QUICK_LOG_TRIGGER) { QuickLogTriggerScreen(navController = nav, authVm = authVm) }
-                    composable(Routes.QUICK_LOG_MEDICINE) { QuickLogMedicineScreen(navController = nav, authVm = authVm) }
-                    composable(Routes.QUICK_LOG_RELIEF) { QuickLogReliefScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.QUICK_LOG_TRIGGER) {
+                        val triggerVm: TriggerViewModel = viewModel()
+                        val quickLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        TriggersScreen(
+                            navController = nav, vm = triggerVm, authVm = authVm, logVm = quickLogVm,
+                            quickLogMode = true,
+                            linkedMigraineId = linkedMigraineId,
+                            onMigraineSelect = { linkedMigraineId = it },
+                            onSave = {
+                                scope.launch {
+                                    val token = authVm.state.value.accessToken ?: return@launch
+                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                    quickLogVm.draft.value.triggers.forEach { t ->
+                                        runCatching { db.insertTrigger(token, linkedMigraineId, t.type, t.startAtIso ?: java.time.Instant.now().toString(), t.note) }
+                                    }
+                                    quickLogVm.clearDraft()
+                                    nav.popBackStack()
+                                }
+                            }
+                        )
+                    }
+                    composable(Routes.QUICK_LOG_MEDICINE) {
+                        val medVm: MedicineViewModel = viewModel()
+                        val quickLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        MedicinesScreen(
+                            navController = nav, vm = medVm, authVm = authVm, logVm = quickLogVm,
+                            quickLogMode = true,
+                            linkedMigraineId = linkedMigraineId,
+                            onMigraineSelect = { linkedMigraineId = it },
+                            onSave = {
+                                scope.launch {
+                                    val token = authVm.state.value.accessToken ?: return@launch
+                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                    quickLogVm.draft.value.meds.forEach { m ->
+                                        runCatching { db.insertMedicine(token, linkedMigraineId, m.name, m.amount, m.startAtIso ?: java.time.Instant.now().toString(), m.notes) }
+                                    }
+                                    quickLogVm.clearDraft()
+                                    nav.popBackStack()
+                                }
+                            }
+                        )
+                    }
+                    composable(Routes.QUICK_LOG_RELIEF) {
+                        val reliefVm: ReliefViewModel = viewModel()
+                        val quickLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        ReliefsScreen(
+                            navController = nav, vm = reliefVm, authVm = authVm, logVm = quickLogVm,
+                            quickLogMode = true,
+                            linkedMigraineId = linkedMigraineId,
+                            onMigraineSelect = { linkedMigraineId = it },
+                            onSave = {
+                                scope.launch {
+                                    val token = authVm.state.value.accessToken ?: return@launch
+                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                    quickLogVm.draft.value.rels.forEach { r ->
+                                        runCatching { db.insertRelief(token, linkedMigraineId, r.type, r.startAtIso ?: java.time.Instant.now().toString(), r.endAtIso, r.notes, r.reliefScale) }
+                                    }
+                                    quickLogVm.clearDraft()
+                                    nav.popBackStack()
+                                }
+                            }
+                        )
+                    }
+                    composable(Routes.QUICK_LOG_ACTIVITY) {
+                        val activityVm: ActivityViewModel = viewModel()
+                        val quickLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        ActivitiesScreen(
+                            navController = nav, vm = activityVm, authVm = authVm, logVm = quickLogVm,
+                            quickLogMode = true,
+                            linkedMigraineId = linkedMigraineId,
+                            onMigraineSelect = { linkedMigraineId = it },
+                            onSave = {
+                                scope.launch {
+                                    val token = authVm.state.value.accessToken ?: return@launch
+                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                    quickLogVm.draft.value.activities.forEach { a ->
+                                        runCatching { db.insertActivity(token, linkedMigraineId, a.type, a.startAtIso ?: java.time.Instant.now().toString(), a.endAtIso, a.note) }
+                                    }
+                                    quickLogVm.clearDraft()
+                                    nav.popBackStack()
+                                }
+                            }
+                        )
+                    }
+                    composable(Routes.QUICK_LOG_PRODROME) {
+                        val prodromeVm: ProdromeViewModel = viewModel()
+                        val quickLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        ProdromeLogScreen(
+                            navController = nav, vm = prodromeVm, authVm = authVm, logVm = quickLogVm,
+                            quickLogMode = true,
+                            linkedMigraineId = linkedMigraineId,
+                            onMigraineSelect = { linkedMigraineId = it },
+                            onSave = {
+                                scope.launch {
+                                    val token = authVm.state.value.accessToken ?: return@launch
+                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                    quickLogVm.draft.value.prodromes.forEach { p ->
+                                        runCatching { db.insertProdrome(token, linkedMigraineId, p.type, p.startAtIso, p.note) }
+                                    }
+                                    quickLogVm.clearDraft()
+                                    nav.popBackStack()
+                                }
+                            }
+                        )
+                    }
+
+                    composable(Routes.QUICK_LOG_MIGRAINE) {
+                        val symptomVmLocal: SymptomViewModel = viewModel()
+                        QuickMigraineScreen(
+                            navController = nav, authVm = authVm, symptomVm = symptomVmLocal,
+                            onClose = { nav.popBackStack() }
+                        )
+                    }
 
                     composable(Routes.TRIGGERS) {
                         TriggersScreen(navController = nav, vm = triggerVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
@@ -1008,19 +1165,274 @@ fun AppRoot() {
 
                     composable("${Routes.EDIT_MIGRAINE}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        EditMigraineScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                        val authState by authVm.state.collectAsState()
+                        var prefilling by remember { mutableStateOf(true) }
+                        LaunchedEffect(id) {
+                            val token = authState.accessToken ?: return@LaunchedEffect
+                            logVm.prefillForEdit(token, id) {
+                                prefilling = false
+                            }
+                        }
+                        if (!prefilling) {
+                            // Navigate to wizard, replacing this route
+                            LaunchedEffect(Unit) {
+                                nav.navigate(Routes.LOG_MIGRAINE) {
+                                    popUpTo("${Routes.EDIT_MIGRAINE}/{id}") { inclusive = true }
+                                }
+                            }
+                        } else {
+                            // Loading indicator
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = AppTheme.AccentPurple)
+                            }
+                        }
                     }
                     composable("${Routes.EDIT_TRIGGER}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        EditTriggerScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                        val triggerVm: TriggerViewModel = viewModel()
+                        val editLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        var loaded by remember { mutableStateOf(false) }
+                        LaunchedEffect(id) {
+                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
+                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                            try {
+                                val rows = db.getAllTriggers(token)
+                                val row = rows.find { it.id == id }
+                                if (row != null) {
+                                    editLogVm.addTriggerDraft(row.type ?: "", row.startAt, row.notes)
+                                    linkedMigraineId = row.migraineId
+                                }
+                            } catch (_: Exception) {}
+                            loaded = true
+                        }
+                        if (loaded) {
+                            TriggersScreen(
+                                navController = nav, vm = triggerVm, authVm = authVm, logVm = editLogVm,
+                                quickLogMode = true,
+                                linkedMigraineId = linkedMigraineId,
+                                onMigraineSelect = { linkedMigraineId = it },
+                                onSave = {
+                                    scope.launch {
+                                        val token = authVm.state.value.accessToken ?: return@launch
+                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                        // Delete old, insert new
+                                        runCatching { db.deleteTrigger(token, id) }
+                                        editLogVm.draft.value.triggers.forEach { t ->
+                                            runCatching { db.insertTrigger(token, linkedMigraineId, t.type, t.startAtIso ?: java.time.Instant.now().toString(), t.note) }
+                                        }
+                                        editLogVm.clearDraft()
+                                        nav.popBackStack()
+                                    }
+                                }
+                            )
+                        }
                     }
                     composable("${Routes.EDIT_MEDICINE}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        EditMedicineScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                        val medVm: MedicineViewModel = viewModel()
+                        val editLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        var loaded by remember { mutableStateOf(false) }
+                        LaunchedEffect(id) {
+                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
+                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                            try {
+                                val rows = db.getAllMedicines(token)
+                                val row = rows.find { it.id == id }
+                                if (row != null) {
+                                    editLogVm.addMedicineDraft(row.name ?: "", row.amount, row.notes, row.startAt, null)
+                                    linkedMigraineId = row.migraineId
+                                }
+                            } catch (_: Exception) {}
+                            loaded = true
+                        }
+                        if (loaded) {
+                            MedicinesScreen(
+                                navController = nav, vm = medVm, authVm = authVm, logVm = editLogVm,
+                                quickLogMode = true,
+                                linkedMigraineId = linkedMigraineId,
+                                onMigraineSelect = { linkedMigraineId = it },
+                                onSave = {
+                                    scope.launch {
+                                        val token = authVm.state.value.accessToken ?: return@launch
+                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                        runCatching { db.deleteMedicine(token, id) }
+                                        editLogVm.draft.value.meds.forEach { m ->
+                                            runCatching { db.insertMedicine(token, linkedMigraineId, m.name, m.amount, m.startAtIso ?: java.time.Instant.now().toString(), m.notes) }
+                                        }
+                                        editLogVm.clearDraft()
+                                        nav.popBackStack()
+                                    }
+                                }
+                            )
+                        }
                     }
                     composable("${Routes.EDIT_RELIEF}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        EditReliefScreen(navController = nav, authVm = authVm, vm = logVm, id = id)
+                        val reliefVm: ReliefViewModel = viewModel()
+                        val editLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        var loaded by remember { mutableStateOf(false) }
+                        LaunchedEffect(id) {
+                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
+                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                            try {
+                                val rows = db.getAllReliefs(token)
+                                val row = rows.find { it.id == id }
+                                if (row != null) {
+                                    editLogVm.addReliefDraft(row.type ?: "", row.notes, row.startAt, row.endAt, null)
+                                    linkedMigraineId = row.migraineId
+                                }
+                            } catch (_: Exception) {}
+                            loaded = true
+                        }
+                        if (loaded) {
+                            ReliefsScreen(
+                                navController = nav, vm = reliefVm, authVm = authVm, logVm = editLogVm,
+                                quickLogMode = true,
+                                linkedMigraineId = linkedMigraineId,
+                                onMigraineSelect = { linkedMigraineId = it },
+                                onSave = {
+                                    scope.launch {
+                                        val token = authVm.state.value.accessToken ?: return@launch
+                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                        runCatching { db.deleteRelief(token, id) }
+                                        editLogVm.draft.value.rels.forEach { r ->
+                                            runCatching { db.insertRelief(token, linkedMigraineId, r.type, r.startAtIso ?: java.time.Instant.now().toString(), r.endAtIso, r.notes, r.reliefScale) }
+                                        }
+                                        editLogVm.clearDraft()
+                                        nav.popBackStack()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    composable("${Routes.EDIT_PRODROME}/{id}") {
+                        val id = it.arguments?.getString("id") ?: return@composable
+                        val prodromeVm: ProdromeViewModel = viewModel()
+                        val editLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        var loaded by remember { mutableStateOf(false) }
+                        LaunchedEffect(id) {
+                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
+                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                            try {
+                                val rows = db.getAllProdromeLog(token)
+                                val row = rows.find { it.id == id }
+                                if (row != null) {
+                                    editLogVm.addProdromeDraft(row.type ?: "", row.startAt, row.notes)
+                                    linkedMigraineId = row.migraineId
+                                }
+                            } catch (_: Exception) {}
+                            loaded = true
+                        }
+                        if (loaded) {
+                            ProdromeLogScreen(
+                                navController = nav, vm = prodromeVm, authVm = authVm, logVm = editLogVm,
+                                quickLogMode = true,
+                                linkedMigraineId = linkedMigraineId,
+                                onMigraineSelect = { linkedMigraineId = it },
+                                onSave = {
+                                    scope.launch {
+                                        val token = authVm.state.value.accessToken ?: return@launch
+                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                        runCatching { db.deleteProdromeLog(token, id) }
+                                        editLogVm.draft.value.prodromes.forEach { p ->
+                                            runCatching { db.insertProdrome(token, linkedMigraineId, p.type, p.startAtIso, p.note) }
+                                        }
+                                        editLogVm.clearDraft()
+                                        nav.popBackStack()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    composable("${Routes.EDIT_ACTIVITY}/{id}") {
+                        val id = it.arguments?.getString("id") ?: return@composable
+                        val activityVm: ActivityViewModel = viewModel()
+                        val editLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        var loaded by remember { mutableStateOf(false) }
+                        LaunchedEffect(id) {
+                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
+                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                            try {
+                                val rows = db.getAllActivityLog(token)
+                                val row = rows.find { it.id == id }
+                                if (row != null) {
+                                    editLogVm.addActivityDraft(row.type ?: "", row.startAt, row.notes)
+                                    linkedMigraineId = row.migraineId
+                                }
+                            } catch (_: Exception) {}
+                            loaded = true
+                        }
+                        if (loaded) {
+                            ActivitiesScreen(
+                                navController = nav, vm = activityVm, authVm = authVm, logVm = editLogVm,
+                                quickLogMode = true,
+                                linkedMigraineId = linkedMigraineId,
+                                onMigraineSelect = { linkedMigraineId = it },
+                                onSave = {
+                                    scope.launch {
+                                        val token = authVm.state.value.accessToken ?: return@launch
+                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                        runCatching { db.deleteActivityLog(token, id) }
+                                        editLogVm.draft.value.activities.forEach { a ->
+                                            runCatching { db.insertActivity(token, linkedMigraineId, a.type, a.startAtIso ?: java.time.Instant.now().toString(), a.endAtIso, a.note) }
+                                        }
+                                        editLogVm.clearDraft()
+                                        nav.popBackStack()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    composable("${Routes.EDIT_LOCATION}/{id}") {
+                        val id = it.arguments?.getString("id") ?: return@composable
+                        val locationVm: LocationViewModel = viewModel()
+                        val editLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        var loaded by remember { mutableStateOf(false) }
+                        LaunchedEffect(id) {
+                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
+                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                            try {
+                                val rows = db.getAllLocationLog(token)
+                                val row = rows.find { it.id == id }
+                                if (row != null) {
+                                    editLogVm.addLocationDraft(row.type ?: "", row.startAt, row.notes)
+                                    linkedMigraineId = row.migraineId
+                                }
+                            } catch (_: Exception) {}
+                            loaded = true
+                        }
+                        if (loaded) {
+                            LocationsScreen(
+                                navController = nav, vm = locationVm, authVm = authVm, logVm = editLogVm,
+                                quickLogMode = true,
+                                linkedMigraineId = linkedMigraineId,
+                                onMigraineSelect = { linkedMigraineId = it },
+                                onSave = {
+                                    scope.launch {
+                                        val token = authVm.state.value.accessToken ?: return@launch
+                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                        runCatching { db.deleteLocationLog(token, id) }
+                                        editLogVm.draft.value.locations.forEach { l ->
+                                            runCatching { db.insertLocation(token, linkedMigraineId, l.type, l.startAtIso ?: java.time.Instant.now().toString(), l.note) }
+                                        }
+                                        editLogVm.clearDraft()
+                                        nav.popBackStack()
+                                    }
+                                }
+                            )
+                        }
                     }
 
                     composable(Routes.ADJUST_MIGRAINES) {
@@ -1041,22 +1453,23 @@ fun AppRoot() {
                         val edge = remember { EdgeFunctionsService() }
                         val scope = rememberCoroutineScope()
 
-                        // Trigger automation settings: triggerType -> enabled
-                        var triggerSettings by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+                        // Trigger automation settings: label -> full setting (enabled + threshold)
+                        var triggerSettings by remember { mutableStateOf<Map<String, EdgeFunctionsService.TriggerSettingResponse>>(emptyMap()) }
 
-                        // Map of pool label -> trigger_type key for automatable triggers
-                        // Add entries here when you add new automations
-                        val automatableMap = remember { mapOf(
-                            "Low recovery" to "recovery_low",
-                            "Unusually low recovery" to "recovery_unusually_low"
-                        ) }
+                        // Build automatableMap dynamically from pool:
+                        // any trigger with direction != null is automatable
+                        // label is used as the key in trigger_settings
+                        val automatableMap = remember(pool) {
+                            pool.filter { it.direction != null }
+                                .associate { it.label to it.label }
+                        }
 
                         LaunchedEffect(authState.accessToken) {
                             authState.accessToken?.let { triggerVm.loadAll(it) }
                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 runCatching { edge.getTriggerSettings(ctx) }
                                     .onSuccess { list ->
-                                        triggerSettings = list.associate { it.triggerType to it.enabled }
+                                        triggerSettings = list.associate { it.triggerType to it }
                                     }
                             }
                         }
@@ -1065,14 +1478,20 @@ fun AppRoot() {
                         val items = remember(pool, frequentIds, triggerSettings) {
                             pool.map { row ->
                                 val autoKey = automatableMap[row.label]
+                                val setting = autoKey?.let { triggerSettings[it] }
                                 PoolItem(
                                     id = row.id,
                                     label = row.label,
+                                    iconKey = row.iconKey,
                                     category = row.category,
                                     isFavorite = row.id in frequentIds,
                                     prediction = PredictionValue.fromString(row.predictionValue),
                                     isAutomatable = autoKey != null,
-                                    isAutomated = autoKey?.let { triggerSettings[it] } ?: false
+                                    isAutomated = setting?.enabled ?: row.enabledByDefault,
+                                    threshold = setting?.threshold,
+                                    defaultThreshold = row.defaultThreshold,
+                                    unit = row.unit,
+                                    direction = row.direction
                                 )
                             }
                         }
@@ -1087,6 +1506,8 @@ fun AppRoot() {
                                 items = items,
                                 showPrediction = true,
                                 categories = listOf("Body", "Cognitive", "Diet", "Environment", "Menstrual Cycle", "Physical", "Sleep"),
+                                iconResolver = { key -> TriggerIcons.forKey(key) },
+                                pickerIcons = TriggerIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, prediction ->
                                     authState.accessToken?.let { triggerVm.addNewToPool(it, label, category, prediction.name) }
                                 },
@@ -1110,7 +1531,22 @@ fun AppRoot() {
                                         if (ok) {
                                             runCatching { edge.getTriggerSettings(ctx) }
                                                 .onSuccess { list ->
-                                                    triggerSettings = list.associate { it.triggerType to it.enabled }
+                                                    triggerSettings = list.associate { it.triggerType to it }
+                                                }
+                                        }
+                                    }
+                                },
+                                onThresholdChange = { id, threshold ->
+                                    val label = pool.find { it.id == id }?.label ?: return@PoolConfig
+                                    val autoKey = automatableMap[label] ?: return@PoolConfig
+                                    val currentEnabled = triggerSettings[autoKey]?.enabled
+                                        ?: pool.find { it.id == id }?.enabledByDefault ?: true
+                                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        val ok = edge.upsertTriggerSetting(ctx, autoKey, currentEnabled, threshold)
+                                        if (ok) {
+                                            runCatching { edge.getTriggerSettings(ctx) }
+                                                .onSuccess { list ->
+                                                    triggerSettings = list.associate { it.triggerType to it }
                                                 }
                                         }
                                     }
@@ -1137,6 +1573,7 @@ fun AppRoot() {
                                 PoolItem(
                                     id = row.id,
                                     label = row.label,
+                                    iconKey = row.category,
                                     category = row.category,
                                     isFavorite = row.id in frequentIds
                                 )
@@ -1152,6 +1589,8 @@ fun AppRoot() {
                                 drawHeroIcon = { HubIcons.run { drawMedicinePill(it) } },
                                 items = items,
                                 categories = listOf("Analgesic", "Anti-Nausea", "CGRP", "Preventive", "Supplement", "Triptan", "Other"),
+                                iconResolver = { key -> MedicineIcons.forKey(key) },
+                                pickerIcons = MedicineIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ ->
                                     authState.accessToken?.let { medicineVm.addNewToPool(it, label, category) }
                                 },
@@ -1186,6 +1625,7 @@ fun AppRoot() {
                                 PoolItem(
                                     id = row.id,
                                     label = row.label,
+                                    iconKey = row.iconKey,
                                     category = row.category,
                                     isFavorite = row.id in frequentIds,
                                     isAutomatable = row.isAutomatable,
@@ -1203,6 +1643,8 @@ fun AppRoot() {
                                 drawHeroIcon = { HubIcons.run { drawReliefLeaf(it) } },
                                 items = items,
                                 categories = listOf("Breathing", "Cold/Heat", "Darkness", "Hydration", "Massage", "Meditation", "Movement", "Rest", "Supplement", "Other"),
+                                iconResolver = { key -> ReliefIcons.forKey(key) },
+                                pickerIcons = ReliefIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ ->
                                     authState.accessToken?.let { reliefVm.addNewToPool(it, label, category) }
                                 },
@@ -1234,22 +1676,21 @@ fun AppRoot() {
                         val edge = remember { EdgeFunctionsService() }
                         val scope = rememberCoroutineScope()
 
-                        // Prodrome automation settings: prodromeType -> enabled
-                        var prodromeSettings by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+                        // Prodrome settings: prodromeType -> ProdromeSettingResponse (includes threshold)
+                        var prodromeSettings by remember { mutableStateOf<Map<String, EdgeFunctionsService.ProdromeSettingResponse>>(emptyMap()) }
 
-                        // Map of pool label -> prodrome_type key for automatable prodromes
-                        val automatableMap = remember { mapOf(
-                            "Fatigue / Yawning" to "fatigue_yawning",
-                            "Neck stiffness" to "neck_stiffness",
-                            "Mood changes" to "mood_changes"
-                        ) }
+                        // Build automatable map dynamically from pool (direction != null = auto-detectable)
+                        val automatableMap = remember(pool) {
+                            pool.filter { it.direction != null }
+                                .associate { it.label to it.label }
+                        }
 
                         LaunchedEffect(authState.accessToken) {
                             authState.accessToken?.let { prodromeVm.loadAll(it) }
                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 runCatching { edge.getProdromeSettings(ctx) }
                                     .onSuccess { list ->
-                                        prodromeSettings = list.associate { it.prodromeType to it.enabled }
+                                        prodromeSettings = list.associate { it.prodromeType to it }
                                     }
                             }
                         }
@@ -1258,14 +1699,20 @@ fun AppRoot() {
                         val items = remember(pool, frequentIds, prodromeSettings) {
                             pool.map { row ->
                                 val autoKey = automatableMap[row.label]
+                                val setting = autoKey?.let { prodromeSettings[it] }
                                 PoolItem(
                                     id = row.id,
                                     label = row.label,
+                                    iconKey = row.iconKey,
                                     category = row.category,
                                     isFavorite = row.id in frequentIds,
                                     prediction = PredictionValue.fromString(row.predictionValue),
                                     isAutomatable = autoKey != null,
-                                    isAutomated = autoKey?.let { prodromeSettings[it] } ?: false
+                                    isAutomated = setting?.enabled ?: row.enabledByDefault,
+                                    threshold = setting?.threshold,
+                                    defaultThreshold = row.defaultThreshold,
+                                    unit = row.unit,
+                                    direction = row.direction
                                 )
                             }
                         }
@@ -1279,7 +1726,9 @@ fun AppRoot() {
                                 drawHeroIcon = { HubIcons.run { drawProdromeEye(it) } },
                                 items = items,
                                 showPrediction = true,
-                                categories = listOf("Cognitive", "Digestive", "Mood", "Physical", "Sensory", "Sleep", "Speech", "Visual"),
+                                categories = listOf("Autonomic", "Cognitive", "Digestive", "Mood", "Physical", "Sensitivity", "Sensory", "Sleep", "Speech", "Visual"),
+                                iconResolver = { key -> ProdromeIcons.forKey(key) },
+                                pickerIcons = ProdromeIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, prediction ->
                                     authState.accessToken?.let { prodromeVm.addNewToPool(it, label, category, prediction.name) }
                                 },
@@ -1306,9 +1755,20 @@ fun AppRoot() {
                                         if (ok) {
                                             runCatching { edge.getProdromeSettings(ctx) }
                                                 .onSuccess { list ->
-                                                    prodromeSettings = list.associate { it.prodromeType to it.enabled }
+                                                    prodromeSettings = list.associate { it.prodromeType to it }
                                                 }
                                         }
+                                    }
+                                },
+                                onThresholdChange = { id, newThreshold ->
+                                    val label = pool.find { it.id == id }?.label ?: return@PoolConfig
+                                    val autoKey = automatableMap[label] ?: return@PoolConfig
+                                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        edge.upsertProdromeSetting(ctx, autoKey, true, newThreshold)
+                                        runCatching { edge.getProdromeSettings(ctx) }
+                                            .onSuccess { list ->
+                                                prodromeSettings = list.associate { it.prodromeType to it }
+                                            }
                                     }
                                 }
                             )
@@ -1327,7 +1787,7 @@ fun AppRoot() {
                         val items = remember(pool, frequentIds) {
                             pool.map { row ->
                                 PoolItem(
-                                    id = row.id, label = row.label, category = row.category,
+                                    id = row.id, label = row.label, iconKey = row.iconKey, category = row.category,
                                     isFavorite = row.id in frequentIds,
                                     isAutomatable = row.isAutomatable, isAutomated = row.isAutomated
                                 )
@@ -1343,6 +1803,8 @@ fun AppRoot() {
                                 drawHeroIcon = { HubIcons.run { drawLocationPin(it) } },
                                 items = items,
                                 categories = listOf("Exercise", "Home", "Medical", "Outdoors", "Social", "Transport", "Work", "Other"),
+                                iconResolver = { key -> LocationIcons.forKey(key) },
+                                pickerIcons = LocationIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ -> authState.accessToken?.let { locationVm.addNewToPool(it, label, category) } },
                                 onDelete = { id -> authState.accessToken?.let { locationVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
@@ -1368,7 +1830,7 @@ fun AppRoot() {
                         val items = remember(pool, frequentIds) {
                             pool.map { row ->
                                 PoolItem(
-                                    id = row.id, label = row.label, category = row.category,
+                                    id = row.id, label = row.label, iconKey = row.iconKey, category = row.category,
                                     isFavorite = row.id in frequentIds,
                                     isAutomatable = row.isAutomatable, isAutomated = row.isAutomated
                                 )
@@ -1384,6 +1846,8 @@ fun AppRoot() {
                                 drawHeroIcon = { HubIcons.run { drawActivityPulse(it) } },
                                 items = items,
                                 categories = listOf("Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
+                                iconResolver = { key -> ActivityIcons.forKey(key) },
+                                pickerIcons = ActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ -> authState.accessToken?.let { activityVm.addNewToPool(it, label, category) } },
                                 onDelete = { id -> authState.accessToken?.let { activityVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
@@ -1409,7 +1873,7 @@ fun AppRoot() {
                         val items = remember(pool, frequentIds) {
                             pool.map { row ->
                                 PoolItem(
-                                    id = row.id, label = row.label, category = row.category,
+                                    id = row.id, label = row.label, iconKey = row.iconKey, category = row.category,
                                     isFavorite = row.id in frequentIds,
                                     isAutomatable = row.isAutomatable, isAutomated = row.isAutomated
                                 )
@@ -1425,6 +1889,8 @@ fun AppRoot() {
                                 drawHeroIcon = { HubIcons.run { drawMissedActivity(it) } },
                                 items = items,
                                 categories = listOf("Care", "Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
+                                iconResolver = { key -> MissedActivityIcons.forKey(key) },
+                                pickerIcons = MissedActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ -> authState.accessToken?.let { missedVm.addNewToPool(it, label, category) } },
                                 onDelete = { id -> authState.accessToken?.let { missedVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->
@@ -1492,6 +1958,14 @@ fun AppRoot() {
                         DataSettingsScreen(onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) })
                     }
 
+                    composable(Routes.RISK_WEIGHTS) {
+                        RiskWeightsScreen(onBack = { nav.popBackStack() })
+                    }
+
+                    composable(Routes.TESTING) {
+                        TestingScreen(authVm = authVm)
+                    }
+
                     composable(Routes.MENSTRUATION_SETTINGS) {
                         MenstruationSettingsScreen(onBack = { nav.popBackStack() })
                     }
@@ -1508,9 +1982,6 @@ fun AppRoot() {
                         )
                     }
 
-                    composable(Routes.TESTING) { TestingScreen(authVm = authVm) }
-                    composable(Routes.TESTING_COMPLETE) { TestingScreenComplete(authVm = authVm) }
-                    composable(Routes.LOCATION_DEBUG) { LocationDebugScreen() }
                 }
             }
         }
@@ -1530,6 +2001,11 @@ private fun needsAttention(ev: JournalEvent): Boolean {
 
         is JournalEvent.Relief ->
             ev.row.durationMinutes == null || ev.row.startAt.isNullOrBlank()
+
+        is JournalEvent.Prodrome -> ev.row.startAt.isNullOrBlank()
+        is JournalEvent.Activity -> ev.row.startAt.isNullOrBlank()
+        is JournalEvent.Location -> false
+        is JournalEvent.MissedActivity -> false
     }
 }
 
@@ -1559,6 +2035,8 @@ private fun BottomBar(
             val showBadge = item.route == Routes.JOURNAL && journalBadgeCount > 0
             val selected = currentRoute == item.route ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_DETAIL) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_REPORT) ||
+                    (item.route == Routes.INSIGHTS && currentRoute?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true) ||
                     (item.route == Routes.MONITOR && currentRoute == Routes.MONITOR_CONFIG)
 
             NavigationBarItem(
@@ -1585,4 +2063,3 @@ private fun BottomBar(
         }
     }
 }
-

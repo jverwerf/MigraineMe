@@ -4,4 +4,6 @@ plugins {
     id("org.jetbrains.kotlin.android") version "1.9.24" apply false
     // ➕ Serialization plugin (needed for Ktor JSON)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24" apply false
+    // Firebase
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 
 // --- drafts ---
@@ -22,7 +23,8 @@ data class MigraineDraft(
 data class TriggerDraft(
     val type: String,
     val startAtIso: String? = null,
-    val note: String? = null
+    val note: String? = null,
+    val existingId: String? = null
 )
 
 data class MedicineDraft(
@@ -30,7 +32,8 @@ data class MedicineDraft(
     val amount: String? = null,
     val notes: String? = null,
     val startAtIso: String? = null,
-    val reliefScale: String? = "NONE"
+    val reliefScale: String? = "NONE",
+    val existingId: String? = null
 )
 
 data class ReliefDraft(
@@ -38,34 +41,41 @@ data class ReliefDraft(
     val notes: String? = null,
     val startAtIso: String? = null,
     val endAtIso: String? = null,
-    val reliefScale: String? = "NONE"
+    val reliefScale: String? = "NONE",
+    val existingId: String? = null
 )
 
 data class ProdromeDraft(
     val type: String,
     val startAtIso: String? = null,
-    val note: String? = null
+    val note: String? = null,
+    val existingId: String? = null
 )
 
 data class LocationDraft(
     val type: String,
     val startAtIso: String? = null,
-    val note: String? = null
+    val note: String? = null,
+    val existingId: String? = null
 )
 
 data class ActivityDraft(
     val type: String,
     val startAtIso: String? = null,
-    val note: String? = null
+    val endAtIso: String? = null,
+    val note: String? = null,
+    val existingId: String? = null
 )
 
 data class MissedActivityDraft(
     val type: String,
     val startAtIso: String? = null,
-    val note: String? = null
+    val note: String? = null,
+    val existingId: String? = null
 )
 
 data class Draft(
+    val editMigraineId: String? = null,
     val migraine: MigraineDraft? = null,
     val painLocations: List<String> = emptyList(),
     val triggers: List<TriggerDraft> = emptyList(),
@@ -79,10 +89,14 @@ data class Draft(
 
 // --- journal event feed ---
 sealed class JournalEvent {
-    data class Migraine(val row: SupabaseDbService.MigraineRow) : JournalEvent()
+    data class Migraine(val row: SupabaseDbService.MigraineRow, val linked: SupabaseDbService.MigraineLinkedItems = SupabaseDbService.MigraineLinkedItems()) : JournalEvent()
     data class Trigger(val row: SupabaseDbService.TriggerRow) : JournalEvent()
     data class Medicine(val row: SupabaseDbService.MedicineRow) : JournalEvent()
     data class Relief(val row: SupabaseDbService.ReliefRow) : JournalEvent()
+    data class Prodrome(val row: SupabaseDbService.ProdromeLogRow) : JournalEvent()
+    data class Location(val row: SupabaseDbService.LocationLogRow) : JournalEvent()
+    data class Activity(val row: SupabaseDbService.ActivityLogRow) : JournalEvent()
+    data class MissedActivity(val row: SupabaseDbService.MissedActivityLogRow) : JournalEvent()
 }
 
 class LogViewModel(application: Application) : AndroidViewModel(application) {
@@ -92,14 +106,66 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         BuildConfig.SUPABASE_ANON_KEY
     )
 
+    private val edge = EdgeFunctionsService()
+
     private val _draft = MutableStateFlow(Draft())
     val draft: StateFlow<Draft> = _draft
+
+    /** When non-null, the wizard is in "edit" mode for this migraine. Review will update instead of insert. */
+    private val _editMigraineId = MutableStateFlow<String?>(null)
+    val editMigraineId: StateFlow<String?> = _editMigraineId
+
+    /** Pre-populate the draft from an existing migraine + all linked items (ignoring automated/system items). */
+    fun prefillForEdit(accessToken: String, migraineId: String, onReady: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val migraines = db.getMigraines(accessToken)
+                val row = migraines.find { it.id == migraineId } ?: return@launch
+                val linked = db.getLinkedItems(accessToken, migraineId)
+
+                _editMigraineId.value = migraineId
+                println("DEBUG prefillForEdit: setting editMigraineId=$migraineId")
+                // The type field stores joined symptom labels like "Throbbing, Nausea"
+                // Split back into individual symptoms for the picker
+                val symptomLabels = row.type
+                    ?.split(",")
+                    ?.map { it.trim() }
+                    ?.filter { it.isNotBlank() && it != "Migraine" }
+                    ?: emptyList()
+
+                _draft.value = Draft(
+                    editMigraineId = migraineId,
+                    migraine = MigraineDraft(
+                        type = row.type,
+                        symptoms = symptomLabels,
+                        severity = row.severity,
+                        beganAtIso = row.startAt,
+                        endedAtIso = row.endAt,
+                        note = row.notes
+                    ),
+                    painLocations = row.painLocations ?: emptyList(),
+                    triggers = linked.triggers
+                        .filter { it.source != "system" }
+                        .map { TriggerDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
+                    meds = linked.medicines.map { MedicineDraft(it.name, it.amount, it.notes, it.startAt, null, existingId = it.id) },
+                    rels = linked.reliefs.map { ReliefDraft(it.type ?: "", it.notes, it.startAt, it.endAt, null, existingId = it.id) },
+                    prodromes = linked.prodromes.map { ProdromeDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
+                    locations = linked.locations.map { LocationDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
+                    activities = linked.activities.map { ActivityDraft(it.type ?: "", it.startAt, it.endAt, it.notes, existingId = it.id) }
+                )
+                onReady()
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
 
     private val _migraines = MutableStateFlow<List<SupabaseDbService.MigraineRow>>(emptyList())
     val migraines: StateFlow<List<SupabaseDbService.MigraineRow>> = _migraines
 
     private val _journal = MutableStateFlow<List<JournalEvent>>(emptyList())
     val journal: StateFlow<List<JournalEvent>> = _journal
+
+    private val _triggerLabelMap = MutableStateFlow<Map<String, String>>(emptyMap())
+    val triggerLabelMap: StateFlow<Map<String, String>> = _triggerLabelMap
 
     // --- single-entry edit state ---
     private val _editMigraine = MutableStateFlow<SupabaseDbService.MigraineRow?>(null)
@@ -215,9 +281,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun addActivityDraft(type: String, startAtIso: String? = null, note: String? = null) {
+    fun addActivityDraft(type: String, startAtIso: String? = null, endAtIso: String? = null, note: String? = null) {
         _draft.value = _draft.value.copy(
-            activities = _draft.value.activities + ActivityDraft(type, startAtIso, note)
+            activities = _draft.value.activities + ActivityDraft(type, startAtIso, endAtIso, note)
         )
     }
 
@@ -227,7 +293,30 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun clearDraft() { _draft.value = Draft() }
+    fun clearDraft() { _draft.value = Draft(); _editMigraineId.value = null }
+
+    // Direct list replacements — preserves editMigraineId and existingIds on other lists
+    fun replaceTriggers(triggers: List<TriggerDraft>) {
+        _draft.value = _draft.value.copy(triggers = triggers)
+    }
+    fun replaceProdromes(prodromes: List<ProdromeDraft>) {
+        _draft.value = _draft.value.copy(prodromes = prodromes)
+    }
+    fun replaceMedicines(meds: List<MedicineDraft>) {
+        _draft.value = _draft.value.copy(meds = meds)
+    }
+    fun replaceReliefs(rels: List<ReliefDraft>) {
+        _draft.value = _draft.value.copy(rels = rels)
+    }
+    fun replaceLocations(locations: List<LocationDraft>) {
+        _draft.value = _draft.value.copy(locations = locations)
+    }
+    fun replaceActivities(activities: List<ActivityDraft>) {
+        _draft.value = _draft.value.copy(activities = activities)
+    }
+    fun replaceMissedActivities(missedActivities: List<MissedActivityDraft>) {
+        _draft.value = _draft.value.copy(missedActivities = missedActivities)
+    }
 
     // ---- quick actions ----
     fun addMigraine(accessToken: String) {
@@ -267,6 +356,132 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ---- final save ----
+    /** Update an existing migraine + update/insert/delete linked items. */
+    fun updateFull(
+        accessToken: String,
+        migraineId: String,
+        type: String?,
+        severity: Int?,
+        beganAtIso: String,
+        endedAtIso: String?,
+        note: String?,
+        painLocations: List<String>,
+        meds: List<MedicineDraft>,
+        rels: List<ReliefDraft>
+    ) {
+        val triggersSnapshot = _draft.value.triggers
+        val prodromesSnapshot = _draft.value.prodromes
+        val locationsSnapshot = _draft.value.locations
+        val activitiesSnapshot = _draft.value.activities
+        val missedActivitiesSnapshot = _draft.value.missedActivities
+
+        viewModelScope.launch {
+            try {
+                val migraineStart = beganAtIso.ifBlank {
+                    DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                }
+
+                // Update migraine itself
+                println("DEBUG updateFull: updating migraineId=$migraineId")
+                db.updateMigraine(accessToken, migraineId, type, severity, migraineStart, endedAtIso, note, painLocations.takeIf { it.isNotEmpty() })
+
+                // --- Triggers: delete removed, update existing, insert new ---
+                val oldLinked = db.getLinkedItems(accessToken, migraineId)
+                val keepTriggerIds = triggersSnapshot.mapNotNull { it.existingId }.toSet()
+                oldLinked.triggers.filter { it.source != "system" && it.id !in keepTriggerIds }.forEach {
+                    runCatching { db.deleteTrigger(accessToken, it.id) }
+                }
+                for (t in triggersSnapshot.filter { it.type.isNotBlank() }) {
+                    if (t.existingId != null) {
+                        runCatching { db.updateTrigger(accessToken, t.existingId, t.type, t.startAtIso ?: migraineStart, t.note) }
+                    } else {
+                        runCatching { db.insertTrigger(accessToken, migraineId, t.type, t.startAtIso ?: migraineStart, t.note) }
+                    }
+                }
+
+                // --- Medicines ---
+                val keepMedIds = meds.mapNotNull { it.existingId }.toSet()
+                oldLinked.medicines.filter { it.source != "system" && it.id !in keepMedIds }.forEach {
+                    runCatching { db.deleteMedicine(accessToken, it.id) }
+                }
+                for (m in meds.filter { !it.name.isNullOrBlank() }) {
+                    if (m.existingId != null) {
+                        runCatching { db.updateMedicine(accessToken, m.existingId, m.name, m.amount, m.startAtIso ?: migraineStart, m.notes) }
+                    } else {
+                        runCatching { db.insertMedicine(accessToken, migraineId, m.name, m.amount, m.startAtIso ?: migraineStart, m.notes, m.reliefScale) }
+                    }
+                }
+
+                // --- Reliefs ---
+                val keepRelIds = rels.mapNotNull { it.existingId }.toSet()
+                oldLinked.reliefs.filter { it.source != "system" && it.id !in keepRelIds }.forEach {
+                    runCatching { db.deleteRelief(accessToken, it.id) }
+                }
+                for (r in rels.filter { it.type.isNotBlank() }) {
+                    val rStart = r.startAtIso ?: migraineStart
+                    val rEnd = r.endAtIso ?: rStart
+                    if (r.existingId != null) {
+                        runCatching { db.updateRelief(accessToken, r.existingId, r.type, rStart, r.notes, endAt = rEnd) }
+                    } else {
+                        runCatching { db.insertRelief(accessToken, migraineId, r.type, rStart, r.notes, rEnd, r.reliefScale) }
+                    }
+                }
+
+                // --- Prodromes ---
+                val keepProdIds = prodromesSnapshot.mapNotNull { it.existingId }.toSet()
+                oldLinked.prodromes.filter { it.source != "system" && it.id !in keepProdIds }.forEach {
+                    runCatching { db.deleteProdromeLog(accessToken, it.id) }
+                }
+                for (p in prodromesSnapshot.filter { it.type.isNotBlank() }) {
+                    if (p.existingId != null) {
+                        runCatching { db.updateProdromeLog(accessToken, p.existingId, p.type, p.startAtIso ?: migraineStart, p.note) }
+                    } else {
+                        runCatching { db.insertProdrome(accessToken, migraineId, p.type, p.startAtIso ?: migraineStart, p.note) }
+                    }
+                }
+
+                // --- Locations ---
+                val keepLocIds = locationsSnapshot.mapNotNull { it.existingId }.toSet()
+                oldLinked.locations.filter { it.source != "system" && it.id !in keepLocIds }.forEach {
+                    runCatching { db.deleteLocationLog(accessToken, it.id) }
+                }
+                for (loc in locationsSnapshot.filter { it.type.isNotBlank() }) {
+                    if (loc.existingId != null) {
+                        runCatching { db.updateLocationLog(accessToken, loc.existingId, loc.type, loc.startAtIso ?: migraineStart, loc.note) }
+                    } else {
+                        runCatching { db.insertLocation(accessToken, migraineId, loc.type, loc.startAtIso ?: migraineStart, loc.note) }
+                    }
+                }
+
+                // --- Activities ---
+                val keepActIds = activitiesSnapshot.mapNotNull { it.existingId }.toSet()
+                oldLinked.activities.filter { it.source != "system" && it.id !in keepActIds }.forEach {
+                    runCatching { db.deleteActivityLog(accessToken, it.id) }
+                }
+                for (act in activitiesSnapshot.filter { it.type.isNotBlank() }) {
+                    val aStart = act.startAtIso ?: migraineStart
+                    val aEnd = act.endAtIso ?: aStart
+                    if (act.existingId != null) {
+                        runCatching { db.updateActivityLog(accessToken, act.existingId, act.type, aStart, aEnd, act.note) }
+                    } else {
+                        runCatching { db.insertActivity(accessToken, migraineId, act.type, aStart, aEnd, act.note) }
+                    }
+                }
+
+                // --- Missed Activities ---
+                for (ma in missedActivitiesSnapshot.filter { it.type.isNotBlank() }) {
+                    if (ma.existingId != null) {
+                        runCatching { db.updateMissedActivityLog(accessToken, ma.existingId, ma.type, ma.startAtIso ?: migraineStart, ma.note) }
+                    } else {
+                        runCatching { db.insertMissedActivity(accessToken, migraineId, ma.type, ma.startAtIso ?: migraineStart, ma.note) }
+                    }
+                }
+
+                loadJournal(accessToken)
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
     fun addFull(
         accessToken: String,
         type: String?,
@@ -300,6 +515,39 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     painLocations = painLocations.takeIf { it.isNotEmpty() }
                 )
 
+                // Link nearby system/automated triggers & prodromes to this migraine
+                // (within ±3 days of migraine start, unlinked, source=system)
+                // Only auto-link if user explicitly set a date (not defaulting to now)
+                if (beganAtIso.isNotBlank()) {
+                    try {
+                        val migraineInstant = Instant.parse(migraine.startAt)
+                        val windowStart = migraineInstant.minus(3, ChronoUnit.DAYS)
+                        val windowEnd = migraineInstant.plus(3, ChronoUnit.DAYS)
+
+                        val allTriggers = db.getAllTriggers(accessToken)
+                        allTriggers.filter { t ->
+                            t.source == "system" && t.migraineId == null &&
+                            runCatching {
+                                val tInstant = Instant.parse(t.startAt)
+                                tInstant.isAfter(windowStart) && tInstant.isBefore(windowEnd)
+                            }.getOrDefault(false)
+                        }.forEach { t ->
+                            runCatching { db.updateTrigger(accessToken, t.id, migraineId = migraine.id) }
+                        }
+
+                        val allProdromes = db.getAllProdromeLog(accessToken)
+                        allProdromes.filter { p ->
+                            p.source == "system" && p.migraineId == null &&
+                            runCatching {
+                                val pInstant = Instant.parse(p.startAt ?: "")
+                                pInstant.isAfter(windowStart) && pInstant.isBefore(windowEnd)
+                            }.getOrDefault(false)
+                        }.forEach { p ->
+                            runCatching { db.linkToMigraine(accessToken, "prodromes", p.id, migraine.id) }
+                        }
+                    } catch (e: Exception) { e.printStackTrace() }
+                }
+
                 for (t in triggersSnapshot.filter { it.type.isNotBlank() }) {
                     try {
                         db.insertTrigger(
@@ -328,13 +576,14 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
                 for (r in rels.filter { it.type.isNotBlank() }) {
                     try {
+                        val rStart = r.startAtIso ?: migraineStart
                         db.insertRelief(
                             accessToken = accessToken,
                             migraineId = migraine.id,
                             type = r.type,
-                            startAt = r.startAtIso ?: migraineStart,
+                            startAt = rStart,
                             notes = r.notes,
-                            endAt = r.endAtIso,
+                            endAt = r.endAtIso ?: rStart,
                             reliefScale = r.reliefScale
                         )
                     } catch (e: Exception) { e.printStackTrace() }
@@ -366,11 +615,13 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
                 for (act in activitiesSnapshot.filter { it.type.isNotBlank() }) {
                     try {
+                        val aStart = act.startAtIso ?: migraineStart
                         db.insertActivity(
                             accessToken = accessToken,
                             migraineId = migraine.id,
                             type = act.type,
-                            startAt = act.startAtIso ?: migraineStart,
+                            startAt = aStart,
+                            endAt = act.endAtIso ?: aStart,
                             notes = act.note
                         )
                     } catch (e: Exception) { e.printStackTrace() }
@@ -413,17 +664,34 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun loadJournal(accessToken: String) {
         viewModelScope.launch {
             try {
-                val migraines = db.getMigraines(accessToken).map { JournalEvent.Migraine(it) }
+                val migraineRows = db.getMigraines(accessToken)
+                val migraines = migraineRows.map { row ->
+                    val linked = try { db.getLinkedItems(accessToken, row.id) } catch (_: Exception) { SupabaseDbService.MigraineLinkedItems() }
+                    JournalEvent.Migraine(row, linked)
+                }
                 val triggers = db.getAllTriggers(accessToken).map { JournalEvent.Trigger(it) }
                 val medicines = db.getAllMedicines(accessToken).map { JournalEvent.Medicine(it) }
                 val reliefs = db.getAllReliefs(accessToken).map { JournalEvent.Relief(it) }
+                val prodromes = db.getAllProdromeLog(accessToken).map { JournalEvent.Prodrome(it) }
+                val locations = db.getAllLocationLog(accessToken).map { JournalEvent.Location(it) }
+                val activities = db.getAllActivityLog(accessToken).map { JournalEvent.Activity(it) }
+                val missedActivities = db.getAllMissedActivityLog(accessToken).map { JournalEvent.MissedActivity(it) }
 
-                val merged = (migraines + triggers + medicines + reliefs).sortedByDescending { ev ->
+                // Load trigger definitions for label lookup
+                val context = getApplication<android.app.Application>().applicationContext
+                val defs = edge.getTriggerDefinitions(context)
+                _triggerLabelMap.value = defs.associate { it.triggerType to it.label }
+
+                val merged = (migraines + triggers + medicines + reliefs + prodromes + locations + activities + missedActivities).sortedByDescending { ev ->
                     when (ev) {
                         is JournalEvent.Migraine -> ev.row.startAt
                         is JournalEvent.Trigger -> ev.row.startAt
                         is JournalEvent.Medicine -> ev.row.startAt
                         is JournalEvent.Relief -> ev.row.startAt
+                        is JournalEvent.Prodrome -> ev.row.startAt
+                        is JournalEvent.Location -> ev.row.startAt
+                        is JournalEvent.Activity -> ev.row.startAt
+                        is JournalEvent.MissedActivity -> ev.row.startAt
                     }
                 }
                 _journal.value = merged
@@ -439,7 +707,23 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun removeMigraine(accessToken: String, id: String) {
         viewModelScope.launch {
             try {
+                // Unlink ALL linked items first (set migraine_id = null)
+                val linked = db.getLinkedItems(accessToken, id)
+                linked.triggers.forEach { runCatching { db.updateTrigger(accessToken, it.id, clearMigraineId = true) } }
+                linked.medicines.forEach { runCatching { db.updateMedicine(accessToken, it.id, clearMigraineId = true) } }
+                linked.reliefs.forEach { runCatching { db.updateRelief(accessToken, it.id, clearMigraineId = true) } }
+                linked.prodromes.forEach { runCatching { db.unlinkFromMigraine(accessToken, "prodromes", it.id) } }
+                linked.activities.forEach { runCatching { db.unlinkFromMigraine(accessToken, "time_in_high_hr_zones_daily", it.id) } }
+                linked.locations.forEach { runCatching { db.unlinkFromMigraine(accessToken, "locations", it.id) } }
+                // Now delete the migraine itself
                 db.deleteMigraine(accessToken, id)
+                // Then delete manual linked items (system items survive via RLS + app filter)
+                linked.triggers.filter { it.source != "system" }.forEach { runCatching { db.deleteTrigger(accessToken, it.id) } }
+                linked.medicines.filter { it.source != "system" }.forEach { runCatching { db.deleteMedicine(accessToken, it.id) } }
+                linked.reliefs.filter { it.source != "system" }.forEach { runCatching { db.deleteRelief(accessToken, it.id) } }
+                linked.prodromes.filter { it.source != "system" }.forEach { runCatching { db.deleteProdromeLog(accessToken, it.id) } }
+                linked.activities.filter { it.source != "system" }.forEach { runCatching { db.deleteActivityLog(accessToken, it.id) } }
+                linked.locations.filter { it.source != "system" }.forEach { runCatching { db.deleteLocationLog(accessToken, it.id) } }
                 loadJournal(accessToken)
             } catch (e: Exception) { e.printStackTrace() }
         }
@@ -467,6 +751,42 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteRelief(accessToken, id)
+                loadJournal(accessToken)
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    fun removeProdrome(accessToken: String, id: String) {
+        viewModelScope.launch {
+            try {
+                db.deleteProdromeLog(accessToken, id)
+                loadJournal(accessToken)
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    fun removeLocation(accessToken: String, id: String) {
+        viewModelScope.launch {
+            try {
+                db.deleteLocationLog(accessToken, id)
+                loadJournal(accessToken)
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    fun removeActivity(accessToken: String, id: String) {
+        viewModelScope.launch {
+            try {
+                db.deleteActivityLog(accessToken, id)
+                loadJournal(accessToken)
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    fun removeMissedActivity(accessToken: String, id: String) {
+        viewModelScope.launch {
+            try {
+                db.deleteMissedActivityLog(accessToken, id)
                 loadJournal(accessToken)
             } catch (e: Exception) { e.printStackTrace() }
         }
@@ -610,13 +930,16 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 val prefs = db.getTriggerPrefs(accessToken)
                 val pool = db.getAllTriggerPool(accessToken)
 
+                // Filter out NONE-prediction triggers
+                val visiblePool = pool.filter { it.predictionValue?.uppercase() != "NONE" }
+
                 val frequent = prefs
                     .filter { it.status == "frequent" }
                     .sortedBy { it.position }
                     .mapNotNull { it.trigger?.label?.trim() }
                     .filter { it.isNotEmpty() }
 
-                val all = pool.mapNotNull { it.label.trim() }.filter { it.isNotEmpty() }
+                val all = visiblePool.mapNotNull { it.label.trim() }.filter { it.isNotEmpty() }
                 val allMinusFrequent = all.filter { it !in frequent }.sorted()
 
                 _triggerOptionsFrequent.value = frequent
@@ -685,3 +1008,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
+
+

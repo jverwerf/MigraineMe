@@ -77,6 +77,8 @@ data class MonitorCardConfig(
         const val METRIC_BIOTIN = "biotin"
         const val METRIC_PANTOTHENIC_ACID = "pantothenic_acid"
         const val METRIC_TYRAMINE_EXPOSURE = "tyramine_exposure"
+        const val METRIC_ALCOHOL_EXPOSURE = "alcohol_exposure"
+        const val METRIC_GLUTEN_EXPOSURE = "gluten_exposure"
         
         val DEFAULT_NUTRITION_METRICS = listOf(
             METRIC_CALORIES,
@@ -119,7 +121,9 @@ data class MonitorCardConfig(
             METRIC_VITAMIN_E,
             METRIC_VITAMIN_K,
             METRIC_ZINC,
-            METRIC_TYRAMINE_EXPOSURE
+            METRIC_TYRAMINE_EXPOSURE,
+            METRIC_ALCOHOL_EXPOSURE,
+            METRIC_GLUTEN_EXPOSURE
         )
         
         val NUTRITION_METRIC_LABELS = mapOf(
@@ -157,7 +161,9 @@ data class MonitorCardConfig(
             METRIC_FOLATE to "Folate (B9)",
             METRIC_BIOTIN to "Biotin (B7)",
             METRIC_PANTOTHENIC_ACID to "Pantothenic (B5)",
-            METRIC_TYRAMINE_EXPOSURE to "Tyramine Exposure"
+            METRIC_TYRAMINE_EXPOSURE to "Tyramine",
+            METRIC_ALCOHOL_EXPOSURE to "Alcohol",
+            METRIC_GLUTEN_EXPOSURE to "Gluten"
         )
         
         val NUTRITION_METRIC_UNITS = mapOf(
@@ -195,8 +201,15 @@ data class MonitorCardConfig(
             METRIC_FOLATE to "mcg",
             METRIC_BIOTIN to "mcg",
             METRIC_PANTOTHENIC_ACID to "mg",
-            METRIC_TYRAMINE_EXPOSURE to ""
+            METRIC_TYRAMINE_EXPOSURE to "",
+            METRIC_ALCOHOL_EXPOSURE to "",
+            METRIC_GLUTEN_EXPOSURE to ""
         )
+
+        /** Set of categorical risk metrics (use MAX not SUM, display as labels) */
+        val RISK_METRICS = setOf(METRIC_TYRAMINE_EXPOSURE, METRIC_ALCOHOL_EXPOSURE, METRIC_GLUTEN_EXPOSURE)
+
+        fun isRiskMetric(metric: String) = metric in RISK_METRICS
     }
     
     fun isVisible(cardId: String): Boolean = cardId !in hiddenCards

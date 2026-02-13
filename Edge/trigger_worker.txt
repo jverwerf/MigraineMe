@@ -1,0 +1,311 @@
+// supabase/functions/trigger-worker/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function mean(arr: number[]): number | null {
+  if (arr.length === 0) return null;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function stdDev(arr: number[], avg: number): number | null {
+  if (arr.length < 2) return null;
+  const squaredDiffs = arr.map((x) => (x - avg) ** 2);
+  return Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / arr.length);
+}
+
+const STALE_LOCK_MINUTES = 10;
+const MAX_ATTEMPTS = 3;
+
+// Thresholds
+const RECOVERY_LOW_THRESHOLD = 33;
+const MIN_DAYS_FOR_SD = 14;
+
+serve(async (req) => {
+  console.log("[trigger-worker] start", {
+    nowUtc: new Date().toISOString(),
+    method: req.method,
+  });
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "trigger-worker" } },
+    });
+
+    const nowUtc = new Date();
+    const nowIso = nowUtc.toISOString();
+    const staleCutoff = new Date(nowUtc.getTime() - STALE_LOCK_MINUTES * 60_000).toISOString();
+
+    // Pick queued jobs (or stale locked jobs)
+    const { data: jobs, error: pickErr } = await supabase
+      .from("trigger_jobs")
+      .select("*")
+      .eq("status", "queued")
+      .lt("attempts", MAX_ATTEMPTS)
+      .or(`locked_at.is.null,locked_at.lt.${staleCutoff}`)
+      .limit(20);
+
+    if (pickErr) {
+      throw new Error(`Failed to pick jobs: ${pickErr.message}`);
+    }
+
+    if (!jobs || jobs.length === 0) {
+      return jsonResponse({ ok: true, message: "No jobs to process", processed: 0 });
+    }
+
+    const results: unknown[] = [];
+
+    for (const job of jobs) {
+      const jobResult: Record<string, unknown> = {
+        jobId: job.id,
+        userId: job.user_id,
+        localDate: job.local_date,
+        triggerResults: [],
+      };
+
+      // Lock the job
+      const { error: lockErr } = await supabase
+        .from("trigger_jobs")
+        .update({ locked_at: nowIso, attempts: job.attempts + 1, updated_at: nowIso })
+        .eq("id", job.id);
+
+      if (lockErr) {
+        jobResult.status = "lock_failed";
+        jobResult.error = lockErr.message;
+        results.push(jobResult);
+        continue;
+      }
+
+      try {
+        const userId = job.user_id;
+        const localDate = job.local_date;
+
+        // Get user's enabled trigger types
+        const { data: userTriggers, error: trigErr } = await supabase
+          .from("trigger_settings")
+          .select("trigger_type")
+          .eq("user_id", userId)
+          .eq("enabled", true);
+
+        if (trigErr) {
+          throw new Error(`trigger_settings query failed: ${trigErr.message}`);
+        }
+
+        const enabledTypes = new Set((userTriggers ?? []).map((t) => t.trigger_type));
+        jobResult.enabledTypes = [...enabledTypes];
+
+        // Process recovery triggers
+        if (enabledTypes.has("recovery_low") || enabledTypes.has("recovery_unusually_low")) {
+          const recoveryResult = await processRecoveryTriggers(
+            supabase,
+            userId,
+            localDate,
+            enabledTypes
+          );
+          (jobResult.triggerResults as unknown[]).push(recoveryResult);
+        }
+
+        // Mark job done
+        await supabase
+          .from("trigger_jobs")
+          .update({ status: "done", locked_at: null, last_error: null, updated_at: nowIso })
+          .eq("id", job.id);
+
+        jobResult.status = "done";
+      } catch (e) {
+        const errMsg = (e as Error).message;
+        jobResult.status = "error";
+        jobResult.error = errMsg;
+
+        // Mark job error or requeue
+        const newStatus = job.attempts + 1 >= MAX_ATTEMPTS ? "error" : "queued";
+        await supabase
+          .from("trigger_jobs")
+          .update({ status: newStatus, locked_at: null, last_error: errMsg, updated_at: nowIso })
+          .eq("id", job.id);
+      }
+
+      results.push(jobResult);
+    }
+
+    const summary = {
+      picked: jobs.length,
+      done: results.filter((r: any) => r.status === "done").length,
+      errors: results.filter((r: any) => r.status === "error").length,
+    };
+
+    return jsonResponse({ ok: true, nowUtc: nowIso, summary, results });
+  } catch (e) {
+    console.error("[trigger-worker] error", e);
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});
+
+async function processRecoveryTriggers(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  localDate: string,
+  enabledTypes: Set<string>
+): Promise<Record<string, unknown>> {
+  const result: Record<string, unknown> = { metric: "recovery", triggers: [] };
+
+  // Get recovery score for the date
+  const { data: recovery, error: recErr } = await supabase
+    .from("recovery_score_daily")
+    .select("value_pct")
+    .eq("user_id", userId)
+    .eq("date", localDate)
+    .maybeSingle();
+
+  if (recErr) {
+    result.error = `recovery fetch failed: ${recErr.message}`;
+    return result;
+  }
+
+  if (!recovery || recovery.value_pct == null) {
+    result.status = "no_data";
+    return result;
+  }
+
+  const value = recovery.value_pct as number;
+  result.value = value;
+
+  // Check absolute low threshold
+  if (enabledTypes.has("recovery_low") && value < RECOVERY_LOW_THRESHOLD) {
+    const created = await createTriggerIfNotExists(
+      supabase,
+      userId,
+      "recovery_low",
+      localDate,
+      `Recovery ${value.toFixed(0)}% - below ${RECOVERY_LOW_THRESHOLD}% threshold`
+    );
+    (result.triggers as unknown[]).push({ type: "recovery_low", created, value });
+  }
+
+  // Check 2SD threshold
+  if (enabledTypes.has("recovery_unusually_low")) {
+    const startDate = addDaysIsoDate(localDate, -MIN_DAYS_FOR_SD);
+    const endDate = addDaysIsoDate(localDate, -1);
+
+    const { data: history, error: histErr } = await supabase
+      .from("recovery_score_daily")
+      .select("value_pct")
+      .eq("user_id", userId)
+      .gte("date", startDate)
+      .lte("date", endDate);
+
+    if (histErr) {
+      result.sdError = `history fetch failed: ${histErr.message}`;
+    } else {
+      const values = (history ?? [])
+        .map((r: { value_pct: unknown }) => r.value_pct)
+        .filter((v): v is number => typeof v === "number");
+
+      if (values.length >= MIN_DAYS_FOR_SD) {
+        const avg = mean(values);
+        const sd = avg != null ? stdDev(values, avg) : null;
+
+        if (avg != null && sd != null && sd > 0) {
+          const threshold = avg - 2 * sd;
+          result.sdStats = { avg: avg.toFixed(1), sd: sd.toFixed(1), threshold: threshold.toFixed(1) };
+
+          if (value < threshold) {
+            const created = await createTriggerIfNotExists(
+              supabase,
+              userId,
+              "recovery_unusually_low",
+              localDate,
+              `Recovery ${value.toFixed(0)}% - below 2SD (threshold: ${threshold.toFixed(0)}%, avg: ${avg.toFixed(0)}%)`
+            );
+            (result.triggers as unknown[]).push({
+              type: "recovery_unusually_low",
+              created,
+              value,
+              threshold: threshold.toFixed(1),
+            });
+          }
+        } else {
+          result.sdStatus = "insufficient_variance";
+        }
+      } else {
+        result.sdStatus = `insufficient_history (${values.length}/${MIN_DAYS_FOR_SD} days)`;
+      }
+    }
+  }
+
+  result.status = "processed";
+  return result;
+}
+
+async function createTriggerIfNotExists(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  triggerType: string,
+  date: string,
+  notes: string
+): Promise<boolean> {
+  const dayStart = `${date}T00:00:00Z`;
+  const dayEnd = `${date}T23:59:59Z`;
+
+  const { data: existing, error: checkErr } = await supabase
+    .from("triggers")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("type", triggerType)
+    .eq("source", "system")
+    .gte("start_at", dayStart)
+    .lte("start_at", dayEnd)
+    .limit(1);
+
+  if (checkErr) {
+    console.error(`[trigger-worker] check existing failed: ${checkErr.message}`);
+    return false;
+  }
+
+  if (existing && existing.length > 0) {
+    return false;
+  }
+
+  const { error: insertErr } = await supabase.from("triggers").insert({
+    user_id: userId,
+    type: triggerType,
+    source: "system",
+    start_at: `${date}T09:00:00Z`,
+    notes,
+    active: true,
+  });
+
+  if (insertErr) {
+    console.error(`[trigger-worker] insert failed: ${insertErr.message}`);
+    return false;
+  }
+
+  return true;
+}

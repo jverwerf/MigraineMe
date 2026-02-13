@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import java.time.Instant
 import java.time.LocalDateTime
@@ -38,40 +39,62 @@ fun ProdromeLogScreen(
     vm: ProdromeViewModel,
     authVm: AuthViewModel,
     logVm: LogViewModel,
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    quickLogMode: Boolean = false,
+    onSave: (() -> Unit)? = null,
+    linkedMigraineId: String? = null,
+    onMigraineSelect: ((String?) -> Unit)? = null
 ) {
-    val pool by vm.pool.collectAsState()
+    val rawPool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
+
+    // Hide prodromes with prediction = NONE
+    val pool = remember(rawPool) { rawPool.filter { it.predictionValue?.uppercase() != "NONE" } }
     val authState by authVm.state.collectAsState()
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(authState.accessToken) {
-        authState.accessToken?.let { vm.loadAll(it) }
+    LaunchedEffect(authState.accessToken, draft.migraine?.beganAtIso) {
+        authState.accessToken?.let {
+            vm.loadAll(it)
+            vm.loadRecent(it, draft.migraine?.beganAtIso)
+        }
+    }
+
+    // Recent prodromes: type → days ago
+    val recentDaysAgo by vm.recentDaysAgo.collectAsState()
+    val recentStartAts by vm.recentStartAts.collectAsState()
+    var hasAutoSelected by remember { mutableStateOf(false) }
+
+    // Reset auto-select when migraine date changes
+    LaunchedEffect(draft.migraine?.beganAtIso) {
+        hasAutoSelected = false
     }
 
     // ── Rebuild helpers ──
-    // Rebuilds the entire draft preserving everything except prodromes,
-    // then re-adds the provided prodrome list
     fun rebuildDraftWithProdromes(prodromes: List<ProdromeDraft>) {
-        val d = draft
-        logVm.clearDraft()
-        d.migraine?.let {
-            logVm.setMigraineDraft(it.type, it.severity, it.beganAtIso, it.endedAtIso, it.note, symptoms = it.symptoms)
-        }
-        if (d.painLocations.isNotEmpty()) logVm.setPainLocationsDraft(d.painLocations)
-        d.triggers.forEach { logVm.addTriggerDraft(it.type, it.startAtIso, it.note) }
-        d.meds.forEach { m -> m.name?.let { logVm.addMedicineDraft(it, m.amount, m.notes, m.startAtIso) } }
-        d.rels.forEach { logVm.addReliefDraft(it.type, it.notes, it.startAtIso, it.endAtIso, it.reliefScale) }
-        d.locations.forEach { logVm.addLocationDraft(it.type, it.startAtIso, it.note) }
-        d.activities.forEach { logVm.addActivityDraft(it.type, it.startAtIso, it.note) }
-        d.missedActivities.forEach { logVm.addMissedActivityDraft(it.type, it.startAtIso, it.note) }
-        prodromes.forEach { logVm.addProdromeDraft(it.type, it.startAtIso, it.note) }
+        logVm.replaceProdromes(prodromes)
     }
 
     // ── Time dialog: add new ──
     var showAddTimeDialog by remember { mutableStateOf(false) }
     var pendingLabel by remember { mutableStateOf<String?>(null) }
+
+    // ── Auto-select recent prodromes (once, on first load — wizard only) ──
+    // Only auto-select when user has explicitly set a migraine date
+    LaunchedEffect(recentDaysAgo, pool) {
+        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty() && draft.migraine?.beganAtIso != null) {
+            val currentLabels = draft.prodromes.map { it.type }.toSet()
+            val poolLabelsSet = pool.map { it.label }.toSet()
+            val toAdd = recentDaysAgo.keys
+                .filter { it in poolLabelsSet && it !in currentLabels }
+            if (toAdd.isNotEmpty()) {
+                val newProdromes = draft.prodromes + toAdd.map { ProdromeDraft(it, startAtIso = recentStartAts[it]) }
+                rebuildDraftWithProdromes(newProdromes)
+            }
+            hasAutoSelected = true
+        }
+    }
 
     // ── Time dialog: edit existing ──
     var showEditTimeDialog by remember { mutableStateOf(false) }
@@ -80,11 +103,9 @@ fun ProdromeLogScreen(
     fun onProdromeTap(label: String) {
         val existingIdx = draft.prodromes.indexOfFirst { it.type == label }
         if (existingIdx >= 0) {
-            // Deselect — remove from draft
             val updated = draft.prodromes.toMutableList().apply { removeAt(existingIdx) }
             rebuildDraftWithProdromes(updated)
         } else {
-            // Show time picker to add
             pendingLabel = label
             showAddTimeDialog = true
         }
@@ -134,7 +155,10 @@ fun ProdromeLogScreen(
     }
 
     // Frequent labels
-    val frequentLabels = remember(frequent) { frequent.mapNotNull { it.prodrome?.label }.toSet() }
+    val poolLabels = remember(pool) { pool.map { it.label }.toSet() }
+    val frequentLabels = remember(frequent, poolLabels) {
+        frequent.mapNotNull { it.prodrome?.label }.filter { it in poolLabels }.toSet()
+    }
     val selectedLabels = remember(draft.prodromes) { draft.prodromes.map { it.type }.toSet() }
 
     // Group pool by category
@@ -145,16 +169,26 @@ fun ProdromeLogScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
 
-            // Top bar: ← Previous | Title | X Close
+            // Top bar
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Pain", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                if (!quickLogMode) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Pain", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
                 }
                 Text("Prodromes", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                if (!quickLogMode) {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    }
+                } else {
+                    Spacer(Modifier.size(28.dp))
                 }
             }
 
@@ -186,6 +220,17 @@ fun ProdromeLogScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            // Icon in the selected row
+                            val rowIcon = pool.find { it.label == p.type }?.iconKey?.let { ProdromeIcons.forKey(it) }
+                            if (rowIcon != null) {
+                                Icon(
+                                    imageVector = rowIcon,
+                                    contentDescription = null,
+                                    tint = Color(0xFFCE93D8),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                            }
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     p.type,
@@ -199,7 +244,6 @@ fun ProdromeLogScreen(
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
-                            // Edit time
                             Icon(
                                 Icons.Outlined.Edit,
                                 contentDescription = "Edit time",
@@ -212,7 +256,6 @@ fun ProdromeLogScreen(
                                     }
                             )
                             Spacer(Modifier.width(8.dp))
-                            // Remove
                             Icon(
                                 Icons.Outlined.Close,
                                 contentDescription = "Remove",
@@ -238,14 +281,18 @@ fun ProdromeLogScreen(
                 }
             }
 
-            // ── Single prodromes card: Frequent, then categories with dividers ──
+            if (quickLogMode && onMigraineSelect != null) {
+                val firstIso = draft.prodromes.firstOrNull()?.startAtIso
+                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+            }
+
+            // ── Prodromes card: Frequent, then categories ──
             BaseCard {
-                // Frequent section (at top of card)
                 if (frequentLabels.isNotEmpty()) {
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { prod ->
-                            ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey) {
+                            ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recentDaysAgo[prod.label]) {
                                 onProdromeTap(prod.label)
                             }
                         }
@@ -253,7 +300,6 @@ fun ProdromeLogScreen(
                     HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                 }
 
-                // Category sections with dividers between
                 val categoryEntries = grouped.entries.toList()
                 categoryEntries.forEachIndexed { catIndex, (category, items) ->
                     val nonFreqItems = items.filter { it.label !in frequentLabels }
@@ -261,12 +307,11 @@ fun ProdromeLogScreen(
                         Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { prod ->
-                                ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey) {
+                                ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recentDaysAgo[prod.label]) {
                                     onProdromeTap(prod.label)
                                 }
                             }
                         }
-                        // Divider between categories (not after last)
                         val hasMore = categoryEntries.drop(catIndex + 1).any { (_, its) -> its.any { it.label !in frequentLabels } }
                         if (hasMore) {
                             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
@@ -288,11 +333,12 @@ fun ProdromeLogScreen(
                     onClick = { navController.popBackStack() },
                     border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(if (quickLogMode) "Cancel" else "Back") }
                 Button(
-                    onClick = { navController.navigate(Routes.TRIGGERS) },
+                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.TRIGGERS) },
+                    enabled = !quickLogMode || draft.prodromes.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(if (quickLogMode) "Save" else "Next") }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -301,7 +347,7 @@ fun ProdromeLogScreen(
 }
 
 /* ────────────────────────────────────────────────
- *  Time dialog — Skip (use migraine start) or pick
+ *  Time dialog
  * ──────────────────────────────────────────────── */
 
 @Composable
@@ -357,15 +403,29 @@ private fun ProdromeTimeDialog(
 }
 
 /* ────────────────────────────────────────────────
- *  Prodrome circle button
+ *  Prodrome circle button — renders ProdromeIcons
  * ──────────────────────────────────────────────── */
 
 @Composable
-private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
-    val circleColor = if (isSelected) Color(0xFFCE93D8).copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
-    val borderColor = if (isSelected) Color(0xFFCE93D8).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
+private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? = null, daysAgo: Int? = null, onClick: () -> Unit) {
+    val accent = Color(0xFFCE93D8)
+
+    // Graduated colors based on recency
+    // null/not-recent + not-selected = default unselected
+    // selected + no recent history = current accent
+    // selected + recent = tinted by how recent
+    val (circleColor, borderColor) = when {
+        isSelected && daysAgo == null -> accent.copy(alpha = 0.40f) to accent.copy(alpha = 0.7f) // manually selected, no recent history
+        isSelected && daysAgo == 0   -> accent.copy(alpha = 0.50f) to accent.copy(alpha = 0.85f) // today
+        isSelected && daysAgo == 1   -> Color(0xFF9575CD).copy(alpha = 0.35f) to Color(0xFF9575CD).copy(alpha = 0.65f) // yesterday - bluer purple
+        isSelected && daysAgo == 2   -> Color(0xFF7986CB).copy(alpha = 0.30f) to Color(0xFF7986CB).copy(alpha = 0.55f) // 2 days - indigo
+        isSelected && daysAgo == 3   -> Color(0xFF64B5F6).copy(alpha = 0.25f) to Color(0xFF64B5F6).copy(alpha = 0.45f) // 3 days - blue
+        else -> Color.White.copy(alpha = 0.08f) to Color.White.copy(alpha = 0.12f)
+    }
     val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
     val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
+
+    val icon = ProdromeIcons.forKey(iconKey)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -385,11 +445,20 @@ private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? 
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                (iconKey ?: label.take(2)).uppercase(),
-                color = iconTint,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
-            )
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = iconTint,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Text(
+                    label.take(2).uppercase(),
+                    color = iconTint,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                )
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(
@@ -400,6 +469,20 @@ private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? 
             maxLines = 2,
             modifier = Modifier.fillMaxWidth()
         )
+        if (isSelected && daysAgo != null && daysAgo > 0) {
+            Text(
+                when (daysAgo) {
+                    1 -> "yesterday"
+                    2 -> "2d ago"
+                    3 -> "3d ago"
+                    else -> ""
+                },
+                color = Color.White.copy(alpha = 0.5f),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -420,3 +503,5 @@ private fun formatProdromeTime(iso: String?): String {
         "Not set"
     }
 }
+
+

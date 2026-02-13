@@ -43,7 +43,11 @@ fun MedicinesScreen(
     vm: MedicineViewModel,
     authVm: AuthViewModel,
     logVm: LogViewModel,
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    quickLogMode: Boolean = false,
+    onSave: (() -> Unit)? = null,
+    linkedMigraineId: String? = null,
+    onMigraineSelect: ((String?) -> Unit)? = null
 ) {
     val pool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
@@ -57,19 +61,7 @@ fun MedicinesScreen(
 
     // ── Rebuild helpers ──
     fun rebuildDraftWithMeds(meds: List<MedicineDraft>) {
-        val d = draft
-        logVm.clearDraft()
-        d.migraine?.let {
-            logVm.setMigraineDraft(it.type, it.severity, it.beganAtIso, it.endedAtIso, it.note, symptoms = it.symptoms)
-        }
-        if (d.painLocations.isNotEmpty()) logVm.setPainLocationsDraft(d.painLocations)
-        d.prodromes.forEach { logVm.addProdromeDraft(it.type, it.startAtIso, it.note) }
-        d.triggers.forEach { logVm.addTriggerDraft(it.type, it.startAtIso, it.note) }
-        meds.forEach { logVm.addMedicineDraft(it.name ?: "", it.amount, it.notes, it.startAtIso, it.reliefScale) }
-        d.rels.forEach { logVm.addReliefDraft(it.type, it.notes, it.startAtIso, it.endAtIso, it.reliefScale) }
-        d.locations.forEach { logVm.addLocationDraft(it.type, it.startAtIso, it.note) }
-        d.activities.forEach { logVm.addActivityDraft(it.type, it.startAtIso, it.note) }
-        d.missedActivities.forEach { logVm.addMissedActivityDraft(it.type, it.startAtIso, it.note) }
+        logVm.replaceMedicines(meds)
     }
 
     // ── Add dialog state ──
@@ -143,14 +135,24 @@ fun MedicinesScreen(
 
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Triggers", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                if (!quickLogMode) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Triggers", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
                 }
                 Text("Medicines", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                if (!quickLogMode) {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    }
+                } else {
+                    Spacer(Modifier.size(28.dp))
                 }
             }
 
@@ -248,6 +250,11 @@ fun MedicinesScreen(
                 }
             }
 
+            if (quickLogMode && onMigraineSelect != null) {
+                val firstIso = draft.meds.firstOrNull()?.startAtIso
+                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+            }
+
             // ── Single medicines card: Frequent → divider → categories ──
             BaseCard {
                 // Frequent section
@@ -297,11 +304,12 @@ fun MedicinesScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(if (quickLogMode) "Cancel" else "Back") }
                 Button(
-                    onClick = { navController.navigate(Routes.RELIEFS) },
+                    onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.RELIEFS) },
+                    enabled = !quickLogMode || draft.meds.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(if (quickLogMode) "Save" else "Next") }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -544,3 +552,4 @@ private fun formatMedTime(iso: String?): String {
         "Not set"
     }
 }
+

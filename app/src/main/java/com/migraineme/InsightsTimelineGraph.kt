@@ -1,14 +1,10 @@
 package com.migraineme
 
 import android.graphics.Paint
-import androidx.compose.foundation.BorderStroke
+import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -20,20 +16,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import java.time.Duration
@@ -42,370 +42,195 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-private data class HitPoint(val x: Float, val y: Float, val label: String)
+private data class HitTarget(val x: Float, val y: Float, val label: String)
+private val GridColor = Color.White.copy(alpha = 0.06f)
+private val AxisColor = Color.White.copy(alpha = 0.12f)
+private val MigBarColor = Color(0xFFB97BFF)
+private val HighlightCol = Color(0xFFFF7BB0)
+private val PopupBg = Color(0xFF2A0C3C)
+private val AutoDotColor = Color(0xFFFFD54F)
 
 @Composable
-fun InsightsTimelineGraphPreview(
-    migraines: List<MigraineSpan>,
-    reliefs: List<ReliefSpan>,
-    triggers: List<TriggerPoint>,
-    meds: List<MedicinePoint>,
-    hOffsetPx: MutableState<Float>,
-    timeSpan: TimeSpan,
-    modifier: Modifier,
-    onTapMoreDetails: () -> Unit
+fun InsightsTimelineGraph(
+    migraines: List<MigraineSpan>, events: List<EventMarker>, metricSeries: List<MetricSeries>,
+    windowStart: Instant?, windowEnd: Instant?, highlightMigraineStart: Instant? = null, modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Color.White.copy(alpha = 0.93f),
-        shape = RoundedCornerShape(14.dp),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.06f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
-            TimelineCanvas(
-                migraines = migraines,
-                reliefs = reliefs,
-                triggers = triggers,
-                meds = meds,
-                hOffsetPx = hOffsetPx,
-                timeSpan = timeSpan,
-                modifier = Modifier.fillMaxSize(),
-                tapMode = TapMode.Navigate,
-                onTapMoreDetails = onTapMoreDetails
-            )
-        }
+    Surface(modifier = modifier.fillMaxWidth(), color = Color(0xFF1A0628).copy(alpha = 0.85f), shape = RoundedCornerShape(14.dp)) {
+        if (windowStart != null && windowEnd != null) CoreCanvas(migraines, events, metricSeries, windowStart, windowEnd, highlightMigraineStart, Modifier.fillMaxSize().padding(8.dp))
     }
 }
 
 @Composable
 fun InsightsTimelineGraphInteractive(
-    migraines: List<MigraineSpan>,
-    reliefs: List<ReliefSpan>,
-    triggers: List<TriggerPoint>,
-    meds: List<MedicinePoint>,
-    hOffsetPx: MutableState<Float>,
-    timeSpan: TimeSpan,
-    modifier: Modifier
+    migraines: List<MigraineSpan>, reliefs: List<ReliefSpan>, triggers: List<TriggerPoint>, meds: List<MedicinePoint>,
+    hOffsetPx: androidx.compose.runtime.MutableState<Float>, timeSpan: TimeSpan, modifier: Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Color.White.copy(alpha = 0.93f),
-        shape = RoundedCornerShape(14.dp),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.06f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
-            TimelineCanvas(
-                migraines = migraines,
-                reliefs = reliefs,
-                triggers = triggers,
-                meds = meds,
-                hOffsetPx = hOffsetPx,
-                timeSpan = timeSpan,
-                modifier = Modifier.fillMaxSize(),
-                tapMode = TapMode.Popup,
-                onTapMoreDetails = null
-            )
-        }
+    val events = remember(triggers, meds, reliefs) {
+        val ev = mutableListOf<EventMarker>()
+        triggers.forEach { ev += EventMarker(it.at, null, it.name, "Trigger", null, EventCategoryColors["Trigger"]!!) }
+        meds.forEach { ev += EventMarker(it.at, null, it.name, "Medicine", it.amount?.let { a -> "Amount: $a" }, EventCategoryColors["Medicine"]!!) }
+        reliefs.forEach { ev += EventMarker(it.start, it.end, it.name, "Relief", null, EventCategoryColors["Relief"]!!) }
+        ev.sortedBy { it.at }
+    }
+    val now = Instant.now()
+    Surface(modifier = modifier.fillMaxWidth(), color = Color(0xFF1A0628).copy(alpha = 0.85f), shape = RoundedCornerShape(14.dp)) {
+        CoreCanvas(migraines, events, emptyList(), now.minusMillis(timeSpan.millis), now, null, Modifier.fillMaxSize().padding(12.dp))
     }
 }
-
-private enum class TapMode { Popup, Navigate }
 
 @Composable
-private fun TimelineCanvas(
-    migraines: List<MigraineSpan>,
-    reliefs: List<ReliefSpan>,
-    triggers: List<TriggerPoint>,
-    meds: List<MedicinePoint>,
-    hOffsetPx: MutableState<Float>,
-    timeSpan: TimeSpan,
-    modifier: Modifier,
-    tapMode: TapMode,
-    onTapMoreDetails: (() -> Unit)?,
-    zoneId: ZoneId = ZoneId.systemDefault(),
-    minBarHeight: Dp = 10.dp,
-    maxBarHeight: Dp = 18.dp,
-    showDayTicks: Boolean = true
+private fun CoreCanvas(
+    migraines: List<MigraineSpan>, events: List<EventMarker>, metricSeries: List<MetricSeries>,
+    windowStart: Instant, windowEnd: Instant, highlightMigraineStart: Instant?, modifier: Modifier
 ) {
     val density = LocalDensity.current
-    var canvasWidthPx by remember { mutableStateOf(0) }
-    var canvasHeightPx by remember { mutableStateOf(0) }
-    var popup by remember { mutableStateOf<HitPoint?>(null) }
+    var cW by remember { mutableStateOf(0) }; var cH by remember { mutableStateOf(0) }
+    var popup by remember { mutableStateOf<HitTarget?>(null) }
+    val zone = ZoneId.systemDefault(); val visMs = Duration.between(windowStart, windowEnd).toMillis().coerceAtLeast(1)
+    val eventCats = remember(events) { events.map { it.category }.distinct() }
+    val sortedEvents = remember(events) { events.sortedBy { it.at } }
+    val datePaint = remember { Paint().apply { color = Color.White.copy(alpha = 0.5f).toArgb(); textSize = 24f; isAntiAlias = true } }
+    val catPaint = remember { Paint().apply { color = Color.White.copy(alpha = 0.35f).toArgb(); textSize = 20f; isAntiAlias = true; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD) } }
+    val numPaint = remember { Paint().apply { color = Color.White.copy(alpha = 0.85f).toArgb(); textSize = 14f; isAntiAlias = true; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); textAlign = Paint.Align.CENTER } }
 
-    val axisTextPaint = remember { Paint().apply { color = Color.Gray.toArgb(); textSize = 28f; isAntiAlias = true } }
-    val axisLabelPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 30f; isAntiAlias = true } }
-    val brainPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
-    val leafPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
-    val pillPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
-    val lightningPaint = remember { Paint().apply { color = Color.DarkGray.toArgb(); textSize = 36f; isAntiAlias = true } }
-
-    val hitRadiusPx = with(density) { 24.dp.toPx() }
-    val barHitHalfHeight = with(density) { 16.dp.toPx() }
-
-    fun humanDuration(start: Instant, end: Instant): String {
-        val d = Duration.between(start, end).abs()
-        val hours = d.toHours()
-        val minutes = d.minusHours(hours).toMinutes()
-        val parts = buildList {
-            if (hours > 0) add("${hours}h")
-            if (minutes > 0 || hours == 0L) add("${minutes}m")
-        }
-        return parts.joinToString(" ")
-    }
-
-    val Y_MIG = 0.9f
-    val Y_MED = 0.65f
-    val Y_REL = 0.4f
-    val Y_TRI = 0.15f
-
-    val pointerMod = when (tapMode) {
-        TapMode.Navigate -> Modifier.pointerInput(timeSpan) {
-            detectTapGestures {
-                popup = null
-                onTapMoreDetails?.invoke()
-            }
-        }
-
-        TapMode.Popup -> Modifier.pointerInput(timeSpan) {
+    Box(modifier = modifier.onSizeChanged { cW = it.width; cH = it.height }) {
+        Canvas(Modifier.matchParentSize().pointerInput(windowStart, windowEnd) {
             detectTapGestures { pos ->
-                val now = Instant.now()
-                val leftPad = 56f
-                val rightPad = 16f
-                val topPad = 16f
-                val bottomPad = 40f
-                val x0 = leftPad
-                val x1 = canvasWidthPx.toFloat() - rightPad
-                val y0 = topPad
-                val y1 = canvasHeightPx.toFloat() - bottomPad
-
-                fun yOf(v: Float) = y1 - (v.coerceIn(0f, 1f)) * (y1 - y0)
-
-                val visibleMillis = timeSpan.millis
-                val millisPerPx = visibleMillis / (x1 - x0).coerceAtLeast(1f)
-                val effectiveOffset = min(hOffsetPx.value, 0f)
-                val leftInstant = now.minusMillis(visibleMillis)
-                    .minusMillis((effectiveOffset * -1f * millisPerPx).toLong())
-                val rightInstant = leftInstant.plusMillis(visibleMillis)
-
-                fun xOf(t: Instant): Float {
-                    val c = when {
-                        t.isBefore(leftInstant) -> leftInstant
-                        t.isAfter(rightInstant) -> rightInstant
-                        else -> t
-                    }
-                    val r = (c.toEpochMilli() - leftInstant.toEpochMilli()).toFloat() / visibleMillis
-                    return x0 + r * (x1 - x0)
-                }
-
-                val hits = mutableListOf<HitPoint>()
-
-                val yMig = yOf(Y_MIG)
-                migraines.sortedBy { it.start }.forEach { m ->
-                    val s = m.start
-                    val e = m.end ?: now
-                    val xs = xOf(s)
-                    val xe = xOf(e)
-                    val mid = xs + (xe - xs) / 2f
-                    val lbl = "${m.label ?: "Migraine"}\nDuration: ${humanDuration(s, e)}"
-                    hits += HitPoint(mid, yMig, lbl)
-                    if (pos.x in min(xs, xe)..max(xs, xe) && abs(pos.y - yMig) <= barHitHalfHeight) {
-                        popup = HitPoint(pos.x, yMig, lbl)
-                        return@detectTapGestures
-                    }
-                }
-
-                val yRel = yOf(Y_REL)
-                reliefs.sortedBy { it.start }.forEach { r ->
-                    val s = r.start
-                    val e = r.end ?: now
-                    val xs = xOf(s)
-                    val xe = xOf(e)
-                    val mid = xs + (xe - xs) / 2f
-                    val lbl = "${r.name}\nDuration: ${humanDuration(s, e)}"
-                    hits += HitPoint(mid, yRel, lbl)
-                    if (pos.x in min(xs, xe)..max(xs, xe) && abs(pos.y - yRel) <= barHitHalfHeight) {
-                        popup = HitPoint(pos.x, yRel, lbl)
-                        return@detectTapGestures
-                    }
-                }
-
-                val yMed = yOf(Y_MED)
-                meds.sortedBy { it.at }.forEach { med ->
-                    val x = xOf(med.at)
-                    val line2 = med.amount?.let { amt -> "Amount: $amt" } ?: ""
-                    val lbl = if (line2.isNotEmpty()) "${med.name}\n$line2" else med.name
-                    hits += HitPoint(x, yMed, lbl)
-                }
-
-                val yTrig = yOf(Y_TRI)
-                triggers.sortedBy { it.at }.forEach { t ->
-                    val x = xOf(t.at)
-                    hits += HitPoint(x, yTrig, t.name)
-                }
-
-                val nearest = hits.minByOrNull { h -> hypot(h.x - pos.x, h.y - pos.y) }
-                popup = if (nearest != null && hypot(nearest.x - pos.x, nearest.y - pos.y) <= hitRadiusPx) nearest else null
+                val w = cW.toFloat(); val h = cH.toFloat(); val x0 = 8f; val x1 = w - 8f
+                fun xOf(t: Instant): Float { val cl = t.clamp(windowStart, windowEnd); return x0 + (cl.toEpochMilli() - windowStart.toEpochMilli()).toFloat() / visMs * (x1 - x0) }
+                val migBot = h * 0.16f; val evTop = migBot + 4f; val evBot = if (eventCats.isNotEmpty()) h * 0.48f else evTop; val now = Instant.now()
+                val hits = mutableListOf<HitTarget>()
+                migraines.forEach { m -> val xs = xOf(m.start); val xe = xOf(m.end ?: now); hits += HitTarget((xs + xe) / 2f, migBot / 2f, "${m.label ?: "Migraine"}\nSeverity: ${m.severity ?: "–"}/10\n${hDur(m.start, m.end ?: now)}") }
+                val cc = eventCats.size.coerceAtLeast(1); val rh = (evBot - evTop) / cc; val hitMin = 14f
+                val hitOffsets = mutableListOf<Pair<Float, Float>>() // (cx, cy) of placed dots
+                sortedEvents.forEachIndexed { idx, ev -> val ci = eventCats.indexOf(ev.category).coerceAtLeast(0); val auto = if (ev.isAutomated) " ⚡auto" else ""
+                    val rcy = evTop + ci * rh + rh / 2f; val ex = xOf(ev.at)
+                    val nearby = hitOffsets.filter { kotlin.math.abs(it.first - ex) < hitMin && kotlin.math.abs(it.second - rcy) < 1f }
+                    val ox = if (nearby.isEmpty()) 0f else { val n = nearby.size; val s = if (n % 2 == 0) -1f else 1f; s * ((n + 1) / 2) * hitMin }
+                    hitOffsets.add(Pair(ex + ox, rcy))
+                    hits += HitTarget(ex + ox, rcy, "#${idx + 1} ${ev.name}$auto${ev.detail?.let { "\n$it" } ?: ""}") }
+                val near = hits.minByOrNull { hypot(it.x - pos.x, it.y - pos.y) }
+                popup = if (near != null && hypot(near.x - pos.x, near.y - pos.y) <= 56f) near else null
             }
-        }
-    }
+        }) {
+            val now = Instant.now(); val w = size.width; val h = size.height; val x0 = 8f; val x1 = w - 8f; val bPad = 32f
+            fun xOf(t: Instant): Float { val cl = t.clamp(windowStart, windowEnd); return x0 + (cl.toEpochMilli() - windowStart.toEpochMilli()).toFloat() / visMs * (x1 - x0) }
+            val migBot = h * 0.16f; val evTop = migBot + 4f; val catCnt = eventCats.size; val evBot = if (catCnt > 0) h * 0.48f else evTop; val metTop = evBot + 8f; val metBot = h - bPad
 
-    Box(modifier = modifier.onSizeChanged { size ->
-        canvasWidthPx = size.width
-        canvasHeightPx = size.height
-    }) {
-        Canvas(
-            modifier = if (tapMode == TapMode.Popup) {
-                Modifier
-                    .matchParentSize()
-                    .draggable(
-                        orientation = Orientation.Horizontal,
-                        state = rememberDraggableState { delta ->
-                            hOffsetPx.value += delta
-                            if (hOffsetPx.value > 0f) hOffsetPx.value = 0f
-                        }
-                    )
-                    .then(pointerMod)
-            } else {
-                Modifier
-                    .matchParentSize()
-                    .then(pointerMod)
+            // X-axis date labels — skip days to prevent overlap
+            val totalDays = ChronoUnit.DAYS.between(
+                ZonedDateTime.ofInstant(windowStart, zone).truncatedTo(ChronoUnit.DAYS),
+                ZonedDateTime.ofInstant(windowEnd, zone).truncatedTo(ChronoUnit.DAYS)
+            ).toInt() + 1
+            // Show at most ~6 labels so they never overlap
+            val labelEveryN = when {
+                totalDays <= 7 -> 1
+                totalDays <= 14 -> 2
+                totalDays <= 21 -> 3
+                totalDays <= 42 -> 5
+                else -> 7
             }
-        ) {
-            val now = Instant.now()
+            val dateFmt = if (totalDays <= 14)
+                DateTimeFormatter.ofPattern("d").withZone(zone)
+            else
+                DateTimeFormatter.ofPattern("d").withZone(zone)
+            val monthFmt = DateTimeFormatter.ofPattern("MMM").withZone(zone)
 
-            val leftPadPx = 56f
-            val rightPadPx = 16f
-            val topPadPx = 16f
-            val bottomPadPx = 40f
-            val axisStroke = 2f
-
-            val x0 = leftPadPx
-            val x1 = size.width - rightPadPx
-            val y0 = topPadPx
-            val y1 = size.height - bottomPadPx
-
-            fun yOf(v: Float) = y1 - (v.coerceIn(0f, 1f)) * (y1 - y0)
-
-            val visibleMillis = timeSpan.millis
-            val millisPerPx = visibleMillis / (x1 - x0).coerceAtLeast(1f)
-            val effectiveOffset = min(hOffsetPx.value, 0f)
-            val leftInstant = now.minusMillis(visibleMillis)
-                .minusMillis((effectiveOffset * -1f * millisPerPx).toLong())
-            val rightInstant = leftInstant.plusMillis(visibleMillis)
-
-            fun xOf(t: Instant): Float {
-                val c = when {
-                    t.isBefore(leftInstant) -> leftInstant
-                    t.isAfter(rightInstant) -> rightInstant
-                    else -> t
-                }
-                val r = (c.toEpochMilli() - leftInstant.toEpochMilli()).toFloat() / visibleMillis
-                return x0 + r * (x1 - x0)
-            }
-
-            // axes
-            drawLine(Color.Gray, Offset(x0, y1), Offset(x1, y1), axisStroke)
-            drawLine(Color.Gray, Offset(x0, y0), Offset(x0, y1), axisStroke)
-
-            val marks = listOf(1f, 0.75f, 0.5f, 0.25f, 0f)
-            marks.forEach { value ->
-                val y = yOf(value)
-                drawLine(Color.DarkGray, Offset(x0 - 6f, y), Offset(x0 + 6f, y), 2f)
-                drawContext.canvas.nativeCanvas.drawText(
-                    value.toString(), x0 - 48f, y + 10f, axisLabelPaint
-                )
-            }
-
-            val minStroke = with(density) { minBarHeight.toPx() }
-            val maxStroke = with(density) { maxBarHeight.toPx() }
-
-            val yMig = yOf(0.9f)
-            migraines.sortedBy { it.start }.forEach { m ->
-                val xs = xOf(m.start)
-                val xe = xOf(m.end ?: now)
-                val sev = (m.severity ?: 0).coerceIn(0, 10)
-                val t = minStroke + (maxStroke - minStroke) * (sev / 10f)
-                drawLine(Color(0xFF607D8B), Offset(xs, yMig), Offset(xe, yMig), t)
-                val mid = xs + (xe - xs) / 2f
-                drawContext.canvas.nativeCanvas.drawText("🧠", mid - 12f, yMig - t / 2f - 6f, brainPaint)
-            }
-
-            val yRel = yOf(0.4f)
-            reliefs.sortedBy { it.start }.forEach { r ->
-                val xs = xOf(r.start)
-                val xe = xOf(r.end ?: now)
-                val inten = (r.intensity ?: 0).coerceIn(0, 10)
-                val t = minStroke + (maxStroke - minStroke) * (inten / 10f)
-                drawLine(Color(0xFF4CAF50), Offset(xs, yRel), Offset(xe, yRel), t)
-                val mid = xs + (xe - xs) / 2f
-                drawContext.canvas.nativeCanvas.drawText("🍃", mid - 12f, yRel - t / 2f - 6f, leafPaint)
-            }
-
-            val yMed = yOf(0.65f)
-            meds.sortedBy { it.at }.forEach { med ->
-                val x = xOf(med.at)
-                drawContext.canvas.nativeCanvas.drawText("💊", x - 12f, yMed - 6f, pillPaint)
-            }
-
-            val yTrig = yOf(0.15f)
-            triggers.sortedBy { it.at }.forEach { t ->
-                val x = xOf(t.at)
-                drawContext.canvas.nativeCanvas.drawText("⚡", x - 12f, yTrig - 6f, lightningPaint)
-            }
-
-            if (showDayTicks) {
-                var d = ZonedDateTime.ofInstant(leftInstant, zoneId).truncatedTo(ChronoUnit.DAYS)
-                val endDay = ZonedDateTime.ofInstant(rightInstant, zoneId).truncatedTo(ChronoUnit.DAYS).plusDays(1)
-                while (!d.isAfter(endDay)) {
-                    val xi = xOf(d.toInstant())
-                    drawLine(Color.LightGray, Offset(xi, y1), Offset(xi, y1 - 10f))
+            var day = ZonedDateTime.ofInstant(windowStart, zone).truncatedTo(ChronoUnit.DAYS)
+            val endDay = ZonedDateTime.ofInstant(windowEnd, zone).truncatedTo(ChronoUnit.DAYS).plusDays(1)
+            var dayIdx = 0
+            while (!day.isAfter(endDay)) {
+                val xi = xOf(day.toInstant())
+                // Grid line for every day
+                drawLine(GridColor, Offset(xi, 0f), Offset(xi, h - bPad), 1f)
+                // Label only every Nth day
+                if (dayIdx % labelEveryN == 0) {
+                    val dayStr = dateFmt.format(day)
+                    val monthStr = monthFmt.format(day)
+                    // Show month on first label or when month changes
+                    val showMonth = dayIdx == 0 || day.dayOfMonth <= labelEveryN
+                    val label = if (showMonth) "$monthStr $dayStr" else dayStr
+                    val tw = datePaint.measureText(label)
                     drawContext.canvas.nativeCanvas.drawText(
-                        DateTimeFormatter.ofPattern("MMM d").withZone(zoneId).format(d),
-                        xi - 40f,
-                        y1 + 28f,
-                        axisTextPaint
+                        label, xi - tw / 2f, h - 6f, datePaint
                     )
-                    d = d.plusDays(1)
                 }
+                day = day.plusDays(1)
+                dayIdx++
             }
-        }
+            drawLine(AxisColor, Offset(x0, migBot), Offset(x1, migBot), 1f); if (catCnt > 0) drawLine(AxisColor, Offset(x0, evBot), Offset(x1, evBot), 1f)
 
-        if (tapMode == TapMode.Popup) {
-            popup?.let { hit ->
-                val offsetX = (hit.x - 140f).roundToInt()
-                val offsetY = (hit.y - 80f).roundToInt()
-                Card(
-                    modifier = Modifier.offset { IntOffset(offsetX, offsetY) },
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
-                    shape = RoundedCornerShape(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Text(
-                        text = hit.label,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Black
-                    )
+            if (highlightMigraineStart != null) migraines.find { it.start == highlightMigraineStart }?.let { sel ->
+                val xs = xOf(sel.start); val xe = xOf(sel.end ?: now); val bL = min(xs, xe); val bR = max(xs, xe)
+                drawRect(brush = Brush.verticalGradient(listOf(HighlightCol.copy(alpha = 0.10f), HighlightCol.copy(alpha = 0.02f))), topLeft = Offset(bL, 0f), size = Size((bR - bL).coerceAtLeast(4f), h - bPad))
+                val dash = PathEffect.dashPathEffect(floatArrayOf(8f, 6f)); drawLine(HighlightCol.copy(alpha = 0.4f), Offset(xs, 0f), Offset(xs, h - bPad), 1.5f, pathEffect = dash)
+                if (sel.end != null) drawLine(HighlightCol.copy(alpha = 0.3f), Offset(xe, 0f), Offset(xe, h - bPad), 1.5f, pathEffect = dash)
+            }
+
+            val barY = migBot / 2f; val minStk = with(density) { 7.dp.toPx() }; val maxStk = with(density) { 14.dp.toPx() }
+            migraines.sortedBy { it.start }.forEach { m -> val xs = xOf(m.start); val xe = xOf(m.end ?: now); val sev = (m.severity ?: 0).coerceIn(0, 10); val thick = minStk + (maxStk - minStk) * (sev / 10f)
+                val isHl = highlightMigraineStart != null && m.start == highlightMigraineStart; val col = if (isHl) HighlightCol else MigBarColor
+                drawLine(col.copy(alpha = 0.15f), Offset(xs, barY), Offset(xe, barY), thick + 8f, StrokeCap.Round); drawLine(col.copy(alpha = 0.8f), Offset(xs, barY), Offset(xe, barY), thick, StrokeCap.Round)
+                if (sev > 0) drawContext.canvas.nativeCanvas.drawText("$sev", (xs + xe) / 2f - 6f, barY + 4f, Paint().apply { color = Color.White.toArgb(); textSize = 20f; isAntiAlias = true; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD) }) }
+
+            if (catCnt > 0) { val rowH = (evBot - evTop) / catCnt
+                eventCats.forEachIndexed { ci, catName -> val rcy = evTop + ci * rowH + rowH / 2f; drawContext.canvas.nativeCanvas.drawText(catName, x0 + 2f, rcy + 5f, catPaint); if (ci > 0) drawLine(GridColor, Offset(x0, evTop + ci * rowH), Offset(x1, evTop + ci * rowH), 0.5f) }
+
+                // Pre-compute positions with overlap offset
+                data class DotPos(val idx: Int, val ev: EventMarker, val cx: Float, val cy: Float, val ox: Float, val oy: Float)
+                val dotPositions = mutableListOf<DotPos>()
+                val minSpacing = 14f // min px between dot centers before we spread
+
+                sortedEvents.forEachIndexed { idx, ev ->
+                    val ci = eventCats.indexOf(ev.category).coerceAtLeast(0)
+                    val rcy = evTop + ci * rowH + rowH / 2f
+                    val ex = xOf(ev.at)
+
+                    // Find how many prior dots in same row are too close
+                    val nearby = dotPositions.filter { kotlin.math.abs(it.cx - ex) < minSpacing && kotlin.math.abs(it.cy - rcy) < 1f }
+                    val offsetX = if (nearby.isEmpty()) 0f else {
+                        val n = nearby.size
+                        // Alternate left/right: 0, +14, -14, +28, -28...
+                        val sign = if (n % 2 == 0) -1f else 1f
+                        sign * ((n + 1) / 2) * minSpacing
+                    }
+                    dotPositions.add(DotPos(idx, ev, ex, rcy, ex + offsetX, rcy))
+                }
+
+                // Draw dots at offset positions
+                dotPositions.forEach { dp ->
+                    val ev = dp.ev; val dx = dp.ox; val dy = dp.oy
+                    if (ev.endAt != null) { val ex2 = xOf(ev.endAt); drawLine(ev.color.copy(alpha = 0.6f), Offset(dp.cx, dy), Offset(ex2, dy), 6f, StrokeCap.Round) }
+                    if (ev.isAutomated) { drawCircle(AutoDotColor.copy(alpha = 0.2f), 12f, Offset(dx, dy)); drawCircle(AutoDotColor, 6f, Offset(dx, dy)) }
+                    else { drawCircle(ev.color.copy(alpha = 0.15f), 10f, Offset(dx, dy)); drawCircle(ev.color, 5f, Offset(dx, dy)) }
+                    // Number label above dot
+                    drawContext.canvas.nativeCanvas.drawText("${dp.idx + 1}", dx, dy - 10f, numPaint)
+                }
+            }
+
+            if (metricSeries.isNotEmpty() && metTop < metBot) { val chartH = metBot - metTop
+                metricSeries.forEach { series -> if (series.points.size < 2) return@forEach; val sorted = series.points.sortedBy { it.date }; val minV = sorted.minOf { it.value }; val maxV = sorted.maxOf { it.value }; val range = (maxV - minV).coerceAtLeast(0.01)
+                    fun dateX(ds: String): Float { val ld = java.time.LocalDate.parse(ds); return xOf(ld.atStartOfDay(zone).toInstant().plusSeconds(43200)) }
+                    fun valY(v: Double): Float { return metBot - ((v - minV) / range).toFloat().coerceIn(0f, 1f) * chartH * 0.85f }
+                    val path = Path(); sorted.forEachIndexed { i, pt -> if (i == 0) path.moveTo(dateX(pt.date), valY(pt.value)) else path.lineTo(dateX(pt.date), valY(pt.value)) }
+                    drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
+                    sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
+                    val first = sorted.first(); drawContext.canvas.nativeCanvas.drawText("${series.label}: ${"%.1f".format(first.value)}${series.unit}", dateX(first.date) + 4f, valY(first.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true })
+                    if (sorted.size > 2) { val last = sorted.last(); drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(last.value)}", dateX(last.date) - 12f, valY(last.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true }) }
                 }
             }
         }
+        popup?.let { hit -> val offX = (hit.x - 120f).roundToInt().coerceAtLeast(0); val offY = (hit.y - 70f).roundToInt().coerceAtLeast(0)
+            Card(Modifier.offset { IntOffset(offX, offY) }, colors = CardDefaults.cardColors(containerColor = PopupBg), shape = RoundedCornerShape(10.dp), elevation = CardDefaults.cardElevation(8.dp)) {
+                Text(hit.label, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f)) } }
     }
 }
+
+private fun Instant.clamp(a: Instant, b: Instant): Instant = when { this.isBefore(a) -> a; this.isAfter(b) -> b; else -> this }
+private fun hDur(s: Instant, e: Instant): String { val d = Duration.between(s, e).abs(); val h = d.toHours(); val m = d.minusHours(h).toMinutes(); return buildString { if (h > 0) append("${h}h "); append("${m}m") } }
+

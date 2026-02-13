@@ -52,7 +52,7 @@ class NutritionOutboxPushWorker(
 
             val service = SupabaseNutritionService(applicationContext)
             val enrichmentService = USDAEnrichmentService() // USDA enrichment
-            val tyramineClassifier = TyramineClassifierService() // Tyramine classification
+            val riskClassifier = FoodRiskClassifierService() // Food risk classification
 
             val upserts = batch.filter { it.operation == "UPSERT" }
             val deletes = batch.filter { it.operation == "DELETE" }
@@ -76,11 +76,15 @@ class NutritionOutboxPushWorker(
                         nutrition.copy(enriched = true)
                     }
 
-                    // Step 2: Classify tyramine exposure
-                    val tyramineRisk = if (!enriched.foodName.isNullOrBlank()) {
-                        tyramineClassifier.classify(accessToken, enriched.foodName)
-                    } else "none"
-                    val finalNutrition = enriched.copy(tyramineExposure = tyramineRisk)
+                    // Step 2: Classify food risks (tyramine, alcohol, gluten)
+                    val risks = if (!enriched.foodName.isNullOrBlank()) {
+                        riskClassifier.classify(accessToken, enriched.foodName)
+                    } else FoodRiskResult()
+                    val finalNutrition = enriched.copy(
+                        tyramineExposure = risks.tyramine,
+                        alcoholExposure = risks.alcohol,
+                        glutenExposure = risks.gluten
+                    )
 
                     service.uploadNutritionRecord(accessToken, finalNutrition, item.healthConnectId)
                     succeededIds.add(item.healthConnectId)
@@ -177,7 +181,9 @@ class NutritionOutboxPushWorker(
 
             caffeine = record.caffeine?.inGrams?.times(1000),
 
-            tyramineExposure = null, // Set by TyramineClassifierService after enrichment
+            tyramineExposure = null, // Set by FoodRiskClassifierService after enrichment
+            alcoholExposure = null,
+            glutenExposure = null,
 
             source = "health_connect",
             enriched = false // Will be set to true after enrichment

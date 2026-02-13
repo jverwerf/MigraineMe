@@ -1,4 +1,3 @@
-
 package com.migraineme
 
 import android.content.Context
@@ -55,6 +54,7 @@ class EdgeFunctionsService {
         @SerialName("user_id") val userId: String,
         @SerialName("trigger_type") val triggerType: String,
         val enabled: Boolean,
+        val threshold: Double? = null,
         @SerialName("updated_at") val updatedAtIso: String
     )
 
@@ -63,7 +63,23 @@ class EdgeFunctionsService {
         @SerialName("user_id") val userId: String,
         @SerialName("trigger_type") val triggerType: String,
         val enabled: Boolean,
+        val threshold: Double? = null,
         @SerialName("updated_at") val updatedAt: String
+    )
+
+    @Serializable
+    data class TriggerDefinitionResponse(
+        @SerialName("trigger_type") val triggerType: String,
+        val category: String,
+        val label: String,
+        val description: String,
+        @SerialName("metric_table") val metricTable: String,
+        @SerialName("metric_column") val metricColumn: String,
+        val direction: String,
+        @SerialName("default_threshold") val defaultThreshold: Double? = null,
+        val unit: String? = null,
+        @SerialName("baseline_days") val baselineDays: Int = 14,
+        @SerialName("enabled_by_default") val enabledByDefault: Boolean = false
     )
 
     @Serializable
@@ -71,6 +87,7 @@ class EdgeFunctionsService {
         @SerialName("user_id") val userId: String,
         @SerialName("prodrome_type") val prodromeType: String,
         val enabled: Boolean,
+        val threshold: Double? = null,
         @SerialName("updated_at") val updatedAtIso: String
     )
 
@@ -79,6 +96,7 @@ class EdgeFunctionsService {
         @SerialName("user_id") val userId: String,
         @SerialName("prodrome_type") val prodromeType: String,
         val enabled: Boolean,
+        val threshold: Double? = null,
         @SerialName("updated_at") val updatedAt: String
     )
 
@@ -288,7 +306,8 @@ class EdgeFunctionsService {
             "time_in_high_hr_zones_daily",
             "activity_hr_zones_sessions",
             "steps_daily",
-            "stress_index_daily"
+            "stress_index_daily",
+            "strain_daily"
         )
 
         var allOk = true
@@ -463,10 +482,39 @@ class EdgeFunctionsService {
         }
     }
 
+    suspend fun getTriggerDefinitions(context: Context): List<TriggerDefinitionResponse> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/trigger_definitions?select=*&order=category,trigger_type"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<TriggerDefinitionResponse>>()
+            } else {
+                Log.e("EdgeFunctionsService", "getTriggerDefinitions failed: ${res.status}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getTriggerDefinitions error: ${e.message}", e)
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
     suspend fun upsertTriggerSetting(
         context: Context,
         triggerType: String,
-        enabled: Boolean
+        enabled: Boolean,
+        threshold: Double? = null
     ): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
@@ -476,6 +524,7 @@ class EdgeFunctionsService {
             userId = userId,
             triggerType = triggerType,
             enabled = enabled,
+            threshold = threshold,
             updatedAtIso = Instant.now().toString()
         )
 
@@ -593,7 +642,8 @@ class EdgeFunctionsService {
     suspend fun upsertProdromeSetting(
         context: Context,
         prodromeType: String,
-        enabled: Boolean
+        enabled: Boolean,
+        threshold: Double? = null
     ): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
@@ -603,6 +653,7 @@ class EdgeFunctionsService {
             userId = userId,
             prodromeType = prodromeType,
             enabled = enabled,
+            threshold = threshold,
             updatedAtIso = Instant.now().toString()
         )
 
@@ -710,6 +761,7 @@ class EdgeFunctionsService {
             "time_in_high_hr_zones_daily",
             "activity_hr_zones_sessions",
             "steps_daily",
+            "strain_daily",
             "stress_index_daily",
             "screen_time_daily",
             "user_location_daily",
@@ -769,5 +821,311 @@ class EdgeFunctionsService {
 
         return allOk
     }
-}
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Risk Decay Weights
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Serializable
+    data class RiskDecayWeightResponse(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        val severity: String,
+        @SerialName("day_0") val day0: Double,
+        @SerialName("day_1") val day1: Double,
+        @SerialName("day_2") val day2: Double,
+        @SerialName("day_3") val day3: Double,
+        @SerialName("day_4") val day4: Double,
+        @SerialName("day_5") val day5: Double,
+        @SerialName("day_6") val day6: Double,
+        @SerialName("updated_at") val updatedAt: String
+    )
+
+    @Serializable
+    private data class RiskDecayWeightUpsertBody(
+        @SerialName("user_id") val userId: String,
+        val severity: String,
+        @SerialName("day_0") val day0: Double,
+        @SerialName("day_1") val day1: Double,
+        @SerialName("day_2") val day2: Double,
+        @SerialName("day_3") val day3: Double,
+        @SerialName("day_4") val day4: Double,
+        @SerialName("day_5") val day5: Double,
+        @SerialName("day_6") val day6: Double,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
+    suspend fun getRiskDecayWeights(context: Context): List<RiskDecayWeightResponse> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val userId = SessionStore.readUserId(appCtx) ?: return emptyList()
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/risk_decay_weights?user_id=eq.$userId&select=*&order=severity.asc"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<RiskDecayWeightResponse>>()
+            } else {
+                Log.e("EdgeFunctionsService", "getRiskDecayWeights failed: ${res.status}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getRiskDecayWeights error: ${e.message}", e)
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertRiskDecayWeight(
+        context: Context,
+        severity: String,
+        day0: Double,
+        day1: Double,
+        day2: Double,
+        day3: Double,
+        day4: Double,
+        day5: Double,
+        day6: Double
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = RiskDecayWeightUpsertBody(
+            userId = userId,
+            severity = severity,
+            day0 = day0, day1 = day1, day2 = day2,
+            day3 = day3, day4 = day4, day5 = day5, day6 = day6,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/risk_decay_weights?on_conflict=user_id,severity"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "upsertRiskDecayWeight failed: ${res.status} - ${res.bodyAsText()}")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "upsertRiskDecayWeight exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun seedDefaultRiskDecayWeights(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        data class Default(val severity: String, val d0: Double, val d1: Double, val d2: Double)
+
+        val defaults = listOf(
+            Default("HIGH", 10.0, 5.0, 2.5),
+            Default("MILD", 6.0, 3.0, 1.5),
+            Default("LOW", 3.0, 1.5, 0.0)
+        )
+
+        val client = buildClient()
+        var allOk = true
+
+        try {
+            for (d in defaults) {
+                val body = RiskDecayWeightUpsertBody(
+                    userId = userId,
+                    severity = d.severity,
+                    day0 = d.d0, day1 = d.d1, day2 = d.d2,
+                    day3 = 0.0, day4 = 0.0, day5 = 0.0, day6 = 0.0,
+                    updatedAtIso = Instant.now().toString()
+                )
+
+                val url =
+                    "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/risk_decay_weights?on_conflict=user_id,severity"
+
+                val res = client.post(url) {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                    header("Prefer", "resolution=ignore-duplicates")
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+
+                val ok = res.status.value in 200..299
+                if (!ok) {
+                    allOk = false
+                    Log.w("EdgeFunctionsService", "Failed to seed risk decay weight: ${d.severity}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "seedDefaultRiskDecayWeights exception", e)
+            allOk = false
+        } finally {
+            client.close()
+        }
+
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Risk Gauge Thresholds
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Serializable
+    data class RiskGaugeThresholdResponse(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        val zone: String,              // NONE | LOW | MILD | HIGH
+        @SerialName("min_value") val minValue: Double,
+        @SerialName("updated_at") val updatedAt: String
+    )
+
+    @Serializable
+    private data class RiskGaugeThresholdUpsertBody(
+        @SerialName("user_id") val userId: String,
+        val zone: String,
+        @SerialName("min_value") val minValue: Double,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
+    suspend fun getRiskGaugeThresholds(context: Context): List<RiskGaugeThresholdResponse> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val userId = SessionStore.readUserId(appCtx) ?: return emptyList()
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/risk_gauge_thresholds?user_id=eq.$userId&select=*&order=min_value.asc"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<RiskGaugeThresholdResponse>>()
+            } else {
+                Log.e("EdgeFunctionsService", "getRiskGaugeThresholds failed: ${res.status}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getRiskGaugeThresholds error: ${e.message}", e)
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertRiskGaugeThreshold(
+        context: Context,
+        zone: String,
+        minValue: Double
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = RiskGaugeThresholdUpsertBody(
+            userId = userId,
+            zone = zone,
+            minValue = minValue,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/risk_gauge_thresholds?on_conflict=user_id,zone"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "upsertRiskGaugeThreshold failed: ${res.status} - ${res.bodyAsText()}")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "upsertRiskGaugeThreshold exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun seedDefaultRiskGaugeThresholds(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val defaults = listOf(
+            "NONE" to 0.0,
+            "LOW" to 3.0,
+            "MILD" to 5.0,
+            "HIGH" to 10.0
+        )
+
+        val client = buildClient()
+        var allOk = true
+
+        try {
+            for ((zone, minVal) in defaults) {
+                val body = RiskGaugeThresholdUpsertBody(
+                    userId = userId,
+                    zone = zone,
+                    minValue = minVal,
+                    updatedAtIso = Instant.now().toString()
+                )
+
+                val url =
+                    "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/risk_gauge_thresholds?on_conflict=user_id,zone"
+
+                val res = client.post(url) {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                    header("Prefer", "resolution=ignore-duplicates")
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+
+                val ok = res.status.value in 200..299
+                if (!ok) {
+                    allOk = false
+                    Log.w("EdgeFunctionsService", "Failed to seed risk gauge threshold: $zone")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "seedDefaultRiskGaugeThresholds exception", e)
+            allOk = false
+        } finally {
+            client.close()
+        }
+
+        return allOk
+    }
+}

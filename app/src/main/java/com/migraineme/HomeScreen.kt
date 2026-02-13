@@ -4,13 +4,16 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -19,6 +22,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,8 +33,8 @@ import io.ktor.client.request.post
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -91,6 +95,13 @@ fun HomeScreenRoot(
         }
     }
 
+    // ── Load real risk score from triggers + prodromes ──
+    LaunchedEffect(auth.accessToken) {
+        if (!auth.accessToken.isNullOrBlank()) {
+            vm.loadRisk(appCtx)
+        }
+    }
+
     if (state.loading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -98,12 +109,45 @@ fun HomeScreenRoot(
     } else {
         val scrollState = rememberScrollState()
 
+        // Selected day index: 0 = today (default), 1 = tomorrow, etc.
+        var selectedDay by remember { mutableStateOf(0) }
+
+        // Derive the displayed data from selected day
+        val dayData = state.dayRisks.getOrNull(selectedDay)
+        val displayScore = dayData?.score ?: state.riskScore
+        val displayZone = dayData?.zone ?: state.riskZone
+        val displayPercent = dayData?.percent ?: state.riskPercent
+        val displayTriggers = dayData?.topTriggers ?: state.triggersAtRisk
+
+        // Recommendation adjusts for selected day
+        val displayRecommendation = if (selectedDay == 0) {
+            state.aiRecommendation
+        } else {
+            val dayLabel = dayData?.date?.format(java.time.format.DateTimeFormatter.ofPattern("EEEE")) ?: "that day"
+            when (displayZone) {
+                RiskZone.HIGH -> "High risk predicted for $dayLabel. Plan ahead: avoid known triggers, prepare medication, and keep your schedule light."
+                RiskZone.MILD -> "Moderate risk predicted for $dayLabel. Stay mindful of your triggers and keep regular meals and breaks."
+                RiskZone.LOW -> "Low risk predicted for $dayLabel. Maintain your healthy routine."
+                RiskZone.NONE -> "No significant risk predicted for $dayLabel. Looking good!"
+            }
+        }
+
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll) {
-                RiskHeroCard(riskPercent = state.riskPercent)
-                DataStatusCard(accessToken = auth.accessToken)
-                TopTriggersCard(triggers = state.triggersAtRisk)
-                RecommendationCard(recommendation = state.aiRecommendation)
+                RiskHeroCard(
+                    riskPercent = displayPercent,
+                    riskScore = displayScore,
+                    riskZone = displayZone,
+                    forecast = state.forecast,
+                    selectedDay = selectedDay,
+                    dayRisks = state.dayRisks,
+                    onDaySelected = { selectedDay = it }
+                )
+                ActiveTriggersCard(
+                    triggers = displayTriggers,
+                    gaugeMax = state.gaugeMaxScore
+                )
+                RecommendationCard(recommendation = displayRecommendation)
             }
         }
     }
@@ -112,22 +156,33 @@ fun HomeScreenRoot(
 @Composable
 private fun RiskHeroCard(
     riskPercent: Int,
+    riskScore: Double = 0.0,
+    riskZone: RiskZone = RiskZone.NONE,
+    forecast: List<Int> = listOf(0, 0, 0, 0, 0, 0, 0),
+    selectedDay: Int = 0,
+    dayRisks: List<DayRisk> = emptyList(),
+    onDaySelected: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val clamped = riskPercent.coerceIn(0, 100)
-    val label = remember(clamped) {
-        when {
-            clamped < 33 -> "Low"
-            clamped < 67 -> "Medium"
-            else -> "High"
-        }
+
+    val zoneColor = when (riskZone) {
+        RiskZone.HIGH -> Color(0xFFE57373)
+        RiskZone.MILD -> Color(0xFFFFB74D)
+        RiskZone.LOW -> Color(0xFF81C784)
+        RiskZone.NONE -> AppTheme.SubtleTextColor
     }
 
-    val outlook = remember(clamped) { simpleSevenDayForecast(clamped) }
+    // Day label for selected day
+    val dayLabel = if (selectedDay == 0) "Risk today" else {
+        val date = dayRisks.getOrNull(selectedDay)?.date
+        if (date != null) "Risk · ${date.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM"))}"
+        else "Risk"
+    }
 
     HeroCard(modifier = modifier) {
         Text(
-            "Risk today",
+            dayLabel,
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
@@ -140,244 +195,262 @@ private fun RiskHeroCard(
             progressColor = AppTheme.AccentPurple
         )
 
+        // Score display
         Text(
-            "$clamped%",
+            "%.1f".format(riskScore),
             color = Color.White,
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
         )
 
+        // Zone label
         Text(
-            label,
-            color = AppTheme.BodyTextColor,
+            riskZone.label,
+            color = zoneColor,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
         )
 
-        SevenDayOutlook(values = outlook)
+        SevenDayOutlook(
+            values = forecast,
+            selectedDay = selectedDay,
+            dayRisks = dayRisks,
+            onDaySelected = onDaySelected
+        )
     }
 }
 
 @Composable
 private fun SevenDayOutlook(
     values: List<Int>,
+    selectedDay: Int = 0,
+    dayRisks: List<DayRisk> = emptyList(),
+    onDaySelected: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val zone = ZoneId.systemDefault()
+    val today = LocalDate.now(zone)
+    val dayFmt = DateTimeFormatter.ofPattern("EEE")
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.Start
     ) {
         Text(
-            "Next 7 days (predictive)",
+            "7-day forecast",
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )
 
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(34.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            val n = 7
-            val gap = size.width * 0.03f
-            val barW = (size.width - gap * (n - 1)) / n
-            val maxH = size.height
+            for (i in 0 until 7) {
+                val percent = values.getOrNull(i)?.coerceIn(0, 100) ?: 0
+                val date = today.plusDays(i.toLong())
+                val dayLabel = if (i == 0) "Today" else date.format(dayFmt)
+                val isSelected = i == selectedDay
 
-            for (i in 0 until n) {
-                val v = values.getOrNull(i)?.coerceIn(0, 100) ?: 0
-                val t = v / 100f
-                val h = (maxH * (0.25f + 0.75f * t)).coerceAtMost(maxH)
-                val x = i * (barW + gap)
-                val y = maxH - h
-
-                drawRoundRect(
-                    color = Color.White.copy(alpha = 0.10f),
-                    topLeft = Offset(x, 0f),
-                    size = Size(barW, maxH),
-                    cornerRadius = CornerRadius(barW / 2f, barW / 2f)
-                )
-
-                drawRoundRect(
-                    color = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, t).copy(alpha = 0.95f),
-                    topLeft = Offset(x, y),
-                    size = Size(barW, h),
-                    cornerRadius = CornerRadius(barW / 2f, barW / 2f)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.clickable { onDaySelected(i) }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        // Selection ring
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .background(
+                                        color = AppTheme.AccentPurple.copy(alpha = 0.25f),
+                                        shape = CircleShape
+                                    )
+                            )
+                        }
+                        MiniGauge(
+                            percent = percent,
+                            size = 36.dp,
+                            strokeWidth = 3.5.dp
+                        )
+                    }
+                    Text(
+                        dayLabel,
+                        color = if (isSelected) AppTheme.AccentPurple else if (i == 0) Color.White else AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    )
+                }
             }
         }
-    }
-}
-
-private fun simpleSevenDayForecast(base: Int): List<Int> {
-    val b = base.coerceIn(0, 100)
-    val amp = (4 + (b / 10)).coerceIn(4, 14)
-    return (0 until 7).map { i ->
-        val phase = (i - 1) * 0.85f
-        val delta = (sin(phase) * amp).toInt()
-        (b + delta).coerceIn(0, 100)
     }
 }
 
 @Composable
-private fun DataStatusCard(accessToken: String?) {
-    val ctx = LocalContext.current.applicationContext
-    val zone = ZoneId.systemDefault()
-    val today = LocalDate.now(zone).toString()
-    val afterNine = LocalTime.now(zone) >= LocalTime.of(9, 0)
+private fun MiniGauge(
+    percent: Int,
+    size: Dp,
+    strokeWidth: Dp
+) {
+    val clamped = percent.coerceIn(0, 100)
+    val p = clamped / 100f
+    val t = p // for color lerp
 
-    var whoopConnected by remember(accessToken, today) { mutableStateOf(false) }
-    var metricSettings by remember { mutableStateOf<List<EdgeFunctionsService.MetricSettingResponse>>(emptyList()) }
-    var settingsLoaded by remember { mutableStateOf(false) }
+    // Color from purple (low) to pink (high)
+    val progressColor = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, t)
 
-    LaunchedEffect(accessToken, today) {
-        whoopConnected = runCatching { WhoopTokenStore(ctx).load() != null }.getOrDefault(false)
+    Box(
+        modifier = Modifier.width(size).height(size * 0.62f),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val sw = strokeWidth.toPx()
+            val radius = (minOf(this.size.width, this.size.height * 2f) / 2f) - sw
+            val cx = this.size.width / 2f
+            val cy = this.size.height
 
-        if (!accessToken.isNullOrBlank()) {
-            withContext(Dispatchers.IO) {
-                metricSettings = try {
-                    EdgeFunctionsService().getMetricSettings(ctx)
-                } catch (e: Exception) {
-                    emptyList()
-                }
-            }
-        }
-        settingsLoaded = true
-    }
+            val startAngle = 180f
+            val fullSweep = 180f
+            val sweep = fullSweep * p
 
-    // Helper lambdas for checking metric settings
-    val isWhoopMetricEnabled: (String) -> Boolean = { metric ->
-        val setting = metricSettings.find { it.metric == metric }
-        setting != null && setting.enabled && setting.preferredSource == "whoop"
-    }
+            // Track
+            drawArc(
+                color = Color.White.copy(alpha = 0.10f),
+                startAngle = startAngle,
+                sweepAngle = fullSweep,
+                useCenter = false,
+                topLeft = Offset(cx - radius, cy - radius),
+                size = Size(radius * 2f, radius * 2f),
+                style = Stroke(width = sw * 0.7f, cap = StrokeCap.Round)
+            )
 
-    val isMetricEnabled: (String) -> Boolean = { metric ->
-        val setting = metricSettings.find { it.metric == metric }
-        setting != null && setting.enabled
-    }
-
-    val sleepAnchorsAll = listOf("sleep_duration_daily", "sleep_score_daily")
-    val sleepOptionalsAll = listOf(
-        "sleep_efficiency_daily", "sleep_stages_daily", "sleep_disturbances_daily",
-        "fell_asleep_time_daily", "woke_up_time_daily"
-    )
-    val physicalAnchorsAll = listOf("recovery_score_daily", "resting_hr_daily", "hrv_daily")
-    val physicalOptionalsAll = listOf("spo2_daily", "skin_temp_daily", "time_in_high_hr_zones_daily")
-
-    // Derive enabled metrics from settings
-    val enabledSleepAnchors = sleepAnchorsAll.filter { isWhoopMetricEnabled(it) }
-    val enabledSleepOptionals = sleepOptionalsAll.filter { isWhoopMetricEnabled(it) }
-    val enabledPhysicalAnchors = physicalAnchorsAll.filter { isWhoopMetricEnabled(it) }
-    val enabledPhysicalOptionals = physicalOptionalsAll.filter { isWhoopMetricEnabled(it) }
-    val locationEnabled = isMetricEnabled("user_location_daily")
-
-    var sleepAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-    var physicalAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-    var locationLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-
-    LaunchedEffect(today, accessToken, whoopConnected, settingsLoaded, metricSettings) {
-        if (accessToken.isNullOrBlank() || !settingsLoaded) {
-            sleepAnchorLoaded = null
-            physicalAnchorLoaded = null
-            locationLoaded = null
-            return@LaunchedEffect
-        }
-
-        withContext(Dispatchers.IO) {
-            sleepAnchorLoaded = if (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) {
-                null
-            } else if (!whoopConnected) {
-                false
-            } else {
-                runCatching { SupabaseMetricsService(ctx).hasSleepForDate(accessToken, today, "whoop") }.getOrDefault(false)
-            }
-
-            physicalAnchorLoaded = if (enabledPhysicalAnchors.isEmpty() && enabledPhysicalOptionals.isEmpty()) {
-                null
-            } else if (!whoopConnected) {
-                false
-            } else {
-                runCatching { SupabasePhysicalHealthService(ctx).hasRecoveryForDate(accessToken, today, "whoop") }.getOrDefault(false)
-            }
-
-            locationLoaded = if (!locationEnabled) {
-                null
-            } else {
-                runCatching { SupabasePersonalService(ctx).hasUserLocationForDate(accessToken, today, source = "device") }.getOrDefault(false)
-            }
-        }
-    }
-
-    BaseCard {
-        Text(
-            "Data status",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
-
-        Text(
-            text = "WHOOP: " + if (whoopConnected) "Connected" else "Not connected",
-            color = Color.White,
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        val sleepText = when (sleepAnchorLoaded) {
-            null -> "Sleep: Disabled"
-            true -> "Sleep: Loaded for $today"
-            false -> "Sleep: Missing for $today"
-        }
-        Text(sleepText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-
-        val physicalText = when (physicalAnchorLoaded) {
-            null -> "Recovery: Disabled"
-            true -> "Recovery: Loaded for $today"
-            false -> "Recovery: Missing for $today"
-        }
-        Text(physicalText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-
-        val locationText = when (locationLoaded) {
-            null -> "Location: Disabled"
-            true -> "Location: Loaded for $today"
-            false -> "Location: Missing for $today"
-        }
-        Text(locationText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-
-        if (afterNine) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Tip: After 9:00, today's WHOOP sleep/recovery should usually be available.",
-                color = AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodySmall
+            // Progress
+            drawArc(
+                color = progressColor,
+                startAngle = startAngle,
+                sweepAngle = sweep,
+                useCenter = false,
+                topLeft = Offset(cx - radius, cy - radius),
+                size = Size(radius * 2f, radius * 2f),
+                style = Stroke(width = sw, cap = StrokeCap.Round)
             )
         }
     }
 }
-
 @Composable
-private fun TopTriggersCard(triggers: List<TriggerScore>) {
+private fun ActiveTriggersCard(triggers: List<TriggerScore>, gaugeMax: Double) {
+    if (triggers.isEmpty()) return
+
+    val totalScore = triggers.sumOf { it.score }.coerceAtLeast(1)
+
     BaseCard {
         Text(
-            "Top Triggers",
+            "Active Triggers",
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
 
         triggers.forEach { t ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(t.name, color = Color.White, style = MaterialTheme.typography.bodyLarge)
-                Spacer(Modifier.width(8.dp))
-                Column(Modifier.width(120.dp)) {
-                    LinearProgressIndicator(
-                        progress = t.score / 100f,
-                        modifier = Modifier.fillMaxWidth(),
-                        color = AppTheme.AccentPurple,
-                        trackColor = AppTheme.TrackColor
+            val sevColor = when (t.severity) {
+                "HIGH" -> Color(0xFFE57373)
+                "MILD" -> Color(0xFFFFB74D)
+                else -> Color(0xFF81C784)
+            }
+            val sevBg = sevColor.copy(alpha = 0.15f)
+            val barFraction = (t.score.toFloat() / totalScore).coerceIn(0f, 1f)
+            val pctOfTotal = (barFraction * 100).toInt()
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.White.copy(alpha = 0.04f),
+                        shape = RoundedCornerShape(10.dp)
                     )
+                    .padding(start = 0.dp)
+            ) {
+                // Colored left border effect via a Row
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    // Left severity accent bar
+                    Box(
+                        modifier = Modifier
+                            .width(3.dp)
+                            .height(56.dp)
+                            .background(
+                                color = sevColor,
+                                shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
+                            )
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // Top row: name + severity chip
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                t.name,
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            Spacer(Modifier.width(8.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        color = sevBg,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    t.severity,
+                                    color = sevColor,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                        }
+
+                        // Progress bar
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .background(
+                                    color = AppTheme.TrackColor,
+                                    shape = RoundedCornerShape(2.dp)
+                                )
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(barFraction)
+                                    .height(4.dp)
+                                    .background(
+                                        color = sevColor,
+                                        shape = RoundedCornerShape(2.dp)
+                                    )
+                            )
+                        }
+
+                        // Bottom row: points + days active
+                        Text(
+                            "${pctOfTotal}% of risk · ${t.score} pts · ${if (t.daysActive == 1) "today only" else "${t.daysActive} days active"}",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
-                Spacer(Modifier.width(8.dp))
-                Text("${t.score}%", color = AppTheme.BodyTextColor)
             }
         }
     }
@@ -509,3 +582,4 @@ private fun RiskGauge(
         }
     }
 }
+

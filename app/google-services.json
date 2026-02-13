@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "630053958216",
+    "project_id": "migraineme-4a652",
+    "storage_bucket": "migraineme-4a652.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:630053958216:android:78bec839c264b9c3e85e7d",
+        "android_client_info": {
+          "package_name": "com.migraineme"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByL9-b-2Ko-E0qoEs5N5iBzwkMIwYC8FI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

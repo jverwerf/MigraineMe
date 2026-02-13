@@ -39,7 +39,11 @@ fun LocationsScreen(
     vm: LocationViewModel,
     authVm: AuthViewModel,
     logVm: LogViewModel,
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    quickLogMode: Boolean = false,
+    onSave: (() -> Unit)? = null,
+    linkedMigraineId: String? = null,
+    onMigraineSelect: ((String?) -> Unit)? = null
 ) {
     val pool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
@@ -50,17 +54,7 @@ fun LocationsScreen(
     LaunchedEffect(authState.accessToken) { authState.accessToken?.let { vm.loadAll(it) } }
 
     fun rebuildDraftWithLocations(locs: List<LocationDraft>) {
-        val d = draft
-        logVm.clearDraft()
-        d.migraine?.let { logVm.setMigraineDraft(it.type, it.severity, it.beganAtIso, it.endedAtIso, it.note, symptoms = it.symptoms) }
-        if (d.painLocations.isNotEmpty()) logVm.setPainLocationsDraft(d.painLocations)
-        d.prodromes.forEach { logVm.addProdromeDraft(it.type, it.startAtIso, it.note) }
-        d.triggers.forEach { logVm.addTriggerDraft(it.type, it.startAtIso, it.note) }
-        d.meds.forEach { m -> logVm.addMedicineDraft(m.name ?: "", m.amount, m.notes, m.startAtIso, m.reliefScale) }
-        d.rels.forEach { logVm.addReliefDraft(it.type, it.notes, it.startAtIso, it.endAtIso, it.reliefScale) }
-        locs.forEach { logVm.addLocationDraft(it.type, it.startAtIso, it.note) }
-        d.activities.forEach { logVm.addActivityDraft(it.type, it.startAtIso, it.note) }
-        d.missedActivities.forEach { logVm.addMissedActivityDraft(it.type, it.startAtIso, it.note) }
+        logVm.replaceLocations(locs)
     }
 
     fun onTap(label: String) {
@@ -124,12 +118,17 @@ fun LocationsScreen(
                 }
             }
 
+            if (quickLogMode && onMigraineSelect != null) {
+                val firstIso = draft.locations.firstOrNull()?.startAtIso
+                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
+            }
+
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { loc ->
-                            CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6)) { onTap(loc.label) }
+                            CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) }
                         }
                     }
                     HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
@@ -140,7 +139,7 @@ fun LocationsScreen(
                     if (nonFreq.isNotEmpty()) {
                         Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            nonFreq.forEach { loc -> CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6)) { onTap(loc.label) } }
+                            nonFreq.forEach { loc -> CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) } }
                         }
                         if (entries.drop(ci + 1).any { (_, its) -> its.any { it.label !in frequentLabels } })
                             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
@@ -153,10 +152,11 @@ fun LocationsScreen(
                 OutlinedButton(onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
-                Button(onClick = { navController.navigate(Routes.ACTIVITIES) },
+                ) { Text(if (quickLogMode) "Cancel" else "Back") }
+                Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.ACTIVITIES) },
+                    enabled = !quickLogMode || draft.locations.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(if (quickLogMode) "Save" else "Next") }
             }
             Spacer(Modifier.height(32.dp))
         }
@@ -164,7 +164,8 @@ fun LocationsScreen(
 }
 
 @Composable
-private fun CircleButton(label: String, isSelected: Boolean, accent: Color, onClick: () -> Unit) {
+private fun CircleButton(label: String, isSelected: Boolean, accent: Color, iconKey: String? = null, onClick: () -> Unit) {
+    val icon = LocationIcons.forKey(iconKey)
     val bg = if (isSelected) accent.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val border = if (isSelected) accent.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     Column(
@@ -172,8 +173,12 @@ private fun CircleButton(label: String, isSelected: Boolean, accent: Color, onCl
         modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)
     ) {
         Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(1.5.dp, border, CircleShape), contentAlignment = Alignment.Center) {
-            Text(label.take(2).uppercase(), color = if (isSelected) Color.White else AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = label, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor, modifier = Modifier.size(24.dp))
+            } else {
+                Text(label.take(2).uppercase(), color = if (isSelected) Color.White else AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(label, color = if (isSelected) Color.White else AppTheme.BodyTextColor,
@@ -213,3 +218,4 @@ private fun formatLocTime(iso: String?): String {
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) { "Not set" }
 }
+

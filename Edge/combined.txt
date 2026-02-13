@@ -1,284 +1,8 @@
-===== TITLE: compute-stress-daily.txt =====
+===== TITLE: check-recovery-triggers.txt =====
 
-// FILE: supabase/functions/compute-stress-daily/index.ts
+// supabase/functions/check-recovery-triggers/index.ts
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-
-function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-function requireEnv(name: string): string {
-  const v = Deno.env.get(name);
-  if (!v) throw new Error(`Missing env var: ${name}`);
-  return v;
-}
-
-function addDaysIsoDate(isoDate: string, deltaDays: number): string {
-  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
-  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  dt.setUTCDate(dt.getUTCDate() + deltaDays);
-  return dt.toISOString().slice(0, 10);
-}
-
-function median(xs: number[]): number | null {
-  const a = xs.filter((n) => Number.isFinite(n)).slice().sort((p, q) => p - q);
-  if (!a.length) return null;
-  const mid = Math.floor(a.length / 2);
-  return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
-}
-
-function mad(xs: number[], med: number): number | null {
-  const dev = xs.map((x) => Math.abs(x - med)).filter((n) => Number.isFinite(n));
-  return median(dev);
-}
-
-function robustZ(x: number, xs: number[]): number | null {
-  const med = median(xs);
-  if (med == null) return null;
-  const m = mad(xs, med);
-  if (m == null || m <= 1e-9) return null;
-  const robustStd = 1.4826 * m;
-  return (x - med) / robustStd;
-}
-
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, n));
-}
-
-function zToPct(z: number): number {
-  const pct = 100 / (1 + Math.exp(-z));
-  return clamp(pct, 0, 100);
-}
-
-type Body = {
-  user_id?: string;
-  local_date?: string; // YYYY-MM-DD
-};
-
-async function insertBackendMetricRun(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  localDate: string,
-): Promise<boolean> {
-  const { error } = await supabase.from("backend_metric_runs").insert({
-    user_id: userId,
-    local_date: localDate,
-    metric: "stress_index_daily",
-    source: "computed",
-  });
-
-  if (!error) return true;
-
-  const msg = (error.message ?? "").toLowerCase();
-  if (msg.includes("duplicate") || msg.includes("unique")) return false;
-
-  throw new Error(`backend_metric_runs insert failed: ${error.message}`);
-}
-
-serve(async (req) => {
-  try {
-    if (req.method !== "POST") {
-      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
-    }
-
-    const supabaseUrl = requireEnv("SUPABASE_URL");
-    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-      global: { headers: { "X-Client-Info": "compute-stress-index-daily" } },
-    });
-
-    const body = (await req.json().catch(() => null)) as Body | null;
-    const userId = typeof body?.user_id === "string" ? body.user_id.trim() : "";
-    const localDate = typeof body?.local_date === "string" ? body.local_date.trim() : "";
-
-    if (!userId || !localDate) {
-      return jsonResponse({ ok: false, error: "Missing user_id/local_date" }, 400);
-    }
-
-    // 1) Must be enabled (ONLY check stress_index_daily)
-    const { data: stressSetting, error: msErr } = await supabase
-      .from("metric_settings")
-      .select("enabled")
-      .eq("user_id", userId)
-      .eq("metric", "stress_index_daily")
-      .maybeSingle();
-
-    if (msErr) throw new Error(`metric_settings read failed: ${msErr.message}`);
-    if (!stressSetting?.enabled) {
-      return jsonResponse({ ok: true, skipped: true, reason: "stress_index_disabled", userId, localDate });
-    }
-
-    // 2) Inputs
-    const [{ data: hrvRow, error: hrvErr }, { data: rhrRow, error: rhrErr }] = await Promise.all([
-      supabase
-        .from("hrv_daily")
-        .select("value_rmssd_ms")
-        .eq("user_id", userId)
-        .eq("date", localDate)
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("resting_hr_daily")
-        .select("value_bpm")
-        .eq("user_id", userId)
-        .eq("date", localDate)
-        .limit(1)
-        .maybeSingle(),
-    ]);
-
-    if (hrvErr) throw new Error(`hrv_daily read failed: ${hrvErr.message}`);
-    if (rhrErr) throw new Error(`resting_hr_daily read failed: ${rhrErr.message}`);
-
-    const hrv = typeof (hrvRow as any)?.value_rmssd_ms === "number" ? (hrvRow as any).value_rmssd_ms : null;
-    const rhr = typeof (rhrRow as any)?.value_bpm === "number" ? (rhrRow as any).value_bpm : null;
-
-    if (hrv == null || rhr == null) {
-      return jsonResponse({
-        ok: true,
-        skipped: true,
-        reason: "missing_inputs",
-        userId,
-        localDate,
-        hasHrv: hrv != null,
-        hasRhr: rhr != null,
-      });
-    }
-
-    // 3) Baseline window (prior 14 days)
-    const startDate = addDaysIsoDate(localDate, -14);
-    const endDate = addDaysIsoDate(localDate, -1);
-
-    const [{ data: hrvBase, error: hrvBaseErr }, { data: rhrBase, error: rhrBaseErr }] = await Promise.all([
-      supabase
-        .from("hrv_daily")
-        .select("date,value_rmssd_ms")
-        .eq("user_id", userId)
-        .gte("date", startDate)
-        .lte("date", endDate),
-      supabase
-        .from("resting_hr_daily")
-        .select("date,value_bpm")
-        .eq("user_id", userId)
-        .gte("date", startDate)
-        .lte("date", endDate),
-    ]);
-
-    if (hrvBaseErr) throw new Error(`hrv baseline read failed: ${hrvBaseErr.message}`);
-    if (rhrBaseErr) throw new Error(`rhr baseline read failed: ${rhrBaseErr.message}`);
-
-    const hrvXs = (hrvBase ?? [])
-      .map((r: any) => (typeof r.value_rmssd_ms === "number" ? r.value_rmssd_ms : null))
-      .filter((n: any) => typeof n === "number") as number[];
-
-    const rhrXs = (rhrBase ?? [])
-      .map((r: any) => (typeof r.value_bpm === "number" ? r.value_bpm : null))
-      .filter((n: any) => typeof n === "number") as number[];
-
-    if (hrvXs.length < 5 || rhrXs.length < 5) {
-      return jsonResponse({
-        ok: true,
-        skipped: true,
-        reason: "insufficient_baseline",
-        userId,
-        localDate,
-        baselineDays: { hrv: hrvXs.length, rhr: rhrXs.length },
-      });
-    }
-
-    const zRhr = robustZ(rhr, rhrXs);
-    const zHrv = robustZ(hrv, hrvXs);
-
-    if (zRhr == null || zHrv == null) {
-      return jsonResponse({
-        ok: true,
-        skipped: true,
-        reason: "baseline_zero_variance",
-        userId,
-        localDate,
-      });
-    }
-
-    const zCombined = (0.55 * zRhr) + (0.45 * (-zHrv));
-    const stressValue = zToPct(zCombined);
-
-    // 4) De-dupe
-    const proceed = await insertBackendMetricRun(supabase, userId, localDate);
-    if (!proceed) {
-      return jsonResponse({ ok: true, status: "already_done", userId, localDate });
-    }
-
-    const computedAt = new Date().toISOString();
-    const baselineWindowDays = Math.min(hrvXs.length, rhrXs.length);
-
-    // 5) Write to stress_index_daily (NO created_at/updated_at)
-    const { error: upErr } = await supabase.from("stress_index_daily").upsert(
-      {
-        user_id: userId,
-        date: localDate,
-        value: stressValue,
-        hrv_z: zHrv,
-        rhr_z: zRhr,
-        baseline_window_days: baselineWindowDays,
-        computed_at: computedAt,
-      },
-      { onConflict: "user_id,date" },
-    );
-
-    if (upErr) throw new Error(`stress_index_daily upsert failed: ${upErr.message}`);
-
-    return jsonResponse({
-      ok: true,
-      status: "written",
-      userId,
-      localDate,
-      value: stressValue,
-      debug: { zRhr, zHrv, zCombined, baselineWindowDays },
-    });
-  } catch (e) {
-    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
-  }
-});
-
-
-===== TITLE: daily-9am-noise-index.txt =====
-
-// FILE: supabase/functions/daily-9am-noise-index/index.ts
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-
-type ResolveRow = {
-  city_id: number;
-  timezone: string | null;
-  resolved_date?: string | null;
-};
-
-type MetricSettingRow = {
-  user_id: string;
-  metric: string;
-  enabled: boolean;
-  preferred_source: string | null;
-  allowed_sources: string[] | null;
-};
-
-type SyncJobInsert = {
-  job_type: string;
-  user_id: string;
-  local_date: string;
-  status: string;
-  updated_at: string;
-  created_by: string;
-  timezone: string;
-  city_id: number | null;
-  attempts?: number;
-  locked_at?: string | null;
-  last_error?: string | null;
-};
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -332,53 +56,50 @@ function getLocalTimeParts(timeZone: string, now = new Date()) {
   return { localDate, hh, mm };
 }
 
-async function resolveWithDateFallback(
+async function resolveUserTimezone(
   supabase: ReturnType<typeof createClient>,
   userId: string,
-  utcIsoDate: string,
-): Promise<{ row: ResolveRow | null; usedDate: string | null }> {
+  utcIsoDate: string
+): Promise<string | null> {
   const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
 
   for (const d of candidates) {
-    const { data, error } = await supabase.rpc("resolve_user_city_for_date", {
-      p_user_id: userId,
-      p_date: d,
-    });
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (error) {
-      throw new Error(`resolve_user_city_for_date failed for date=${d}: ${error.message}`);
-    }
-
-    const row: ResolveRow | undefined = Array.isArray(data) ? data[0] : data;
-    if (row?.timezone) return { row, usedDate: row.resolved_date ?? d };
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
   }
 
-  return { row: null, usedDate: null };
+  return null;
 }
 
-async function mapLimit<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T, idx: number) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let nextIndex = 0;
-
-  async function worker() {
-    while (true) {
-      const i = nextIndex++;
-      if (i >= items.length) return;
-      results[i] = await fn(items[i], i);
-    }
-  }
-
-  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker());
-  await Promise.all(workers);
-  return results;
+function mean(arr: number[]): number | null {
+  if (arr.length === 0) return null;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
+
+function stdDev(arr: number[], avg: number): number | null {
+  if (arr.length < 2) return null;
+  const squaredDiffs = arr.map((x) => (x - avg) ** 2);
+  return Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / arr.length);
+}
+
+const ABSOLUTE_LOW_THRESHOLD = 33;
+const MIN_DAYS_FOR_SD = 14;
 
 serve(async (req) => {
-  console.log("[daily-9am-noise-index] start", { nowUtc: new Date().toISOString(), method: req.method, url: req.url });
+  console.log("[check-recovery-triggers] start", {
+    nowUtc: new Date().toISOString(),
+    method: req.method,
+  });
 
   try {
     if (req.method !== "POST" && req.method !== "GET") {
@@ -390,103 +111,1618 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
-      global: { headers: { "X-Client-Info": "daily-9am-noise-index-dispatcher" } },
+      global: { headers: { "X-Client-Info": "check-recovery-triggers" } },
+    });
+
+    const nowUtc = new Date();
+    const utcDate = nowUtc.toISOString().slice(0, 10);
+
+    // Parse optional force flag and date override from request body
+    let force = false;
+    let dateOverride: string | null = null;
+    try {
+      const body = await req.json();
+      force = body?.force === true;
+      dateOverride = typeof body?.date === "string" ? body.date : null;
+    } catch {
+      // No body or invalid JSON
+    }
+
+    // Get users with recovery triggers enabled
+    const { data: triggerSettings, error: tsErr } = await supabase
+      .from("trigger_settings")
+      .select("user_id, trigger_type, enabled")
+      .in("trigger_type", ["recovery_low", "recovery_unusually_low"])
+      .eq("enabled", true);
+
+    if (tsErr) {
+      throw new Error(`trigger_settings query failed: ${tsErr.message}`);
+    }
+
+    if (!triggerSettings || triggerSettings.length === 0) {
+      return jsonResponse({
+        ok: true,
+        message: "No users with recovery triggers enabled",
+        processed: 0,
+      });
+    }
+
+    // Group by user
+    const userTriggerTypes = new Map<string, Set<string>>();
+    for (const ts of triggerSettings) {
+      if (!userTriggerTypes.has(ts.user_id)) {
+        userTriggerTypes.set(ts.user_id, new Set());
+      }
+      userTriggerTypes.get(ts.user_id)!.add(ts.trigger_type);
+    }
+
+    const results: unknown[] = [];
+
+    for (const [userId, enabledTypes] of userTriggerTypes) {
+      const userResult: Record<string, unknown> = { userId, triggers: [] };
+
+      // Resolve user timezone
+      const timezone = await resolveUserTimezone(supabase, userId, utcDate);
+      if (!timezone) {
+        userResult.status = "no_timezone";
+        results.push(userResult);
+        continue;
+      }
+
+      userResult.timezone = timezone;
+
+      // Get local time for this user
+      const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+      userResult.localTime = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+
+      // Use date override if provided, otherwise use local date
+      const targetDate = dateOverride ?? localDate;
+      userResult.targetDate = targetDate;
+
+      // Only process if 9:00-9:09 AM local time (unless forced or date override)
+      if (!force && !dateOverride && (hh !== 9 || mm >= 10)) {
+        userResult.status = "outside_9am_window";
+        results.push(userResult);
+        continue;
+      }
+
+      // Get target date's recovery score
+      const { data: todayRecovery, error: recErr } = await supabase
+        .from("recovery_score_daily")
+        .select("date, value_pct")
+        .eq("user_id", userId)
+        .eq("date", targetDate)
+        .maybeSingle();
+
+      if (recErr) {
+        userResult.error = `recovery fetch failed: ${recErr.message}`;
+        results.push(userResult);
+        continue;
+      }
+
+      if (!todayRecovery || todayRecovery.value_pct == null) {
+        userResult.status = "no_recovery_data_for_date";
+        results.push(userResult);
+        continue;
+      }
+
+      const todayValue = todayRecovery.value_pct as number;
+      userResult.todayValue = todayValue;
+
+      // Check absolute threshold
+      if (enabledTypes.has("recovery_low") && todayValue < ABSOLUTE_LOW_THRESHOLD) {
+        const created = await createTriggerIfNotExists(
+          supabase,
+          userId,
+          "recovery_low",
+          targetDate,
+          `Recovery ${todayValue.toFixed(0)}% - below ${ABSOLUTE_LOW_THRESHOLD}% threshold`
+        );
+        (userResult.triggers as unknown[]).push({
+          type: "recovery_low",
+          created,
+          value: todayValue,
+        });
+      }
+
+      // Check 2SD threshold
+      if (enabledTypes.has("recovery_unusually_low")) {
+        const startDate = addDaysIsoDate(targetDate, -MIN_DAYS_FOR_SD);
+        const endDate = addDaysIsoDate(targetDate, -1);
+
+        const { data: historyData, error: histErr } = await supabase
+          .from("recovery_score_daily")
+          .select("value_pct")
+          .eq("user_id", userId)
+          .gte("date", startDate)
+          .lte("date", endDate);
+
+        if (histErr) {
+          userResult.sdError = `history fetch failed: ${histErr.message}`;
+        } else {
+          const values = (historyData ?? [])
+            .map((r: { value_pct: unknown }) => r.value_pct)
+            .filter((v): v is number => typeof v === "number");
+
+          if (values.length >= MIN_DAYS_FOR_SD) {
+            const avg = mean(values);
+            const sd = avg != null ? stdDev(values, avg) : null;
+
+            if (avg != null && sd != null && sd > 0) {
+              const threshold = avg - 2 * sd;
+              userResult.sdStats = { avg: avg.toFixed(1), sd: sd.toFixed(1), threshold: threshold.toFixed(1) };
+
+              if (todayValue < threshold) {
+                const created = await createTriggerIfNotExists(
+                  supabase,
+                  userId,
+                  "recovery_unusually_low",
+                  targetDate,
+                  `Recovery ${todayValue.toFixed(0)}% - below 2SD (threshold: ${threshold.toFixed(0)}%, avg: ${avg.toFixed(0)}%)`
+                );
+                (userResult.triggers as unknown[]).push({
+                  type: "recovery_unusually_low",
+                  created,
+                  value: todayValue,
+                  threshold: threshold.toFixed(1),
+                });
+              }
+            } else {
+              userResult.sdStatus = "insufficient_variance";
+            }
+          } else {
+            userResult.sdStatus = `insufficient_history (${values.length}/${MIN_DAYS_FOR_SD} days)`;
+          }
+        }
+      }
+
+      userResult.status = "processed";
+      results.push(userResult);
+    }
+
+    const summary = {
+      total: results.length,
+      processed: results.filter((r: any) => r.status === "processed").length,
+      outside9am: results.filter((r: any) => r.status === "outside_9am_window").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      noData: results.filter((r: any) => r.status === "no_recovery_data_for_date").length,
+    };
+
+    return jsonResponse({
+      ok: true,
+      nowUtc: nowUtc.toISOString(),
+      utcDate,
+      forced: force,
+      summary,
+      results,
+    });
+  } catch (e) {
+    console.error("[check-recovery-triggers] error", e);
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});
+
+async function createTriggerIfNotExists(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  triggerType: string,
+  date: string,
+  notes: string
+): Promise<boolean> {
+  const dayStart = `${date}T00:00:00Z`;
+  const dayEnd = `${date}T23:59:59Z`;
+
+  const { data: existing, error: checkErr } = await supabase
+    .from("triggers")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("type", triggerType)
+    .eq("source", "system")
+    .gte("start_at", dayStart)
+    .lte("start_at", dayEnd)
+    .limit(1);
+
+  if (checkErr) {
+    console.error(`[check-recovery-triggers] check existing failed: ${checkErr.message}`);
+    return false;
+  }
+
+  if (existing && existing.length > 0) {
+    return false;
+  }
+
+  const { error: insertErr } = await supabase.from("triggers").insert({
+    user_id: userId,
+    type: triggerType,
+    source: "system",
+    start_at: `${date}T09:00:00Z`,
+    notes,
+    active: true,
+  });
+
+  if (insertErr) {
+    console.error(`[check-recovery-triggers] insert failed: ${insertErr.message}`);
+    return false;
+  }
+
+  return true;
+}
+
+
+===== TITLE: combined.txt =====
+
+
+
+===== TITLE: compute-stress-daily.txt =====
+
+// FILE: supabase/functions/compute-stress-index/index.ts
+//
+// Cron-triggered edge function that runs every 10 minutes.
+// For users where it's 9:00–9:10 AM local time and stress_index_daily is enabled,
+// computes a stress index (0–100) from HRV + resting HR data.
+//
+// Formula:
+//   - Uses personal 14-day baseline for both HRV and resting HR
+//   - Lower HRV than baseline = more stress
+//   - Higher resting HR than baseline = more stress
+//   - Combined into a 0–100 score where 0 = very relaxed, 100 = very stressed
+//
+// Runs AFTER wearable sync so hrv_daily and resting_hr_daily are populated.
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
+/**
+ * Compute stress index (0–100) from HRV and resting HR relative to personal baseline.
+ *
+ * HRV component (0–50):
+ *   - HRV at or above baseline → 0 (no stress signal)
+ *   - HRV 50% below baseline → 50 (max stress signal from HRV)
+ *
+ * Resting HR component (0–50):
+ *   - RHR at or below baseline → 0 (no stress signal)
+ *   - RHR 20 bpm above baseline → 50 (max stress signal from RHR)
+ *
+ * If no baseline (< 3 days of data), uses population defaults:
+ *   - HRV baseline: 50 ms (moderate)
+ *   - RHR baseline: 65 bpm (moderate)
+ */
+function computeStressScore(
+  todayHrv: number | null,
+  todayRhr: number | null,
+  baselineHrv: number | null,
+  baselineRhr: number | null,
+  baselineDays: number
+): number | null {
+  // Need at least one input
+  if (todayHrv == null && todayRhr == null) return null;
+
+  const DEFAULT_HRV = 50;
+  const DEFAULT_RHR = 65;
+  const MIN_BASELINE_DAYS = 3;
+
+  const refHrv = (baselineDays >= MIN_BASELINE_DAYS && baselineHrv != null) ? baselineHrv : DEFAULT_HRV;
+  const refRhr = (baselineDays >= MIN_BASELINE_DAYS && baselineRhr != null) ? baselineRhr : DEFAULT_RHR;
+
+  let hrvScore = 25; // neutral if missing
+  let rhrScore = 25;
+
+  if (todayHrv != null && refHrv > 0) {
+    // How much lower is today's HRV vs baseline? Lower = more stress.
+    const drop = (refHrv - todayHrv) / refHrv; // fraction, e.g. 0.3 = 30% drop
+    // Clamp: -0.5 (way above baseline) to 0.5 (way below)
+    const clamped = Math.max(-0.5, Math.min(0.5, drop));
+    // Map: -0.5 → 0, 0 → 25, 0.5 → 50
+    hrvScore = Math.round((clamped + 0.5) * 50);
+  }
+
+  if (todayRhr != null) {
+    // How much higher is today's RHR vs baseline? Higher = more stress.
+    const rise = todayRhr - refRhr; // bpm above baseline
+    // Clamp: -10 (well below baseline) to 20 (well above)
+    const clamped = Math.max(-10, Math.min(20, rise));
+    // Map: -10 → 0, 0 → 16.7, 20 → 50
+    rhrScore = Math.round(((clamped + 10) / 30) * 50);
+  }
+
+  return Math.max(0, Math.min(100, hrvScore + rhrScore));
+}
+
+serve(async (req) => {
+  console.log("[compute-stress-index] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowUtc = new Date();
+    const utcDate = nowUtc.toISOString().slice(0, 10);
+    const BASELINE_DAYS = 14;
+
+    // Get users with stress_index_daily enabled
+    const { data: metricRows, error: metricErr } = await supabase
+      .from("metric_settings")
+      .select("user_id")
+      .eq("metric", "stress_index_daily")
+      .eq("enabled", true);
+
+    if (metricErr) throw new Error(`metric_settings query failed: ${metricErr.message}`);
+
+    const userIds = [...new Set((metricRows ?? []).map((r: any) => String(r.user_id)))];
+    console.log(`[compute-stress-index] ${userIds.length} users with stress enabled`);
+
+    if (userIds.length === 0) {
+      return jsonResponse({ ok: true, processed: 0 });
+    }
+
+    const results = await mapLimit(userIds, 10, async (userId) => {
+      try {
+        // Resolve timezone
+        const timezone = await resolveTimezone(supabase, userId, utcDate);
+        if (!timezone) {
+          return { userId, status: "no_timezone" };
+        }
+
+        // Check if 9:00–9:10 AM local time
+        const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+        if (hh !== 9 || mm > 10) {
+          return { userId, status: "not_9am", localHour: hh };
+        }
+
+        const yesterday = addDaysIsoDate(localDate, -1);
+
+        // Fetch yesterday's HRV
+        const { data: hrvRow } = await supabase
+          .from("hrv_daily")
+          .select("value_rmssd_ms")
+          .eq("user_id", userId)
+          .eq("date", yesterday)
+          .maybeSingle();
+
+        // Fetch yesterday's resting HR
+        const { data: rhrRow } = await supabase
+          .from("resting_hr_daily")
+          .select("value_bpm")
+          .eq("user_id", userId)
+          .eq("date", yesterday)
+          .maybeSingle();
+
+        const todayHrv = hrvRow?.value_rmssd_ms ?? null;
+        const todayRhr = rhrRow?.value_bpm ?? null;
+
+        if (todayHrv == null && todayRhr == null) {
+          return { userId, status: "no_input_data", date: yesterday };
+        }
+
+        // Fetch baseline (past 14 days, excluding yesterday)
+        const baselineStart = addDaysIsoDate(yesterday, -BASELINE_DAYS);
+        const baselineEnd = addDaysIsoDate(yesterday, -1);
+
+        const { data: hrvBaseline } = await supabase
+          .from("hrv_daily")
+          .select("value_rmssd_ms")
+          .eq("user_id", userId)
+          .gte("date", baselineStart)
+          .lte("date", baselineEnd)
+          .not("value_rmssd_ms", "is", null);
+
+        const { data: rhrBaseline } = await supabase
+          .from("resting_hr_daily")
+          .select("value_bpm")
+          .eq("user_id", userId)
+          .gte("date", baselineStart)
+          .lte("date", baselineEnd)
+          .not("value_bpm", "is", null);
+
+        const hrvValues = (hrvBaseline ?? []).map((r: any) => Number(r.value_rmssd_ms)).filter((v) => !isNaN(v));
+        const rhrValues = (rhrBaseline ?? []).map((r: any) => Number(r.value_bpm)).filter((v) => !isNaN(v));
+
+        const baselineDays = Math.max(hrvValues.length, rhrValues.length);
+        const baselineHrv = hrvValues.length > 0
+          ? hrvValues.reduce((a, b) => a + b, 0) / hrvValues.length
+          : null;
+        const baselineRhr = rhrValues.length > 0
+          ? rhrValues.reduce((a, b) => a + b, 0) / rhrValues.length
+          : null;
+
+        const stressValue = computeStressScore(todayHrv, todayRhr, baselineHrv, baselineRhr, baselineDays);
+
+        if (stressValue == null) {
+          return { userId, status: "no_score", date: yesterday };
+        }
+
+        // Compute z-scores for storage
+        const MIN_BASELINE_DAYS = 3;
+        const refHrv = (baselineDays >= MIN_BASELINE_DAYS && baselineHrv != null) ? baselineHrv : 50;
+        const refRhr = (baselineDays >= MIN_BASELINE_DAYS && baselineRhr != null) ? baselineRhr : 65;
+        const hrvZ = (todayHrv != null && refHrv > 0) ? (refHrv - todayHrv) / refHrv : null;
+        const rhrZ = todayRhr != null ? todayRhr - refRhr : null;
+
+        // Upsert
+        const { error: upsertErr } = await supabase
+          .from("stress_index_daily")
+          .upsert(
+            {
+              user_id: userId,
+              date: yesterday,
+              value: stressValue,
+              hrv_z: hrvZ,
+              rhr_z: rhrZ,
+              baseline_window_days: baselineDays,
+              computed_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,date" }
+          );
+
+        if (upsertErr) throw upsertErr;
+
+        return {
+          userId,
+          status: "ok",
+          date: yesterday,
+          value: stressValue,
+          inputs: { hrv: todayHrv, rhr: todayRhr },
+          baseline: { hrv: baselineHrv, rhr: baselineRhr, days: baselineDays },
+        };
+      } catch (e: any) {
+        return { userId, status: "error", error: String(e?.message ?? e) };
+      }
+    });
+
+    const summary = {
+      total: results.length,
+      ok: results.filter((r: any) => r.status === "ok").length,
+      not9am: results.filter((r: any) => r.status === "not_9am").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      noInput: results.filter((r: any) => r.status === "no_input_data").length,
+      errors: results.filter((r: any) => r.status === "error").length,
+    };
+
+    console.log("[compute-stress-index] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+
+  } catch (e: any) {
+    console.error("[compute-stress-index] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
+  }
+});
+
+
+===== TITLE: convert-predicted-menstruations.txt =====
+
+// FILE: supabase/functions/convert-predicted-menstruations/index.ts
+// Runs HOURLY and converts predicted triggers ONLY when it's 9:00-9:10 AM local time
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveUserTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+serve(async (req) => {
+  try {
+    console.log("[convert-predicted-menstruations] start", {
+      nowUtc: new Date().toISOString(),
+      method: req.method,
+      url: req.url
+    });
+
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "convert-predicted-menstruations" } },
     });
 
     const nowUtc = new Date();
     const nowIso = nowUtc.toISOString();
     const utcDate = nowIso.slice(0, 10);
 
-    // Users: anyone with at least one enabled metric row
+    // Get all users with menstruation enabled
     const { data: userRows, error: userErr } = await supabase
       .from("metric_settings")
       .select("user_id")
+      .eq("metric", "menstruation")
       .eq("enabled", true);
 
-    if (userErr) throw new Error(`metric_settings query failed: ${userErr.message}`);
+    if (userErr) {
+      throw new Error(`Failed to query users: ${userErr.message}`);
+    }
 
-    const userIds = Array.from(new Set((userRows ?? []).map((r: any) => String(r.user_id)))).filter(Boolean);
+    if (!userRows || userRows.length === 0) {
+      console.log("[convert-predicted-menstruations] No users with menstruation enabled");
+      return jsonResponse({
+        ok: true,
+        message: "No users with menstruation enabled",
+        converted: 0
+      });
+    }
 
-    const perUser = await mapLimit(userIds, 12, async (userId) => {
-      let resolved: ResolveRow | null = null;
-      let usedResolveDate: string | null = null;
+    console.log(`[convert-predicted-menstruations] Checking ${userRows.length} users`);
+
+    const results = [];
+
+    for (const userRow of userRows) {
+      const userId = userRow.user_id;
 
       try {
-        const out = await resolveWithDateFallback(supabase, userId, utcDate);
-        resolved = out.row;
-        usedResolveDate = out.usedDate;
-      } catch (e) {
-        return { userId, status: "resolver_error", error: (e as Error).message };
+        // Resolve user's timezone
+        const timezone = await resolveUserTimezone(supabase, userId, utcDate);
+        if (!timezone) {
+          console.log(`[convert-predicted-menstruations] User ${userId}: No timezone, skipping`);
+          continue;
+        }
+
+        // Get local time for this user RIGHT NOW
+        const localTime = getLocalTimeParts(timezone, nowUtc);
+        
+        // CRITICAL: Only process if it's between 9:00 and 9:10 AM local time
+        if (localTime.hh !== 9 || localTime.mm >= 10) {
+          // Not 9:00-9:10 AM for this user, skip
+          continue;
+        }
+
+        console.log(`[convert-predicted-menstruations] User ${userId}: It's 9:0${localTime.mm} AM! (${timezone})`);
+
+        // Find predicted trigger
+        const { data: predictedTriggers, error: queryError } = await supabase
+          .from("triggers")
+          .select("id, user_id, type, start_at, source, active")
+          .eq("user_id", userId)
+          .eq("type", "menstruation_predicted")
+          .eq("source", "system")
+          .eq("active", true);
+
+        if (queryError) {
+          console.error(`[convert-predicted-menstruations] User ${userId}: Query error:`, queryError.message);
+          results.push({ userId, status: "error", reason: queryError.message });
+          continue;
+        }
+
+        if (!predictedTriggers || predictedTriggers.length === 0) {
+          console.log(`[convert-predicted-menstruations] User ${userId}: No predicted trigger`);
+          continue;
+        }
+
+        const predicted = predictedTriggers[0];
+        const predictedDate = predicted.start_at.slice(0, 10);
+
+        // Check if predicted date is TODAY (in user's local timezone)
+        if (predictedDate !== localTime.localDate) {
+          console.log(`[convert-predicted-menstruations] User ${userId}: Predicted date ${predictedDate} != today ${localTime.localDate}`);
+          continue;
+        }
+
+        console.log(`[convert-predicted-menstruations] User ${userId}: Predicted trigger is DUE TODAY!`);
+
+        // Check if already converted today (avoid duplicates if function runs multiple times in the 9:00-9:10 window)
+        const { data: existingToday, error: checkError } = await supabase
+          .from("triggers")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("type", "menstruation")
+          .eq("source", "auto")
+          .gte("start_at", `${localTime.localDate}T00:00:00Z`)
+          .lte("start_at", `${localTime.localDate}T23:59:59Z`);
+
+        if (checkError) {
+          console.error(`[convert-predicted-menstruations] User ${userId}: Check error:`, checkError.message);
+          results.push({ userId, status: "error", reason: checkError.message });
+          continue;
+        }
+
+        if (existingToday && existingToday.length > 0) {
+          console.log(`[convert-predicted-menstruations] User ${userId}: Already converted today, skipping`);
+          results.push({ userId, status: "skipped", reason: "Already converted today" });
+          continue;
+        }
+
+        // Check if user manually logged period nearby (within 3 days)
+        const threeDaysAgo = addDaysIsoDate(localTime.localDate, -3);
+        const threeDaysLater = addDaysIsoDate(localTime.localDate, 3);
+
+        const { data: manualPeriods, error: manualError } = await supabase
+          .from("triggers")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("type", "menstruation")
+          .in("source", ["manual", "health_connect"])
+          .gte("start_at", `${threeDaysAgo}T00:00:00Z`)
+          .lte("start_at", `${threeDaysLater}T23:59:59Z`);
+
+        if (manualError) {
+          console.error(`[convert-predicted-menstruations] User ${userId}: Manual check error:`, manualError.message);
+          results.push({ userId, status: "error", reason: manualError.message });
+          continue;
+        }
+
+        if (manualPeriods && manualPeriods.length > 0) {
+          console.log(`[convert-predicted-menstruations] User ${userId}: User logged period manually nearby, skipping auto-conversion`);
+          results.push({ userId, status: "skipped", reason: "Manual period logged nearby" });
+          continue;
+        }
+
+        // INSERT REAL MENSTRUATION TRIGGER
+        const { error: insertError } = await supabase
+          .from("triggers")
+          .insert({
+            user_id: userId,
+            type: "menstruation",
+            start_at: `${localTime.localDate}T09:00:00Z`,
+            source: "auto",
+            active: true,
+            notes: "Auto-generated from predicted menstruation"
+          });
+
+        if (insertError) {
+          console.error(`[convert-predicted-menstruations] User ${userId}: Insert error:`, insertError.message);
+          results.push({ userId, status: "error", reason: insertError.message });
+          continue;
+        }
+
+        console.log(`[convert-predicted-menstruations] ✓ User ${userId}: Converted predicted to real!`);
+        results.push({ 
+          userId, 
+          status: "converted", 
+          timezone, 
+          localDate: localTime.localDate,
+          localTime: `${localTime.hh}:${String(localTime.mm).padStart(2, '0')}`
+        });
+
+        // Note: Database trigger will automatically update the predicted trigger's date
+
+      } catch (userError) {
+        console.error(`[convert-predicted-menstruations] User ${userId}: Error:`, userError);
+        results.push({ userId, status: "error", reason: String(userError) });
       }
+    }
 
-      if (!resolved?.timezone) return { userId, status: "no_timezone" };
+    const summary = {
+      ok: true,
+      nowUtc: nowIso,
+      utcDate,
+      totalUsers: userRows.length,
+      converted: results.filter(r => r.status === "converted").length,
+      skipped: results.filter(r => r.status === "skipped").length,
+      errors: results.filter(r => r.status === "error").length,
+      results: results
+    };
 
-      const tz = resolved.timezone;
-      const cityId = typeof resolved.city_id === "number" ? resolved.city_id : null;
-      const { localDate } = getLocalTimeParts(tz, nowUtc);
+    console.log("[convert-predicted-menstruations] done", summary);
+    return jsonResponse(summary);
 
-      // Trigger rule:
-      // - We enqueue noise_index_daily if the user has enabled either:
-      //   (a) ambient_noise_samples   (raw ingestion toggle)
-      //   OR
-      //   (b) ambient_noise_index_daily (explicit index toggle, for backwards compat)
-      const { data: metrics, error: metErr } = await supabase
-        .from("metric_settings")
-        .select("user_id,metric,enabled,preferred_source,allowed_sources")
-        .eq("user_id", userId)
-        .eq("enabled", true)
-        .in("metric", ["ambient_noise_samples", "ambient_noise_index_daily"]);
+  } catch (e) {
+    console.error("[convert-predicted-menstruations] error", e);
+    return jsonResponse({
+      ok: false,
+      error: String(e)
+    }, 500);
+  }
+});
 
-      if (metErr) {
-        return { userId, status: "metrics_error", error: metErr.message, timezone: tz, localDate };
+
+===== TITLE: daily-9am-noise-index.txt =====
+
+// FILE: supabase/functions/daily-9am-noise-index/index.ts
+//
+// Dispatcher that runs every 10 minutes via cron.
+// For users where it's 9:00-9:10 AM local time and noise is enabled,
+// queues a job to sync_jobs_noise for yesterday's date.
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
+serve(async (req) => {
+  console.log("[daily-9am-noise-index] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowUtc = new Date();
+    const utcDate = nowUtc.toISOString().slice(0, 10);
+
+    // Get users with ambient_noise_samples enabled
+    const { data: metricRows, error: metricErr } = await supabase
+      .from("metric_settings")
+      .select("user_id")
+      .eq("metric", "ambient_noise_samples")
+      .eq("enabled", true);
+
+    if (metricErr) throw new Error(`metric_settings query failed: ${metricErr.message}`);
+
+    const userIds = [...new Set((metricRows ?? []).map((r: any) => String(r.user_id)))].filter(Boolean);
+
+    console.log(`[daily-9am-noise-index] ${userIds.length} users with noise enabled`);
+
+    const results = await mapLimit(userIds, 10, async (userId) => {
+      try {
+        // Resolve timezone
+        const timezone = await resolveTimezone(supabase, userId, utcDate);
+        if (!timezone) {
+          return { userId, status: "no_timezone" };
+        }
+
+        // Check if 9:00-9:10 AM local time
+        const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+        if (hh !== 9 || mm > 10) {
+          return { userId, status: "not_9am", localHour: hh };
+        }
+
+        // Queue job for YESTERDAY (complete day)
+        const yesterday = addDaysIsoDate(localDate, -1);
+
+        // Upsert job (idempotent - won't duplicate if already queued)
+        const { error: upsertErr } = await supabase
+          .from("sync_jobs_noise")
+          .upsert(
+            {
+              user_id: userId,
+              local_date: yesterday,
+              timezone: timezone,
+              status: "queued",
+              attempts: 0,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,local_date", ignoreDuplicates: true }
+          );
+
+        if (upsertErr) {
+          return { userId, status: "queue_error", error: upsertErr.message };
+        }
+
+        return { userId, status: "queued", date: yesterday, timezone };
+
+      } catch (e: any) {
+        return { userId, status: "error", error: String(e?.message ?? e) };
       }
-
-      const enabled = (metrics ?? []) as MetricSettingRow[];
-      const needed = enabled.length > 0;
-
-      if (!needed) {
-        return { userId, status: "no_jobs_needed", timezone: tz, localDate, usedResolveDate };
-      }
-
-      const job: SyncJobInsert = {
-        job_type: "noise_index_daily",
-        user_id: userId,
-        local_date: localDate,
-        status: "queued",
-        updated_at: nowIso,
-        created_by: "daily-9am-noise",
-        timezone: tz,
-        city_id: cityId,
-        attempts: 0,
-        locked_at: null,
-        last_error: null,
-      };
-
-      const { error: insErr } = await supabase
-        .from("sync_jobs")
-        .upsert([job], { onConflict: "job_type,user_id,local_date" });
-
-      if (insErr) {
-        return { userId, status: "enqueue_error", error: insErr.message, timezone: tz, localDate, usedResolveDate };
-      }
-
-      return { userId, status: "enqueued", timezone: tz, localDate, usedResolveDate, enqueued: ["noise_index_daily"] };
     });
 
     const summary = {
-      checkedUsers: userIds.length,
-      enqueuedUsers: perUser.filter((r: any) => r.status === "enqueued").length,
-      noJobsNeeded: perUser.filter((r: any) => r.status === "no_jobs_needed").length,
-      noTimezone: perUser.filter((r: any) => r.status === "no_timezone").length,
-      errors: perUser.filter((r: any) => String(r.status).includes("error")).length,
-      nowUtc: nowIso,
+      total: results.length,
+      queued: results.filter((r: any) => r.status === "queued").length,
+      not9am: results.filter((r: any) => r.status === "not_9am").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      errors: results.filter((r: any) => r.status === "error" || r.status === "queue_error").length,
     };
 
-    console.log("[daily-9am-noise-index] done", { summary });
-    return jsonResponse({ ok: true, summary, results: perUser });
-  } catch (e) {
-    console.log("[daily-9am-noise-index] error", { error: (e as Error).message });
-    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+    console.log("[daily-9am-noise-index] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+
+  } catch (e: any) {
+    console.error("[daily-9am-noise-index] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
+  }
+});
+
+
+===== TITLE: daily-9am-nutrition.txt =====
+
+// FILE: supabase/functions/daily-9am-nutrition/index.ts
+//
+// Dispatcher that runs every 10 minutes via cron.
+// For users where it's 9:00-9:10 AM local time and nutrition is enabled,
+// queues a job to sync_jobs_nutrition for yesterday's date.
+//
+// Pattern copied from daily-9am-noise-index
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
+serve(async (req) => {
+  console.log("[daily-9am-nutrition] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowUtc = new Date();
+    const utcDate = nowUtc.toISOString().slice(0, 10);
+
+    // Get users with nutrition enabled
+    const { data: metricRows, error: metricErr } = await supabase
+      .from("metric_settings")
+      .select("user_id")
+      .eq("metric", "nutrition")
+      .eq("enabled", true);
+
+    if (metricErr) throw new Error(`metric_settings query failed: ${metricErr.message}`);
+
+    const userIds = [...new Set((metricRows ?? []).map((r: any) => String(r.user_id)))].filter(Boolean);
+
+    console.log(`[daily-9am-nutrition] ${userIds.length} users with nutrition enabled`);
+
+    const results = await mapLimit(userIds, 10, async (userId) => {
+      try {
+        // Resolve timezone
+        const timezone = await resolveTimezone(supabase, userId, utcDate);
+        if (!timezone) {
+          return { userId, status: "no_timezone" };
+        }
+
+        // Check if 9:00-9:10 AM local time
+        const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+        if (hh !== 9 || mm > 10) {
+          return { userId, status: "not_9am", localHour: hh };
+        }
+
+        // Queue job for YESTERDAY (complete day)
+        const yesterday = addDaysIsoDate(localDate, -1);
+
+        // Upsert job (idempotent - won't duplicate if already queued)
+        const { error: upsertErr } = await supabase
+          .from("sync_jobs_nutrition")
+          .upsert(
+            {
+              user_id: userId,
+              local_date: yesterday,
+              timezone: timezone,
+              status: "queued",
+              attempts: 0,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,local_date", ignoreDuplicates: true }
+          );
+
+        if (upsertErr) {
+          return { userId, status: "queue_error", error: upsertErr.message };
+        }
+
+        return { userId, status: "queued", date: yesterday, timezone };
+
+      } catch (e: any) {
+        return { userId, status: "error", error: String(e?.message ?? e) };
+      }
+    });
+
+    const summary = {
+      total: results.length,
+      queued: results.filter((r: any) => r.status === "queued").length,
+      not9am: results.filter((r: any) => r.status === "not_9am").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      errors: results.filter((r: any) => r.status === "error" || r.status === "queue_error").length,
+    };
+
+    console.log("[daily-9am-nutrition] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+
+  } catch (e: any) {
+    console.error("[daily-9am-nutrition] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
+  }
+});
+
+
+===== TITLE: daily-9am-phone-behavior.txt =====
+
+// FILE: supabase/functions/daily-9am-phone-behavior/index.ts
+//
+// Cron-triggered edge function that runs every 10 minutes.
+// For users where it's 9:00–9:10 AM local time and any phone behavior metric is enabled,
+// aggregates yesterday's samples into daily tables:
+//
+//   phone_brightness_samples  → phone_brightness_daily  (AVG, MAX, COUNT)
+//   phone_volume_samples      → phone_volume_daily      (AVG, COUNT)
+//   phone_dark_mode_samples   → phone_dark_mode_daily   (estimated hours, dark count, total count)
+//   phone_unlock_samples      → phone_unlock_daily      (MAX cumulative count)
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+/** Concurrency-limited parallel mapper */
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
+const PHONE_BEHAVIOR_METRICS = [
+  "phone_brightness_daily",
+  "phone_volume_daily",
+  "phone_dark_mode_daily",
+  "phone_unlock_daily",
+];
+
+serve(async (req) => {
+  console.log("[daily-9am-phone-behavior] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowUtc = new Date();
+    const utcDate = nowUtc.toISOString().slice(0, 10);
+
+    // Get users with ANY phone behavior metric enabled
+    const { data: metricRows, error: metricErr } = await supabase
+      .from("metric_settings")
+      .select("user_id, metric")
+      .in("metric", PHONE_BEHAVIOR_METRICS)
+      .eq("enabled", true);
+
+    if (metricErr) throw new Error(`metric_settings query failed: ${metricErr.message}`);
+
+    // Group enabled metrics by user
+    const userMetrics = new Map<string, Set<string>>();
+    for (const row of metricRows ?? []) {
+      const uid = String(row.user_id);
+      if (!userMetrics.has(uid)) userMetrics.set(uid, new Set());
+      userMetrics.get(uid)!.add(row.metric);
+    }
+
+    const userIds = [...userMetrics.keys()];
+    console.log(`[daily-9am-phone-behavior] ${userIds.length} users with phone behavior enabled`);
+
+    const results = await mapLimit(userIds, 10, async (userId) => {
+      try {
+        // Resolve timezone
+        const timezone = await resolveTimezone(supabase, userId, utcDate);
+        if (!timezone) {
+          return { userId, status: "no_timezone" };
+        }
+
+        // Check if 9:00–9:10 AM local time
+        const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+        if (hh !== 9 || mm > 10) {
+          return { userId, status: "not_9am", localHour: hh };
+        }
+
+        const yesterday = addDaysIsoDate(localDate, -1);
+        const enabledMetrics = userMetrics.get(userId)!;
+        const aggregated: string[] = [];
+        const errors: string[] = [];
+
+        // ── Brightness ───────────────────────────────────────────────
+        if (enabledMetrics.has("phone_brightness_daily")) {
+          try {
+            const { data, error } = await supabase.rpc("aggregate_phone_brightness", {
+              p_user_id: userId,
+              p_date: yesterday,
+              p_timezone: timezone,
+            });
+
+            if (error) throw error;
+            if (data && data.length > 0 && data[0].sample_count > 0) {
+              const row = data[0];
+              const { error: upsertErr } = await supabase
+                .from("phone_brightness_daily")
+                .upsert(
+                  {
+                    user_id: userId,
+                    date: yesterday,
+                    value_mean: row.value_mean,
+                    value_max: row.value_max,
+                    sample_count: row.sample_count,
+                    source: "computed",
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: "user_id,date" }
+                );
+              if (upsertErr) throw upsertErr;
+              aggregated.push("brightness");
+            }
+          } catch (e: any) {
+            errors.push(`brightness: ${e.message}`);
+          }
+        }
+
+        // ── Volume ───────────────────────────────────────────────────
+        if (enabledMetrics.has("phone_volume_daily")) {
+          try {
+            const { data, error } = await supabase.rpc("aggregate_phone_volume", {
+              p_user_id: userId,
+              p_date: yesterday,
+              p_timezone: timezone,
+            });
+
+            if (error) throw error;
+            if (data && data.length > 0 && data[0].sample_count > 0) {
+              const row = data[0];
+              const { error: upsertErr } = await supabase
+                .from("phone_volume_daily")
+                .upsert(
+                  {
+                    user_id: userId,
+                    date: yesterday,
+                    value_mean_pct: row.value_mean_pct,
+                    sample_count: row.sample_count,
+                    source: "computed",
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: "user_id,date" }
+                );
+              if (upsertErr) throw upsertErr;
+              aggregated.push("volume");
+            }
+          } catch (e: any) {
+            errors.push(`volume: ${e.message}`);
+          }
+        }
+
+        // ── Dark Mode ────────────────────────────────────────────────
+        if (enabledMetrics.has("phone_dark_mode_daily")) {
+          try {
+            const { data, error } = await supabase.rpc("aggregate_phone_dark_mode", {
+              p_user_id: userId,
+              p_date: yesterday,
+              p_timezone: timezone,
+            });
+
+            if (error) throw error;
+            if (data && data.length > 0 && data[0].sample_count > 0) {
+              const row = data[0];
+              const { error: upsertErr } = await supabase
+                .from("phone_dark_mode_daily")
+                .upsert(
+                  {
+                    user_id: userId,
+                    date: yesterday,
+                    value_hours: row.value_hours,
+                    dark_samples: row.dark_samples,
+                    sample_count: row.sample_count,
+                    source: "computed",
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: "user_id,date" }
+                );
+              if (upsertErr) throw upsertErr;
+              aggregated.push("dark_mode");
+            }
+          } catch (e: any) {
+            errors.push(`dark_mode: ${e.message}`);
+          }
+        }
+
+        // ── Unlocks ──────────────────────────────────────────────────
+        if (enabledMetrics.has("phone_unlock_daily")) {
+          try {
+            const { data, error } = await supabase.rpc("aggregate_phone_unlocks", {
+              p_user_id: userId,
+              p_date: yesterday,
+              p_timezone: timezone,
+            });
+
+            if (error) throw error;
+            if (data && data.length > 0 && data[0].sample_count > 0) {
+              const row = data[0];
+              const { error: upsertErr } = await supabase
+                .from("phone_unlock_daily")
+                .upsert(
+                  {
+                    user_id: userId,
+                    date: yesterday,
+                    value_count: row.value_count,
+                    source: "computed",
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: "user_id,date" }
+                );
+              if (upsertErr) throw upsertErr;
+              aggregated.push("unlocks");
+            }
+          } catch (e: any) {
+            errors.push(`unlocks: ${e.message}`);
+          }
+        }
+
+        return {
+          userId,
+          status: errors.length > 0 ? "partial" : "ok",
+          date: yesterday,
+          aggregated,
+          errors: errors.length > 0 ? errors : undefined,
+        };
+      } catch (e: any) {
+        return { userId, status: "error", error: String(e?.message ?? e) };
+      }
+    });
+
+    const summary = {
+      total: results.length,
+      ok: results.filter((r: any) => r.status === "ok").length,
+      partial: results.filter((r: any) => r.status === "partial").length,
+      not9am: results.filter((r: any) => r.status === "not_9am").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      errors: results.filter((r: any) => r.status === "error").length,
+    };
+
+    console.log("[daily-9am-phone-behavior] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+  } catch (e: any) {
+    console.error("[daily-9am-phone-behavior] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
   }
 });
 
@@ -498,7 +1734,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 type ResolveRow = {
-  city_id: number;
+  city_id: number | null;  // UPDATED: Now nullable
   timezone: string | null;
   resolved_date?: string | null;
 };
@@ -585,17 +1821,29 @@ async function resolveWithDateFallback(
   const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
 
   for (const d of candidates) {
-    const { data, error } = await supabase.rpc("resolve_user_city_for_date", {
-      p_user_id: userId,
-      p_date: d,
-    });
+    // Direct query to user_location_daily - no RPC needed!
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone, date")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (error) {
-      throw new Error(`resolve_user_city_for_date failed for date=${d}: ${error.message}`);
+      throw new Error(`user_location_daily query failed for date=${d}: ${error.message}`);
     }
 
-    const row: ResolveRow | undefined = Array.isArray(data) ? data[0] : data;
-    if (row?.timezone) return { row, usedDate: row.resolved_date ?? d };
+    if (data?.timezone) {
+      const row: ResolveRow = {
+        city_id: null,  // No longer needed
+        timezone: data.timezone,
+        resolved_date: data.date
+      };
+      return { row, usedDate: data.date };
+    }
   }
 
   return { row: null, usedDate: null };
@@ -740,7 +1988,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 type ResolveRow = {
-  city_id: number;
+  city_id: number | null;  // UPDATED: Now nullable
   timezone: string | null;
   resolved_date?: string | null;
 };
@@ -827,17 +2075,29 @@ async function resolveWithDateFallback(
   const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
 
   for (const d of candidates) {
-    const { data, error } = await supabase.rpc("resolve_user_city_for_date", {
-      p_user_id: userId,
-      p_date: d,
-    });
+    // Direct query to user_location_daily - no RPC needed!
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone, date")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (error) {
-      throw new Error(`resolve_user_city_for_date failed for date=${d}: ${error.message}`);
+      throw new Error(`user_location_daily query failed for date=${d}: ${error.message}`);
     }
 
-    const row: ResolveRow | undefined = Array.isArray(data) ? data[0] : data;
-    if (row?.timezone) return { row, usedDate: row.resolved_date ?? d };
+    if (data?.timezone) {
+      const row: ResolveRow = {
+        city_id: null,  // No longer needed
+        timezone: data.timezone,
+        resolved_date: data.date
+      };
+      return { row, usedDate: data.date };
+    }
   }
 
   return { row: null, usedDate: null };
@@ -1012,6 +2272,418 @@ serve(async (req) => {
 });
 
 
+===== TITLE: daily-9am-triggers.txt =====
+
+// supabase/functions/daily-9am-triggers/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveUserTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+serve(async (req) => {
+  console.log("[daily-9am-triggers] start", {
+    nowUtc: new Date().toISOString(),
+    method: req.method,
+  });
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "daily-9am-triggers" } },
+    });
+
+    const nowUtc = new Date();
+    const nowIso = nowUtc.toISOString();
+    const utcDate = nowIso.slice(0, 10);
+
+    // Get all users with any trigger enabled
+    const { data: triggerSettings, error: tsErr } = await supabase
+      .from("trigger_settings")
+      .select("user_id")
+      .eq("enabled", true);
+
+    if (tsErr) {
+      throw new Error(`trigger_settings query failed: ${tsErr.message}`);
+    }
+
+    const userIds = [...new Set((triggerSettings ?? []).map((r) => r.user_id))];
+
+    if (userIds.length === 0) {
+      return jsonResponse({
+        ok: true,
+        message: "No users with triggers enabled",
+        enqueued: 0,
+      });
+    }
+
+    const results: unknown[] = [];
+    let enqueuedCount = 0;
+
+    for (const userId of userIds) {
+      const userResult: Record<string, unknown> = { userId };
+
+      // Resolve timezone
+      const timezone = await resolveUserTimezone(supabase, userId, utcDate);
+      if (!timezone) {
+        userResult.status = "no_timezone";
+        results.push(userResult);
+        continue;
+      }
+
+      userResult.timezone = timezone;
+
+      // Get local time
+      const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+      userResult.localTime = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+      userResult.localDate = localDate;
+
+      // Only enqueue if 9:00-9:09 AM local
+      if (hh !== 9 || mm >= 10) {
+        userResult.status = "outside_9am_window";
+        results.push(userResult);
+        continue;
+      }
+
+      // Enqueue trigger job
+      const { error: insErr } = await supabase.from("trigger_jobs").upsert(
+        {
+          job_type: "daily_triggers",
+          user_id: userId,
+          local_date: localDate,
+          status: "queued",
+          attempts: 0,
+          locked_at: null,
+          last_error: null,
+          created_by: "daily-9am-triggers",
+          timezone,
+          updated_at: nowIso,
+        },
+        { onConflict: "job_type,user_id,local_date", ignoreDuplicates: true }
+      );
+
+      if (insErr) {
+        userResult.status = "enqueue_error";
+        userResult.error = insErr.message;
+      } else {
+        userResult.status = "enqueued";
+        enqueuedCount++;
+      }
+
+      results.push(userResult);
+    }
+
+    const summary = {
+      totalUsers: userIds.length,
+      enqueued: enqueuedCount,
+      outside9am: results.filter((r: any) => r.status === "outside_9am_window").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      errors: results.filter((r: any) => r.status === "enqueue_error").length,
+    };
+
+    return jsonResponse({
+      ok: true,
+      nowUtc: nowIso,
+      utcDate,
+      summary,
+      results,
+    });
+  } catch (e) {
+    console.error("[daily-9am-triggers] error", e);
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});
+
+
+===== TITLE: daily-9am-weather-dispatcher.txt =====
+
+// FILE: supabase/functions/daily-9am-weather-dispatcher/index.ts
+//
+// Dispatcher that runs every 10 minutes via cron.
+// For users where it's 9:00-9:10 AM local time and weather is enabled,
+// queues a job to sync_jobs_weather for today's date.
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveTimezone(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string
+): Promise<string | null> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) continue;
+    if (data?.timezone) return data.timezone;
+  }
+
+  return null;
+}
+
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
+serve(async (req) => {
+  console.log("[daily-9am-weather-dispatcher] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowUtc = new Date();
+    const utcDate = nowUtc.toISOString().slice(0, 10);
+
+    // Get users with weather OR location enabled (need location to know their city)
+    const { data: metricRows, error: metricErr } = await supabase
+      .from("metric_settings")
+      .select("user_id, metric")
+      .eq("enabled", true)
+      .in("metric", ["weather", "location"]);
+
+    if (metricErr) throw new Error(`metric_settings query failed: ${metricErr.message}`);
+
+    // Group by user - need both location AND weather enabled
+    const userMetrics = new Map<string, Set<string>>();
+    for (const row of metricRows ?? []) {
+      const userId = String(row.user_id);
+      if (!userMetrics.has(userId)) userMetrics.set(userId, new Set());
+      userMetrics.get(userId)!.add(row.metric);
+    }
+
+    // Filter to users with location enabled (weather is optional - we'll still fetch for them)
+    const eligibleUsers = [...userMetrics.entries()]
+      .filter(([_, metrics]) => metrics.has("location"))
+      .map(([userId]) => userId);
+
+    console.log(`[daily-9am-weather-dispatcher] ${eligibleUsers.length} eligible users`);
+
+    const results = await mapLimit(eligibleUsers, 10, async (userId) => {
+      try {
+        // Resolve timezone
+        const timezone = await resolveTimezone(supabase, userId, utcDate);
+        if (!timezone) {
+          return { userId, status: "no_timezone" };
+        }
+
+        // Check if 9:00-9:10 AM local time
+        const { localDate, hh, mm } = getLocalTimeParts(timezone, nowUtc);
+        if (hh !== 9 || mm > 10) {
+          return { userId, status: "not_9am", localHour: hh };
+        }
+
+        // Queue job for TODAY (weather is fetched for current day)
+        const { error: upsertErr } = await supabase
+          .from("sync_jobs_weather")
+          .upsert(
+            {
+              user_id: userId,
+              local_date: localDate,
+              timezone: timezone,
+              status: "queued",
+              attempts: 0,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,local_date", ignoreDuplicates: true }
+          );
+
+        if (upsertErr) {
+          return { userId, status: "queue_error", error: upsertErr.message };
+        }
+
+        return { userId, status: "queued", date: localDate, timezone };
+
+      } catch (e: any) {
+        return { userId, status: "error", error: String(e?.message ?? e) };
+      }
+    });
+
+    const summary = {
+      total: results.length,
+      queued: results.filter((r: any) => r.status === "queued").length,
+      not9am: results.filter((r: any) => r.status === "not_9am").length,
+      noTimezone: results.filter((r: any) => r.status === "no_timezone").length,
+      errors: results.filter((r: any) => r.status === "error" || r.status === "queue_error").length,
+    };
+
+    console.log("[daily-9am-weather-dispatcher] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+
+  } catch (e: any) {
+    console.error("[daily-9am-weather-dispatcher] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
+  }
+});
+
+
 ===== TITLE: enqueue-login-backfill.txt =====
 
 // supabase/functions/enqueue-login-backfill/index.ts
@@ -1106,177 +2778,103 @@ async function resolveWithDateFallback(
   const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
 
   for (const d of candidates) {
-    const { data, error } = await supabase.rpc("resolve_user_city_for_date", {
-      p_user_id: userId,
-      p_date: d,
-    });
+    // Direct query to user_location_daily - no RPC needed!
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone, date")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (error) throw new Error(`resolve_user_city_for_date failed for date=${d}: ${error.message}`);
+    if (error) {
+      throw new Error(`user_location_daily query failed for date=${d}: ${error.message}`);
+    }
 
-    const row: ResolveRow | undefined = Array.isArray(data) ? data[0] : data;
-    if (row?.timezone) return { row, usedDate: row.resolved_date ?? d };
+    if (data?.timezone) {
+      const row: ResolveRow = {
+        city_id: null,  // No longer needed
+        timezone: data.timezone,
+        resolved_date: data.date
+      };
+      return { row, usedDate: data.date };
+    }
   }
 
   return { row: null, usedDate: null };
 }
+async function resolveWithDateFallback(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string,
+): Promise<{ row: ResolveRow | null; usedDate: string | null }> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
 
-function whoopIsNeeded(enabledMetrics: MetricSettingRow[]): boolean {
-  return enabledMetrics.some((m) => {
-    const pref = (m.preferred_source ?? "").toLowerCase();
-    const allowed = (m.allowed_sources ?? []).map((s) => String(s).toLowerCase());
-    return pref === "whoop" || allowed.includes("whoop");
-  });
-}
-
-function dateRangeInclusive(startIso: string, endIso: string) {
-  const out: string[] = [];
-  let cur = startIso;
-  for (let guard = 0; guard < 500; guard++) {
-    out.push(cur);
-    if (cur === endIso) break;
-    cur = addDaysIsoDate(cur, +1);
-  }
-  return out;
-}
-
-serve(async (req) => {
-  console.log("[enqueue-login-backfill] start", {
-    nowUtc: new Date().toISOString(),
-    method: req.method,
-    url: req.url,
-  });
-
-  try {
-    if (req.method !== "POST") return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
-
-    const supabaseUrl = requireEnv("SUPABASE_URL");
-    const anonKey = requireEnv("SUPABASE_ANON_KEY");
-    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
-
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.toLowerCase().startsWith("bearer ")) {
-      return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
-    }
-
-    // Identify user via JWT (RLS-safe reads)
-    const userClient = createClient(supabaseUrl, anonKey, {
-      auth: { persistSession: false },
-      global: {
-        headers: { Authorization: authHeader, "X-Client-Info": "enqueue-login-backfill-user" },
-      },
-    });
-
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData?.user) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
-
-    const userId = userData.user.id;
-
-    // Admin client for writing sync_jobs (bypasses RLS)
-    const admin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-      global: { headers: { "X-Client-Info": "enqueue-login-backfill-admin" } },
-    });
-
-    const nowUtc = new Date();
-    const nowIso = nowUtc.toISOString();
-    const utcDate = nowIso.slice(0, 10);
-
-    // Resolve timezone using the user client (safer if resolver has RLS dependencies)
-    const out = await resolveWithDateFallback(userClient, userId, utcDate);
-    if (!out.row?.timezone) return jsonResponse({ ok: true, enqueued: false, reason: "no_timezone" });
-
-    const tz = out.row.timezone;
-    const cityId = typeof out.row.city_id === "number" ? out.row.city_id : null;
-    const { localDate } = getLocalTimeParts(tz, nowUtc);
-
-    // Only enqueue if WHOOP is needed for any enabled metric
-    const { data: metrics, error: metErr } = await userClient
-      .from("metric_settings")
-      .select("user_id,metric,enabled,preferred_source,allowed_sources")
+  for (const d of candidates) {
+    // Direct query to user_location_daily - no RPC needed!
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone, date")
       .eq("user_id", userId)
-      .eq("enabled", true);
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (metErr) throw new Error(`metric_settings query failed: ${metErr.message}`);
-
-    const enabledMetrics = (metrics ?? []) as MetricSettingRow[];
-    if (!whoopIsNeeded(enabledMetrics)) {
-      return jsonResponse({ ok: true, enqueued: false, reason: "no_whoop_needed", userId, timezone: tz, localDate });
+    if (error) {
+      throw new Error(`user_location_daily query failed for date=${d}: ${error.message}`);
     }
 
-    // 30 days inclusive: today-29 .. today (LOCAL)
-    const startLocalDate = addDaysIsoDate(localDate, -29);
-    const endLocalDate = localDate;
-    const days = dateRangeInclusive(startLocalDate, endLocalDate);
-
-    // Cost-effective: only enqueue missing days (based on backend_daily_runs finalization)
-    const { data: alreadyRan, error: ranErr } = await admin
-      .from("backend_daily_runs")
-      .select("local_date")
-      .eq("user_id", userId)
-      .in("local_date", days);
-
-    if (ranErr) throw new Error(`backend_daily_runs query failed: ${ranErr.message}`);
-
-    const ranSet = new Set((alreadyRan ?? []).map((r: any) => String(r.local_date)));
-
-    const jobs: SyncJobInsert[] = [];
-
-    for (const d of days) {
-      if (ranSet.has(d)) continue;
-      jobs.push({
-        job_type: "whoop_daily",
-        user_id: userId,
-        local_date: d,
-        status: "queued",
-        updated_at: nowIso,
-        created_by: "login-backfill",
-        timezone: tz,
-        city_id: cityId,
-        // Self-heal stuck jobs
-        attempts: 0,
-        locked_at: null,
-        last_error: null,
-      });
+    if (data?.timezone) {
+      const row: ResolveRow = {
+        city_id: null,  // No longer needed
+        timezone: data.timezone,
+        resolved_date: data.date
+      };
+      return { row, usedDate: data.date };
     }
-
-    if (!jobs.length) {
-      return jsonResponse({
-        ok: true,
-        enqueued: false,
-        reason: "nothing_missing",
-        userId,
-        timezone: tz,
-        localDate,
-        startLocalDate,
-        endLocalDate,
-        jobs: 0,
-      });
-    }
-
-    // IMPORTANT: do NOT ignoreDuplicates here; we want to repair existing rows (e.g. timezone null, attempts cap)
-    const { error: insErr } = await admin.from("sync_jobs").upsert(jobs, {
-      onConflict: "job_type,user_id,local_date",
-    });
-
-    if (insErr) throw new Error(`sync_jobs upsert failed: ${insErr.message}`);
-
-    console.log("[enqueue-login-backfill] enqueued", { userId, startLocalDate, endLocalDate, jobs: jobs.length });
-
-    return jsonResponse({
-      ok: true,
-      enqueued: true,
-      userId,
-      timezone: tz,
-      localDate,
-      startLocalDate,
-      endLocalDate,
-      jobs: jobs.length,
-    });
-  } catch (e) {
-    console.log("[enqueue-login-backfill] error", { error: (e as Error).message });
-    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
   }
-});
+
+  return { row: null, usedDate: null };
+}
+async function resolveWithDateFallback(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string,
+): Promise<{ row: ResolveRow | null; usedDate: string | null }> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    // Direct query to user_location_daily - no RPC needed!
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone, date")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`user_location_daily query failed for date=${d}: ${error.message}`);
+    }
+
+    if (data?.timezone) {
+      const row: ResolveRow = {
+        city_id: null,  // No longer needed
+        timezone: data.timezone,
+        resolved_date: data.date
+      };
+      return { row, usedDate: data.date };
+    }
+  }
+
+  return { row: null, usedDate: null };
+}
 
 
 ===== TITLE: fetch_bucket.txt =====
@@ -1293,7 +2891,9 @@ const SB_KEY = Deno.env.get("SB_SERVICE_ROLE_KEY")!;
 
 const sb = createClient(SB_URL, SB_KEY);
 
-function bad(status: number, msg: string) { return new Response(msg, { status }); }
+function bad(status: number, msg: string) {
+  return new Response(msg, { status });
+}
 
 serve(async (req) => {
   try {
@@ -1305,7 +2905,7 @@ serve(async (req) => {
       bucket = Number(body?.bucket);
     }
     if (!Number.isInteger(bucket) || bucket < 1 || bucket > 12) {
-      return bad(400, "bucket=1..12 required");
+      return bad(400, "bucket=1.12 required");
     }
 
     const { data: cities, error } = await sb
@@ -1314,21 +2914,30 @@ serve(async (req) => {
       .eq("bucket", bucket)
       .returns<City[]>();
     if (error) return bad(500, error.message);
-    if (!cities?.length) return new Response(JSON.stringify({ bucket, ok: 0, err: 0 }), { headers: { "content-type": "application/json" } });
+    if (!cities?.length)
+      return new Response(JSON.stringify({ bucket, ok: 0, err: 0 }), {
+        headers: { "content-type": "application/json" },
+      });
 
-    let ok = 0, err = 0;
+    let ok = 0,
+      err = 0;
     for (const c of cities) {
       try {
         const tz = c.timezone ?? "auto";
         const u = new URL("https://api.open-meteo.com/v1/forecast");
         u.searchParams.set("latitude", String(c.lat));
         u.searchParams.set("longitude", String(c.lon));
-        u.searchParams.set("daily","temperature_2m_min,temperature_2m_max,temperature_2m_mean,surface_pressure_mean,relative_humidity_2m_mean");
-        u.searchParams.set("past_days","2");
-        u.searchParams.set("forecast_days","7");
+        u.searchParams.set(
+          "daily",
+          "temperature_2m_min,temperature_2m_max,temperature_2m_mean,surface_pressure_mean,surface_pressure_min,surface_pressure_max,relative_humidity_2m_mean,relative_humidity_2m_min,relative_humidity_2m_max,uv_index_max,wind_speed_10m_mean,wind_speed_10m_max,weathercode",
+        );
+        u.searchParams.set("past_days", "2");
+        u.searchParams.set("forecast_days", "7");
         u.searchParams.set("timezone", tz);
 
-        const resp = await fetch(u.toString(), { headers: { accept: "application/json" } });
+        const resp = await fetch(u.toString(), {
+          headers: { accept: "application/json" },
+        });
         if (!resp.ok) throw new Error(`open-meteo ${resp.status}`);
         const d = (await resp.json())?.daily;
         if (!d?.time) throw new Error("missing daily block");
@@ -1340,7 +2949,15 @@ serve(async (req) => {
           p_tmax: d.temperature_2m_max,
           p_tmean: d.temperature_2m_mean,
           p_pmean: d.surface_pressure_mean,
+          p_pmin: d.surface_pressure_min,
+          p_pmax: d.surface_pressure_max,
           p_hmean: d.relative_humidity_2m_mean,
+          p_hmin: d.relative_humidity_2m_min,
+          p_hmax: d.relative_humidity_2m_max,
+          p_uv_max: d.uv_index_max,
+          p_wind_mean: d.wind_speed_10m_mean,
+          p_wind_max: d.wind_speed_10m_max,
+          p_weather_code: d.weathercode,
         });
         if (rpcErr) throw rpcErr;
         ok++;
@@ -1348,7 +2965,9 @@ serve(async (req) => {
         err++;
       }
     }
-    return new Response(JSON.stringify({ bucket, ok, err }), { headers: { "content-type": "application/json" } });
+    return new Response(JSON.stringify({ bucket, ok, err }), {
+      headers: { "content-type": "application/json" },
+    });
   } catch (e) {
     return bad(500, String(e));
   }
@@ -1358,20 +2977,340 @@ serve(async (req) => {
 ===== TITLE: noise-index-worker.txt =====
 
 // FILE: supabase/functions/noise-index-worker/index.ts
+//
+// Worker that processes jobs from sync_jobs_noise.
+// Aggregates samples from ambient_noise_samples into ambient_noise_index_daily.
+// Computes baseline from past 14 days and calculates value_index_pct.
+
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
-type ResolveRow = {
-  city_id: number;
-  timezone: string | null;
-  resolved_date?: string | null;
-};
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function parseGmtOffsetToMinutes(gmt: string): number | null {
+  const raw = (gmt ?? "").trim().toUpperCase();
+  if (raw === "GMT" || raw === "UTC" || raw === "UT") return 0;
+
+  const m = raw.match(/(?:GMT|UTC)?\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/);
+  if (!m) return null;
+
+  const sign = m[1] === "-" ? -1 : 1;
+  const hh = Number(m[2]);
+  const mm = m[3] ? Number(m[3]) : 0;
+  return sign * (hh * 60 + mm);
+}
+
+function getOffsetMinutesForInstant(timeZone: string, instant: Date): number {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "shortOffset",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(instant);
+  const tzPart = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+  const mins = parseGmtOffsetToMinutes(tzPart);
+  if (mins == null) throw new Error(`Could not parse timezone offset "${tzPart}" for tz=${timeZone}`);
+  return mins;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+/**
+ * Convert local date to UTC timestamp range for that entire day
+ */
+function getUtcRangeForLocalDate(
+  timeZone: string,
+  localDate: string
+): { startUtc: string; endUtc: string } {
+  const [y, m, d] = localDate.split("-").map(Number);
+
+  // Start of day (00:00:00) in local time
+  const startLocal = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+  const startOffset = getOffsetMinutesForInstant(timeZone, startLocal);
+  const startUtc = new Date(startLocal.getTime() - startOffset * 60_000);
+
+  // End of day (23:59:59.999) in local time
+  const endLocal = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999));
+  const endOffset = getOffsetMinutesForInstant(timeZone, endLocal);
+  const endUtc = new Date(endLocal.getTime() - endOffset * 60_000);
+
+  return {
+    startUtc: startUtc.toISOString(),
+    endUtc: endUtc.toISOString(),
+  };
+}
+
+/**
+ * Calculate value_index_pct: how today compares to baseline
+ * 0 = quietest (at or below baseline), 100 = loudest (significantly above baseline)
+ */
+function calculateIndexPct(
+  dayMeanLmean: number,
+  baselineMeanLmean: number | null,
+  baselineDays: number
+): number {
+  // If no baseline or insufficient data, return 100 (assume it's notable)
+  if (baselineMeanLmean == null || baselineDays < 3) {
+    return 100;
+  }
+
+  // Calculate how much louder today is vs baseline
+  // Using a simple ratio approach
+  const diff = dayMeanLmean - baselineMeanLmean;
+  
+  if (diff <= 0) {
+    // At or below baseline = quiet day
+    return 0;
+  }
+
+  // Scale: if diff > 2.0 (log scale), consider it 100%
+  // This is roughly 7x louder in linear scale
+  const maxDiff = 2.0;
+  const pct = Math.min(100, Math.round((diff / maxDiff) * 100));
+  
+  return pct;
+}
+
+serve(async (req) => {
+  console.log("[noise-index-worker] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowIso = new Date().toISOString();
+    const MAX_ATTEMPTS = 3;
+    const BATCH_SIZE = 20;
+    const BASELINE_DAYS = 14;
+
+    // Fetch queued jobs
+    const { data: jobs, error: jobsErr } = await supabase
+      .from("sync_jobs_noise")
+      .select("*")
+      .eq("status", "queued")
+      .lt("attempts", MAX_ATTEMPTS)
+      .order("created_at", { ascending: true })
+      .limit(BATCH_SIZE);
+
+    if (jobsErr) throw new Error(`Failed to fetch jobs: ${jobsErr.message}`);
+
+    if (!jobs || jobs.length === 0) {
+      console.log("[noise-index-worker] no queued jobs");
+      return jsonResponse({ ok: true, processed: 0 });
+    }
+
+    console.log(`[noise-index-worker] processing ${jobs.length} jobs`);
+
+    const results: { jobId: string; status: string; error?: string; sampleCount?: number }[] = [];
+
+    for (const job of jobs) {
+      const jobId = job.id;
+      const userId = job.user_id;
+      const localDate = job.local_date;
+      const timezone = job.timezone;
+
+      try {
+        // Mark as processing
+        await supabase
+          .from("sync_jobs_noise")
+          .update({ status: "processing", attempts: job.attempts + 1, updated_at: nowIso })
+          .eq("id", jobId);
+
+        // Get UTC range for the local date
+        const { startUtc, endUtc } = getUtcRangeForLocalDate(timezone, localDate);
+
+        console.log(`[noise-index-worker] job=${jobId} user=${userId} date=${localDate} range=${startUtc} to ${endUtc}`);
+
+        // Fetch noise samples for this user and date range
+        const { data: samples, error: samplesErr } = await supabase
+          .from("ambient_noise_samples")
+          .select("l_mean, l_p90, l_max, duration_s")
+          .eq("user_id", userId)
+          .gte("start_ts", startUtc)
+          .lte("start_ts", endUtc);
+
+        if (samplesErr) {
+          throw new Error(`Failed to fetch samples: ${samplesErr.message}`);
+        }
+
+        // Calculate day metrics (even if no samples, we record 0)
+        let dayMeanLmean: number | null = null;
+        let dayMeanLp90: number | null = null;
+        let dayMaxLmax: number | null = null;
+        const samplesCount = samples?.length ?? 0;
+
+        if (samples && samples.length > 0) {
+          const lMeanValues = samples.map((s: any) => s.l_mean as number);
+          const lP90Values = samples.filter((s: any) => s.l_p90 != null).map((s: any) => s.l_p90 as number);
+          const lMaxValues = samples.filter((s: any) => s.l_max != null).map((s: any) => s.l_max as number);
+
+          dayMeanLmean = lMeanValues.reduce((a, b) => a + b, 0) / lMeanValues.length;
+          dayMeanLp90 = lP90Values.length > 0
+            ? lP90Values.reduce((a, b) => a + b, 0) / lP90Values.length
+            : null;
+          dayMaxLmax = lMaxValues.length > 0 ? Math.max(...lMaxValues) : null;
+        }
+
+        // Fetch baseline from past 14 days (excluding today)
+        const baselineStartDate = addDaysIsoDate(localDate, -BASELINE_DAYS);
+        const baselineEndDate = addDaysIsoDate(localDate, -1);
+
+        const { data: baselineRows, error: baselineErr } = await supabase
+          .from("ambient_noise_index_daily")
+          .select("day_mean_lmean, day_mean_lp90, day_max_lmax")
+          .eq("user_id", userId)
+          .gte("date", baselineStartDate)
+          .lte("date", baselineEndDate)
+          .not("day_mean_lmean", "is", null);
+
+        if (baselineErr) {
+          console.warn(`[noise-index-worker] baseline query failed: ${baselineErr.message}`);
+        }
+
+        // Calculate baseline metrics
+        let baselineDays = 0;
+        let baselineMeanLmean: number | null = null;
+        let baselineMeanLp90: number | null = null;
+        let baselineMaxLmax: number | null = null;
+
+        if (baselineRows && baselineRows.length > 0) {
+          baselineDays = baselineRows.length;
+          
+          const blLmean = baselineRows.map((r: any) => Number(r.day_mean_lmean)).filter((v) => !isNaN(v));
+          const blLp90 = baselineRows.filter((r: any) => r.day_mean_lp90 != null).map((r: any) => Number(r.day_mean_lp90));
+          const blLmax = baselineRows.filter((r: any) => r.day_max_lmax != null).map((r: any) => Number(r.day_max_lmax));
+
+          if (blLmean.length > 0) {
+            baselineMeanLmean = blLmean.reduce((a, b) => a + b, 0) / blLmean.length;
+          }
+          if (blLp90.length > 0) {
+            baselineMeanLp90 = blLp90.reduce((a, b) => a + b, 0) / blLp90.length;
+          }
+          if (blLmax.length > 0) {
+            baselineMaxLmax = Math.max(...blLmax);
+          }
+        }
+
+        // Calculate index percentage
+        const valueIndexPct = dayMeanLmean != null
+          ? calculateIndexPct(dayMeanLmean, baselineMeanLmean, baselineDays)
+          : 0;
+
+        // Upsert to ambient_noise_index_daily
+        const { error: upsertErr } = await supabase
+          .from("ambient_noise_index_daily")
+          .upsert(
+            {
+              user_id: userId,
+              date: localDate,
+              source: "computed",
+              value_index_pct: valueIndexPct,
+              samples_count: samplesCount,
+              day_mean_lmean: dayMeanLmean,
+              day_mean_lp90: dayMeanLp90,
+              day_max_lmax: dayMaxLmax,
+              baseline_days: baselineDays,
+              baseline_mean_lmean: baselineMeanLmean,
+              baseline_mean_lp90: baselineMeanLp90,
+              baseline_max_lmax: baselineMaxLmax,
+              computed_at: nowIso,
+              updated_at: nowIso,
+            },
+            { onConflict: "user_id,date" }
+          );
+
+        if (upsertErr) {
+          throw new Error(`Failed to upsert daily index: ${upsertErr.message}`);
+        }
+
+        // Mark job as done
+        await supabase
+          .from("sync_jobs_noise")
+          .update({ status: "done", updated_at: nowIso })
+          .eq("id", jobId);
+
+        results.push({ jobId, status: "done", sampleCount: samplesCount });
+        console.log(`[noise-index-worker] job=${jobId} done, ${samplesCount} samples, index=${valueIndexPct}%`);
+
+      } catch (e: any) {
+        console.error(`[noise-index-worker] job=${jobId} error:`, e);
+
+        // Mark as failed or back to queued for retry
+        const newStatus = job.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "queued";
+        await supabase
+          .from("sync_jobs_noise")
+          .update({
+            status: newStatus,
+            last_error: String(e?.message ?? e),
+            updated_at: nowIso,
+          })
+          .eq("id", jobId);
+
+        results.push({ jobId, status: "error", error: String(e?.message ?? e) });
+      }
+    }
+
+    const summary = {
+      total: results.length,
+      done: results.filter((r) => r.status === "done").length,
+      errors: results.filter((r) => r.status === "error").length,
+    };
+
+    console.log("[noise-index-worker] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+
+  } catch (e: any) {
+    console.error("[noise-index-worker] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
+  }
+});
+
+
+===== TITLE: nutrition-daily-worker.txt =====
+
+// FILE: supabase/functions/nutrition-daily-worker/index.ts
+//
+// Worker that processes jobs from sync_jobs_nutrition.
+// Reads nutrition_records for a user/date window, aggregates them,
+// and upserts to nutrition_daily.
+//
+// Pattern copied from noise-index-worker
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 type SyncJobRow = {
   id: string | number;
-  job_type: string;
   user_id: string;
   local_date: string;
+  timezone: string;
   status: string;
   attempts: number;
   locked_at: string | null;
@@ -1388,13 +3327,6 @@ function requireEnv(name: string): string {
   const v = Deno.env.get(name);
   if (!v) throw new Error(`Missing env var: ${name}`);
   return v;
-}
-
-function addDaysIsoDate(isoDate: string, deltaDays: number): string {
-  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
-  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  dt.setUTCDate(dt.getUTCDate() + deltaDays);
-  return dt.toISOString().slice(0, 10);
 }
 
 function parseGmtOffsetToMinutes(gmt: string): number | null {
@@ -1446,56 +3378,13 @@ function localDateTimeToUtcIso(
   return new Date(guess).toISOString();
 }
 
-async function resolveWithDateFallback(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  isoDate: string,
-): Promise<{ row: ResolveRow | null; usedDate: string | null }> {
-  const candidates = [addDaysIsoDate(isoDate, -1), isoDate, addDaysIsoDate(isoDate, +1)];
-
-  for (const d of candidates) {
-    const { data, error } = await supabase.rpc("resolve_user_city_for_date", {
-      p_user_id: userId,
-      p_date: d,
-    });
-
-    if (error) throw new Error(`resolve_user_city_for_date failed for date=${d}: ${error.message}`);
-
-    const row: ResolveRow | undefined = Array.isArray(data) ? data[0] : data;
-    if (row?.timezone) return { row, usedDate: row.resolved_date ?? d };
-  }
-
-  return { row: null, usedDate: null };
-}
-
 function numOrNull(v: unknown): number | null {
   const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
   return Number.isFinite(n) ? n : null;
 }
 
-function intOrNull(v: unknown): number | null {
-  const n = numOrNull(v);
-  if (n == null) return null;
-  return Math.trunc(n);
-}
-
-function clamp01(x: number): number {
-  if (x < 0) return 0;
-  if (x > 1) return 1;
-  return x;
-}
-
-// Map mean dB to index in [0..100]:
-// <= 40 dB => 100, >= 80 dB => 0 (linear clamp)
-function noiseDbToIndex(meanDb: number): number {
-  const lo = 40;
-  const hi = 80;
-  const t = clamp01((meanDb - lo) / (hi - lo));
-  return (1 - t) * 100.0;
-}
-
 serve(async (req) => {
-  console.log("[noise-index-worker] start", { nowUtc: new Date().toISOString(), method: req.method, url: req.url });
+  console.log("[nutrition-daily-worker] start", { nowUtc: new Date().toISOString(), method: req.method, url: req.url });
 
   try {
     if (req.method !== "POST" && req.method !== "GET") {
@@ -1507,24 +3396,23 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
-      global: { headers: { "X-Client-Info": "noise-index-worker" } },
+      global: { headers: { "X-Client-Info": "nutrition-daily-worker" } },
     });
 
     const nowUtc = new Date();
     const nowIso = nowUtc.toISOString();
     const staleCutoffIso = new Date(nowUtc.getTime() - 30 * 60_000).toISOString();
 
-    // Pick noise jobs only
+    // Pick nutrition jobs
     const { data: jobs, error: jobsErr } = await supabase
-      .from("sync_jobs")
-      .select("id,job_type,user_id,local_date,status,attempts,locked_at")
-      .eq("job_type", "noise_index_daily")
+      .from("sync_jobs_nutrition")
+      .select("id,user_id,local_date,timezone,status,attempts,locked_at")
       .or(`status.eq.queued,status.eq.running.and(locked_at.lt.${staleCutoffIso})`)
       .order("local_date", { ascending: true })
       .order("created_at", { ascending: true })
       .limit(50);
 
-    if (jobsErr) throw new Error(`sync_jobs select failed: ${jobsErr.message}`);
+    if (jobsErr) throw new Error(`sync_jobs_nutrition select failed: ${jobsErr.message}`);
 
     const picked = (jobs ?? []) as SyncJobRow[];
     if (!picked.length) {
@@ -1536,7 +3424,7 @@ serve(async (req) => {
 
       if (job.status === "queued") {
         const { data, error } = await supabase
-          .from("sync_jobs")
+          .from("sync_jobs_nutrition")
           .update({ status: "running", locked_at: lockIso, updated_at: lockIso, last_error: null })
           .eq("id", job.id)
           .eq("status", "queued")
@@ -1548,7 +3436,7 @@ serve(async (req) => {
       }
 
       const { data, error } = await supabase
-        .from("sync_jobs")
+        .from("sync_jobs_nutrition")
         .update({ status: "running", locked_at: lockIso, updated_at: lockIso })
         .eq("id", job.id)
         .eq("status", "running")
@@ -1561,14 +3449,14 @@ serve(async (req) => {
     }
 
     async function bumpAttempts(jobId: string | number): Promise<number> {
-      const { data: row, error: selErr } = await supabase.from("sync_jobs").select("attempts").eq("id", jobId).maybeSingle();
+      const { data: row, error: selErr } = await supabase.from("sync_jobs_nutrition").select("attempts").eq("id", jobId).maybeSingle();
       if (selErr) throw new Error(`bump_attempts_select_failed: ${selErr.message}`);
 
       const current = typeof (row as any)?.attempts === "number" ? (row as any).attempts : 0;
       const next = current + 1;
 
       const { error: updErr } = await supabase
-        .from("sync_jobs")
+        .from("sync_jobs_nutrition")
         .update({ attempts: next, updated_at: new Date().toISOString() })
         .eq("id", jobId);
 
@@ -1579,13 +3467,13 @@ serve(async (req) => {
 
     async function markJobDone(jobId: string | number) {
       const endIso = new Date().toISOString();
-      await supabase.from("sync_jobs").update({ status: "done", finished_at: endIso, updated_at: endIso, locked_at: null }).eq("id", jobId);
+      await supabase.from("sync_jobs_nutrition").update({ status: "done", finished_at: endIso, updated_at: endIso, locked_at: null }).eq("id", jobId);
     }
 
     async function markJobError(jobId: string | number, errMsg: string) {
       const endIso = new Date().toISOString();
       await supabase
-        .from("sync_jobs")
+        .from("sync_jobs_nutrition")
         .update({ status: "error", last_error: errMsg, finished_at: endIso, updated_at: endIso, locked_at: null })
         .eq("id", jobId);
     }
@@ -1596,88 +3484,227 @@ serve(async (req) => {
 
       const userId = String(job.user_id);
       const jobLocalDate = String(job.local_date);
+      const tz = job.timezone;
 
       try {
         await bumpAttempts(job.id);
 
-        const out = await resolveWithDateFallback(supabase, userId, jobLocalDate);
-        if (!out.row?.timezone) {
+        if (!tz) {
           await markJobError(job.id, "no_timezone");
           return { jobId: job.id, userId, date: jobLocalDate, status: "no_timezone" };
         }
 
-        const tz = out.row.timezone;
-
-        // 24h window ending at 09:00 LOCAL on this local_date
+        // 24h window: midnight to midnight local time for the given date
         const [y, m, d] = jobLocalDate.split("-").map((x) => Number(x));
-        const windowEndUtcIso = localDateTimeToUtcIso(tz, y, m, d, 9, 0, 0);
-        const windowEndMs = new Date(windowEndUtcIso).getTime();
-        const windowStartUtcIso = new Date(windowEndMs - 24 * 60 * 60 * 1000).toISOString();
+        const windowStartUtcIso = localDateTimeToUtcIso(tz, y, m, d, 0, 0, 0);
+        const windowEndUtcIso = localDateTimeToUtcIso(tz, y, m, d, 23, 59, 59);
 
-        // Pull samples in window
+        // Pull nutrition records in window
         const { data: rows, error } = await supabase
-          .from("ambient_noise_samples")
-          .select("start_ts,duration_s,l_mean,l_p90,l_max")
+          .from("nutrition_records")
+          .select(`
+            id, timestamp, meal_type,
+            calories, protein, total_carbohydrate, total_fat,
+            dietary_fiber, sugar, saturated_fat, unsaturated_fat,
+            monounsaturated_fat, polyunsaturated_fat, trans_fat, cholesterol,
+            calcium, chloride, chromium, copper, iodine, iron,
+            magnesium, manganese, molybdenum, phosphorus, potassium,
+            selenium, sodium, zinc,
+            vitamin_a, vitamin_b6, vitamin_b12, vitamin_c, vitamin_d,
+            vitamin_e, vitamin_k, biotin, folate, folic_acid,
+            niacin, pantothenic_acid, riboflavin, thiamin,
+            caffeine
+          `)
           .eq("user_id", userId)
-          .gte("start_ts", windowStartUtcIso)
-          .lt("start_ts", windowEndUtcIso)
-          .order("start_ts", { ascending: true });
+          .gte("timestamp", windowStartUtcIso)
+          .lte("timestamp", windowEndUtcIso)
+          .order("timestamp", { ascending: true });
 
-        if (error) throw new Error(`ambient_noise_samples query failed: ${error.message}`);
+        if (error) throw new Error(`nutrition_records query failed: ${error.message}`);
 
-        const samples = (rows ?? []) as any[];
+        const records = (rows ?? []) as any[];
 
-        let sampleCount = 0;
-        let totalDur = 0;
-        let weightedSum = 0;
+        // Aggregate values - initialize all totals
+        const totals = {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          fiber: 0,
+          sugar: 0,
+          saturatedFat: 0,
+          unsaturatedFat: 0,
+          monounsaturatedFat: 0,
+          polyunsaturatedFat: 0,
+          transFat: 0,
+          cholesterol: 0,
+          // Minerals
+          calcium: 0,
+          chloride: 0,
+          chromium: 0,
+          copper: 0,
+          iodine: 0,
+          iron: 0,
+          magnesium: 0,
+          manganese: 0,
+          molybdenum: 0,
+          phosphorus: 0,
+          potassium: 0,
+          selenium: 0,
+          sodium: 0,
+          zinc: 0,
+          // Vitamins
+          vitaminA: 0,
+          vitaminB6: 0,
+          vitaminB12: 0,
+          vitaminC: 0,
+          vitaminD: 0,
+          vitaminE: 0,
+          vitaminK: 0,
+          biotin: 0,
+          folate: 0,
+          folicAcid: 0,
+          niacin: 0,
+          pantothenicAcid: 0,
+          riboflavin: 0,
+          thiamin: 0,
+          // Other
+          caffeine: 0,
+        };
 
-        let p90Max: number | null = null;
-        let maxMax: number | null = null;
+        const mealTypes = new Set<string>();
+        let recordCount = 0;
 
-        for (const r of samples) {
-          const dur = intOrNull(r?.duration_s) ?? 0;
-          const mean = numOrNull(r?.l_mean);
-          const p90 = numOrNull(r?.l_p90);
-          const mx = numOrNull(r?.l_max);
+        for (const r of records) {
+          recordCount++;
 
-          if (dur > 0 && mean != null) {
-            sampleCount += 1;
-            totalDur += dur;
-            weightedSum += mean * dur;
-          }
+          // Helper to add to total
+          const add = (key: keyof typeof totals, val: unknown) => {
+            const n = numOrNull(val);
+            if (n != null) totals[key] += n;
+          };
 
-          if (p90 != null) p90Max = p90Max == null ? p90 : Math.max(p90Max, p90);
-          if (mx != null) maxMax = maxMax == null ? mx : Math.max(maxMax, mx);
+          // Macros
+          add("calories", r?.calories);
+          add("protein", r?.protein);
+          add("carbs", r?.total_carbohydrate);
+          add("fat", r?.total_fat);
+          add("fiber", r?.dietary_fiber);
+          add("sugar", r?.sugar);
+          add("saturatedFat", r?.saturated_fat);
+          add("unsaturatedFat", r?.unsaturated_fat);
+          add("monounsaturatedFat", r?.monounsaturated_fat);
+          add("polyunsaturatedFat", r?.polyunsaturated_fat);
+          add("transFat", r?.trans_fat);
+          add("cholesterol", r?.cholesterol);
+
+          // Minerals
+          add("calcium", r?.calcium);
+          add("chloride", r?.chloride);
+          add("chromium", r?.chromium);
+          add("copper", r?.copper);
+          add("iodine", r?.iodine);
+          add("iron", r?.iron);
+          add("magnesium", r?.magnesium);
+          add("manganese", r?.manganese);
+          add("molybdenum", r?.molybdenum);
+          add("phosphorus", r?.phosphorus);
+          add("potassium", r?.potassium);
+          add("selenium", r?.selenium);
+          add("sodium", r?.sodium);
+          add("zinc", r?.zinc);
+
+          // Vitamins
+          add("vitaminA", r?.vitamin_a);
+          add("vitaminB6", r?.vitamin_b6);
+          add("vitaminB12", r?.vitamin_b12);
+          add("vitaminC", r?.vitamin_c);
+          add("vitaminD", r?.vitamin_d);
+          add("vitaminE", r?.vitamin_e);
+          add("vitaminK", r?.vitamin_k);
+          add("biotin", r?.biotin);
+          add("folate", r?.folate);
+          add("folicAcid", r?.folic_acid);
+          add("niacin", r?.niacin);
+          add("pantothenicAcid", r?.pantothenic_acid);
+          add("riboflavin", r?.riboflavin);
+          add("thiamin", r?.thiamin);
+
+          // Other
+          add("caffeine", r?.caffeine);
+
+          const mealType = r?.meal_type;
+          if (mealType && mealType !== "unknown") mealTypes.add(mealType);
         }
 
-        const meanDb = totalDur > 0 ? weightedSum / totalDur : null;
-        const indexScore = meanDb == null ? 0 : noiseDbToIndex(meanDb);
-
+        const mealCount = mealTypes.size;
         const computedAt = new Date().toISOString();
 
-        // IMPORTANT:
-        // Your DB schema has baseline_days as NOT NULL.
-        // We are not computing a baseline yet, so we set baseline_days = 0.
-        const baselineDays = 0;
+        // Helper: return value or null if no records
+        const valOrNull = (v: number) => recordCount > 0 ? v : null;
 
+        // Upsert to nutrition_daily
         const { error: upErr } = await supabase
-          .from("ambient_noise_index_daily")
+          .from("nutrition_daily")
           .upsert(
             {
               user_id: userId,
               date: jobLocalDate,
               source: "computed",
 
-              value_index_pct: indexScore,
-              samples_count: sampleCount,
-              day_mean_lmean: meanDb,
-              day_mean_lp90: p90Max,
-              day_max_lmax: maxMax,
+              // Energy
+              total_calories: valOrNull(totals.calories),
 
-              baseline_days: baselineDays,
-              baseline_mean_lmean: null,
-              baseline_mean_lp90: null,
-              baseline_max_lmax: null,
+              // Macros
+              total_protein_g: valOrNull(totals.protein),
+              total_carbs_g: valOrNull(totals.carbs),
+              total_fat_g: valOrNull(totals.fat),
+              total_fiber_g: valOrNull(totals.fiber),
+              total_sugar_g: valOrNull(totals.sugar),
+              total_saturated_fat_g: valOrNull(totals.saturatedFat),
+              total_unsaturated_fat_g: valOrNull(totals.unsaturatedFat),
+              total_monounsaturated_fat_g: valOrNull(totals.monounsaturatedFat),
+              total_polyunsaturated_fat_g: valOrNull(totals.polyunsaturatedFat),
+              total_trans_fat_g: valOrNull(totals.transFat),
+              total_cholesterol_mg: valOrNull(totals.cholesterol),
+
+              // Minerals
+              total_calcium_mg: valOrNull(totals.calcium),
+              total_chloride_mg: valOrNull(totals.chloride),
+              total_chromium_mcg: valOrNull(totals.chromium),
+              total_copper_mg: valOrNull(totals.copper),
+              total_iodine_mcg: valOrNull(totals.iodine),
+              total_iron_mg: valOrNull(totals.iron),
+              total_magnesium_mg: valOrNull(totals.magnesium),
+              total_manganese_mg: valOrNull(totals.manganese),
+              total_molybdenum_mcg: valOrNull(totals.molybdenum),
+              total_phosphorus_mg: valOrNull(totals.phosphorus),
+              total_potassium_mg: valOrNull(totals.potassium),
+              total_selenium_mcg: valOrNull(totals.selenium),
+              total_sodium_mg: valOrNull(totals.sodium),
+              total_zinc_mg: valOrNull(totals.zinc),
+
+              // Vitamins
+              total_vitamin_a_mcg: valOrNull(totals.vitaminA),
+              total_vitamin_b6_mg: valOrNull(totals.vitaminB6),
+              total_vitamin_b12_mcg: valOrNull(totals.vitaminB12),
+              total_vitamin_c_mg: valOrNull(totals.vitaminC),
+              total_vitamin_d_mcg: valOrNull(totals.vitaminD),
+              total_vitamin_e_mg: valOrNull(totals.vitaminE),
+              total_vitamin_k_mcg: valOrNull(totals.vitaminK),
+              total_biotin_mcg: valOrNull(totals.biotin),
+              total_folate_mcg: valOrNull(totals.folate),
+              total_folic_acid_mcg: valOrNull(totals.folicAcid),
+              total_niacin_mg: valOrNull(totals.niacin),
+              total_pantothenic_acid_mg: valOrNull(totals.pantothenicAcid),
+              total_riboflavin_mg: valOrNull(totals.riboflavin),
+              total_thiamin_mg: valOrNull(totals.thiamin),
+
+              // Other
+              total_caffeine_mg: valOrNull(totals.caffeine),
+
+              meal_count: mealCount,
+              record_count: recordCount,
 
               computed_at: computedAt,
               created_at: computedAt,
@@ -1686,7 +3713,7 @@ serve(async (req) => {
             { onConflict: "user_id,date,source" },
           );
 
-        if (upErr) throw new Error(`ambient_noise_index_daily upsert failed: ${upErr.message}`);
+        if (upErr) throw new Error(`nutrition_daily upsert failed: ${upErr.message}`);
 
         await markJobDone(job.id);
 
@@ -1698,13 +3725,12 @@ serve(async (req) => {
           timezone: tz,
           windowStartUtcIso,
           windowEndUtcIso,
-          sampleCount,
-          totalDur,
-          meanDb,
-          p90Max,
-          maxMax,
-          indexScore,
-          baselineDays,
+          recordCount,
+          mealCount,
+          totalCalories: totals.calories,
+          totalProtein: totals.protein,
+          totalCarbs: totals.carbs,
+          totalFat: totals.fat,
         };
       } catch (e) {
         const msg = (e as Error).message;
@@ -1725,8 +3751,276 @@ serve(async (req) => {
 
     return jsonResponse({ ok: true, summary, results });
   } catch (e) {
-    console.log("[noise-index-worker] fatal", { error: (e as Error).message });
+    console.log("[nutrition-daily-worker] fatal", { error: (e as Error).message });
     return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});
+
+
+===== TITLE: send-fcm-push.txt =====
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const FIREBASE_SERVICE_ACCOUNT = JSON.parse(
+  Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!
+);
+
+// Get Firebase access token using service account
+async function getFirebaseAccessToken(): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = now + 3600;
+
+  // Create JWT header and payload
+  const header = { alg: "RS256", typ: "JWT" };
+  const payload = {
+    iss: FIREBASE_SERVICE_ACCOUNT.client_email,
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: expiry,
+  };
+
+  // Encode to base64url
+  const encoder = new TextEncoder();
+  const headerB64 = btoa(JSON.stringify(header))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+  const payloadB64 = btoa(JSON.stringify(payload))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+
+  const signatureInput = `${headerB64}.${payloadB64}`;
+
+  // Import private key and sign
+  const pemContents = FIREBASE_SERVICE_ACCOUNT.private_key
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s/g, "");
+
+  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    cryptoKey,
+    encoder.encode(signatureInput)
+  );
+
+  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+
+  const jwt = `${signatureInput}.${signatureB64}`;
+
+  // Exchange JWT for access token
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+  });
+
+  const tokenData = await tokenResponse.json();
+  return tokenData.access_token;
+}
+
+// Send FCM message to a single device
+async function sendFcmMessage(
+  accessToken: string,
+  fcmToken: string,
+  messageType: string
+): Promise<boolean> {
+  const projectId = FIREBASE_SERVICE_ACCOUNT.project_id;
+  const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+  const message = {
+    message: {
+      token: fcmToken,
+      data: {
+        type: messageType,
+      },
+      android: {
+        priority: "high",
+      },
+    },
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(message),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error(`FCM send failed for token ${fcmToken.slice(0, 20)}...: ${error}`);
+    return false;
+  }
+
+  return true;
+}
+
+serve(async (req) => {
+  try {
+    // Allow both POST (manual trigger) and GET (cron trigger)
+    const url = new URL(req.url);
+    let messageType = "sync_hourly";
+
+    if (req.method === "POST") {
+      const body = await req.json();
+      messageType = body.type || "sync_hourly";
+    } else {
+      messageType = url.searchParams.get("type") || "sync_hourly";
+    }
+
+    console.log(`Sending FCM push: type=${messageType}`);
+
+    // Get all users with FCM tokens who have this metric enabled
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Map message type to metric name for filtering users
+    // sync_health_connect checks if user has ANY health connect metric enabled
+    const metricMap: Record<string, string> = {
+      sync_hourly: "user_location_daily", // triggers location + screen time
+      sync_location: "user_location_daily",
+      sync_screen_time: "screen_time_daily",
+      sync_weather: "weather",
+      sync_noise: "ambient_noise_samples",
+      sync_health_connect: "hrv_daily", // Use HRV as proxy - if they have HC connected, they'll have this
+    };
+
+    const metric = metricMap[messageType] || "user_location_daily";
+
+    let enabledUserIds: Set<string>;
+
+    if (messageType === "sync_health_connect") {
+      // For Health Connect, get users who have ANY health_connect metric enabled
+      const healthConnectMetrics = [
+        "sleep_duration_daily",
+        "hrv_daily",
+        "resting_hr_daily",
+        "steps_daily",
+        "weight_daily",
+        "body_fat_daily",
+        "hydration_daily",
+        "blood_pressure_daily",
+        "blood_glucose_daily",
+        "spo2_daily",
+        "respiratory_rate_daily",
+        "skin_temp_daily",
+      ];
+
+      const { data: enabledUsers, error: settingsError } = await supabase
+        .from("metric_settings")
+        .select("user_id")
+        .in("metric", healthConnectMetrics)
+        .eq("enabled", true)
+        .eq("preferred_source", "health_connect");
+
+      if (settingsError) {
+        console.error("Error fetching metric_settings:", settingsError);
+        return new Response(JSON.stringify({ error: settingsError.message }), {
+          status: 500,
+        });
+      }
+
+      enabledUserIds = new Set((enabledUsers || []).map((u) => u.user_id));
+    } else {
+      // Standard single metric check
+      const { data: enabledUsers, error: settingsError } = await supabase
+        .from("metric_settings")
+        .select("user_id")
+        .eq("metric", metric)
+        .eq("enabled", true);
+
+      if (settingsError) {
+        console.error("Error fetching metric_settings:", settingsError);
+        return new Response(JSON.stringify({ error: settingsError.message }), {
+          status: 500,
+        });
+      }
+
+      enabledUserIds = new Set((enabledUsers || []).map((u) => u.user_id));
+    }
+
+    console.log(`Found ${enabledUserIds.size} users with ${messageType} enabled`);
+
+    if (enabledUserIds.size === 0) {
+      return new Response(
+        JSON.stringify({ success: true, sent: 0, message: "No users with metric enabled" }),
+        { status: 200 }
+      );
+    }
+
+    // Get FCM tokens for these users
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, fcm_token")
+      .not("fcm_token", "is", null);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      return new Response(JSON.stringify({ error: profilesError.message }), {
+        status: 500,
+      });
+    }
+
+    // Filter to only users who have the metric enabled
+    const tokensToSend = (profiles || [])
+      .filter((p) => p.fcm_token && enabledUserIds.has(p.user_id))
+      .map((p) => p.fcm_token);
+
+    console.log(`Sending to ${tokensToSend.length} devices`);
+
+    if (tokensToSend.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, sent: 0, message: "No FCM tokens found" }),
+        { status: 200 }
+      );
+    }
+
+    // Get Firebase access token
+    const firebaseToken = await getFirebaseAccessToken();
+
+    // Send to all devices
+    let sent = 0;
+    let failed = 0;
+
+    for (const fcmToken of tokensToSend) {
+      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType);
+      if (success) {
+        sent++;
+      } else {
+        failed++;
+      }
+    }
+
+    console.log(`FCM push complete: sent=${sent}, failed=${failed}`);
+
+    return new Response(
+      JSON.stringify({ success: true, sent, failed, type: messageType }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("FCM push error:", error);
+    return new Response(JSON.stringify({ error: String(error) }), {
+      status: 500,
+    });
   }
 });
 
@@ -2308,9 +4602,10 @@ async function whoopFetchPagedRecords(
 }
 
 function isExpiredSoon(expiresAtIso: string | null, nowUtc: Date): boolean {
-  if (!expiresAtIso) return false;
+  // If expires_at is NULL or invalid, assume expired and refresh to be safe
+  if (!expiresAtIso) return true;
   const exp = new Date(expiresAtIso).getTime();
-  if (Number.isNaN(exp)) return false;
+  if (Number.isNaN(exp)) return true;
   return exp <= nowUtc.getTime() + 5 * 60_000;
 }
 
@@ -2499,12 +4794,16 @@ function getForceFlag(req: Request): boolean {
   return raw === "1" || raw.toLowerCase() === "true" || raw.toLowerCase() === "yes";
 }
 
-// Retry window only matters for TODAY jobs
-const RETRY_START_HOUR = 10;
-const RETRY_END_HOUR = 12;
+// Retry window: 9:00 - 9:45 local time
+const RETRY_START_HOUR = 9;
+const RETRY_END_HOUR = 9;
+const RETRY_END_MINUTE = 45;
 
-function isWithinRetryHours(hh: number): boolean {
-  return hh >= RETRY_START_HOUR && hh <= RETRY_END_HOUR;
+function isWithinRetryWindow(hh: number, mm: number): boolean {
+  if (hh < RETRY_START_HOUR) return false;
+  if (hh > RETRY_END_HOUR) return false;
+  if (hh === RETRY_END_HOUR && mm > RETRY_END_MINUTE) return false;
+  return true;
 }
 
 const MAX_PICK_ATTEMPTS = 10;
@@ -2523,6 +4822,19 @@ serve(async (req) => {
     const whoopConfigured = Boolean(optionalEnv("WHOOP_CLIENT_ID") && optionalEnv("WHOOP_CLIENT_SECRET"));
     const force = getForceFlag(req);
 
+    // Also check for force in request body (for webhook invocation)
+    let bodyForce = false;
+    let bodyUserId: string | null = null;
+    try {
+      const body = await req.clone().json();
+      bodyForce = body?.force === true;
+      bodyUserId = typeof body?.userId === "string" ? body.userId : null;
+    } catch {
+      // No body or invalid JSON
+    }
+
+    const isForced = force || bodyForce;
+
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
       global: { headers: { "X-Client-Info": "sync-worker" } },
@@ -2534,7 +4846,7 @@ serve(async (req) => {
 
     // NOTE: attempts gating prevents hot-looping and runaway attempts.
     // Force mode bypasses this gate.
-    const { data: jobs, error: jobsErr } = await supabase
+    let jobsQuery = supabase
       .from("sync_jobs")
       .select("id,job_type,user_id,local_date,status,attempts,locked_at")
       .eq("job_type", "whoop_daily")
@@ -2543,12 +4855,19 @@ serve(async (req) => {
       .order("created_at", { ascending: true })
       .limit(50);
 
+    // If specific userId provided (from webhook), filter to just that user
+    if (bodyUserId) {
+      jobsQuery = jobsQuery.eq("user_id", bodyUserId);
+    }
+
+    const { data: jobs, error: jobsErr } = await jobsQuery;
+
     if (jobsErr) throw new Error(`sync_jobs select failed: ${jobsErr.message}`);
 
     const all = (jobs ?? []) as SyncJobRow[];
 
     // Filter attempts only here so we preserve the original select shape
-    const picked = all.filter((j) => force || (j.attempts ?? 0) < MAX_PICK_ATTEMPTS);
+    const picked = all.filter((j) => isForced || (j.attempts ?? 0) < MAX_PICK_ATTEMPTS);
 
     if (!picked.length) {
       return jsonResponse({
@@ -2556,7 +4875,7 @@ serve(async (req) => {
         summary: {
           picked: 0,
           whoopClientConfigured: whoopConfigured,
-          forced: force,
+          forced: isForced,
           maxPickAttempts: MAX_PICK_ATTEMPTS,
           filteredOut: all.length,
         },
@@ -2764,11 +5083,13 @@ serve(async (req) => {
           };
         }
 
-        // Gate by retry window ONLY for today jobs.
+        // Gate by retry window ONLY for today jobs (unless forced by webhook)
         // IMPORTANT: do not increment attempts for gating-only requeues.
-        if (isTodayJob && !force) {
-          if (!isWithinRetryHours(hh)) {
-            const reason = hh > RETRY_END_HOUR ? "after_retry_window_waiting_for_whoop_data" : "outside_retry_window";
+        if (isTodayJob && !isForced) {
+          if (!isWithinRetryWindow(hh, mm)) {
+            const reason = (hh > RETRY_END_HOUR || (hh === RETRY_END_HOUR && mm > RETRY_END_MINUTE))
+              ? "after_retry_window_waiting_for_whoop_data"
+              : "outside_retry_window";
             await markJobQueued(job.id, reason);
             return { jobId: job.id, userId, localDate: jobLocalDate, status: reason, timezone: tz, localTime };
           }
@@ -2808,7 +5129,8 @@ serve(async (req) => {
         try {
           if (isExpiredSoon(whoopToken.expires_at, nowUtc)) {
             const refreshed = await refreshWhoopToken(whoopToken.refresh_token);
-            const expiresAt = new Date(nowUtc.getTime() + (refreshed.expires_in || 0) * 1000).toISOString();
+            const expiresInSec = refreshed.expires_in || 3600; // Default 1 hour if missing
+            const expiresAt = new Date(nowUtc.getTime() + expiresInSec * 1000).toISOString();
 
             const { error: updErr } = await supabase
               .from("whoop_tokens")
@@ -2830,9 +5152,28 @@ serve(async (req) => {
               token_type: refreshed.token_type ?? whoopToken.token_type,
               expires_at: expiresAt,
             };
+            
+            // Log successful refresh to edge_audit
+            await supabase.from("edge_audit").insert({
+              fn: "sync-worker",
+              user_id: userId,
+              ok: true,
+              stage: "whoop_refresh_ok",
+              message: `expires_in=${expiresInSec}s`,
+            }).catch(() => {});
           }
         } catch (e) {
-          metricResults.push({ source: "whoop", status: "refresh_failed", error: (e as Error).message });
+          const errMsg = (e as Error).message;
+          metricResults.push({ source: "whoop", status: "refresh_failed", error: errMsg });
+          
+          // Log refresh failure to edge_audit - THIS IS CRITICAL TO MONITOR
+          await supabase.from("edge_audit").insert({
+            fn: "sync-worker",
+            user_id: userId,
+            ok: false,
+            stage: "whoop_refresh_failed",
+            message: errMsg.slice(0, 500),
+          }).catch(() => {});
         }
 
         const whoopEnabled = (metric: string) => {
@@ -3283,7 +5624,8 @@ serve(async (req) => {
 
         if (!hasWhoopData) {
           if (isTodayJob) {
-            const reason = (!force && hh > RETRY_END_HOUR)
+            const pastWindow = (hh > RETRY_END_HOUR || (hh === RETRY_END_HOUR && mm > RETRY_END_MINUTE));
+            const reason = (!isForced && pastWindow)
               ? "after_retry_window_waiting_for_whoop_data"
               : "retry_waiting_for_whoop_data";
             await markJobQueued(job.id, reason);
@@ -3384,8 +5726,8 @@ serve(async (req) => {
       errors: results.filter((r: any) => r.status === "error" || String(r.status).includes("error")).length,
       nowUtc: nowUtc.toISOString(),
       whoopClientConfigured: whoopConfigured,
-      forced: force,
-      retryHoursLocal: `${String(RETRY_START_HOUR).padStart(2, "0")}:00-${String(RETRY_END_HOUR).padStart(2, "0")}:00`,
+      forced: isForced,
+      retryWindowLocal: `${String(RETRY_START_HOUR).padStart(2, "0")}:00-${String(RETRY_END_HOUR).padStart(2, "0")}:${String(RETRY_END_MINUTE).padStart(2, "0")}`,
       staleReclaimMinutes: 30,
       maxPickAttempts: MAX_PICK_ATTEMPTS,
     };
@@ -3395,6 +5737,321 @@ serve(async (req) => {
     return jsonResponse({ ok: false, error: (e as Error).message }, 500);
   }
 });
+
+
+===== TITLE: trigger_worker.txt =====
+
+// supabase/functions/trigger-worker/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function mean(arr: number[]): number | null {
+  if (arr.length === 0) return null;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function stdDev(arr: number[], avg: number): number | null {
+  if (arr.length < 2) return null;
+  const squaredDiffs = arr.map((x) => (x - avg) ** 2);
+  return Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / arr.length);
+}
+
+const STALE_LOCK_MINUTES = 10;
+const MAX_ATTEMPTS = 3;
+
+// Thresholds
+const RECOVERY_LOW_THRESHOLD = 33;
+const MIN_DAYS_FOR_SD = 14;
+
+serve(async (req) => {
+  console.log("[trigger-worker] start", {
+    nowUtc: new Date().toISOString(),
+    method: req.method,
+  });
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "trigger-worker" } },
+    });
+
+    const nowUtc = new Date();
+    const nowIso = nowUtc.toISOString();
+    const staleCutoff = new Date(nowUtc.getTime() - STALE_LOCK_MINUTES * 60_000).toISOString();
+
+    // Pick queued jobs (or stale locked jobs)
+    const { data: jobs, error: pickErr } = await supabase
+      .from("trigger_jobs")
+      .select("*")
+      .eq("status", "queued")
+      .lt("attempts", MAX_ATTEMPTS)
+      .or(`locked_at.is.null,locked_at.lt.${staleCutoff}`)
+      .limit(20);
+
+    if (pickErr) {
+      throw new Error(`Failed to pick jobs: ${pickErr.message}`);
+    }
+
+    if (!jobs || jobs.length === 0) {
+      return jsonResponse({ ok: true, message: "No jobs to process", processed: 0 });
+    }
+
+    const results: unknown[] = [];
+
+    for (const job of jobs) {
+      const jobResult: Record<string, unknown> = {
+        jobId: job.id,
+        userId: job.user_id,
+        localDate: job.local_date,
+        triggerResults: [],
+      };
+
+      // Lock the job
+      const { error: lockErr } = await supabase
+        .from("trigger_jobs")
+        .update({ locked_at: nowIso, attempts: job.attempts + 1, updated_at: nowIso })
+        .eq("id", job.id);
+
+      if (lockErr) {
+        jobResult.status = "lock_failed";
+        jobResult.error = lockErr.message;
+        results.push(jobResult);
+        continue;
+      }
+
+      try {
+        const userId = job.user_id;
+        const localDate = job.local_date;
+
+        // Get user's enabled trigger types
+        const { data: userTriggers, error: trigErr } = await supabase
+          .from("trigger_settings")
+          .select("trigger_type")
+          .eq("user_id", userId)
+          .eq("enabled", true);
+
+        if (trigErr) {
+          throw new Error(`trigger_settings query failed: ${trigErr.message}`);
+        }
+
+        const enabledTypes = new Set((userTriggers ?? []).map((t) => t.trigger_type));
+        jobResult.enabledTypes = [...enabledTypes];
+
+        // Process recovery triggers
+        if (enabledTypes.has("recovery_low") || enabledTypes.has("recovery_unusually_low")) {
+          const recoveryResult = await processRecoveryTriggers(
+            supabase,
+            userId,
+            localDate,
+            enabledTypes
+          );
+          (jobResult.triggerResults as unknown[]).push(recoveryResult);
+        }
+
+        // Mark job done
+        await supabase
+          .from("trigger_jobs")
+          .update({ status: "done", locked_at: null, last_error: null, updated_at: nowIso })
+          .eq("id", job.id);
+
+        jobResult.status = "done";
+      } catch (e) {
+        const errMsg = (e as Error).message;
+        jobResult.status = "error";
+        jobResult.error = errMsg;
+
+        // Mark job error or requeue
+        const newStatus = job.attempts + 1 >= MAX_ATTEMPTS ? "error" : "queued";
+        await supabase
+          .from("trigger_jobs")
+          .update({ status: newStatus, locked_at: null, last_error: errMsg, updated_at: nowIso })
+          .eq("id", job.id);
+      }
+
+      results.push(jobResult);
+    }
+
+    const summary = {
+      picked: jobs.length,
+      done: results.filter((r: any) => r.status === "done").length,
+      errors: results.filter((r: any) => r.status === "error").length,
+    };
+
+    return jsonResponse({ ok: true, nowUtc: nowIso, summary, results });
+  } catch (e) {
+    console.error("[trigger-worker] error", e);
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});
+
+async function processRecoveryTriggers(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  localDate: string,
+  enabledTypes: Set<string>
+): Promise<Record<string, unknown>> {
+  const result: Record<string, unknown> = { metric: "recovery", triggers: [] };
+
+  // Get recovery score for the date
+  const { data: recovery, error: recErr } = await supabase
+    .from("recovery_score_daily")
+    .select("value_pct")
+    .eq("user_id", userId)
+    .eq("date", localDate)
+    .maybeSingle();
+
+  if (recErr) {
+    result.error = `recovery fetch failed: ${recErr.message}`;
+    return result;
+  }
+
+  if (!recovery || recovery.value_pct == null) {
+    result.status = "no_data";
+    return result;
+  }
+
+  const value = recovery.value_pct as number;
+  result.value = value;
+
+  // Check absolute low threshold
+  if (enabledTypes.has("recovery_low") && value < RECOVERY_LOW_THRESHOLD) {
+    const created = await createTriggerIfNotExists(
+      supabase,
+      userId,
+      "recovery_low",
+      localDate,
+      `Recovery ${value.toFixed(0)}% - below ${RECOVERY_LOW_THRESHOLD}% threshold`
+    );
+    (result.triggers as unknown[]).push({ type: "recovery_low", created, value });
+  }
+
+  // Check 2SD threshold
+  if (enabledTypes.has("recovery_unusually_low")) {
+    const startDate = addDaysIsoDate(localDate, -MIN_DAYS_FOR_SD);
+    const endDate = addDaysIsoDate(localDate, -1);
+
+    const { data: history, error: histErr } = await supabase
+      .from("recovery_score_daily")
+      .select("value_pct")
+      .eq("user_id", userId)
+      .gte("date", startDate)
+      .lte("date", endDate);
+
+    if (histErr) {
+      result.sdError = `history fetch failed: ${histErr.message}`;
+    } else {
+      const values = (history ?? [])
+        .map((r: { value_pct: unknown }) => r.value_pct)
+        .filter((v): v is number => typeof v === "number");
+
+      if (values.length >= MIN_DAYS_FOR_SD) {
+        const avg = mean(values);
+        const sd = avg != null ? stdDev(values, avg) : null;
+
+        if (avg != null && sd != null && sd > 0) {
+          const threshold = avg - 2 * sd;
+          result.sdStats = { avg: avg.toFixed(1), sd: sd.toFixed(1), threshold: threshold.toFixed(1) };
+
+          if (value < threshold) {
+            const created = await createTriggerIfNotExists(
+              supabase,
+              userId,
+              "recovery_unusually_low",
+              localDate,
+              `Recovery ${value.toFixed(0)}% - below 2SD (threshold: ${threshold.toFixed(0)}%, avg: ${avg.toFixed(0)}%)`
+            );
+            (result.triggers as unknown[]).push({
+              type: "recovery_unusually_low",
+              created,
+              value,
+              threshold: threshold.toFixed(1),
+            });
+          }
+        } else {
+          result.sdStatus = "insufficient_variance";
+        }
+      } else {
+        result.sdStatus = `insufficient_history (${values.length}/${MIN_DAYS_FOR_SD} days)`;
+      }
+    }
+  }
+
+  result.status = "processed";
+  return result;
+}
+
+async function createTriggerIfNotExists(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  triggerType: string,
+  date: string,
+  notes: string
+): Promise<boolean> {
+  const dayStart = `${date}T00:00:00Z`;
+  const dayEnd = `${date}T23:59:59Z`;
+
+  const { data: existing, error: checkErr } = await supabase
+    .from("triggers")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("type", triggerType)
+    .eq("source", "system")
+    .gte("start_at", dayStart)
+    .lte("start_at", dayEnd)
+    .limit(1);
+
+  if (checkErr) {
+    console.error(`[trigger-worker] check existing failed: ${checkErr.message}`);
+    return false;
+  }
+
+  if (existing && existing.length > 0) {
+    return false;
+  }
+
+  const { error: insertErr } = await supabase.from("triggers").insert({
+    user_id: userId,
+    type: triggerType,
+    source: "system",
+    start_at: `${date}T09:00:00Z`,
+    notes,
+    active: true,
+  });
+
+  if (insertErr) {
+    console.error(`[trigger-worker] insert failed: ${insertErr.message}`);
+    return false;
+  }
+
+  return true;
+}
 
 
 ===== TITLE: upsert-whoop-token.txt =====
@@ -3423,17 +6080,8 @@ type Body = {
   refresh_token?: string;
   token_type?: string;
   expires_at?: string | null;
-
-  // NEW: optional client-provided metric toggles
+  expires_in?: number | null;  // WHOOP OAuth returns this (seconds until expiry)
   metric_settings?: MetricToggle[] | null;
-};
-
-type EdgeAuditInsert = {
-  fn: string;
-  user_id: string | null;
-  ok: boolean;
-  stage: string;
-  message: string | null;
 };
 
 type ResolveRow = {
@@ -3453,8 +6101,6 @@ type SyncJobInsert = {
   city_id: number | null;
 };
 
-// Added two toggles (metric_settings rows) so WHOOP connect seeds them for new users.
-// Note: reconnect should NOT override user choices unless the client explicitly sends metric_settings.
 const WHOOP_METRICS = [
   "recovery_score_daily",
   "resting_hr_daily",
@@ -3468,10 +6114,11 @@ const WHOOP_METRICS = [
   "sleep_stages_daily",
   "fell_asleep_time_daily",
   "woke_up_time_daily",
-
-  // Activities toggles (these are YOUR internal metric keys; ingestion must consume them)
   "activity_hr_zones_sessions",
   "hr_zones_daily",
+  "steps_daily",
+  "time_in_high_hr_zones_daily",
+  "stress_index_daily",
 ] as const;
 
 const WHOOP_METRIC_SET = new Set<string>(WHOOP_METRICS as unknown as string[]);
@@ -3573,7 +6220,6 @@ function normalizeClientMetricToggles(raw: unknown): { applied: MetricToggle[]; 
     applied.push({ metric, enabled });
   }
 
-  // de-dupe by metric, last one wins
   const map = new Map<string, boolean>();
   for (const t of applied) map.set(t.metric, t.enabled);
   return {
@@ -3582,27 +6228,71 @@ function normalizeClientMetricToggles(raw: unknown): { applied: MetricToggle[]; 
   };
 }
 
-// PATCH: sanitize token fields (trim + remove embedded newlines)
 function sanitizeTokenField(raw: unknown): string {
   if (typeof raw !== "string") return "";
   return raw.replace(/\r?\n/g, "").replace(/\r/g, "").trim();
 }
 
-// PATCH: Only accept expires_at if it parses AND is in the future.
-// If client sends old/invalid, store null so we don't poison DB.
-function normalizeClientExpiresAt(raw: unknown, nowUtc: Date): string | null {
-  if (raw == null) return null;
-  if (typeof raw !== "string") return null;
+// FIXED: Now handles both expires_at (ISO string) and expires_in (seconds)
+function computeExpiresAt(expiresAtRaw: unknown, expiresInRaw: unknown, nowUtc: Date): string {
+  // First try expires_at (ISO timestamp string)
+  if (expiresAtRaw != null && typeof expiresAtRaw === "string") {
+    const s = expiresAtRaw.trim();
+    if (s) {
+      const ms = new Date(s).getTime();
+      if (!Number.isNaN(ms) && ms > nowUtc.getTime()) {
+        return new Date(ms).toISOString();
+      }
+    }
+  }
 
-  const s = raw.trim();
-  if (!s) return null;
+  // Then try expires_in (seconds until expiry) - this is what WHOOP OAuth returns
+  if (expiresInRaw != null) {
+    const seconds = typeof expiresInRaw === "number" ? expiresInRaw : Number(expiresInRaw);
+    if (!Number.isNaN(seconds) && seconds > 0) {
+      return new Date(nowUtc.getTime() + seconds * 1000).toISOString();
+    }
+  }
 
-  const ms = new Date(s).getTime();
-  if (Number.isNaN(ms)) return null;
+  // Default: 1 hour from now (WHOOP tokens typically last ~1 hour)
+  console.log("[upsert-whoop-token] No valid expires_at or expires_in provided, defaulting to 1 hour");
+  return new Date(nowUtc.getTime() + 3600 * 1000).toISOString();
+}
 
-  if (ms <= nowUtc.getTime()) return null;
+// Fetch WHOOP user ID from their API - WITH LOGGING
+async function fetchWhoopUserId(accessToken: string): Promise<number | null> {
+  try {
+    console.log("[upsert-whoop-token] fetching WHOOP user profile...");
+    
+    const res = await fetch("https://api.prod.whoop.com/developer/v2/user/profile/basic", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+    });
 
-  return new Date(ms).toISOString();
+    console.log("[upsert-whoop-token] WHOOP profile response status:", res.status);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.log("[upsert-whoop-token] WHOOP profile error:", text);
+      return null;
+    }
+
+    const data = await res.json();
+    console.log("[upsert-whoop-token] WHOOP profile data:", JSON.stringify(data));
+    
+    const whoopUserId = data?.user_id;
+    
+    if (typeof whoopUserId === "number") {
+      return whoopUserId;
+    }
+    
+    return null;
+  } catch (e) {
+    console.log("[upsert-whoop-token] fetch error:", (e as Error).message);
+    return null;
+  }
 }
 
 serve(async (req) => {
@@ -3621,62 +6311,40 @@ serve(async (req) => {
     global: { headers: { "X-Client-Info": "upsert-whoop-token-admin" } },
   });
 
-  async function audit(a: EdgeAuditInsert) {
+  async function audit(fn: string, userId: string | null, ok: boolean, stage: string, message: string | null) {
     try {
-      await admin.from("edge_audit").insert(a);
+      await admin.from("edge_audit").insert({ fn, user_id: userId, ok, stage, message });
     } catch (e) {
-      console.log("[upsert-whoop-token] audit_insert_failed", { error: (e as Error).message });
+      console.log("[upsert-whoop-token] audit failed", e);
     }
   }
 
   try {
     if (req.method !== "POST") {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: null,
-        ok: false,
-        stage: "method_not_allowed",
-        message: req.method,
-      });
+      await audit("upsert-whoop-token", null, false, "method_not_allowed", req.method);
       return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
     }
 
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.toLowerCase().startsWith("bearer ")) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: null,
-        ok: false,
-        stage: "missing_auth",
-        message: "Authorization header missing/invalid",
-      });
+      await audit("upsert-whoop-token", null, false, "missing_auth", "Authorization header missing/invalid");
       return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
     }
 
+    const jwt = authHeader.slice(7);
     const userClient = createClient(supabaseUrl, anonKey, {
       auth: { persistSession: false },
-      global: {
-        headers: {
-          Authorization: authHeader,
-          "X-Client-Info": "upsert-whoop-token-user",
-        },
-      },
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
     });
 
     const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData?.user) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: null,
-        ok: false,
-        stage: "auth_get_user_failed",
-        message: userErr?.message ?? "no user",
-      });
+    if (userErr || !userData?.user?.id) {
+      await audit("upsert-whoop-token", null, false, "auth_failed", userErr?.message ?? "no user");
       return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
     }
 
     const userId = userData.user.id;
-    await audit({ fn: "upsert-whoop-token", user_id: userId, ok: true, stage: "auth_ok", message: null });
+    await audit("upsert-whoop-token", userId, true, "auth_ok", null);
 
     const body = (await req.json().catch(() => null)) as Body | null;
 
@@ -3684,13 +6352,7 @@ serve(async (req) => {
     const refresh = sanitizeTokenField(body?.refresh_token);
 
     if (!access || !refresh) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "bad_body",
-        message: "missing access_token or refresh_token",
-      });
+      await audit("upsert-whoop-token", userId, false, "bad_body", "missing access_token or refresh_token");
       return jsonResponse({ ok: false, error: "Missing access_token/refresh_token" }, 400);
     }
 
@@ -3700,156 +6362,86 @@ serve(async (req) => {
     const nowIso = nowUtc.toISOString();
     const utcDate = nowIso.slice(0, 10);
 
-    const expiresAt = normalizeClientExpiresAt(body?.expires_at ?? null, nowUtc);
+    // FIXED: Now handles both expires_at and expires_in
+    const expiresAt = computeExpiresAt(body?.expires_at, body?.expires_in, nowUtc);
 
-    // 1) Upsert WHOOP tokens (auth only)
-    const { error: upsertErr } = await admin.from("whoop_tokens").upsert(
-      {
-        user_id: userId,
-        access_token: access,
-        refresh_token: refresh,
-        token_type: tokenType,
-        expires_at: expiresAt,
-        updated_at: nowIso,
-        created_at: nowIso,
-      },
-      { onConflict: "user_id" },
-    );
+    // Fetch WHOOP user ID for webhook mapping
+    const whoopUserId = await fetchWhoopUserId(access);
+    if (whoopUserId) {
+      await audit("upsert-whoop-token", userId, true, "whoop_user_id_fetched", `whoop_user_id=${whoopUserId}`);
+    } else {
+      await audit("upsert-whoop-token", userId, false, "whoop_user_id_fetch_failed", "see logs");
+    }
+
+    // Upsert WHOOP tokens
+    const tokenData: Record<string, unknown> = {
+      user_id: userId,
+      access_token: access,
+      refresh_token: refresh,
+      token_type: tokenType,
+      expires_at: expiresAt,
+      updated_at: nowIso,
+      created_at: nowIso,
+    };
+
+    if (whoopUserId) {
+      tokenData.whoop_user_id = whoopUserId;
+    }
+
+    const { error: upsertErr } = await admin.from("whoop_tokens").upsert(tokenData, { onConflict: "user_id" });
 
     if (upsertErr) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "whoop_tokens_upsert_failed",
-        message: upsertErr.message,
-      });
+      await audit("upsert-whoop-token", userId, false, "whoop_tokens_upsert_failed", upsertErr.message);
       return jsonResponse({ ok: false, error: upsertErr.message }, 500);
     }
 
-    await audit({
-      fn: "upsert-whoop-token",
-      user_id: userId,
-      ok: true,
-      stage: "whoop_tokens_upsert_ok",
-      message: null,
-    });
+    await audit("upsert-whoop-token", userId, true, "whoop_tokens_upsert_ok", `expires_at=${expiresAt}`);
 
-    // NEW: parse client-provided toggles (optional)
+    // Parse client-provided toggles
     const { applied: clientMetricToggles, ignored: ignoredClientMetrics } = normalizeClientMetricToggles(
       (body as any)?.metric_settings,
     );
 
-    if (ignoredClientMetrics.length) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: true,
-        stage: "metric_client_ignored",
-        message: `ignored=${ignoredClientMetrics.slice(0, 20).join(",")}`,
-      });
-    }
-
-    // 2a) If client sent toggles, upsert those rows with enabled=true/false (this UPDATES existing rows)
-    let clientAppliedCount = 0;
-    if (clientMetricToggles.length) {
-      const rows = clientMetricToggles.map((t) => ({
-        user_id: userId,
-        metric: t.metric,
-        enabled: t.enabled,
-        preferred_source: "whoop",
-        allowed_sources: ["whoop"],
-        created_at: nowIso,
-        updated_at: nowIso,
-      }));
-
-      const { error } = await admin.from("metric_settings").upsert(rows, { onConflict: "user_id,metric" });
-      if (error) {
-        await audit({
-          fn: "upsert-whoop-token",
-          user_id: userId,
-          ok: false,
-          stage: "metric_client_upsert_failed",
-          message: error.message,
-        });
-      } else {
-        clientAppliedCount = rows.length;
-        await audit({
-          fn: "upsert-whoop-token",
-          user_id: userId,
-          ok: true,
-          stage: "metric_client_upsert_ok",
-          message: `applied=${clientAppliedCount}`,
-        });
-      }
-    }
-
-    // 2b) Seed any missing WHOOP metrics without overriding existing user choices.
-    const seedRows = WHOOP_METRICS.map((metric) => ({
+    // Enable all WHOOP metrics
+    let enabledCount = 0;
+    const enableRows = WHOOP_METRICS.map((metric) => ({
       user_id: userId,
       metric,
       enabled: true,
       preferred_source: "whoop",
       allowed_sources: ["whoop"],
-      created_at: nowIso,
       updated_at: nowIso,
     }));
 
-    const { error: seedErr } = await admin.from("metric_settings").upsert(seedRows, {
+    const { error: enableErr } = await admin.from("metric_settings").upsert(enableRows, {
       onConflict: "user_id,metric",
-      ignoreDuplicates: true,
     });
 
-    if (seedErr) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "metric_bootstrap_failed",
-        message: seedErr.message,
-      });
-      // Do not fail connect if tokens succeeded
-    } else {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: true,
-        stage: "metric_bootstrap_ok",
-        message: `seeded_missing_metrics count=${WHOOP_METRICS.length}`,
-      });
+    if (!enableErr) {
+      enabledCount = WHOOP_METRICS.length;
+      await audit("upsert-whoop-token", userId, true, "metric_enable_ok", `enabled=${enabledCount}`);
     }
 
-    // 3) Enqueue initial backfill immediately (30 days local, skip finalized days)
+    // Enqueue backfill
     let enqueuedJobs = 0;
     try {
       const resolved = await resolveWithDateFallback(admin, userId, utcDate);
       const row = resolved.row;
 
-      if (!row?.timezone) {
-        await audit({
-          fn: "upsert-whoop-token",
-          user_id: userId,
-          ok: true,
-          stage: "backfill_skipped_no_timezone",
-          message: `usedResolveDate=${resolved.usedDate ?? "null"}`,
-        });
-      } else {
+      if (row?.timezone) {
         const tz = row.timezone;
         const cityId = typeof row.city_id === "number" ? row.city_id : null;
-
         const { localDate } = getLocalTimeParts(tz, nowUtc);
 
         const startLocalDate = addDaysIsoDate(localDate, -29);
         const endLocalDate = localDate;
         const days = dateRangeInclusive(startLocalDate, endLocalDate);
 
-        const { data: alreadyRan, error: ranErr } = await admin
+        const { data: alreadyRan } = await admin
           .from("backend_daily_runs")
           .select("local_date")
           .eq("user_id", userId)
           .in("local_date", days);
-
-        if (ranErr) throw new Error(`backend_daily_runs query failed: ${ranErr.message}`);
 
         const ranSet = new Set((alreadyRan ?? []).map((r: any) => String(r.local_date)));
 
@@ -3869,54 +6461,446 @@ serve(async (req) => {
         }
 
         if (jobs.length) {
-          const { error: insErr } = await admin.from("sync_jobs").upsert(jobs, {
+          await admin.from("sync_jobs").upsert(jobs, {
             onConflict: "job_type,user_id,local_date",
             ignoreDuplicates: true,
           });
-          if (insErr) throw new Error(`sync_jobs upsert failed: ${insErr.message}`);
-
           enqueuedJobs = jobs.length;
-          await audit({
-            fn: "upsert-whoop-token",
-            user_id: userId,
-            ok: true,
-            stage: "backfill_enqueued",
-            message: `local=${startLocalDate}..${endLocalDate} jobs=${enqueuedJobs} tz=${tz}`,
-          });
-        } else {
-          await audit({
-            fn: "upsert-whoop-token",
-            user_id: userId,
-            ok: true,
-            stage: "backfill_nothing_missing",
-            message: `local=${startLocalDate}..${endLocalDate} tz=${tz}`,
-          });
+          await audit("upsert-whoop-token", userId, true, "backfill_enqueued", `jobs=${enqueuedJobs}`);
         }
       }
     } catch (e) {
-      await audit({
-        fn: "upsert-whoop-token",
-        user_id: userId,
-        ok: false,
-        stage: "backfill_exception",
-        message: (e as Error).message,
-      });
+      await audit("upsert-whoop-token", userId, false, "backfill_exception", (e as Error).message);
     }
 
     return jsonResponse({
       ok: true,
       userId,
+      whoopUserId,
       enqueuedJobs,
-      metricSettings: {
-        clientApplied: clientAppliedCount,
-        clientIgnored: ignoredClientMetrics,
-        allowlisted: WHOOP_METRICS.length,
-      },
+      expiresAt,
+      metricSettings: { enabled: enabledCount },
     });
   } catch (e) {
     const msg = (e as Error).message;
-    await audit({ fn: "upsert-whoop-token", user_id: null, ok: false, stage: "exception", message: msg });
+    console.error("[upsert-whoop-token] exception", e);
     return jsonResponse({ ok: false, error: msg }, 500);
+  }
+});
+
+
+===== TITLE: weather_worker.txt =====
+
+// FILE: supabase/functions/weather-worker/index.ts
+//
+// Worker that processes jobs from sync_jobs_weather.
+// Looks up user's location, finds nearest city, copies weather to user_weather_daily.
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+/**
+ * Find nearest city to given coordinates using Haversine distance
+ */
+async function findNearestCity(
+  supabase: ReturnType<typeof createClient>,
+  lat: number,
+  lon: number
+): Promise<{ cityId: number; name: string; distance: number } | null> {
+  // Query cities within ~2 degrees (rough bounding box first for performance)
+  const { data: cities, error } = await supabase
+    .from("city")
+    .select("id, name, lat, lon")
+    .gte("lat", lat - 2)
+    .lte("lat", lat + 2)
+    .gte("lon", lon - 2)
+    .lte("lon", lon + 2)
+    .limit(100);
+
+  if (error || !cities || cities.length === 0) {
+    // Fallback: get any city (shouldn't happen often)
+    const { data: fallback } = await supabase
+      .from("city")
+      .select("id, name, lat, lon")
+      .limit(50);
+    
+    if (!fallback || fallback.length === 0) return null;
+    
+    // Find nearest from fallback
+    let nearest = fallback[0];
+    let minDist = haversine(lat, lon, nearest.lat, nearest.lon);
+    
+    for (const city of fallback) {
+      const dist = haversine(lat, lon, city.lat, city.lon);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = city;
+      }
+    }
+    
+    return { cityId: nearest.id, name: nearest.name, distance: minDist };
+  }
+
+  // Find nearest city
+  let nearest = cities[0];
+  let minDist = haversine(lat, lon, nearest.lat, nearest.lon);
+
+  for (const city of cities) {
+    const dist = haversine(lat, lon, city.lat, city.lon);
+    if (dist < minDist) {
+      minDist = dist;
+      nearest = city;
+    }
+  }
+
+  return { cityId: nearest.id, name: nearest.name, distance: minDist };
+}
+
+/**
+ * Haversine distance in km
+ */
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(deg: number): number {
+  return deg * (Math.PI / 180);
+}
+
+serve(async (req) => {
+  console.log("[weather-worker] start", new Date().toISOString());
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const nowIso = new Date().toISOString();
+    const MAX_ATTEMPTS = 3;
+    const BATCH_SIZE = 20;
+
+    // Fetch queued jobs
+    const { data: jobs, error: jobsErr } = await supabase
+      .from("sync_jobs_weather")
+      .select("*")
+      .eq("status", "queued")
+      .lt("attempts", MAX_ATTEMPTS)
+      .order("created_at", { ascending: true })
+      .limit(BATCH_SIZE);
+
+    if (jobsErr) throw new Error(`Failed to fetch jobs: ${jobsErr.message}`);
+
+    if (!jobs || jobs.length === 0) {
+      console.log("[weather-worker] no queued jobs");
+      return jsonResponse({ ok: true, processed: 0 });
+    }
+
+    console.log(`[weather-worker] processing ${jobs.length} jobs`);
+
+    const results: { jobId: string; status: string; error?: string; cityName?: string }[] = [];
+
+    for (const job of jobs) {
+      const jobId = job.id;
+      const userId = job.user_id;
+      const localDate = job.local_date;
+      const timezone = job.timezone;
+
+      try {
+        // Mark as processing
+        await supabase
+          .from("sync_jobs_weather")
+          .update({ status: "processing", attempts: job.attempts + 1, updated_at: nowIso })
+          .eq("id", jobId);
+
+        // Get user's location for this date (or nearby dates)
+        const candidates = [localDate, addDaysIsoDate(localDate, -1), addDaysIsoDate(localDate, +1)];
+        let userLat: number | null = null;
+        let userLon: number | null = null;
+
+        for (const d of candidates) {
+          const { data: locData } = await supabase
+            .from("user_location_daily")
+            .select("latitude, longitude")
+            .eq("user_id", userId)
+            .eq("date", d)
+            .maybeSingle();
+
+          if (locData?.latitude && locData?.longitude) {
+            userLat = locData.latitude;
+            userLon = locData.longitude;
+            break;
+          }
+        }
+
+        if (userLat == null || userLon == null) {
+          throw new Error("No location data found for user");
+        }
+
+        // Find nearest city
+        const nearestCity = await findNearestCity(supabase, userLat, userLon);
+        if (!nearestCity) {
+          throw new Error("No cities found in database");
+        }
+
+        console.log(`[weather-worker] job=${jobId} user=${userId} city=${nearestCity.name} (${nearestCity.distance.toFixed(1)}km)`);
+
+        // Get weather for this city and date
+        const { data: cityWeather, error: weatherErr } = await supabase
+          .from("city_weather_daily")
+          .select("*")
+          .eq("city_id", nearestCity.cityId)
+          .eq("day", localDate)
+          .maybeSingle();
+
+        if (weatherErr) {
+          throw new Error(`Failed to fetch city weather: ${weatherErr.message}`);
+        }
+
+        if (!cityWeather) {
+          // No weather data for this city/date yet - mark as done (will retry tomorrow or via backfill)
+          await supabase
+            .from("sync_jobs_weather")
+            .update({ status: "done", updated_at: nowIso })
+            .eq("id", jobId);
+
+          results.push({ jobId, status: "no_weather_data", cityName: nearestCity.name });
+          continue;
+        }
+
+        // Upsert to user_weather_daily
+        const { error: upsertErr } = await supabase
+          .from("user_weather_daily")
+          .upsert(
+            {
+              user_id: userId,
+              date: localDate,
+              temp_c_min: cityWeather.temp_c_min,
+              temp_c_max: cityWeather.temp_c_max,
+              temp_c_mean: cityWeather.temp_c_mean,
+              pressure_hpa_min: cityWeather.pressure_hpa_min,
+              pressure_hpa_max: cityWeather.pressure_hpa_max,
+              pressure_hpa_mean: cityWeather.pressure_hpa_mean,
+              humidity_pct_min: cityWeather.humidity_pct_min,
+              humidity_pct_max: cityWeather.humidity_pct_max,
+              humidity_pct_mean: cityWeather.humidity_pct_mean,
+              wind_speed_mps_mean: cityWeather.wind_speed_mps_mean,
+              wind_speed_mps_max: cityWeather.wind_speed_mps_max,
+              uv_index_max: cityWeather.uv_index_max,
+              weather_code: cityWeather.weather_code,
+              is_thunderstorm_day: cityWeather.is_thunderstorm_day,
+              city_id: nearestCity.cityId,
+              timezone: timezone,
+              updated_at: nowIso,
+            },
+            { onConflict: "user_id,date" }
+          );
+
+        if (upsertErr) {
+          throw new Error(`Failed to upsert user weather: ${upsertErr.message}`);
+        }
+
+        // Mark job as done
+        await supabase
+          .from("sync_jobs_weather")
+          .update({ status: "done", updated_at: nowIso })
+          .eq("id", jobId);
+
+        results.push({ jobId, status: "done", cityName: nearestCity.name });
+        console.log(`[weather-worker] job=${jobId} done`);
+
+      } catch (e: any) {
+        console.error(`[weather-worker] job=${jobId} error:`, e);
+
+        // Mark as failed or back to queued for retry
+        const newStatus = job.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "queued";
+        await supabase
+          .from("sync_jobs_weather")
+          .update({
+            status: newStatus,
+            last_error: String(e?.message ?? e),
+            updated_at: nowIso,
+          })
+          .eq("id", jobId);
+
+        results.push({ jobId, status: "error", error: String(e?.message ?? e) });
+      }
+    }
+
+    const summary = {
+      total: results.length,
+      done: results.filter((r) => r.status === "done").length,
+      noWeatherData: results.filter((r) => r.status === "no_weather_data").length,
+      errors: results.filter((r) => r.status === "error").length,
+    };
+
+    console.log("[weather-worker] done", summary);
+
+    return jsonResponse({ ok: true, summary, results });
+
+  } catch (e: any) {
+    console.error("[weather-worker] error", e);
+    return jsonResponse({ ok: false, error: String(e?.message ?? e) }, 500);
+  }
+});
+
+
+===== TITLE: whoop-webhook.txt =====
+
+// supabase/functions/whoop-webhook/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+serve(async (req) => {
+  const supabaseUrl = requireEnv("SUPABASE_URL");
+  const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+
+  async function audit(ok: boolean, stage: string, message: string | null, userId: string | null = null) {
+    try {
+      await supabase.from("edge_audit").insert({
+        fn: "whoop-webhook",
+        user_id: userId,
+        ok,
+        stage,
+        message,
+      });
+    } catch (e) {
+      console.log("[whoop-webhook] audit failed", e);
+    }
+  }
+
+  try {
+    if (req.method !== "POST") {
+      return jsonResponse({ ok: true });
+    }
+
+    const body = await req.json();
+    const whoopUserId = body?.user_id;
+    const eventType = body?.type;
+
+    console.log("[whoop-webhook] event", { whoopUserId, eventType });
+
+    await audit(true, "received", `whoop_user_id=${whoopUserId} type=${eventType}`, null);
+
+    if (!whoopUserId || !eventType) {
+      return jsonResponse({ ok: true });
+    }
+
+    // Find our user
+    const { data: tokenRow } = await supabase
+      .from("whoop_tokens")
+      .select("user_id")
+      .eq("whoop_user_id", whoopUserId)
+      .maybeSingle();
+
+    if (!tokenRow) {
+      await audit(false, "user_not_found", `whoop_user_id=${whoopUserId}`, null);
+      return jsonResponse({ ok: true });
+    }
+
+    const userId = tokenRow.user_id;
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Get timezone
+    const { data: locData } = await supabase
+      .from("user_location_daily")
+      .select("timezone")
+      .eq("user_id", userId)
+      .not("timezone", "is", null)
+      .order("date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const timezone = locData?.timezone || "UTC";
+
+    // Queue sync job and trigger immediate sync
+    if (eventType === "sleep.updated" || eventType === "recovery.updated" || eventType === "workout.updated") {
+      // Still queue the job as a fallback/record
+      const { error: jobErr } = await supabase
+        .from("sync_jobs")
+        .upsert({
+          job_type: "whoop_daily",
+          user_id: userId,
+          local_date: today,
+          status: "queued",
+          attempts: 0,
+          created_by: `webhook:${eventType}`,
+          timezone: timezone,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "job_type,user_id,local_date" });
+
+      if (jobErr) {
+        await audit(false, "job_queue_failed", jobErr.message, userId);
+      } else {
+        await audit(true, "job_queued", `event=${eventType}`, userId);
+      }
+
+      // Immediately trigger sync-worker for this user
+      try {
+        await supabase.functions.invoke('sync-worker', {
+          body: { userId, force: true }
+        });
+        await audit(true, "sync_invoked", `event=${eventType}`, userId);
+      } catch (invokeErr: any) {
+        await audit(false, "sync_invoke_failed", invokeErr?.message ?? String(invokeErr), userId);
+      }
+    }
+
+    return jsonResponse({ ok: true });
+
+  } catch (e) {
+    console.error("[whoop-webhook] error", e);
+    return jsonResponse({ ok: true });
   }
 });
 

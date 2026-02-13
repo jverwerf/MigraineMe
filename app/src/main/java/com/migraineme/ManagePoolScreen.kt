@@ -1,16 +1,21 @@
 package com.migraineme
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -22,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,8 +57,15 @@ data class PoolItem(
     val isFavorite: Boolean = false,
     val prediction: PredictionValue = PredictionValue.NONE,
     val isAutomatable: Boolean = false,
-    val isAutomated: Boolean = false
+    val isAutomated: Boolean = false,
+    val threshold: Double? = null,
+    val defaultThreshold: Double? = null,
+    val unit: String? = null,
+    val direction: String? = null
 )
+
+/** Icon entry for the add-dialog picker grid */
+data class PickerIconEntry(val key: String, val label: String, val icon: ImageVector)
 
 data class PoolConfig(
     val title: String,
@@ -62,19 +75,22 @@ data class PoolConfig(
     val items: List<PoolItem>,
     val categories: List<String> = emptyList(),
     val showPrediction: Boolean = false,
+    val iconResolver: ((String?) -> ImageVector?)? = null,
+    val pickerIcons: List<PickerIconEntry> = emptyList(),
     val onAdd: (label: String, category: String?, prediction: PredictionValue) -> Unit,
     val onDelete: (itemId: String) -> Unit,
     val onToggleFavorite: (itemId: String, starred: Boolean) -> Unit,
     val onSetPrediction: (itemId: String, prediction: PredictionValue) -> Unit = { _, _ -> },
     val onToggleAutomation: (itemId: String, enabled: Boolean) -> Unit = { _, _ -> },
-    val onSetCategory: (itemId: String, category: String?) -> Unit = { _, _ -> }
+    val onSetCategory: (itemId: String, category: String?) -> Unit = { _, _ -> },
+    val onThresholdChange: (itemId: String, threshold: Double?) -> Unit = { _, _ -> }
 )
 
 /* ────────────────────────────────────────────────
  *  Screen
  * ──────────────────────────────────────────────── */
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ManagePoolScreen(
     navController: NavController,
@@ -127,7 +143,41 @@ fun ManagePoolScreen(
                 if (config.items.isEmpty()) {
                     Text("No items yet — tap + to add", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 } else {
-                    config.items.forEach { item ->
+                    // Group items by category, with uncategorized at the end
+                    val grouped = config.items.groupBy { it.category ?: "Other" }
+                    val sortedCategories = grouped.keys.sortedWith(compareBy { if (it == "Other") "zzz" else it })
+                    var expandedCategories by remember { mutableStateOf(setOf<String>()) }
+
+                    sortedCategories.forEach { category ->
+                        val isExpanded = category in expandedCategories
+                        val itemCount = grouped[category]?.size ?: 0
+
+                        // Section header — clickable to expand/collapse
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { expandedCategories = if (isExpanded) expandedCategories - category else expandedCategories + category }
+                                .padding(top = 12.dp, bottom = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "${category.replaceFirstChar { it.uppercase() }} ($itemCount)",
+                                color = config.iconColor.copy(alpha = 0.8f),
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Icon(
+                                if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                tint = config.iconColor.copy(alpha = 0.5f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        HorizontalDivider(color = config.iconColor.copy(alpha = 0.15f), thickness = 0.5.dp, modifier = Modifier.padding(bottom = 4.dp))
+
+                    AnimatedVisibility(visible = isExpanded) {
+                        Column {
+                    grouped[category]?.forEach { item ->
                         // Track category dropdown state per item
                         var catExpanded by remember { mutableStateOf(false) }
 
@@ -148,11 +198,21 @@ fun ManagePoolScreen(
                                     .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    (item.iconKey ?: item.label.take(2)).uppercase(),
-                                    color = config.iconColor,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                )
+                                val resolvedIcon = config.iconResolver?.invoke(item.iconKey)
+                                if (resolvedIcon != null) {
+                                    Icon(
+                                        imageVector = resolvedIcon,
+                                        contentDescription = item.label,
+                                        tint = config.iconColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                } else {
+                                    Text(
+                                        (item.iconKey ?: item.label.take(2)).uppercase(),
+                                        color = config.iconColor,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
                             }
 
                             // Label
@@ -285,13 +345,92 @@ fun ManagePoolScreen(
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
+
+                            // ── Row 5: threshold ──
+                            val hasThreshold = item.direction == "low" || item.direction == "high"
+                            if (hasThreshold) {
+                                val effectiveThreshold = item.threshold ?: item.defaultThreshold
+                                val displayValue = effectiveThreshold?.let { formatThresholdForDisplay(it, item.unit) } ?: ""
+                                var textValue by remember(item.id, effectiveThreshold) {
+                                    mutableStateOf(displayValue)
+                                }
+                                val dimAlpha = if (item.isAutomated) 1f else 0.4f
+                                Row(
+                                    modifier = Modifier
+                                        .padding(start = 46.dp, bottom = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        "Threshold:",
+                                        color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .width(72.dp)
+                                            .height(28.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(
+                                                if (item.isAutomated) Color.White.copy(alpha = 0.08f)
+                                                else Color.White.copy(alpha = 0.04f)
+                                            )
+                                            .border(
+                                                0.5.dp,
+                                                if (item.isAutomated) Color.White.copy(alpha = 0.15f)
+                                                else Color.White.copy(alpha = 0.06f),
+                                                RoundedCornerShape(4.dp)
+                                            )
+                                            .padding(horizontal = 8.dp),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        androidx.compose.foundation.text.BasicTextField(
+                                            value = textValue,
+                                            onValueChange = { newText ->
+                                                textValue = newText
+                                                val parsed = newText.toDoubleOrNull()
+                                                if (parsed != null) {
+                                                    config.onThresholdChange(item.id, parsed)
+                                                }
+                                            },
+                                            enabled = item.isAutomated,
+                                            singleLine = true,
+                                            textStyle = MaterialTheme.typography.labelSmall.copy(
+                                                color = AppTheme.BodyTextColor.copy(alpha = dimAlpha)
+                                            ),
+                                            cursorBrush = androidx.compose.ui.graphics.SolidColor(AppTheme.AccentPurple)
+                                        )
+                                        if (textValue.isEmpty()) {
+                                            Text(
+                                                "—",
+                                                color = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        when (item.unit) {
+                                            "hours" -> "h"
+                                            "%" -> "%"
+                                            "count" -> ""
+                                            "time" -> ""
+                                            else -> item.unit ?: ""
+                                        },
+                                        color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
                         }
 
-                        // Divider
-                        if (item != config.items.last()) {
+                        // Divider between items within same category
+                        if (item != grouped[category]?.last()) {
                             HorizontalDivider(color = Color.White.copy(alpha = 0.06f), thickness = 0.5.dp, modifier = Modifier.padding(vertical = 2.dp))
                         }
-                    }
+                    } // end items forEach
+                        } // end Column
+                    } // end AnimatedVisibility
+                    } // end categories forEach
                 }
             }
 
@@ -313,6 +452,7 @@ fun ManagePoolScreen(
         var newLabel by remember { mutableStateOf("") }
         var newCategory by remember { mutableStateOf<String?>(null) }
         var newPrediction by remember { mutableStateOf(PredictionValue.NONE) }
+        var newIconKey by remember { mutableStateOf<String?>(null) }
         var categoryExpanded by remember { mutableStateOf(false) }
 
         AlertDialog(
@@ -382,16 +522,52 @@ fun ManagePoolScreen(
 
                     // Prediction value
                     if (config.showPrediction) {
-                    Text("Prediction value", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        PredictionValue.entries.forEach { pv ->
-                            PredictionChip(
-                                value = pv,
-                                isSelected = newPrediction == pv,
-                                onClick = { newPrediction = pv }
-                            )
+                        Text("Prediction value", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            PredictionValue.entries.forEach { pv ->
+                                PredictionChip(
+                                    value = pv,
+                                    isSelected = newPrediction == pv,
+                                    onClick = { newPrediction = pv }
+                                )
+                            }
                         }
                     }
+
+                    // ── Icon picker (only shown when pickerIcons is provided) ──
+                    if (config.pickerIcons.isNotEmpty()) {
+                        Text("Pick an icon", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            config.pickerIcons.forEach { picker ->
+                                val isChosen = newIconKey == picker.key
+                                Box(
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isChosen) config.iconColor.copy(alpha = 0.40f)
+                                            else Color.White.copy(alpha = 0.08f)
+                                        )
+                                        .border(
+                                            1.5.dp,
+                                            if (isChosen) config.iconColor.copy(alpha = 0.7f)
+                                            else Color.White.copy(alpha = 0.12f),
+                                            CircleShape
+                                        )
+                                        .clickable { newIconKey = if (isChosen) null else picker.key },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        picker.icon, contentDescription = picker.label,
+                                        tint = if (isChosen) Color.White else AppTheme.SubtleTextColor,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -464,5 +640,18 @@ private fun PredictionChip(
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )
         )
+    }
+}
+
+private fun formatThresholdForDisplay(value: Double, unit: String?): String {
+    return when (unit) {
+        "hours" -> String.format("%.1f", value)
+        "%" -> String.format("%.0f", value)
+        "count" -> String.format("%.0f", value)
+        "time" -> {
+            val h = value.toInt()
+            String.format("%d:%02d", h, 0)
+        }
+        else -> String.format("%.1f", value)
     }
 }
