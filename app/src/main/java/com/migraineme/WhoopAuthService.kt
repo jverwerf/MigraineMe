@@ -39,7 +39,6 @@ class WhoopAuthService {
 
         private const val EXPIRY_SKEW_MS = 60_000L
 
-        // WHOOP returns a refresh_token only if the auth request includes the "offline" scope.
         private const val SCOPE =
             "offline read:recovery read:sleep read:workout read:cycles read:body_measurement read:profile"
     }
@@ -72,7 +71,6 @@ class WhoopAuthService {
             .appendQueryParameter("client_id", CLIENT_ID)
             .appendQueryParameter("redirect_uri", REDIRECT_URI)
             .appendQueryParameter("scope", SCOPE.replace("+", " "))
-            // Force a fresh auth + consent; ignore any existing session
             .appendQueryParameter("state", state)
             .appendQueryParameter("code_challenge", challenge)
             .appendQueryParameter("code_challenge_method", "S256")
@@ -142,8 +140,6 @@ class WhoopAuthService {
             val store = WhoopTokenStore(appCtx)
             val existing = store.load()
 
-            // Defensive: never overwrite a valid refresh token with an empty one.
-            // If WHOOP didn't return a refresh_token, keep the existing one (if any) so refresh/upload still works.
             val merged = when {
                 tok.refreshToken.isNotBlank() -> tok
                 existing?.refreshToken?.isNotBlank() == true -> tok.copy(refreshToken = existing.refreshToken)
@@ -173,55 +169,21 @@ class WhoopAuthService {
         }
     }
 
+    /**
+     * Server (sync-worker) handles all WHOOP token refreshes.
+     * App must never refresh locally to avoid racing with the server
+     * and burning the refresh token.
+     */
     fun refresh(context: Context): Boolean {
-        val appCtx = context.applicationContext
-        val store = WhoopTokenStore(appCtx)
-        val current = store.load() ?: return false
-
-        if (!current.isExpiredSoon(EXPIRY_SKEW_MS)) return true
-        if (current.refreshToken.isBlank()) return false
-
-        val res = postForm(
-            TOKEN_URL,
-            mapOf(
-                "grant_type" to "refresh_token",
-                "client_id" to CLIENT_ID,
-                "client_secret" to CLIENT_SECRET,
-                "refresh_token" to current.refreshToken,
-                "scope" to "offline"
-            )
-        )
-
-        return if (res.isSuccess) {
-            val refreshed = res.getOrThrow()
-            val merged = if (refreshed.refreshToken.isBlank()) {
-                refreshed.copy(refreshToken = current.refreshToken)
-            } else {
-                refreshed
-            }
-            store.save(merged)
-
-            // Keep Supabase whoop_tokens in sync after refresh.
-            WhoopTokenUploadWorker.enqueueNow(appCtx)
-
-            true
-        } else {
-            Log.w(TAG, "refresh failed: ${res.exceptionOrNull()?.message}")
-            false
-        }
+        return true
     }
 
+    /**
+     * Server handles all WHOOP token refreshes.
+     * Just return whatever we have locally.
+     */
     suspend fun refreshIfNeeded(context: Context): WhoopToken? {
-        val appCtx = context.applicationContext
-        val store = WhoopTokenStore(appCtx)
-        val tok = store.load() ?: return null
-
-        return if (!tok.isExpiredSoon(EXPIRY_SKEW_MS)) {
-            tok
-        } else {
-            val ok = refresh(appCtx)
-            store.load()?.takeIf { ok }
-        }
+        return WhoopTokenStore(context.applicationContext).load()
     }
 
     suspend fun revokeAccessWithDebug(context: Context): Pair<Boolean, String> {

@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
@@ -61,7 +62,8 @@ data class PoolItem(
     val threshold: Double? = null,
     val defaultThreshold: Double? = null,
     val unit: String? = null,
-    val direction: String? = null
+    val direction: String? = null,
+    val displayGroup: String? = null
 )
 
 /** Icon entry for the add-dialog picker grid */
@@ -147,10 +149,12 @@ fun ManagePoolScreen(
                     val grouped = config.items.groupBy { it.category ?: "Other" }
                     val sortedCategories = grouped.keys.sortedWith(compareBy { if (it == "Other") "zzz" else it })
                     var expandedCategories by remember { mutableStateOf(setOf<String>()) }
+                    var expandedGroups by remember { mutableStateOf(setOf<String>()) }
 
                     sortedCategories.forEach { category ->
                         val isExpanded = category in expandedCategories
-                        val itemCount = grouped[category]?.size ?: 0
+                        val categoryItems = grouped[category] ?: emptyList()
+                        val itemCount = categoryItems.size
 
                         // Section header — clickable to expand/collapse
                         Row(
@@ -162,7 +166,7 @@ fun ManagePoolScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "${category.replaceFirstChar { it.uppercase() }} ($itemCount)",
+                                "${category.replaceFirstChar { c -> c.uppercase() }} ($itemCount)",
                                 color = config.iconColor.copy(alpha = 0.8f),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                             )
@@ -177,257 +181,104 @@ fun ManagePoolScreen(
 
                     AnimatedVisibility(visible = isExpanded) {
                         Column {
-                    grouped[category]?.forEach { item ->
-                        // Track category dropdown state per item
-                        var catExpanded by remember { mutableStateOf(false) }
+                        // Within category, separate grouped vs standalone items
+                        val withGroup = categoryItems.filter { it.displayGroup != null }
+                        val standalone = categoryItems.filter { it.displayGroup == null }
 
-                        // ── Row 1: icon · label · star · delete ──
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // Icon circle
-                            Box(
+                        // Render display_groups first
+                        val displayGroups = withGroup.groupBy { it.displayGroup!! }
+                        displayGroups.forEach { (groupName, members) ->
+                            val isGroupExpanded = groupName in expandedGroups
+                            // Use first member's icon as group icon
+                            val groupIcon = config.iconResolver?.invoke(members.firstOrNull()?.iconKey)
+                            // Group-level prediction = highest among members
+                            val groupPrediction = members.map { it.prediction }
+                                .maxByOrNull { it.ordinal } ?: PredictionValue.NONE
+                            val groupIsFavorite = members.any { it.isFavorite }
+
+                            // ── Group header row ──
+                            Row(
                                 modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.08f))
-                                    .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(config.iconColor.copy(alpha = 0.06f))
+                                    .clickable { expandedGroups = if (isGroupExpanded) expandedGroups - groupName else expandedGroups + groupName }
+                                    .padding(vertical = 8.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                val resolvedIcon = config.iconResolver?.invoke(item.iconKey)
-                                if (resolvedIcon != null) {
-                                    Icon(
-                                        imageVector = resolvedIcon,
-                                        contentDescription = item.label,
-                                        tint = config.iconColor,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                } else {
-                                    Text(
-                                        (item.iconKey ?: item.label.take(2)).uppercase(),
-                                        color = config.iconColor,
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                    )
+                                // Icon circle
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.08f))
+                                        .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (groupIcon != null) {
+                                        Icon(groupIcon, groupName, tint = config.iconColor, modifier = Modifier.size(20.dp))
+                                    } else {
+                                        Text(groupName.take(2).uppercase(), color = config.iconColor,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    }
                                 }
-                            }
 
-                            // Label
-                            Text(
-                                item.label,
-                                color = AppTheme.BodyTextColor,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
-                            )
+                                // Group name + member count
+                                Column(Modifier.weight(1f)) {
+                                    Text(groupName, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    Text("${members.size} metrics", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                                }
 
-                            // Star
-                            IconButton(onClick = { config.onToggleFavorite(item.id, !item.isFavorite) }, modifier = Modifier.size(32.dp)) {
+                                // Expand indicator
                                 Icon(
-                                    if (item.isFavorite) Icons.Outlined.Star else Icons.Outlined.StarBorder,
-                                    if (item.isFavorite) "Unstar" else "Star",
-                                    tint = if (item.isFavorite) Color(0xFFFFD54F) else AppTheme.SubtleTextColor,
+                                    if (isGroupExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                                    contentDescription = if (isGroupExpanded) "Collapse" else "Expand",
+                                    tint = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
 
-                            // Delete — hidden for automatable (system) triggers
-                            if (!item.isAutomatable) {
-                                IconButton(onClick = { showDeleteDialog = item }, modifier = Modifier.size(32.dp)) {
-                                    Icon(Icons.Outlined.Delete, "Delete", tint = AppTheme.AccentPink.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
-                                }
-                            }
-                        }
-
-                        // ── Row 2: prediction value chips ──
-                        if (config.showPrediction) {
-                        Row(
-                            modifier = Modifier.padding(start = 46.dp, bottom = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            PredictionValue.entries.forEach { pv ->
-                                PredictionChip(
-                                    value = pv,
-                                    isSelected = item.prediction == pv,
-                                    onClick = { config.onSetPrediction(item.id, pv) }
-                                )
-                            }
-                        }
-                        }
-
-                        // ── Row 3: editable category ──
-                        if (config.categories.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.padding(start = 46.dp, bottom = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Box {
-                                    Row(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(Color.White.copy(alpha = 0.06f))
-                                            .clickable { catExpanded = true }
-                                            .padding(horizontal = 8.dp, vertical = 3.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(
-                                            item.category ?: "Category",
-                                            color = if (item.category != null) AppTheme.SubtleTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.4f),
-                                            style = MaterialTheme.typography.labelSmall
-                                        )
-                                        Icon(
-                                            Icons.Outlined.ExpandMore,
-                                            contentDescription = "Change category",
-                                            tint = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = catExpanded,
-                                        onDismissRequest = { catExpanded = false },
-                                        modifier = Modifier.background(Color(0xFF2A0C3C))
-                                    ) {
-                                        config.categories.forEach { cat ->
-                                            DropdownMenuItem(
-                                                text = { Text(cat, color = Color.White, style = MaterialTheme.typography.bodySmall) },
-                                                onClick = { config.onSetCategory(item.id, cat); catExpanded = false },
-                                                modifier = if (item.category == cat) Modifier.background(config.iconColor.copy(alpha = 0.15f)) else Modifier
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // ── Row 4: automation toggle (only if automatable) ──
-                        if (item.isAutomatable) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(start = 46.dp, bottom = 4.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(Color.White.copy(alpha = 0.06f))
-                                    .clickable { config.onToggleAutomation(item.id, !item.isAutomated) }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                // Mini toggle track
-                                Box(
-                                    modifier = Modifier
-                                        .width(26.dp)
-                                        .height(14.dp)
-                                        .clip(RoundedCornerShape(7.dp))
-                                        .background(
-                                            if (item.isAutomated) Color(0xFF4A1A6B).copy(alpha = 0.7f)
-                                            else Color.White.copy(alpha = 0.10f)
-                                        )
-                                ) {
-                                    // Thumb
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(2.dp)
-                                            .size(10.dp)
-                                            .align(if (item.isAutomated) Alignment.CenterEnd else Alignment.CenterStart)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (item.isAutomated) Color.White.copy(alpha = 0.85f)
-                                                else AppTheme.SubtleTextColor.copy(alpha = 0.4f)
-                                            )
-                                    )
-                                }
-                                Text(
-                                    "Auto-detect",
-                                    color = if (item.isAutomated) AppTheme.SubtleTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-
-                            // ── Row 5: threshold ──
-                            val hasThreshold = item.direction == "low" || item.direction == "high"
-                            if (hasThreshold) {
-                                val effectiveThreshold = item.threshold ?: item.defaultThreshold
-                                val displayValue = effectiveThreshold?.let { formatThresholdForDisplay(it, item.unit) } ?: ""
-                                var textValue by remember(item.id, effectiveThreshold) {
-                                    mutableStateOf(displayValue)
-                                }
-                                val dimAlpha = if (item.isAutomated) 1f else 0.4f
+                            // Group-level prediction chips
+                            if (config.showPrediction) {
                                 Row(
-                                    modifier = Modifier
-                                        .padding(start = 46.dp, bottom = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(start = 46.dp, top = 4.dp, bottom = 4.dp),
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text(
-                                        "Threshold:",
-                                        color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha),
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .width(72.dp)
-                                            .height(28.dp)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(
-                                                if (item.isAutomated) Color.White.copy(alpha = 0.08f)
-                                                else Color.White.copy(alpha = 0.04f)
-                                            )
-                                            .border(
-                                                0.5.dp,
-                                                if (item.isAutomated) Color.White.copy(alpha = 0.15f)
-                                                else Color.White.copy(alpha = 0.06f),
-                                                RoundedCornerShape(4.dp)
-                                            )
-                                            .padding(horizontal = 8.dp),
-                                        contentAlignment = Alignment.CenterStart
-                                    ) {
-                                        androidx.compose.foundation.text.BasicTextField(
-                                            value = textValue,
-                                            onValueChange = { newText ->
-                                                textValue = newText
-                                                val parsed = newText.toDoubleOrNull()
-                                                if (parsed != null) {
-                                                    config.onThresholdChange(item.id, parsed)
-                                                }
-                                            },
-                                            enabled = item.isAutomated,
-                                            singleLine = true,
-                                            textStyle = MaterialTheme.typography.labelSmall.copy(
-                                                color = AppTheme.BodyTextColor.copy(alpha = dimAlpha)
-                                            ),
-                                            cursorBrush = androidx.compose.ui.graphics.SolidColor(AppTheme.AccentPurple)
+                                    PredictionValue.entries.forEach { pv ->
+                                        PredictionChip(
+                                            value = pv,
+                                            isSelected = groupPrediction == pv,
+                                            onClick = {
+                                                // Set prediction on ALL members of the group
+                                                members.forEach { member -> config.onSetPrediction(member.id, pv) }
+                                            }
                                         )
-                                        if (textValue.isEmpty()) {
-                                            Text(
-                                                "—",
-                                                color = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
-                                                style = MaterialTheme.typography.labelSmall
-                                            )
-                                        }
                                     }
-                                    Text(
-                                        when (item.unit) {
-                                            "hours" -> "h"
-                                            "%" -> "%"
-                                            "count" -> ""
-                                            "time" -> ""
-                                            else -> item.unit ?: ""
-                                        },
-                                        color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha),
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
                                 }
                             }
+
+                            // ── Expanded: show individual members ──
+                            AnimatedVisibility(visible = isGroupExpanded) {
+                                Column(Modifier.padding(start = 20.dp, top = 4.dp)) {
+                                    members.forEach { item ->
+                                        PoolItemRow(item = item, config = config, showDeleteDialog = { showDeleteDialog = it }, indent = 26.dp)
+                                        if (item != members.last()) {
+                                            HorizontalDivider(color = Color.White.copy(alpha = 0.04f), thickness = 0.5.dp, modifier = Modifier.padding(vertical = 2.dp))
+                                        }
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
                         }
 
-                        // Divider between items within same category
-                        if (item != grouped[category]?.last()) {
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), thickness = 0.5.dp, modifier = Modifier.padding(vertical = 2.dp))
+                        // Render standalone items (no displayGroup)
+                        standalone.forEach { item ->
+                            PoolItemRow(item = item, config = config, showDeleteDialog = { showDeleteDialog = it })
+                            if (item != standalone.last()) {
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.06f), thickness = 0.5.dp, modifier = Modifier.padding(vertical = 2.dp))
+                            }
                         }
-                    } // end items forEach
                         } // end Column
                     } // end AnimatedVisibility
                     } // end categories forEach
@@ -640,6 +491,140 @@ private fun PredictionChip(
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )
         )
+    }
+}
+
+/** Renders a single pool item row with all its controls (icon, label, star, delete, prediction, automation, threshold) */
+@Composable
+private fun PoolItemRow(
+    item: PoolItem,
+    config: PoolConfig,
+    showDeleteDialog: (PoolItem) -> Unit,
+    indent: Dp = 0.dp
+) {
+    var catExpanded by remember { mutableStateOf(false) }
+
+    // ── Row 1: icon · label · star · delete ──
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = indent, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier.size(38.dp).clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.08f))
+                .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            val resolvedIcon = config.iconResolver?.invoke(item.iconKey)
+            if (resolvedIcon != null) {
+                Icon(resolvedIcon, item.label, tint = config.iconColor, modifier = Modifier.size(20.dp))
+            } else {
+                Text((item.iconKey ?: item.label.take(2)).uppercase(), color = config.iconColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+            }
+        }
+        Text(item.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        IconButton(onClick = { config.onToggleFavorite(item.id, !item.isFavorite) }, modifier = Modifier.size(32.dp)) {
+            Icon(
+                if (item.isFavorite) Icons.Outlined.Star else Icons.Outlined.StarBorder,
+                if (item.isFavorite) "Unstar" else "Star",
+                tint = if (item.isFavorite) Color(0xFFFFD54F) else AppTheme.SubtleTextColor,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        if (!item.isAutomatable) {
+            IconButton(onClick = { showDeleteDialog(item) }, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Outlined.Delete, "Delete", tint = AppTheme.AccentPink.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+            }
+        }
+    }
+
+    val startPad = indent + 46.dp
+
+    // ── Row 2: prediction value chips (only for standalone, not grouped children) ──
+    if (config.showPrediction && item.displayGroup == null) {
+        Row(modifier = Modifier.padding(start = startPad, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PredictionValue.entries.forEach { pv ->
+                PredictionChip(value = pv, isSelected = item.prediction == pv, onClick = { config.onSetPrediction(item.id, pv) })
+            }
+        }
+    }
+
+    // ── Row 3: editable category (only for standalone) ──
+    if (config.categories.isNotEmpty() && item.displayGroup == null) {
+        Row(modifier = Modifier.padding(start = startPad, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box {
+                Row(
+                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color.White.copy(alpha = 0.06f))
+                        .clickable { catExpanded = true }.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(item.category ?: "Category",
+                        color = if (item.category != null) AppTheme.SubtleTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.4f),
+                        style = MaterialTheme.typography.labelSmall)
+                    Icon(Icons.Outlined.ExpandMore, "Change category", tint = AppTheme.SubtleTextColor.copy(alpha = 0.5f), modifier = Modifier.size(12.dp))
+                }
+                DropdownMenu(expanded = catExpanded, onDismissRequest = { catExpanded = false }, modifier = Modifier.background(Color(0xFF2A0C3C))) {
+                    config.categories.forEach { cat ->
+                        DropdownMenuItem(
+                            text = { Text(cat, color = Color.White, style = MaterialTheme.typography.bodySmall) },
+                            onClick = { config.onSetCategory(item.id, cat); catExpanded = false },
+                            modifier = if (item.category == cat) Modifier.background(config.iconColor.copy(alpha = 0.15f)) else Modifier
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Row 4: automation toggle (only if automatable) ──
+    if (item.isAutomatable) {
+        Row(
+            modifier = Modifier.padding(start = startPad, bottom = 4.dp).clip(RoundedCornerShape(6.dp))
+                .background(Color.White.copy(alpha = 0.06f))
+                .clickable { config.onToggleAutomation(item.id, !item.isAutomated) }
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(modifier = Modifier.width(26.dp).height(14.dp).clip(RoundedCornerShape(7.dp))
+                .background(if (item.isAutomated) Color(0xFF4A1A6B).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.10f))) {
+                Box(modifier = Modifier.padding(2.dp).size(10.dp)
+                    .align(if (item.isAutomated) Alignment.CenterEnd else Alignment.CenterStart)
+                    .clip(CircleShape).background(if (item.isAutomated) Color.White.copy(alpha = 0.85f) else AppTheme.SubtleTextColor.copy(alpha = 0.4f)))
+            }
+            Text("Auto-detect", color = if (item.isAutomated) AppTheme.SubtleTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                style = MaterialTheme.typography.labelSmall)
+        }
+
+        // ── Row 5: threshold ──
+        val hasThreshold = item.direction == "low" || item.direction == "high"
+        if (hasThreshold) {
+            val effectiveThreshold = item.threshold ?: item.defaultThreshold
+            val displayValue = effectiveThreshold?.let { formatThresholdForDisplay(it, item.unit) } ?: ""
+            var textValue by remember(item.id, effectiveThreshold) { mutableStateOf(displayValue) }
+            val dimAlpha = if (item.isAutomated) 1f else 0.4f
+            Row(modifier = Modifier.padding(start = startPad, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Threshold:", color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha), style = MaterialTheme.typography.labelSmall)
+                Box(
+                    modifier = Modifier.width(72.dp).height(28.dp).clip(RoundedCornerShape(4.dp))
+                        .background(if (item.isAutomated) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.04f))
+                        .border(0.5.dp, if (item.isAutomated) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.06f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = textValue, onValueChange = { newText -> textValue = newText; newText.toDoubleOrNull()?.let { config.onThresholdChange(item.id, it) } },
+                        enabled = item.isAutomated, singleLine = true,
+                        textStyle = MaterialTheme.typography.labelSmall.copy(color = AppTheme.BodyTextColor.copy(alpha = dimAlpha)),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(AppTheme.AccentPurple)
+                    )
+                    if (textValue.isEmpty()) { Text("—", color = AppTheme.SubtleTextColor.copy(alpha = 0.3f), style = MaterialTheme.typography.labelSmall) }
+                }
+                Text(when (item.unit) { "hours" -> "h"; "%" -> "%"; "count" -> ""; "time" -> ""; else -> item.unit ?: "" },
+                    color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha), style = MaterialTheme.typography.labelSmall)
+            }
+        }
     }
 }
 

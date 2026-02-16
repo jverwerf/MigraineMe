@@ -124,6 +124,13 @@ fun DataSettingsScreen(
     // ─────────────────────────────────────────────────────────────────────────
 
     val scrollState = rememberScrollState()
+
+    // Report scroll position for setup coach overlay
+    LaunchedEffect(scrollState.value) {
+        if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+            SetupScrollState.scrollPosition = scrollState.value
+        }
+    }
     val sections = remember { DataSettingsSections.getAllSections() }
     val weatherMetrics = remember { DataSettingsSections.weatherMetrics }
     val hasAnyWearable = connectedWearables.isNotEmpty()
@@ -346,3 +353,4 @@ private fun requestLocationPermission(
         )
     }
 }
+

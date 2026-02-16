@@ -52,6 +52,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -173,10 +174,16 @@ object Routes {
     const val TRIGGERS_SETTINGS = "triggers_settings"
     const val RISK_WEIGHTS = "risk_weights"
     const val TESTING = "testing"
+    const val ONBOARDING = "onboarding"
+    const val AI_SETUP = "ai_setup"
     const val CUSTOMIZE_TRIGGERS = "customize_triggers"
+    const val EVENING_CHECKIN = "evening_checkin"
 }
 
 class MainActivity : ComponentActivity() {
+
+    // Deep link route from notification tap
+    private var pendingNavigationRoute = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -193,10 +200,11 @@ class MainActivity : ComponentActivity() {
 
         handleWhoopOAuthIntent(intent)
         handleSupabaseOAuthIntent(intent)
+        handleNavigationIntent(intent)
 
         setContent {
             MaterialTheme {
-                AppRoot()
+                AppRoot(pendingNavigationRoute = pendingNavigationRoute)
             }
         }
     }
@@ -205,6 +213,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         handleWhoopOAuthIntent(intent)
         handleSupabaseOAuthIntent(intent)
+        handleNavigationIntent(intent)
     }
 
     private fun handleWhoopOAuthIntent(intent: Intent?) {
@@ -250,11 +259,19 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "Returning from sign-in…", Toast.LENGTH_SHORT).show()
         }
     }
+
+    private fun handleNavigationIntent(intent: Intent?) {
+        intent?.getStringExtra("navigate_to")?.let { route ->
+            pendingNavigationRoute.value = route
+            // Clear so it doesn't re-trigger
+            intent.removeExtra("navigate_to")
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppRoot() {
+fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)) {
     val nav = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -370,6 +387,16 @@ fun AppRoot() {
     val journal by logVm.journal.collectAsState()
     val attentionCount = remember(journal) { journal.count { needsAttention(it) } }
 
+    // Handle deep link navigation from notification tap
+    LaunchedEffect(pendingNavigationRoute.value, token) {
+        val route = pendingNavigationRoute.value ?: return@LaunchedEffect
+        // Wait until user is authenticated before navigating
+        if (!token.isNullOrBlank()) {
+            nav.navigate(route) { launchSingleTop = true }
+            pendingNavigationRoute.value = null
+        }
+    }
+
     data class DrawerItem(val title: String, val route: String, val icon: ImageVector)
 
     val drawerItems = listOf(
@@ -465,7 +492,8 @@ fun AppRoot() {
             current == Routes.MENTAL_DATA_HISTORY ||
             current == Routes.FULL_GRAPH_MENTAL ||
             current == Routes.MONITOR_ENVIRONMENT ||
-            current == Routes.THIRD_PARTY_CONNECTIONS
+            current == Routes.THIRD_PARTY_CONNECTIONS ||
+            current == Routes.EVENING_CHECKIN
 
         // Wizard fullscreen: hide top bar + bottom nav for immersive logging
         val isWizardFullscreen = current in setOf(
@@ -475,7 +503,9 @@ fun AppRoot() {
             Routes.NOTES, Routes.REVIEW,
             Routes.MANAGE_ITEMS, Routes.MANAGE_SYMPTOMS,
             Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
-            Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES
+            Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
+            Routes.ONBOARDING, Routes.AI_SETUP, "${Routes.ONBOARDING}/setup",
+            Routes.EVENING_CHECKIN
         )
 
         // Insights background
@@ -523,7 +553,8 @@ fun AppRoot() {
                 current == Routes.NOTES ||
                 current == Routes.REVIEW ||
                 current == Routes.TIMING ||
-                current == Routes.MANAGE_SYMPTOMS
+                current == Routes.MANAGE_SYMPTOMS ||
+                current == Routes.EVENING_CHECKIN
             val isManageItems = current == Routes.MANAGE_ITEMS ||
                 current == Routes.MANAGE_TRIGGERS ||
                 current == Routes.MANAGE_MEDICINES ||
@@ -919,12 +950,12 @@ fun AppRoot() {
                     }
                 }
             ) { inner ->
+                Box(modifier = Modifier.fillMaxSize().padding(inner)) {
                 NavHost(
                     navController = nav,
                     startDestination = Routes.LOGIN,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(inner)
                 ) {
                     composable(Routes.MONITOR) { MonitorScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_CONFIG) { MonitorConfigScreen(onBack = { nav.popBackStack() }) }
@@ -975,11 +1006,21 @@ fun AppRoot() {
                     composable(Routes.TRIGGERS_SETTINGS) { TriggersSettingsScreen(navController = nav, authVm = authVm) }
                     composable(Routes.CUSTOMIZE_TRIGGERS) { CustomizeTriggersScreen() }
                     composable(Routes.HOME) {
+                        // Safety net: clear any leftover demo data on first HOME load
+                        val homeCtx = LocalContext.current
+                        LaunchedEffect(Unit) {
+                            DemoDataSeeder.ensureDemoCleared(homeCtx)
+                        }
+
                         HomeScreenRoot(
                             onLogout = { nav.navigate(Routes.LOGOUT) { launchSingleTop = true } },
                             onNavigateToMigraine = { nav.navigate(Routes.MIGRAINE) },
                             authVm = authVm,
-                            logVm = logVm
+                            logVm = logVm,
+                            triggerVm = triggerVm,
+                            medicineVm = medVm,
+                            reliefVm = reliefVm,
+                            symptomVm = symptomVm,
                         )
                     }
                     composable(Routes.COMMUNITY) { CommunityScreen() }
@@ -1491,7 +1532,8 @@ fun AppRoot() {
                                     threshold = setting?.threshold,
                                     defaultThreshold = row.defaultThreshold,
                                     unit = row.unit,
-                                    direction = row.direction
+                                    direction = row.direction,
+                                    displayGroup = row.displayGroup
                                 )
                             }
                         }
@@ -1712,7 +1754,8 @@ fun AppRoot() {
                                     threshold = setting?.threshold,
                                     defaultThreshold = row.defaultThreshold,
                                     unit = row.unit,
-                                    direction = row.direction
+                                    direction = row.direction,
+                                    displayGroup = row.displayGroup
                                 )
                             }
                         }
@@ -1906,18 +1949,32 @@ fun AppRoot() {
 
                     composable(Routes.LOGIN) {
                         val a by authVm.state.collectAsState()
+                        val loginCtx = LocalContext.current
                         LaunchedEffect(a.accessToken) {
                             if (!a.accessToken.isNullOrBlank()) {
-                                nav.navigate(Routes.HOME) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
+                                // If returning from WHOOP OAuth during setup, go back to Connections
+                                val whoopPrefs = loginCtx.getSharedPreferences("whoop_oauth", android.content.Context.MODE_PRIVATE)
+                                val returnToSetup = whoopPrefs.getBoolean("return_to_setup", false)
+                                if (returnToSetup) {
+                                    whoopPrefs.edit().putBoolean("return_to_setup", false).apply()
+                                    nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) {
+                                        popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    val dest = if (OnboardingPrefs.isCompleted(loginCtx)) Routes.HOME else Routes.ONBOARDING
+                                    nav.navigate(dest) {
+                                        popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
                             }
                         }
                         LoginScreen(
                             authVm = authVm,
                             onLoggedIn = {
-                                nav.navigate(Routes.HOME) {
+                                val dest = if (OnboardingPrefs.isCompleted(loginCtx)) Routes.HOME else Routes.ONBOARDING
+                                nav.navigate(dest) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
                                 }
@@ -1927,10 +1984,11 @@ fun AppRoot() {
                     }
 
                     composable(Routes.SIGNUP) {
+                        val signupCtx = LocalContext.current
                         SignupScreen(
                             authVm = authVm,
                             onSignedUpAndLoggedIn = {
-                                nav.navigate(Routes.HOME) {
+                                nav.navigate(Routes.ONBOARDING) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
                                 }
@@ -1963,11 +2021,109 @@ fun AppRoot() {
                     }
 
                     composable(Routes.TESTING) {
-                        TestingScreen(authVm = authVm)
+                        TestingScreen(
+                            authVm = authVm,
+                            onNavigateToOnboarding = {
+                                nav.navigate(Routes.ONBOARDING) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToHome = {
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToCheckIn = {
+                                nav.navigate(Routes.EVENING_CHECKIN) {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+
+                    composable(Routes.ONBOARDING) {
+                        OnboardingScreen(
+                            startAtSetup = false,
+                            onComplete = {
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onStartTour = {
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                                TourManager.startTour()
+                            },
+                            onStartSetup = {
+                                nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) {
+                                    launchSingleTop = true
+                                }
+                                TourManager.startSetup()
+                            }
+                        )
+                    }
+
+                    composable("${Routes.ONBOARDING}/setup") {
+                        OnboardingScreen(
+                            startAtSetup = true,
+                            onComplete = {
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onStartTour = { /* already done */ },
+                            onStartSetup = {
+                                nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) {
+                                    launchSingleTop = true
+                                }
+                                TourManager.startSetup()
+                            }
+                        )
+                    }
+
+                    composable(Routes.AI_SETUP) {
+                        AiSetupScreen(
+                            onComplete = {
+                                scope.launch(Dispatchers.IO) {
+                                    try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
+                                    DemoDataSeeder.ensureDemoCleared(appCtx)
+                                }
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onSkip = {
+                                scope.launch(Dispatchers.IO) {
+                                    try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
+                                    DemoDataSeeder.ensureDemoCleared(appCtx)
+                                }
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
                     }
 
                     composable(Routes.MENSTRUATION_SETTINGS) {
                         MenstruationSettingsScreen(onBack = { nav.popBackStack() })
+                    }
+
+                    composable(Routes.EVENING_CHECKIN) {
+                        EveningCheckInScreen(
+                            navController = nav,
+                            authVm = authVm,
+                            triggerVm = triggerVm,
+                            prodromeVm = viewModel(),
+                            medicineVm = medVm,
+                            reliefVm = reliefVm,
+                        )
                     }
 
                     composable(Routes.LOGOUT) {
@@ -1983,6 +2139,28 @@ fun AppRoot() {
                     }
 
                 }
+
+                    // Coach overlay for feature tour (floats on top of real screens)
+                    CoachOverlay(
+                        navigateTo = { route ->
+                            nav.navigate(route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onTourFinished = {
+                            nav.navigate("${Routes.ONBOARDING}/setup") {
+                                popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        },
+                        onSetupFinished = {
+                            nav.navigate(Routes.AI_SETUP) {
+                                popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                } // end Box wrapper
             }
         }
     }

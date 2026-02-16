@@ -19,8 +19,9 @@ import java.time.LocalTime
 import java.time.ZoneId
 
 @Composable
-fun TestingScreen(authVm: AuthViewModel) {
+fun TestingScreen(authVm: AuthViewModel, onNavigateToOnboarding: () -> Unit = {}, onNavigateToHome: () -> Unit = {}, onNavigateToCheckIn: () -> Unit = {}) {
     val auth by authVm.state.collectAsState()
+    val ctx = LocalContext.current
     val scrollState = rememberScrollState()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -39,6 +40,67 @@ fun TestingScreen(authVm: AuthViewModel) {
             }
 
             DataStatusCard(accessToken = auth.accessToken)
+
+            // Evening Check-in
+            BaseCard {
+                Text(
+                    "Evening Check-in",
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    "Test the daily evening check-in flow",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(Modifier.height(4.dp))
+                Button(
+                    onClick = onNavigateToCheckIn,
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text("Open Evening Check-in")
+                }
+            }
+
+            // Onboarding reset
+            BaseCard {
+                Text(
+                    "Onboarding",
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+
+                Text(
+                    "Completed: ${OnboardingPrefs.isCompleted(ctx)}",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Button(
+                    onClick = {
+                        OnboardingPrefs.reset(ctx)
+                        onNavigateToOnboarding()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text("Restart Onboarding")
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        TourManager.startTour()
+                        onNavigateToHome()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text("Start Feature Tour Only")
+                }
+            }
         }
     }
 }

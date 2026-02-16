@@ -44,7 +44,13 @@ fun HomeScreenRoot(
     onNavigateToMigraine: () -> Unit = {},
     authVm: AuthViewModel,
     logVm: LogViewModel,
-    vm: HomeViewModel = viewModel()
+    vm: HomeViewModel = viewModel(),
+    // Quick log VMs — created at call site or defaulted
+    triggerVm: TriggerViewModel = viewModel(),
+    medicineVm: MedicineViewModel = viewModel(),
+    reliefVm: ReliefViewModel = viewModel(),
+    prodromeVm: ProdromeViewModel = viewModel(),
+    symptomVm: SymptomViewModel = viewModel(),
 ) {
     val state by vm.state.collectAsState()
     val auth by authVm.state.collectAsState()
@@ -134,6 +140,7 @@ fun HomeScreenRoot(
 
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll) {
+
                 RiskHeroCard(
                     riskPercent = displayPercent,
                     riskScore = displayScore,
@@ -143,6 +150,18 @@ fun HomeScreenRoot(
                     dayRisks = state.dayRisks,
                     onDaySelected = { selectedDay = it }
                 )
+
+                // ── Quick Log Strip — below the gauge ──
+                QuickLogStrip(
+                    authVm = authVm,
+                    triggerVm = triggerVm,
+                    medicineVm = medicineVm,
+                    reliefVm = reliefVm,
+                    prodromeVm = prodromeVm,
+                    symptomVm = symptomVm,
+                    onLogComplete = { vm.loadRisk(appCtx) }
+                )
+
                 ActiveTriggersCard(
                     triggers = displayTriggers,
                     gaugeMax = state.gaugeMaxScore
@@ -257,7 +276,6 @@ private fun SevenDayOutlook(
                     modifier = Modifier.clickable { onDaySelected(i) }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        // Selection ring
                         if (isSelected) {
                             Box(
                                 modifier = Modifier
@@ -295,10 +313,8 @@ private fun MiniGauge(
 ) {
     val clamped = percent.coerceIn(0, 100)
     val p = clamped / 100f
-    val t = p // for color lerp
 
-    // Color from purple (low) to pink (high)
-    val progressColor = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, t)
+    val progressColor = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, p)
 
     Box(
         modifier = Modifier.width(size).height(size * 0.62f),
@@ -307,149 +323,124 @@ private fun MiniGauge(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val sw = strokeWidth.toPx()
             val radius = (minOf(this.size.width, this.size.height * 2f) / 2f) - sw
-            val cx = this.size.width / 2f
-            val cy = this.size.height
-
-            val startAngle = 180f
-            val fullSweep = 180f
-            val sweep = fullSweep * p
-
-            // Track
-            drawArc(
-                color = Color.White.copy(alpha = 0.10f),
-                startAngle = startAngle,
-                sweepAngle = fullSweep,
-                useCenter = false,
-                topLeft = Offset(cx - radius, cy - radius),
-                size = Size(radius * 2f, radius * 2f),
-                style = Stroke(width = sw * 0.7f, cap = StrokeCap.Round)
-            )
-
-            // Progress
-            drawArc(
-                color = progressColor,
-                startAngle = startAngle,
-                sweepAngle = sweep,
-                useCenter = false,
-                topLeft = Offset(cx - radius, cy - radius),
-                size = Size(radius * 2f, radius * 2f),
-                style = Stroke(width = sw, cap = StrokeCap.Round)
-            )
+            val cx = this.size.width / 2f; val cy = this.size.height
+            drawArc(AppTheme.TrackColor, 180f, 180f, false,
+                Offset(cx - radius, cy - radius), Size(radius * 2f, radius * 2f),
+                style = Stroke(sw * 0.7f, cap = StrokeCap.Round))
+            if (p > 0f) {
+                drawArc(progressColor, 180f, 180f * p, false,
+                    Offset(cx - radius, cy - radius), Size(radius * 2f, radius * 2f),
+                    style = Stroke(sw, cap = StrokeCap.Round))
+            }
         }
     }
 }
-@Composable
-private fun ActiveTriggersCard(triggers: List<TriggerScore>, gaugeMax: Double) {
-    if (triggers.isEmpty()) return
 
-    val totalScore = triggers.sumOf { it.score }.coerceAtLeast(1)
+@Composable
+private fun ActiveTriggersCard(
+    triggers: List<TriggerScore>,
+    gaugeMax: Double = 10.0
+) {
+    if (triggers.isEmpty()) return
 
     BaseCard {
         Text(
-            "Active Triggers",
+            "Active triggers",
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
 
+        Spacer(Modifier.height(8.dp))
+
         triggers.forEach { t ->
-            val sevColor = when (t.severity) {
+            val sevColor = when (t.severity.uppercase()) {
                 "HIGH" -> Color(0xFFE57373)
                 "MILD" -> Color(0xFFFFB74D)
                 else -> Color(0xFF81C784)
             }
-            val sevBg = sevColor.copy(alpha = 0.15f)
-            val barFraction = (t.score.toFloat() / totalScore).coerceIn(0f, 1f)
-            val pctOfTotal = (barFraction * 100).toInt()
+            val sevBg = sevColor.copy(alpha = 0.12f)
+            val totalPts = triggers.sumOf { it.score }.coerceAtLeast(1)
+            val pctOfTotal = (t.score * 100) / totalPts
+            val barFraction = (t.score.toFloat() / gaugeMax.toFloat()).coerceIn(0f, 1f)
 
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        color = Color.White.copy(alpha = 0.04f),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .padding(start = 0.dp)
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Colored left border effect via a Row
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    // Left severity accent bar
-                    Box(
-                        modifier = Modifier
-                            .width(3.dp)
-                            .height(56.dp)
-                            .background(
-                                color = sevColor,
-                                shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
-                            )
-                    )
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .background(sevColor, CircleShape)
+                )
 
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Top row: name + severity chip
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Top row: name + severity chip
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                t.name,
-                                color = Color.White,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            )
+                        Text(
+                            t.name,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
 
-                            Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(8.dp))
 
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        color = sevBg,
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    t.severity,
-                                    color = sevColor,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                )
-                            }
-                        }
-
-                        // Progress bar
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp)
                                 .background(
-                                    color = AppTheme.TrackColor,
-                                    shape = RoundedCornerShape(2.dp)
+                                    color = sevBg,
+                                    shape = RoundedCornerShape(12.dp)
                                 )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(barFraction)
-                                    .height(4.dp)
-                                    .background(
-                                        color = sevColor,
-                                        shape = RoundedCornerShape(2.dp)
-                                    )
+                            Text(
+                                t.severity,
+                                color = sevColor,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                             )
                         }
+                    }
 
-                        // Bottom row: points + days active
-                        Text(
-                            "${pctOfTotal}% of risk · ${t.score} pts · ${if (t.daysActive == 1) "today only" else "${t.daysActive} days active"}",
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall
+                    // Progress bar
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .background(
+                                color = AppTheme.TrackColor,
+                                shape = RoundedCornerShape(2.dp)
+                            )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(barFraction)
+                                .height(4.dp)
+                                .background(
+                                    color = sevColor,
+                                    shape = RoundedCornerShape(2.dp)
+                                )
                         )
                     }
+
+                    // Bottom row: points + days active
+                    Text(
+                        "${pctOfTotal}% of risk · ${t.score} pts · ${if (t.daysActive == 1) "today only" else "${t.daysActive} days active"}",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
         }
@@ -582,4 +573,3 @@ private fun RiskGauge(
         }
     }
 }
-

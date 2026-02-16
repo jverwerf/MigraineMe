@@ -20,12 +20,10 @@ class WhoopTokenUploadWorker(
     override suspend fun doWork(): Result {
         val ctx = applicationContext
 
-        // Need a valid Supabase token to authenticate edge functions.
         val supaAccessToken = SessionStore.getValidAccessToken(ctx)
             ?.takeIf { it.isNotBlank() }
             ?: return Result.retry()
 
-        // Ensure userId persisted (WhoopTokenStore is user-bound).
         val existingUserId = SessionStore.readUserId(ctx)
         if (existingUserId.isNullOrBlank()) {
             val derived = JwtUtils.extractUserIdFromAccessToken(supaAccessToken)
@@ -47,15 +45,12 @@ class WhoopTokenUploadWorker(
             return Result.retry()
         }
 
-        val backfillEnqueued = runCatching { edge.enqueueLoginBackfillGuaranteed(ctx) }
-            .getOrDefault(false)
+        // Best-effort backfill — do NOT retry the whole worker if this fails.
+        // The server will handle backfill via cron regardless.
+        runCatching { edge.enqueueLoginBackfillGuaranteed(ctx) }
+            .onFailure { Log.w(TAG, "enqueue-login-backfill failed (non-fatal): ${it.message}") }
 
-        if (!backfillEnqueued) {
-            Log.w(TAG, "enqueue-login-backfill failed; retrying")
-            return Result.retry()
-        }
-
-        Log.d(TAG, "WHOOP token uploaded and backfill enqueued")
+        Log.d(TAG, "WHOOP token uploaded successfully")
         return Result.success()
     }
 
@@ -75,9 +70,6 @@ class WhoopTokenUploadWorker(
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .build()
 
-            // CRITICAL: Use REPLACE (not KEEP) so we always trigger a run.
-            // KEEP can result in "stuck" ENQUEUED work preventing any future triggers,
-            // which matches your symptom: no new edge_audit rows.
             WorkManager.getInstance(appCtx)
                 .enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, req)
         }

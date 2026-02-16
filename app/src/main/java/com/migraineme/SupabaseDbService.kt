@@ -585,7 +585,8 @@ class SupabaseDbService(
         val unit: String? = null,
         @SerialName("enabled_by_default") val enabledByDefault: Boolean = false,
         @SerialName("metric_table") val metricTable: String? = null,
-        @SerialName("metric_column") val metricColumn: String? = null
+        @SerialName("metric_column") val metricColumn: String? = null,
+        @SerialName("display_group") val displayGroup: String? = null
     )
     @Serializable
     data class TriggerPrefRow(
@@ -601,7 +602,7 @@ class SupabaseDbService(
     suspend fun getAllTriggerPool(accessToken: String): List<UserTriggerRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
+            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column,display_group"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
         }
         if (!response.status.isSuccess()) error("Fetch user_triggers failed: ${response.bodyAsText()}")
         return response.body()
@@ -632,11 +633,13 @@ class SupabaseDbService(
         accessToken: String,
         triggerId: String,
         predictionValue: String? = null,
-        category: String? = null
+        category: String? = null,
+        defaultThreshold: Double? = null
     ) {
         val payload = buildJsonObject {
             predictionValue?.let { put("prediction_value", it) }
             category?.let { put("category", it) }
+            defaultThreshold?.let { put("default_threshold", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -1092,7 +1095,8 @@ class SupabaseDbService(
         val unit: String? = null,
         @SerialName("enabled_by_default") val enabledByDefault: Boolean = false,
         @SerialName("metric_table") val metricTable: String? = null,
-        @SerialName("metric_column") val metricColumn: String? = null
+        @SerialName("metric_column") val metricColumn: String? = null,
+        @SerialName("display_group") val displayGroup: String? = null
     )
     @Serializable
     data class ProdromePrefRow(
@@ -1112,7 +1116,7 @@ class SupabaseDbService(
     suspend fun getAllProdromePool(accessToken: String): List<UserProdromeRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
+            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column,display_group"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
         }
         if (!response.status.isSuccess()) error("Fetch user_prodromes failed: ${response.bodyAsText()}")
         return response.body()
@@ -1143,11 +1147,13 @@ class SupabaseDbService(
         accessToken: String,
         prodromeId: String,
         predictionValue: String? = null,
-        category: String? = null
+        category: String? = null,
+        defaultThreshold: Double? = null
     ) {
         val payload = buildJsonObject {
             predictionValue?.let { put("prediction_value", it) }
             category?.let { put("category", it) }
+            defaultThreshold?.let { put("default_threshold", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -1795,6 +1801,86 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json); setBody(payload)
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Risk Score — Live + Daily
+    // ─────────────────────────────────────────────────────────────────
+
+    @Serializable
+    data class RiskScoreLiveRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        val score: Double,
+        val zone: String,
+        val percent: Int,
+        @SerialName("top_triggers") val topTriggers: String? = null,   // jsonb → raw string
+        val forecast: String? = null,                                   // jsonb → raw string
+        @SerialName("day_risks") val dayRisks: String? = null,          // jsonb → raw string
+        @SerialName("updated_at") val updatedAt: String? = null,
+    )
+
+    /** Read the pre-computed live risk score for the current user. Returns null if none exists. */
+    suspend fun getRiskScoreLive(accessToken: String): RiskScoreLiveRow? {
+        return try {
+            val response = client.get("$supabaseUrl/rest/v1/risk_score_live") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+                parameter("select", "id,user_id,score,zone,percent,top_triggers::text,forecast::text,day_risks::text,updated_at")
+                parameter("limit", "1")
+            }
+            if (!response.status.isSuccess()) {
+                android.util.Log.w("SupabaseDb", "getRiskScoreLive HTTP ${response.status}")
+                return null
+            }
+            val raw = response.bodyAsText()
+            android.util.Log.d("SupabaseDb", "getRiskScoreLive raw: ${raw.take(500)}")
+            if (raw.isBlank() || raw == "[]") return null
+
+            // Parse manually to avoid kotlinx.serialization issues with jsonb
+            val arr = org.json.JSONArray(raw)
+            if (arr.length() == 0) return null
+            val obj = arr.getJSONObject(0)
+            RiskScoreLiveRow(
+                id = obj.optString("id", ""),
+                userId = obj.optString("user_id", ""),
+                score = obj.optDouble("score", 0.0),
+                zone = obj.optString("zone", "NONE"),
+                percent = obj.optInt("percent", 0),
+                topTriggers = obj.optString("top_triggers", null)?.takeIf { it != "null" },
+                forecast = obj.optString("forecast", null)?.takeIf { it != "null" },
+                dayRisks = obj.optString("day_risks", null)?.takeIf { it != "null" },
+                updatedAt = obj.optString("updated_at", null)?.takeIf { it != "null" },
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("SupabaseDb", "getRiskScoreLive error: ${e.message}", e)
+            null
+        }
+    }
+
+    @Serializable
+    data class RiskScoreDailyRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        val date: String,
+        val score: Double,
+        val zone: String,
+        val percent: Int,
+        @SerialName("top_triggers") val topTriggers: String? = null,
+        @SerialName("created_at") val createdAt: String? = null,
+    )
+
+    /** Read daily risk score history. Returns most recent first. */
+    suspend fun getRiskScoreDaily(accessToken: String, daysBack: Int = 30): List<RiskScoreDailyRow> {
+        val cutoff = java.time.LocalDate.now().minusDays(daysBack.toLong()).toString()
+        val response = client.get("$supabaseUrl/rest/v1/risk_score_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "*")
+            parameter("date", "gte.$cutoff")
+            parameter("order", "date.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
 }
+
 
 

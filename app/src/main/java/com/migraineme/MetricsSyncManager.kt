@@ -26,7 +26,6 @@ import java.util.Date
  * Called from LoginScreen after successful auth.
  *
  * Responsibilities:
- * - Best-effort WHOOP token refresh (does not change auth approach)
  * - Upload WHOOP token to Supabase (server worker source of truth)
  * - Seed default metric settings for new users
  * - Seed default trigger settings for new users
@@ -34,6 +33,7 @@ import java.util.Date
  * Does NOT:
  * - Change Supabase auth
  * - Change Whoop auth structure
+ * - Refresh WHOOP tokens (server handles all refreshes)
  * - Run/schedule on-device WHOOP daily sync workers (WHOOP ingestion is backend-driven now)
  */
 object MetricsSyncManager {
@@ -160,7 +160,6 @@ object MetricsSyncManager {
         }
     }
 
-
     private suspend fun seedRiskDecayWeightsBestEffort(context: Context) {
         try {
             val ok = EdgeFunctionsService().seedDefaultRiskDecayWeights(context)
@@ -186,6 +185,7 @@ object MetricsSyncManager {
             Log.w("MetricsSyncManager", "seedDefaultRiskGaugeThresholds error: ${t.message}")
         }
     }
+
     private fun isWhoopMetricEnabled(
         settings: List<EdgeFunctionsService.MetricSettingResponse>,
         metric: String
@@ -234,26 +234,26 @@ object MetricsSyncManager {
 
                 val whoopSleepEnabled =
                     isWhoopMetricEnabled(settings, "sleep_duration_daily") ||
-                    isWhoopMetricEnabled(settings, "sleep_score_daily") ||
-                    isWhoopMetricEnabled(settings, "sleep_efficiency_daily") ||
-                    isWhoopMetricEnabled(settings, "sleep_stages_daily") ||
-                    isWhoopMetricEnabled(settings, "sleep_disturbances_daily") ||
-                    isWhoopMetricEnabled(settings, "fell_asleep_time_daily") ||
-                    isWhoopMetricEnabled(settings, "woke_up_time_daily")
+                            isWhoopMetricEnabled(settings, "sleep_score_daily") ||
+                            isWhoopMetricEnabled(settings, "sleep_efficiency_daily") ||
+                            isWhoopMetricEnabled(settings, "sleep_stages_daily") ||
+                            isWhoopMetricEnabled(settings, "sleep_disturbances_daily") ||
+                            isWhoopMetricEnabled(settings, "fell_asleep_time_daily") ||
+                            isWhoopMetricEnabled(settings, "woke_up_time_daily")
 
                 val whoopPhysicalEnabled =
                     isWhoopMetricEnabled(settings, "recovery_score_daily") ||
-                    isWhoopMetricEnabled(settings, "resting_hr_daily") ||
-                    isWhoopMetricEnabled(settings, "hrv_daily") ||
-                    isWhoopMetricEnabled(settings, "skin_temp_daily") ||
-                    isWhoopMetricEnabled(settings, "spo2_daily") ||
-                    isWhoopMetricEnabled(settings, "time_in_high_hr_zones_daily") ||
-                    isWhoopMetricEnabled(settings, "steps_daily")
+                            isWhoopMetricEnabled(settings, "resting_hr_daily") ||
+                            isWhoopMetricEnabled(settings, "hrv_daily") ||
+                            isWhoopMetricEnabled(settings, "skin_temp_daily") ||
+                            isWhoopMetricEnabled(settings, "spo2_daily") ||
+                            isWhoopMetricEnabled(settings, "time_in_high_hr_zones_daily") ||
+                            isWhoopMetricEnabled(settings, "steps_daily")
 
                 if (whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
-                    runCatching { WhoopAuthService().refresh(appCtx) }.onFailure {
-                        Log.w("MetricsSyncManager", "WHOOP refresh failed: ${it.message}")
-                    }
+                    // Server (sync-worker) handles all WHOOP token refreshes and data sync.
+                    // App must never refresh locally to avoid racing and burning the refresh token.
+                    Log.d("MetricsSyncManager", "WHOOP connected and metrics enabled — server handles sync")
                 } else if (!whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
                     withContext(Dispatchers.Main) {
                         snackbarHostState.showSnackbar(
@@ -262,10 +262,6 @@ object MetricsSyncManager {
                         )
                     }
                 }
-
-                // NOTE: Location and noise workers are NOT started here anymore.
-                // They are only started when user explicitly enables them in DataSettings
-                // and grants permission.
 
             } catch (t: Throwable) {
                 Log.w("MetricsSyncManager", "onLogin error: ${t.message}")

@@ -1128,4 +1128,43 @@ class EdgeFunctionsService {
 
         return allOk
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Risk Score Calculation (on-demand)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Trigger on-demand risk score calculation via edge function.
+     * Called when risk_score_live is missing or stale (>2h).
+     * The edge function recalculates and writes to risk_score_live + risk_score_daily.
+     */
+    suspend fun triggerRiskCalculation(context: Context, userId: String): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/calculate-risk-score"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("""{"user_id":"$userId"}""")
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "triggerRiskCalculation failed: ${res.status} - ${res.bodyAsText()}")
+            } else {
+                Log.d("EdgeFunctionsService", "triggerRiskCalculation success for $userId")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "triggerRiskCalculation exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
 }

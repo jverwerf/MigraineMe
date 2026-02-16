@@ -474,40 +474,49 @@ fun ThirdPartyConnectionsScreen(
             )
 
             // WHOOP Row
-            ConnectionRowLogoOnly(
-                logoResId = whoopLogoResId,
-                fallbackLetter = "W",
-                isConnected = hasWhoop.value,
-                onClick = {
-                    if (!hasWhoop.value) {
-                        activity?.let { WhoopAuthService().startAuth(it) }
+            Box(Modifier.spotlightTarget("whoop_card")) {
+                ConnectionRowLogoOnly(
+                    logoResId = whoopLogoResId,
+                    fallbackLetter = "W",
+                    isConnected = hasWhoop.value,
+                    onClick = {
+                        if (!hasWhoop.value) {
+                            // Flag to return here after OAuth if setup coach is active
+                            if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                                context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
+                                    .edit().putBoolean("return_to_setup", true).apply()
+                            }
+                            activity?.let { WhoopAuthService().startAuth(it) }
+                        }
+                    },
+                    onLongClick = {
+                        if (hasWhoop.value) showWhoopDisconnectDialog.value = true
                     }
-                },
-                onLongClick = {
-                    if (hasWhoop.value) showWhoopDisconnectDialog.value = true
-                }
-            )
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
 
             // Health Connect Row
-            ConnectionRow(
-                logoResId = R.drawable.ic_health_connect,
-                fallbackLetter = "H",
-                title = "Health Connect",
-                isConnected = anyHCConnected,
-                warningText = if (anyHCConnected && !allHCConnected) "Some permissions missing. Tap to enable all." else null,
-                onClick = {
-                    if (!healthConnectAvailable.value) {
-                        android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
-                        return@ConnectionRow
+            Box(Modifier.spotlightTarget("health_connect_card")) {
+                ConnectionRow(
+                    logoResId = R.drawable.ic_health_connect,
+                    fallbackLetter = "H",
+                    title = "Health Connect",
+                    isConnected = anyHCConnected,
+                    warningText = if (anyHCConnected && !allHCConnected) "Some permissions missing. Tap to enable all." else null,
+                    onClick = {
+                        if (!healthConnectAvailable.value) {
+                            android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
+                            return@ConnectionRow
+                        }
+                        scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
+                    },
+                    onLongClick = {
+                        if (anyHCConnected) showHealthConnectDisconnectDialog.value = true
                     }
-                    scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
-                },
-                onLongClick = {
-                    if (anyHCConnected) showHealthConnectDisconnectDialog.value = true
-                }
-            )
+                )
+            }
 
             Spacer(Modifier.height(32.dp))
         }
@@ -660,3 +669,4 @@ private fun ConnectionRow(
         }
     }
 }
+

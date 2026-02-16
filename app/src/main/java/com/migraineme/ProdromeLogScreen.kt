@@ -48,8 +48,29 @@ fun ProdromeLogScreen(
     val rawPool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
 
-    // Hide prodromes with prediction = NONE
-    val pool = remember(rawPool) { rawPool.filter { it.predictionValue?.uppercase() != "NONE" } }
+    // Hide prodromes with prediction = NONE, then collapse display_group items
+    // into a single entry (e.g. "Light sensitivity" instead of "Brightness low" + "Dark mode high")
+    val pool = remember(rawPool) {
+        val visible = rawPool.filter { it.predictionValue?.uppercase() != "NONE" }
+        val standalone = visible.filter { it.displayGroup == null }
+        val grouped = visible.filter { it.displayGroup != null }
+            .groupBy { it.displayGroup!! }
+            .map { (groupName, members) ->
+                val first = members.first()
+                val severityOrder = listOf("HIGH", "MILD", "LOW", "NONE")
+                val bestSeverity = members.map { it.predictionValue?.uppercase() ?: "NONE" }
+                    .minByOrNull { sev -> severityOrder.indexOf(sev) } ?: "NONE"
+                SupabaseDbService.UserProdromeRow(
+                    id = "group_${groupName}",
+                    label = groupName,
+                    iconKey = first.iconKey,
+                    category = first.category,
+                    predictionValue = bestSeverity,
+                    displayGroup = groupName
+                )
+            }
+        standalone + grouped
+    }
     val authState by authVm.state.collectAsState()
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()

@@ -395,12 +395,16 @@ class InsightsViewModel : ViewModel() {
     private val _labelToMetricKey = MutableStateFlow<Map<String, String>>(emptyMap())
     val labelToMetricMap: StateFlow<Map<String, String>> = _labelToMetricKey
 
+    /** Group name → all associated VM metric keys (e.g. "poor sleep" → {sleep_dur, sleep_score, ...}) */
+    private val _groupToMetricKeys = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
+
     /** Fetch trigger_templates + prodrome_templates and build label → metric key map */
     private fun loadTemplateMap(client: OkHttpClient, base: String, key: String, token: String) {
         val map = mutableMapOf<String, String>()
+        val groupMap = mutableMapOf<String, MutableSet<String>>()
         for (table in listOf("trigger_templates", "prodrome_templates")) {
             try {
-                val url = "$base/rest/v1/$table?select=label,metric_table,metric_column&metric_table=not.is.null"
+                val url = "$base/rest/v1/$table?select=label,metric_table,metric_column,display_group&metric_table=not.is.null"
                 val req = Request.Builder().url(url).get()
                     .addHeader("apikey", key)
                     .addHeader("Authorization", "Bearer $token")
@@ -414,6 +418,7 @@ class InsightsViewModel : ViewModel() {
                     val label = o.optString("label", "").takeIf { it.isNotBlank() } ?: continue
                     val metricTable = o.optString("metric_table", "").takeIf { it.isNotBlank() } ?: continue
                     val metricCol = o.optString("metric_column", "")
+                    val displayGroup = o.optString("display_group", "").takeIf { it.isNotBlank() }
                     val vmKey = if (metricCol.isNotBlank()) {
                         TABLE_COL_TO_KEY["$metricTable:$metricCol"] ?: TABLE_TO_KEY[metricTable]
                     } else {
@@ -421,11 +426,18 @@ class InsightsViewModel : ViewModel() {
                     }
                     if (vmKey != null) {
                         map[normaliseLabel(label)] = vmKey
+                        // If this belongs to a display_group, also map group → keys
+                        if (displayGroup != null) {
+                            val normGroup = normaliseLabel(displayGroup)
+                            map[normGroup] = vmKey
+                            groupMap.getOrPut(normGroup) { mutableSetOf() }.add(vmKey)
+                        }
                     }
                 }
             } catch (_: Exception) { /* templates optional */ }
         }
         _labelToMetricKey.value = map
+        _groupToMetricKeys.value = groupMap
     }
 
     /** Normalise a trigger/prodrome label for lookup: lowercase, strip colons, strip direction suffixes */
@@ -442,21 +454,32 @@ class InsightsViewModel : ViewModel() {
         return _labelToMetricKey.value[normaliseLabel(label)]
     }
 
+    /** Resolve a trigger/prodrome type to ALL associated VM metric keys.
+     *  For grouped triggers (e.g. "Poor sleep"), returns all member keys.
+     *  For individual triggers, returns the single key in a set. */
+    fun metricKeysForLabel(label: String): Set<String> {
+        val norm = normaliseLabel(label)
+        val groupKeys = _groupToMetricKeys.value[norm]
+        if (!groupKeys.isNullOrEmpty()) return groupKeys
+        val single = _labelToMetricKey.value[norm]
+        return if (single != null) setOf(single) else emptySet()
+    }
+
     /** Return auto-detected metric keys from ALL triggers/prodromes linked to the given migraine IDs. */
     fun autoMetricKeysForMigraines(migraineIds: Set<String>): Set<String> {
         val keys = mutableSetOf<String>()
         _allTriggers.value
             .filter { it.migraineId in migraineIds }
-            .mapNotNullTo(keys) { labelToMetricKey(it.type ?: "") }
+            .forEach { keys.addAll(metricKeysForLabel(it.type ?: "")) }
         _allProdromes.value
             .filter { it.migraineId in migraineIds }
-            .mapNotNullTo(keys) { labelToMetricKey(it.type ?: "") }
+            .forEach { keys.addAll(metricKeysForLabel(it.type ?: "")) }
         _allMedicines.value
             .filter { it.migraineId in migraineIds }
-            .mapNotNullTo(keys) { labelToMetricKey(it.name ?: "") }
+            .forEach { keys.addAll(metricKeysForLabel(it.name ?: "")) }
         _allReliefs.value
             .filter { it.migraineId in migraineIds }
-            .mapNotNullTo(keys) { labelToMetricKey(it.type ?: "") }
+            .forEach { keys.addAll(metricKeysForLabel(it.type ?: "")) }
         return keys
     }
 
@@ -1032,7 +1055,16 @@ class InsightsViewModel : ViewModel() {
             _allActivities.value = allA
             _allLocations.value = allL
 
-            val tc = triggerPool.associate { it.label.lowercase() to (it.category ?: "Other") }
+            val tcBase = triggerPool.associate { it.label.lowercase() to (it.category ?: "Other") }
+            // Also map display_group names to their category (use first member's category)
+            val tcGroups = mutableMapOf<String, String>()
+            for (row in triggerPool) {
+                val group = row.displayGroup
+                if (group != null && group !in tcGroups) {
+                    tcGroups[group.lowercase()] = row.category ?: "Other"
+                }
+            }
+            val tc: Map<String, String> = tcBase + tcGroups
             val pc = prodromePool.associate { it.label.lowercase() to (it.category ?: "Other") }
             val sc = symptomPool.associate { it.label.lowercase() to (it.category ?: "Other") }
             val mc = medicinePool.associate { it.label.lowercase() to (it.category ?: "Other") }

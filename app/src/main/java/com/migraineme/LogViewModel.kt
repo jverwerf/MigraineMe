@@ -515,38 +515,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     painLocations = painLocations.takeIf { it.isNotEmpty() }
                 )
 
-                // Link nearby system/automated triggers & prodromes to this migraine
-                // (within ±3 days of migraine start, unlinked, source=system)
-                // Only auto-link if user explicitly set a date (not defaulting to now)
-                if (beganAtIso.isNotBlank()) {
-                    try {
-                        val migraineInstant = Instant.parse(migraine.startAt)
-                        val windowStart = migraineInstant.minus(3, ChronoUnit.DAYS)
-                        val windowEnd = migraineInstant.plus(3, ChronoUnit.DAYS)
-
-                        val allTriggers = db.getAllTriggers(accessToken)
-                        allTriggers.filter { t ->
-                            t.source == "system" && t.migraineId == null &&
-                            runCatching {
-                                val tInstant = Instant.parse(t.startAt)
-                                tInstant.isAfter(windowStart) && tInstant.isBefore(windowEnd)
-                            }.getOrDefault(false)
-                        }.forEach { t ->
-                            runCatching { db.updateTrigger(accessToken, t.id, migraineId = migraine.id) }
-                        }
-
-                        val allProdromes = db.getAllProdromeLog(accessToken)
-                        allProdromes.filter { p ->
-                            p.source == "system" && p.migraineId == null &&
-                            runCatching {
-                                val pInstant = Instant.parse(p.startAt ?: "")
-                                pInstant.isAfter(windowStart) && pInstant.isBefore(windowEnd)
-                            }.getOrDefault(false)
-                        }.forEach { p ->
-                            runCatching { db.linkToMigraine(accessToken, "prodromes", p.id, migraine.id) }
-                        }
-                    } catch (e: Exception) { e.printStackTrace() }
-                }
+                // Auto-detected triggers/prodromes are pre-selected in the UI and already
+                // included in the draft snapshots below — no separate linking needed.
 
                 for (t in triggersSnapshot.filter { it.type.isNotBlank() }) {
                     try {

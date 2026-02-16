@@ -27,7 +27,7 @@ class HealthConnectNutritionChangesWorker(
         )
 
         // One-time backfill window when token doesn't exist yet
-        private const val BACKFILL_DAYS = 7L
+        private const val BACKFILL_DAYS = 14L
     }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -149,3 +149,4 @@ class HealthConnectNutritionChangesWorker(
         }
     }
 }
+

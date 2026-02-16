@@ -49,8 +49,30 @@ fun TriggersScreen(
     val rawPool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
 
-    // Hide triggers with prediction = NONE (user set to "None" in manage screen)
-    val pool = remember(rawPool) { rawPool.filter { it.predictionValue?.uppercase() != "NONE" } }
+    // Hide triggers with prediction = NONE, then collapse display_group items
+    // into a single entry so user sees "Poor sleep" instead of 8 individual sleep metrics
+    val pool = remember(rawPool) {
+        val visible = rawPool.filter { it.predictionValue?.uppercase() != "NONE" }
+        val standalone = visible.filter { it.displayGroup == null }
+        val grouped = visible.filter { it.displayGroup != null }
+            .groupBy { it.displayGroup!! }
+            .map { (groupName, members) ->
+                val first = members.first()
+                // Use highest severity among members as group severity
+                val severityOrder = listOf("HIGH", "MILD", "LOW", "NONE")
+                val bestSeverity = members.map { it.predictionValue?.uppercase() ?: "NONE" }
+                    .minByOrNull { sev -> severityOrder.indexOf(sev) } ?: "NONE"
+                SupabaseDbService.UserTriggerRow(
+                    id = "group_${groupName}",
+                    label = groupName,
+                    iconKey = first.iconKey,
+                    category = first.category,
+                    predictionValue = bestSeverity,
+                    displayGroup = groupName
+                )
+            }
+        standalone + grouped
+    }
     val authState by authVm.state.collectAsState()
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
