@@ -13,16 +13,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 
 @Composable
-fun TestingScreen(authVm: AuthViewModel, onNavigateToOnboarding: () -> Unit = {}, onNavigateToHome: () -> Unit = {}, onNavigateToCheckIn: () -> Unit = {}) {
+fun TestingScreen(
+    authVm: AuthViewModel,
+    onNavigateToOnboarding: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToCheckIn: () -> Unit = {},
+    onNavigateToRecalibrationReview: () -> Unit = {},
+) {
     val auth by authVm.state.collectAsState()
     val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+
+    // Recalibration state
+    var recalibStatus by remember { mutableStateOf("") }
+    var recalibRunning by remember { mutableStateOf(false) }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
@@ -40,6 +54,73 @@ fun TestingScreen(authVm: AuthViewModel, onNavigateToOnboarding: () -> Unit = {}
             }
 
             DataStatusCard(accessToken = auth.accessToken)
+
+            // ── AI Recalibration ──
+            BaseCard {
+                Text(
+                    "AI Recalibration",
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    "Invoke the monthly recalibration edge function on demand. " +
+                    "This runs both AI calls (Neurologist + Statistician) and writes proposals.",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(Modifier.height(4.dp))
+
+                if (recalibStatus.isNotBlank()) {
+                    Text(
+                        recalibStatus,
+                        color = if (recalibStatus.startsWith("Error")) AppTheme.AccentPink else AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            recalibRunning = true
+                            recalibStatus = "Running recalibration..."
+                            scope.launch {
+                                try {
+                                    val result = withContext(Dispatchers.IO) {
+                                        invokeRecalibration(ctx)
+                                    }
+                                    recalibStatus = result
+                                } catch (e: Exception) {
+                                    recalibStatus = "Error: ${e.message}"
+                                } finally {
+                                    recalibRunning = false
+                                }
+                            }
+                        },
+                        enabled = !recalibRunning,
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    ) {
+                        if (recalibRunning) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text("Run Recalibration")
+                    }
+
+                    Button(
+                        onClick = onNavigateToRecalibrationReview,
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Review Proposals")
+                    }
+                }
+            }
 
             // Evening Check-in
             BaseCard {
@@ -101,6 +182,55 @@ fun TestingScreen(authVm: AuthViewModel, onNavigateToOnboarding: () -> Unit = {}
                     Text("Start Feature Tour Only")
                 }
             }
+        }
+    }
+}
+
+/**
+ * Calls the recalibrate edge function with force=true.
+ * Returns a status string for the UI.
+ */
+private suspend fun invokeRecalibration(context: android.content.Context): String {
+    val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
+        ?: return "Error: Not authenticated"
+
+    val client = okhttp3.OkHttpClient.Builder()
+        .connectTimeout(90, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(90, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
+
+    val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/recalibrate"
+    val body = """{"force": true}"""
+        .toRequestBody("application/json".toMediaType())
+
+    val request = okhttp3.Request.Builder()
+        .url(url)
+        .post(body)
+        .header("Authorization", "Bearer $accessToken")
+        .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+        .build()
+
+    client.newCall(request).execute().use { response ->
+        val responseBody = response.body?.string() ?: ""
+        return if (response.isSuccessful) {
+            try {
+                val json = org.json.JSONObject(responseBody)
+                val status = json.optString("status", "unknown")
+                val proposals = json.optInt("proposals", 0)
+                when (status) {
+                    "ok" -> "Done! $proposals proposals generated. Tap 'Review Proposals' to see them."
+                    "no_profile" -> "Please complete your profile setup first — we need your migraine profile to generate personalised suggestions."
+                    "insufficient_data" -> {
+                        val count = json.optInt("migraine_count", 0)
+                        "No learning this month — we need at least 5 logged migraines to spot patterns (you have $count so far). Keep logging and we'll have suggestions for you soon!"
+                    }
+                    else -> "Status: $status — $responseBody"
+                }
+            } catch (_: Exception) {
+                "Done (raw): $responseBody"
+            }
+        } else {
+            "Error ${response.code}: $responseBody"
         }
     }
 }

@@ -49,10 +49,11 @@ fun TriggersScreen(
     val rawPool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
 
-    // Hide triggers with prediction = NONE, then collapse display_group items
+    // Show all triggers in the logging wizard (including NONE prediction)
+    // so system-detected anomalies are surfaced. Collapse display_group items
     // into a single entry so user sees "Poor sleep" instead of 8 individual sleep metrics
     val pool = remember(rawPool) {
-        val visible = rawPool.filter { it.predictionValue?.uppercase() != "NONE" }
+        val visible = rawPool
         val standalone = visible.filter { it.displayGroup == null }
         val grouped = visible.filter { it.displayGroup != null }
             .groupBy { it.displayGroup!! }
@@ -514,6 +515,7 @@ private fun formatTriggerTime(iso: String?): String {
         "Not set"
     }
 }
+
 
 
 

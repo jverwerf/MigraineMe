@@ -20,18 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.navigation.NavController
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -39,149 +32,59 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun HomeScreenRoot(
-    onLogout: () -> Unit,
-    onNavigateToMigraine: () -> Unit = {},
-    onNavigateToRiskDetail: () -> Unit = {},
-    onNavigateToRecalibrationReview: () -> Unit = {},
-    authVm: AuthViewModel,
-    logVm: LogViewModel,
-    vm: HomeViewModel = viewModel(),
-    // Quick log VMs — created at call site or defaulted
-    triggerVm: TriggerViewModel = viewModel(),
-    medicineVm: MedicineViewModel = viewModel(),
-    reliefVm: ReliefViewModel = viewModel(),
-    prodromeVm: ProdromeViewModel = viewModel(),
-    symptomVm: SymptomViewModel = viewModel(),
+fun RiskDetailScreen(
+    navController: NavController,
+    state: HomeUiState
 ) {
-    val state by vm.state.collectAsState()
-    val auth by authVm.state.collectAsState()
+    val scrollState = rememberScrollState()
 
-    val ctx = LocalContext.current
-    val appCtx = ctx.applicationContext
+    var selectedDay by remember { mutableStateOf(0) }
+    val dayData = if (selectedDay in state.dayRisks.indices) state.dayRisks[selectedDay] else null
+    val displayScore = dayData?.score ?: state.riskScore
+    val displayZone = dayData?.zone ?: state.riskZone
+    val displayPercent = dayData?.percent ?: state.riskPercent
+    val displayTriggers = dayData?.topTriggers ?: state.triggersAtRisk
+    val displayRecommendation = state.aiRecommendation
 
-    /**
-     * On WHOOP OAuth return, MainActivity persists the callback URI.
-     * Previously, the token exchange + backfill trigger only happened in ThirdPartyConnectionsScreen.
-     * Since the callback returns to Home, we complete auth here too (best-effort, once per pending callback).
-     */
-    LaunchedEffect(Unit) {
-        val prefs = appCtx.getSharedPreferences("whoop_oauth", android.content.Context.MODE_PRIVATE)
-        val lastUri = prefs.getString("last_uri", null)
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll) {
 
-        if (!lastUri.isNullOrBlank()) {
-            withContext(Dispatchers.IO) {
-                val persistedToken = SessionStore.getValidAccessToken(appCtx)
-                if (!persistedToken.isNullOrBlank()) {
-                    var persistedUserId = SessionStore.readUserId(appCtx)
-                    if (persistedUserId.isNullOrBlank()) {
-                        persistedUserId = JwtUtils.extractUserIdFromAccessToken(persistedToken)
-                        if (!persistedUserId.isNullOrBlank()) {
-                            SessionStore.saveUserId(appCtx, persistedUserId)
-                        }
-                    }
-                }
-
-                val ok = WhoopAuthService().completeAuth(appCtx)
-
-                if (ok) {
-                    val accessToken = SessionStore.getValidAccessToken(appCtx)
-                    if (!accessToken.isNullOrBlank()) {
-                        val client = HttpClient(Android)
-                        try {
-                            client.post("${BuildConfig.SUPABASE_URL}/functions/v1/enqueue-login-backfill") {
-                                header("Authorization", "Bearer $accessToken")
-                                header("Content-Type", "application/json")
-                            }
-                        } catch (_: Throwable) {
-                        } finally {
-                            client.close()
-                        }
-                    }
-                }
+            // Back button
+            Button(
+                onClick = { navController.popBackStack() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.08f)),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+            ) {
+                Text("\u2190 Back", color = Color.White, style = MaterialTheme.typography.labelLarge)
             }
-        }
-    }
 
-    // ── Load real risk score from triggers + prodromes ──
-    LaunchedEffect(auth.accessToken) {
-        if (!auth.accessToken.isNullOrBlank()) {
-            vm.loadRisk(appCtx)
-        }
-    }
+            // Gauge + forecast — exact same as HomeScreen
+            DetailHeroCard(
+                riskPercent = displayPercent,
+                riskScore = displayScore,
+                riskZone = displayZone,
+                forecast = state.forecast,
+                selectedDay = selectedDay,
+                dayRisks = state.dayRisks,
+                onDaySelected = { selectedDay = it }
+            )
 
-    if (state.loading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else {
-        val scrollState = rememberScrollState()
+            // ALL triggers — not limited to 3
+            DetailTriggersCard(
+                triggers = displayTriggers,
+                gaugeMax = state.gaugeMaxScore
+            )
 
-        // Selected day index: 0 = today (default), 1 = tomorrow, etc.
-        var selectedDay by remember { mutableStateOf(0) }
-
-        // Derive the displayed data from selected day
-        val dayData = state.dayRisks.getOrNull(selectedDay)
-        val displayScore = dayData?.score ?: state.riskScore
-        val displayZone = dayData?.zone ?: state.riskZone
-        val displayPercent = dayData?.percent ?: state.riskPercent
-        val displayTriggers = dayData?.topTriggers ?: state.triggersAtRisk
-
-        // Recommendation adjusts for selected day
-        val displayRecommendation = if (selectedDay == 0) {
-            state.aiRecommendation
-        } else {
-            val dayLabel = dayData?.date?.format(java.time.format.DateTimeFormatter.ofPattern("EEEE")) ?: "that day"
-            when (displayZone) {
-                RiskZone.HIGH -> "High risk predicted for $dayLabel. Plan ahead: avoid known triggers, prepare medication, and keep your schedule light."
-                RiskZone.MILD -> "Moderate risk predicted for $dayLabel. Stay mindful of your triggers and keep regular meals and breaks."
-                RiskZone.LOW -> "Low risk predicted for $dayLabel. Maintain your healthy routine."
-                RiskZone.NONE -> "No significant risk predicted for $dayLabel. Looking good!"
-            }
-        }
-
-        ScrollFadeContainer(scrollState = scrollState) { scroll ->
-            ScrollableScreenContent(scrollState = scroll) {
-
-                RecalibrationBanner(
-                    onTap = onNavigateToRecalibrationReview
-                )
-
-                RiskHeroCard(
-                    riskPercent = displayPercent,
-                    riskScore = displayScore,
-                    riskZone = displayZone,
-                    forecast = state.forecast,
-                    selectedDay = selectedDay,
-                    dayRisks = state.dayRisks,
-                    onDaySelected = { selectedDay = it },
-                    onTap = onNavigateToRiskDetail
-                )
-
-                // ── Quick Log Strip — below the gauge ──
-                QuickLogStrip(
-                    authVm = authVm,
-                    triggerVm = triggerVm,
-                    medicineVm = medicineVm,
-                    reliefVm = reliefVm,
-                    prodromeVm = prodromeVm,
-                    symptomVm = symptomVm,
-                    onLogComplete = { vm.loadRisk(appCtx) }
-                )
-
-                ActiveTriggersCard(
-                    triggers = displayTriggers.take(3),
-                    gaugeMax = state.gaugeMaxScore,
-                    onTap = onNavigateToRiskDetail
-                )
-                RecommendationCard(recommendation = displayRecommendation)
-            }
+            // Recommendation
+            DetailRecoCard(recommendation = displayRecommendation)
         }
     }
 }
 
+// Below: exact copies of HomeScreen composables, renamed to avoid conflict.
+
 @Composable
-private fun RiskHeroCard(
+private fun DetailHeroCard(
     riskPercent: Int,
     riskScore: Double = 0.0,
     riskZone: RiskZone = RiskZone.NONE,
@@ -189,7 +92,6 @@ private fun RiskHeroCard(
     selectedDay: Int = 0,
     dayRisks: List<DayRisk> = emptyList(),
     onDaySelected: (Int) -> Unit = {},
-    onTap: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val clamped = riskPercent.coerceIn(0, 100)
@@ -208,14 +110,14 @@ private fun RiskHeroCard(
         else "Risk"
     }
 
-    HeroCard(modifier = modifier.clickable { onTap() }) {
+    HeroCard(modifier = modifier) {
         Text(
             dayLabel,
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
 
-        RiskGauge(
+        DetailGauge(
             percent = clamped,
             diameter = 220.dp,
             stroke = 16.dp,
@@ -237,7 +139,7 @@ private fun RiskHeroCard(
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
         )
 
-        SevenDayOutlook(
+        DetailOutlook(
             values = forecast,
             selectedDay = selectedDay,
             dayRisks = dayRisks,
@@ -247,7 +149,7 @@ private fun RiskHeroCard(
 }
 
 @Composable
-private fun SevenDayOutlook(
+private fun DetailOutlook(
     values: List<Int>,
     selectedDay: Int = 0,
     dayRisks: List<DayRisk> = emptyList(),
@@ -295,7 +197,7 @@ private fun SevenDayOutlook(
                                     )
                             )
                         }
-                        MiniGauge(
+                        DetailMini(
                             percent = percent,
                             size = 36.dp,
                             strokeWidth = 3.5.dp
@@ -315,7 +217,7 @@ private fun SevenDayOutlook(
 }
 
 @Composable
-private fun MiniGauge(
+private fun DetailMini(
     percent: Int,
     size: Dp,
     strokeWidth: Dp
@@ -346,30 +248,18 @@ private fun MiniGauge(
 }
 
 @Composable
-private fun ActiveTriggersCard(
+private fun DetailTriggersCard(
     triggers: List<TriggerScore>,
-    gaugeMax: Double = 10.0,
-    onTap: () -> Unit = {}
+    gaugeMax: Double = 10.0
 ) {
     if (triggers.isEmpty()) return
 
-    BaseCard(modifier = Modifier.clickable { onTap() }) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Top contributors",
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                "→",
-                color = AppTheme.AccentPurple,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+    BaseCard {
+        Text(
+            "All contributors",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -469,7 +359,7 @@ private fun ActiveTriggersCard(
 }
 
 @Composable
-private fun RecommendationCard(recommendation: String) {
+private fun DetailRecoCard(recommendation: String) {
     BaseCard {
         Text(
             "Recommendation",
@@ -484,7 +374,7 @@ private fun RecommendationCard(recommendation: String) {
 }
 
 @Composable
-private fun RiskGauge(
+private fun DetailGauge(
     percent: Int,
     diameter: Dp,
     stroke: Dp,

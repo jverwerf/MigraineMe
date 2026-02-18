@@ -3,6 +3,7 @@ package com.migraineme
 import android.content.Context
 import android.util.Log
 import io.ktor.client.*
+import io.ktor.client.engine.android.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -13,6 +14,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
+import org.json.JSONArray
 
 /**
  * AI-powered full app configuration via GPT-4o-mini, proxied through Supabase Edge Function.
@@ -79,9 +81,13 @@ object AiSetupService {
         val reliefs: List<PoolLabel>,
         val activities: List<PoolLabel>,
         val missedActivities: List<PoolLabel>,
+        /** Individual trigger labels (pre-group-collapse) that have a metric_table in Supabase = auto-detected */
+        val autoTriggerLabels: Set<String> = emptySet(),
+        /** Individual prodrome labels that have a metric_table = auto-detected */
+        val autoProdromeLabels: Set<String> = emptySet(),
     )
 
-    data class PoolLabel(val label: String, val category: String? = null, val iconKey: String? = null)
+    data class PoolLabel(val label: String, val category: String? = null, val iconKey: String? = null, val isAuto: Boolean = false)
 
     // ═══════════════════════════════════════════════════════════════════════
     // Output data classes
@@ -113,6 +119,8 @@ object AiSetupService {
         @SerialName("decay_weights") val decayWeights: List<AiDecayWeights> = emptyList(),
         @SerialName("data_warnings") val dataWarnings: List<AiDataWarning> = emptyList(),
         val summary: String = "",
+        @SerialName("clinical_assessment") val clinicalAssessment: String = "",
+        @SerialName("calibration_notes") val calibrationNotes: String = "",
     )
 
     @Serializable
@@ -175,6 +183,7 @@ RULES:
    - Frequent migraines: steeper curves (high day0, rapid drop) — triggers hit hard but fade fast
    - Infrequent migraines: flatter curves (moderate day0, slower drop) — cumulative buildup matters more
    - Defaults: HIGH=10/5/2.5/1/0/0/0, MILD=6/3/1.5/0.5/0/0/0, LOW=3/1.5/0/0/0/0/0
+7. NEVER set favorite=true on auto-detected triggers or prodromes (marked with [AUTO] in the items list). These are collected automatically from connected devices and do not need manual logging.
 
 SEVERITY SCALING by migraine frequency:
 - Daily → more HIGH ratings, tighter gauge thresholds (low:3, mild:8, high:15)
@@ -283,12 +292,12 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         appendLine()
         appendLine("TRIGGERS:")
         items.triggers.groupBy { it.category ?: "Other" }.forEach { (cat, list) ->
-            appendLine("  [$cat] ${list.joinToString(", ") { it.label }}")
+            appendLine("  [$cat] ${list.joinToString(", ") { "${it.label}${if (it.isAuto) " [AUTO]" else ""}" }}")
         }
         appendLine()
         appendLine("PRODROMES:")
         items.prodromes.groupBy { it.category ?: "Other" }.forEach { (cat, list) ->
-            appendLine("  [$cat] ${list.joinToString(", ") { it.label }}")
+            appendLine("  [$cat] ${list.joinToString(", ") { "${it.label}${if (it.isAuto) " [AUTO]" else ""}" }}")
         }
         appendLine()
         appendLine("MEDICINES: ${items.medicines.joinToString(", ") { it.label }}")
@@ -333,6 +342,41 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
     // Available items builder (reads from Supabase)
     // ═══════════════════════════════════════════════════════════════════════
 
+    /**
+     * Fetch auto-detect labels from the global template table (trigger_templates or prodrome_templates).
+     * These are the source of truth for which labels have metric_table (= auto-detected).
+     * Returns a Set of lowercase label strings.
+     */
+    private suspend fun fetchAutoLabelsFromTemplate(accessToken: String, table: String): Set<String> {
+        val client = HttpClient(io.ktor.client.engine.android.Android)
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/$table?select=label&metric_table=not.is.null"
+            val response = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+            if (!response.status.isSuccess()) {
+                Log.w(TAG, "Failed to fetch $table auto labels: ${response.status}")
+                emptySet()
+            } else {
+                val body = response.bodyAsText()
+                val arr = JSONArray(body)
+                val labels = mutableSetOf<String>()
+                for (i in 0 until arr.length()) {
+                    val label = arr.getJSONObject(i).optString("label", "")
+                    if (label.isNotBlank()) labels.add(label.lowercase())
+                }
+                Log.d(TAG, "Fetched ${labels.size} auto labels from $table")
+                labels
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error fetching auto labels from $table", e)
+            emptySet()
+        } finally {
+            client.close()
+        }
+    }
+
     suspend fun buildAvailableItems(context: Context): AvailableItems = withContext(Dispatchers.IO) {
         val appCtx = context.applicationContext
         val accessToken = SessionStore.getValidAccessToken(appCtx)
@@ -341,22 +385,29 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
 
         // Collapse display_group items: GPT sees group names instead of individual labels
         val rawTriggers = db.getAllTriggerPool(accessToken)
+
+        // Build auto-detect lookup from TEMPLATE tables (global source of truth)
+        // user_triggers may not have metric_table populated — templates always do
+        val autoTriggerLabels = fetchAutoLabelsFromTemplate(accessToken, "trigger_templates")
+        val autoProdromeLabels = fetchAutoLabelsFromTemplate(accessToken, "prodrome_templates")
+
         val triggerStandalone = rawTriggers.filter { it.displayGroup == null }
-            .map { PoolLabel(it.label, it.category, it.iconKey) }
+            .map { PoolLabel(it.label, it.category, it.iconKey, isAuto = it.metricTable != null) }
         val triggerGrouped = rawTriggers.filter { it.displayGroup != null }
             .groupBy { it.displayGroup!! }
             .map { (groupName, members) ->
-                PoolLabel(groupName, members.first().category, members.first().iconKey)
+                PoolLabel(groupName, members.first().category, members.first().iconKey, isAuto = members.first().metricTable != null)
             }
         val triggers = triggerStandalone + triggerGrouped
 
         val rawProdromes = db.getAllProdromePool(accessToken)
+
         val prodromeStandalone = rawProdromes.filter { it.displayGroup == null }
-            .map { PoolLabel(it.label, it.category, it.iconKey) }
+            .map { PoolLabel(it.label, it.category, it.iconKey, isAuto = it.metricTable != null) }
         val prodromeGrouped = rawProdromes.filter { it.displayGroup != null }
             .groupBy { it.displayGroup!! }
             .map { (groupName, members) ->
-                PoolLabel(groupName, members.first().category, members.first().iconKey)
+                PoolLabel(groupName, members.first().category, members.first().iconKey, isAuto = members.first().metricTable != null)
             }
         val prodromes = prodromeStandalone + prodromeGrouped
 
@@ -366,7 +417,7 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         val activities = db.getAllActivityPool(accessToken).map { PoolLabel(it.label, it.category, it.iconKey) }
         val missedActivities = db.getAllMissedActivityPool(accessToken).map { PoolLabel(it.label, it.category, it.iconKey) }
 
-        AvailableItems(triggers, prodromes, symptoms, medicines, reliefs, activities, missedActivities)
+        AvailableItems(triggers, prodromes, symptoms, medicines, reliefs, activities, missedActivities, autoTriggerLabels, autoProdromeLabels)
     }
 
     // ═══════════════════════════════════════════════════════════════════════

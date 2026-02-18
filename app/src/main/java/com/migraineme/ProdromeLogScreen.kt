@@ -48,10 +48,11 @@ fun ProdromeLogScreen(
     val rawPool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
 
-    // Hide prodromes with prediction = NONE, then collapse display_group items
+    // Show all prodromes in the logging wizard (including NONE prediction)
+    // so system-detected anomalies are surfaced. Collapse display_group items
     // into a single entry (e.g. "Light sensitivity" instead of "Brightness low" + "Dark mode high")
     val pool = remember(rawPool) {
-        val visible = rawPool.filter { it.predictionValue?.uppercase() != "NONE" }
+        val visible = rawPool
         val standalone = visible.filter { it.displayGroup == null }
         val grouped = visible.filter { it.displayGroup != null }
             .groupBy { it.displayGroup!! }
@@ -524,5 +525,6 @@ private fun formatProdromeTime(iso: String?): String {
         "Not set"
     }
 }
+
 
 

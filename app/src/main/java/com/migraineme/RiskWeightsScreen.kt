@@ -194,7 +194,11 @@ fun RiskWeightsScreen(
                         if (!ok) allOk = false
                     }
 
-                    if (allOk) saveSuccess = true
+                    if (allOk) {
+                        // Recalculate risk scores with the new thresholds/weights
+                        edge.triggerRecalcRiskScores(context)
+                        saveSuccess = true
+                    }
                     else error = "Some rows failed to save"
                 } catch (e: Exception) {
                     error = "Save failed: ${e.message}"
@@ -507,3 +511,4 @@ private fun fmt(v: Double): String {
     return if (v == v.toLong().toDouble()) v.toLong().toString()
     else v.toBigDecimal().stripTrailingZeros().toPlainString()
 }
+

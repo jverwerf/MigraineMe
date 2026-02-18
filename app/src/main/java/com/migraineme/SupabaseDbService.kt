@@ -1615,6 +1615,8 @@ class SupabaseDbService(
         val response = client.get("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
+            parameter("activity_type", "neq.daily_total")
+            parameter("start_at", "not.is.null")
             parameter("order", "start_at.desc")
         }
         if (!response.status.isSuccess()) return emptyList()

@@ -126,9 +126,13 @@ fun DataSettingsScreen(
     val scrollState = rememberScrollState()
 
     // Report scroll position for setup coach overlay
-    LaunchedEffect(scrollState.value) {
+    LaunchedEffect(scrollState.value, scrollState.maxValue) {
         if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
-            SetupScrollState.scrollPosition = scrollState.value
+            if (scrollState.maxValue > 0 && scrollState.value >= scrollState.maxValue - 50) {
+                SetupScrollState.scrollPosition = -1  // at bottom → expand coach card
+            } else {
+                SetupScrollState.scrollPosition = scrollState.value
+            }
         }
     }
     val sections = remember { DataSettingsSections.getAllSections() }

@@ -1167,4 +1167,83 @@ class EdgeFunctionsService {
             client.close()
         }
     }
+
+    // Recalc Triggers + Prodromes + Risk Score
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Trigger a full recalculation of system triggers, prodromes, and risk scores.
+     * Called after the user saves changes to prediction values or thresholds on
+     * the Manage Triggers / Manage Prodromes screens.
+     *
+     * The edge function:
+     *   1. Deletes all source='system' triggers + prodromes for the last 7 days
+     *   2. Re-evaluates definitions against existing metric data (threshold + 2SD)
+     *   3. Recalculates risk_score_daily + risk_score_live (gauge)
+     */
+    suspend fun triggerRecalc(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/recalc-user-triggers"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("""{"user_id":"$userId"}""")
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "triggerRecalc failed: ${res.status} - ${res.bodyAsText()}")
+            } else {
+                Log.d("EdgeFunctionsService", "triggerRecalc success for $userId")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "triggerRecalc exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * Recalculate risk scores only (no trigger/prodrome re-evaluation).
+     * Called after the user saves gauge thresholds or decay weights in Risk Model settings.
+     */
+    suspend fun triggerRecalcRiskScores(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/recalc-risk-scores"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("""{"user_id":"$userId"}""")
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "triggerRecalcRiskScores failed: ${res.status} - ${res.bodyAsText()}")
+            } else {
+                Log.d("EdgeFunctionsService", "triggerRecalcRiskScores success for $userId")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "triggerRecalcRiskScores exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
 }

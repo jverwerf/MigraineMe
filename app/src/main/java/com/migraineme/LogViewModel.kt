@@ -900,8 +900,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 val prefs = db.getTriggerPrefs(accessToken)
                 val pool = db.getAllTriggerPool(accessToken)
 
-                // Filter out NONE-prediction triggers
-                val visiblePool = pool.filter { it.predictionValue?.uppercase() != "NONE" }
+                // Show all triggers in the logging wizard (including NONE prediction)
+                // so system-detected anomalies (e.g. HRV 2SD) are surfaced for the user
+                val visiblePool = pool
 
                 val frequent = prefs
                     .filter { it.status == "frequent" }
@@ -978,6 +979,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
 
 
 

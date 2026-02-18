@@ -182,12 +182,20 @@ fun AiSetupScreen(
                 val answers = buildAnswers()
                 val dc = dataContext ?: withContext(Dispatchers.IO) { AiSetupService.buildDataContext(appCtx) }
                 val items = availableItems ?: withContext(Dispatchers.IO) { AiSetupService.buildAvailableItems(appCtx) }
+                Log.d("AiSetup", "autoTriggerLabels(${items.autoTriggerLabels.size}): ${items.autoTriggerLabels.take(5)}")
+                Log.d("AiSetup", "autoProdromeLabels(${items.autoProdromeLabels.size}): ${items.autoProdromeLabels.take(5)}")
 
                 // Step 1: Deterministic mapping (pure Kotlin, instant)
                 val mapping = DeterministicMapper.map(answers, dc.enabledMetrics)
 
-                // Step 2: AI calibration (network call)
-                val result = AiCalibrationService.calibrate(appCtx, mapping, items)
+                // Step 2: AI calibration — two-call architecture
+                val result = AiCalibrationService.calibrate(
+                    context = appCtx,
+                    mapping = mapping,
+                    items = items,
+                    answers = answers,
+                    dataContext = dc,
+                )
 
                 result.fold(
                     onSuccess = { config -> aiConfig = config; isProcessing = false; currentPage = AiPage.RESULTS },
@@ -205,8 +213,22 @@ fun AiSetupScreen(
         isApplying = true
         scope.launch {
             AiSetupApplier.applyConfig(appCtx, config) { progress -> applyProgress = progress }.fold(
-                onSuccess = { isApplying = false; onComplete() },
-                onFailure = { isApplying = false; onComplete() }
+                onSuccess = {
+                    // Save answers + AI config to Supabase for community features
+                    launch(Dispatchers.IO) {
+                        runCatching { AiSetupProfileStore.save(appCtx, buildAnswers(), config) }
+                            .onFailure { Log.w("AiSetup", "Profile store save failed (non-blocking)", it) }
+                    }
+                    isApplying = false; onComplete()
+                },
+                onFailure = {
+                    // Still try to save even if apply partially failed
+                    launch(Dispatchers.IO) {
+                        runCatching { AiSetupProfileStore.save(appCtx, buildAnswers(), config) }
+                            .onFailure { Log.w("AiSetup", "Profile store save failed (non-blocking)", it) }
+                    }
+                    isApplying = false; onComplete()
+                }
             )
         }
     }

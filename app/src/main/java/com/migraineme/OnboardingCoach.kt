@@ -40,15 +40,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Shared scroll position — screens write to this during setup so the
- * coach overlay can react (e.g. re-expand when scrolled back to top).
- */
 object SetupScrollState {
     var scrollPosition by mutableStateOf(0)
 }
-
-// ─── Data ────────────────────────────────────────────────────────────────────
 
 data class TourStep(
     val route: String,
@@ -59,8 +53,6 @@ data class TourStep(
     val interactive: Boolean = false,
     val spotlightKey: String? = null,
 )
-
-// ─── Tour steps ──────────────────────────────────────────────────────────────
 
 val tourSteps = listOf(
     TourStep(Routes.HOME, Icons.Outlined.Home, "Home — Your Risk Gauge",
@@ -89,8 +81,6 @@ val tourSteps = listOf(
         "Your account, your rules."),
 )
 
-// ─── Setup steps ─────────────────────────────────────────────────────────────
-
 val setupSteps = listOf(
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect WHOOP",
         "If you have a WHOOP band, tap the Connect button below to link it. This will automatically import your sleep, recovery, HRV, and more.",
@@ -106,23 +96,13 @@ val setupSteps = listOf(
         interactive = true),
 )
 
-// ─── Spotlight State (reactive compose state) ────────────────────────────────
-
 object SpotlightState {
-    /**
-     * Root-relative bounds. Using mutableStateMapOf so any read from this map
-     * inside a @Composable automatically triggers recomposition when values change
-     * (including when cards resize).
-     */
     private val _rects = mutableStateMapOf<String, Rect>()
-
-    /** Root-relative origin of the overlay */
     var overlayRootOffset by mutableStateOf(Offset.Zero)
 
     fun register(key: String, rootBounds: Rect) { _rects[key] = rootBounds }
     fun clear() { _rects.clear(); overlayRootOffset = Offset.Zero }
 
-    /** Get rect in overlay-local coords. Reactive — recomposes when rect changes. */
     @Composable
     fun getLocalRect(key: String): Rect? {
         val rootRect = _rects[key] ?: return null
@@ -136,17 +116,11 @@ object SpotlightState {
     }
 }
 
-/**
- * Modifier — cards call this to report their root-relative bounds.
- * Fires on every layout pass (including resizes).
- */
 fun Modifier.spotlightTarget(key: String): Modifier = this.onGloballyPositioned { coords ->
     if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
         SpotlightState.register(key, coords.boundsInRoot())
     }
 }
-
-// ─── State ───────────────────────────────────────────────────────────────────
 
 enum class CoachPhase { TOUR, SETUP }
 
@@ -205,8 +179,6 @@ object TourManager {
     fun currentPhase(): CoachPhase = _state.value.phase
 }
 
-// ─── Overlay ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun CoachOverlay(
     navigateTo: (String) -> Unit,
@@ -228,14 +200,13 @@ fun CoachOverlay(
         if (wasTour) {
             CoroutineScope(Dispatchers.IO).launch {
                 DemoDataSeeder.clearDemoData(ctx)
+                kotlinx.coroutines.withContext(Dispatchers.Main) { onTourFinished() }
             }
-            onTourFinished()
         } else {
             onSetupFinished()
         }
     }
 
-    // Pulsing animation
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f, targetValue = 0.8f,
@@ -248,7 +219,6 @@ fun CoachOverlay(
         label = "arrowBounce"
     )
 
-    // Always track overlay origin so coordinate conversion is ready
     Box(
         Modifier
             .fillMaxSize()
@@ -260,11 +230,9 @@ fun CoachOverlay(
             }
     )
 
-    // Spotlight rect — reactive, updates when card resizes
     val spotlightRect = step?.spotlightKey?.let { SpotlightState.getLocalRect(it) }
     val hasSpotlight = spotlightRect != null && spotlightRect.width > 0f && spotlightRect.height > 0f
 
-    // Dim overlay with spotlight cutout
     AnimatedVisibility(
         visible = step != null,
         enter = fadeIn(tween(300)), exit = fadeOut(tween(300))
@@ -280,10 +248,7 @@ fun CoachOverlay(
                         .fillMaxSize()
                         .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                 ) {
-                    // Full dim
                     drawRect(Color.Black.copy(alpha = 0.5f))
-
-                    // Cutout
                     val cutout = RoundRect(
                         left = spotlightRect.left - paddingPx,
                         top = spotlightRect.top - paddingPx,
@@ -295,8 +260,6 @@ fun CoachOverlay(
                     clipPath(cutoutPath, ClipOp.Intersect) {
                         drawRect(Color.Transparent, blendMode = BlendMode.Clear)
                     }
-
-                    // Pulsing glow border
                     drawRoundRect(
                         color = Color(0xFFFF7BB0).copy(alpha = pulseAlpha),
                         topLeft = Offset(cutout.left, cutout.top),
@@ -306,27 +269,34 @@ fun CoachOverlay(
                     )
                 }
             } else if (!step.interactive) {
-                // Normal full dim for tour steps
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)))
             }
-            // Interactive without spotlight (Data screen): no dim
         }
     }
 
-    // Coach card - collapsible for interactive steps
     var isCollapsed by remember { mutableStateOf(false) }
-    // Reset collapsed state when step changes, auto-collapse after 3s for interactive
     LaunchedEffect(tourState.stepIndex) {
         isCollapsed = false
         val currentStep = steps.getOrNull(tourState.stepIndex)
         if (currentStep?.interactive == true) {
-            kotlinx.coroutines.delay(3000)
-            isCollapsed = true
+            // TOUR: don't collapse page 1 (Home, idx 0)
+            // SETUP: don't collapse page 1 (WHOOP, idx 0) or page 2 (HC, idx 1)
+            val shouldCollapse = when (tourState.phase) {
+                CoachPhase.TOUR -> tourState.stepIndex > 0
+                CoachPhase.SETUP -> tourState.stepIndex >= 2
+            }
+            if (shouldCollapse) {
+                kotlinx.coroutines.delay(3000)
+                isCollapsed = true
+            }
         }
     }
-    // Re-expand when user scrolls back to top
     LaunchedEffect(SetupScrollState.scrollPosition) {
         if (SetupScrollState.scrollPosition == 0 && isCollapsed) {
+            isCollapsed = false
+        }
+        // Expand when scrolled to bottom (position == -1 sentinel)
+        if (SetupScrollState.scrollPosition == -1 && isCollapsed) {
             isCollapsed = false
         }
     }
@@ -346,18 +316,13 @@ fun CoachOverlay(
                     label = "collapse"
                 ) { collapsed ->
                     if (collapsed) {
-                        // Minimized pill
                         Card(
                             onClick = { isCollapsed = false },
                             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A2E)),
                             shape = RoundedCornerShape(28.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                             modifier = Modifier
-                                .border(
-                                    1.dp,
-                                    Color(0xFFFF7BB0).copy(alpha = 0.5f),
-                                    RoundedCornerShape(28.dp)
-                                )
+                                .border(1.dp, Color(0xFFFF7BB0).copy(alpha = 0.5f), RoundedCornerShape(28.dp))
                         ) {
                             Row(
                                 Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
@@ -380,7 +345,6 @@ fun CoachOverlay(
                             }
                         }
                     } else {
-                        // Full coach card
                         Card(
                             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A2E)),
                             shape = RoundedCornerShape(18.dp),
@@ -413,15 +377,17 @@ fun CoachOverlay(
                                         Text(step.title, color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
                                         Text("${tourState.stepIndex + 1} of ${steps.size}", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                                     }
-                                    // Collapse button for interactive steps
                                     if (isInteractive) {
-                                        IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
-                                            Icon(Icons.Outlined.UnfoldLess, "Minimize", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                                        // Hide minimize on SETUP pages 1+2 (WHOOP, HC) — always expanded
+                                        val allowMinimize = !(tourState.phase == CoachPhase.SETUP && tourState.stepIndex < 2)
+                                        if (allowMinimize) {
+                                            IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
+                                                Icon(Icons.Outlined.UnfoldLess, "Minimize", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                                            }
                                         }
                                     }
-                                    IconButton(onClick = { finishAndClean() }, modifier = Modifier.size(28.dp)) {
-                                        Icon(Icons.Outlined.Close, "Skip", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
-                                    }
+                                    // ★ Never show X during onboarding (TOUR or SETUP)
+                                    // User must complete the flow to ensure cleanup
                                 }
 
                                 Spacer(Modifier.height(10.dp))
@@ -429,7 +395,7 @@ fun CoachOverlay(
                                 Spacer(Modifier.height(6.dp))
                                 Text(step.highlight, color = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
 
-                                if (isInteractive && step.spotlightKey == null) {
+                                if (isInteractive && step.spotlightKey == null && !(tourState.phase == CoachPhase.TOUR && tourState.stepIndex == 2)) {
                                     Spacer(Modifier.height(4.dp))
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                                         Icon(Icons.Filled.KeyboardArrowDown, "Scroll down",

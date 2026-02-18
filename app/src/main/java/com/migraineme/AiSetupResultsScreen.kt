@@ -89,6 +89,58 @@ fun AiSetupResultsScreen(
             }
         }
 
+        // ── Clinical Assessment — "What Our AI Found" ──
+        if (config.clinicalAssessment.isNotBlank()) {
+            var assessmentExpanded by remember { mutableStateOf(true) }
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E).copy(alpha = 0.9f)),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.border(1.dp, Brush.linearGradient(listOf(AppTheme.AccentPink.copy(alpha = 0.3f), AppTheme.AccentPurple.copy(alpha = 0.3f))), RoundedCornerShape(16.dp))
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(Modifier.fillMaxWidth().clickable { assessmentExpanded = !assessmentExpanded }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.size(32.dp).background(AppTheme.AccentPink.copy(alpha = 0.15f), RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Outlined.Psychology, null, tint = AppTheme.AccentPink, modifier = Modifier.size(18.dp))
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text("What Our AI Found", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text("Clinical assessment of your profile", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
+                        Icon(if (assessmentExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                    }
+                    AnimatedVisibility(visible = assessmentExpanded) {
+                        Text(config.clinicalAssessment, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 12.dp))
+                    }
+                }
+            }
+        }
+
+        // ── Gauge Calibration Notes — "How We Calibrated Your Gauge" ──
+        if (config.calibrationNotes.isNotBlank()) {
+            var calibrationExpanded by remember { mutableStateOf(true) }
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E).copy(alpha = 0.9f)),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.border(1.dp, Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), Color(0xFF4FC3F7).copy(alpha = 0.3f))), RoundedCornerShape(16.dp))
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(Modifier.fillMaxWidth().clickable { calibrationExpanded = !calibrationExpanded }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.size(32.dp).background(AppTheme.AccentPurple.copy(alpha = 0.15f), RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Outlined.Analytics, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text("How We Calibrated Your Gauge", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text("Why your thresholds are set where they are", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
+                        Icon(if (calibrationExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                    }
+                    AnimatedVisibility(visible = calibrationExpanded) {
+                        Text(config.calibrationNotes, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 12.dp))
+                    }
+                }
+            }
+        }
+
         // ── Data Warnings ──
         config.dataWarnings.forEach { warning ->
             val (bgColor, borderColor, icon) = when (warning.severity) {
@@ -347,4 +399,3 @@ private fun ThresholdBadge(label: String, value: Int, color: Color) {
         Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
-

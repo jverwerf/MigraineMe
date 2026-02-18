@@ -13,9 +13,21 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
@@ -30,7 +42,6 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -81,6 +92,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.material.icons.outlined.Analytics
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.style.TextAlign
+import io.ktor.client.statement.bodyAsText
+import io.ktor.client.request.get
+import io.ktor.client.request.header
 
 
 object Routes {
@@ -173,11 +200,13 @@ object Routes {
     
     const val TRIGGERS_SETTINGS = "triggers_settings"
     const val RISK_WEIGHTS = "risk_weights"
+    const val RISK_DETAIL = "risk_detail"
     const val TESTING = "testing"
     const val ONBOARDING = "onboarding"
     const val AI_SETUP = "ai_setup"
     const val CUSTOMIZE_TRIGGERS = "customize_triggers"
     const val EVENING_CHECKIN = "evening_checkin"
+    const val RECALIBRATION_REVIEW = "recalibration_review"
 }
 
 class MainActivity : ComponentActivity() {
@@ -288,6 +317,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val reliefVm: ReliefViewModel = viewModel()
     val migraineVm: MigraineViewModel = viewModel()
     val symptomVm: SymptomViewModel = viewModel()
+    val homeVm: HomeViewModel = viewModel()
 
     val authState by authVm.state.collectAsState()
     val token = authState.accessToken
@@ -505,7 +535,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
             Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
             Routes.ONBOARDING, Routes.AI_SETUP, "${Routes.ONBOARDING}/setup",
-            Routes.EVENING_CHECKIN
+            Routes.EVENING_CHECKIN, "backfill_loading", "subscribe"
         )
 
         // Insights background
@@ -1006,17 +1036,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable(Routes.TRIGGERS_SETTINGS) { TriggersSettingsScreen(navController = nav, authVm = authVm) }
                     composable(Routes.CUSTOMIZE_TRIGGERS) { CustomizeTriggersScreen() }
                     composable(Routes.HOME) {
-                        // Safety net: clear any leftover demo data on first HOME load
-                        val homeCtx = LocalContext.current
-                        LaunchedEffect(Unit) {
-                            DemoDataSeeder.ensureDemoCleared(homeCtx)
-                        }
-
                         HomeScreenRoot(
                             onLogout = { nav.navigate(Routes.LOGOUT) { launchSingleTop = true } },
                             onNavigateToMigraine = { nav.navigate(Routes.MIGRAINE) },
+                            onNavigateToRiskDetail = { nav.navigate(Routes.RISK_DETAIL) },
+                            onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             authVm = authVm,
                             logVm = logVm,
+                            vm = homeVm,
                             triggerVm = triggerVm,
                             medicineVm = medVm,
                             reliefVm = reliefVm,
@@ -1595,6 +1622,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 },
                                 onSetCategory = { id, category ->
                                     authState.accessToken?.let { triggerVm.setCategory(it, id, category) }
+                                },
+                                onSave = {
+                                    edge.triggerRecalc(ctx)
+                                    authState.accessToken?.let { triggerVm.loadAll(it) }
                                 }
                             )
                         )
@@ -1813,6 +1844,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                                 prodromeSettings = list.associate { it.prodromeType to it }
                                             }
                                     }
+                                },
+                                onSave = {
+                                    edge.triggerRecalc(ctx)
+                                    authState.accessToken?.let { prodromeVm.loadAll(it) }
                                 }
                             )
                         )
@@ -2000,7 +2035,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable(Routes.PROFILE) {
                         ProfileScreen(
                             authVm = authVm,
-                            onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) }
+                            onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) },
+                            onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) }
                         )
                     }
 
@@ -2018,6 +2054,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.RISK_WEIGHTS) {
                         RiskWeightsScreen(onBack = { nav.popBackStack() })
+                    }
+
+                    composable(Routes.RISK_DETAIL) {
+                        val homeState by homeVm.state.collectAsState()
+                        RiskDetailScreen(
+                            navController = nav,
+                            state = homeState
+                        )
                     }
 
                     composable(Routes.TESTING) {
@@ -2038,7 +2082,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 nav.navigate(Routes.EVENING_CHECKIN) {
                                     launchSingleTop = true
                                 }
+                            },
+                            onNavigateToRecalibrationReview = {
+                                nav.navigate(Routes.RECALIBRATION_REVIEW) {
+                                    launchSingleTop = true
+                                }
                             }
+                        )
+                    }
+
+                    composable(Routes.RECALIBRATION_REVIEW) {
+                        RecalibrationReviewScreen(
+                            onBack = { nav.popBackStack() }
                         )
                     }
 
@@ -2063,6 +2118,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     launchSingleTop = true
                                 }
                                 TourManager.startSetup()
+                            },
+                            onTourSkipped = {
+                                nav.navigate("${Routes.ONBOARDING}/setup") {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
                             }
                         )
                     }
@@ -2071,7 +2132,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         OnboardingScreen(
                             startAtSetup = true,
                             onComplete = {
-                                nav.navigate(Routes.HOME) {
+                                nav.navigate(Routes.AI_SETUP) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
                                 }
@@ -2091,24 +2152,226 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onComplete = {
                                 scope.launch(Dispatchers.IO) {
                                     try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
-                                    DemoDataSeeder.ensureDemoCleared(appCtx)
-                                }
-                                nav.navigate(Routes.HOME) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
+                                    kotlinx.coroutines.withContext(Dispatchers.Main) {
+                                        nav.navigate("backfill_loading") {
+                                            popUpTo(Routes.AI_SETUP) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
                                 }
                             },
                             onSkip = {
                                 scope.launch(Dispatchers.IO) {
                                     try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
-                                    DemoDataSeeder.ensureDemoCleared(appCtx)
-                                }
-                                nav.navigate(Routes.HOME) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
+                                    kotlinx.coroutines.withContext(Dispatchers.Main) {
+                                        nav.navigate("backfill_loading") {
+                                            popUpTo(Routes.AI_SETUP) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
                                 }
                             }
                         )
+                    }
+
+                    // ── Backfill loading: polls edge_audit until backfill-all completes (max 60s) ──
+                    composable("backfill_loading") {
+                        val ctx = LocalContext.current
+                        var progress by remember { mutableFloatStateOf(0f) }
+                        var statusText by remember { mutableStateOf("Analyzing your data...") }
+                        var showContinueButton by remember { mutableStateOf(false) }
+
+                        LaunchedEffect(Unit) {
+                            kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                val token = SessionStore.readAccessToken(ctx) ?: ""
+                                val userId = SessionStore.readUserId(ctx) ?: ""
+                                val base = BuildConfig.SUPABASE_URL
+                                val key = BuildConfig.SUPABASE_ANON_KEY
+                                val client = io.ktor.client.HttpClient()
+                                val startTime = System.currentTimeMillis()
+                                val startIso = java.time.Instant.now().toString()
+                                val timeoutMs = 120_000L
+                                var done = false
+
+                                // Wait a few seconds before first poll to let backfill start
+                                kotlinx.coroutines.delay(5000)
+
+                                try {
+                                    while (!done && (System.currentTimeMillis() - startTime) < timeoutMs) {
+                                        val elapsed = System.currentTimeMillis() - startTime
+                                        progress = (elapsed.toFloat() / timeoutMs).coerceAtMost(0.95f)
+
+                                        // Update status text based on progress
+                                        statusText = when {
+                                            elapsed < 12_000 -> "Fetching your WHOOP data..."
+                                            elapsed < 22_000 -> "Loading weather patterns..."
+                                            elapsed < 38_000 -> "Evaluating your triggers..."
+                                            elapsed < 52_000 -> "Calculating risk scores..."
+                                            else -> "Almost there..."
+                                        }
+
+                                        try {
+                                            val resp = client.get("$base/rest/v1/edge_audit?fn=eq.backfill-all&user_id=eq.$userId&ok=eq.true&created_at=gte.$startIso&order=created_at.desc&limit=1") {
+                                                header("Authorization", "Bearer $token")
+                                                header("apikey", key)
+                                            }
+                                            val body = resp.bodyAsText()
+                                            // Non-empty array means a matching row was found
+                                            if (body.startsWith("[") && body.length > 5 && !body.startsWith("[]")) {
+                                                done = true
+                                                progress = 1f
+                                                statusText = "All set!"
+                                            }
+                                        } catch (_: Exception) {}
+
+                                        if (!done) kotlinx.coroutines.delay(3000)
+                                    }
+                                } finally { client.close() }
+
+                                if (!done) { progress = 1f; statusText = "Taking longer than expected..." }
+                                kotlinx.coroutines.delay(800) // Brief pause to show final status
+                            }
+
+                            if (statusText == "All set!") {
+                                // Backfill completed — go to subscribe
+                                nav.navigate("subscribe") {
+                                    popUpTo("backfill_loading") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                // Backfill still running — show retry/continue option
+                                statusText = "Still setting up in the background"
+                                showContinueButton = true
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(AppTheme.FadeColor)
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(24.dp)
+                            ) {
+                                // Animated brain/pulse icon
+                                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+                                val pulseScale by infiniteTransition.animateFloat(
+                                    initialValue = 0.9f, targetValue = 1.1f,
+                                    animationSpec = infiniteRepeatable(
+                                        tween(1000, easing = FastOutSlowInEasing),
+                                        RepeatMode.Reverse
+                                    ), label = "scale"
+                                )
+                                val animatedProgress by animateFloatAsState(progress, tween(500), label = "prog")
+                                Icon(
+                                    Icons.Outlined.Analytics, contentDescription = null,
+                                    tint = AppTheme.AccentPink,
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .scale(pulseScale)
+                                )
+
+                                Text(
+                                    statusText,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = AppTheme.TitleColor,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                LinearProgressIndicator(
+                                    progress = { animatedProgress },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.7f)
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = AppTheme.AccentPink,
+                                    trackColor = AppTheme.TrackColor
+                                )
+
+                                Text(
+                                    if (showContinueButton) "Your data is still being processed.\nThis will complete in the background."
+                                    else "Setting up your personalised migraine predictions",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = AppTheme.SubtleTextColor,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                if (showContinueButton) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Button(
+                                        onClick = {
+                                            nav.navigate("subscribe") {
+                                                popUpTo("backfill_loading") { inclusive = true }
+                                                launchSingleTop = true
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text("Continue")
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Subscribe placeholder ──
+                    composable("subscribe") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(AppTheme.FadeColor)
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(24.dp)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Star, contentDescription = null,
+                                    tint = AppTheme.AccentPink,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Text(
+                                    "Subscribe to MigraineMe",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = AppTheme.TitleColor,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    "Unlock personalised migraine predictions, detailed insights, and AI-powered analysis.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = AppTheme.SubtleTextColor,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                Button(
+                                    onClick = {
+                                        nav.navigate(Routes.HOME) {
+                                            popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth(0.7f).height(48.dp)
+                                ) {
+                                    Text("Subscribe Now", style = MaterialTheme.typography.titleSmall)
+                                }
+                                TextButton(onClick = {
+                                    nav.navigate(Routes.HOME) {
+                                        popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }) {
+                                    Text("Maybe later", color = AppTheme.SubtleTextColor)
+                                }
+                            }
+                        }
                     }
 
                     composable(Routes.MENSTRUATION_SETTINGS) {

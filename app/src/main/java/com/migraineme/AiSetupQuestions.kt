@@ -123,13 +123,55 @@ private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Se
 private fun QFreeText(value: String, onValueChange: (String) -> Unit, hint: String) {
     var text by remember { mutableStateOf(value) }
     LaunchedEffect(value) { if (value != text) text = value }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Speech recogniser launcher (same pattern as daily NotePage)
+    val speechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                val updated = if (text.isBlank()) spoken else "$text, $spoken"
+                text = updated
+                onValueChange(updated)
+            }
+        }
+    }
+
+    fun launchVoice() {
+        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Tell us about your migraines…")
+        }
+        try { speechLauncher.launch(intent) } catch (_: Exception) {
+            android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     OutlinedTextField(
         value = text, onValueChange = { text = it; onValueChange(it) },
         placeholder = { Text(hint, color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall) },
         textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
         colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = AppTheme.TrackColor, focusedBorderColor = AppTheme.AccentPurple, cursorColor = AppTheme.AccentPurple, unfocusedContainerColor = AppTheme.TrackColor.copy(alpha = 0.3f), focusedContainerColor = AppTheme.TrackColor.copy(alpha = 0.3f)),
         shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth(),
+        minLines = 3, maxLines = 6,
     )
+    Spacer(Modifier.height(8.dp))
+    OutlinedButton(
+        onClick = { launchVoice() },
+        modifier = Modifier.height(40.dp),
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
+        border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+    ) {
+        Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
+        Spacer(Modifier.width(4.dp))
+        Text("Voice", style = MaterialTheme.typography.bodySmall)
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -154,7 +196,7 @@ fun AiQuestionsPage1(
         QCard("What is your gender?", Icons.Outlined.Person, "Used to personalise thresholds (e.g. nutrition, body composition)") { QSingleChips(listOf("Female", "Male", "Prefer not to say"), gender, onGender) }
         QCard("What is your age range?", Icons.Outlined.Cake) { QSingleChips(listOf("18-25", "26-35", "36-45", "46-55", "56+"), ageRange, onAgeRange) }
         QCard("How often do you get migraines?", Icons.Outlined.CalendarMonth) {
-            QSingleChips(listOf("Rarely (few/year)", "1-3/month", "4-7/month", "8-14/month", "15+/month (chronic)"), frequency, onFrequency)
+            QSingleChips(listOf("A few per year", "Every 1-2 months", "1-3 per month", "Weekly", "Chronic"), frequency, onFrequency)
         }
         QCard("How long do they usually last?", Icons.Outlined.Timer) {
             QSingleChips(listOf("< 4 hours", "4-12 hours", "12-24 hours", "1-3 days", "3+ days"), duration, onDuration)
@@ -409,7 +451,7 @@ fun AiQuestionsPage8(
         QCard("What helps relieve your migraines?", Icons.Outlined.Spa, "Tap all that apply") { QPoolMultiSelect(reliefPool, selectedReliefs, onToggleRelief, Color(0xFF81C784)) }
         QCard("What are you usually doing when migraines hit?", Icons.Outlined.DirectionsRun, "Tap all that apply") { QPoolMultiSelect(activityPool, selectedActivities, onToggleActivity, Color(0xFFFF8A65)) }
         QCard("What do you miss because of migraines?", Icons.Outlined.EventBusy, "Tap all that apply") { QPoolMultiSelect(missedActivityPool, selectedMissedActivities, onToggleMissed, Color(0xFFEF9A9A)) }
-        QCard("Anything else we should know?", Icons.Outlined.Edit, "Optional — helps AI fine-tune your setup") { QFreeText(additionalNotes ?: "", onAdditionalNotes, "e.g. chocolate is really bad, I work night shifts...") }
+        QCard("Anything else we should know?", Icons.Outlined.Mic, "Type or speak — helps AI understand you better") { QFreeText(additionalNotes ?: "", onAdditionalNotes, "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...") }
         Spacer(Modifier.height(80.dp))
     }
 }
