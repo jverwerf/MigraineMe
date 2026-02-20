@@ -86,7 +86,7 @@ fun QuickMigraineScreen(
     val freqAccompIds = favorites.filter { it.symptom?.category == "accompanying" }.mapNotNull { it.symptom?.label }.toSet()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Top bar
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -258,3 +258,4 @@ private fun formatQuickTime(iso: String?): String? {
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) { null }
 }
+

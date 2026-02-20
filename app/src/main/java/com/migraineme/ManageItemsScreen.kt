@@ -17,8 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,15 +40,7 @@ fun ManageItemsScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
-
-            // Close bar
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Manage Items", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
-                }
-            }
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Hero
             HeroCard {
@@ -194,3 +186,5 @@ private fun ManageItemRow(
         }
     }
 }
+
+

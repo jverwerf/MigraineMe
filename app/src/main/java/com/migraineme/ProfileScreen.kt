@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,8 +53,10 @@ import kotlin.math.max
 @Composable
 fun ProfileScreen(
     authVm: AuthViewModel = viewModel(),
+    onBack: () -> Unit = {},
     onNavigateChangePassword: () -> Unit,
     onNavigateToRecalibrationReview: () -> Unit = {},
+    onNavigateToPaywall: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -260,16 +263,15 @@ fun ProfileScreen(
     // UI
     // ═══════════════════════════════════════════════════════════════
 
+    val scrollState = rememberScrollState()
+
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // ── Header ──
-        Text("Profile", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-
         // ── Profile Card ──
         val current = profile.value
         val headerName = current?.displayName?.takeIf { it.isNotBlank() } ?: "Name not set"
@@ -383,6 +385,9 @@ fun ProfileScreen(
         profileError.value?.let {
             Text(it, color = Color(0xFFEF5350), style = MaterialTheme.typography.bodySmall)
         }
+
+        // ── Subscription ──
+        SubscriptionCard(onNavigateToPaywall = onNavigateToPaywall)
 
         // ── AI Migraine Profile ──
         if (aiProfileLoading) {
@@ -591,6 +596,146 @@ private fun AiMigraineProfileCard(data: JsonObject) {
 }
 
 @Composable
+private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
+    val premiumState by PremiumManager.state.collectAsState()
+    val context = LocalContext.current
+
+    if (premiumState.isLoading) return
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        shape = AppTheme.BaseCardShape,
+        border = AppTheme.BaseCardBorder,
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            // Header
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    Modifier.size(38.dp)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))
+                            ),
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Outlined.WorkspacePremium, null,
+                        tint = Color.White, modifier = Modifier.size(20.dp)
+                    )
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Subscription",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        when (premiumState.tier) {
+                            PremiumTier.PREMIUM -> premiumState.planType?.replaceFirstChar { it.uppercase() }?.let { "$it plan" } ?: "Premium"
+                            PremiumTier.TRIAL -> "${premiumState.trialDaysRemaining} days left on trial"
+                            PremiumTier.FREE -> "Free plan"
+                        },
+                        color = when (premiumState.tier) {
+                            PremiumTier.PREMIUM -> AppTheme.AccentPurple
+                            PremiumTier.TRIAL -> if (premiumState.isTrialUrgent) Color(0xFFFFB74D) else AppTheme.AccentPurple
+                            PremiumTier.FREE -> AppTheme.SubtleTextColor
+                        },
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+
+            when (premiumState.tier) {
+                PremiumTier.PREMIUM -> {
+                    // ── Premium: show plan details + manage ──
+                    val expiryText = premiumState.subscriptionExpiryDate?.let { raw ->
+                        try {
+                            val instant = java.time.Instant.parse(raw)
+                            val local = instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                            "Renews ${local.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy"))}"
+                        } catch (_: Exception) { null }
+                    }
+
+                    if (expiryText != null) {
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .background(AppTheme.AccentPurple.copy(alpha = 0.1f), RoundedCornerShape(10.dp))
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Outlined.CalendarMonth, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
+                            Text(expiryText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            try {
+                                val intent = android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse("https://play.google.com/store/account/subscriptions")
+                                )
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.4f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                    ) {
+                        Icon(Icons.Outlined.OpenInNew, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Manage subscription", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+
+                PremiumTier.TRIAL, PremiumTier.FREE -> {
+                    // ── Free / Trial: feature teaser + upgrade ──
+                    val features = listOf(
+                        Icons.Outlined.Analytics to "Full insights & spider charts",
+                        Icons.Outlined.Timeline to "7-day risk forecast",
+                        Icons.Outlined.Psychology to "AI calibration",
+                        Icons.Outlined.Description to "PDF reports for your doctor",
+                    )
+
+                    features.forEach { (icon, label) ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(icon, null, tint = AppTheme.AccentPurple.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+                            Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+
+                    Button(
+                        onClick = onNavigateToPaywall,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Outlined.WorkspacePremium, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            if (premiumState.tier == PremiumTier.TRIAL) "Upgrade now" else "Unlock Premium",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ProfileStatChip(icon: ImageVector, text: String, modifier: Modifier = Modifier) {
     Row(
         modifier
@@ -771,3 +916,6 @@ private fun compressJpegUnderLimit(bmp: Bitmap, maxBytes: Int): ByteArray {
     bmp.compress(Bitmap.CompressFormat.JPEG, 10, baos)
     return baos.toByteArray()
 }
+
+
+

@@ -4,6 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +61,7 @@ data class HomeUiState(
     val riskPercent: Int = 0,               // 0..100 for gauge animation (mapped from score)
     val triggersAtRisk: List<TriggerScore> = emptyList(),
     val aiRecommendation: String = "",
+    val dailyInsight: String? = null,       // from daily_insights table (premium)
     val recentLogs: List<MigraineLog> = emptyList(),
     // Gauge thresholds for display
     val gaugeMaxScore: Double = 10.0,       // the HIGH threshold — used as gauge max
@@ -203,13 +209,52 @@ class HomeViewModel : ViewModel() {
                 "Looking good! No significant active triggers. Keep up your healthy habits."
         }
 
+        // Fetch AI daily insight (premium feature)
+        var dailyInsight: String? = null
+        try {
+            val token = SessionStore.getValidAccessToken(appCtx)
+            if (token != null) {
+                val today = java.time.LocalDate.now().toString()
+                Log.d(TAG, "Fetching daily insight for date=$today")
+                val client = io.ktor.client.HttpClient(io.ktor.client.engine.android.Android)
+                try {
+                    val response = client.get("${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/daily_insights") {
+                        header("Authorization", "Bearer $token")
+                        header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                        parameter("select", "insight")
+                        parameter("date", "eq.$today")
+                        parameter("limit", "1")
+                        header(io.ktor.http.HttpHeaders.Accept, "application/json")
+                    }
+                    val body = response.bodyAsText()
+                    Log.d(TAG, "Daily insight response: status=${response.status}, body=$body")
+                    if (response.status.isSuccess()) {
+                        val arr = org.json.JSONArray(body)
+                        if (arr.length() > 0) {
+                            dailyInsight = arr.getJSONObject(0).optString("insight", null)
+                            Log.d(TAG, "Daily insight loaded: ${dailyInsight?.take(60)}...")
+                        } else {
+                            Log.d(TAG, "Daily insight: empty array returned")
+                        }
+                    }
+                } finally {
+                    client.close()
+                }
+            } else {
+                Log.d(TAG, "Daily insight: no access token")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Daily insight fetch failed: ${e.message}", e)
+        }
+
         return HomeUiState(
             loading = false,
             riskScore = live.score,
             riskZone = zone,
             riskPercent = live.percent,
             triggersAtRisk = topTriggers,
-            aiRecommendation = aiTip,
+            aiRecommendation = dailyInsight ?: aiTip,
+            dailyInsight = dailyInsight,
             gaugeMaxScore = gaugeMax,
             forecast = forecast,
             dayRisks = dayRisks,
@@ -230,6 +275,7 @@ class HomeViewModel : ViewModel() {
                     name = obj.getString("name"),
                     score = obj.optInt("score", 0),
                     severity = obj.optString("severity", "LOW"),
+                    daysActive = obj.optInt("days_active", 1),
                 )
             }
         } catch (e: Exception) {
@@ -270,7 +316,7 @@ class HomeViewModel : ViewModel() {
                         val ta = obj.getJSONArray("top_triggers")
                         (0 until ta.length()).map { j ->
                             val to = ta.getJSONObject(j)
-                            TriggerScore(to.getString("name"), to.optInt("score", 0), to.optString("severity", "LOW"))
+                            TriggerScore(to.getString("name"), to.optInt("score", 0), to.optString("severity", "LOW"), to.optInt("days_active", 1))
                         }
                     } catch (_: Exception) { emptyList() }
                 )
@@ -290,3 +336,4 @@ class HomeViewModel : ViewModel() {
         private const val TAG = "HomeViewModel"
     }
 }
+

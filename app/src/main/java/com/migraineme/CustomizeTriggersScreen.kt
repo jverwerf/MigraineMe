@@ -91,7 +91,7 @@ fun CustomizeTriggersScreen() {
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Info Card
             HeroCard {
                 Text(
@@ -267,3 +267,4 @@ private fun formatThresholdDisplay(value: Double, unit: String?): String {
         else -> String.format("%.1f", value)
     }
 }
+

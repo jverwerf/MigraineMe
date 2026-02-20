@@ -32,7 +32,7 @@ data class SpiderData(
 
 class InsightsViewModel : ViewModel() {
 
-    // ═══════ Core flows ═══════
+    // ======= Core flows =======
 
     private val _migraines = MutableStateFlow<List<MigraineSpan>>(emptyList())
     val migraines: StateFlow<List<MigraineSpan>> = _migraines
@@ -68,7 +68,7 @@ class InsightsViewModel : ViewModel() {
     private val _latestSleepDate = MutableStateFlow<String?>(null)
     val latestSleepDate: StateFlow<String?> = _latestSleepDate
 
-    // ═══════ Spider chart flows ═══════
+    // ======= Spider chart flows =======
 
     private val _triggerSpider = MutableStateFlow<SpiderData?>(null)
     val triggerSpider: StateFlow<SpiderData?> = _triggerSpider
@@ -132,7 +132,7 @@ class InsightsViewModel : ViewModel() {
     private val _spiderLoading = MutableStateFlow(true)
     val spiderLoading: StateFlow<Boolean> = _spiderLoading
 
-    // ═══════ Per-migraine linked items ═══════
+    // ======= Per-migraine linked items =======
 
     private val _selectedLinkedItems = MutableStateFlow(SupabaseDbService.MigraineLinkedItems())
     val selectedLinkedItems: StateFlow<SupabaseDbService.MigraineLinkedItems> = _selectedLinkedItems
@@ -262,20 +262,23 @@ class InsightsViewModel : ViewModel() {
         )
     }
 
-    // ═══════ ALL daily metrics ═══════
+    // ======= ALL daily metrics =======
 
     data class DailyValue(val date: String, val value: Double)
 
     private val _allDailyMetrics = MutableStateFlow<Map<String, List<DailyValue>>>(emptyMap())
     val allDailyMetrics: StateFlow<Map<String, List<DailyValue>>> = _allDailyMetrics
 
-    // ═══════ Shared UI state (used by both InsightsScreen and InsightsDetailScreen) ═══════
+    // ======= Shared UI state (used by both InsightsScreen and InsightsDetailScreen) =======
 
     private val _selectedMigraineIndex = MutableStateFlow(0)
     val selectedMigraineIndex: StateFlow<Int> = _selectedMigraineIndex
 
     private val _userToggledMetrics = MutableStateFlow<Set<String>>(emptySet())
     val userToggledMetrics: StateFlow<Set<String>> = _userToggledMetrics
+
+    private val _userDisabledMetrics = MutableStateFlow<Set<String>>(emptySet())
+    val userDisabledMetrics: StateFlow<Set<String>> = _userDisabledMetrics
 
     private val _windowDaysBefore = MutableStateFlow(7L)
     val windowDaysBefore: StateFlow<Long> = _windowDaysBefore
@@ -285,7 +288,8 @@ class InsightsViewModel : ViewModel() {
 
     fun selectMigraine(index: Int) {
         _selectedMigraineIndex.value = index
-        _userToggledMetrics.value = emptySet() // reset user toggles on migraine change
+        _userToggledMetrics.value = emptySet()
+        _userDisabledMetrics.value = emptySet()
     }
 
     fun setWindowDays(before: Long, after: Long) {
@@ -293,15 +297,24 @@ class InsightsViewModel : ViewModel() {
         _windowDaysAfter.value = after
     }
 
-    fun toggleMetric(key: String) {
-        val current = _userToggledMetrics.value
-        _userToggledMetrics.value = if (key in current) current - key else current + key
+    fun toggleMetric(key: String, isCurrentlyEnabled: Boolean) {
+        val toggled = _userToggledMetrics.value
+        val disabled = _userDisabledMetrics.value
+        if (isCurrentlyEnabled) {
+            // Turn it off: add to disabled, remove from toggled
+            _userDisabledMetrics.value = disabled + key
+            _userToggledMetrics.value = toggled - key
+        } else {
+            // Turn it on: remove from disabled, add to toggled
+            _userDisabledMetrics.value = disabled - key
+            _userToggledMetrics.value = toggled + key
+        }
     }
 
-    // ═══════ Dynamic template → metric mapping ═══════
+    // ======= Dynamic template -> metric mapping =======
 
     /**
-     * Maps Supabase metric_table names → VM metric keys.
+     * Maps Supabase metric_table names -> VM metric keys.
      * This is the ONLY hardcoded mapping. Everything else is driven by DB templates.
      * When a new metric table is added to the DB AND to loadAllDailyMetrics, add its entry here.
      */
@@ -389,16 +402,16 @@ class InsightsViewModel : ViewModel() {
     }
 
     /**
-     * Dynamic map: normalised trigger/prodrome label → VM metric key.
+     * Dynamic map: normalised trigger/prodrome label -> VM metric key.
      * Built at startup from trigger_templates + prodrome_templates fetched from Supabase.
      */
     private val _labelToMetricKey = MutableStateFlow<Map<String, String>>(emptyMap())
     val labelToMetricMap: StateFlow<Map<String, String>> = _labelToMetricKey
 
-    /** Group name → all associated VM metric keys (e.g. "poor sleep" → {sleep_dur, sleep_score, ...}) */
+    /** Group name -> all associated VM metric keys (e.g. "poor sleep" -> {sleep_dur, sleep_score, ...}) */
     private val _groupToMetricKeys = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
 
-    /** Fetch trigger_templates + prodrome_templates and build label → metric key map */
+    /** Fetch trigger_templates + prodrome_templates and build label -> metric key map */
     private fun loadTemplateMap(client: OkHttpClient, base: String, key: String, token: String) {
         val map = mutableMapOf<String, String>()
         val groupMap = mutableMapOf<String, MutableSet<String>>()
@@ -426,7 +439,7 @@ class InsightsViewModel : ViewModel() {
                     }
                     if (vmKey != null) {
                         map[normaliseLabel(label)] = vmKey
-                        // If this belongs to a display_group, also map group → keys
+                        // If this belongs to a display_group, also map group -> keys
                         if (displayGroup != null) {
                             val normGroup = normaliseLabel(displayGroup)
                             map[normGroup] = vmKey
@@ -483,7 +496,7 @@ class InsightsViewModel : ViewModel() {
         return keys
     }
 
-    // ═══════ Filtering ═══════
+    // ======= Filtering =======
 
     /** Tag = "category:label", e.g. "Trigger:Pressure Drop", "Symptom:Nausea" */
     data class FilterTag(val category: String, val label: String) {
@@ -605,12 +618,12 @@ class InsightsViewModel : ViewModel() {
             .mapValues { it.value.distinct().sorted() }
     }
 
-    // ═══════ Internal ═══════
+    // ======= Internal =======
 
     private val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
     private var cachedToken: String? = null
 
-    // ═══════ Public API ═══════
+    // ======= Public API =======
 
     fun load(context: Context, accessToken: String) {
         cachedToken = accessToken
@@ -618,7 +631,7 @@ class InsightsViewModel : ViewModel() {
             try {
                 val now = Instant.now()
 
-                // Load template → metric mapping FIRST (fast, needed for auto-selection)
+                // Load template -> metric mapping FIRST (fast, needed for auto-selection)
                 withContext(Dispatchers.IO) {
                     val client = OkHttpClient()
                     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
@@ -722,7 +735,7 @@ class InsightsViewModel : ViewModel() {
         }
     }
 
-    // ═══════ Load EVERY daily metric table via direct Supabase REST ═══════
+    // ======= Load EVERY daily metric table via direct Supabase REST =======
 
     private fun loadAllDailyMetrics(context: Context, token: String) {
         val userId = SessionStore.readUserId(context) ?: return
@@ -732,7 +745,7 @@ class InsightsViewModel : ViewModel() {
         val cutoff = LocalDate.now().minusDays(180).toString()
         val map = mutableMapOf<String, List<DailyValue>>()
 
-        // ── Weather (user_weather_daily) ──
+        //  Weather (user_weather_daily) 
         val weatherArr = fetchArr(client, base, key, token, userId, "user_weather_daily",
             "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max", cutoff)
         if (weatherArr != null) {
@@ -743,7 +756,7 @@ class InsightsViewModel : ViewModel() {
             map["uv"] = parseDoubleCol(weatherArr, "uv_index_max")
         }
 
-        // ── Location/Altitude (user_location_daily) ──
+        //  Location/Altitude (user_location_daily) 
         val locArr = fetchArr(client, base, key, token, userId, "user_location_daily",
             "date,altitude_max_m,altitude_change_m", cutoff)
         if (locArr != null) {
@@ -751,7 +764,7 @@ class InsightsViewModel : ViewModel() {
             map["alt_change"] = parseDoubleCol(locArr, "altitude_change_m")
         }
 
-        // ── Physical health metrics (each in its own table) ──
+        //  Physical health metrics (each in its own table) 
         map["recovery"] = fetchAndParse(client, base, key, token, userId, "recovery_score_daily", "value_pct", cutoff)
         map["hrv"] = fetchAndParse(client, base, key, token, userId, "hrv_daily", "value_rmssd_ms", cutoff)
         map["rhr"] = fetchAndParse(client, base, key, token, userId, "resting_hr_daily", "value_bpm", cutoff)
@@ -766,7 +779,7 @@ class InsightsViewModel : ViewModel() {
         map["bp_sys"] = fetchAndParse(client, base, key, token, userId, "blood_pressure_daily", "value_systolic", cutoff)
         map["glucose"] = fetchAndParse(client, base, key, token, userId, "blood_glucose_daily", "value_mgdl", cutoff)
 
-        // ── Sleep metrics ──
+        //  Sleep metrics 
         map["sleep_dur"] = fetchAndParse(client, base, key, token, userId, "sleep_duration_daily", "value_hours", cutoff)
         map["sleep_score"] = fetchAndParse(client, base, key, token, userId, "sleep_score_daily", "value_pct", cutoff)
         map["sleep_eff"] = fetchAndParse(client, base, key, token, userId, "sleep_efficiency_daily", "value_pct", cutoff)
@@ -780,14 +793,14 @@ class InsightsViewModel : ViewModel() {
             map["sleep_light"] = parseDoubleCol(stagesArr, "value_light_hm")
         }
 
-        // ── Screen time (only total from screen_time_daily; other phone metrics from their own tables below) ──
+        //  Screen time (only total from screen_time_daily; other phone metrics from their own tables below) 
         val screenArr = fetchArr(client, base, key, token, userId, "screen_time_daily",
             "date,value_minutes", cutoff)
         if (screenArr != null) {
             map["screen_time"] = parseDoubleCol(screenArr, "value_minutes")
         }
 
-        // ── Nutrition / Diet ──
+        //  Nutrition / Diet 
         // nutrition_daily has basic 8 fields; nutrition_records has ALL nutrients per-record.
         // We query nutrition_records and aggregate by date for the full picture.
         loadNutritionMetrics(client, base, key, token, userId, cutoff, map)
@@ -810,7 +823,7 @@ class InsightsViewModel : ViewModel() {
             fillIfEmpty("caffeine", "total_caffeine_mg")
         }
 
-        // ── Bedtime / Wake time (timestamp → 24h decimal, bedtime shifted +24 if < 12 for smooth plotting) ──
+        //  Bedtime / Wake time (timestamp -> 24h decimal, bedtime shifted +24 if < 12 for smooth plotting) 
         fun parseTimestampToHours(arr: JSONArray, col: String, shiftPastNoon: Boolean): List<DailyValue> {
             val list = mutableListOf<DailyValue>()
             for (i in 0 until arr.length()) {
@@ -821,7 +834,7 @@ class InsightsViewModel : ViewModel() {
                     val inst = Instant.parse(ts)
                     val zoned = inst.atZone(java.time.ZoneId.systemDefault())
                     var hours = zoned.hour + zoned.minute / 60.0
-                    if (shiftPastNoon && hours < 12.0) hours += 24.0  // e.g. 00:30 → 24.5
+                    if (shiftPastNoon && hours < 12.0) hours += 24.0  // e.g. 00:30 -> 24.5
                     list += DailyValue(date, hours)
                 } catch (_: Exception) { /* skip unparseable */ }
             }
@@ -837,10 +850,10 @@ class InsightsViewModel : ViewModel() {
             map["wake_time"] = parseTimestampToHours(wakeArr, "value_at", shiftPastNoon = false)
         }
 
-        // ── Additional physical ──
+        //  Additional physical 
         map["strain"] = fetchAndParse(client, base, key, token, userId, "strain_daily", "value_strain", cutoff)
 
-        // ── Additional mental / phone ──
+        //  Additional mental / phone 
         map["late_screen"] = fetchAndParse(client, base, key, token, userId, "screen_time_late_night", "value_hours", cutoff)
         map["noise"] = fetchAndParse(client, base, key, token, userId, "ambient_noise_index_daily", "day_mean_lmean", cutoff)
         map["brightness"] = fetchAndParse(client, base, key, token, userId, "phone_brightness_daily", "value_mean", cutoff)
@@ -848,7 +861,7 @@ class InsightsViewModel : ViewModel() {
         map["unlocks"] = fetchAndParseInt(client, base, key, token, userId, "phone_unlock_daily", "value_count", cutoff)
         map["dark_mode"] = fetchAndParse(client, base, key, token, userId, "phone_dark_mode_daily", "value_hours", cutoff)
 
-        // ── Wellness ──
+        //  Wellness 
         map["hydration"] = fetchAndParse(client, base, key, token, userId, "hydration_daily", "value_ml", cutoff)
         map["mindfulness"] = fetchAndParse(client, base, key, token, userId, "mindfulness_daily", "duration_minutes", cutoff)
 
@@ -922,7 +935,7 @@ class InsightsViewModel : ViewModel() {
                 }
             }
 
-            // Risk metrics (tyramine, alcohol, gluten) — string "none"/"low"/"medium"/"high" → 0/1/2/3
+            // Risk metrics (tyramine, alcohol, gluten) – string "none"/"low"/"medium"/"high" -> 0/1/2/3
             val riskKeys = listOf(
                 "tyramine" to "tyramine_exposure",
                 "alcohol" to "alcohol_exposure",
@@ -959,7 +972,7 @@ class InsightsViewModel : ViewModel() {
         } catch (_: Exception) { /* nutrition data optional */ }
     }
 
-    // ── REST helpers ──
+    //  REST helpers 
 
     private fun fetchArr(
         client: OkHttpClient, base: String, key: String, token: String,
@@ -1013,7 +1026,7 @@ class InsightsViewModel : ViewModel() {
         return parseIntCol(arr, col)
     }
 
-    // ═══════ Spider data ═══════
+    // ======= Spider data =======
 
     private suspend fun loadSpiderData(
         accessToken: String,
@@ -1162,7 +1175,7 @@ class InsightsViewModel : ViewModel() {
         }
     }
 
-    // ── Spider helpers ──
+    //  Spider helpers 
 
     internal fun buildSpider(
         logType: String,
@@ -1210,5 +1223,6 @@ class InsightsViewModel : ViewModel() {
         else -> 0f
     }
 }
+
 
 

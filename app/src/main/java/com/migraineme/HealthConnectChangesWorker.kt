@@ -136,7 +136,7 @@ class HealthConnectChangesWorker(
         createNotificationChannel()
         
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_health_connect)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Syncing Health Data")
             .setContentText("Reading data from Health Connect...")
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -517,3 +517,4 @@ class HealthConnectChangesWorker(
         }
     }
 }
+

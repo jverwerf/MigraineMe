@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -67,7 +68,7 @@ val AllMetricDefs = listOf(
     MetricDef("recovery", "Recovery", "%", Color(0xFFFFCC80), "Physical"),
     MetricDef("hrv", "HRV", "ms", Color(0xFFA5D6A7), "Physical"),
     MetricDef("rhr", "Resting HR", "bpm", Color(0xFFEF9A9A), "Physical"),
-    MetricDef("spo2", "SpO₂", "%", Color(0xFF80DEEA), "Physical"),
+    MetricDef("spo2", "SpO2", "%", Color(0xFF80DEEA), "Physical"),
     MetricDef("skin_temp", "Skin Temp", "°C", Color(0xFFFFAB91), "Physical"),
     MetricDef("resp_rate", "Resp. Rate", "bpm", Color(0xFFB39DDB), "Physical"),
     MetricDef("stress", "Stress", "", Color(0xFFE57373), "Physical"),
@@ -97,7 +98,7 @@ val AllMetricDefs = listOf(
     MetricDef("unlocks", "Unlocks", "", Color(0xFF4DD0E1), "Mental"),
     MetricDef("dark_mode", "Dark Mode", "hrs", Color(0xFF546E7A), "Mental"),
     MetricDef("mindfulness", "Mindfulness", "min", Color(0xFF80CBC4), "Mental"),
-    // Diet — macros
+    // Diet – macros
     MetricDef("calories", "Calories", "kcal", Color(0xFFFFAB91), "Diet"),
     MetricDef("protein", "Protein", "g", Color(0xFFEF9A9A), "Diet"),
     MetricDef("carbs", "Carbs", "g", Color(0xFFFFCC80), "Diet"),
@@ -111,7 +112,7 @@ val AllMetricDefs = listOf(
     MetricDef("unsat_fat", "Unsat. Fat", "g", Color(0xFFFFCC80), "Diet"),
     MetricDef("trans_fat", "Trans Fat", "g", Color(0xFFE57373), "Diet"),
     MetricDef("hydration", "Hydration", "ml", Color(0xFF29B6F6), "Diet"),
-    // Diet — minerals
+    // Diet – minerals
     MetricDef("potassium", "Potassium", "mg", Color(0xFF80CBC4), "Diet"),
     MetricDef("calcium", "Calcium", "mg", Color(0xFFB0BEC5), "Diet"),
     MetricDef("iron", "Iron", "mg", Color(0xFFBCAAA4), "Diet"),
@@ -121,7 +122,7 @@ val AllMetricDefs = listOf(
     MetricDef("phosphorus", "Phosphorus", "mg", Color(0xFFA5D6A7), "Diet"),
     MetricDef("copper", "Copper", "mg", Color(0xFFFFAB91), "Diet"),
     MetricDef("manganese", "Manganese", "mg", Color(0xFFB39DDB), "Diet"),
-    // Diet — vitamins
+    // Diet – vitamins
     MetricDef("vitamin_a", "Vitamin A", "mcg", Color(0xFFFFCC80), "Diet"),
     MetricDef("vitamin_c", "Vitamin C", "mg", Color(0xFFFFE082), "Diet"),
     MetricDef("vitamin_d", "Vitamin D", "mcg", Color(0xFFFFF176), "Diet"),
@@ -135,7 +136,7 @@ val AllMetricDefs = listOf(
     MetricDef("folate", "Folate", "mcg", Color(0xFF7E57C2), "Diet"),
     MetricDef("biotin", "Biotin", "mcg", Color(0xFF9575CD), "Diet"),
     MetricDef("panto_acid", "Panto. Acid", "mg", Color(0xFFBA68C8), "Diet"),
-    // Diet — food risks (0=none, 1=low, 2=medium, 3=high)
+    // Diet – food risks (0=none, 1=low, 2=medium, 3=high)
     MetricDef("tyramine", "Tyramine", "risk", Color(0xFFFFAB40), "Diet"),
     MetricDef("alcohol", "Alcohol", "risk", Color(0xFFEF5350), "Diet"),
     MetricDef("gluten", "Gluten", "risk", Color(0xFFFFD54F), "Diet"),
@@ -204,8 +205,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
 
     // Enabled metrics: auto-selected from triggers + user toggles (stored in VM)
     val userToggledKeys by vm.userToggledMetrics.collectAsState()
+    val userDisabledKeys by vm.userDisabledMetrics.collectAsState()
 
-    val enabledKeys = autoSelectedKeys + userToggledKeys
+    val enabledKeys = (autoSelectedKeys - userDisabledKeys) + userToggledKeys
 
     val enabledSeries = remember(available, enabledKeys, allDailyMetrics, windowDates) {
         available.filter { it.key in enabledKeys }.map { d ->
@@ -234,11 +236,16 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     val missedActivitySpider by vm.missedActivitySpider.collectAsState()
     val locationSpider by vm.locationSpider.collectAsState()
 
-    ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+    val premiumStateTop by PremiumManager.state.collectAsState()
 
-            // ── Full Report card ──
-            HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.INSIGHTS_REPORT) }) {
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+
+            //  Full Report card — taps to paywall for free users
+            HeroCard(modifier = Modifier.clickable {
+                if (premiumStateTop.isPremium) navController.navigate(Routes.INSIGHTS_REPORT)
+                else navController.navigate(Routes.PAYWALL)
+            }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Full Report", color = AppTheme.TitleColor,
@@ -247,16 +254,37 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall)
                     }
+                    if (!premiumStateTop.isPremium) {
+                        Icon(
+                            Icons.Outlined.Lock,
+                            contentDescription = "Premium",
+                            tint = AppTheme.AccentPurple,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                    }
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
             }
 
-            // ── Timeline card ──
-            HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.INSIGHTS_DETAIL) }) {
+            //  Timeline card — taps to paywall for free users
+            HeroCard(modifier = Modifier.clickable {
+                if (premiumStateTop.isPremium) navController.navigate(Routes.INSIGHTS_DETAIL)
+                else navController.navigate(Routes.PAYWALL)
+            }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("Migraine Timeline", color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.weight(1f))
+                    if (!premiumStateTop.isPremium) {
+                        Icon(
+                            Icons.Outlined.Lock,
+                            contentDescription = "Premium",
+                            tint = AppTheme.AccentPurple,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                    }
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
 
@@ -276,7 +304,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
                     }
                 } else {
-                    // Event count chips (categories only — no "Auto" chip)
+                    // Event count chips (categories only – no "Auto" chip)
                     val catCounts = remember(windowEvents) {
                         windowEvents.groupBy { it.category }.mapValues { it.value.size }
                     }
@@ -292,7 +320,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 }
 
                 // Metric picker chips (grouped by category)
-                // ── REMOVED: metric picker is on the detail screen ──
+                //  REMOVED: metric picker is on the detail screen 
 
                 // Graph (compact)
                 InsightsTimelineGraph(
@@ -309,7 +337,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
 
             Spacer(Modifier.height(4.dp))
 
-            // Spider cards
+            // Spider cards — premium only (except trigger spider as teaser)
             if (spiderLoading) {
                 BaseCard {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center,
@@ -321,30 +349,54 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 }
             } else {
                 val ml by vm.migraines.collectAsState()
-                if (symptomSpider != null && symptomSpider!!.totalLogged > 0) {
-                    SymptomsInsightCard(ml) {
-                        navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${symptomSpider!!.logType}")
-                    }
-                }
-                val medEff by vm.medicineEffectiveness.collectAsState()
-                val relEff by vm.reliefEffectiveness.collectAsState()
-                listOf(prodromeSpider, triggerSpider, medicineSpider, reliefSpider,
-                    locationSpider, activitySpider, missedActivitySpider).forEach { sp ->
-                    if (sp != null && sp.totalLogged > 0) {
-                        val eff = when (sp.logType) {
-                            "Medicines" -> if (medEff.isNotEmpty() && sp.axes.size >= 3) {
-                                val m = medEff.associate { it.category to it.avgRelief }
-                                sp.axes.map { SpiderAxis(it.label, m[it.label] ?: 0f, 3f) }
-                            } else null
-                            "Reliefs" -> if (relEff.isNotEmpty() && sp.axes.size >= 3) {
-                                val m = relEff.associate { it.category to it.avgRelief }
-                                sp.axes.map { SpiderAxis(it.label, m[it.label] ?: 0f, 3f) }
-                            } else null
-                            else -> null
+                val premiumState by PremiumManager.state.collectAsState()
+
+                // Trigger spider — free teaser
+                if (triggerSpider != null && triggerSpider!!.totalLogged > 0) {
+                    val medEff by vm.medicineEffectiveness.collectAsState()
+                    val relEff by vm.reliefEffectiveness.collectAsState()
+                    SpiderInsightCard(triggerSpider!!, {
+                        if (premiumState.isPremium) {
+                            navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${triggerSpider!!.logType}")
+                        } else {
+                            navController.navigate(Routes.PAYWALL)
                         }
-                        SpiderInsightCard(sp, {
-                            navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${sp.logType}")
-                        }, eff)
+                    })
+                }
+
+                // All other spiders — premium only
+                PremiumGate(
+                    message = "Unlock All Insights",
+                    subtitle = "Spider charts, symptom patterns, treatment effectiveness",
+                    onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        if (symptomSpider != null && symptomSpider!!.totalLogged > 0) {
+                            SymptomsInsightCard(ml) {
+                                navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${symptomSpider!!.logType}")
+                            }
+                        }
+                        val medEff by vm.medicineEffectiveness.collectAsState()
+                        val relEff by vm.reliefEffectiveness.collectAsState()
+                        listOf(prodromeSpider, medicineSpider, reliefSpider,
+                            locationSpider, activitySpider, missedActivitySpider).forEach { sp ->
+                            if (sp != null && sp.totalLogged > 0) {
+                                val eff = when (sp.logType) {
+                                    "Medicines" -> if (medEff.isNotEmpty() && sp.axes.size >= 3) {
+                                        val m = medEff.associate { it.category to it.avgRelief }
+                                        sp.axes.map { SpiderAxis(it.label, m[it.label] ?: 0f, 3f) }
+                                    } else null
+                                    "Reliefs" -> if (relEff.isNotEmpty() && sp.axes.size >= 3) {
+                                        val m = relEff.associate { it.category to it.avgRelief }
+                                        sp.axes.map { SpiderAxis(it.label, m[it.label] ?: 0f, 3f) }
+                                    } else null
+                                    else -> null
+                                }
+                                SpiderInsightCard(sp, {
+                                    navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${sp.logType}")
+                                }, eff)
+                            }
+                        }
                     }
                 }
             }
@@ -352,7 +404,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     }
 }
 
-// ═══════ Composable helpers ═══════
+// ======= Composable helpers =======
 
 @Composable
 private fun MigraineSelector(
@@ -381,10 +433,10 @@ private fun MigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "–"}/10",
+                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "—"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "–"}/10",
+                    Text("Severity: ${sel.severity ?: "—"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
@@ -412,7 +464,7 @@ private fun Chip(n: Int, label: String, color: Color) {
     }
 }
 
-// ═══════ Spider/Symptom cards ═══════
+// ======= Spider/Symptom cards =======
 
 @Composable
 private fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes: List<SpiderAxis>? = null) {
@@ -495,4 +547,6 @@ private fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
         }
     }
 }
+
+
 

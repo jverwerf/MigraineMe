@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -303,7 +305,17 @@ fun ThirdPartyConnectionsScreen(
     suspend fun tryCompleteWhoopIfCallbackPresent() {
         val prefs = context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
         val lastUri = prefs.getString("last_uri", null)
-        if (lastUri.isNullOrBlank() || lastProcessedUri.value == lastUri) return
+        if (lastUri.isNullOrBlank()) return
+
+        // If already connected, just refresh UI state and return
+        val existingToken = tokenStore.load()
+        if (existingToken != null) {
+            hasWhoop.value = true
+            return
+        }
+
+        // Only process if we haven't already processed this exact URI
+        if (lastProcessedUri.value == lastUri) return
         lastProcessedUri.value = lastUri
 
         val ok = withContext(Dispatchers.IO) { WhoopAuthService().completeAuth(context) }
@@ -327,6 +339,22 @@ fun ThirdPartyConnectionsScreen(
         }
     }
 
+    // Try completing WHOOP OAuth on first screen load (returning from OAuth redirect)
+    LaunchedEffect("whoop_initial_check") {
+        hasWhoop.value = tokenStore.load() != null
+        tryCompleteWhoopIfCallbackPresent()
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(1500)
+            lastProcessedUri.value = null
+            tryCompleteWhoopIfCallbackPresent()
+        }
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(2000)
+            lastProcessedUri.value = null
+            tryCompleteWhoopIfCallbackPresent()
+        }
+    }
+
     val resumeTick = remember { mutableStateOf(0) }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -337,7 +365,21 @@ fun ThirdPartyConnectionsScreen(
     }
 
     LaunchedEffect(resumeTick.value) {
+        // Always refresh hasWhoop from token store on resume
+        hasWhoop.value = tokenStore.load() != null
         tryCompleteWhoopIfCallbackPresent()
+        // Retry after delay — OAuth callback may not have written to prefs yet
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(1500)
+            lastProcessedUri.value = null  // Reset so retry actually processes
+            tryCompleteWhoopIfCallbackPresent()
+        }
+        // One more retry for slow connections
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(2000)
+            lastProcessedUri.value = null
+            tryCompleteWhoopIfCallbackPresent()
+        }
         runCatching { refreshHealthConnectPermissions() }
         runCatching { refreshMetricEnabledFlags() }
     }
@@ -455,23 +497,42 @@ fun ThirdPartyConnectionsScreen(
     }
 
     // UI
-    ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scroll)
-                .padding(horizontal = 16.dp)
-        ) {
-            // Spacer for background reveal
-            Spacer(Modifier.height(AppTheme.LogoRevealHeight))
-
-            // Connected Services section
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 16.dp)
+    ) {
+        // Connected Services section
             Text(
                 "Connected Services",
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            // Health Connect Row
+            Box(Modifier.spotlightTarget("health_connect_card")) {
+                ConnectionRow(
+                    logoResId = R.drawable.ic_health_connect,
+                    fallbackLetter = "H",
+                    title = "Health Connect",
+                    isConnected = anyHCConnected,
+                    warningText = if (anyHCConnected && !allHCConnected) "Some permissions missing. Tap to enable all." else null,
+                    onClick = {
+                        if (!healthConnectAvailable.value) {
+                            android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
+                            return@ConnectionRow
+                        }
+                        scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
+                    },
+                    onLongClick = {
+                        if (anyHCConnected) showHealthConnectDisconnectDialog.value = true
+                    }
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
 
             // WHOOP Row
             Box(Modifier.spotlightTarget("whoop_card")) {
@@ -495,32 +556,8 @@ fun ThirdPartyConnectionsScreen(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            // Health Connect Row
-            Box(Modifier.spotlightTarget("health_connect_card")) {
-                ConnectionRow(
-                    logoResId = R.drawable.ic_health_connect,
-                    fallbackLetter = "H",
-                    title = "Health Connect",
-                    isConnected = anyHCConnected,
-                    warningText = if (anyHCConnected && !allHCConnected) "Some permissions missing. Tap to enable all." else null,
-                    onClick = {
-                        if (!healthConnectAvailable.value) {
-                            android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
-                            return@ConnectionRow
-                        }
-                        scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
-                    },
-                    onLongClick = {
-                        if (anyHCConnected) showHealthConnectDisconnectDialog.value = true
-                    }
-                )
-            }
-
             Spacer(Modifier.height(32.dp))
         }
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -669,4 +706,6 @@ private fun ConnectionRow(
         }
     }
 }
+
+
 

@@ -1246,4 +1246,194 @@ class EdgeFunctionsService {
             client.close()
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Correlation Stats
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Serializable
+    data class CorrelationStat(
+        val id: String = "",
+        @SerialName("factor_name") val factorName: String = "",
+        @SerialName("factor_type") val factorType: String = "",   // trigger, metric, interaction
+        @SerialName("factor_b") val factorB: String? = null,
+        @SerialName("best_lag_days") val bestLagDays: Int = 0,
+        @SerialName("lift_ratio") val liftRatio: Float = 0f,
+        @SerialName("pct_migraine_windows") val pctMigraineWindows: Float = 0f,
+        @SerialName("pct_control_windows") val pctControlWindows: Float = 0f,
+        @SerialName("sample_size") val sampleSize: Int = 0,
+        @SerialName("p_value") val pValue: Float = 1f,
+        @SerialName("suggested_threshold") val suggestedThreshold: Float? = null,
+        @SerialName("current_threshold") val currentThreshold: Float? = null,
+        @SerialName("updated_at") val updatedAt: String = "",
+    ) {
+        /** Human-readable description of this finding */
+        fun toInsightText(): String = when (factorType) {
+            "trigger" -> {
+                val lagText = if (bestLagDays == 0) "on the same day"
+                    else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
+                "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your migraines ($lagText). " +
+                    "That's ${String.format("%.1f", liftRatio)}x more than normal days."
+            }
+            "metric" -> {
+                if (suggestedThreshold != null && currentThreshold != null &&
+                    kotlin.math.abs(suggestedThreshold - currentThreshold) > currentThreshold * 0.05f) {
+                    "Your migraine risk jumps when ${factorName.lowercase()} crosses " +
+                        "${fmtThreshold(suggestedThreshold, factorName)} — your current alert is set at " +
+                        "${fmtThreshold(currentThreshold, factorName)}."
+                } else if (suggestedThreshold != null) {
+                    "Your migraines cluster around ${factorName.lowercase()} of " +
+                        "${fmtThreshold(suggestedThreshold, factorName)} " +
+                        "(${String.format("%.1f", liftRatio)}x lift)."
+                } else {
+                    "${factorName} shows a ${String.format("%.1f", liftRatio)}x difference on pre-migraine days vs normal days."
+                }
+            }
+            "interaction" -> {
+                "${factorName} + ${factorB ?: "?"} together preceded " +
+                    "${pctMigraineWindows.toInt()}% of your migraines — " +
+                    "${String.format("%.1f", liftRatio)}x more likely than either alone."
+            }
+            else -> "${factorName}: ${String.format("%.1f", liftRatio)}x lift"
+        }
+
+        fun isSignificant(): Boolean = pValue < 0.1f && liftRatio > 1.3f
+
+        companion object {
+            fun fmtThreshold(value: Float, metricLabel: String): String {
+                val lower = metricLabel.lowercase()
+                return when {
+                    "sleep" in lower && "duration" in lower -> "${String.format("%.1f", value)}hrs"
+                    "hrv" in lower -> "${value.toInt()}ms"
+                    "pressure" in lower -> "${value.toInt()}hPa"
+                    "humidity" in lower -> "${value.toInt()}%"
+                    "temperature" in lower || "temp" in lower -> "${String.format("%.1f", value)}°C"
+                    "screen" in lower -> "${String.format("%.1f", value)}hrs"
+                    "recovery" in lower || "efficiency" in lower || "score" in lower -> "${value.toInt()}%"
+                    "stress" in lower -> "${value.toInt()}"
+                    "noise" in lower -> "${value.toInt()}%"
+                    "heart" in lower || "hr" in lower -> "${value.toInt()}bpm"
+                    else -> String.format("%.1f", value)
+                }
+            }
+        }
+    }
+
+    @Serializable
+    data class GaugeAccuracy(
+        @SerialName("true_positives") val truePositives: Int = 0,
+        @SerialName("false_positives") val falsePositives: Int = 0,
+        @SerialName("false_negatives") val falseNegatives: Int = 0,
+        @SerialName("true_negatives") val trueNegatives: Int = 0,
+        @SerialName("total_days") val totalDays: Int = 0,
+        @SerialName("sensitivity_pct") val sensitivityPct: Int = 0,
+        @SerialName("specificity_pct") val specificityPct: Int = 0,
+        @SerialName("false_alarm_rate_pct") val falseAlarmRatePct: Int = 0,
+        @SerialName("updated_at") val updatedAt: String = "",
+    ) {
+        fun catchRateText(): String = "Your gauge caught ${sensitivityPct}% of your migraines"
+        fun falseAlarmText(): String = "False alarm rate: ${falseAlarmRatePct}%"
+    }
+
+    /**
+     * Trigger the compute-correlation-stats edge function.
+     * Fire-and-forget — call after migraine save.
+     */
+    suspend fun triggerCorrelationCompute(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/compute-correlation-stats"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.w("EdgeFunctionsService", "triggerCorrelationCompute failed: ${res.status.value} ${res.bodyAsText()}")
+            } else {
+                Log.d("EdgeFunctionsService", "triggerCorrelationCompute success")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "triggerCorrelationCompute exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * Read top significant correlations from PostgREST.
+     */
+    suspend fun getTopCorrelations(context: Context, limit: Int = 10): List<CorrelationStat> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/correlation_stats" +
+                "?p_value=lt.0.1&lift_ratio=gt.1.3" +
+                "&order=lift_ratio.desc" +
+                "&limit=$limit" +
+                "&select=id,factor_name,factor_type,factor_b,best_lag_days,lift_ratio," +
+                "pct_migraine_windows,pct_control_windows,sample_size,p_value," +
+                "suggested_threshold,current_threshold,updated_at"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<List<CorrelationStat>>()
+            } else {
+                Log.w("EdgeFunctionsService", "getTopCorrelations failed: ${res.status.value}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getTopCorrelations exception", e)
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * Read gauge accuracy for current user.
+     */
+    suspend fun getGaugeAccuracy(context: Context): GaugeAccuracy? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/gauge_accuracy" +
+                "?select=*&limit=1"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Accept", "application/vnd.pgrst.object+json")
+            }
+
+            if (res.status.value in 200..299) {
+                res.body<GaugeAccuracy>()
+            } else {
+                Log.w("EdgeFunctionsService", "getGaugeAccuracy failed: ${res.status.value}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getGaugeAccuracy exception", e)
+            null
+        } finally {
+            client.close()
+        }
+    }
 }

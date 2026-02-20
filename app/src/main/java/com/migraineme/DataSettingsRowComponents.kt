@@ -3,15 +3,19 @@ package com.migraineme
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,16 +44,17 @@ fun WearableSourceSelector(
             onClick = { if (enabled && options.size > 1) expanded = true },
             enabled = enabled
         ) {
-            Text(selected.label, style = MaterialTheme.typography.bodySmall)
+            Text(selected.label, color = Color.White, style = MaterialTheme.typography.bodySmall)
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
         ) {
             options.forEach { opt ->
                 DropdownMenuItem(
-                    text = { Text(opt.label) },
+                    text = { Text(opt.label, color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(opt)
@@ -78,16 +83,17 @@ fun PhoneSourceSelector(
             onClick = { if (enabled && options.size > 1) expanded = true },
             enabled = enabled
         ) {
-            Text(selected.label, style = MaterialTheme.typography.bodySmall)
+            Text(selected.label, color = Color.White, style = MaterialTheme.typography.bodySmall)
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
         ) {
             options.forEach { opt ->
                 DropdownMenuItem(
-                    text = { Text(opt.label) },
+                    text = { Text(opt.label, color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(opt)
@@ -119,16 +125,17 @@ fun HybridSourceSelector(
             onClick = { if (enabled && options.size > 1) expanded = true },
             enabled = enabled
         ) {
-            Text(selectedLabel, style = MaterialTheme.typography.bodySmall)
+            Text(selectedLabel, color = Color.White, style = MaterialTheme.typography.bodySmall)
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
         ) {
             options.forEach { (key: String, label: String) ->
                 DropdownMenuItem(
-                    text = { Text(label) },
+                    text = { Text(label, color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(key)
@@ -165,6 +172,7 @@ fun PermissionSubRow(
         ) {
             Text(
                 label,
+                color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.alpha(0.75f)
             )
@@ -311,16 +319,16 @@ fun MenstruationDetailCard(
                     Text(
                         "Last Period",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AppTheme.SubtleTextColor
                     )
                     Text(
                         settings.lastMenstruationDate?.toString() ?: "Not set",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        color = AppTheme.AccentPurple
                     )
                 }
                 TextButton(onClick = onEdit) {
-                    Text("Edit")
+                    Text("Edit", color = AppTheme.AccentPurple)
                 }
             }
 
@@ -338,22 +346,22 @@ fun MenstruationDetailCard(
                     Text(
                         "Average Cycle",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AppTheme.SubtleTextColor
                     )
                     Text(
                         "${settings.avgCycleLength} days",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        color = AppTheme.AccentPurple
                     )
                     Text(
                         "Weighted average of last 6 cycles",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = AppTheme.SubtleTextColor,
                         modifier = Modifier.alpha(0.7f)
                     )
                 }
                 TextButton(onClick = onEdit) {
-                    Text("Edit")
+                    Text("Edit", color = AppTheme.AccentPurple)
                 }
             }
 
@@ -370,12 +378,13 @@ fun MenstruationDetailCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         "Auto-update average",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppTheme.BodyTextColor
                     )
                     Text(
                         "Recalculate when new periods logged",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = AppTheme.SubtleTextColor,
                         modifier = Modifier.alpha(0.7f)
                     )
                 }
@@ -393,7 +402,7 @@ fun MenstruationDetailCard(
                 Text(
                     "Next expected: $nextPeriod",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = AppTheme.AccentPurple
                 )
             }
         }
@@ -411,3 +420,139 @@ fun openAppSettings(context: android.content.Context) {
     }
     context.startActivity(intent)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notifications Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+fun NotificationsCard(
+    onRequestNotificationPermission: () -> Unit,
+    refreshTick: Int
+) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+
+    // Check notification permission (Android 13+)
+    val notificationPermissionGranted = remember(refreshTick) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                appContext,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Not needed pre-Android 13
+        }
+    }
+
+    // Check if evening check-in channel is enabled
+    val eveningCheckinEnabled = remember(refreshTick) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = appContext.getSystemService(android.content.Context.NOTIFICATION_SERVICE)
+                    as android.app.NotificationManager
+            val channel = nm.getNotificationChannel("evening_checkin")
+            channel == null || channel.importance != android.app.NotificationManager.IMPORTANCE_NONE
+        } else {
+            true
+        }
+    }
+
+    val providerColWidth = 120.dp
+    val toggleColWidth = 56.dp
+
+    HeroCard {
+        Text(
+            "Notifications",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+            )
+        )
+        Spacer(Modifier.height(12.dp))
+
+        // Evening check-in row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 10.dp)
+            ) {
+                Text(
+                    "Evening check-in",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "Daily reminder at 8pm to log your day",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Column(
+                modifier = Modifier.width(toggleColWidth),
+                horizontalAlignment = Alignment.End
+            ) {
+                Switch(
+                    checked = notificationPermissionGranted && eveningCheckinEnabled,
+                    onCheckedChange = { newValue ->
+                        if (newValue) {
+                            if (!notificationPermissionGranted) {
+                                onRequestNotificationPermission()
+                            } else if (!eveningCheckinEnabled) {
+                                // Channel disabled by user — open app notification settings
+                                openNotificationSettings(appContext)
+                            }
+                        } else {
+                            // Turn off — open notification settings so user can disable the channel
+                            openNotificationSettings(appContext)
+                        }
+                    }
+                )
+            }
+        }
+
+        // Permission sub-row (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Spacer(Modifier.height(4.dp))
+            PermissionSubRow(
+                label = "Notification permission",
+                isGranted = notificationPermissionGranted,
+                alpha = 1.0f,
+                providerColWidth = providerColWidth,
+                toggleColWidth = toggleColWidth,
+                onRequestPermission = onRequestNotificationPermission
+            )
+        }
+
+        // Channel warning
+        if (notificationPermissionGranted && !eveningCheckinEnabled) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
+
+private fun openNotificationSettings(context: android.content.Context) {
+    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+    } else {
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+    }
+    context.startActivity(intent)
+}
+

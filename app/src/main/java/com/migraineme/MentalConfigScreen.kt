@@ -69,7 +69,7 @@ fun MentalConfigScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
@@ -174,3 +174,4 @@ fun MentalConfigScreen(
         }
     }
 }
+

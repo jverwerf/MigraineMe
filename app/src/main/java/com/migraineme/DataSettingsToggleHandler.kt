@@ -126,7 +126,7 @@ object DataSettingsToggleHandler {
      * Check if permissions are granted for enabling a metric.
      * Returns null if all permissions are granted, or ToggleResult.NeedsPermission if not.
      */
-    private fun checkPermissionsForMetric(
+    private suspend fun checkPermissionsForMetric(
         context: Context,
         metric: String,
         preferredSource: String?
@@ -163,10 +163,9 @@ object DataSettingsToggleHandler {
                 }
             }
             metric == "nutrition" -> {
-                if (preferredSource == PhoneSource.HEALTH_CONNECT.key) {
-                    // Will be checked asynchronously by caller
-                    null
-                } else null
+                // HC nutrition permission is managed via Connections screen.
+                // If HC is connected, auto-enable handles the rest.
+                null
             }
             else -> null
         }
@@ -460,3 +459,4 @@ object DataSettingsToggleHandler {
         }
     }
 }
+

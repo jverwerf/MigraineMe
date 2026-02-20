@@ -8,9 +8,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +38,7 @@ import kotlinx.coroutines.withContext
  */
 @Composable
 fun DataSettingsScreen(
+    onBack: () -> Unit = {},
     onOpenMenstruationSettings: () -> Unit
 ) {
     val context = LocalContext.current
@@ -63,6 +68,10 @@ fun DataSettingsScreen(
     // ─────────────────────────────────────────────────────────────────────────
 
     val micPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { refreshTick++ }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { refreshTick++ }
 
@@ -111,6 +120,9 @@ fun DataSettingsScreen(
             state.refreshWearableConnections()
             state.refreshHealthConnectPermissions()
             state.autoEnableScreenTimeIfPermissionGranted()
+            state.autoEnableLocationIfPermissionGranted()
+            state.autoEnableAmbientNoiseIfPermissionGranted()
+            state.autoEnableNutritionIfHcPermissionGranted()
 
             // Sync workers and refresh if Supabase changed
             if (state.syncWorkers()) {
@@ -195,6 +207,8 @@ fun DataSettingsScreen(
                                 )
                                 handleToggleResult(
                                     result = result,
+                                    metric = metric,
+                                    state = state,
                                     activity = activity,
                                     appContext = appContext,
                                     micPermissionLauncher = micPermissionLauncher,
@@ -242,6 +256,28 @@ fun DataSettingsScreen(
                 }
             }
         }
+
+        // ── Notifications Card ──────────────────────────────────────────────
+        NotificationsCard(
+            onRequestNotificationPermission = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val askedBefore = hasAskedNotificationPermission(appContext)
+                    val canRationale = activity?.let {
+                        ActivityCompat.shouldShowRequestPermissionRationale(
+                            it, Manifest.permission.POST_NOTIFICATIONS
+                        )
+                    } ?: true
+
+                    if (askedBefore && !canRationale) {
+                        openAppSettings(appContext)
+                    } else {
+                        markAskedNotificationPermission(appContext)
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+            },
+            refreshTick = refreshTick
+        )
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -289,6 +325,8 @@ fun DataSettingsScreen(
 
 private fun handleToggleResult(
     result: DataSettingsToggleHandler.ToggleResult,
+    metric: String,
+    state: DataSettingsState,
     activity: Activity?,
     appContext: android.content.Context,
     micPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
@@ -299,6 +337,7 @@ private fun handleToggleResult(
     when (result) {
         is DataSettingsToggleHandler.ToggleResult.Success -> { /* UI will refresh */ }
         is DataSettingsToggleHandler.ToggleResult.NeedsPermission -> {
+            state.markPendingEnable(metric)
             when (result.permissionType) {
                 DataSettingsToggleHandler.PermissionType.SCREEN_TIME -> onShowScreenTimeDialog()
                 DataSettingsToggleHandler.PermissionType.LOCATION -> {
@@ -356,5 +395,17 @@ private fun requestLocationPermission(
             )
         )
     }
+}
+
+private fun hasAskedNotificationPermission(context: android.content.Context): Boolean {
+    return context.getSharedPreferences("data_settings", android.content.Context.MODE_PRIVATE)
+        .getBoolean("notification_permission_asked", false)
+}
+
+private fun markAskedNotificationPermission(context: android.content.Context) {
+    context.getSharedPreferences("data_settings", android.content.Context.MODE_PRIVATE)
+        .edit()
+        .putBoolean("notification_permission_asked", true)
+        .apply()
 }
 

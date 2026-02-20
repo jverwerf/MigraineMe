@@ -140,7 +140,7 @@ fun ManagePoolScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Close bar — check for unsaved changes
             Row(
@@ -785,3 +785,4 @@ private fun formatThresholdForDisplay(value: Double, unit: String?): String {
         else -> String.format("%.1f", value)
     }
 }
+

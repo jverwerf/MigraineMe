@@ -25,7 +25,8 @@ fun DataSection(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = AppTheme.TitleColor
             )
             Spacer(Modifier.height(10.dp))
             content()
@@ -54,6 +55,7 @@ fun MetricToggle(
     ) {
         Text(
             text = label,
+            color = AppTheme.BodyTextColor,
             modifier = Modifier.weight(1f)
         )
         Switch(
@@ -76,7 +78,7 @@ fun MenstruationSection(
 ) {
     if (settings == null || settings.lastMenstruationDate == null) {
         TextButton(onClick = onSetup) {
-            Text("Set up menstruation tracking")
+            Text("Set up menstruation tracking", color = AppTheme.AccentPurple)
         }
     } else {
         Row(
@@ -87,22 +89,24 @@ fun MenstruationSection(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "Menstruation",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppTheme.BodyTextColor
                 )
                 Text(
                     "Last: ${settings.lastMenstruationDate}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = AppTheme.SubtleTextColor
                 )
                 Text(
                     "Cycle: ${settings.avgCycleLength} days",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = AppTheme.SubtleTextColor
                 )
             }
             TextButton(onClick = onEdit) {
-                Text("Edit")
+                Text("Edit", color = AppTheme.AccentPurple)
             }
         }
     }
 }
+

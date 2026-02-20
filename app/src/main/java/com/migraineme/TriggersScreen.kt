@@ -192,7 +192,7 @@ fun TriggersScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -515,6 +515,7 @@ private fun formatTriggerTime(iso: String?): String {
         "Not set"
     }
 }
+
 
 
 

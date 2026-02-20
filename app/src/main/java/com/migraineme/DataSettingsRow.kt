@@ -10,8 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 /**
  * Individual data settings row component.
@@ -55,23 +58,33 @@ fun DataSettingsRow(
     val isMenstruationRow = row.table == "menstruation" && row.collectedByKind == CollectedByKind.PHONE
     val isStressRow = row.table == "stress_index_daily"
 
-    // Permission states
-    val screenTimePermissionGranted = remember(metricSettings) {
+    // Permission states — refresh on lifecycle resume so granting permission is reflected immediately
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var permissionTick by remember { mutableIntStateOf(0) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) permissionTick++
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val screenTimePermissionGranted = remember(permissionTick) {
         if (isScreenTimeRow || isLateNightScreenTimeRow) DataSettingsPermissionHelper.hasScreenTimePermission(appContext) else true
     }
-    val usageStatsPermissionGranted = remember(metricSettings) {
+    val usageStatsPermissionGranted = remember(permissionTick) {
         if (isPhoneOrWearableRow) DataSettingsPermissionHelper.hasScreenTimePermission(appContext) else true
     }
-    val locationPermissionGranted = remember(metricSettings) {
+    val locationPermissionGranted = remember(permissionTick) {
         DataSettingsPermissionHelper.hasLocationPermission(appContext)
     }
-    val backgroundLocationGranted = remember(metricSettings) {
+    val backgroundLocationGranted = remember(permissionTick) {
         DataSettingsPermissionHelper.hasBackgroundLocationPermission(appContext)
     }
-    val micPermissionGranted = remember(metricSettings) {
+    val micPermissionGranted = remember(permissionTick) {
         if (isAmbientNoiseRow) DataSettingsPermissionHelper.hasMicrophonePermission(appContext) else true
     }
-    val batteryOptimizationExempt = remember(metricSettings) {
+    val batteryOptimizationExempt = remember(permissionTick) {
         if (isAmbientNoiseRow) DataSettingsPermissionHelper.isBatteryOptimizationExempt(appContext) else true
     }
 
@@ -504,3 +517,6 @@ private fun getDefaultEnabled(row: DataRow): Boolean {
         else -> defaultActiveFor(row)
     }
 }
+
+
+

@@ -222,25 +222,9 @@ fun RiskWeightsScreen(
 
     // ── UI ──
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Top bar
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-                }
-                Text(
-                    "Risk Model",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Spacer(Modifier.size(48.dp))
-            }
-
             if (loading) {
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = AppTheme.AccentPurple)
@@ -511,4 +495,6 @@ private fun fmt(v: Double): String {
     return if (v == v.toLong().toDouble()) v.toLong().toString()
     else v.toBigDecimal().stripTrailingZeros().toPlainString()
 }
+
+
 

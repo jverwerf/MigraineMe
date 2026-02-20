@@ -1,0 +1,287 @@
+// supabase/functions/daily-9am-sync/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+type ResolveRow = {
+  city_id: number | null;  // UPDATED: Now nullable
+  timezone: string | null;
+  resolved_date?: string | null;
+};
+
+type MetricSettingRow = {
+  user_id: string;
+  metric: string;
+  enabled: boolean;
+  preferred_source: string | null;
+  allowed_sources: string[] | null;
+};
+
+type SyncJobInsert = {
+  job_type: string;
+  user_id: string;
+  local_date: string;
+  status: string;
+  updated_at: string;
+  created_by: string;
+  timezone: string;
+  city_id: number | null;
+  attempts?: number;
+  locked_at?: string | null;
+  last_error?: string | null;
+};
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function addDaysIsoDate(isoDate: string, deltaDays: number): string {
+  const [y, m, d] = isoDate.split("-").map((x) => Number(x));
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+function getLocalTimeParts(timeZone: string, now = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = fmt.formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  if (!year || !month || !day || !hour || !minute) {
+    throw new Error(`Failed to compute local time parts for timezone=${timeZone}`);
+  }
+
+  const localDate = `${year}-${month}-${day}`;
+  const hh = Number(hour);
+  const mm = Number(minute);
+
+  return { localDate, hh, mm };
+}
+
+async function resolveWithDateFallback(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  utcIsoDate: string,
+): Promise<{ row: ResolveRow | null; usedDate: string | null }> {
+  const candidates = [addDaysIsoDate(utcIsoDate, -1), utcIsoDate, addDaysIsoDate(utcIsoDate, +1)];
+
+  for (const d of candidates) {
+    // Direct query to user_location_daily - no RPC needed!
+    const { data, error } = await supabase
+      .from("user_location_daily")
+      .select("timezone, date")
+      .eq("user_id", userId)
+      .eq("date", d)
+      .not("timezone", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`user_location_daily query failed for date=${d}: ${error.message}`);
+    }
+
+    if (data?.timezone) {
+      const row: ResolveRow = {
+        city_id: null,  // No longer needed
+        timezone: data.timezone,
+        resolved_date: data.date
+      };
+      return { row, usedDate: data.date };
+    }
+  }
+
+  return { row: null, usedDate: null };
+}
+
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, idx: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i], i);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+serve(async (req) => {
+  console.log("[daily-9am-sync] dispatcher_start", {
+    nowUtc: new Date().toISOString(),
+    method: req.method,
+    url: req.url,
+  });
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "daily-9am-sync-dispatcher" } },
+    });
+
+    const nowUtc = new Date();
+    const nowIso = nowUtc.toISOString();
+    const utcDate = nowIso.slice(0, 10);
+
+    // Users to check: anyone with at least one enabled metric row
+    const { data: userRows, error: userErr } = await supabase
+      .from("metric_settings")
+      .select("user_id")
+      .eq("enabled", true);
+
+    if (userErr) throw new Error(`metric_settings query failed: ${userErr.message}`);
+
+    const userIds = Array.from(new Set((userRows ?? []).map((r: any) => String(r.user_id)))).filter(Boolean);
+
+    const perUser = await mapLimit(userIds, 12, async (userId) => {
+      // Resolve timezone so we enqueue with correct local_date
+      let resolved: ResolveRow | null = null;
+      let usedResolveDate: string | null = null;
+
+      try {
+        const out = await resolveWithDateFallback(supabase, userId, utcDate);
+        resolved = out.row;
+        usedResolveDate = out.usedDate;
+      } catch (e) {
+        return { userId, status: "resolver_error", error: (e as Error).message };
+      }
+
+      if (!resolved?.timezone) {
+        return { userId, status: "no_timezone" };
+      }
+
+      const tz = resolved.timezone;
+      const cityId = typeof resolved.city_id === "number" ? resolved.city_id : null;
+
+      const { localDate } = getLocalTimeParts(tz, nowUtc);
+
+      // Fetch enabled metrics and decide which job types are needed
+      const { data: metrics, error: metErr } = await supabase
+        .from("metric_settings")
+        .select("user_id,metric,enabled,preferred_source,allowed_sources")
+        .eq("user_id", userId)
+        .eq("enabled", true);
+
+      if (metErr) {
+        return { userId, status: "metrics_error", error: metErr.message, timezone: tz, localDate };
+      }
+
+      const enabledMetrics = (metrics ?? []) as MetricSettingRow[];
+
+      const whoopNeeded = enabledMetrics.some((m) => {
+        const pref = (m.preferred_source ?? "").toLowerCase();
+        const allowed = (m.allowed_sources ?? []).map((s) => String(s).toLowerCase());
+        return pref === "whoop" || allowed.includes("whoop");
+      });
+
+      const jobs: SyncJobInsert[] = [];
+      if (whoopNeeded) {
+        jobs.push({
+          job_type: "whoop_daily",
+          user_id: userId,
+          local_date: localDate,
+          status: "queued",
+          updated_at: nowIso,
+          created_by: "daily-9am",
+          timezone: tz,
+          city_id: cityId,
+          // Self-heal stuck jobs (e.g. attempts hit cap, or timezone null)
+          attempts: 0,
+          locked_at: null,
+          last_error: null,
+        });
+      }
+
+      if (!jobs.length) {
+        return {
+          userId,
+          status: "no_jobs_needed",
+          timezone: tz,
+          localDate,
+          usedResolveDate,
+        };
+      }
+
+      // IMPORTANT: do NOT ignoreDuplicates here; we want to "repair" existing rows for today
+      const { error: insErr } = await supabase
+        .from("sync_jobs")
+        .upsert(jobs, { onConflict: "job_type,user_id,local_date" });
+
+      if (insErr) {
+        return {
+          userId,
+          status: "enqueue_error",
+          error: insErr.message,
+          timezone: tz,
+          localDate,
+          usedResolveDate,
+        };
+      }
+
+      return {
+        userId,
+        status: "enqueued",
+        timezone: tz,
+        localDate,
+        usedResolveDate,
+        enqueued: jobs.map((j) => j.job_type),
+      };
+    });
+
+    const summary = {
+      checkedUsers: userIds.length,
+      enqueuedUsers: perUser.filter((r: any) => r.status === "enqueued").length,
+      noJobsNeeded: perUser.filter((r: any) => r.status === "no_jobs_needed").length,
+      noTimezone: perUser.filter((r: any) => r.status === "no_timezone").length,
+      errors: perUser.filter((r: any) => String(r.status).includes("error")).length,
+      nowUtc: nowIso,
+    };
+
+    console.log("[daily-9am-sync] dispatcher_done", { summary });
+
+    return jsonResponse({ ok: true, summary, results: perUser });
+  } catch (e) {
+    console.log("[daily-9am-sync] dispatcher_error", { error: (e as Error).message });
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});

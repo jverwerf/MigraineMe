@@ -71,7 +71,7 @@ fun LocationsScreen(
     val grouped = remember(pool) { pool.groupBy { it.category ?: "Other" }.toSortedMap() }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
@@ -218,4 +218,5 @@ private fun formatLocTime(iso: String?): String {
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
     } catch (_: Exception) { "Not set" }
 }
+
 

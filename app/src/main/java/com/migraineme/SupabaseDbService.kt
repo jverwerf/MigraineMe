@@ -35,7 +35,7 @@ class SupabaseDbService(
 
     private fun HttpStatusCode.isSuccess(): Boolean = value in 200..299
 
-    // ───────── MIGRAINES ─────────
+    //  MIGRAINES 
     @Serializable
     data class MigraineRow(
         val id: String,
@@ -250,7 +250,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete migraine failed: ${response.bodyAsText()}")
     }
 
-    // ───────── TRIGGERS ─────────
+    //  TRIGGERS 
     @Serializable
     data class TriggerRow(
         val id: String,
@@ -280,6 +280,7 @@ class SupabaseDbService(
     ): TriggerRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         val payload = TriggerInsert(type, safeStart, notes, migraineId)
+        // Try normal insert first
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -288,8 +289,38 @@ class SupabaseDbService(
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        if (!response.status.isSuccess()) error("Insert trigger failed: ${response.bodyAsText()}")
-        return response.body()
+        if (response.status.isSuccess()) return response.body()
+
+        // If duplicate key (23505), find existing and update only migraine_id
+        val errBody = response.bodyAsText()
+        if ("23505" in errBody && migraineId != null) {
+            // Find the existing trigger by user+time+type
+            val existing: List<TriggerRow> = client.get("$supabaseUrl/rest/v1/triggers") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("type", "eq.$type")
+                parameter("start_at", "eq.$safeStart")
+                parameter("select", "*")
+            }.body()
+            val match = existing.firstOrNull() ?: error("Insert trigger failed: $errBody")
+            // PATCH only migraine_id (preserves source, active, etc.)
+            val patchPayload = buildJsonObject {
+                put("migraine_id", migraineId)
+                notes?.let { put("notes", it) }
+            }
+            val patchResp = client.patch("$supabaseUrl/rest/v1/triggers") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("id", "eq.${match.id}")
+                header("Prefer", "return=representation")
+                header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+                contentType(ContentType.Application.Json)
+                setBody(patchPayload)
+            }
+            if (!patchResp.status.isSuccess()) error("Update trigger failed: ${patchResp.bodyAsText()}")
+            return patchResp.body()
+        }
+        error("Insert trigger failed: $errBody")
     }
 
     /** Lightweight row for recent trigger queries. */
@@ -370,7 +401,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete trigger failed: ${response.bodyAsText()}")
     }
 
-    // ───────── MEDICINES ─────────
+    //  MEDICINES 
     @Serializable
     data class MedicineRow(
         val id: String,
@@ -471,7 +502,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete medicine failed: ${response.bodyAsText()}")
     }
 
-    // ───────── RELIEFS ─────────
+    //  RELIEFS 
     @Serializable
     data class ReliefRow(
         val id: String,
@@ -573,7 +604,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete relief failed: ${response.bodyAsText()}")
     }
 
-    // ───────── TRIGGER POOL / PREFS ─────────
+    //  TRIGGER POOL / PREFS 
     @Serializable data class UserTriggerRow(
         val id: String,
         val label: String,
@@ -697,7 +728,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete trigger pref failed: ${response.bodyAsText()}")
     }
 
-    // ───────── MEDICINE POOL / PREFS ─────────
+    //  MEDICINE POOL / PREFS 
     @Serializable data class UserMedicineRow(val id: String, val label: String, val category: String? = null)
     @Serializable
     data class MedicinePrefRow(
@@ -791,7 +822,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete medicine pref failed: ${response.bodyAsText()}")
     }
 
-    // ───────── RELIEF POOL / PREFS ─────────
+    //  RELIEF POOL / PREFS 
     @Serializable data class UserReliefRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class ReliefPrefRow(
@@ -894,7 +925,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete relief pref failed: ${response.bodyAsText()}")
     }
 
-    // ───────── MIGRAINE POOL / PREFS ─────────
+    //  MIGRAINE POOL / PREFS 
     @Serializable data class UserMigrainePoolRow(val id: String, val label: String)
     @Serializable
     data class MigrainePrefRow(
@@ -979,7 +1010,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete migraine pref failed: ${response.bodyAsText()}")
     }
 
-    // ───────── WEATHER DAILY ─────────
+    //  WEATHER DAILY 
     @Serializable
     data class WeatherDailyRow(
         val id: String,
@@ -1002,7 +1033,7 @@ class SupabaseDbService(
         return response.body()
     }
 
-    // ───────── SYMPTOM POOL ─────────
+    //  SYMPTOM POOL 
     @Serializable data class UserSymptomRow(
         val id: String,
         val label: String,
@@ -1083,7 +1114,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete symptom pref failed: ${response.bodyAsText()}")
     }
 
-    // ───────── PRODROME POOL ─────────
+    //  PRODROME POOL 
     @Serializable data class UserProdromeRow(
         val id: String,
         val label: String,
@@ -1193,7 +1224,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete prodrome pref failed: ${response.bodyAsText()}")
     }
 
-    // ───────── PRODROME LOG ─────────
+    //  PRODROME LOG 
     @Serializable private data class ProdromeLogInsert(
         val type: String?,
         @SerialName("start_at") val startAt: String,
@@ -1281,7 +1312,7 @@ class SupabaseDbService(
         }
     }
 
-    // ───────── LOCATION POOL / PREFS ─────────
+    //  LOCATION POOL / PREFS 
     @Serializable data class UserLocationRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class LocationPrefRow(
@@ -1369,7 +1400,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete location_pref failed: ${response.bodyAsText()}")
     }
 
-    // ── Location log ──
+    //  Location log 
     @Serializable
     data class LocationLogRow(
         val id: String,
@@ -1441,7 +1472,7 @@ class SupabaseDbService(
         }
     }
 
-    // ───────── ACTIVITY POOL / PREFS ─────────
+    //  ACTIVITY POOL / PREFS 
     @Serializable data class UserActivityRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class ActivityPrefRow(
@@ -1529,7 +1560,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete activity_pref failed: ${response.bodyAsText()}")
     }
 
-    // ── Activity log (writes to time_in_high_hr_zones_daily) ──
+    //  Activity log (writes to time_in_high_hr_zones_daily) 
     @Serializable
     data class ActivityLogRow(
         val id: String,
@@ -1644,7 +1675,7 @@ class SupabaseDbService(
         }
     }
 
-    // ───────── MISSED ACTIVITY POOL / PREFS ─────────
+    //  MISSED ACTIVITY POOL / PREFS 
     @Serializable data class UserMissedActivityRow(val id: String, val label: String, val category: String? = null, @SerialName("icon_key") val iconKey: String? = null, @SerialName("is_automatable") val isAutomatable: Boolean = false, @SerialName("is_automated") val isAutomated: Boolean = false)
     @Serializable
     data class MissedActivityPrefRow(
@@ -1732,7 +1763,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete missed_activity_pref failed: ${response.bodyAsText()}")
     }
 
-    // ── Missed Activity log ──
+    //  Missed Activity log 
     @Serializable
     data class MissedActivityLogRow(
         val id: String,
@@ -1804,9 +1835,9 @@ class SupabaseDbService(
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // Risk Score — Live + Daily
-    // ─────────────────────────────────────────────────────────────────
+    // 
+    // Risk Score – Live + Daily
+    // 
 
     @Serializable
     data class RiskScoreLiveRow(
@@ -1815,9 +1846,9 @@ class SupabaseDbService(
         val score: Double,
         val zone: String,
         val percent: Int,
-        @SerialName("top_triggers") val topTriggers: String? = null,   // jsonb → raw string
-        val forecast: String? = null,                                   // jsonb → raw string
-        @SerialName("day_risks") val dayRisks: String? = null,          // jsonb → raw string
+        @SerialName("top_triggers") val topTriggers: String? = null,   // jsonb -> raw string
+        val forecast: String? = null,                                   // jsonb -> raw string
+        @SerialName("day_risks") val dayRisks: String? = null,          // jsonb -> raw string
         @SerialName("updated_at") val updatedAt: String? = null,
     )
 
@@ -1883,6 +1914,7 @@ class SupabaseDbService(
         return response.body()
     }
 }
+
 
 
 

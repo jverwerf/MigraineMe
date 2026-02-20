@@ -131,7 +131,7 @@ fun PainLocationScreen(
     fun syncToDraft() { vm.setPainLocationsDraft(selected.toList()) }
 
     ScrollFadeContainer(scrollState = scroll) { scrollState ->
-        ScrollableScreenContent(scrollState = scrollState, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scrollState, logoRevealHeight = 0.dp) {
 
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -426,3 +426,4 @@ private fun PainPointOverlay(
         }
     }
 }
+

@@ -17,7 +17,7 @@ class USDAEnrichmentService {
 
     companion object {
         private const val TAG = "USDAEnrichment"
-        private const val API_KEY = BuildConfig.USDA_API_KEY
+        private val API_KEY = BuildConfig.USDA_API_KEY
         private const val BASE_URL = "https://api.nal.usda.gov/fdc/v1"
     }
 
@@ -233,3 +233,4 @@ data class USDANutrient(
     val name: String,
     val unitName: String
 )
+

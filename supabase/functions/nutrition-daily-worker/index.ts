@@ -1,0 +1,482 @@
+// FILE: supabase/functions/nutrition-daily-worker/index.ts
+//
+// Worker that processes jobs from sync_jobs_nutrition.
+// Reads nutrition_records for a user/date window, aggregates them,
+// and upserts to nutrition_daily.
+//
+// Pattern copied from noise-index-worker
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+type SyncJobRow = {
+  id: string | number;
+  user_id: string;
+  local_date: string;
+  timezone: string;
+  status: string;
+  attempts: number;
+  locked_at: string | null;
+};
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+function parseGmtOffsetToMinutes(gmt: string): number | null {
+  const raw = (gmt ?? "").trim().toUpperCase();
+  if (raw === "GMT" || raw === "UTC" || raw === "UT") return 0;
+
+  const m = raw.match(/(?:GMT|UTC)?\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/);
+  if (!m) return null;
+
+  const sign = m[1] === "-" ? -1 : 1;
+  const hh = Number(m[2]);
+  const mm = m[3] ? Number(m[3]) : 0;
+  return sign * (hh * 60 + mm);
+}
+
+function getOffsetMinutesForInstant(timeZone: string, instant: Date): number {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "shortOffset",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(instant);
+  const tzPart = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+  const mins = parseGmtOffsetToMinutes(tzPart);
+  if (mins == null) throw new Error(`Could not parse timezone offset "${tzPart}" for tz=${timeZone}`);
+  return mins;
+}
+
+function localDateTimeToUtcIso(
+  timeZone: string,
+  y: number,
+  m: number,
+  d: number,
+  hh: number,
+  mm: number,
+  ss: number,
+): string {
+  const baseUtc = Date.UTC(y, m - 1, d, hh, mm, ss);
+  let guess = baseUtc;
+
+  // converge offset for DST transitions
+  for (let i = 0; i < 3; i++) {
+    const offsetMin = getOffsetMinutesForInstant(timeZone, new Date(guess));
+    guess = baseUtc - offsetMin * 60_000;
+  }
+
+  return new Date(guess).toISOString();
+}
+
+function numOrNull(v: unknown): number | null {
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : null;
+}
+
+serve(async (req) => {
+  console.log("[nutrition-daily-worker] start", { nowUtc: new Date().toISOString(), method: req.method, url: req.url });
+
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    const supabaseUrl = requireEnv("SUPABASE_URL");
+    const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+      global: { headers: { "X-Client-Info": "nutrition-daily-worker" } },
+    });
+
+    const nowUtc = new Date();
+    const nowIso = nowUtc.toISOString();
+    const staleCutoffIso = new Date(nowUtc.getTime() - 30 * 60_000).toISOString();
+
+    // Pick nutrition jobs
+    const { data: jobs, error: jobsErr } = await supabase
+      .from("sync_jobs_nutrition")
+      .select("id,user_id,local_date,timezone,status,attempts,locked_at")
+      .or(`status.eq.queued,status.eq.running.and(locked_at.lt.${staleCutoffIso})`)
+      .order("local_date", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    if (jobsErr) throw new Error(`sync_jobs_nutrition select failed: ${jobsErr.message}`);
+
+    const picked = (jobs ?? []) as SyncJobRow[];
+    if (!picked.length) {
+      return jsonResponse({ ok: true, summary: { picked: 0, nowUtc: nowIso } });
+    }
+
+    async function lockJob(job: SyncJobRow): Promise<boolean> {
+      const lockIso = new Date().toISOString();
+
+      if (job.status === "queued") {
+        const { data, error } = await supabase
+          .from("sync_jobs_nutrition")
+          .update({ status: "running", locked_at: lockIso, updated_at: lockIso, last_error: null })
+          .eq("id", job.id)
+          .eq("status", "queued")
+          .select("id")
+          .maybeSingle();
+
+        if (error) return false;
+        return Boolean(data);
+      }
+
+      const { data, error } = await supabase
+        .from("sync_jobs_nutrition")
+        .update({ status: "running", locked_at: lockIso, updated_at: lockIso })
+        .eq("id", job.id)
+        .eq("status", "running")
+        .lt("locked_at", staleCutoffIso)
+        .select("id")
+        .maybeSingle();
+
+      if (error) return false;
+      return Boolean(data);
+    }
+
+    async function bumpAttempts(jobId: string | number): Promise<number> {
+      const { data: row, error: selErr } = await supabase.from("sync_jobs_nutrition").select("attempts").eq("id", jobId).maybeSingle();
+      if (selErr) throw new Error(`bump_attempts_select_failed: ${selErr.message}`);
+
+      const current = typeof (row as any)?.attempts === "number" ? (row as any).attempts : 0;
+      const next = current + 1;
+
+      const { error: updErr } = await supabase
+        .from("sync_jobs_nutrition")
+        .update({ attempts: next, updated_at: new Date().toISOString() })
+        .eq("id", jobId);
+
+      if (updErr) throw new Error(`bump_attempts_update_failed: ${updErr.message}`);
+
+      return next;
+    }
+
+    async function markJobDone(jobId: string | number) {
+      const endIso = new Date().toISOString();
+      await supabase.from("sync_jobs_nutrition").update({ status: "done", finished_at: endIso, updated_at: endIso, locked_at: null }).eq("id", jobId);
+    }
+
+    async function markJobError(jobId: string | number, errMsg: string) {
+      const endIso = new Date().toISOString();
+      await supabase
+        .from("sync_jobs_nutrition")
+        .update({ status: "error", last_error: errMsg, finished_at: endIso, updated_at: endIso, locked_at: null })
+        .eq("id", jobId);
+    }
+
+    async function process(job: SyncJobRow) {
+      const locked = await lockJob(job);
+      if (!locked) return { jobId: job.id, status: "skipped_lock_race" };
+
+      const userId = String(job.user_id);
+      const jobLocalDate = String(job.local_date);
+      const tz = job.timezone;
+
+      try {
+        await bumpAttempts(job.id);
+
+        if (!tz) {
+          await markJobError(job.id, "no_timezone");
+          return { jobId: job.id, userId, date: jobLocalDate, status: "no_timezone" };
+        }
+
+        // 24h window: midnight to midnight local time for the given date
+        const [y, m, d] = jobLocalDate.split("-").map((x) => Number(x));
+        const windowStartUtcIso = localDateTimeToUtcIso(tz, y, m, d, 0, 0, 0);
+        const windowEndUtcIso = localDateTimeToUtcIso(tz, y, m, d, 23, 59, 59);
+
+        // Pull nutrition records in window
+        const { data: rows, error } = await supabase
+          .from("nutrition_records")
+          .select(`
+            id, timestamp, meal_type,
+            calories, protein, total_carbohydrate, total_fat,
+            dietary_fiber, sugar, saturated_fat, unsaturated_fat,
+            monounsaturated_fat, polyunsaturated_fat, trans_fat, cholesterol,
+            calcium, chloride, chromium, copper, iodine, iron,
+            magnesium, manganese, molybdenum, phosphorus, potassium,
+            selenium, sodium, zinc,
+            vitamin_a, vitamin_b6, vitamin_b12, vitamin_c, vitamin_d,
+            vitamin_e, vitamin_k, biotin, folate, folic_acid,
+            niacin, pantothenic_acid, riboflavin, thiamin,
+            caffeine,
+            tyramine_exposure, alcohol_exposure, gluten_exposure
+          `)
+          .eq("user_id", userId)
+          .gte("timestamp", windowStartUtcIso)
+          .lte("timestamp", windowEndUtcIso)
+          .order("timestamp", { ascending: true });
+
+        if (error) throw new Error(`nutrition_records query failed: ${error.message}`);
+
+        const records = (rows ?? []) as any[];
+
+        // Aggregate values - initialize all totals
+        const totals = {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          fiber: 0,
+          sugar: 0,
+          saturatedFat: 0,
+          unsaturatedFat: 0,
+          monounsaturatedFat: 0,
+          polyunsaturatedFat: 0,
+          transFat: 0,
+          cholesterol: 0,
+          // Minerals
+          calcium: 0,
+          chloride: 0,
+          chromium: 0,
+          copper: 0,
+          iodine: 0,
+          iron: 0,
+          magnesium: 0,
+          manganese: 0,
+          molybdenum: 0,
+          phosphorus: 0,
+          potassium: 0,
+          selenium: 0,
+          sodium: 0,
+          zinc: 0,
+          // Vitamins
+          vitaminA: 0,
+          vitaminB6: 0,
+          vitaminB12: 0,
+          vitaminC: 0,
+          vitaminD: 0,
+          vitaminE: 0,
+          vitaminK: 0,
+          biotin: 0,
+          folate: 0,
+          folicAcid: 0,
+          niacin: 0,
+          pantothenicAcid: 0,
+          riboflavin: 0,
+          thiamin: 0,
+          // Other
+          caffeine: 0,
+        };
+
+        const mealTypes = new Set<string>();
+        let recordCount = 0;
+
+        // Risk exposure tracking: keep MAX severity per day
+        // "none" < "low" < "medium" < "high"
+        const RISK_RANK: Record<string, number> = { none: 0, low: 1, medium: 2, high: 3 };
+        let maxTyramine = "none";
+        let maxAlcohol = "none";
+        let maxGluten = "none";
+        const riskMax = (current: string, incoming: unknown): string => {
+          const val = typeof incoming === "string" ? incoming.toLowerCase() : "none";
+          return (RISK_RANK[val] ?? 0) > (RISK_RANK[current] ?? 0) ? val : current;
+        };
+
+        for (const r of records) {
+          recordCount++;
+
+          // Helper to add to total
+          const add = (key: keyof typeof totals, val: unknown) => {
+            const n = numOrNull(val);
+            if (n != null) totals[key] += n;
+          };
+
+          // Macros
+          add("calories", r?.calories);
+          add("protein", r?.protein);
+          add("carbs", r?.total_carbohydrate);
+          add("fat", r?.total_fat);
+          add("fiber", r?.dietary_fiber);
+          add("sugar", r?.sugar);
+          add("saturatedFat", r?.saturated_fat);
+          add("unsaturatedFat", r?.unsaturated_fat);
+          add("monounsaturatedFat", r?.monounsaturated_fat);
+          add("polyunsaturatedFat", r?.polyunsaturated_fat);
+          add("transFat", r?.trans_fat);
+          add("cholesterol", r?.cholesterol);
+
+          // Minerals
+          add("calcium", r?.calcium);
+          add("chloride", r?.chloride);
+          add("chromium", r?.chromium);
+          add("copper", r?.copper);
+          add("iodine", r?.iodine);
+          add("iron", r?.iron);
+          add("magnesium", r?.magnesium);
+          add("manganese", r?.manganese);
+          add("molybdenum", r?.molybdenum);
+          add("phosphorus", r?.phosphorus);
+          add("potassium", r?.potassium);
+          add("selenium", r?.selenium);
+          add("sodium", r?.sodium);
+          add("zinc", r?.zinc);
+
+          // Vitamins
+          add("vitaminA", r?.vitamin_a);
+          add("vitaminB6", r?.vitamin_b6);
+          add("vitaminB12", r?.vitamin_b12);
+          add("vitaminC", r?.vitamin_c);
+          add("vitaminD", r?.vitamin_d);
+          add("vitaminE", r?.vitamin_e);
+          add("vitaminK", r?.vitamin_k);
+          add("biotin", r?.biotin);
+          add("folate", r?.folate);
+          add("folicAcid", r?.folic_acid);
+          add("niacin", r?.niacin);
+          add("pantothenicAcid", r?.pantothenic_acid);
+          add("riboflavin", r?.riboflavin);
+          add("thiamin", r?.thiamin);
+
+          // Other
+          add("caffeine", r?.caffeine);
+
+          // Risk exposures — track MAX severity
+          maxTyramine = riskMax(maxTyramine, r?.tyramine_exposure);
+          maxAlcohol = riskMax(maxAlcohol, r?.alcohol_exposure);
+          maxGluten = riskMax(maxGluten, r?.gluten_exposure);
+
+          const mealType = r?.meal_type;
+          if (mealType && mealType !== "unknown") mealTypes.add(mealType);
+        }
+
+        const mealCount = mealTypes.size;
+        const computedAt = new Date().toISOString();
+
+        // Helper: return value or null if no records
+        const valOrNull = (v: number) => recordCount > 0 ? v : null;
+
+        // Upsert to nutrition_daily
+        const { error: upErr } = await supabase
+          .from("nutrition_daily")
+          .upsert(
+            {
+              user_id: userId,
+              date: jobLocalDate,
+              source: "computed",
+
+              // Energy
+              total_calories: valOrNull(totals.calories),
+
+              // Macros
+              total_protein_g: valOrNull(totals.protein),
+              total_carbs_g: valOrNull(totals.carbs),
+              total_fat_g: valOrNull(totals.fat),
+              total_fiber_g: valOrNull(totals.fiber),
+              total_sugar_g: valOrNull(totals.sugar),
+              total_saturated_fat_g: valOrNull(totals.saturatedFat),
+              total_unsaturated_fat_g: valOrNull(totals.unsaturatedFat),
+              total_monounsaturated_fat_g: valOrNull(totals.monounsaturatedFat),
+              total_polyunsaturated_fat_g: valOrNull(totals.polyunsaturatedFat),
+              total_trans_fat_g: valOrNull(totals.transFat),
+              total_cholesterol_mg: valOrNull(totals.cholesterol),
+
+              // Minerals
+              total_calcium_mg: valOrNull(totals.calcium),
+              total_chloride_mg: valOrNull(totals.chloride),
+              total_chromium_mcg: valOrNull(totals.chromium),
+              total_copper_mg: valOrNull(totals.copper),
+              total_iodine_mcg: valOrNull(totals.iodine),
+              total_iron_mg: valOrNull(totals.iron),
+              total_magnesium_mg: valOrNull(totals.magnesium),
+              total_manganese_mg: valOrNull(totals.manganese),
+              total_molybdenum_mcg: valOrNull(totals.molybdenum),
+              total_phosphorus_mg: valOrNull(totals.phosphorus),
+              total_potassium_mg: valOrNull(totals.potassium),
+              total_selenium_mcg: valOrNull(totals.selenium),
+              total_sodium_mg: valOrNull(totals.sodium),
+              total_zinc_mg: valOrNull(totals.zinc),
+
+              // Vitamins
+              total_vitamin_a_mcg: valOrNull(totals.vitaminA),
+              total_vitamin_b6_mg: valOrNull(totals.vitaminB6),
+              total_vitamin_b12_mcg: valOrNull(totals.vitaminB12),
+              total_vitamin_c_mg: valOrNull(totals.vitaminC),
+              total_vitamin_d_mcg: valOrNull(totals.vitaminD),
+              total_vitamin_e_mg: valOrNull(totals.vitaminE),
+              total_vitamin_k_mcg: valOrNull(totals.vitaminK),
+              total_biotin_mcg: valOrNull(totals.biotin),
+              total_folate_mcg: valOrNull(totals.folate),
+              total_folic_acid_mcg: valOrNull(totals.folicAcid),
+              total_niacin_mg: valOrNull(totals.niacin),
+              total_pantothenic_acid_mg: valOrNull(totals.pantothenicAcid),
+              total_riboflavin_mg: valOrNull(totals.riboflavin),
+              total_thiamin_mg: valOrNull(totals.thiamin),
+
+              // Other
+              total_caffeine_mg: valOrNull(totals.caffeine),
+
+              // Risk exposures (MAX severity across all foods that day)
+              max_tyramine_exposure: recordCount > 0 ? maxTyramine : null,
+              max_alcohol_exposure: recordCount > 0 ? maxAlcohol : null,
+              max_gluten_exposure: recordCount > 0 ? maxGluten : null,
+
+              meal_count: mealCount,
+              record_count: recordCount,
+
+              computed_at: computedAt,
+              created_at: computedAt,
+              updated_at: computedAt,
+            },
+            { onConflict: "user_id,date,source" },
+          );
+
+        if (upErr) throw new Error(`nutrition_daily upsert failed: ${upErr.message}`);
+
+        await markJobDone(job.id);
+
+        return {
+          jobId: job.id,
+          status: "done",
+          userId,
+          date: jobLocalDate,
+          timezone: tz,
+          windowStartUtcIso,
+          windowEndUtcIso,
+          recordCount,
+          mealCount,
+          totalCalories: totals.calories,
+          totalProtein: totals.protein,
+          totalCarbs: totals.carbs,
+          totalFat: totals.fat,
+        };
+      } catch (e) {
+        const msg = (e as Error).message;
+        await markJobError(job.id, msg);
+        return { jobId: job.id, status: "error", error: msg, userId, date: jobLocalDate };
+      }
+    }
+
+    const results: any[] = [];
+    for (const j of picked) results.push(await process(j));
+
+    const summary = {
+      picked: picked.length,
+      done: results.filter((r) => r.status === "done").length,
+      errors: results.filter((r) => r.status === "error").length,
+      nowUtc: nowIso,
+    };
+
+    return jsonResponse({ ok: true, summary, results });
+  } catch (e) {
+    console.log("[nutrition-daily-worker] fatal", { error: (e as Error).message });
+    return jsonResponse({ ok: false, error: (e as Error).message }, 500);
+  }
+});

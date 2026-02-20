@@ -29,9 +29,9 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
     val scrollState = rememberScrollState()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            // Top bar: ← Previous | Title | X Close
+            // Top bar: <- Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
@@ -112,7 +112,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
             if (draft.rels.isNotEmpty()) {
                 ReviewSection(drawIcon = { HubIcons.run { drawReliefLeaf(it) } }, title = "Reliefs (${draft.rels.size})", iconTint = Color(0xFF81C784)) {
                     draft.rels.forEach { r ->
-                        ReviewRow(r.type, "${formatIsoDdMmYyHm(r.startAtIso)}${if (r.endAtIso != null) " → ${formatIsoDdMmYyHm(r.endAtIso)}" else ""}")
+                        ReviewRow(r.type, "${formatIsoDdMmYyHm(r.startAtIso)}${if (r.endAtIso != null) " -> ${formatIsoDdMmYyHm(r.endAtIso)}" else ""}")
                     }
                 }
             }
@@ -187,7 +187,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                         }
                     }
                     vm.clearDraft()
-                    navController.popBackStack(Routes.JOURNAL, inclusive = false)
+                    navController.popBackStack(Routes.HOME, inclusive = false)
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
@@ -252,4 +252,6 @@ private fun formatIsoDdMmYyHm(iso: String?): String {
         ldt.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
     } catch (_: Exception) { "-" }
 }
+
+
 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,7 +68,7 @@ fun MonitorPhysicalScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Back
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -100,12 +101,12 @@ fun MonitorPhysicalScreen(
             // Today's Physical Health — shows ALL metrics
             BaseCard {
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.PHYSICAL_DATA_HISTORY) },
+                    modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.PHYSICAL_DATA_HISTORY) else navController.navigate(Routes.PAYWALL) },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Today's Data", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                    if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
                 }
                 Spacer(Modifier.height(8.dp))
 
@@ -148,11 +149,17 @@ fun MonitorPhysicalScreen(
                 }
             }
 
-            // History Graph
-            PhysicalHistoryGraph(
-                days = 14,
-                onClick = { navController.navigate(Routes.FULL_GRAPH_PHYSICAL) }
-            )
+            // History Graph — premium only
+            PremiumGate(
+                message = "Unlock Physical Trends",
+                subtitle = "Track your health metrics over time",
+                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+            ) {
+                PhysicalHistoryGraph(
+                    days = 14,
+                    onClick = { navController.navigate(Routes.FULL_GRAPH_PHYSICAL) }
+                )
+            }
         }
     }
 }
@@ -335,3 +342,4 @@ private fun fetchSingleDouble(
         } else null
     } catch (_: Exception) { null }
 }
+

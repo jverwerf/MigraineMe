@@ -133,7 +133,7 @@ class AmbientNoiseSampleWorker(
         ensureChannel(context)
 
         val notif = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Measuring ambient sound level")
             .setContentText("MigraineMe is sampling loudness (no audio stored).")
             .setOngoing(true)
@@ -244,3 +244,4 @@ class AmbientNoiseSampleWorker(
         }
     }
 }
+

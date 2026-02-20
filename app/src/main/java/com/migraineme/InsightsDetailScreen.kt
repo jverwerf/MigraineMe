@@ -38,7 +38,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-// ═══════ Filter category colors (matching the card / spider colors) ═══════
+// ======= Filter category colors (matching the card / spider colors) =======
 
 private val FilterCatColors = mapOf(
     "Severity" to Color(0xFFFF7043),
@@ -53,7 +53,7 @@ private val FilterCatColors = mapOf(
     "Missed Activity" to Color(0xFFEF9A9A)
 )
 
-// ═══════ Ordered categories to match the migraine log flow ═══════
+// ======= Ordered categories to match the migraine log flow =======
 
 private val FilterCatOrder = listOf(
     "Severity", "Symptom", "Pain Location", "Trigger", "Prodrome",
@@ -80,14 +80,14 @@ fun InsightsDetailScreen(
     val scrollState = rememberScrollState()
     val zone = ZoneId.systemDefault()
 
-    // ── Filter state ──
+    //  Filter state 
     val tagIndex by vm.migraineTagIndex.collectAsState()
     val availableTags by vm.availableFilterTags.collectAsState()
     val activeFilters by vm.activeFilters.collectAsState()
     val timeFrame by vm.timeFrame.collectAsState()
     val customRange by vm.customRange.collectAsState()
 
-    // ── Filtered migraines ──
+    //  Filtered migraines 
     val sorted = remember(migraines) { migraines.sortedByDescending { it.start } }
     val filteredSorted = remember(sorted, activeFilters, tagIndex, timeFrame, customRange) {
         val cutoff = when {
@@ -161,7 +161,8 @@ fun InsightsDetailScreen(
     }
 
     val userToggledKeys by vm.userToggledMetrics.collectAsState()
-    val enabledKeys = autoSelectedKeys + userToggledKeys
+    val userDisabledKeys by vm.userDisabledMetrics.collectAsState()
+    val enabledKeys = (autoSelectedKeys - userDisabledKeys) + userToggledKeys
 
     val enabledSeries = remember(available, enabledKeys, allDailyMetrics, windowDates) {
         available.filter { it.key in enabledKeys }.map { d ->
@@ -181,9 +182,9 @@ fun InsightsDetailScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            // ── Back arrow ──
+            //  Back arrow 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack,
@@ -191,7 +192,7 @@ fun InsightsDetailScreen(
                 }
             }
 
-            // ══════════ 1. FILTER CARD (collapsible) ══════════
+            // ========== 1. FILTER CARD (collapsible) ==========
             FilterCard(
                 availableTags = availableTags,
                 activeFilters = activeFilters,
@@ -205,7 +206,7 @@ fun InsightsDetailScreen(
                 onClear = { vm.clearFilters() }
             )
 
-            // ══════════ 2. GRAPH CARD ══════════
+            // ========== 2. GRAPH CARD ==========
             HeroCard {
                 Text("Migraine Timeline", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -259,13 +260,13 @@ fun InsightsDetailScreen(
                 WindowDaysControl(wBefore, wAfter, onChanged = { b, a -> vm.setWindowDays(b, a) })
             }
 
-            // ══════════ 3. METRIC PICKER (below graph) ══════════
+            // ========== 3. METRIC PICKER (below graph) ==========
             if (available.isNotEmpty()) {
                 BaseCard {
                     Text("Overlay Metrics", color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(2.dp))
-                    Text("Tap to toggle metric lines on the graph. ⚡ = auto-detected from triggers.",
+                    Text("Tap to toggle metric lines on the graph. * = auto-detected from triggers.",
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
@@ -285,7 +286,7 @@ fun InsightsDetailScreen(
                                     color = d.color,
                                     active = isEnabled,
                                     isAutoSelected = isAuto,
-                                    onClick = { vm.toggleMetric(d.key) }
+                                    onClick = { vm.toggleMetric(d.key, isEnabled) }
                                 )
                             }
                         }
@@ -297,7 +298,7 @@ fun InsightsDetailScreen(
     }
 }
 
-// ═══════ Filter card ═══════
+// ======= Filter card =======
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -328,7 +329,7 @@ private fun FilterCard(
     }
 
     BaseCard {
-        // Header row — always visible, tappable
+        // Header row – always visible, tappable
         Row(
             Modifier
                 .fillMaxWidth()
@@ -378,7 +379,7 @@ private fun FilterCard(
                 if (timeFrame != InsightsViewModel.TimeFrame.ALL) {
                     val timeLabel = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null) {
                         val df = java.time.format.DateTimeFormatter.ofPattern("MMM d")
-                        "${df.format(customRange.from)} – ${df.format(customRange.to)}"
+                        "${df.format(customRange.from)} — ${df.format(customRange.to)}"
                     } else timeFrame.label
                     Row(
                         Modifier
@@ -457,7 +458,7 @@ private fun FilterCard(
                                     style = MaterialTheme.typography.bodySmall)
                             }
                         }
-                        Text("–", color = AppTheme.SubtleTextColor,
+                        Text("—", color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(top = 12.dp))
                         // To button
@@ -501,7 +502,7 @@ private fun FilterCard(
         }
     }
 
-    // ── Date picker dialogs ──
+    //  Date picker dialogs 
     if (showFromPicker) {
         val state = rememberDatePickerState(
             initialSelectedDateMillis = customFrom.atStartOfDay(java.time.ZoneOffset.UTC)
@@ -602,7 +603,7 @@ private fun FilterOptionChip(
     }
 }
 
-// ═══════ Shared helper to build event markers from linked items ═══════
+// ======= Shared helper to build event markers from linked items =======
 
 internal fun buildEventMarkers(
     linkedItems: SupabaseDbService.MigraineLinkedItems,
@@ -668,7 +669,7 @@ internal fun buildEventMarkers(
 internal fun parseInstant(iso: String?): Instant? =
     iso?.let { runCatching { Instant.parse(it) }.getOrNull() }
 
-// ═══════ Private composables ═══════
+// ======= Private composables =======
 
 @Composable
 private fun DetailMigraineSelector(
@@ -697,10 +698,10 @@ private fun DetailMigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "–"}/10",
+                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "—"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "–"}/10",
+                    Text("Severity: ${sel.severity ?: "—"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
@@ -754,4 +755,6 @@ private fun DetailToggle(
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
     }
 }
+
+
 

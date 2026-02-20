@@ -46,7 +46,7 @@ fun RecalibrationReviewScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // ── Header ──
             Row(
@@ -521,3 +521,4 @@ private fun formatDecayVal(v: Double): String {
     return if (v == v.toLong().toDouble()) v.toLong().toString()
     else String.format("%.1f", v)
 }
+

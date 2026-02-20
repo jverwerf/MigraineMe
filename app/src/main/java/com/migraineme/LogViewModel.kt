@@ -3,6 +3,7 @@ package com.migraineme
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -164,6 +165,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private val _journal = MutableStateFlow<List<JournalEvent>>(emptyList())
     val journal: StateFlow<List<JournalEvent>> = _journal
 
+    private val _journalLoading = MutableStateFlow(false)
+    val journalLoading: StateFlow<Boolean> = _journalLoading
+
     private val _triggerLabelMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val triggerLabelMap: StateFlow<Map<String, String>> = _triggerLabelMap
 
@@ -295,7 +299,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearDraft() { _draft.value = Draft(); _editMigraineId.value = null }
 
-    // Direct list replacements — preserves editMigraineId and existingIds on other lists
+    // Direct list replacements – preserves editMigraineId and existingIds on other lists
     fun replaceTriggers(triggers: List<TriggerDraft>) {
         _draft.value = _draft.value.copy(triggers = triggers)
     }
@@ -478,6 +482,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 loadJournal(accessToken)
+
+                // Recompute correlation stats in background (fire-and-forget)
+                launch(Dispatchers.IO) {
+                    try { edge.triggerCorrelationCompute(getApplication()) }
+                    catch (_: Exception) { }
+                }
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -499,6 +509,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         val activitiesSnapshot = _draft.value.activities
         val missedActivitiesSnapshot = _draft.value.missedActivities
 
+        println("DEBUG addFull: triggersSnapshot.size=${triggersSnapshot.size}, types=${triggersSnapshot.map { it.type }}")
+        println("DEBUG addFull: prodromesSnapshot.size=${prodromesSnapshot.size}, meds=${meds.size}, rels=${rels.size}")
+
         viewModelScope.launch {
             try {
                 val migraineStart = beganAtIso.ifBlank {
@@ -516,8 +529,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 )
 
                 // Auto-detected triggers/prodromes are pre-selected in the UI and already
-                // included in the draft snapshots below — no separate linking needed.
+                // included in the draft snapshots below – no separate linking needed.
 
+                println("DEBUG addFull: about to insert ${triggersSnapshot.size} triggers for migraineId=${migraine.id}")
                 for (t in triggersSnapshot.filter { it.type.isNotBlank() }) {
                     try {
                         db.insertTrigger(
@@ -527,7 +541,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             startAt = t.startAtIso ?: migraineStart,
                             notes = t.note
                         )
-                    } catch (e: Exception) { e.printStackTrace() }
+                    } catch (e: Exception) { println("DEBUG addFull: trigger FAILED ${t.type}: ${e.message}"); e.printStackTrace() }
                 }
 
                 for (m in meds.filter { !it.name.isNullOrBlank() }) {
@@ -610,6 +624,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 loadJournal(accessToken)
+
+                // Recompute correlation stats in background (fire-and-forget)
+                launch(Dispatchers.IO) {
+                    try { edge.triggerCorrelationCompute(getApplication()) }
+                    catch (_: Exception) { }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -633,6 +653,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     // ---- unified journal feed ----
     fun loadJournal(accessToken: String) {
         viewModelScope.launch {
+            _journalLoading.value = true
             try {
                 val migraineRows = db.getMigraines(accessToken)
                 val migraines = migraineRows.map { row ->
@@ -669,6 +690,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 e.printStackTrace()
                 _journal.value = emptyList()
+            } finally {
+                _journalLoading.value = false
             }
         }
     }
@@ -979,6 +1002,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
 
 
 

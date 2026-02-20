@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -116,6 +117,8 @@ object Routes {
     const val DATA = "data"
     const val MENSTRUATION_SETTINGS = "menstruation_settings"
     const val COMMUNITY = "community"
+    const val ARTICLE_DETAIL = "community/article"
+    const val FORUM_POST_DETAIL = "community/forum"
     const val INSIGHTS = "insights"
     const val INSIGHTS_DETAIL = "insights_detail"
     const val INSIGHTS_REPORT = "insights_report"
@@ -207,6 +210,7 @@ object Routes {
     const val CUSTOMIZE_TRIGGERS = "customize_triggers"
     const val EVENING_CHECKIN = "evening_checkin"
     const val RECALIBRATION_REVIEW = "recalibration_review"
+    const val PAYWALL = "paywall"
 }
 
 class MainActivity : ComponentActivity() {
@@ -267,7 +271,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 !code.isNullOrBlank() -> {
-                    Toast.makeText(this, "Returning from WHOOP…", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Returning from WHOOP...", Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {
@@ -285,7 +289,7 @@ class MainActivity : ComponentActivity() {
                 .putString("last_uri", data.toString())
                 .apply()
 
-            Toast.makeText(this, "Returning from sign-in…", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Returning from sign-in...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -318,9 +322,31 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val migraineVm: MigraineViewModel = viewModel()
     val symptomVm: SymptomViewModel = viewModel()
     val homeVm: HomeViewModel = viewModel()
+    val communityVm: CommunityViewModel = viewModel()
 
     val authState by authVm.state.collectAsState()
     val token = authState.accessToken
+
+    val communityState by communityVm.state.collectAsState()
+    val communityUnreadCount = communityState.unreadCount
+
+    // Refresh community unread count when authenticated
+    LaunchedEffect(token) {
+        if (!token.isNullOrBlank()) {
+            communityVm.refreshUnreadCount(token)
+        }
+    }
+
+    // ── Premium state ──
+    LaunchedEffect(token) {
+        if (!token.isNullOrBlank()) {
+            val userId = SessionStore.readUserId(appCtx)
+            PremiumManager.initialize(appCtx, userId)
+            PremiumManager.loadState(appCtx)
+        } else {
+            PremiumManager.reset()
+        }
+    }
 
     var lastPreloadedToken by remember { mutableStateOf<String?>(null) }
 
@@ -434,7 +460,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
-        DrawerItem("Testing", Routes.TESTING, Icons.Outlined.BarChart),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout)
     )
@@ -464,6 +489,22 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     ) {
         val backStack by nav.currentBackStackEntryAsState()
         val current = backStack?.destination?.route ?: Routes.LOGIN
+
+        // Tour hint state for nav bar pulse animations
+        val topBarTourState by TourManager.state.collectAsState()
+        val topBarTourHint = if (topBarTourState.active && topBarTourState.phase == CoachPhase.TOUR)
+            tourSteps.getOrNull(topBarTourState.stepIndex)?.navHint else null
+        val navPulseTransition = rememberInfiniteTransition(label = "topBarPulse")
+        val topBarPulseScale by navPulseTransition.animateFloat(
+            1f, 1.6f,
+            infiniteRepeatable(tween(1000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+            label = "topPulseScale"
+        )
+        val topBarPulseAlpha by navPulseTransition.animateFloat(
+            0.6f, 0f,
+            infiniteRepeatable(tween(1000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+            label = "topPulseAlpha"
+        )
         
         // Updated to include JOURNAL and Migraine screens
         val showHomeBackground =
@@ -523,180 +564,36 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.FULL_GRAPH_MENTAL ||
             current == Routes.MONITOR_ENVIRONMENT ||
             current == Routes.THIRD_PARTY_CONNECTIONS ||
-            current == Routes.EVENING_CHECKIN
+            current == Routes.PROFILE ||
+            current == Routes.DATA ||
+            current == Routes.RISK_WEIGHTS ||
+            current == Routes.RISK_DETAIL ||
+            current == Routes.CHANGE_PASSWORD ||
+            current == Routes.MENSTRUATION_SETTINGS ||
+            current == Routes.EVENING_CHECKIN ||
+            current == Routes.COMMUNITY ||
+            current?.startsWith(Routes.ARTICLE_DETAIL) == true ||
+            current?.startsWith(Routes.FORUM_POST_DETAIL) == true ||
+            current == Routes.PAYWALL
 
         // Wizard fullscreen: hide top bar + bottom nav for immersive logging
         val isWizardFullscreen = current in setOf(
+            Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
             Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAIN_LOCATION,
             Routes.TRIGGERS, Routes.MEDICINES,
             Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES,
             Routes.NOTES, Routes.REVIEW,
-            Routes.MANAGE_ITEMS, Routes.MANAGE_SYMPTOMS,
+            Routes.MANAGE_SYMPTOMS,
             Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
             Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
             Routes.ONBOARDING, Routes.AI_SETUP, "${Routes.ONBOARDING}/setup",
-            Routes.EVENING_CHECKIN, "backfill_loading", "subscribe"
+            Routes.EVENING_CHECKIN, "backfill_loading", "subscribe",
+            Routes.PAYWALL
         )
 
-        // Insights background
-        val insightsBgResId = remember {
-            ctx.resources.getIdentifier("purple_sky_bg_insights", "drawable", ctx.packageName)
-        }
-        var insightsBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-        LaunchedEffect(current, insightsBgResId) {
-            val isInsights = current == Routes.INSIGHTS || current == Routes.INSIGHTS_DETAIL || current == Routes.INSIGHTS_REPORT || current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true
-            if (!isInsights) return@LaunchedEffect
-            if (insightsBgResId != 0) return@LaunchedEffect
-            if (insightsBgBitmap != null) return@LaunchedEffect
-
-            insightsBgBitmap = withContext(Dispatchers.IO) {
-                try {
-                    appCtx.assets.open("purple_sky_bg_insights.png").use { input ->
-                        BitmapFactory.decodeStream(input)
-                    }
-                } catch (_: Throwable) {
-                    null
-                }
-            }
-        }
-
-        // Migraine background
-        val migraineBgResId = remember {
-            ctx.resources.getIdentifier("purple_sky_bg_migraine", "drawable", ctx.packageName)
-        }
-        var migraineBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-        LaunchedEffect(current, migraineBgResId) {
-            val isMigraine = current == Routes.MIGRAINE || 
-                current == Routes.QUICK_LOG_TRIGGER || 
-                current == Routes.QUICK_LOG_MEDICINE || 
-                current == Routes.QUICK_LOG_RELIEF ||
-                current == Routes.QUICK_LOG_ACTIVITY ||
-                current == Routes.QUICK_LOG_PRODROME ||
-                current == Routes.QUICK_LOG_MIGRAINE ||
-                current == Routes.LOG_MIGRAINE ||
-                current == Routes.PAIN_LOCATION ||
-                current == Routes.TRIGGERS ||
-                current == Routes.MEDICINES ||
-                current == Routes.RELIEFS ||
-                current == Routes.NOTES ||
-                current == Routes.REVIEW ||
-                current == Routes.TIMING ||
-                current == Routes.MANAGE_SYMPTOMS ||
-                current == Routes.EVENING_CHECKIN
-            val isManageItems = current == Routes.MANAGE_ITEMS ||
-                current == Routes.MANAGE_TRIGGERS ||
-                current == Routes.MANAGE_MEDICINES ||
-                current == Routes.MANAGE_RELIEFS ||
-                current == Routes.MANAGE_PRODROMES
-            if (!isMigraine && !isManageItems) return@LaunchedEffect
-            if (migraineBgResId != 0) return@LaunchedEffect
-            if (migraineBgBitmap != null) return@LaunchedEffect
-
-            migraineBgBitmap = withContext(Dispatchers.IO) {
-                try {
-                    appCtx.assets.open("purple_sky_bg_migraine.png").use { input ->
-                        BitmapFactory.decodeStream(input)
-                    }
-                } catch (_: Throwable) {
-                    null
-                }
-            }
-        }
-
-        // Monitor background
-        val monitorBgResId = remember {
-            ctx.resources.getIdentifier("purple_sky_bg_monitor", "drawable", ctx.packageName)
-        }
-        var monitorBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-        LaunchedEffect(current, monitorBgResId) {
-            val isMonitor = current == Routes.MONITOR || 
-                current == Routes.MONITOR_CONFIG ||
-                current == Routes.MONITOR_NUTRITION ||
-                current == Routes.NUTRITION_CONFIG ||
-                current == Routes.NUTRITION_HISTORY ||
-                current == Routes.WEATHER_CONFIG ||
-                current == Routes.SLEEP_DATA_HISTORY ||
-                current == Routes.ENV_DATA_HISTORY ||
-                current == Routes.MONITOR_PHYSICAL ||
-                current == Routes.PHYSICAL_CONFIG ||
-                current == Routes.PHYSICAL_DATA_HISTORY ||
-                current == Routes.FULL_GRAPH_PHYSICAL ||
-                current == Routes.MONITOR_SLEEP ||
-                current == Routes.SLEEP_CONFIG ||
-                current == Routes.FULL_GRAPH_SLEEP ||
-                current == Routes.FULL_GRAPH_WEATHER ||
-                current == Routes.FULL_GRAPH_NUTRITION ||
-                current == Routes.MONITOR_MENTAL ||
-                current == Routes.MENTAL_CONFIG ||
-                current == Routes.MENTAL_DATA_HISTORY ||
-                current == Routes.FULL_GRAPH_MENTAL ||
-                current == Routes.MONITOR_ENVIRONMENT ||
-            current == Routes.THIRD_PARTY_CONNECTIONS
-            if (!isMonitor) return@LaunchedEffect
-            if (monitorBgResId != 0) return@LaunchedEffect
-            if (monitorBgBitmap != null) return@LaunchedEffect
-
-            monitorBgBitmap = withContext(Dispatchers.IO) {
-                try {
-                    appCtx.assets.open("purple_sky_bg_monitor.png").use { input ->
-                        BitmapFactory.decodeStream(input)
-                    }
-                } catch (_: Throwable) {
-                    null
-                }
-            }
-        }
-
-        // Journal background
-        val journalBgResId = remember {
-            ctx.resources.getIdentifier("purple_sky_bg_journal", "drawable", ctx.packageName)
-        }
-        var journalBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-        LaunchedEffect(current, journalBgResId) {
-            if (current != Routes.JOURNAL) return@LaunchedEffect
-            if (journalBgResId != 0) return@LaunchedEffect
-            if (journalBgBitmap != null) return@LaunchedEffect
-
-            journalBgBitmap = withContext(Dispatchers.IO) {
-                try {
-                    appCtx.assets.open("purple_sky_bg_journal.png").use { input ->
-                        BitmapFactory.decodeStream(input)
-                    }
-                } catch (_: Throwable) {
-                    null
-                }
-            }
-        }
-
-
-        // Connections background
-        val connectionsBgResId = remember {
-            ctx.resources.getIdentifier("purple_sky_bg_3rd_connection", "drawable", ctx.packageName)
-        }
-        var connectionsBgBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-        LaunchedEffect(current, connectionsBgResId) {
-            if (current != Routes.THIRD_PARTY_CONNECTIONS) return@LaunchedEffect
-            if (connectionsBgResId != 0) return@LaunchedEffect
-            if (connectionsBgBitmap != null) return@LaunchedEffect
-
-            connectionsBgBitmap = withContext(Dispatchers.IO) {
-                try {
-                    appCtx.assets.open("purple_sky_bg_3rd_connection.png").use { input ->
-                        BitmapFactory.decodeStream(input)
-                    }
-                } catch (_: Throwable) {
-                    null
-                }
-            }
-        }
         Box(modifier = Modifier.fillMaxSize()) {
             when (current) {
-                Routes.HOME -> {
+                Routes.HOME, Routes.PAYWALL -> {
                     Image(
                         painter = painterResource(R.drawable.purple_sky_bg),
                         contentDescription = null,
@@ -705,170 +602,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     )
                 }
 
-                Routes.MIGRAINE, Routes.QUICK_LOG_TRIGGER, Routes.QUICK_LOG_MEDICINE, Routes.QUICK_LOG_RELIEF, Routes.QUICK_LOG_ACTIVITY, Routes.QUICK_LOG_PRODROME, Routes.QUICK_LOG_MIGRAINE,
-                Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAIN_LOCATION, Routes.PRODROMES_LOG, Routes.TRIGGERS, Routes.MEDICINES, Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES, Routes.NOTES, Routes.REVIEW, Routes.MANAGE_SYMPTOMS, Routes.MANAGE_ITEMS, Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES, Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES -> {
-                    when {
-                        migraineBgResId != 0 -> {
-                            Image(
-                                painter = painterResource(migraineBgResId),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        migraineBgBitmap != null -> {
-                            Image(
-                                bitmap = migraineBgBitmap!!.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        else -> {
-                            // Fallback to home background
-                            Image(
-                                painter = painterResource(R.drawable.purple_sky_bg),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                }
-
-                Routes.JOURNAL -> {
-                    when {
-                        journalBgResId != 0 -> {
-                            Image(
-                                painter = painterResource(journalBgResId),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        journalBgBitmap != null -> {
-                            Image(
-                                bitmap = journalBgBitmap!!.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        else -> {
-                            // Fallback to home background
-                            Image(
-                                painter = painterResource(R.drawable.purple_sky_bg),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                }
-
-                Routes.MONITOR, Routes.MONITOR_CONFIG, Routes.MONITOR_NUTRITION, Routes.NUTRITION_CONFIG, Routes.NUTRITION_HISTORY, Routes.WEATHER_CONFIG, Routes.SLEEP_DATA_HISTORY, Routes.ENV_DATA_HISTORY, Routes.MONITOR_PHYSICAL, Routes.PHYSICAL_CONFIG, Routes.PHYSICAL_DATA_HISTORY, Routes.FULL_GRAPH_PHYSICAL, Routes.MONITOR_SLEEP, Routes.SLEEP_CONFIG, Routes.FULL_GRAPH_SLEEP, Routes.FULL_GRAPH_WEATHER, Routes.FULL_GRAPH_NUTRITION, Routes.MONITOR_MENTAL, Routes.MENTAL_CONFIG, Routes.MENTAL_DATA_HISTORY, Routes.FULL_GRAPH_MENTAL, Routes.MONITOR_ENVIRONMENT -> {
-                    when {
-                        monitorBgResId != 0 -> {
-                            Image(
-                                painter = painterResource(monitorBgResId),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        monitorBgBitmap != null -> {
-                            Image(
-                                bitmap = monitorBgBitmap!!.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        else -> {
-                            // Fallback to home background
-                            Image(
-                                painter = painterResource(R.drawable.purple_sky_bg),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                }
-
-                Routes.THIRD_PARTY_CONNECTIONS -> {
-                    when {
-                        connectionsBgResId != 0 -> {
-                            Image(
-                                painter = painterResource(connectionsBgResId),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        connectionsBgBitmap != null -> {
-                            Image(
-                                bitmap = connectionsBgBitmap!!.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        else -> {
-                            // Fallback to home background
-                            Image(
-                                painter = painterResource(R.drawable.purple_sky_bg),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                }
-
-                Routes.INSIGHTS, Routes.INSIGHTS_DETAIL, Routes.INSIGHTS_REPORT, "${Routes.INSIGHTS_BREAKDOWN}/{logType}" -> {
-                    when {
-                        insightsBgResId != 0 -> {
-                            Image(
-                                painter = painterResource(insightsBgResId),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        insightsBgBitmap != null -> {
-                            Image(
-                                bitmap = insightsBgBitmap!!.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        else -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.background)
-                            )
-                        }
-                    }
-                }
-
                 else -> {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background)
+                            .background(AppTheme.FadeColor)
                     )
                 }
             }
@@ -883,9 +621,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                             containerColor = Color.Transparent,
                             scrolledContainerColor = Color(0xFF2A003D),
-                            titleContentColor = if (showHomeBackground) Color.White else MaterialTheme.colorScheme.onSurface,
-                            navigationIconContentColor = if (showHomeBackground) Color.White else MaterialTheme.colorScheme.onSurface,
-                            actionIconContentColor = if (showHomeBackground) Color.White else MaterialTheme.colorScheme.onSurface
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White,
+                            actionIconContentColor = Color.White
                         ),
                         title = {
                             Text(
@@ -897,7 +635,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.INSIGHTS_REPORT -> "Insights"
                                     "${Routes.INSIGHTS_BREAKDOWN}/{logType}" -> "Insights"
                                     Routes.HOME -> "Home"
-                                    Routes.MIGRAINE -> "Migraine"
+                                    Routes.MIGRAINE -> "Log"
                                     Routes.LOG_MIGRAINE -> "Log Migraine"
                                     Routes.PAIN_LOCATION -> "Pain Location"
                                     Routes.QUICK_LOG_TRIGGER -> "Log Trigger"
@@ -953,6 +691,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.TIMING -> "Timing"
                                     Routes.THIRD_PARTY_CONNECTIONS -> "Connections"
                                     Routes.CHANGE_PASSWORD -> "Change password"
+                                    Routes.RISK_WEIGHTS -> "Risk Model"
+                                    Routes.RISK_DETAIL -> "Risk Detail"
                                     else -> ""
                                 }
                             )
@@ -960,14 +700,38 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         navigationIcon = {
                             if (current != Routes.LOGIN && current != Routes.SIGNUP) {
                                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                    Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                                    Box(contentAlignment = Alignment.Center) {
+                                        if (topBarTourHint == NavHintLocation.TOP_SETTINGS) {
+                                            Box(
+                                                Modifier
+                                                    .size((24 * topBarPulseScale).dp)
+                                                    .background(AppTheme.AccentPink.copy(alpha = topBarPulseAlpha), CircleShape)
+                                            )
+                                        }
+                                        Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                                    }
                                 }
                             }
                         },
                         actions = {
                             if (current != Routes.LOGIN && current != Routes.SIGNUP) {
                                 IconButton(onClick = { nav.navigate(Routes.COMMUNITY) }) {
-                                    Icon(Icons.Outlined.Groups, contentDescription = "Community")
+                                    Box(contentAlignment = Alignment.Center) {
+                                        if (topBarTourHint == NavHintLocation.TOP_COMMUNITY) {
+                                            Box(
+                                                Modifier
+                                                    .size((24 * topBarPulseScale).dp)
+                                                    .background(AppTheme.AccentPink.copy(alpha = topBarPulseAlpha), CircleShape)
+                                            )
+                                        }
+                                        if (communityUnreadCount > 0) {
+                                            BadgedBox(badge = { Badge { Text(communityUnreadCount.toString()) } }) {
+                                                Icon(Icons.Outlined.Groups, contentDescription = "Community")
+                                            }
+                                        } else {
+                                            Icon(Icons.Outlined.Groups, contentDescription = "Community")
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -993,23 +757,73 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     // Monitor detail screens (placeholders for now)
                     composable(Routes.MONITOR_NUTRITION) { MonitorNutritionScreen(navController = nav, authVm = authVm) }
                     composable(Routes.NUTRITION_CONFIG) { NutritionConfigScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.NUTRITION_HISTORY) { NutritionHistoryScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.NUTRITION_HISTORY) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { NutritionHistoryScreen(onBack = { nav.popBackStack() }) }
+                    }
                     composable(Routes.WEATHER_CONFIG) { WeatherConfigScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.SLEEP_DATA_HISTORY) { SleepDataHistoryScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.ENV_DATA_HISTORY) { EnvironmentDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.SLEEP_DATA_HISTORY) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { SleepDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    }
+                    composable(Routes.ENV_DATA_HISTORY) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { EnvironmentDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    }
                     composable(Routes.MONITOR_PHYSICAL) { MonitorPhysicalScreen(navController = nav, authVm = authVm) }
                     composable(Routes.PHYSICAL_CONFIG) { PhysicalConfigScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.PHYSICAL_DATA_HISTORY) { PhysicalDataHistoryScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.FULL_GRAPH_PHYSICAL) { FullScreenGraphScreen(graphType = "physical", onBack = { nav.popBackStack() }) }
+                    composable(Routes.PHYSICAL_DATA_HISTORY) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { PhysicalDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    }
+                    composable(Routes.FULL_GRAPH_PHYSICAL) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { FullScreenGraphScreen(graphType = "physical", onBack = { nav.popBackStack() }) }
+                    }
                     composable(Routes.MONITOR_SLEEP) { MonitorSleepScreen(navController = nav, authVm = authVm) }
                     composable(Routes.SLEEP_CONFIG) { SleepConfigScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.FULL_GRAPH_SLEEP) { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }) }
-                    composable(Routes.FULL_GRAPH_WEATHER) { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }) }
-                    composable(Routes.FULL_GRAPH_NUTRITION) { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
+                    composable(Routes.FULL_GRAPH_SLEEP) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }) }
+                    }
+                    composable(Routes.FULL_GRAPH_WEATHER) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }) }
+                    }
+                    composable(Routes.FULL_GRAPH_NUTRITION) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
+                    }
                     composable(Routes.MONITOR_MENTAL) { MonitorMentalScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MENTAL_CONFIG) { MentalConfigScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.MENTAL_DATA_HISTORY) { MentalDataHistoryScreen(onBack = { nav.popBackStack() }) }
-                    composable(Routes.FULL_GRAPH_MENTAL) { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }) }
+                    composable(Routes.MENTAL_DATA_HISTORY) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { MentalDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    }
+                    composable(Routes.FULL_GRAPH_MENTAL) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }) }
+                    }
                     composable(Routes.MONITOR_ENVIRONMENT) { MonitorEnvironmentScreen(navController = nav, authVm = authVm) }
                     
                     composable(Routes.INSIGHTS) {
@@ -1018,20 +832,35 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         InsightsScreen(navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_DETAIL) {
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        InsightsDetailScreen(navController = nav, vm = insightsVm)
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsDetailScreen(navController = nav, vm = insightsVm)
+                        }
                     }
                     composable(Routes.INSIGHTS_REPORT) {
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        InsightsReportScreen(navController = nav, vm = insightsVm)
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsReportScreen(navController = nav, vm = insightsVm)
+                        }
                     }
                     composable("${Routes.INSIGHTS_BREAKDOWN}/{logType}") { backStack ->
-                        val logType = backStack.arguments?.getString("logType") ?: "Triggers"
-                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                        InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val logType = backStack.arguments?.getString("logType") ?: "Triggers"
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
+                        }
                     }
                     composable(Routes.TRIGGERS_SETTINGS) { TriggersSettingsScreen(navController = nav, authVm = authVm) }
                     composable(Routes.CUSTOMIZE_TRIGGERS) { CustomizeTriggersScreen() }
@@ -1041,6 +870,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateToMigraine = { nav.navigate(Routes.MIGRAINE) },
                             onNavigateToRiskDetail = { nav.navigate(Routes.RISK_DETAIL) },
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
+                            onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
                             authVm = authVm,
                             logVm = logVm,
                             vm = homeVm,
@@ -1050,7 +880,37 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             symptomVm = symptomVm,
                         )
                     }
-                    composable(Routes.COMMUNITY) { CommunityScreen() }
+                    composable(Routes.COMMUNITY) {
+                        CommunityScreen(authVm = authVm, navController = nav, vm = communityVm)
+                    }
+                    composable("${Routes.ARTICLE_DETAIL}/{articleId}") { backStack ->
+                        val articleId = backStack.arguments?.getString("articleId") ?: return@composable
+                        val authState by authVm.state.collectAsState()
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        ArticleDetailScreen(
+                            articleId = articleId,
+                            vm = communityVm,
+                            accessToken = authState.accessToken,
+                            currentUserId = authState.userId,
+                            insightsVm = insightsVm,
+                            onBack = { nav.popBackStack() }
+                        )
+                    }
+                    composable("${Routes.FORUM_POST_DETAIL}/{postId}") { backStack ->
+                        val postId = backStack.arguments?.getString("postId") ?: return@composable
+                        val authState by authVm.state.collectAsState()
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        ForumPostDetailScreen(
+                            postId = postId,
+                            vm = communityVm,
+                            accessToken = authState.accessToken,
+                            currentUserId = authState.userId,
+                            insightsVm = insightsVm,
+                            onBack = { nav.popBackStack() }
+                        )
+                    }
                     composable(Routes.JOURNAL) { JournalScreen(navController = nav, authVm = authVm, vm = logVm) }
 
                     // Migraine Hub (main migraine tab)
@@ -1257,250 +1117,27 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
                     composable("${Routes.EDIT_TRIGGER}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        val triggerVm: TriggerViewModel = viewModel()
-                        val editLogVm: LogViewModel = viewModel()
-                        val scope = rememberCoroutineScope()
-                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
-                        var loaded by remember { mutableStateOf(false) }
-                        LaunchedEffect(id) {
-                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
-                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                            try {
-                                val rows = db.getAllTriggers(token)
-                                val row = rows.find { it.id == id }
-                                if (row != null) {
-                                    editLogVm.addTriggerDraft(row.type ?: "", row.startAt, row.notes)
-                                    linkedMigraineId = row.migraineId
-                                }
-                            } catch (_: Exception) {}
-                            loaded = true
-                        }
-                        if (loaded) {
-                            TriggersScreen(
-                                navController = nav, vm = triggerVm, authVm = authVm, logVm = editLogVm,
-                                quickLogMode = true,
-                                linkedMigraineId = linkedMigraineId,
-                                onMigraineSelect = { linkedMigraineId = it },
-                                onSave = {
-                                    scope.launch {
-                                        val token = authVm.state.value.accessToken ?: return@launch
-                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                        // Delete old, insert new
-                                        runCatching { db.deleteTrigger(token, id) }
-                                        editLogVm.draft.value.triggers.forEach { t ->
-                                            runCatching { db.insertTrigger(token, linkedMigraineId, t.type, t.startAtIso ?: java.time.Instant.now().toString(), t.note) }
-                                        }
-                                        editLogVm.clearDraft()
-                                        nav.popBackStack()
-                                    }
-                                }
-                            )
-                        }
+                        JournalEditScreen(itemType = "trigger", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_MEDICINE}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        val medVm: MedicineViewModel = viewModel()
-                        val editLogVm: LogViewModel = viewModel()
-                        val scope = rememberCoroutineScope()
-                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
-                        var loaded by remember { mutableStateOf(false) }
-                        LaunchedEffect(id) {
-                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
-                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                            try {
-                                val rows = db.getAllMedicines(token)
-                                val row = rows.find { it.id == id }
-                                if (row != null) {
-                                    editLogVm.addMedicineDraft(row.name ?: "", row.amount, row.notes, row.startAt, null)
-                                    linkedMigraineId = row.migraineId
-                                }
-                            } catch (_: Exception) {}
-                            loaded = true
-                        }
-                        if (loaded) {
-                            MedicinesScreen(
-                                navController = nav, vm = medVm, authVm = authVm, logVm = editLogVm,
-                                quickLogMode = true,
-                                linkedMigraineId = linkedMigraineId,
-                                onMigraineSelect = { linkedMigraineId = it },
-                                onSave = {
-                                    scope.launch {
-                                        val token = authVm.state.value.accessToken ?: return@launch
-                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                        runCatching { db.deleteMedicine(token, id) }
-                                        editLogVm.draft.value.meds.forEach { m ->
-                                            runCatching { db.insertMedicine(token, linkedMigraineId, m.name, m.amount, m.startAtIso ?: java.time.Instant.now().toString(), m.notes) }
-                                        }
-                                        editLogVm.clearDraft()
-                                        nav.popBackStack()
-                                    }
-                                }
-                            )
-                        }
+                        JournalEditScreen(itemType = "medicine", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_RELIEF}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        val reliefVm: ReliefViewModel = viewModel()
-                        val editLogVm: LogViewModel = viewModel()
-                        val scope = rememberCoroutineScope()
-                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
-                        var loaded by remember { mutableStateOf(false) }
-                        LaunchedEffect(id) {
-                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
-                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                            try {
-                                val rows = db.getAllReliefs(token)
-                                val row = rows.find { it.id == id }
-                                if (row != null) {
-                                    editLogVm.addReliefDraft(row.type ?: "", row.notes, row.startAt, row.endAt, null)
-                                    linkedMigraineId = row.migraineId
-                                }
-                            } catch (_: Exception) {}
-                            loaded = true
-                        }
-                        if (loaded) {
-                            ReliefsScreen(
-                                navController = nav, vm = reliefVm, authVm = authVm, logVm = editLogVm,
-                                quickLogMode = true,
-                                linkedMigraineId = linkedMigraineId,
-                                onMigraineSelect = { linkedMigraineId = it },
-                                onSave = {
-                                    scope.launch {
-                                        val token = authVm.state.value.accessToken ?: return@launch
-                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                        runCatching { db.deleteRelief(token, id) }
-                                        editLogVm.draft.value.rels.forEach { r ->
-                                            runCatching { db.insertRelief(token, linkedMigraineId, r.type, r.startAtIso ?: java.time.Instant.now().toString(), r.endAtIso, r.notes, r.reliefScale) }
-                                        }
-                                        editLogVm.clearDraft()
-                                        nav.popBackStack()
-                                    }
-                                }
-                            )
-                        }
+                        JournalEditScreen(itemType = "relief", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_PRODROME}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        val prodromeVm: ProdromeViewModel = viewModel()
-                        val editLogVm: LogViewModel = viewModel()
-                        val scope = rememberCoroutineScope()
-                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
-                        var loaded by remember { mutableStateOf(false) }
-                        LaunchedEffect(id) {
-                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
-                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                            try {
-                                val rows = db.getAllProdromeLog(token)
-                                val row = rows.find { it.id == id }
-                                if (row != null) {
-                                    editLogVm.addProdromeDraft(row.type ?: "", row.startAt, row.notes)
-                                    linkedMigraineId = row.migraineId
-                                }
-                            } catch (_: Exception) {}
-                            loaded = true
-                        }
-                        if (loaded) {
-                            ProdromeLogScreen(
-                                navController = nav, vm = prodromeVm, authVm = authVm, logVm = editLogVm,
-                                quickLogMode = true,
-                                linkedMigraineId = linkedMigraineId,
-                                onMigraineSelect = { linkedMigraineId = it },
-                                onSave = {
-                                    scope.launch {
-                                        val token = authVm.state.value.accessToken ?: return@launch
-                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                        runCatching { db.deleteProdromeLog(token, id) }
-                                        editLogVm.draft.value.prodromes.forEach { p ->
-                                            runCatching { db.insertProdrome(token, linkedMigraineId, p.type, p.startAtIso, p.note) }
-                                        }
-                                        editLogVm.clearDraft()
-                                        nav.popBackStack()
-                                    }
-                                }
-                            )
-                        }
+                        JournalEditScreen(itemType = "prodrome", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_ACTIVITY}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        val activityVm: ActivityViewModel = viewModel()
-                        val editLogVm: LogViewModel = viewModel()
-                        val scope = rememberCoroutineScope()
-                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
-                        var loaded by remember { mutableStateOf(false) }
-                        LaunchedEffect(id) {
-                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
-                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                            try {
-                                val rows = db.getAllActivityLog(token)
-                                val row = rows.find { it.id == id }
-                                if (row != null) {
-                                    editLogVm.addActivityDraft(row.type ?: "", row.startAt, row.notes)
-                                    linkedMigraineId = row.migraineId
-                                }
-                            } catch (_: Exception) {}
-                            loaded = true
-                        }
-                        if (loaded) {
-                            ActivitiesScreen(
-                                navController = nav, vm = activityVm, authVm = authVm, logVm = editLogVm,
-                                quickLogMode = true,
-                                linkedMigraineId = linkedMigraineId,
-                                onMigraineSelect = { linkedMigraineId = it },
-                                onSave = {
-                                    scope.launch {
-                                        val token = authVm.state.value.accessToken ?: return@launch
-                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                        runCatching { db.deleteActivityLog(token, id) }
-                                        editLogVm.draft.value.activities.forEach { a ->
-                                            runCatching { db.insertActivity(token, linkedMigraineId, a.type, a.startAtIso ?: java.time.Instant.now().toString(), a.endAtIso, a.note) }
-                                        }
-                                        editLogVm.clearDraft()
-                                        nav.popBackStack()
-                                    }
-                                }
-                            )
-                        }
+                        JournalEditScreen(itemType = "activity", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_LOCATION}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        val locationVm: LocationViewModel = viewModel()
-                        val editLogVm: LogViewModel = viewModel()
-                        val scope = rememberCoroutineScope()
-                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
-                        var loaded by remember { mutableStateOf(false) }
-                        LaunchedEffect(id) {
-                            val token = authVm.state.value.accessToken ?: return@LaunchedEffect
-                            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                            try {
-                                val rows = db.getAllLocationLog(token)
-                                val row = rows.find { it.id == id }
-                                if (row != null) {
-                                    editLogVm.addLocationDraft(row.type ?: "", row.startAt, row.notes)
-                                    linkedMigraineId = row.migraineId
-                                }
-                            } catch (_: Exception) {}
-                            loaded = true
-                        }
-                        if (loaded) {
-                            LocationsScreen(
-                                navController = nav, vm = locationVm, authVm = authVm, logVm = editLogVm,
-                                quickLogMode = true,
-                                linkedMigraineId = linkedMigraineId,
-                                onMigraineSelect = { linkedMigraineId = it },
-                                onSave = {
-                                    scope.launch {
-                                        val token = authVm.state.value.accessToken ?: return@launch
-                                        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                        runCatching { db.deleteLocationLog(token, id) }
-                                        editLogVm.draft.value.locations.forEach { l ->
-                                            runCatching { db.insertLocation(token, linkedMigraineId, l.type, l.startAtIso ?: java.time.Instant.now().toString(), l.note) }
-                                        }
-                                        editLogVm.clearDraft()
-                                        nav.popBackStack()
-                                    }
-                                }
-                            )
-                        }
+                        JournalEditScreen(itemType = "location", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
                     }
 
                     composable(Routes.ADJUST_MIGRAINES) {
@@ -1997,7 +1634,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         launchSingleTop = true
                                     }
                                 } else {
-                                    val dest = if (OnboardingPrefs.isCompleted(loginCtx)) Routes.HOME else Routes.ONBOARDING
+                                    val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                        OnboardingPrefs.isCompletedFromSupabase(loginCtx)
+                                    }
+                                    val dest = if (completed) Routes.HOME else Routes.ONBOARDING
                                     nav.navigate(dest) {
                                         popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                         launchSingleTop = true
@@ -2008,10 +1648,15 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         LoginScreen(
                             authVm = authVm,
                             onLoggedIn = {
-                                val dest = if (OnboardingPrefs.isCompleted(loginCtx)) Routes.HOME else Routes.ONBOARDING
-                                nav.navigate(dest) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
+                                scope.launch {
+                                    val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                        OnboardingPrefs.isCompletedFromSupabase(loginCtx)
+                                    }
+                                    val dest = if (completed) Routes.HOME else Routes.ONBOARDING
+                                    nav.navigate(dest) {
+                                        popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
                             },
                             onNavigateToSignUp = { nav.navigate(Routes.SIGNUP) { launchSingleTop = true } }
@@ -2035,8 +1680,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable(Routes.PROFILE) {
                         ProfileScreen(
                             authVm = authVm,
+                            onBack = { nav.popBackStack() },
                             onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) },
-                            onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) }
+                            onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
+                            onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) }
                         )
                     }
 
@@ -2049,46 +1696,28 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.DATA) {
-                        DataSettingsScreen(onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) })
+                        DataSettingsScreen(onBack = { nav.popBackStack() }, onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) })
                     }
 
                     composable(Routes.RISK_WEIGHTS) {
-                        RiskWeightsScreen(onBack = { nav.popBackStack() })
+                        val pState by PremiumManager.state.collectAsState()
+                        val tourActive = TourManager.isActive()
+                        if (!tourActive && !pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }
+                        } else { RiskWeightsScreen(onBack = { nav.popBackStack() }) }
                     }
 
                     composable(Routes.RISK_DETAIL) {
-                        val homeState by homeVm.state.collectAsState()
-                        RiskDetailScreen(
-                            navController = nav,
-                            state = homeState
-                        )
-                    }
-
-                    composable(Routes.TESTING) {
-                        TestingScreen(
-                            authVm = authVm,
-                            onNavigateToOnboarding = {
-                                nav.navigate(Routes.ONBOARDING) {
-                                    launchSingleTop = true
-                                }
-                            },
-                            onNavigateToHome = {
-                                nav.navigate(Routes.HOME) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
-                                }
-                            },
-                            onNavigateToCheckIn = {
-                                nav.navigate(Routes.EVENING_CHECKIN) {
-                                    launchSingleTop = true
-                                }
-                            },
-                            onNavigateToRecalibrationReview = {
-                                nav.navigate(Routes.RECALIBRATION_REVIEW) {
-                                    launchSingleTop = true
-                                }
-                            }
-                        )
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }
+                        } else {
+                            val homeState by homeVm.state.collectAsState()
+                            RiskDetailScreen(
+                                navController = nav,
+                                state = homeState
+                            )
+                        }
                     }
 
                     composable(Routes.RECALIBRATION_REVIEW) {
@@ -2174,7 +1803,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         )
                     }
 
-                    // ── Backfill loading: polls edge_audit until backfill-all completes (max 60s) ──
+                    // â”€â”€ Backfill loading: polls edge_audit until backfill-all completes (max 60s) â”€â”€
                     composable("backfill_loading") {
                         val ctx = LocalContext.current
                         var progress by remember { mutableFloatStateOf(0f) }
@@ -2318,60 +1947,26 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         }
                     }
 
-                    // ── Subscribe placeholder ──
+                    // ── Subscribe / Paywall ──
                     composable("subscribe") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(AppTheme.FadeColor)
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(24.dp)
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Star, contentDescription = null,
-                                    tint = AppTheme.AccentPink,
-                                    modifier = Modifier.size(64.dp)
-                                )
-                                Text(
-                                    "Subscribe to MigraineMe",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = AppTheme.TitleColor,
-                                    textAlign = TextAlign.Center
-                                )
-                                Text(
-                                    "Unlock personalised migraine predictions, detailed insights, and AI-powered analysis.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = AppTheme.SubtleTextColor,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                Button(
-                                    onClick = {
-                                        nav.navigate(Routes.HOME) {
-                                            popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                            launchSingleTop = true
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
-                                    shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier.fillMaxWidth(0.7f).height(48.dp)
-                                ) {
-                                    Text("Subscribe Now", style = MaterialTheme.typography.titleSmall)
+                        OnboardingPaywallScreen(
+                            onDismiss = {
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
                                 }
-                                TextButton(onClick = {
-                                    nav.navigate(Routes.HOME) {
-                                        popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                        launchSingleTop = true
-                                    }
-                                }) {
-                                    Text("Maybe later", color = AppTheme.SubtleTextColor)
+                            },
+                            onSubscribed = {
+                                nav.navigate(Routes.HOME) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
                                 }
                             }
-                        }
+                        )
+                    }
+
+                    composable(Routes.PAYWALL) {
+                        PaywallScreen(navController = nav)
                     }
 
                     composable(Routes.MENSTRUATION_SETTINGS) {
@@ -2461,8 +2056,34 @@ private fun BottomBar(
         BottomItem(Routes.MONITOR, "Monitor", Icons.Outlined.Timeline),
         BottomItem(Routes.INSIGHTS, "Insights", Icons.Outlined.BarChart),
         BottomItem(Routes.HOME, "Home", Icons.Outlined.Home),
-        BottomItem(Routes.MIGRAINE, "Migraine", Icons.Outlined.Psychology),
+        BottomItem(Routes.MIGRAINE, "Log", Icons.Outlined.Psychology),
         BottomItem(Routes.JOURNAL, "Journal", Icons.Outlined.History)
+    )
+
+    // Tour pulse state
+    val tourState by TourManager.state.collectAsState()
+    val currentTourStep = if (tourState.active && tourState.phase == CoachPhase.TOUR)
+        tourSteps.getOrNull(tourState.stepIndex) else null
+    val tourHintRoute = currentTourStep?.navHint?.let { hint ->
+        when (hint) {
+            NavHintLocation.BOTTOM_HOME -> Routes.HOME
+            NavHintLocation.BOTTOM_MONITOR -> Routes.MONITOR
+            NavHintLocation.BOTTOM_INSIGHTS -> Routes.INSIGHTS
+            NavHintLocation.BOTTOM_MIGRAINE -> Routes.MIGRAINE
+            NavHintLocation.BOTTOM_JOURNAL -> Routes.JOURNAL
+            else -> null
+        }
+    }
+    val infiniteTransition = rememberInfiniteTransition(label = "navPulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        1f, 1.5f,
+        infiniteRepeatable(tween(1000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "navPulseScale"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        0.5f, 0f,
+        infiniteRepeatable(tween(1000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "navPulseAlpha"
     )
 
     NavigationBar(
@@ -2479,6 +2100,7 @@ private fun BottomBar(
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_REPORT) ||
                     (item.route == Routes.INSIGHTS && currentRoute?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true) ||
                     (item.route == Routes.MONITOR && currentRoute == Routes.MONITOR_CONFIG)
+            val isTourTarget = tourHintRoute == item.route
 
             NavigationBarItem(
                 selected = selected,
@@ -2490,17 +2112,43 @@ private fun BottomBar(
                     }
                 },
                 icon = {
-                    if (showBadge) {
-                        BadgedBox(badge = { Badge { Text(journalBadgeCount.toString()) } }) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        if (isTourTarget) {
+                            Box(
+                                Modifier
+                                    .size((24 * pulseScale).dp)
+                                    .background(
+                                        AppTheme.AccentPink.copy(alpha = pulseAlpha),
+                                        CircleShape
+                                    )
+                            )
+                        }
+                        if (showBadge) {
+                            BadgedBox(badge = { Badge { Text(journalBadgeCount.toString()) } }) {
+                                Icon(item.icon, contentDescription = item.label)
+                            }
+                        } else {
                             Icon(item.icon, contentDescription = item.label)
                         }
-                    } else {
-                        Icon(item.icon, contentDescription = item.label)
                     }
                 },
                 label = { Text(item.label) },
-                alwaysShowLabel = true
+                alwaysShowLabel = true,
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.White,
+                    selectedTextColor = Color.White,
+                    unselectedIconColor = Color.White.copy(alpha = 0.85f),
+                    unselectedTextColor = Color.White.copy(alpha = 0.85f),
+                    indicatorColor = AppTheme.AccentPurple.copy(alpha = 0.25f)
+                )
             )
         }
     }
 }
+
+
+
+

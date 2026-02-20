@@ -131,7 +131,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         )
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("How was today?")
             .setContentText("Take 15 seconds to log your day")
             .setContentIntent(pi)
@@ -192,3 +192,4 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         private const val TAG = "FCMService"
     }
 }
+

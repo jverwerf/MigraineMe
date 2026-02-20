@@ -22,6 +22,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -44,6 +49,7 @@ fun HomeScreenRoot(
     onNavigateToMigraine: () -> Unit = {},
     onNavigateToRiskDetail: () -> Unit = {},
     onNavigateToRecalibrationReview: () -> Unit = {},
+    onNavigateToPaywall: () -> Unit = {},
     authVm: AuthViewModel,
     logVm: LogViewModel,
     vm: HomeViewModel = viewModel(),
@@ -117,6 +123,9 @@ fun HomeScreenRoot(
     } else {
         val scrollState = rememberScrollState()
 
+        // ── Premium state ──
+        val premiumState by PremiumManager.state.collectAsState()
+
         // Selected day index: 0 = today (default), 1 = tomorrow, etc.
         var selectedDay by remember { mutableStateOf(0) }
 
@@ -127,21 +136,11 @@ fun HomeScreenRoot(
         val displayPercent = dayData?.percent ?: state.riskPercent
         val displayTriggers = dayData?.topTriggers ?: state.triggersAtRisk
 
-        // Recommendation adjusts for selected day
-        val displayRecommendation = if (selectedDay == 0) {
-            state.aiRecommendation
-        } else {
-            val dayLabel = dayData?.date?.format(java.time.format.DateTimeFormatter.ofPattern("EEEE")) ?: "that day"
-            when (displayZone) {
-                RiskZone.HIGH -> "High risk predicted for $dayLabel. Plan ahead: avoid known triggers, prepare medication, and keep your schedule light."
-                RiskZone.MILD -> "Moderate risk predicted for $dayLabel. Stay mindful of your triggers and keep regular meals and breaks."
-                RiskZone.LOW -> "Low risk predicted for $dayLabel. Maintain your healthy routine."
-                RiskZone.NONE -> "No significant risk predicted for $dayLabel. Looking good!"
-            }
-        }
-
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll) {
+
+                // ── Trial banner ──
+                TrialBanner(onUpgrade = onNavigateToPaywall)
 
                 RecalibrationBanner(
                     onTap = onNavigateToRecalibrationReview
@@ -151,11 +150,26 @@ fun HomeScreenRoot(
                     riskPercent = displayPercent,
                     riskScore = displayScore,
                     riskZone = displayZone,
-                    forecast = state.forecast,
-                    selectedDay = selectedDay,
-                    dayRisks = state.dayRisks,
-                    onDaySelected = { selectedDay = it },
-                    onTap = onNavigateToRiskDetail
+                    // Gate: only show full 7-day forecast for premium users
+                    forecast = if (premiumState.isPremium) state.forecast
+                               else listOf(state.forecast.firstOrNull() ?: 0),
+                    selectedDay = if (premiumState.isPremium) selectedDay else 0,
+                    dayRisks = if (premiumState.isPremium) state.dayRisks
+                               else state.dayRisks.take(1),
+                    onDaySelected = {
+                        if (premiumState.isPremium) {
+                            selectedDay = it
+                        } else {
+                            onNavigateToPaywall()
+                        }
+                    },
+                    onTap = {
+                        if (premiumState.isPremium) {
+                            onNavigateToRiskDetail()
+                        } else {
+                            onNavigateToPaywall()
+                        }
+                    }
                 )
 
                 // ── Quick Log Strip — below the gauge ──
@@ -169,12 +183,29 @@ fun HomeScreenRoot(
                     onLogComplete = { vm.loadRisk(appCtx) }
                 )
 
-                ActiveTriggersCard(
-                    triggers = displayTriggers.take(3),
-                    gaugeMax = state.gaugeMaxScore,
-                    onTap = onNavigateToRiskDetail
-                )
-                RecommendationCard(recommendation = displayRecommendation)
+                // ── AI Daily Insight — premium only, today only ──
+                if (selectedDay == 0 && !state.dailyInsight.isNullOrBlank()) {
+                    PremiumGate(
+                        message = "Unlock AI Daily Insights",
+                        subtitle = "Personalised advice based on your data",
+                        onUpgrade = onNavigateToPaywall
+                    ) {
+                        AiInsightCard(insight = state.dailyInsight!!)
+                    }
+                }
+
+                // ── Active triggers — blurred for free users ──
+                PremiumGate(
+                    message = "Unlock trigger breakdown",
+                    subtitle = "See what\u2019s driving your risk score",
+                    onUpgrade = onNavigateToPaywall
+                ) {
+                    ActiveTriggersCard(
+                        triggers = displayTriggers.take(3),
+                        gaugeMax = state.gaugeMaxScore,
+                        onTap = onNavigateToRiskDetail
+                    )
+                }
             }
         }
     }
@@ -469,16 +500,27 @@ private fun ActiveTriggersCard(
 }
 
 @Composable
-private fun RecommendationCard(recommendation: String) {
+private fun AiInsightCard(insight: String) {
     BaseCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.Star,
+                contentDescription = null,
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "AI Insight",
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+        }
+        Spacer(Modifier.height(4.dp))
         Text(
-            "Recommendation",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
-        Text(
-            recommendation.ifBlank { "—" },
-            color = AppTheme.BodyTextColor
+            insight,
+            color = AppTheme.BodyTextColor,
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }

@@ -31,8 +31,8 @@ class FoodRiskClassifierService {
 
     companion object {
         private const val TAG = "FoodRiskClassifier"
-        private const val BASE_URL = BuildConfig.SUPABASE_URL
-        private const val ANON_KEY = BuildConfig.SUPABASE_ANON_KEY
+        private val BASE_URL = BuildConfig.SUPABASE_URL
+        private val ANON_KEY = BuildConfig.SUPABASE_ANON_KEY
     }
 
     private val httpClient = OkHttpClient.Builder()

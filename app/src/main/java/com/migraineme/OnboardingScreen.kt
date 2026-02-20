@@ -24,14 +24,56 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import androidx.compose.runtime.rememberCoroutineScope
 
 object OnboardingPrefs {
-    private const val PREFS_NAME = "onboarding"
-    private const val KEY_COMPLETED = "completed"
-    fun isCompleted(context: Context): Boolean = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(KEY_COMPLETED, false)
-    fun setCompleted(context: Context) { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putBoolean(KEY_COMPLETED, true).apply() }
-    fun reset(context: Context) { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putBoolean(KEY_COMPLETED, false).apply() }
+
+    /**
+     * Check Supabase directly — no local cache.
+     * Must be called from IO dispatcher.
+     */
+    suspend fun isCompletedFromSupabase(context: Context): Boolean {
+        return try {
+            val token = SessionStore.getValidAccessToken(context) ?: return false
+            val userId = SessionStore.readUserId(context) ?: JwtUtils.extractUserIdFromAccessToken(token) ?: return false
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/profiles?user_id=eq.$userId&select=onboarding_completed"
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+            val response = okhttp3.OkHttpClient().newCall(request).execute()
+            val body = response.body?.string() ?: return false
+            response.close()
+            body.contains("\"onboarding_completed\":true") || body.contains("\"onboarding_completed\": true")
+        } catch (_: Exception) { false }
+    }
+
+    /**
+     * Mark onboarding complete in Supabase.
+     * Must be called from IO dispatcher.
+     */
+    suspend fun setCompletedInSupabase(context: Context) {
+        try {
+            val token = SessionStore.getValidAccessToken(context) ?: return
+            val userId = SessionStore.readUserId(context) ?: JwtUtils.extractUserIdFromAccessToken(token) ?: return
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/profiles?user_id=eq.$userId"
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .patch(
+                    """{"onboarding_completed": true}""".toRequestBody("application/json".toMediaType())
+                )
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=minimal")
+                .build()
+            okhttp3.OkHttpClient().newCall(request).execute().close()
+        } catch (_: Exception) {}
+    }
 }
 
 private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING }
@@ -57,12 +99,20 @@ fun OnboardingScreen(
     var seedingStarted by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // Helper: clean up demo data then go to setup landing (connections)
-    fun skipAndClean() {
-        OnboardingPrefs.setCompleted(appCtx)
+    // ── Skip exit: clear demo data + mark complete in Supabase + navigate ──
+    fun skipOnboarding(then: () -> Unit) {
         scope.launch(Dispatchers.IO) {
             DemoDataSeeder.clearDemoData(appCtx)
-            kotlinx.coroutines.withContext(Dispatchers.Main) { onTourSkipped() }
+            OnboardingPrefs.setCompletedInSupabase(appCtx)
+            kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
+        }
+    }
+
+    // ── Tour/Setup exit: keep demo data for the tour, just mark complete ──
+    fun proceedWithTour(then: () -> Unit) {
+        scope.launch(Dispatchers.IO) {
+            OnboardingPrefs.setCompletedInSupabase(appCtx)
+            kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
         }
     }
 
@@ -94,7 +144,7 @@ fun OnboardingScreen(
     LaunchedEffect(dataReady) {
         if (dataReady && currentPage == PageId.LOADING_DATA) {
             kotlinx.coroutines.delay(600L)
-            onStartTour()
+            proceedWithTour { onStartTour() }
         }
     }
 
@@ -134,7 +184,7 @@ fun OnboardingScreen(
                 // Left
                 when (currentPage) {
                     PageId.WELCOME -> {
-                        TextButton(onClick = { skipAndClean() }) {
+                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
@@ -144,12 +194,12 @@ fun OnboardingScreen(
                         }
                     }
                     PageId.LOADING_DATA -> {
-                        TextButton(onClick = { skipAndClean() }) {
+                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
                     PageId.SETUP_LANDING -> {
-                        TextButton(onClick = { OnboardingPrefs.setCompleted(appCtx); onComplete() }) {
+                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
@@ -179,7 +229,7 @@ fun OnboardingScreen(
                     }
                     PageId.LOADING_DATA -> {
                         Button(
-                            onClick = { onStartTour() },
+                            onClick = { proceedWithTour { onStartTour() } },
                             enabled = dataReady,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AppTheme.AccentPink,
@@ -198,7 +248,7 @@ fun OnboardingScreen(
                     }
                     PageId.SETUP_LANDING -> {
                         Button(
-                            onClick = { OnboardingPrefs.setCompleted(appCtx); onStartSetup() },
+                            onClick = { proceedWithTour { onStartSetup() } },
                             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -412,3 +462,4 @@ private fun SetupStepPreview(icon: androidx.compose.ui.graphics.vector.ImageVect
         }
     }
 }
+

@@ -21,14 +21,15 @@ class WhoopAuthService {
     companion object {
         private const val TAG = "WHOOP"
 
-        private const val CLIENT_ID = "354e4d44-3780-4e99-a655-a306776879ee"
-        private const val CLIENT_SECRET =
-            "ce7314f4cdfab97a16467747a174a0ba8f1a8c561bc1dcc149674171ccd85d00"
+        // Client ID loaded from BuildConfig (set in local.properties)
+        private val CLIENT_ID = BuildConfig.WHOOP_CLIENT_ID
+
+        // Client secret is SERVER-SIDE ONLY — never in the APK.
+        // Token exchange happens via the whoop-token-exchange Edge Function.
 
         private const val REDIRECT_URI = "whoop://migraineme/callback"
 
         private const val AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth"
-        private const val TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token"
         private const val REVOKE_URL = "https://api.prod.whoop.com/developer/v2/user/access"
 
         private const val PREFS = "whoop_oauth"
@@ -111,17 +112,9 @@ class WhoopAuthService {
             return false
         }
 
-        val res = postForm(
-            TOKEN_URL,
-            mapOf(
-                "grant_type" to "authorization_code",
-                "client_id" to CLIENT_ID,
-                "client_secret" to CLIENT_SECRET,
-                "redirect_uri" to REDIRECT_URI,
-                "code" to code,
-                "code_verifier" to verifier
-            )
-        )
+        // ── Token exchange via server-side Edge Function ──
+        // The client secret never leaves the server.
+        val res = exchangeCodeViaServer(appCtx, code, verifier)
 
         return if (res.isSuccess) {
             val tok = res.getOrThrow()
@@ -166,6 +159,61 @@ class WhoopAuthService {
         } else {
             prefs.edit().putString(KEY_TOKEN_ERROR, res.exceptionOrNull()?.message ?: "WHOOP authentication failed").apply()
             false
+        }
+    }
+
+    /**
+     * Exchange authorization code for tokens via server-side Edge Function.
+     * The WHOOP client_secret lives in Supabase secrets — never in the APK.
+     */
+    private fun exchangeCodeViaServer(context: Context, code: String, codeVerifier: String): Result<WhoopToken> {
+        val supaAccessToken = SessionStore.readAccessToken(context) ?: return Result.failure(
+            IllegalStateException("No Supabase access token")
+        )
+
+        val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/whoop-token-exchange"
+
+        val jsonBody = JSONObject().apply {
+            put("code", code)
+            put("code_verifier", codeVerifier)
+        }.toString()
+
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("Authorization", "Bearer $supaAccessToken")
+            setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
+        }
+
+        return try {
+            conn.outputStream.use { os ->
+                os.write(jsonBody.toByteArray(Charsets.UTF_8))
+            }
+
+            val responseCode = conn.responseCode
+            val stream = if (responseCode in 200..299) conn.inputStream else conn.errorStream
+            val text = stream?.use { s ->
+                BufferedReader(InputStreamReader(s)).readText()
+            }.orEmpty()
+
+            if (responseCode !in 200..299) {
+                Log.e(TAG, "whoop-token-exchange error $responseCode: $text")
+                val msg = runCatching {
+                    val jo = JSONObject(text)
+                    jo.optString("error", text)
+                }.getOrDefault(text)
+                Result.failure(IllegalStateException(msg))
+            } else {
+                val jo = JSONObject(text)
+                Result.success(WhoopToken.fromTokenResponse(jo))
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "whoop-token-exchange exception", t)
+            Result.failure(t)
+        } finally {
+            runCatching { conn.disconnect() }
         }
     }
 
@@ -234,49 +282,6 @@ class WhoopAuthService {
         }
 
         return revoked to debug
-    }
-
-    private fun postForm(url: String, form: Map<String, String>): Result<WhoopToken> {
-        val body = form.entries.joinToString("&") { (k, v) ->
-            "${URLEncoder.encode(k, "UTF-8")}=${URLEncoder.encode(v, "UTF-8")}"
-        }
-
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            doOutput = true
-            setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-            setRequestProperty("Accept", "application/json")
-        }
-
-        return try {
-            conn.outputStream.use { os ->
-                os.write(body.toByteArray(Charsets.UTF_8))
-            }
-
-            val code = conn.responseCode
-            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-            val text = stream?.use { s ->
-                BufferedReader(InputStreamReader(s)).readText()
-            }.orEmpty()
-
-            if (code !in 200..299) {
-                Log.e(TAG, "token endpoint error $code: $text")
-                val msg = runCatching {
-                    val jo = JSONObject(text)
-                    val err = jo.optString("error")
-                    val desc = jo.optString("error_description")
-                    if (err.isNotBlank()) "$err: $desc" else text
-                }.getOrDefault(text)
-                Result.failure(IllegalStateException(msg))
-            } else {
-                val jo = JSONObject(text)
-                Result.success(WhoopToken.fromTokenResponse(jo))
-            }
-        } catch (t: Throwable) {
-            Result.failure(t)
-        } finally {
-            runCatching { conn.disconnect() }
-        }
     }
 
     private fun pkceChallengeS256(verifier: String): String {

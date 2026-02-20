@@ -115,6 +115,7 @@ fun EveningCheckInScreen(
 
     fun runAiParse() {
         if (noteText.isBlank()) { aiParsed = true; return }
+        if (!PremiumManager.state.value.isPremium) { aiParsed = true; return }
         val token = authState.accessToken ?: return
         aiLoading = true
         scope.launch {
@@ -218,7 +219,7 @@ fun EveningCheckInScreen(
                 CheckInPage.PRODROMES -> FavouritesPage("Any warning signs?", "Body signals you noticed", prodromeItems, selectedProdromes, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }) { l -> if (l in selectedProdromes) selectedProdromes.remove(l) else selectedProdromes.add(l) }
                 CheckInPage.MEDICINES -> FavouritesPage("Take any medicine?", "What did you take today", medicineItems, selectedMedicines, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }) { l -> if (l in selectedMedicines) selectedMedicines.remove(l) else selectedMedicines.add(l) }
                 CheckInPage.RELIEFS -> FavouritesPage("Use any relief methods?", "What helped today", reliefItems, selectedReliefs, Color(0xFF81C784), { ReliefIcons.forKey(it) }) { l -> if (l in selectedReliefs) selectedReliefs.remove(l) else selectedReliefs.add(l) }
-                CheckInPage.NOTE -> NotePage(noteText, { noteText = it; if (aiParsed) { aiParsed = false; aiMatches = emptyList() } }, aiLoading, aiParsed, aiMatches) { runAiParse() }
+                CheckInPage.NOTE -> NotePage(noteText, { noteText = it; if (aiParsed) { aiParsed = false; aiMatches = emptyList() } }, aiLoading, aiParsed, aiMatches, navController) { runAiParse() }
                 CheckInPage.REVIEW -> ReviewPage(selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs, aiMatches.map { it.label }.toSet(), saving, saved, { selectedTriggers.remove(it) }, { selectedProdromes.remove(it) }, { selectedMedicines.remove(it) }, { selectedReliefs.remove(it) }) { save() }
             } }
         }
@@ -304,7 +305,7 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading: Boolean, aiParsed: Boolean, aiMatches: List<AiMatchItem>, onParse: () -> Unit) {
+private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading: Boolean, aiParsed: Boolean, aiMatches: List<AiMatchItem>, navController: NavController, onParse: () -> Unit) {
     val scrollState = rememberScrollState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -331,6 +332,54 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
         try { speechLauncher.launch(intent) } catch (_: Exception) {
             android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
         }
+    }
+
+    val premiumState by PremiumManager.state.collectAsState()
+
+    if (!premiumState.isLoading && !premiumState.isPremium) {
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                Icons.Outlined.Mic,
+                contentDescription = null,
+                tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "Voice & AI Matching",
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Speak or type freely about your day and our AI will automatically match your entries to triggers, prodromes, medicines and reliefs.",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = { navController.navigate(Routes.PAYWALL) },
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                Text("Unlock with Premium", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "You can still review and save on the next page",
+                color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
+            )
+        }
+        return
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
@@ -623,3 +672,4 @@ private val SYNONYMS: Map<String, List<String>> = mapOf(
     "rest" to listOf("rested", "nap", "napped", "lay down"),
     "dark room" to listOf("darkness", "lay in dark"),
 )
+

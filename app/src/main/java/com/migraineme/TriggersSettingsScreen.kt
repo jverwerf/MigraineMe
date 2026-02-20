@@ -59,7 +59,7 @@ fun TriggersSettingsScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Customize Triggers Card (similar to Configure Monitor in MonitorScreen)
             HeroCard(
                 modifier = Modifier.clickable { navController.navigate(Routes.CUSTOMIZE_TRIGGERS) }
@@ -121,3 +121,4 @@ fun TriggersSettingsScreen(
         }
     }
 }
+

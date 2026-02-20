@@ -146,7 +146,7 @@ fun MigraineHubScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Hero Card - Log Full Migraine
             HeroCard(
                 modifier = Modifier.clickable { navController.navigate(Routes.LOG_MIGRAINE) }
@@ -166,9 +166,9 @@ fun MigraineHubScreen(navController: NavController) {
                 )
 
                 Text(
-                    "Full migraine with triggers, medicines & reliefs",
+                    "Timing → Pain location → Prodromes → Triggers → Medicines → Reliefs → Notes → Review",
                     color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center
                 )
 
@@ -189,13 +189,37 @@ fun MigraineHubScreen(navController: NavController) {
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Text(
-                    "Log items without a migraine",
+                    "Log a single item without a full migraine entry",
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            // Quick Log Cards Row 1
+            // Quick Log Cards Row 1 — Migraine symptoms first
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                QuickLogCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Symptoms",
+                    subtitle = "Log a symptom",
+                    iconColor = AppTheme.AccentPink,
+                    drawIcon = { HubIcons.run { drawMigraineStarburst(it) } },
+                    onClick = { navController.navigate(Routes.QUICK_LOG_MIGRAINE) }
+                )
+
+                QuickLogCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Prodrome",
+                    subtitle = "Log prodrome",
+                    iconColor = AppTheme.AccentPurple,
+                    drawIcon = { drawProdromeIcon(it) },
+                    onClick = { navController.navigate(Routes.QUICK_LOG_PRODROME) }
+                )
+            }
+
+            // Quick Log Cards Row 2
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -219,7 +243,7 @@ fun MigraineHubScreen(navController: NavController) {
                 )
             }
 
-            // Quick Log Cards Row 2
+            // Quick Log Cards Row 3
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -240,30 +264,6 @@ fun MigraineHubScreen(navController: NavController) {
                     iconColor = Color(0xFFFF8A65),
                     drawIcon = { HubIcons.run { drawActivityPulse(it) } },
                     onClick = { navController.navigate(Routes.QUICK_LOG_ACTIVITY) }
-                )
-            }
-
-            // Quick Log Cards Row 3
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                QuickLogCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Prodrome",
-                    subtitle = "Log symptoms",
-                    iconColor = AppTheme.AccentPurple,
-                    drawIcon = { drawProdromeIcon(it) },
-                    onClick = { navController.navigate(Routes.QUICK_LOG_PRODROME) }
-                )
-
-                QuickLogCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Migraine",
-                    subtitle = "Quick log",
-                    iconColor = AppTheme.AccentPink,
-                    drawIcon = { HubIcons.run { drawMigraineStarburst(it) } },
-                    onClick = { navController.navigate(Routes.QUICK_LOG_MIGRAINE) }
                 )
             }
         }
@@ -329,4 +329,5 @@ private fun QuickLogCard(
         }
     }
 }
+
 

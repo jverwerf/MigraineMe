@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,7 +71,7 @@ fun MonitorEnvironmentScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Back navigation
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -131,7 +132,7 @@ fun MonitorEnvironmentScreen(
             // Today's weather card - show ALL metrics
             BaseCard {
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.ENV_DATA_HISTORY) },
+                    modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.ENV_DATA_HISTORY) else navController.navigate(Routes.PAYWALL) },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -140,7 +141,7 @@ fun MonitorEnvironmentScreen(
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                    if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
                 }
                 Spacer(Modifier.height(8.dp))
 
@@ -217,8 +218,13 @@ fun MonitorEnvironmentScreen(
                 }
             }
 
-            // 7-Day Forecast
+            // 7-Day Forecast — premium only
             if (forecastDays.isNotEmpty()) {
+                PremiumGate(
+                    message = "Unlock 7-Day Forecast",
+                    subtitle = "See weather conditions ahead of time",
+                    onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                ) {
                 BaseCard {
                     Text(
                         "7-Day Forecast",
@@ -240,7 +246,6 @@ fun MonitorEnvironmentScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { navController.navigate(Routes.ENV_DATA_HISTORY) }
                                 .padding(vertical = 6.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -280,15 +285,22 @@ fun MonitorEnvironmentScreen(
                         }
                     }
                 }
+                } // end PremiumGate
             }
 
-            // History + Forecast Graph
-            WeatherHistoryGraph(
-                days = 21,
-                endDate = LocalDate.now().plusDays(6),
-                forecastStartDate = LocalDate.now().plusDays(1).toString(),
-                onClick = { navController.navigate(Routes.FULL_GRAPH_WEATHER) }
-            )
+            // History + Forecast Graph — premium only
+            PremiumGate(
+                message = "Unlock Weather Trends",
+                subtitle = "Track environmental patterns over time",
+                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+            ) {
+                WeatherHistoryGraph(
+                    days = 21,
+                    endDate = LocalDate.now().plusDays(6),
+                    forecastStartDate = LocalDate.now().plusDays(1).toString(),
+                    onClick = { navController.navigate(Routes.FULL_GRAPH_WEATHER) }
+                )
+            }
 
 
         }
@@ -347,5 +359,6 @@ private fun weatherCodeToCondition(code: Int): String {
         else -> "Unknown"
     }
 }
+
 
 

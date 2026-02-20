@@ -113,7 +113,7 @@ fun ConnectionsPage(onNavigateToConnections: () -> Unit, wearableConnected: Stri
         OnboardingIconHeader(Icons.Outlined.Link, "Connect your data")
         Text("The more data MigraineMe has, the better it predicts.", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(4.dp))
-        listOf("WHOOP" to "Sleep, recovery, HRV, HR, SpO₂, skin temp", "Health Connect" to "Steps, sleep, heart rate, nutrition, and more", "Both" to "Get the best of both sources", "None" to "I'll log everything manually").forEach { (label, desc) ->
+        listOf("Health Connect" to "Steps, sleep, heart rate, nutrition, and more", "WHOOP" to "Sleep, recovery, HRV, HR, SpO₂, skin temp", "Both" to "Get the best of both sources", "None" to "I'll log everything manually").forEach { (label, desc) ->
             OnboardingChoiceCard(label, desc, wearableConnected == label) { onWearableChanged(label) }
         }
         if (wearableConnected != null && wearableConnected != "None") {
@@ -283,3 +283,4 @@ fun CompletePage(saving: Boolean) {
             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
     }
 }
+

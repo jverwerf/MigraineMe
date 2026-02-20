@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.CircularProgressIndicator
@@ -68,7 +69,7 @@ fun MonitorSleepScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Back
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -101,12 +102,12 @@ fun MonitorSleepScreen(
             // Today's Sleep — shows ALL metrics
             BaseCard {
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.SLEEP_DATA_HISTORY) },
+                    modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.SLEEP_DATA_HISTORY) else navController.navigate(Routes.PAYWALL) },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Last Night's Sleep", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                    if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
                 }
                 Spacer(Modifier.height(8.dp))
 
@@ -151,11 +152,17 @@ fun MonitorSleepScreen(
                 }
             }
 
-            // History Graph
-            SleepHistoryGraph(
-                days = 14,
-                onClick = { navController.navigate(Routes.FULL_GRAPH_SLEEP) }
-            )
+            // History Graph — premium only
+            PremiumGate(
+                message = "Unlock Sleep Trends",
+                subtitle = "Track your sleep patterns over time",
+                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+            ) {
+                SleepHistoryGraph(
+                    days = 14,
+                    onClick = { navController.navigate(Routes.FULL_GRAPH_SLEEP) }
+                )
+            }
 
 
         }
@@ -313,3 +320,4 @@ private suspend fun sleepFetchTime(ctx: android.content.Context, token: String, 
         } catch (_: Exception) { null }
     }
 }
+

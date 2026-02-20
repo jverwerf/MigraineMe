@@ -1,3 +1,4 @@
+// FILE: app/src/main/java/com/migraineme/SupabaseAuthService.kt
 package com.migraineme
 
 import io.ktor.client.HttpClient
@@ -10,6 +11,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
@@ -94,11 +96,15 @@ object SupabaseAuthService {
 
     suspend fun signUpWithEmail(email: String, password: String): SessionResponse {
         val url = "$baseUrl/auth/v1/signup"
-        return client.post(url) {
+        val response = client.post(url) {
             header("apikey", anonKey)
             contentType(ContentType.Application.Json)
             setBody(SignUpRequest(email, password))
-        }.body()
+        }
+        val rawBody = response.bodyAsText()
+        android.util.Log.d("SupabaseAuth", "signUp status: ${response.status}")
+        android.util.Log.d("SupabaseAuth", "signUp body: $rawBody")
+        return Json { ignoreUnknownKeys = true; isLenient = true }.decodeFromString(rawBody)
     }
 
     /**
@@ -170,9 +176,6 @@ object SupabaseAuthService {
     /**
      * Sends password recovery email (reset link) for email/password accounts.
      * Supabase: POST /auth/v1/recover { "email": "..." }
-     *
-     * If redirectTo is provided, Supabase will redirect the recovery link to that URL
-     * (it must be allowed in Supabase Auth Redirect URLs).
      */
     suspend fun requestPasswordReset(email: String, redirectTo: String? = null) {
         val url = "$baseUrl/auth/v1/recover"

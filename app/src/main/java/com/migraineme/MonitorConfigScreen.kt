@@ -79,7 +79,6 @@ fun MonitorConfigScreen(
     ) {
         // Top spacer for logo reveal area
         item {
-            Spacer(Modifier.height(AppTheme.LogoRevealHeight))
         }
 
         // Back button
@@ -227,5 +226,6 @@ private fun getCardIconTint(cardId: String): Color {
         else -> Color(0xFF4FC3F7)
     }
 }
+
 
 

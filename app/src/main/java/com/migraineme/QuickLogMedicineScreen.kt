@@ -84,7 +84,7 @@ fun QuickLogMedicineScreen(
 
     Box {
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
-            ScrollableScreenContent(scrollState = scroll) {
+            ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
                 // Back navigation
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -319,3 +319,4 @@ private fun formatIsoForDisplay(iso: String): String {
         }
     }
 }
+

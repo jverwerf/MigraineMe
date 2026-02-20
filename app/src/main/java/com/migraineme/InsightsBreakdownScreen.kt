@@ -43,7 +43,7 @@ fun InsightsBreakdownScreen(
     val scrollState = rememberScrollState()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -549,3 +549,4 @@ private fun SeverityStat(label: String, value: Number, color: Color) {
         )
     }
 }
+

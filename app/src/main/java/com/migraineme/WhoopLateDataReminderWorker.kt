@@ -72,7 +72,7 @@ class WhoopLateDataReminderWorker(
         }
 
         val notif = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Whoop data still missing")
             .setContentText("We haven’t received today’s Whoop data yet. Open MigraineMe to retry.")
             .setAutoCancel(true)
@@ -110,3 +110,4 @@ class WhoopLateDataReminderWorker(
         }
     }
 }
+

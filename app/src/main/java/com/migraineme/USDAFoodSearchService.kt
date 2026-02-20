@@ -21,7 +21,7 @@ class USDAFoodSearchService(private val context: Context) {
 
     companion object {
         private const val TAG = "USDAFoodSearch"
-        private const val API_KEY = BuildConfig.USDA_API_KEY
+        private val API_KEY = BuildConfig.USDA_API_KEY
         private const val BASE_URL = "https://api.nal.usda.gov/fdc/v1"
 
         private fun dbl(obj: org.json.JSONObject, key: String): Double? =
@@ -1115,4 +1115,5 @@ fun NutritionLogItem.metricValue(metric: String): Double? = when (metric) {
     }
     else -> null
 }
+
 

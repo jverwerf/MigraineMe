@@ -44,6 +44,16 @@ object SetupScrollState {
     var scrollPosition by mutableStateOf(0)
 }
 
+enum class NavHintLocation(val icon: ImageVector, val label: String) {
+    BOTTOM_HOME(Icons.Outlined.Home, "Home tab"),
+    BOTTOM_MONITOR(Icons.Outlined.Timeline, "Monitor tab"),
+    BOTTOM_INSIGHTS(Icons.Outlined.BarChart, "Insights tab"),
+    BOTTOM_MIGRAINE(Icons.Outlined.Psychology, "Migraine tab"),
+    BOTTOM_JOURNAL(Icons.Outlined.History, "Journal tab"),
+    TOP_COMMUNITY(Icons.Outlined.Groups, "Community icon (top right)"),
+    TOP_SETTINGS(Icons.Outlined.Settings, "Settings menu (top left)"),
+}
+
 data class TourStep(
     val route: String,
     val icon: ImageVector,
@@ -52,44 +62,57 @@ data class TourStep(
     val highlight: String,
     val interactive: Boolean = false,
     val spotlightKey: String? = null,
+    val navHint: NavHintLocation? = null,
 )
 
 val tourSteps = listOf(
     TourStep(Routes.HOME, Icons.Outlined.Home, "Home — Your Risk Gauge",
         "This gauge shows your real-time migraine risk based on active triggers. The 7-day forecast lets you tap any day to preview future risk. Active Triggers shows exactly what's driving your score and how much each contributes.",
-        "Your daily command centre — always start here."),
+        "Your daily command centre — always start here.",
+        navHint = NavHintLocation.BOTTOM_HOME),
     TourStep(Routes.MONITOR, Icons.Outlined.Timeline, "Monitor — Live Data",
         "All your data streams in one place: sleep, recovery, heart rate, weather, screen time, nutrition. Each card shows today's value and a trend graph. Tap any card for detailed history and configuration.",
-        "Keep an eye on your body and environment."),
+        "Keep an eye on your body and environment.",
+        navHint = NavHintLocation.BOTTOM_MONITOR),
     TourStep(Routes.INSIGHTS, Icons.Outlined.BarChart, "Insights — Migraine Analysis",
         "Explore each migraine in detail: see what was happening in your body and environment before, during, and after. Toggle metrics to spot patterns. Drill into breakdowns by trigger, medicine, relief, and more.",
-        "Understand what's really going on."),
-    TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Migraine — Log Attacks",
+        "Understand what's really going on.",
+        navHint = NavHintLocation.BOTTOM_INSIGHTS),
+    TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Log — Log Attacks",
         "When a migraine hits, log everything here: pain location, severity, and symptoms. Quick-log buttons at the top let you rapidly log a trigger, medicine, relief, or activity without the full wizard.",
-        "Your go-to when a migraine hits."),
+        "Your go-to when a migraine hits.",
+        navHint = NavHintLocation.BOTTOM_MIGRAINE),
     TourStep(Routes.JOURNAL, Icons.Outlined.History, "Journal — Your Timeline",
         "Every migraine, trigger, medicine, relief, activity, and location — all in chronological order. Tap any entry to edit. The badge shows items that need your attention.",
-        "Your complete migraine diary."),
+        "Your complete migraine diary.",
+        navHint = NavHintLocation.BOTTOM_JOURNAL),
+    TourStep(Routes.COMMUNITY, Icons.Outlined.Forum, "Community — Articles & Forum",
+        "Read expert articles on migraine science, triggers, and treatment. Join the forum to share experiences, ask questions, and connect with others who understand what you're going through.",
+        "You're not alone — learn and share.",
+        navHint = NavHintLocation.TOP_COMMUNITY),
     TourStep(Routes.MANAGE_ITEMS, Icons.Outlined.Tune, "Settings — Manage Items",
         "Add, remove, or customise your triggers, medicines, reliefs, prodromes, and activities. Set severity levels for triggers and prodromes. Reorder your favourites for quick logging.",
-        "Make the app truly yours."),
+        "Make the app truly yours.",
+        navHint = NavHintLocation.TOP_SETTINGS),
     TourStep(Routes.RISK_WEIGHTS, Icons.Outlined.Speed, "Settings — Risk Model",
         "Customise how your risk score is calculated. Decay weights control how fast triggers lose influence over days. Thresholds set where the gauge transitions between None, Low, Mild, and High zones.",
-        "Advanced control over your predictions."),
+        "Advanced control over your predictions.",
+        navHint = NavHintLocation.TOP_SETTINGS),
     TourStep(Routes.PROFILE, Icons.Outlined.Person, "Settings — Profile",
         "Your account details and app preferences. Change your password, manage your data, and configure notification settings.",
-        "Your account, your rules."),
+        "Your account, your rules.",
+        navHint = NavHintLocation.TOP_SETTINGS),
 )
 
 val setupSteps = listOf(
-    TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect WHOOP",
-        "If you have a WHOOP band, tap the Connect button below to link it. This will automatically import your sleep, recovery, HRV, and more.",
-        "Tap Connect on the WHOOP card below",
-        interactive = true, spotlightKey = "whoop_card"),
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.FavoriteBorder, "Connect Health Connect",
         "Health Connect links your phone's health data — sleep, steps, heart rate, nutrition, and more from any compatible app.",
         "Tap Connect on the Health Connect card below",
         interactive = true, spotlightKey = "health_connect_card"),
+    TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect WHOOP",
+        "If you have a WHOOP band, tap the Connect button below to link it. This will automatically import your sleep, recovery, HRV, and more.",
+        "Tap Connect on the WHOOP card below",
+        interactive = true, spotlightKey = "whoop_card"),
     TourStep(Routes.DATA, Icons.Outlined.Storage, "Configure Data Collection",
         "Control exactly which metrics MigraineMe collects. Scroll through and toggle on the data you want to track. You can always change these later in Settings.",
         "Toggle on the metrics that matter to you ↓",
@@ -280,7 +303,8 @@ fun CoachOverlay(
         val currentStep = steps.getOrNull(tourState.stepIndex)
         if (currentStep?.interactive == true) {
             // TOUR: don't collapse page 1 (Home, idx 0)
-            // SETUP: don't collapse page 1 (WHOOP, idx 0) or page 2 (HC, idx 1)
+            // SETUP: don't collapse page 1 (HC, idx 0) or page 2 (WHOOP, idx 1)
+            // SETUP: DO collapse page 3 (Data Collection, idx 2) after delay
             val shouldCollapse = when (tourState.phase) {
                 CoachPhase.TOUR -> tourState.stepIndex > 0
                 CoachPhase.SETUP -> tourState.stepIndex >= 2
@@ -292,6 +316,7 @@ fun CoachOverlay(
         }
     }
     LaunchedEffect(SetupScrollState.scrollPosition) {
+        // Expand when scrolled to top
         if (SetupScrollState.scrollPosition == 0 && isCollapsed) {
             isCollapsed = false
         }
@@ -301,12 +326,22 @@ fun CoachOverlay(
         }
     }
 
-    AnimatedVisibility(visible = step != null, enter = slideInVertically { -it } + fadeIn(tween(300)), exit = slideOutVertically { -it } + fadeOut(tween(200))) {
+    val isSetupConnectionStep = tourState.phase == CoachPhase.SETUP && tourState.stepIndex < 2
+    AnimatedVisibility(visible = step != null, enter = slideInVertically { if (step?.route == Routes.PROFILE || isSetupConnectionStep) it else -it } + fadeIn(tween(300)), exit = slideOutVertically { if (step?.route == Routes.PROFILE || isSetupConnectionStep) it else -it } + fadeOut(tween(200))) {
         if (step != null) {
-            val topPad = if (step.route == Routes.PROFILE) 80.dp else 12.dp
             val isInteractive = step.interactive
+            val isProfileStep = step.route == Routes.PROFILE
 
-            Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = topPad, bottom = 12.dp)) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+                    .then(
+                        if (isProfileStep) Modifier.padding(bottom = 12.dp)
+                        else Modifier.padding(top = 12.dp, bottom = 12.dp)
+                    ),
+                contentAlignment = if (isProfileStep || isSetupConnectionStep) Alignment.BottomCenter else Alignment.TopCenter
+            ) {
                 AnimatedContent(
                     targetState = isCollapsed,
                     transitionSpec = {
@@ -435,11 +470,17 @@ fun CoachOverlay(
                                             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(14.dp))
                                         }
                                     } else {
+                                        val isTour = tourState.phase == CoachPhase.TOUR
                                         Button(onClick = { finishAndClean() },
                                             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                                             shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)) {
-                                            Icon(Icons.Filled.Check, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp))
-                                            Text("Done!", style = MaterialTheme.typography.labelMedium)
+                                            if (isTour) {
+                                                Text("Set up my data", style = MaterialTheme.typography.labelMedium); Spacer(Modifier.width(4.dp))
+                                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(14.dp))
+                                            } else {
+                                                Icon(Icons.Filled.Check, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp))
+                                                Text("Done!", style = MaterialTheme.typography.labelMedium)
+                                            }
                                         }
                                     }
                                 }
@@ -451,3 +492,5 @@ fun CoachOverlay(
         }
     }
 }
+
+

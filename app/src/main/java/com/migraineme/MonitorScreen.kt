@@ -184,7 +184,7 @@ fun MonitorScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Configure Data Collection Card (HeroCard style like HomeScreen)
             HeroCard(
                 modifier = Modifier.clickable { navController.navigate(Routes.MONITOR_CONFIG) }
@@ -1218,3 +1218,4 @@ private suspend fun loadMentalSummary(ctx: android.content.Context, token: Strin
 
     return MentalSummary(stress, screenTime, lateScreen, noise, brightness, volume, darkMode, unlocks)
 }
+

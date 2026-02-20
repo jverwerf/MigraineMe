@@ -18,8 +18,8 @@ import java.time.LocalDate
 class SupabaseNutritionService(private val context: Context) {
 
     companion object {
-        private const val SUPABASE_URL = BuildConfig.SUPABASE_URL
-        private const val SUPABASE_ANON_KEY = BuildConfig.SUPABASE_ANON_KEY
+        private val SUPABASE_URL = BuildConfig.SUPABASE_URL
+        private val SUPABASE_ANON_KEY = BuildConfig.SUPABASE_ANON_KEY
     }
 
     private val httpClient = OkHttpClient.Builder()

@@ -170,7 +170,7 @@ fun ActivitiesScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
@@ -393,4 +393,5 @@ private fun deriveDurationMinutes(startIso: String, endIso: String): Int? {
         if (dur.isNegative) null else dur.toMinutes().toInt()
     } catch (_: Exception) { null }
 }
+
 

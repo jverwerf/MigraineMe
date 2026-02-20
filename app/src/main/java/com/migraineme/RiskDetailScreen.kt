@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,15 +49,19 @@ fun RiskDetailScreen(
     val displayRecommendation = state.aiRecommendation
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            // Back button
-            Button(
-                onClick = { navController.popBackStack() },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.08f)),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+            // Top bar
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("\u2190 Back", color = Color.White, style = MaterialTheme.typography.labelLarge)
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
+                }
+                Text("Risk Model", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.size(48.dp))
             }
 
             // Gauge + forecast — exact same as HomeScreen
@@ -484,4 +490,5 @@ private fun DetailGauge(
         }
     }
 }
+
 

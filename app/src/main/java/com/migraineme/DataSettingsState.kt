@@ -69,6 +69,22 @@ class DataSettingsState(private val context: Context) {
     val menstruationSettings: StateFlow<MenstruationSettings?> = _menstruationSettings.asStateFlow()
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Pending Toggles (metrics that were toggled but awaiting permission)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private val _pendingEnables = MutableStateFlow<Set<String>>(emptySet())
+
+    fun markPendingEnable(metric: String) {
+        _pendingEnables.value = _pendingEnables.value + metric
+    }
+
+    private fun clearPendingEnable(metric: String) {
+        _pendingEnables.value = _pendingEnables.value - metric
+    }
+
+    fun isPendingEnable(metric: String): Boolean = metric in _pendingEnables.value
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Derived State
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -227,4 +243,72 @@ class DataSettingsState(private val context: Context) {
             }
         }
     }
+
+    /**
+     * Auto-enable location if permission was just granted and toggle was pending.
+     */
+    suspend fun autoEnableLocationIfPermissionGranted() {
+        if (!isPendingEnable("user_location_daily")) return
+        withContext(Dispatchers.IO) {
+            if (DataSettingsPermissionHelper.hasLocationPermission(appContext)) {
+                Log.d(TAG, "Auto-enabling location after permission grant")
+                edge.upsertMetricSetting(
+                    context = appContext,
+                    metric = "user_location_daily",
+                    enabled = true
+                )
+                LocationDailySyncWorker.runOnce(appContext)
+                clearPendingEnable("user_location_daily")
+                loadMetricSettings()
+            }
+        }
+    }
+
+    /**
+     * Auto-enable ambient noise if permissions granted and toggle was pending.
+     */
+    suspend fun autoEnableAmbientNoiseIfPermissionGranted() {
+        if (!isPendingEnable("ambient_noise_samples")) return
+        withContext(Dispatchers.IO) {
+            if (DataSettingsPermissionHelper.hasMicrophonePermission(appContext) &&
+                DataSettingsPermissionHelper.isBatteryOptimizationExempt(appContext)) {
+                Log.d(TAG, "Auto-enabling ambient noise after permission grant")
+                edge.upsertMetricSetting(
+                    context = appContext,
+                    metric = "ambient_noise_samples",
+                    enabled = true
+                )
+                MetricToggleHelper.toggle(appContext, "ambient_noise_samples", true)
+                clearPendingEnable("ambient_noise_samples")
+                loadMetricSettings()
+            }
+        }
+    }
+
+    /**
+     * Auto-enable nutrition with HC source when HC nutrition permission is granted
+     * but nutrition is not yet enabled. This handles the "HC doesn't auto-link" case.
+     */
+    suspend fun autoEnableNutritionIfHcPermissionGranted() {
+        withContext(Dispatchers.IO) {
+            if (DataSettingsPermissionHelper.hasHealthConnectNutritionPermission(appContext)) {
+                val nutritionSetting = _metricSettings.value["nutrition"]
+                val nutritionEnabled = nutritionSetting?.enabled ?: false
+
+                if (!nutritionEnabled) {
+                    Log.d(TAG, "Auto-enabling nutrition after HC nutrition permission detected")
+                    edge.upsertMetricSetting(
+                        context = appContext,
+                        metric = "nutrition",
+                        enabled = true,
+                        preferredSource = PhoneSource.HEALTH_CONNECT.key
+                    )
+                    MetricToggleHelper.toggle(appContext, "nutrition", true)
+                    NutritionSyncScheduler.schedule(appContext)
+                    loadMetricSettings()
+                }
+            }
+        }
+    }
 }
+

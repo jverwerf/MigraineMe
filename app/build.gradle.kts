@@ -12,6 +12,14 @@ configurations.all {
     exclude(group = "com.google.guava", module = "listenablefuture")
 }
 
+// ── Load secrets from local.properties (gitignored — never committed) ──
+fun localProp(key: String): String {
+    val f = rootProject.file("local.properties")
+    if (!f.exists()) return ""
+    val match = f.readLines().firstOrNull { it.startsWith("$key=") } ?: return ""
+    return match.substringAfter("=").trim().replace("\\", "\\\\")
+}
+
 android {
     namespace = "com.migraineme"
     compileSdk = 35
@@ -23,14 +31,19 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("String", "SUPABASE_URL", "\"https://qykflarpibofvffmzghi.supabase.co\"")
-        buildConfigField(
-            "String",
-            "SUPABASE_ANON_KEY",
-            "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5a2ZsYXJwaWJvZnZmZm16Z2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0NjU5NDMsImV4cCI6MjA3MjA0MTk0M30.r3DHA2EKNvC_AraPs1gwgaBl_oEBpDrD1bwPfiuiSbM\""
-        )
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"168300231262-3if586pjr3eejrfn46nijb2ss0egavmq.apps.googleusercontent.com\"")
-        buildConfigField("String", "USDA_API_KEY", "\"dnhSZnRMmCM7QNsf3LirUpjjQDyHleZR7XLLCJH5\"")
+        // ── All keys loaded from local.properties ──
+        buildConfigField("String", "SUPABASE_URL",
+            "\"${localProp("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY",
+            "\"${localProp("SUPABASE_ANON_KEY")}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID",
+            "\"${localProp("GOOGLE_WEB_CLIENT_ID")}\"")
+        buildConfigField("String", "USDA_API_KEY",
+            "\"${localProp("USDA_API_KEY")}\"")
+        buildConfigField("String", "REVENUECAT_API_KEY",
+            "\"${localProp("REVENUECAT_API_KEY")}\"")
+        buildConfigField("String", "WHOOP_CLIENT_ID",
+            "\"${localProp("WHOOP_CLIENT_ID")}\"")
     }
 
     buildTypes {
@@ -40,6 +53,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
         debug {
             isMinifyEnabled = false
@@ -119,4 +133,11 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // Coil — async image loading for Compose
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // RevenueCat
+    implementation("com.revenuecat.purchases:purchases:7.+")
+    implementation("com.revenuecat.purchases:purchases-ui:7.+")
 }
