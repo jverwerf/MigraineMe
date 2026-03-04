@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +59,8 @@ fun ProfileScreen(
     onNavigateChangePassword: () -> Unit,
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
+    onNavigateToCompanions: () -> Unit = {},
+    onLoggedOut: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -68,8 +72,6 @@ fun ProfileScreen(
 
     val isEditing = remember { mutableStateOf(false) }
     val editName = remember { mutableStateOf("") }
-    val selectedMigraineType = remember { mutableStateOf<SupabaseProfileService.MigraineType?>(null) }
-    val migraineMenuExpanded = remember { mutableStateOf(false) }
 
     val avatarBitmap = remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     val avatarUploadErrorDialog = remember { mutableStateOf<String?>(null) }
@@ -77,9 +79,19 @@ fun ProfileScreen(
 
     val canChangePassword = remember { mutableStateOf(false) }
 
+    // ── Delete account state ──
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteConfirmText by remember { mutableStateOf("") }
+    var deleteBusy by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
+
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
     var aiProfileLoading by remember { mutableStateOf(false) }
+
+    // ── AI Companions state ──
+    var subscribedCompanions by remember { mutableStateOf<List<CompanionRow>>(emptyList()) }
+    var companionsLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(auth.accessToken, auth.userId) {
         val token = auth.accessToken
@@ -153,7 +165,6 @@ fun ProfileScreen(
             }
             profile.value = result
             editName.value = result.displayName.orEmpty()
-            selectedMigraineType.value = result.migraineType
         } catch (t: Throwable) {
             profileError.value = t.message
         } finally {
@@ -196,7 +207,55 @@ fun ProfileScreen(
         }
     }
 
-    // Load avatar
+    // Load subscribed companions
+    LaunchedEffect(auth.accessToken) {
+        val token = auth.accessToken ?: return@LaunchedEffect
+        try {
+            val baseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
+            val anonKey = BuildConfig.SUPABASE_ANON_KEY
+            withContext(Dispatchers.IO) {
+                // Fetch subscription companion_ids
+                val subsUrl = "$baseUrl/rest/v1/ai_companion_subscriptions?select=id,companion_id"
+                val subsConn = (URL(subsUrl).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    setRequestProperty("apikey", anonKey)
+                    setRequestProperty("Authorization", "Bearer $token")
+                    setRequestProperty("Accept", "application/json")
+                }
+                val subIds = try {
+                    val code = subsConn.responseCode
+                    if (code in 200..299) {
+                        val text = subsConn.inputStream.bufferedReader().readText()
+                        val arr = Json.parseToJsonElement(text).jsonArray
+                        arr.mapNotNull { it.jsonObject["companion_id"]?.jsonPrimitive?.contentOrNull }.toSet()
+                    } else emptySet()
+                } finally { subsConn.disconnect() }
+
+                if (subIds.isNotEmpty()) {
+                    // Fetch active companions
+                    val compsUrl = "$baseUrl/rest/v1/ai_companions?is_active=eq.true&select=id,name,slug,subtitle,migraine_type,triggers,interests,personality,tone_guide,avatar_url,is_active"
+                    val compsConn = (URL(compsUrl).openConnection() as HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        setRequestProperty("apikey", anonKey)
+                        setRequestProperty("Authorization", "Bearer $token")
+                        setRequestProperty("Accept", "application/json")
+                    }
+                    try {
+                        val code = compsConn.responseCode
+                        if (code in 200..299) {
+                            val text = compsConn.inputStream.bufferedReader().readText()
+                            val companions: List<CompanionRow> = Json { ignoreUnknownKeys = true; explicitNulls = false }
+                                .decodeFromString(text)
+                            subscribedCompanions = companions.filter { it.id in subIds }
+                        }
+                    } finally { compsConn.disconnect() }
+                }
+            }
+        } catch (_: Throwable) {}
+        companionsLoaded = true
+    }
+
+    // Load avatar (original)
     LaunchedEffect(profile.value?.avatarUrl) {
         val url = profile.value?.avatarUrl?.trim()
         if (url.isNullOrBlank()) { avatarBitmap.value = null; return@LaunchedEffect }
@@ -215,7 +274,7 @@ fun ProfileScreen(
         scope.launch {
             try {
                 val updated = withContext(Dispatchers.IO) {
-                    SupabaseProfileService.updateProfile(accessToken = token, userId = userId, displayName = editName.value.trim().ifBlank { null }, avatarUrl = null, migraineType = selectedMigraineType.value)
+                    SupabaseProfileService.updateProfile(accessToken = token, userId = userId, displayName = editName.value.trim().ifBlank { null }, avatarUrl = null, migraineType = null)
                 }
                 profile.value = updated
                 isEditing.value = false
@@ -224,8 +283,7 @@ fun ProfileScreen(
     }
 
     fun cancelInline() {
-        profile.value?.let { editName.value = it.displayName.orEmpty(); selectedMigraineType.value = it.migraineType }
-        migraineMenuExpanded.value = false
+        profile.value?.let { editName.value = it.displayName.orEmpty() }
         isEditing.value = false
     }
 
@@ -272,20 +330,17 @@ fun ProfileScreen(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         // ── Profile Card ──
         val current = profile.value
         val headerName = current?.displayName?.takeIf { it.isNotBlank() } ?: "Name not set"
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
-            shape = AppTheme.BaseCardShape,
-            border = AppTheme.BaseCardBorder,
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.Top) {
+        HeroCard {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box {
                     // Avatar
                     Box(
-                        Modifier.size(72.dp)
+                        Modifier.size(80.dp)
                             .clip(CircleShape)
                             .background(Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f)))),
                         contentAlignment = Alignment.Center
@@ -297,65 +352,29 @@ fun ProfileScreen(
                             Text(headerName.trim().firstOrNull()?.uppercase() ?: "?", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
                         }
                     }
-
-                    Spacer(Modifier.width(16.dp))
-
-                    Column(Modifier.weight(1f)) {
-                        if (isEditing.value) {
-                            OutlinedTextField(
-                                value = editName.value, onValueChange = { editName.value = it },
-                                label = { Text("Name", color = AppTheme.SubtleTextColor) },
-                                singleLine = true,
-                                enabled = auth.accessToken != null && !profileLoading.value,
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.AccentPurple, unfocusedBorderColor = AppTheme.TrackColor, cursorColor = AppTheme.AccentPurple),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        } else {
-                            Text(headerName, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-
-                        Spacer(Modifier.height(4.dp))
-
-                        if (isEditing.value) {
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedButton(
-                                onClick = { migraineMenuExpanded.value = true },
-                                enabled = auth.accessToken != null && !profileLoading.value,
-                                shape = RoundedCornerShape(10.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(selectedMigraineType.value?.label ?: "Select migraine type", style = MaterialTheme.typography.bodySmall)
-                            }
-                        } else {
-                            Text(current?.migraineType?.label ?: "Migraine type not set", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
-
-                        Spacer(Modifier.height(4.dp))
-                        Text("ID: ${auth.userId?.take(8) ?: "—"}…", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f), style = MaterialTheme.typography.labelSmall)
-                    }
-
-                    // Edit / Save / Cancel buttons
-                    Column(horizontalAlignment = Alignment.End) {
-                        if (isEditing.value) {
-                            IconButton(onClick = { saveInline() }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(36.dp)) {
-                                Icon(Icons.Outlined.Check, "Save", tint = AppTheme.AccentPurple)
-                            }
-                            IconButton(onClick = { cancelInline() }, enabled = !profileLoading.value, modifier = Modifier.size(36.dp)) {
-                                Icon(Icons.Outlined.Close, "Cancel", tint = AppTheme.SubtleTextColor)
-                            }
-                        } else {
-                            IconButton(onClick = { isEditing.value = true }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(36.dp)) {
-                                Icon(Icons.Outlined.Edit, "Edit", tint = AppTheme.AccentPurple)
-                            }
-                        }
-                    }
                 }
 
-                // Edit avatar button
+                Spacer(Modifier.height(12.dp))
+
                 if (isEditing.value) {
+                    OutlinedTextField(
+                        value = editName.value, onValueChange = { editName.value = it },
+                        label = { Text("Name", color = AppTheme.SubtleTextColor) },
+                        singleLine = true,
+                        enabled = auth.accessToken != null && !profileLoading.value,
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White, textAlign = TextAlign.Center),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppTheme.AccentPurple, unfocusedBorderColor = AppTheme.TrackColor, cursorColor = AppTheme.AccentPurple),
+                        modifier = Modifier.fillMaxWidth(0.7f)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(onClick = { saveInline() }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(36.dp)) {
+                            Icon(Icons.Outlined.Check, "Save", tint = AppTheme.AccentPurple)
+                        }
+                        IconButton(onClick = { cancelInline() }, enabled = !profileLoading.value, modifier = Modifier.size(36.dp)) {
+                            Icon(Icons.Outlined.Close, "Cancel", tint = AppTheme.SubtleTextColor)
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(
                         onClick = { imagePickerLauncher.launch("image/*") },
@@ -363,19 +382,16 @@ fun ProfileScreen(
                         shape = RoundedCornerShape(10.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPink),
-                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Outlined.CameraAlt, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("Change profile picture", style = MaterialTheme.typography.bodySmall)
                     }
-                }
-
-                // Migraine type dropdown
-                DropdownMenu(expanded = migraineMenuExpanded.value, onDismissRequest = { migraineMenuExpanded.value = false }) {
-                    DropdownMenuItem(text = { Text("Not set") }, onClick = { selectedMigraineType.value = null; migraineMenuExpanded.value = false })
-                    SupabaseProfileService.MigraineType.entries.forEach { option ->
-                        DropdownMenuItem(text = { Text(option.label) }, onClick = { selectedMigraineType.value = option; migraineMenuExpanded.value = false })
+                } else {
+                    Text(headerName, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(4.dp))
+                    IconButton(onClick = { isEditing.value = true }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(28.dp)) {
+                        Icon(Icons.Outlined.Edit, "Edit", tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -402,9 +418,13 @@ fun ProfileScreen(
 
         if (aiProfile != null) {
             AiMigraineProfileCard(aiProfile!!)
+        }
 
-            RecalibrationProfileButton(
-                onNavigateToReview = onNavigateToRecalibrationReview
+        // ── AI Companions ──
+        if (companionsLoaded) {
+            CompanionsProfileCard(
+                companions = subscribedCompanions,
+                onManage = onNavigateToCompanions
             )
         }
 
@@ -424,6 +444,143 @@ fun ProfileScreen(
             }
         }
 
+        // ── Delete Account ──
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = { showDeleteDialog = true; deleteConfirmText = ""; deleteError = null },
+            enabled = auth.accessToken != null && !profileLoading.value,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE57373).copy(alpha = 0.5f)),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE57373))
+        ) {
+            Icon(Icons.Outlined.DeleteForever, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Delete account")
+        }
+
+        // Delete account confirmation dialog
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { if (!deleteBusy) { showDeleteDialog = false; deleteError = null } },
+                containerColor = Color(0xFF1E0A2E),
+                shape = RoundedCornerShape(20.dp),
+                title = {
+                    Text("Delete account?", color = Color(0xFFE57373), fontWeight = FontWeight.SemiBold)
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            "This will permanently delete your account and all your migraine data. This action cannot be undone.",
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            "Type DELETE to confirm:",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        OutlinedTextField(
+                            value = deleteConfirmText,
+                            onValueChange = { deleteConfirmText = it },
+                            singleLine = true,
+                            enabled = !deleteBusy,
+                            placeholder = { Text("DELETE", color = AppTheme.SubtleTextColor.copy(alpha = 0.3f)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFFE57373),
+                                unfocusedBorderColor = AppTheme.TrackColor,
+                                cursorColor = Color(0xFFE57373),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+                        deleteError?.let {
+                            Text(it, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (deleteBusy) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFFE57373), strokeWidth = 2.dp)
+                                Text("Deleting account…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (deleteConfirmText.trim().uppercase() != "DELETE") {
+                                deleteError = "Please type DELETE to confirm."
+                                return@Button
+                            }
+                            val token = auth.accessToken
+                            if (token.isNullOrBlank()) {
+                                deleteError = "Not signed in."
+                                return@Button
+                            }
+                            deleteBusy = true
+                            deleteError = null
+                            scope.launch {
+                                try {
+                                    val success = withContext(Dispatchers.IO) {
+                                        val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/delete-account"
+                                        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+                                            requestMethod = "POST"
+                                            setRequestProperty("Authorization", "Bearer $token")
+                                            setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                                            setRequestProperty("Content-Type", "application/json")
+                                            doOutput = true
+                                            outputStream.write("{}".toByteArray())
+                                        }
+                                        try {
+                                            val code = conn.responseCode
+                                            if (code !in 200..299) {
+                                                val errBody = conn.errorStream?.bufferedReader()?.readText() ?: "HTTP $code"
+                                                throw Exception(errBody)
+                                            }
+                                            true
+                                        } finally {
+                                            conn.disconnect()
+                                        }
+                                    }
+                                    if (success) {
+                                        SessionStore.clear(context.applicationContext)
+                                        PremiumManager.reset()
+                                        authVm.signOut()
+                                        showDeleteDialog = false
+                                        onLoggedOut()
+                                    } else {
+                                        deleteError = "Failed to delete account. Please try again."
+                                    }
+                                } catch (t: Throwable) {
+                                    deleteError = t.message ?: "Failed to delete account."
+                                } finally {
+                                    deleteBusy = false
+                                }
+                            }
+                        },
+                        enabled = !deleteBusy && deleteConfirmText.trim().uppercase() == "DELETE",
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE57373),
+                            disabledContainerColor = Color(0xFFE57373).copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Delete permanently", fontWeight = FontWeight.SemiBold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeleteDialog = false; deleteError = null },
+                        enabled = !deleteBusy
+                    ) {
+                        Text("Cancel", color = AppTheme.SubtleTextColor)
+                    }
+                }
+            )
+        }
+
         Spacer(Modifier.height(32.dp))
     }
 }
@@ -433,6 +590,7 @@ fun ProfileScreen(
 // ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun AiMigraineProfileCard(data: JsonObject) {
     val summary = data["summary"]?.jsonPrimitive?.contentOrNull
     val clinicalAssessment = data["clinical_assessment"]?.jsonPrimitive?.contentOrNull
@@ -514,7 +672,11 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                         if (tracksCycle == true) "Cycle" to "Tracking" else null,
                     )
                     if (demoItems.isNotEmpty()) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
                             demoItems.forEach { (label, value) ->
                                 Box(
                                     Modifier
@@ -535,7 +697,11 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                     if (!triggerAreas.isNullOrEmpty()) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("Trigger areas", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 triggerAreas.forEach { area ->
                                     Box(
                                         Modifier
@@ -564,7 +730,7 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Icon(Icons.Outlined.MedicalInformation, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
-                                Text("AI Clinical Assessment", color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+                                Text("MigraineMe Clinical Assessment", color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
                                 Icon(if (assessmentExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                             }
                             AnimatedVisibility(visible = assessmentExpanded) {
@@ -702,7 +868,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                     val features = listOf(
                         Icons.Outlined.Analytics to "Full insights & spider charts",
                         Icons.Outlined.Timeline to "7-day risk forecast",
-                        Icons.Outlined.Psychology to "AI calibration",
+                        Icons.Outlined.Psychology to "Smart calibration",
                         Icons.Outlined.Description to "PDF reports for your doctor",
                     )
 
@@ -761,6 +927,104 @@ private fun triggerAreaColor(area: String): Color = when (area.lowercase()) {
     "environment" -> Color(0xFF4DD0E1)
     "physical" -> Color(0xFFA1887F)
     else -> Color(0xFFB97BFF)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AI Companions Profile Card
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+private fun CompanionsProfileCard(
+    companions: List<CompanionRow>,
+    onManage: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onManage),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        shape = AppTheme.BaseCardShape,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.25f), AppTheme.AccentPink.copy(alpha = 0.15f)))
+        )
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.SmartToy, null,
+                        tint = AppTheme.AccentPurple,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        "AI Companions",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+                Text(
+                    "Manage",
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (companions.isEmpty()) {
+                Text(
+                    "Follow AI curators to get relevant articles flagged for you.",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    companions.forEach { companion ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            BotAvatar(companion.slug, 40)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    companion.name.replace(" The AI", "").replace(" the AI", ""),
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                    maxLines = 1
+                                )
+                                val desc = buildString {
+                                    if (companion.triggers.isNotEmpty()) {
+                                        append(companion.triggers.joinToString(", "))
+                                    }
+                                    if (companion.interests.isNotEmpty()) {
+                                        if (isNotEmpty()) append(" · ")
+                                        append(companion.interests.take(3).joinToString(", "))
+                                    }
+                                }
+                                if (desc.isNotBlank()) {
+                                    Text(
+                                        desc,
+                                        color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

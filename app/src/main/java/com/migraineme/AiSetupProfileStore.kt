@@ -184,7 +184,7 @@ object AiSetupProfileStore {
      * Derive trigger area tags from the questionnaire answers.
      * These are the high-level categories useful for community matching.
      */
-    private fun buildTriggerAreas(a: DeterministicMapper.QuestionnaireAnswers): List<String> {
+    internal fun buildTriggerAreas(a: DeterministicMapper.QuestionnaireAnswers): List<String> {
         val areas = mutableListOf<String>()
         if (a.poorSleepQualityTriggers != DeterministicMapper.Certainty.NO ||
             a.tooLittleSleepTriggers != DeterministicMapper.Certainty.NO ||

@@ -26,6 +26,7 @@ object AiSetupApplier {
     suspend fun applyConfig(
         context: Context,
         config: AiSetupService.AiConfig,
+        answers: DeterministicMapper.QuestionnaireAnswers? = null,
         onProgress: (ApplyProgress) -> Unit = {},
     ): Result<Unit> = withContext(Dispatchers.IO) {
         val appCtx = context.applicationContext
@@ -223,6 +224,48 @@ object AiSetupApplier {
                     Log.d(TAG, "Decay weight ${dw.severity}: ${dw.day0}/${dw.day1}/${dw.day2}/${dw.day3}/${dw.day4}/${dw.day5}/${dw.day6}")
                 }.onFailure { Log.w(TAG, "Failed decay weight ${dw.severity}: ${it.message}") }
                 progress("Decay: ${dw.severity}")
+            }
+
+            // ── Menstruation setup (if user tracks cycle AND didn't remove it from results) ──
+            if (answers != null && answers.tracksCycle == "Yes" && config.menstruationConfig != null) {
+                runCatching {
+                    Log.d(TAG, "Setting up menstruation tracking from AI setup")
+
+                    // 1. Save menstruation settings (cycle length + last period date if provided)
+                    val avgCycle = config.menstruationConfig?.avgCycleLength ?: DeterministicMapper.deriveCycleLength(answers)
+                    val lastPeriod = answers.lastPeriodDate?.takeIf { it.isNotBlank() }
+                    val lastPeriodLocalDate = lastPeriod?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
+                    val menstruationService = SupabaseMenstruationService(appCtx)
+                    menstruationService.updateSettings(accessToken, lastPeriodLocalDate, avgCycle, true)
+
+                    // 2. Enable menstruation metric
+                    edge.upsertMetricSetting(appCtx, "menstruation", true, null)
+                    MetricToggleHelper.toggle(appCtx, "menstruation", true)
+
+                    // 3. Ensure menstruation_predicted pool entry exists
+                    val predictedSev = config.triggers.firstOrNull {
+                        it.label.equals("menstruation_predicted", ignoreCase = true)
+                    }?.severity ?: "MILD"
+                    db.upsertTriggerToPool(accessToken, "menstruation_predicted", "Menstrual Cycle", predictedSev)
+
+                    // 4. Save menstruation decay weights
+                    val decayWeights = DeterministicMapper.buildMenstruationDecayWeights(answers)
+                    if (decayWeights != null) {
+                        edge.upsertMenstruationDecayWeights(appCtx, decayWeights)
+                    } else {
+                        edge.seedDefaultMenstruationDecayWeights(appCtx)
+                    }
+
+                    // 5. Create predicted trigger if we have a last period date
+                    if (lastPeriodLocalDate != null) {
+                        PredictedMenstruationHelper.ensureExists(appCtx)
+                        Log.d(TAG, "Created menstruation predicted trigger: lastPeriod=$lastPeriod, cycle=$avgCycle")
+                    } else {
+                        Log.d(TAG, "No last period date — predicted trigger will be created when user sets it in Menstruation Settings")
+                    }
+
+                    Log.d(TAG, "Menstruation setup complete: cycle=$avgCycle, severity=$predictedSev")
+                }.onFailure { Log.w(TAG, "Menstruation setup failed (non-blocking): ${it.message}") }
             }
 
             Log.d(TAG, "AI config applied. $done/$totalOps operations.")

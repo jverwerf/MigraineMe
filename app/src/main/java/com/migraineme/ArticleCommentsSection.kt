@@ -5,12 +5,16 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.material3.*
@@ -46,9 +50,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.put
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -82,7 +86,8 @@ fun ArticleCommentsSection(
     articleId: String,
     accessToken: String?,
     currentUserId: String?,
-    insightsVm: InsightsViewModel
+    insightsVm: InsightsViewModel,
+    communityVm: CommunityViewModel? = null
 ) {
     val scope = rememberCoroutineScope()
     var comments by remember { mutableStateOf<List<CommentRow>>(emptyList()) }
@@ -90,6 +95,8 @@ fun ArticleCommentsSection(
     var commentText by remember { mutableStateOf("") }
     var replyingTo by remember { mutableStateOf<CommentRow?>(null) }
     var posting by remember { mutableStateOf(false) }
+    var reportingComment by remember { mutableStateOf<CommentRow?>(null) }
+    var showModerationAlert by remember { mutableStateOf(false) }
 
     val client = remember {
         HttpClient {
@@ -110,6 +117,7 @@ fun ArticleCommentsSection(
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 header("apikey", supabaseKey)
                 parameter("article_id", "eq.$articleId")
+                parameter("status", "eq.active")
                 parameter("select", "id,article_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
                 parameter("order", "created_at.asc")
             }
@@ -127,6 +135,35 @@ fun ArticleCommentsSection(
 
     var showGraphPicker by remember { mutableStateOf(false) }
     var pendingAttachment by remember { mutableStateOf<JsonObject?>(null) }
+
+    // Report dialog
+    reportingComment?.let { comment ->
+        ReportDialog(
+            title = "Report comment",
+            onDismiss = { reportingComment = null },
+            onSubmit = { reason ->
+                accessToken?.let { communityVm?.reportContent(it, postId = null, commentId = null, reason = reason, articleCommentId = comment.id) }
+                reportingComment = null
+            }
+        )
+    }
+
+    // Moderation alert
+    if (showModerationAlert) {
+        AlertDialog(
+            onDismissRequest = { showModerationAlert = false },
+            confirmButton = {
+                TextButton(onClick = { showModerationAlert = false }) {
+                    Text("OK", color = AppTheme.AccentPurple)
+                }
+            },
+            icon = { Icon(Icons.Outlined.Info, contentDescription = null, tint = AppTheme.AccentPurple) },
+            title = { Text("Comment under review", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly.", color = Color.White.copy(alpha = 0.7f)) },
+            containerColor = Color(0xFF1A0029),
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         //  Header 
@@ -154,6 +191,7 @@ fun ArticleCommentsSection(
                     comment = comment,
                     isOwn = comment.userId == currentUserId,
                     onReply = { replyingTo = comment },
+                    onReport = { reportingComment = comment },
                     onDelete = {
                         scope.launch {
                             try {
@@ -192,6 +230,7 @@ fun ArticleCommentsSection(
                             comment = reply,
                             isOwn = reply.userId == currentUserId,
                             onReply = null,
+                            onReport = { reportingComment = reply },
                             onDelete = {
                                 scope.launch {
                                     try {
@@ -324,6 +363,7 @@ fun ArticleCommentsSection(
                 IconButton(
                     onClick = {
                         val text = commentText.trim()
+                        Log.d(TAG, "Send tapped — text='${text.take(30)}' posting=$posting enabled=${commentText.isNotBlank() && !posting}")
                         if (text.isEmpty() || posting) return@IconButton
                         posting = true
                         scope.launch {
@@ -343,12 +383,14 @@ fun ArticleCommentsSection(
                                     contentType(ContentType.Application.Json)
                                     setBody(body.toString())
                                 }
+                                Log.d(TAG, "Post response: ${response.status}")
                                 if (response.status.value in 200..299) {
                                     // Refetch all comments
                                     val fetchResponse = client.get("$supabaseUrl/rest/v1/article_comments") {
                                         header(HttpHeaders.Authorization, "Bearer $accessToken")
                                         header("apikey", supabaseKey)
                                         parameter("article_id", "eq.$articleId")
+                                        parameter("status", "eq.active")
                                         parameter("select", "id,article_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
                                         parameter("order", "created_at.asc")
                                     }
@@ -358,13 +400,36 @@ fun ArticleCommentsSection(
                                     commentText = ""
                                     replyingTo = null
                                     pendingAttachment = null
+                                    // Delayed re-fetch after moderation has had time to process
+                                    val preModCount = comments.size
+                                    kotlinx.coroutines.delay(4000L)
+                                    val modFetch = client.get("$supabaseUrl/rest/v1/article_comments") {
+                                        header(HttpHeaders.Authorization, "Bearer $accessToken")
+                                        header("apikey", supabaseKey)
+                                        parameter("article_id", "eq.$articleId")
+                                        parameter("status", "eq.active")
+                                        parameter("select", "id,article_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
+                                        parameter("order", "created_at.asc")
+                                    }
+                                    if (modFetch.status.value in 200..299) {
+                                        val updatedComments: List<CommentRow> = modFetch.body()
+                                        comments = updatedComments
+                                        if (updatedComments.size < preModCount) {
+                                            showModerationAlert = true
+                                        }
+                                    }
+                                    // Trigger AI summary generation if enough comments
+                                    accessToken?.let { token ->
+                                        communityVm?.triggerSummaryGeneration(token, articleId)
+                                    }
                                 } else {
                                     Log.e(TAG, "post comment failed: ${response.status} ${response.bodyAsText()}")
                                 }
                             } catch (e: Exception) {
                                 Log.e(TAG, "post comment error", e)
+                            } finally {
+                                posting = false
                             }
-                            posting = false
                         }
                     },
                     enabled = commentText.isNotBlank() && !posting
@@ -395,7 +460,8 @@ private fun CommentBubble(
     comment: CommentRow,
     isOwn: Boolean,
     onReply: (() -> Unit)?,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onReport: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -413,13 +479,13 @@ private fun CommentBubble(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(72.dp)
                         .clip(CircleShape)
                 )
             } else {
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(72.dp)
                         .clip(CircleShape)
                         .background(AppTheme.AccentPurple.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
@@ -470,6 +536,15 @@ private fun CommentBubble(
                         modifier = Modifier.size(16.dp)
                     )
                 }
+            } else {
+                IconButton(onClick = onReport, modifier = Modifier.size(28.dp)) {
+                    Icon(
+                        Icons.Outlined.Flag,
+                        contentDescription = "Report",
+                        tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
 
@@ -490,16 +565,28 @@ private fun CommentBubble(
 }
 
 //  Graph Attachment Card 
-// Renders the graph from JSON using CommunityGraphViewModel + InsightsTimelineGraph
+// Renders the graph from JSON using CommunityGraphViewModel + InsightsTimelineGraph or RiskGraphCanvas
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AttachedGraphCard(attachment: JsonObject) {
-    Log.d("GraphCard", "attachment keys: ${attachment.keys}, metrics count: ${attachment["metrics"]?.jsonArray?.size ?: 0}")
+    Log.d("GraphCard", "attachment keys: ${attachment.keys}")
     val graphVm = remember(attachment) {
         CommunityGraphViewModel().apply { loadFromJson(attachment) }
     }
 
+    val isRisk by graphVm.isRiskGraph.collectAsState()
+
+    if (isRisk) {
+        AttachedRiskGraphCard(graphVm)
+    } else {
+        AttachedInsightsGraphCard(graphVm)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel) {
     val migraines by graphVm.migraines.collectAsState()
     val events by graphVm.events.collectAsState()
     val metricSeries by graphVm.metricSeries.collectAsState()
@@ -561,6 +648,64 @@ private fun AttachedGraphCard(attachment: JsonObject) {
                             Box(Modifier.size(8.dp).clip(CircleShape).background(color))
                             Spacer(Modifier.width(4.dp))
                             Text(cat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel) {
+    val riskDays by graphVm.riskDays.collectAsState()
+    val metricSeries by graphVm.metricSeries.collectAsState()
+
+    if (riskDays.isEmpty()) return
+
+    val fmt = DateTimeFormatter.ofPattern("d MMM")
+    val from = LocalDate.parse(riskDays.first().date).format(fmt)
+    val to = LocalDate.parse(riskDays.last().date).format(fmt)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 36.dp, end = 8.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A0628).copy(alpha = 0.85f)),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(modifier = Modifier.padding(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFEF5350)))
+                Spacer(Modifier.width(6.dp))
+                Text("Risk Score", color = Color(0xFFEF5350), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.width(8.dp))
+                Text("$from \u2013 $to", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            }
+            Spacer(Modifier.height(4.dp))
+
+            RiskGraphCanvas(
+                days = riskDays,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+            )
+
+            // Metric legend
+            if (metricSeries.isNotEmpty()) {
+                Spacer(Modifier.height(6.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    for (series in metricSeries) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(8.dp).clip(CircleShape).background(series.color))
+                            Spacer(Modifier.width(4.dp))
+                            Text(series.label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

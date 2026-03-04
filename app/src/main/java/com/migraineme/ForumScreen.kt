@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.*
@@ -45,15 +46,17 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 // ── Forum Post Card (used by CommunityScreen ForumPage) ──
+// Heart = me too + follow. One action, shows count.
 
 @Composable
 fun ForumPostCard(
     post: ForumPostRow,
     isOwn: Boolean,
-    isFavorited: Boolean,
+    isMeToo: Boolean = false,
+    meTooCount: Int = 0,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
-    onToggleFavorite: () -> Unit,
+    onToggleMeToo: () -> Unit = {},
     onReport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -74,7 +77,7 @@ fun ForumPostCard(
                 AvatarCircle(
                     avatarUrl = post.profiles?.avatarUrl,
                     displayName = post.profiles?.displayName,
-                    size = 32
+                    size = 64
                 )
                 Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -146,14 +149,27 @@ fun ForumPostCard(
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall
                 )
+
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = onToggleFavorite, modifier = Modifier.size(28.dp)) {
-                    Icon(
-                        if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
-                        tint = if (isFavorited) AppTheme.AccentPink else AppTheme.SubtleTextColor,
-                        modifier = Modifier.size(18.dp)
-                    )
+
+                // Heart = me too + follow
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (meTooCount > 0) {
+                        Text(
+                            "$meTooCount",
+                            color = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Spacer(Modifier.width(2.dp))
+                    }
+                    IconButton(onClick = onToggleMeToo, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            if (isMeToo) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (isMeToo) "Unlike" else "Me too",
+                            tint = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }
@@ -348,7 +364,8 @@ fun ForumPostDetailScreen(
     var reportingPost by remember { mutableStateOf(false) }
     var reportingComment by remember { mutableStateOf<ForumCommentRow?>(null) }
 
-    val isFavorited = postId in state.forumFavoriteIds
+    val isMeToo = postId in state.myMeTooIds
+    val meTooCount = state.meTooCountMap[postId] ?: 0
 
     // Report dialogs
     if (reportingPost && post != null) {
@@ -370,10 +387,24 @@ fun ForumPostDetailScreen(
         )
     }
 
+    // Moderation alert
+    if (state.showModerationAlert) {
+        AlertDialog(
+            onDismissRequest = { vm.dismissModerationAlert() },
+            confirmButton = {
+                TextButton(onClick = { vm.dismissModerationAlert() }) {
+                    Text("OK", color = AppTheme.AccentPurple)
+                }
+            },
+            icon = { Icon(Icons.Outlined.Info, contentDescription = null, tint = AppTheme.AccentPurple) },
+            title = { Text("Content under review", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly.", color = Color.White.copy(alpha = 0.7f)) },
+            containerColor = Color(0xFF1A0029),
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.FadeColor)
     ) {
         // Scrollable content
         Column(
@@ -400,12 +431,22 @@ fun ForumPostDetailScreen(
                     modifier = Modifier.weight(1f)
                 )
                 if (accessToken != null) {
-                    IconButton(onClick = { vm.toggleForumFavorite(accessToken, postId) }) {
-                        Icon(
-                            if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
-                            tint = if (isFavorited) AppTheme.AccentPink else AppTheme.SubtleTextColor
-                        )
+                    // Heart = me too + follow (with count)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (meTooCount > 0) {
+                            Text(
+                                "$meTooCount",
+                                color = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                        IconButton(onClick = { vm.toggleMeToo(accessToken, postId) }) {
+                            Icon(
+                                if (isMeToo) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = if (isMeToo) "Unlike" else "Me too",
+                                tint = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor
+                            )
+                        }
                     }
                     // Report post button (only for others' posts)
                     if (post != null && post.userId != currentUserId) {
@@ -454,7 +495,7 @@ fun ForumPostDetailScreen(
             } else if (post != null) {
                 HeroCard {
                     Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
-                        AvatarCircle(post.profiles?.avatarUrl, post.profiles?.displayName, 36)
+                        AvatarCircle(post.profiles?.avatarUrl, post.profiles?.displayName, 72)
                         Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -474,6 +515,11 @@ fun ForumPostDetailScreen(
                         }
                     }
                 }
+            }
+
+            // ── AI thread summary (shown when 10+ comments) ──
+            state.threadSummaries[postId]?.let { summary ->
+                ThreadSummaryBanner(summary = summary)
             }
 
             // ── Replies card ──
@@ -611,7 +657,7 @@ private fun ForumCommentBubble(
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AvatarCircle(comment.profiles?.avatarUrl, comment.profiles?.displayName, 28)
+            AvatarCircle(comment.profiles?.avatarUrl, comment.profiles?.displayName, 72)
             Spacer(Modifier.width(8.dp))
             Text(comment.profiles?.displayName ?: "Anonymous", color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.width(8.dp))

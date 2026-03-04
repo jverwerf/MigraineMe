@@ -1,24 +1,15 @@
 package com.migraineme
 
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
-/**
- * Centralized helper for menstruation tracking:
- * - Writes menstruation_settings via SupabaseMenstruationService
- * - Enables/disables metric_settings via EdgeFunctionsService
- * - Manages local helpers (PredictedMenstruationHelper, MetricToggleHelper, MenstruationSyncScheduler)
- *
- * UI (dialogs, toasts) stays in the calling screens.
- */
 object MenstruationTrackingHelper {
 
-    /**
-     * Enable menstruation metric in Supabase + local toggle/scheduler WITHOUT writing menstruation_settings.
-     * Useful when Health Connect permission is granted and you want to show setup dialog next.
-     */
+    private const val TAG = "MenstruationHelper"
+
     suspend fun enableMetricOnly(
         context: Context,
         preferredSource: String?
@@ -31,19 +22,14 @@ object MenstruationTrackingHelper {
                 enabled = true,
                 preferredSource = preferredSource
             )
-            if (ok) {
-                MetricToggleHelper.toggle(context.applicationContext, "menstruation", true)
-            }
+            if (ok) MetricToggleHelper.toggle(context.applicationContext, "menstruation", true)
             ok
         }.getOrElse {
-            android.util.Log.e("MenstruationHelper", "enableMetricOnly failed: ${it.message}", it)
+            Log.e(TAG, "enableMetricOnly failed: ${it.message}", it)
             false
         }
     }
 
-    /**
-     * Disable menstruation metric in Supabase + local toggle/scheduler cleanup.
-     */
     suspend fun disableTracking(
         context: Context,
         preferredSource: String?
@@ -51,7 +37,6 @@ object MenstruationTrackingHelper {
         runCatching {
             PredictedMenstruationHelper.delete(context.applicationContext)
             MetricToggleHelper.toggle(context.applicationContext, "menstruation", false)
-
             val edge = EdgeFunctionsService()
             edge.upsertMetricSetting(
                 context = context.applicationContext,
@@ -59,14 +44,9 @@ object MenstruationTrackingHelper {
                 enabled = false,
                 preferredSource = preferredSource
             )
-        }.onFailure {
-            android.util.Log.e("MenstruationHelper", "disableTracking failed: ${it.message}", it)
-        }.isSuccess
+        }.onFailure { Log.e(TAG, "disableTracking failed: ${it.message}", it) }.isSuccess
     }
 
-    /**
-     * Save menstruation_settings to Supabase and fully enable tracking (Supabase + local).
-     */
     suspend fun saveSettingsAndEnableTracking(
         context: Context,
         lastDate: LocalDate?,
@@ -79,18 +59,10 @@ object MenstruationTrackingHelper {
                 ?: return@withContext false
 
             val service = SupabaseMenstruationService(context.applicationContext)
-            service.updateSettings(
-                accessToken = accessToken,
-                lastMenstruationDate = lastDate,
-                avgCycleLength = avgCycle,
-                autoUpdateAverage = autoUpdate
-            )
+            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate)
 
-            // Persist manual log as a trigger (used by prediction + backend conversion logic)
-            ensureManualMenstruationTrigger(
-                accessToken = accessToken,
-                lastDate = lastDate
-            )
+            ensureManualMenstruationTrigger(accessToken, lastDate)
+            ensurePredictedTriggerPoolEntry(context.applicationContext, accessToken)
 
             PredictedMenstruationHelper.ensureExists(context.applicationContext)
             MetricToggleHelper.toggle(context.applicationContext, "menstruation", true)
@@ -103,14 +75,10 @@ object MenstruationTrackingHelper {
                 enabled = true,
                 preferredSource = preferredSource
             )
-        }.onFailure {
-            android.util.Log.e("MenstruationHelper", "saveSettingsAndEnableTracking failed: ${it.message}", it)
-        }.getOrDefault(false)
+        }.onFailure { Log.e(TAG, "saveSettingsAndEnableTracking failed: ${it.message}", it) }
+            .getOrDefault(false)
     }
 
-    /**
-     * Update menstruation_settings only (no metric toggling).
-     */
     suspend fun updateSettingsOnly(
         context: Context,
         lastDate: LocalDate?,
@@ -122,46 +90,56 @@ object MenstruationTrackingHelper {
                 ?: return@withContext false
 
             val service = SupabaseMenstruationService(context.applicationContext)
-            service.updateSettings(
-                accessToken = accessToken,
-                lastMenstruationDate = lastDate,
-                avgCycleLength = avgCycle,
-                autoUpdateAverage = autoUpdate
-            )
+            service.updateSettings(accessToken, lastDate, avgCycle, autoUpdate)
 
-            // Persist manual log as a trigger (used by prediction + backend conversion logic)
-            ensureManualMenstruationTrigger(
-                accessToken = accessToken,
-                lastDate = lastDate
-            )
+            ensureManualMenstruationTrigger(accessToken, lastDate)
+            ensurePredictedTriggerPoolEntry(context.applicationContext, accessToken)
+            PredictedMenstruationHelper.ensureExists(context.applicationContext)
 
             true
-        }.onFailure {
-            android.util.Log.e("MenstruationHelper", "updateSettingsOnly failed: ${it.message}", it)
-        }.getOrDefault(false)
+        }.onFailure { Log.e(TAG, "updateSettingsOnly failed: ${it.message}", it) }
+            .getOrDefault(false)
     }
 
     /**
-     * When the user logs a "last period date" via the menstruation settings UI, persist it as a real trigger.
-     *
-     * This supports:
-     * - prediction logic that looks at last real "menstruation" triggers
-     * - backend jobs (e.g., convert-predicted-menstruations) that skip auto-conversion if a manual period was logged
+     * Ensure a user_triggers pool entry exists for "menstruation_predicted"
+     * so the edge function can look up its severity for gauge scoring.
+     * Copies severity from the existing "Menstruation" entry, defaults to MILD.
      */
+    private suspend fun ensurePredictedTriggerPoolEntry(
+        appContext: Context,
+        accessToken: String
+    ) {
+        try {
+            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+            val triggerPool = db.getAllTriggerPool(accessToken)
+
+            val menstruationEntry = triggerPool.firstOrNull {
+                it.label.equals("Menstruation", ignoreCase = true)
+            }
+            val severity = menstruationEntry?.predictionValue?.takeIf { it != "NONE" } ?: "MILD"
+
+            db.upsertTriggerToPool(
+                accessToken = accessToken,
+                label = "menstruation_predicted",
+                category = "Menstrual Cycle",
+                predictionValue = severity
+            )
+
+            Log.d(TAG, "Ensured menstruation_predicted pool entry with severity=$severity")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to ensure menstruation_predicted pool entry: ${e.message}")
+        }
+    }
+
     private suspend fun ensureManualMenstruationTrigger(
         accessToken: String,
         lastDate: LocalDate?
     ) {
         if (lastDate == null) return
 
-        val db = SupabaseDbService(
-            BuildConfig.SUPABASE_URL,
-            BuildConfig.SUPABASE_ANON_KEY
-        )
-
+        val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val day = lastDate.toString()
-
-        // Avoid duplicates if user taps Save multiple times for the same date.
         val alreadyLogged = db.getAllTriggers(accessToken).any { t ->
             t.type == "menstruation" &&
                     (t.source ?: "manual") == "manual" &&

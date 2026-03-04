@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -149,7 +153,7 @@ fun MigraineHubScreen(navController: NavController) {
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Hero Card - Log Full Migraine
             HeroCard(
-                modifier = Modifier.clickable { navController.navigate(Routes.LOG_MIGRAINE) }
+                modifier = Modifier.clickable { navController.navigate(Routes.TIMING) }
             ) {
                 Box(
                     modifier = Modifier
@@ -181,6 +185,39 @@ fun MigraineHubScreen(navController: NavController) {
                 )
             }
 
+            // Daily Check-In
+            BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.EVENING_CHECKIN) }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Outlined.EditNote,
+                        contentDescription = null,
+                        tint = AppTheme.AccentPink,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Daily Check-In",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        Text(
+                            "Review your day",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Text(
+                        "→",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             // Quick Log Section Title
             BaseCard {
                 Text(
@@ -195,7 +232,7 @@ fun MigraineHubScreen(navController: NavController) {
                 )
             }
 
-            // Quick Log Cards Row 1 — Migraine symptoms first
+            // Quick Log Section Title
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)

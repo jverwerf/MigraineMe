@@ -63,7 +63,7 @@ fun RecalibrationBanner(
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "AI has suggestions for you",
+                    "MigraineMe has suggestions for you",
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )

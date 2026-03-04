@@ -46,7 +46,6 @@ fun RiskDetailScreen(
     val displayZone = dayData?.zone ?: state.riskZone
     val displayPercent = dayData?.percent ?: state.riskPercent
     val displayTriggers = dayData?.topTriggers ?: state.triggersAtRisk
-    val displayRecommendation = state.aiRecommendation
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -78,11 +77,15 @@ fun RiskDetailScreen(
             // ALL triggers — not limited to 3
             DetailTriggersCard(
                 triggers = displayTriggers,
-                gaugeMax = state.gaugeMaxScore
+                gaugeMax = state.gaugeMaxScore,
+                onViewGraph = {
+                    val contribParam = java.net.URLEncoder.encode(
+                        displayTriggers.joinToString("|") { it.name }, "UTF-8"
+                    )
+                    navController.navigate(Routes.FULL_GRAPH_RISK + "?contributors=$contribParam")
+                }
             )
 
-            // Recommendation
-            DetailRecoCard(recommendation = displayRecommendation)
         }
     }
 }
@@ -256,16 +259,29 @@ private fun DetailMini(
 @Composable
 private fun DetailTriggersCard(
     triggers: List<TriggerScore>,
-    gaugeMax: Double = 10.0
+    gaugeMax: Double = 10.0,
+    onViewGraph: () -> Unit = {}
 ) {
     if (triggers.isEmpty()) return
 
     BaseCard {
-        Text(
-            "All contributors",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "All contributors",
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+            Text(
+                "Risk history \u2192",
+                color = AppTheme.AccentPurple,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.clickable { onViewGraph() }
+            )
+        }
 
         Spacer(Modifier.height(8.dp))
 
@@ -361,21 +377,6 @@ private fun DetailTriggersCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun DetailRecoCard(recommendation: String) {
-    BaseCard {
-        Text(
-            "Recommendation",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
-        Text(
-            recommendation.ifBlank { "—" },
-            color = AppTheme.BodyTextColor
-        )
     }
 }
 

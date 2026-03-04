@@ -5800,7 +5800,7 @@ class AmbientNoiseSampleWorker(
         ensureChannel(context)
 
         val notif = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Measuring ambient sound level")
             .setContentText("MigraineMe is sampling loudness (no audio stored).")
             .setOngoing(true)
@@ -5911,6 +5911,7 @@ class AmbientNoiseSampleWorker(
         }
     }
 }
+
 
 title: AmbientNoiseWatchdogWorker.kt
 text:
@@ -10861,7 +10862,8 @@ fun DataSection(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = AppTheme.TitleColor
             )
             Spacer(Modifier.height(10.dp))
             content()
@@ -10890,6 +10892,7 @@ fun MetricToggle(
     ) {
         Text(
             text = label,
+            color = AppTheme.BodyTextColor,
             modifier = Modifier.weight(1f)
         )
         Switch(
@@ -10912,7 +10915,7 @@ fun MenstruationSection(
 ) {
     if (settings == null || settings.lastMenstruationDate == null) {
         TextButton(onClick = onSetup) {
-            Text("Set up menstruation tracking")
+            Text("Set up menstruation tracking", color = AppTheme.AccentPurple)
         }
     } else {
         Row(
@@ -10923,25 +10926,27 @@ fun MenstruationSection(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "Menstruation",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppTheme.BodyTextColor
                 )
                 Text(
                     "Last: ${settings.lastMenstruationDate}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = AppTheme.SubtleTextColor
                 )
                 Text(
                     "Cycle: ${settings.avgCycleLength} days",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = AppTheme.SubtleTextColor
                 )
             }
             TextButton(onClick = onEdit) {
-                Text("Edit")
+                Text("Edit", color = AppTheme.AccentPurple)
             }
         }
     }
 }
+
 
 title: DataSettingsDialogs.kt
 text:
@@ -11465,8 +11470,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 /**
  * Individual data settings row component.
@@ -11510,23 +11518,33 @@ fun DataSettingsRow(
     val isMenstruationRow = row.table == "menstruation" && row.collectedByKind == CollectedByKind.PHONE
     val isStressRow = row.table == "stress_index_daily"
 
-    // Permission states
-    val screenTimePermissionGranted = remember(metricSettings) {
+    // Permission states — refresh on lifecycle resume so granting permission is reflected immediately
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var permissionTick by remember { mutableIntStateOf(0) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) permissionTick++
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val screenTimePermissionGranted = remember(permissionTick) {
         if (isScreenTimeRow || isLateNightScreenTimeRow) DataSettingsPermissionHelper.hasScreenTimePermission(appContext) else true
     }
-    val usageStatsPermissionGranted = remember(metricSettings) {
+    val usageStatsPermissionGranted = remember(permissionTick) {
         if (isPhoneOrWearableRow) DataSettingsPermissionHelper.hasScreenTimePermission(appContext) else true
     }
-    val locationPermissionGranted = remember(metricSettings) {
+    val locationPermissionGranted = remember(permissionTick) {
         DataSettingsPermissionHelper.hasLocationPermission(appContext)
     }
-    val backgroundLocationGranted = remember(metricSettings) {
+    val backgroundLocationGranted = remember(permissionTick) {
         DataSettingsPermissionHelper.hasBackgroundLocationPermission(appContext)
     }
-    val micPermissionGranted = remember(metricSettings) {
+    val micPermissionGranted = remember(permissionTick) {
         if (isAmbientNoiseRow) DataSettingsPermissionHelper.hasMicrophonePermission(appContext) else true
     }
-    val batteryOptimizationExempt = remember(metricSettings) {
+    val batteryOptimizationExempt = remember(permissionTick) {
         if (isAmbientNoiseRow) DataSettingsPermissionHelper.isBatteryOptimizationExempt(appContext) else true
     }
 
@@ -11962,6 +11980,7 @@ private fun getDefaultEnabled(row: DataRow): Boolean {
 
 
 
+
 title: DataSettingsRowComponents.kt
 text:
 package com.migraineme
@@ -11971,12 +11990,14 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -12008,16 +12029,17 @@ fun WearableSourceSelector(
             onClick = { if (enabled && options.size > 1) expanded = true },
             enabled = enabled
         ) {
-            Text(selected.label, style = MaterialTheme.typography.bodySmall)
+            Text(selected.label, color = Color.White, style = MaterialTheme.typography.bodySmall)
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
         ) {
             options.forEach { opt ->
                 DropdownMenuItem(
-                    text = { Text(opt.label) },
+                    text = { Text(opt.label, color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(opt)
@@ -12046,16 +12068,17 @@ fun PhoneSourceSelector(
             onClick = { if (enabled && options.size > 1) expanded = true },
             enabled = enabled
         ) {
-            Text(selected.label, style = MaterialTheme.typography.bodySmall)
+            Text(selected.label, color = Color.White, style = MaterialTheme.typography.bodySmall)
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
         ) {
             options.forEach { opt ->
                 DropdownMenuItem(
-                    text = { Text(opt.label) },
+                    text = { Text(opt.label, color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(opt)
@@ -12087,16 +12110,17 @@ fun HybridSourceSelector(
             onClick = { if (enabled && options.size > 1) expanded = true },
             enabled = enabled
         ) {
-            Text(selectedLabel, style = MaterialTheme.typography.bodySmall)
+            Text(selectedLabel, color = Color.White, style = MaterialTheme.typography.bodySmall)
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
         ) {
             options.forEach { (key: String, label: String) ->
                 DropdownMenuItem(
-                    text = { Text(label) },
+                    text = { Text(label, color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(key)
@@ -12133,6 +12157,7 @@ fun PermissionSubRow(
         ) {
             Text(
                 label,
+                color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.alpha(0.75f)
             )
@@ -12279,16 +12304,16 @@ fun MenstruationDetailCard(
                     Text(
                         "Last Period",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AppTheme.SubtleTextColor
                     )
                     Text(
                         settings.lastMenstruationDate?.toString() ?: "Not set",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        color = AppTheme.AccentPurple
                     )
                 }
                 TextButton(onClick = onEdit) {
-                    Text("Edit")
+                    Text("Edit", color = AppTheme.AccentPurple)
                 }
             }
 
@@ -12306,22 +12331,22 @@ fun MenstruationDetailCard(
                     Text(
                         "Average Cycle",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AppTheme.SubtleTextColor
                     )
                     Text(
                         "${settings.avgCycleLength} days",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        color = AppTheme.AccentPurple
                     )
                     Text(
                         "Weighted average of last 6 cycles",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = AppTheme.SubtleTextColor,
                         modifier = Modifier.alpha(0.7f)
                     )
                 }
                 TextButton(onClick = onEdit) {
-                    Text("Edit")
+                    Text("Edit", color = AppTheme.AccentPurple)
                 }
             }
 
@@ -12338,12 +12363,13 @@ fun MenstruationDetailCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         "Auto-update average",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppTheme.BodyTextColor
                     )
                     Text(
                         "Recalculate when new periods logged",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = AppTheme.SubtleTextColor,
                         modifier = Modifier.alpha(0.7f)
                     )
                 }
@@ -12361,7 +12387,7 @@ fun MenstruationDetailCard(
                 Text(
                     "Next expected: $nextPeriod",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = AppTheme.AccentPurple
                 )
             }
         }
@@ -12514,6 +12540,7 @@ private fun openNotificationSettings(context: android.content.Context) {
     }
     context.startActivity(intent)
 }
+
 
 title: DataSettingsScreen.kt
 text:
@@ -12669,6 +12696,8 @@ fun DataSettingsScreen(
     val sections = remember { DataSettingsSections.getAllSections() }
     val weatherMetrics = remember { DataSettingsSections.weatherMetrics }
     val hasAnyWearable = connectedWearables.isNotEmpty()
+    // Weather rows depend ONLY on user_location_daily enabled state.
+    // This recomposes reactively whenever metricSettings changes (including optimistic updates).
     val locationEnabled = state.isLocationEnabled()
 
     Column(
@@ -12677,19 +12706,6 @@ fun DataSettingsScreen(
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        // ── Header ──
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-            }
-            Text("Data", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.size(48.dp))
-        }
-
         // Info card
         HeroCard {
             Text(
@@ -12729,6 +12745,12 @@ fun DataSettingsScreen(
                         greyOut = greyOutWearableRow || greyOutWeatherRow,
                         weatherMetrics = weatherMetrics,
                         onToggle = { metric, enabled, source ->
+                            // Optimistic local update — UI reacts immediately.
+                            // This is especially important for user_location_daily so
+                            // weather rows grey/ungrey without waiting for the Supabase
+                            // round-trip.
+                            state.updateMetricLocally(metric, enabled, source)
+
                             scope.launch {
                                 val result = DataSettingsToggleHandler.toggleMetric(
                                     context = appContext,
@@ -12748,6 +12770,7 @@ fun DataSettingsScreen(
                                     onShowScreenTimeDialog = { showScreenTimePermissionDialog = true },
                                     onShowBatteryDialog = { showBatteryOptDialog = true }
                                 )
+                                // Reconcile with server state
                                 refreshTick++
                             }
                         },
@@ -12869,6 +12892,8 @@ private fun handleToggleResult(
     when (result) {
         is DataSettingsToggleHandler.ToggleResult.Success -> { /* UI will refresh */ }
         is DataSettingsToggleHandler.ToggleResult.NeedsPermission -> {
+            // Permission was missing — revert the optimistic update
+            state.updateMetricLocally(metric, false)
             state.markPendingEnable(metric)
             when (result.permissionType) {
                 DataSettingsToggleHandler.PermissionType.SCREEN_TIME -> onShowScreenTimeDialog()
@@ -12883,6 +12908,7 @@ private fun handleToggleResult(
             }
         }
         is DataSettingsToggleHandler.ToggleResult.Error -> {
+            // Toggle failed — the refreshTick will reconcile with server state
             android.util.Log.e("DataSettings", "Toggle error: ${result.message}")
         }
     }
@@ -12940,9 +12966,6 @@ private fun markAskedNotificationPermission(context: android.content.Context) {
         .putBoolean("notification_permission_asked", true)
         .apply()
 }
-
-
-
 
 title: DataSettingsSections.kt
 text:
@@ -13150,6 +13173,32 @@ class DataSettingsState(private val context: Context) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Optimistic Local Updates
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Optimistically update a metric's enabled state locally.
+     * This immediately updates the UI (e.g. weather rows grey-out reacts instantly
+     * when location is toggled) without waiting for the Supabase round-trip.
+     * The subsequent refreshMetricSettings() call will reconcile with server state.
+     */
+    fun updateMetricLocally(metric: String, enabled: Boolean, preferredSource: String? = null) {
+        val current = _metricSettings.value[metric]
+        if (current != null) {
+            // Update existing entry — preserves userId, updatedAt, etc.
+            val updated = current.copy(
+                enabled = enabled,
+                preferredSource = preferredSource ?: current.preferredSource
+            )
+            _metricSettings.value = _metricSettings.value.toMutableMap().apply {
+                put(metric, updated)
+            }
+        }
+        // If no existing entry, skip — the server round-trip will create it.
+        // This avoids needing to fabricate userId/updatedAt fields.
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Data Loading
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -13295,6 +13344,8 @@ class DataSettingsState(private val context: Context) {
         withContext(Dispatchers.IO) {
             if (DataSettingsPermissionHelper.hasLocationPermission(appContext)) {
                 Log.d(TAG, "Auto-enabling location after permission grant")
+                // Optimistic local update — UI reacts immediately
+                updateMetricLocally("user_location_daily", true)
                 edge.upsertMetricSetting(
                     context = appContext,
                     metric = "user_location_daily",
@@ -13354,7 +13405,6 @@ class DataSettingsState(private val context: Context) {
         }
     }
 }
-
 
 title: DataSettingsToggleHandler.kt
 text:
@@ -21518,7 +21568,7 @@ class HealthConnectChangesWorker(
         createNotificationChannel()
         
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_health_connect)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Syncing Health Data")
             .setContentText("Reading data from Health Connect...")
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -21899,6 +21949,7 @@ class HealthConnectChangesWorker(
         }
     }
 }
+
 
 title: HealthConnectDataAvailability.kt
 text:
@@ -30302,6 +30353,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -30457,19 +30510,71 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     Divider(color = Color.White.copy(alpha = 0.08f))
                     Spacer(Modifier.height(10.dp))
 
-                    // Type chips — wrapping
+                    // Type dropdown
+                    var typeExpanded by remember { mutableStateOf(false) }
                     Text("Type", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Spacer(Modifier.height(4.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        typeFilters.forEach { f ->
-                            val sel = selectedTypeFilter == f
+                    Box {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White.copy(alpha = 0.06f))
+                                .border(1.dp, AppTheme.SubtleTextColor.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                                .clickable { typeExpanded = true }
+                                .padding(horizontal = 14.dp, vertical = 12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedTypeFilter, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                                Icon(
+                                    if (typeExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = "Expand",
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = typeExpanded,
+                            onDismissRequest = { typeExpanded = false },
+                            modifier = Modifier
+                                .background(Color(0xFF1E0A2E))
+                                .border(1.dp, AppTheme.SubtleTextColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        ) {
+                            typeFilters.forEach { f ->
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            f,
+                                            color = if (selectedTypeFilter == f) AppTheme.AccentPurple else Color.White,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (selectedTypeFilter == f) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = { selectedTypeFilter = f; typeExpanded = false }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+                    Divider(color = Color.White.copy(alpha = 0.08f))
+                    Spacer(Modifier.height(10.dp))
+
+                    // Source chips
+                    Text("Source", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("All", "Manual").forEach { s ->
+                            val sel = selectedSourceFilter == s
                             FilterChip(
                                 selected = sel,
-                                onClick = { selectedTypeFilter = f },
-                                label = { Text(f, style = MaterialTheme.typography.labelSmall) },
+                                onClick = { selectedSourceFilter = s },
+                                label = { Text(s, style = MaterialTheme.typography.labelSmall) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f),
                                     selectedLabelColor = AppTheme.AccentPurple,
@@ -30485,61 +30590,35 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         }
                     }
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
                     Divider(color = Color.White.copy(alpha = 0.08f))
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
 
-                    // Source + Period side by side
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column {
-                            Text("Source", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                            Spacer(Modifier.height(4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                listOf("All", "Manual", "Auto").forEach { s ->
-                                    val sel = selectedSourceFilter == s
-                                    FilterChip(
-                                        selected = sel,
-                                        onClick = { selectedSourceFilter = s },
-                                        label = { Text(s, style = MaterialTheme.typography.labelSmall) },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f),
-                                            selectedLabelColor = AppTheme.AccentPurple,
-                                            containerColor = Color.Transparent,
-                                            labelColor = AppTheme.SubtleTextColor
-                                        ),
-                                        border = FilterChipDefaults.filterChipBorder(
-                                            borderColor = AppTheme.SubtleTextColor.copy(alpha = 0.25f),
-                                            selectedBorderColor = AppTheme.AccentPurple.copy(alpha = 0.5f),
-                                            enabled = true, selected = sel
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("Period", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                            Spacer(Modifier.height(4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                listOf("7d", "30d", "90d", "All").forEach { tf ->
-                                    val sel = selectedTimeframe == tf
-                                    FilterChip(
-                                        selected = sel,
-                                        onClick = { selectedTimeframe = tf },
-                                        label = { Text(tf, style = MaterialTheme.typography.labelSmall) },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f),
-                                            selectedLabelColor = AppTheme.AccentPurple,
-                                            containerColor = Color.Transparent,
-                                            labelColor = AppTheme.SubtleTextColor
-                                        ),
-                                        border = FilterChipDefaults.filterChipBorder(
-                                            borderColor = AppTheme.SubtleTextColor.copy(alpha = 0.25f),
-                                            selectedBorderColor = AppTheme.AccentPurple.copy(alpha = 0.5f),
-                                            enabled = true, selected = sel
-                                        )
-                                    )
-                                }
-                            }
+                    // Timeframe chips
+                    Text("Timeframe", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Spacer(Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        listOf("7d", "30d", "90d", "All").forEach { tf ->
+                            val sel = selectedTimeframe == tf
+                            FilterChip(
+                                selected = sel,
+                                onClick = { selectedTimeframe = tf },
+                                label = { Text(tf, style = MaterialTheme.typography.labelSmall) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f),
+                                    selectedLabelColor = AppTheme.AccentPurple,
+                                    containerColor = Color.Transparent,
+                                    labelColor = AppTheme.SubtleTextColor
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    borderColor = AppTheme.SubtleTextColor.copy(alpha = 0.25f),
+                                    selectedBorderColor = AppTheme.AccentPurple.copy(alpha = 0.5f),
+                                    enabled = true, selected = sel
+                                )
+                            )
                         }
                     }
 
@@ -30838,6 +30917,7 @@ private fun DeleteDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     )
 }
 
+
 title: JwtUtils.kt
 text:
 package com.migraineme
@@ -30877,6 +30957,54 @@ object JwtUtils {
         } catch (_: Exception) {
             null
         }
+    }
+
+    /**
+     * Extracts display name from JWT user_metadata (works for Facebook, Google, etc.).
+     * Supabase tokens include user_metadata with name/full_name/nickname fields.
+     */
+    fun extractDisplayNameFromToken(accessToken: String?): String? {
+        if (accessToken.isNullOrBlank()) return null
+        return try {
+            val parts = accessToken.split(".")
+            if (parts.size < 2) return null
+            val payloadB64Url = parts[1]
+            val payloadJson = String(
+                Base64.decode(
+                    payloadB64Url.replace('-', '+').replace('_', '/')
+                        .padEnd(((payloadB64Url.length + 3) / 4) * 4, '='),
+                    Base64.DEFAULT
+                )
+            )
+            val obj = JSONObject(payloadJson)
+            val meta = obj.optJSONObject("user_metadata") ?: return null
+            meta.optString("full_name", null)
+                ?: meta.optString("name", null)
+                ?: meta.optString("nickname", null)
+        } catch (_: Exception) { null }
+    }
+
+    /**
+     * Extracts avatar URL from JWT user_metadata.
+     */
+    fun extractAvatarUrlFromToken(accessToken: String?): String? {
+        if (accessToken.isNullOrBlank()) return null
+        return try {
+            val parts = accessToken.split(".")
+            if (parts.size < 2) return null
+            val payloadB64Url = parts[1]
+            val payloadJson = String(
+                Base64.decode(
+                    payloadB64Url.replace('-', '+').replace('_', '/')
+                        .padEnd(((payloadB64Url.length + 3) / 4) * 4, '='),
+                    Base64.DEFAULT
+                )
+            )
+            val obj = JSONObject(payloadJson)
+            val meta = obj.optJSONObject("user_metadata") ?: return null
+            meta.optString("avatar_url", null)
+                ?: meta.optString("picture", null)
+        } catch (_: Exception) { null }
     }
 }
 
@@ -32446,16 +32574,20 @@ fun LoginScreen(
                     credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
                 ) GoogleIdTokenCredential.createFrom(credential.data) else null
                 val idToken = googleCred?.idToken
-                if (idToken.isNullOrBlank()) { error = "Google sign-in failed."; return@launch }
+                if (idToken.isNullOrBlank()) { error = "Google sign-in failed: no ID token received."; return@launch }
+                Log.d(LOG_TAG, "Got Google ID token, exchanging with Supabase...")
                 val ses = SupabaseAuthService.signInWithGoogleIdToken(idToken)
+                Log.d(LOG_TAG, "Supabase response: accessToken=${ses.accessToken?.take(10)}, error=${ses.accessToken == null}")
                 ses.accessToken?.let {
                     handleSuccessfulSession(token = it, refreshToken = ses.refreshToken, expiresIn = ses.expiresIn,
                         displayNameHint = googleCred?.displayName, avatarUrlHint = googleCred?.profilePictureUri?.toString(), providerHint = "google")
-                } ?: run { error = "Invalid login response." }
+                } ?: run { error = "Supabase returned no access token." }
             } catch (e: GetCredentialException) {
-                error = e.message
+                Log.e(LOG_TAG, "GetCredentialException: ${e.type} - ${e.message}", e)
+                error = "Credential error: ${e.type} - ${e.message}"
             } catch (t: Throwable) {
-                error = t.message ?: "Google sign-in failed."
+                Log.e(LOG_TAG, "Google sign-in error: ${t.javaClass.simpleName} - ${t.message}", t)
+                error = "${t.javaClass.simpleName}: ${t.message}"
             } finally {
                 busy = false
             }
@@ -32787,6 +32919,7 @@ private fun themedTextFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedTextColor = Color.White,
     cursorColor = AppTheme.AccentPurple
 )
+
 
 title: LogoutScreen.kt
 text:
@@ -34421,7 +34554,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
-        DrawerItem("Testing", Routes.TESTING, Icons.Outlined.BarChart),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout)
     )
@@ -34526,6 +34658,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.FULL_GRAPH_MENTAL ||
             current == Routes.MONITOR_ENVIRONMENT ||
             current == Routes.THIRD_PARTY_CONNECTIONS ||
+            current == Routes.PROFILE ||
+            current == Routes.DATA ||
+            current == Routes.RISK_WEIGHTS ||
+            current == Routes.RISK_DETAIL ||
+            current == Routes.CHANGE_PASSWORD ||
+            current == Routes.MENSTRUATION_SETTINGS ||
             current == Routes.EVENING_CHECKIN ||
             current == Routes.COMMUNITY ||
             current?.startsWith(Routes.ARTICLE_DETAIL) == true ||
@@ -34539,7 +34677,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             Routes.TRIGGERS, Routes.MEDICINES,
             Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES,
             Routes.NOTES, Routes.REVIEW,
-            Routes.MANAGE_ITEMS, Routes.MANAGE_SYMPTOMS,
+            Routes.MANAGE_SYMPTOMS,
             Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
             Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
             Routes.ONBOARDING, Routes.AI_SETUP, "${Routes.ONBOARDING}/setup",
@@ -34577,9 +34715,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                             containerColor = Color.Transparent,
                             scrolledContainerColor = Color(0xFF2A003D),
-                            titleContentColor = if (showHomeBackground) Color.White else MaterialTheme.colorScheme.onSurface,
-                            navigationIconContentColor = if (showHomeBackground) Color.White else MaterialTheme.colorScheme.onSurface,
-                            actionIconContentColor = if (showHomeBackground) Color.White else MaterialTheme.colorScheme.onSurface
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White,
+                            actionIconContentColor = Color.White
                         ),
                         title = {
                             Text(
@@ -34647,6 +34785,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.TIMING -> "Timing"
                                     Routes.THIRD_PARTY_CONNECTIONS -> "Connections"
                                     Routes.CHANGE_PASSWORD -> "Change password"
+                                    Routes.RISK_WEIGHTS -> "Risk Model"
+                                    Routes.RISK_DETAIL -> "Risk Detail"
                                     else -> ""
                                 }
                             )
@@ -35588,7 +35728,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         launchSingleTop = true
                                     }
                                 } else {
-                                    val dest = if (OnboardingPrefs.isCompleted(loginCtx)) Routes.HOME else Routes.ONBOARDING
+                                    val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                        OnboardingPrefs.isCompletedFromSupabase(loginCtx)
+                                    }
+                                    val dest = if (completed) Routes.HOME else Routes.ONBOARDING
                                     nav.navigate(dest) {
                                         popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                         launchSingleTop = true
@@ -35599,10 +35742,15 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         LoginScreen(
                             authVm = authVm,
                             onLoggedIn = {
-                                val dest = if (OnboardingPrefs.isCompleted(loginCtx)) Routes.HOME else Routes.ONBOARDING
-                                nav.navigate(dest) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
+                                scope.launch {
+                                    val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                        OnboardingPrefs.isCompletedFromSupabase(loginCtx)
+                                    }
+                                    val dest = if (completed) Routes.HOME else Routes.ONBOARDING
+                                    nav.navigate(dest) {
+                                        popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
                             },
                             onNavigateToSignUp = { nav.navigate(Routes.SIGNUP) { launchSingleTop = true } }
@@ -35647,7 +35795,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.RISK_WEIGHTS) {
                         val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
+                        val tourActive = TourManager.isActive()
+                        if (!tourActive && !pState.isLoading && !pState.isPremium) {
                             LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }
                         } else { RiskWeightsScreen(onBack = { nav.popBackStack() }) }
                     }
@@ -35663,33 +35812,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 state = homeState
                             )
                         }
-                    }
-
-                    composable(Routes.TESTING) {
-                        TestingScreen(
-                            authVm = authVm,
-                            onNavigateToOnboarding = {
-                                nav.navigate(Routes.ONBOARDING) {
-                                    launchSingleTop = true
-                                }
-                            },
-                            onNavigateToHome = {
-                                nav.navigate(Routes.HOME) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
-                                }
-                            },
-                            onNavigateToCheckIn = {
-                                nav.navigate(Routes.EVENING_CHECKIN) {
-                                    launchSingleTop = true
-                                }
-                            },
-                            onNavigateToRecalibrationReview = {
-                                nav.navigate(Routes.RECALIBRATION_REVIEW) {
-                                    launchSingleTop = true
-                                }
-                            }
-                        )
                     }
 
                     composable(Routes.RECALIBRATION_REVIEW) {
@@ -36124,6 +36246,7 @@ private fun BottomBar(
 
 
 
+
 title: ManageItemsScreen.kt
 text:
 package com.migraineme
@@ -36169,15 +36292,6 @@ fun ManageItemsScreen(navController: NavController) {
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-
-            // Top bar
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-                Text("Manage Items", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Spacer(Modifier.size(48.dp))
-            }
 
             // Hero
             HeroCard {
@@ -36323,6 +36437,7 @@ private fun ManageItemRow(
         }
     }
 }
+
 
 
 title: ManagePoolScreen.kt
@@ -43296,7 +43411,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         )
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("How was today?")
             .setContentText("Take 15 seconds to log your day")
             .setContentIntent(pi)
@@ -43357,6 +43472,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         private const val TAG = "FCMService"
     }
 }
+
 
 title: MigraineOverlayHelper.kt
 text:
@@ -51511,14 +51627,14 @@ val tourSteps = listOf(
 )
 
 val setupSteps = listOf(
-    TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect WHOOP",
-        "If you have a WHOOP band, tap the Connect button below to link it. This will automatically import your sleep, recovery, HRV, and more.",
-        "Tap Connect on the WHOOP card below",
-        interactive = true, spotlightKey = "whoop_card"),
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.FavoriteBorder, "Connect Health Connect",
         "Health Connect links your phone's health data — sleep, steps, heart rate, nutrition, and more from any compatible app.",
         "Tap Connect on the Health Connect card below",
         interactive = true, spotlightKey = "health_connect_card"),
+    TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect WHOOP",
+        "If you have a WHOOP band, tap the Connect button below to link it. This will automatically import your sleep, recovery, HRV, and more.",
+        "Tap Connect on the WHOOP card below",
+        interactive = true, spotlightKey = "whoop_card"),
     TourStep(Routes.DATA, Icons.Outlined.Storage, "Configure Data Collection",
         "Control exactly which metrics MigraineMe collects. Scroll through and toggle on the data you want to track. You can always change these later in Settings.",
         "Toggle on the metrics that matter to you ↓",
@@ -51709,7 +51825,8 @@ fun CoachOverlay(
         val currentStep = steps.getOrNull(tourState.stepIndex)
         if (currentStep?.interactive == true) {
             // TOUR: don't collapse page 1 (Home, idx 0)
-            // SETUP: don't collapse page 1 (WHOOP, idx 0) or page 2 (HC, idx 1)
+            // SETUP: don't collapse page 1 (HC, idx 0) or page 2 (WHOOP, idx 1)
+            // SETUP: DO collapse page 3 (Data Collection, idx 2) after delay
             val shouldCollapse = when (tourState.phase) {
                 CoachPhase.TOUR -> tourState.stepIndex > 0
                 CoachPhase.SETUP -> tourState.stepIndex >= 2
@@ -51721,6 +51838,7 @@ fun CoachOverlay(
         }
     }
     LaunchedEffect(SetupScrollState.scrollPosition) {
+        // Expand when scrolled to top
         if (SetupScrollState.scrollPosition == 0 && isCollapsed) {
             isCollapsed = false
         }
@@ -51730,7 +51848,8 @@ fun CoachOverlay(
         }
     }
 
-    AnimatedVisibility(visible = step != null, enter = slideInVertically { if (step?.route == Routes.PROFILE) it else -it } + fadeIn(tween(300)), exit = slideOutVertically { if (step?.route == Routes.PROFILE) it else -it } + fadeOut(tween(200))) {
+    val isSetupConnectionStep = tourState.phase == CoachPhase.SETUP && tourState.stepIndex < 2
+    AnimatedVisibility(visible = step != null, enter = slideInVertically { if (step?.route == Routes.PROFILE || isSetupConnectionStep) it else -it } + fadeIn(tween(300)), exit = slideOutVertically { if (step?.route == Routes.PROFILE || isSetupConnectionStep) it else -it } + fadeOut(tween(200))) {
         if (step != null) {
             val isInteractive = step.interactive
             val isProfileStep = step.route == Routes.PROFILE
@@ -51743,7 +51862,7 @@ fun CoachOverlay(
                         if (isProfileStep) Modifier.padding(bottom = 12.dp)
                         else Modifier.padding(top = 12.dp, bottom = 12.dp)
                     ),
-                contentAlignment = if (isProfileStep) Alignment.BottomCenter else Alignment.TopCenter
+                contentAlignment = if (isProfileStep || isSetupConnectionStep) Alignment.BottomCenter else Alignment.TopCenter
             ) {
                 AnimatedContent(
                     targetState = isCollapsed,
@@ -51897,6 +52016,7 @@ fun CoachOverlay(
 }
 
 
+
 title: OnboardingPages.kt
 text:
 package com.migraineme
@@ -52014,7 +52134,7 @@ fun ConnectionsPage(onNavigateToConnections: () -> Unit, wearableConnected: Stri
         OnboardingIconHeader(Icons.Outlined.Link, "Connect your data")
         Text("The more data MigraineMe has, the better it predicts.", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(4.dp))
-        listOf("WHOOP" to "Sleep, recovery, HRV, HR, SpO₂, skin temp", "Health Connect" to "Steps, sleep, heart rate, nutrition, and more", "Both" to "Get the best of both sources", "None" to "I'll log everything manually").forEach { (label, desc) ->
+        listOf("Health Connect" to "Steps, sleep, heart rate, nutrition, and more", "WHOOP" to "Sleep, recovery, HRV, HR, SpO₂, skin temp", "Both" to "Get the best of both sources", "None" to "I'll log everything manually").forEach { (label, desc) ->
             OnboardingChoiceCard(label, desc, wearableConnected == label) { onWearableChanged(label) }
         }
         if (wearableConnected != null && wearableConnected != "None") {
@@ -52185,6 +52305,7 @@ fun CompletePage(saving: Boolean) {
     }
 }
 
+
 title: OnboardingPaywallScreen.kt
 text:
 // FILE: app/src/main/java/com/migraineme/OnboardingPaywallScreen.kt
@@ -52241,15 +52362,15 @@ fun OnboardingPaywallScreen(
             PackageInfo(
                 identifier = "annual",
                 productId = "migraineme_premium_annual",
-                price = "£34.99/year",
-                pricePerMonth = "£2.92",
+                price = "£49.99/year",
+                pricePerMonth = "£4.17",
                 isAnnual = true,
                 rcPackage = null
             ),
             PackageInfo(
                 identifier = "monthly",
                 productId = "migraineme_premium_monthly",
-                price = "£4.99/month",
+                price = "£5.99/month",
                 pricePerMonth = null,
                 isAnnual = false,
                 rcPackage = null
@@ -52551,6 +52672,7 @@ fun OnboardingPaywallScreen(
         }
     }
 }
+
 
 title: OnboardingQuestions.kt
 text:
@@ -52905,14 +53027,56 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import androidx.compose.runtime.rememberCoroutineScope
 
 object OnboardingPrefs {
-    private const val PREFS_NAME = "onboarding"
-    private const val KEY_COMPLETED = "completed"
-    fun isCompleted(context: Context): Boolean = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(KEY_COMPLETED, false)
-    fun setCompleted(context: Context) { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putBoolean(KEY_COMPLETED, true).apply() }
-    fun reset(context: Context) { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putBoolean(KEY_COMPLETED, false).apply() }
+
+    /**
+     * Check Supabase directly — no local cache.
+     * Must be called from IO dispatcher.
+     */
+    suspend fun isCompletedFromSupabase(context: Context): Boolean {
+        return try {
+            val token = SessionStore.getValidAccessToken(context) ?: return false
+            val userId = SessionStore.readUserId(context) ?: JwtUtils.extractUserIdFromAccessToken(token) ?: return false
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/profiles?user_id=eq.$userId&select=onboarding_completed"
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+            val response = okhttp3.OkHttpClient().newCall(request).execute()
+            val body = response.body?.string() ?: return false
+            response.close()
+            body.contains("\"onboarding_completed\":true") || body.contains("\"onboarding_completed\": true")
+        } catch (_: Exception) { false }
+    }
+
+    /**
+     * Mark onboarding complete in Supabase.
+     * Must be called from IO dispatcher.
+     */
+    suspend fun setCompletedInSupabase(context: Context) {
+        try {
+            val token = SessionStore.getValidAccessToken(context) ?: return
+            val userId = SessionStore.readUserId(context) ?: JwtUtils.extractUserIdFromAccessToken(token) ?: return
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/profiles?user_id=eq.$userId"
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .patch(
+                    """{"onboarding_completed": true}""".toRequestBody("application/json".toMediaType())
+                )
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=minimal")
+                .build()
+            okhttp3.OkHttpClient().newCall(request).execute().close()
+        } catch (_: Exception) {}
+    }
 }
 
 private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING }
@@ -52938,12 +53102,20 @@ fun OnboardingScreen(
     var seedingStarted by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // Helper: clean up demo data then go to setup landing (connections)
-    fun skipAndClean() {
-        OnboardingPrefs.setCompleted(appCtx)
+    // ── Skip exit: clear demo data + mark complete in Supabase + navigate ──
+    fun skipOnboarding(then: () -> Unit) {
         scope.launch(Dispatchers.IO) {
             DemoDataSeeder.clearDemoData(appCtx)
-            kotlinx.coroutines.withContext(Dispatchers.Main) { onTourSkipped() }
+            OnboardingPrefs.setCompletedInSupabase(appCtx)
+            kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
+        }
+    }
+
+    // ── Tour/Setup exit: keep demo data for the tour, just mark complete ──
+    fun proceedWithTour(then: () -> Unit) {
+        scope.launch(Dispatchers.IO) {
+            OnboardingPrefs.setCompletedInSupabase(appCtx)
+            kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
         }
     }
 
@@ -52975,7 +53147,7 @@ fun OnboardingScreen(
     LaunchedEffect(dataReady) {
         if (dataReady && currentPage == PageId.LOADING_DATA) {
             kotlinx.coroutines.delay(600L)
-            onStartTour()
+            proceedWithTour { onStartTour() }
         }
     }
 
@@ -53015,7 +53187,7 @@ fun OnboardingScreen(
                 // Left
                 when (currentPage) {
                     PageId.WELCOME -> {
-                        TextButton(onClick = { skipAndClean() }) {
+                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
@@ -53025,12 +53197,12 @@ fun OnboardingScreen(
                         }
                     }
                     PageId.LOADING_DATA -> {
-                        TextButton(onClick = { skipAndClean() }) {
+                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
                     PageId.SETUP_LANDING -> {
-                        TextButton(onClick = { OnboardingPrefs.setCompleted(appCtx); onComplete() }) {
+                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
@@ -53060,7 +53232,7 @@ fun OnboardingScreen(
                     }
                     PageId.LOADING_DATA -> {
                         Button(
-                            onClick = { onStartTour() },
+                            onClick = { proceedWithTour { onStartTour() } },
                             enabled = dataReady,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AppTheme.AccentPink,
@@ -53079,7 +53251,7 @@ fun OnboardingScreen(
                     }
                     PageId.SETUP_LANDING -> {
                         Button(
-                            onClick = { OnboardingPrefs.setCompleted(appCtx); onStartSetup() },
+                            onClick = { proceedWithTour { onStartSetup() } },
                             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -53293,6 +53465,7 @@ private fun SetupStepPreview(icon: androidx.compose.ui.graphics.vector.ImageVect
         }
     }
 }
+
 
 title: PainLocationScreen.kt
 text:
@@ -53780,15 +53953,15 @@ fun PaywallScreen(
             PackageInfo(
                 identifier = "annual",
                 productId = "migraineme_premium_annual",
-                price = "£34.99/year",
-                pricePerMonth = "£2.92",
+                price = "£49.99/year",
+                pricePerMonth = "£4.17",
                 isAnnual = true,
                 rcPackage = null
             ),
             PackageInfo(
                 identifier = "monthly",
                 productId = "migraineme_premium_monthly",
-                price = "£4.99/month",
+                price = "£5.99/month",
                 pricePerMonth = null,
                 isAnnual = false,
                 rcPackage = null
@@ -54154,6 +54327,7 @@ private data class FeatureItem(
     val title: String,
     val subtitle: String
 )
+
 
 
 title: PermissionHelper.kt
@@ -58400,6 +58574,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
@@ -58419,6 +58595,7 @@ fun ProfileScreen(
     onNavigateChangePassword: () -> Unit,
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
+    onLoggedOut: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -58430,14 +58607,18 @@ fun ProfileScreen(
 
     val isEditing = remember { mutableStateOf(false) }
     val editName = remember { mutableStateOf("") }
-    val selectedMigraineType = remember { mutableStateOf<SupabaseProfileService.MigraineType?>(null) }
-    val migraineMenuExpanded = remember { mutableStateOf(false) }
 
     val avatarBitmap = remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     val avatarUploadErrorDialog = remember { mutableStateOf<String?>(null) }
     val avatarUploading = remember { mutableStateOf(false) }
 
     val canChangePassword = remember { mutableStateOf(false) }
+
+    // ── Delete account state ──
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteConfirmText by remember { mutableStateOf("") }
+    var deleteBusy by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
 
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
@@ -58515,7 +58696,6 @@ fun ProfileScreen(
             }
             profile.value = result
             editName.value = result.displayName.orEmpty()
-            selectedMigraineType.value = result.migraineType
         } catch (t: Throwable) {
             profileError.value = t.message
         } finally {
@@ -58577,7 +58757,7 @@ fun ProfileScreen(
         scope.launch {
             try {
                 val updated = withContext(Dispatchers.IO) {
-                    SupabaseProfileService.updateProfile(accessToken = token, userId = userId, displayName = editName.value.trim().ifBlank { null }, avatarUrl = null, migraineType = selectedMigraineType.value)
+                    SupabaseProfileService.updateProfile(accessToken = token, userId = userId, displayName = editName.value.trim().ifBlank { null }, avatarUrl = null, migraineType = null)
                 }
                 profile.value = updated
                 isEditing.value = false
@@ -58586,8 +58766,7 @@ fun ProfileScreen(
     }
 
     fun cancelInline() {
-        profile.value?.let { editName.value = it.displayName.orEmpty(); selectedMigraineType.value = it.migraineType }
-        migraineMenuExpanded.value = false
+        profile.value?.let { editName.value = it.displayName.orEmpty() }
         isEditing.value = false
     }
 
@@ -58691,24 +58870,6 @@ fun ProfileScreen(
                         }
 
                         Spacer(Modifier.height(4.dp))
-
-                        if (isEditing.value) {
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedButton(
-                                onClick = { migraineMenuExpanded.value = true },
-                                enabled = auth.accessToken != null && !profileLoading.value,
-                                shape = RoundedCornerShape(10.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(selectedMigraineType.value?.label ?: "Select migraine type", style = MaterialTheme.typography.bodySmall)
-                            }
-                        } else {
-                            Text(current?.migraineType?.label ?: "Migraine type not set", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
-
-                        Spacer(Modifier.height(4.dp))
                         Text("ID: ${auth.userId?.take(8) ?: "—"}…", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f), style = MaterialTheme.typography.labelSmall)
                     }
 
@@ -58746,13 +58907,6 @@ fun ProfileScreen(
                     }
                 }
 
-                // Migraine type dropdown
-                DropdownMenu(expanded = migraineMenuExpanded.value, onDismissRequest = { migraineMenuExpanded.value = false }) {
-                    DropdownMenuItem(text = { Text("Not set") }, onClick = { selectedMigraineType.value = null; migraineMenuExpanded.value = false })
-                    SupabaseProfileService.MigraineType.entries.forEach { option ->
-                        DropdownMenuItem(text = { Text(option.label) }, onClick = { selectedMigraineType.value = option; migraineMenuExpanded.value = false })
-                    }
-                }
             }
         }
 
@@ -58777,10 +58931,6 @@ fun ProfileScreen(
 
         if (aiProfile != null) {
             AiMigraineProfileCard(aiProfile!!)
-
-            RecalibrationProfileButton(
-                onNavigateToReview = onNavigateToRecalibrationReview
-            )
         }
 
         // ── Change Password ──
@@ -58799,6 +58949,143 @@ fun ProfileScreen(
             }
         }
 
+        // ── Delete Account ──
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = { showDeleteDialog = true; deleteConfirmText = ""; deleteError = null },
+            enabled = auth.accessToken != null && !profileLoading.value,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE57373).copy(alpha = 0.5f)),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE57373))
+        ) {
+            Icon(Icons.Outlined.DeleteForever, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Delete account")
+        }
+
+        // Delete account confirmation dialog
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { if (!deleteBusy) { showDeleteDialog = false; deleteError = null } },
+                containerColor = Color(0xFF1E0A2E),
+                shape = RoundedCornerShape(20.dp),
+                title = {
+                    Text("Delete account?", color = Color(0xFFE57373), fontWeight = FontWeight.SemiBold)
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            "This will permanently delete your account and all your migraine data. This action cannot be undone.",
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            "Type DELETE to confirm:",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        OutlinedTextField(
+                            value = deleteConfirmText,
+                            onValueChange = { deleteConfirmText = it },
+                            singleLine = true,
+                            enabled = !deleteBusy,
+                            placeholder = { Text("DELETE", color = AppTheme.SubtleTextColor.copy(alpha = 0.3f)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFFE57373),
+                                unfocusedBorderColor = AppTheme.TrackColor,
+                                cursorColor = Color(0xFFE57373),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+                        deleteError?.let {
+                            Text(it, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (deleteBusy) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFFE57373), strokeWidth = 2.dp)
+                                Text("Deleting account…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (deleteConfirmText.trim().uppercase() != "DELETE") {
+                                deleteError = "Please type DELETE to confirm."
+                                return@Button
+                            }
+                            val token = auth.accessToken
+                            if (token.isNullOrBlank()) {
+                                deleteError = "Not signed in."
+                                return@Button
+                            }
+                            deleteBusy = true
+                            deleteError = null
+                            scope.launch {
+                                try {
+                                    val success = withContext(Dispatchers.IO) {
+                                        val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/delete-account"
+                                        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+                                            requestMethod = "POST"
+                                            setRequestProperty("Authorization", "Bearer $token")
+                                            setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                                            setRequestProperty("Content-Type", "application/json")
+                                            doOutput = true
+                                            outputStream.write("{}".toByteArray())
+                                        }
+                                        try {
+                                            val code = conn.responseCode
+                                            if (code !in 200..299) {
+                                                val errBody = conn.errorStream?.bufferedReader()?.readText() ?: "HTTP $code"
+                                                throw Exception(errBody)
+                                            }
+                                            true
+                                        } finally {
+                                            conn.disconnect()
+                                        }
+                                    }
+                                    if (success) {
+                                        SessionStore.clear(context.applicationContext)
+                                        PremiumManager.reset()
+                                        authVm.signOut()
+                                        showDeleteDialog = false
+                                        onLoggedOut()
+                                    } else {
+                                        deleteError = "Failed to delete account. Please try again."
+                                    }
+                                } catch (t: Throwable) {
+                                    deleteError = t.message ?: "Failed to delete account."
+                                } finally {
+                                    deleteBusy = false
+                                }
+                            }
+                        },
+                        enabled = !deleteBusy && deleteConfirmText.trim().uppercase() == "DELETE",
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE57373),
+                            disabledContainerColor = Color(0xFFE57373).copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Delete permanently", fontWeight = FontWeight.SemiBold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeleteDialog = false; deleteError = null },
+                        enabled = !deleteBusy
+                    ) {
+                        Text("Cancel", color = AppTheme.SubtleTextColor)
+                    }
+                }
+            )
+        }
+
         Spacer(Modifier.height(32.dp))
     }
 }
@@ -58808,6 +59095,7 @@ fun ProfileScreen(
 // ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun AiMigraineProfileCard(data: JsonObject) {
     val summary = data["summary"]?.jsonPrimitive?.contentOrNull
     val clinicalAssessment = data["clinical_assessment"]?.jsonPrimitive?.contentOrNull
@@ -58889,7 +59177,11 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                         if (tracksCycle == true) "Cycle" to "Tracking" else null,
                     )
                     if (demoItems.isNotEmpty()) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
                             demoItems.forEach { (label, value) ->
                                 Box(
                                     Modifier
@@ -58910,7 +59202,11 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                     if (!triggerAreas.isNullOrEmpty()) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("Trigger areas", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 triggerAreas.forEach { area ->
                                     Box(
                                         Modifier
@@ -59291,6 +59587,7 @@ private fun compressJpegUnderLimit(bmp: Bitmap, maxBytes: Int): ByteArray {
     bmp.compress(Bitmap.CompressFormat.JPEG, 10, baos)
     return baos.toByteArray()
 }
+
 
 
 
@@ -61267,6 +61564,7 @@ private suspend fun runRecalibration(context: android.content.Context): Pair<Str
         }
     }
 }
+
 
 title: RecalibrationReviewScreen.kt
 text:
@@ -65197,22 +65495,6 @@ fun RiskWeightsScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
             // Top bar
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-                }
-                Text(
-                    "Risk Model",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Spacer(Modifier.size(48.dp))
-            }
-
             if (loading) {
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = AppTheme.AccentPurple)
@@ -65483,6 +65765,7 @@ private fun fmt(v: Double): String {
     return if (v == v.toLong().toDouble()) v.toLong().toString()
     else v.toBigDecimal().stripTrailingZeros().toPlainString()
 }
+
 
 
 
@@ -74189,377 +74472,6 @@ data class SyncStateEntity(
     val lastPushRunAtEpochMs: Long? = null
 )
 
-title: TestingScreen.kt
-text:
-package com.migraineme
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-
-@Composable
-fun TestingScreen(
-    authVm: AuthViewModel,
-    onNavigateToOnboarding: () -> Unit = {},
-    onNavigateToHome: () -> Unit = {},
-    onNavigateToCheckIn: () -> Unit = {},
-    onNavigateToRecalibrationReview: () -> Unit = {},
-) {
-    val auth by authVm.state.collectAsState()
-    val ctx = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
-
-    // Recalibration state
-    var recalibStatus by remember { mutableStateOf("") }
-    var recalibRunning by remember { mutableStateOf(false) }
-
-    ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 60.dp) {
-
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Testing",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-            }
-
-            DataStatusCard(accessToken = auth.accessToken)
-
-            // ── AI Recalibration ──
-            BaseCard {
-                Text(
-                    "AI Recalibration",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Text(
-                    "Invoke the monthly recalibration edge function on demand. " +
-                    "This runs both AI calls (Neurologist + Statistician) and writes proposals.",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(Modifier.height(4.dp))
-
-                if (recalibStatus.isNotBlank()) {
-                    Text(
-                        recalibStatus,
-                        color = if (recalibStatus.startsWith("Error")) AppTheme.AccentPink else AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(Modifier.height(4.dp))
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = {
-                            recalibRunning = true
-                            recalibStatus = "Running recalibration..."
-                            scope.launch {
-                                try {
-                                    val result = withContext(Dispatchers.IO) {
-                                        invokeRecalibration(ctx)
-                                    }
-                                    recalibStatus = result
-                                } catch (e: Exception) {
-                                    recalibStatus = "Error: ${e.message}"
-                                } finally {
-                                    recalibRunning = false
-                                }
-                            }
-                        },
-                        enabled = !recalibRunning,
-                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                    ) {
-                        if (recalibRunning) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp,
-                                color = Color.White
-                            )
-                            Spacer(Modifier.width(8.dp))
-                        }
-                        Text("Run Recalibration")
-                    }
-
-                    Button(
-                        onClick = onNavigateToRecalibrationReview,
-                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Review Proposals")
-                    }
-                }
-            }
-
-            // Evening Check-in
-            BaseCard {
-                Text(
-                    "Evening Check-in",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Text(
-                    "Test the daily evening check-in flow",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(Modifier.height(4.dp))
-                Button(
-                    onClick = onNavigateToCheckIn,
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                ) {
-                    Text("Open Evening Check-in")
-                }
-            }
-
-            // Onboarding reset
-            BaseCard {
-                Text(
-                    "Onboarding",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-
-                Text(
-                    "Completed: ${OnboardingPrefs.isCompleted(ctx)}",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Button(
-                    onClick = {
-                        OnboardingPrefs.reset(ctx)
-                        onNavigateToOnboarding()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                ) {
-                    Text("Restart Onboarding")
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                Button(
-                    onClick = {
-                        TourManager.startTour()
-                        onNavigateToHome()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                ) {
-                    Text("Start Feature Tour Only")
-                }
-            }
-        }
-    }
-}
-
-/**
- * Calls the recalibrate edge function with force=true.
- * Returns a status string for the UI.
- */
-private suspend fun invokeRecalibration(context: android.content.Context): String {
-    val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
-        ?: return "Error: Not authenticated"
-
-    val client = okhttp3.OkHttpClient.Builder()
-        .connectTimeout(90, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(90, java.util.concurrent.TimeUnit.SECONDS)
-        .build()
-
-    val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/recalibrate"
-    val body = """{"force": true}"""
-        .toRequestBody("application/json".toMediaType())
-
-    val request = okhttp3.Request.Builder()
-        .url(url)
-        .post(body)
-        .header("Authorization", "Bearer $accessToken")
-        .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
-        .build()
-
-    client.newCall(request).execute().use { response ->
-        val responseBody = response.body?.string() ?: ""
-        return if (response.isSuccessful) {
-            try {
-                val json = org.json.JSONObject(responseBody)
-                val status = json.optString("status", "unknown")
-                val proposals = json.optInt("proposals", 0)
-                when (status) {
-                    "ok" -> "Done! $proposals proposals generated. Tap 'Review Proposals' to see them."
-                    "no_profile" -> "Please complete your profile setup first — we need your migraine profile to generate personalised suggestions."
-                    "insufficient_data" -> {
-                        val count = json.optInt("migraine_count", 0)
-                        "No learning this month — we need at least 5 logged migraines to spot patterns (you have $count so far). Keep logging and we'll have suggestions for you soon!"
-                    }
-                    else -> "Status: $status — $responseBody"
-                }
-            } catch (_: Exception) {
-                "Done (raw): $responseBody"
-            }
-        } else {
-            "Error ${response.code}: $responseBody"
-        }
-    }
-}
-
-@Composable
-private fun DataStatusCard(accessToken: String?) {
-    val ctx = LocalContext.current.applicationContext
-    val zone = ZoneId.systemDefault()
-    val today = LocalDate.now(zone).toString()
-    val afterNine = LocalTime.now(zone) >= LocalTime.of(9, 0)
-
-    var whoopConnected by remember(accessToken, today) { mutableStateOf(false) }
-    var metricSettings by remember { mutableStateOf<List<EdgeFunctionsService.MetricSettingResponse>>(emptyList()) }
-    var settingsLoaded by remember { mutableStateOf(false) }
-
-    LaunchedEffect(accessToken, today) {
-        whoopConnected = runCatching { WhoopTokenStore(ctx).load() != null }.getOrDefault(false)
-
-        if (!accessToken.isNullOrBlank()) {
-            withContext(Dispatchers.IO) {
-                metricSettings = try {
-                    EdgeFunctionsService().getMetricSettings(ctx)
-                } catch (e: Exception) {
-                    emptyList()
-                }
-            }
-        }
-        settingsLoaded = true
-    }
-
-    val isWhoopMetricEnabled: (String) -> Boolean = { metric ->
-        val setting = metricSettings.find { it.metric == metric }
-        setting != null && setting.enabled && setting.preferredSource == "whoop"
-    }
-
-    val isMetricEnabled: (String) -> Boolean = { metric ->
-        val setting = metricSettings.find { it.metric == metric }
-        setting != null && setting.enabled
-    }
-
-    val sleepAnchorsAll = listOf("sleep_duration_daily", "sleep_score_daily")
-    val sleepOptionalsAll = listOf(
-        "sleep_efficiency_daily", "sleep_stages_daily", "sleep_disturbances_daily",
-        "fell_asleep_time_daily", "woke_up_time_daily"
-    )
-    val physicalAnchorsAll = listOf("recovery_score_daily", "resting_hr_daily", "hrv_daily")
-    val physicalOptionalsAll = listOf("spo2_daily", "skin_temp_daily", "time_in_high_hr_zones_daily")
-
-    val enabledSleepAnchors = sleepAnchorsAll.filter { isWhoopMetricEnabled(it) }
-    val enabledSleepOptionals = sleepOptionalsAll.filter { isWhoopMetricEnabled(it) }
-    val enabledPhysicalAnchors = physicalAnchorsAll.filter { isWhoopMetricEnabled(it) }
-    val enabledPhysicalOptionals = physicalOptionalsAll.filter { isWhoopMetricEnabled(it) }
-    val locationEnabled = isMetricEnabled("user_location_daily")
-
-    var sleepAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-    var physicalAnchorLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-    var locationLoaded by remember(today, accessToken) { mutableStateOf<Boolean?>(null) }
-
-    LaunchedEffect(today, accessToken, whoopConnected, settingsLoaded, metricSettings) {
-        if (accessToken.isNullOrBlank() || !settingsLoaded) {
-            sleepAnchorLoaded = null
-            physicalAnchorLoaded = null
-            locationLoaded = null
-            return@LaunchedEffect
-        }
-
-        withContext(Dispatchers.IO) {
-            sleepAnchorLoaded = if (enabledSleepAnchors.isEmpty() && enabledSleepOptionals.isEmpty()) {
-                null
-            } else if (!whoopConnected) {
-                false
-            } else {
-                runCatching { SupabaseMetricsService(ctx).hasSleepForDate(accessToken, today, "whoop") }.getOrDefault(false)
-            }
-
-            physicalAnchorLoaded = if (enabledPhysicalAnchors.isEmpty() && enabledPhysicalOptionals.isEmpty()) {
-                null
-            } else if (!whoopConnected) {
-                false
-            } else {
-                runCatching { SupabasePhysicalHealthService(ctx).hasRecoveryForDate(accessToken, today, "whoop") }.getOrDefault(false)
-            }
-
-            locationLoaded = if (!locationEnabled) {
-                null
-            } else {
-                runCatching { SupabasePersonalService(ctx).hasUserLocationForDate(accessToken, today, source = "device") }.getOrDefault(false)
-            }
-        }
-    }
-
-    BaseCard {
-        Text(
-            "Data status",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
-
-        Text(
-            text = "WHOOP: " + if (whoopConnected) "Connected" else "Not connected",
-            color = Color.White,
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        val sleepText = when (sleepAnchorLoaded) {
-            null -> "Sleep: Disabled"
-            true -> "Sleep: Loaded for $today"
-            false -> "Sleep: Missing for $today"
-        }
-        Text(sleepText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-
-        val physicalText = when (physicalAnchorLoaded) {
-            null -> "Recovery: Disabled"
-            true -> "Recovery: Loaded for $today"
-            false -> "Recovery: Missing for $today"
-        }
-        Text(physicalText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-
-        val locationText = when (locationLoaded) {
-            null -> "Location: Disabled"
-            true -> "Location: Loaded for $today"
-            false -> "Location: Missing for $today"
-        }
-        Text(locationText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-
-        if (afterNine) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Tip: After 9:00, today's WHOOP sleep/recovery should usually be available.",
-                color = AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-    }
-}
-
 title: ThirdPartyConnectionsScreen.kt
 text:
 package com.migraineme
@@ -74869,7 +74781,17 @@ fun ThirdPartyConnectionsScreen(
     suspend fun tryCompleteWhoopIfCallbackPresent() {
         val prefs = context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
         val lastUri = prefs.getString("last_uri", null)
-        if (lastUri.isNullOrBlank() || lastProcessedUri.value == lastUri) return
+        if (lastUri.isNullOrBlank()) return
+
+        // If already connected, just refresh UI state and return
+        val existingToken = tokenStore.load()
+        if (existingToken != null) {
+            hasWhoop.value = true
+            return
+        }
+
+        // Only process if we haven't already processed this exact URI
+        if (lastProcessedUri.value == lastUri) return
         lastProcessedUri.value = lastUri
 
         val ok = withContext(Dispatchers.IO) { WhoopAuthService().completeAuth(context) }
@@ -74893,6 +74815,22 @@ fun ThirdPartyConnectionsScreen(
         }
     }
 
+    // Try completing WHOOP OAuth on first screen load (returning from OAuth redirect)
+    LaunchedEffect("whoop_initial_check") {
+        hasWhoop.value = tokenStore.load() != null
+        tryCompleteWhoopIfCallbackPresent()
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(1500)
+            lastProcessedUri.value = null
+            tryCompleteWhoopIfCallbackPresent()
+        }
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(2000)
+            lastProcessedUri.value = null
+            tryCompleteWhoopIfCallbackPresent()
+        }
+    }
+
     val resumeTick = remember { mutableStateOf(0) }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -74903,7 +74841,21 @@ fun ThirdPartyConnectionsScreen(
     }
 
     LaunchedEffect(resumeTick.value) {
+        // Always refresh hasWhoop from token store on resume
+        hasWhoop.value = tokenStore.load() != null
         tryCompleteWhoopIfCallbackPresent()
+        // Retry after delay — OAuth callback may not have written to prefs yet
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(1500)
+            lastProcessedUri.value = null  // Reset so retry actually processes
+            tryCompleteWhoopIfCallbackPresent()
+        }
+        // One more retry for slow connections
+        if (!hasWhoop.value) {
+            kotlinx.coroutines.delay(2000)
+            lastProcessedUri.value = null
+            tryCompleteWhoopIfCallbackPresent()
+        }
         runCatching { refreshHealthConnectPermissions() }
         runCatching { refreshMetricEnabledFlags() }
     }
@@ -75027,26 +74979,36 @@ fun ThirdPartyConnectionsScreen(
             .verticalScroll(scrollState)
             .padding(horizontal = 16.dp)
     ) {
-        // ── Header ──
-        Row(
-            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-            }
-            Text("Connections", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.size(48.dp))
-        }
-
-            // Connected Services section
+        // Connected Services section
             Text(
                 "Connected Services",
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            // Health Connect Row
+            Box(Modifier.spotlightTarget("health_connect_card")) {
+                ConnectionRow(
+                    logoResId = R.drawable.ic_health_connect,
+                    fallbackLetter = "H",
+                    title = "Health Connect",
+                    isConnected = anyHCConnected,
+                    warningText = if (anyHCConnected && !allHCConnected) "Some permissions missing. Tap to enable all." else null,
+                    onClick = {
+                        if (!healthConnectAvailable.value) {
+                            android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
+                            return@ConnectionRow
+                        }
+                        scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
+                    },
+                    onLongClick = {
+                        if (anyHCConnected) showHealthConnectDisconnectDialog.value = true
+                    }
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
 
             // WHOOP Row
             Box(Modifier.spotlightTarget("whoop_card")) {
@@ -75066,29 +75028,6 @@ fun ThirdPartyConnectionsScreen(
                     },
                     onLongClick = {
                         if (hasWhoop.value) showWhoopDisconnectDialog.value = true
-                    }
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // Health Connect Row
-            Box(Modifier.spotlightTarget("health_connect_card")) {
-                ConnectionRow(
-                    logoResId = R.drawable.ic_health_connect,
-                    fallbackLetter = "H",
-                    title = "Health Connect",
-                    isConnected = anyHCConnected,
-                    warningText = if (anyHCConnected && !allHCConnected) "Some permissions missing. Tap to enable all." else null,
-                    onClick = {
-                        if (!healthConnectAvailable.value) {
-                            android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
-                            return@ConnectionRow
-                        }
-                        scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
-                    },
-                    onLongClick = {
-                        if (anyHCConnected) showHealthConnectDisconnectDialog.value = true
                     }
                 )
             }
@@ -75243,6 +75182,7 @@ private fun ConnectionRow(
         }
     }
 }
+
 
 
 
@@ -80556,7 +80496,7 @@ class WhoopLateDataReminderWorker(
         }
 
         val notif = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Whoop data still missing")
             .setContentText("We haven’t received today’s Whoop data yet. Open MigraineMe to retry.")
             .setAutoCancel(true)
@@ -80594,6 +80534,7 @@ class WhoopLateDataReminderWorker(
         }
     }
 }
+
 
 title: WhoopSyncLogStore.kt
 text:

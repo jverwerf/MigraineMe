@@ -109,6 +109,47 @@ fun HomeScreenRoot(
         }
     }
 
+    /**
+     * On Oura OAuth return, complete auth and trigger backfill (same pattern as WHOOP).
+     */
+    LaunchedEffect(Unit) {
+        val prefs = appCtx.getSharedPreferences("oura_oauth", android.content.Context.MODE_PRIVATE)
+        val lastUri = prefs.getString("last_uri", null)
+
+        if (!lastUri.isNullOrBlank()) {
+            withContext(Dispatchers.IO) {
+                val persistedToken = SessionStore.getValidAccessToken(appCtx)
+                if (!persistedToken.isNullOrBlank()) {
+                    var persistedUserId = SessionStore.readUserId(appCtx)
+                    if (persistedUserId.isNullOrBlank()) {
+                        persistedUserId = JwtUtils.extractUserIdFromAccessToken(persistedToken)
+                        if (!persistedUserId.isNullOrBlank()) {
+                            SessionStore.saveUserId(appCtx, persistedUserId)
+                        }
+                    }
+                }
+
+                val ok = OuraAuthService().completeAuth(appCtx)
+
+                if (ok) {
+                    val accessToken = SessionStore.getValidAccessToken(appCtx)
+                    if (!accessToken.isNullOrBlank()) {
+                        val client = HttpClient(Android)
+                        try {
+                            client.post("${BuildConfig.SUPABASE_URL}/functions/v1/enqueue-login-backfill") {
+                                header("Authorization", "Bearer $accessToken")
+                                header("Content-Type", "application/json")
+                            }
+                        } catch (_: Throwable) {
+                        } finally {
+                            client.close()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // ── Load real risk score from triggers + prodromes ──
     LaunchedEffect(auth.accessToken) {
         if (!auth.accessToken.isNullOrBlank()) {
@@ -186,7 +227,7 @@ fun HomeScreenRoot(
                 // ── AI Daily Insight — premium only, today only ──
                 if (selectedDay == 0 && !state.dailyInsight.isNullOrBlank()) {
                     PremiumGate(
-                        message = "Unlock AI Daily Insights",
+                        message = "Unlock Daily Insights",
                         subtitle = "Personalised advice based on your data",
                         onUpgrade = onNavigateToPaywall
                     ) {
@@ -501,27 +542,33 @@ private fun ActiveTriggersCard(
 
 @Composable
 private fun AiInsightCard(insight: String) {
-    BaseCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             Icon(
                 imageVector = Icons.Outlined.Star,
                 contentDescription = null,
                 tint = AppTheme.AccentPurple,
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "AI Insight",
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "MigraineMe Recommendation",
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    insight,
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            insight,
-            color = AppTheme.BodyTextColor,
-            style = MaterialTheme.typography.bodyMedium
-        )
     }
 }
 

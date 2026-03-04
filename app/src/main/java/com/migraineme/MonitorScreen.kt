@@ -1,7 +1,9 @@
 package com.migraineme
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BubbleChart
@@ -17,7 +20,9 @@ import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -61,17 +66,60 @@ fun MonitorScreen(
     // Card configuration
     var cardConfig by remember { mutableStateOf(MonitorCardConfigStore.load(ctx)) }
     var weatherConfig by remember { mutableStateOf(WeatherCardConfigStore.load(ctx)) }
+    // Bridge: read environment display metrics from new MetricDisplayStore, convert to legacy keys for EnvironmentCard
+    var weatherDisplayMetrics by remember {
+        mutableStateOf(
+            MetricDisplayStore.getDisplayMetrics(ctx, "environment")
+                .map { MetricRegistry.toLegacyKey(it) }
+                .ifEmpty { WeatherCardConfigStore.load(ctx).weatherDisplayMetrics }
+        )
+    }
     var sleepConfig by remember { mutableStateOf(SleepCardConfigStore.load(ctx)) }
+    // Bridge: read sleep display metrics from new MetricDisplayStore, convert to legacy keys
+    var sleepDisplayMetrics by remember {
+        mutableStateOf(
+            MetricDisplayStore.getDisplayMetrics(ctx, "sleep")
+                .map { MetricRegistry.toLegacyKey(it) }
+                .ifEmpty { SleepCardConfigStore.load(ctx).sleepDisplayMetrics }
+        )
+    }
     var physicalConfig by remember { mutableStateOf(PhysicalCardConfigStore.load(ctx)) }
+    var physicalDisplayMetrics by remember {
+        mutableStateOf(
+            MetricDisplayStore.getDisplayMetrics(ctx, "physical")
+                .map { MetricRegistry.toLegacyKey(it) }
+                .ifEmpty { PhysicalCardConfigStore.load(ctx).physicalDisplayMetrics }
+        )
+    }
     var mentalConfig by remember { mutableStateOf(MentalCardConfigStore.load(ctx)) }
+    // Bridge: read mental display metrics from new MetricDisplayStore, convert to legacy keys
+    var mentalDisplayMetrics by remember {
+        mutableStateOf(
+            MetricDisplayStore.getDisplayMetrics(ctx, "mental")
+                .map { MetricRegistry.toLegacyKey(it) }
+                .ifEmpty { MentalCardConfigStore.load(ctx).mentalDisplayMetrics }
+        )
+    }
     
     // Refresh config when returning to screen
     LaunchedEffect(Unit) {
         cardConfig = MonitorCardConfigStore.load(ctx)
         weatherConfig = WeatherCardConfigStore.load(ctx)
+        weatherDisplayMetrics = MetricDisplayStore.getDisplayMetrics(ctx, "environment")
+            .map { MetricRegistry.toLegacyKey(it) }
+            .ifEmpty { WeatherCardConfigStore.load(ctx).weatherDisplayMetrics }
         sleepConfig = SleepCardConfigStore.load(ctx)
+        sleepDisplayMetrics = MetricDisplayStore.getDisplayMetrics(ctx, "sleep")
+            .map { MetricRegistry.toLegacyKey(it) }
+            .ifEmpty { SleepCardConfigStore.load(ctx).sleepDisplayMetrics }
         physicalConfig = PhysicalCardConfigStore.load(ctx)
+        physicalDisplayMetrics = MetricDisplayStore.getDisplayMetrics(ctx, "physical")
+            .map { MetricRegistry.toLegacyKey(it) }
+            .ifEmpty { PhysicalCardConfigStore.load(ctx).physicalDisplayMetrics }
         mentalConfig = MentalCardConfigStore.load(ctx)
+        mentalDisplayMetrics = MetricDisplayStore.getDisplayMetrics(ctx, "mental")
+            .map { MetricRegistry.toLegacyKey(it) }
+            .ifEmpty { MentalCardConfigStore.load(ctx).mentalDisplayMetrics }
     }
     
     // Nutrition data — use same service as MonitorNutritionScreen for full metric coverage
@@ -98,6 +146,37 @@ fun MonitorScreen(
     var menstruationSettings by remember { mutableStateOf<MenstruationSettings?>(null) }
     var menstruationEnabled by remember { mutableStateOf(false) }
     var menstruationLoading by remember { mutableStateOf(true) }
+
+    // Risk history data
+    var riskHistory by remember { mutableStateOf<List<SupabaseDbService.RiskScoreDailyRow>>(emptyList()) }
+    var migraineDates by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var riskHistoryLoading by remember { mutableStateOf(true) }
+    var riskLive by remember { mutableStateOf<SupabaseDbService.RiskScoreLiveRow?>(null) }
+    val effectiveFavs = remember { getEffectiveFavOfFavs(ctx) }
+    // Resolver for fav-of-fav values
+    fun resolveFavValue(key: String): String {
+        val parts = key.split(":", limit = 2)
+        if (parts.size != 2) return "\u2014"
+        val (cat, metric) = parts
+        return when (cat) {
+            "sleep" -> sleepSummary?.let { sleepMetricDisplayValue(it, metric) } ?: "\u2014"
+            "weather" -> weatherSummary?.let { getWeatherMetricValue(it, metric) } ?: "\u2014"
+            "physical" -> physicalSummary?.let { physicalMetricDisplayValue(it, metric) } ?: "\u2014"
+            "mental" -> mentalSummary?.displayValue(metric) ?: "\u2014"
+            "nutrition" -> {
+                if (nutritionItems.isEmpty()) return "\u2014"
+                val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
+                if (total <= 0) return "\u2014"
+                val registryKey = MetricRegistry.nutritionRegistryKey(metric)
+                val unit = MetricRegistry.unit(registryKey)
+                val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure")
+                if (isRisk) {
+                    when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" }
+                } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
+            }
+            else -> "\u2014"
+        }
+    }
     
     LaunchedEffect(authState.accessToken, today) {
         val token = authState.accessToken
@@ -108,7 +187,23 @@ fun MonitorScreen(
             sleepLoading = false
             mentalLoading = false
             menstruationLoading = false
+            riskHistoryLoading = false
             return@LaunchedEffect
+        }
+        
+        // Load risk history + migraines
+        withContext(Dispatchers.IO) {
+            try {
+                val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                riskLive = db.getRiskScoreLive(token)
+                riskHistory = db.getRiskScoreDaily(token, 14).sortedBy { it.date }
+                val migraines = db.getMigraines(token)
+                migraineDates = migraines.map { it.startAt.take(10) }.toSet()
+                android.util.Log.d("MonitorScreen", "Risk history: ${riskHistory.size} days, migraines on: $migraineDates")
+            } catch (e: Exception) {
+                android.util.Log.e("MonitorScreen", "Risk history load failed: ${e.message}", e)
+            }
+            riskHistoryLoading = false
         }
         
         // Load nutrition items (same as MonitorNutritionScreen — supports all 34 nutrients)
@@ -222,13 +317,23 @@ fun MonitorScreen(
 
             // Render cards in configured order
             cardConfig.cardOrder.forEach { cardId ->
-                if (cardConfig.isVisible(cardId)) {
+                // Ensure CARD_RISK is in the order even for existing users
+                if (cardId == MonitorCardConfig.CARD_RISK && cardConfig.isVisible(cardId)) {
+                    RiskCard(
+                        riskLive = riskLive,
+                        isLoading = riskHistoryLoading,
+                        favOfFavs = effectiveFavs.map { it.key to it.label },
+                        resolveFavValue = ::resolveFavValue,
+                        onClick = { navController.navigate(Routes.MONITOR_RISK) }
+                    )
+                } else if (cardConfig.isVisible(cardId)) {
                     when (cardId) {
                         MonitorCardConfig.CARD_NUTRITION -> {
+                            val nutDisplayKeys = remember { MetricDisplayStore.getDisplayMetrics(ctx, "nutrition") }
                             NutritionCard(
                                 nutritionLoading = nutritionLoading,
                                 nutritionItems = nutritionItems,
-                                displayMetrics = cardConfig.nutritionDisplayMetrics,
+                                displayMetrics = nutDisplayKeys.map { MetricRegistry.nutritionLegacyKey(it) },
                                 onClick = { navController.navigate(Routes.MONITOR_NUTRITION) }
                             )
                         }
@@ -236,7 +341,7 @@ fun MonitorScreen(
                             EnvironmentCard(
                                 weatherLoading = weatherLoading,
                                 weatherSummary = weatherSummary,
-                                displayMetrics = weatherConfig.weatherDisplayMetrics.take(3),
+                                displayMetrics = weatherDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_ENVIRONMENT) }
                             )
                         }
@@ -244,7 +349,7 @@ fun MonitorScreen(
                             PhysicalHealthCard(
                                 physicalLoading = physicalLoading,
                                 physicalSummary = physicalSummary,
-                                displayMetrics = physicalConfig.physicalDisplayMetrics.take(3),
+                                displayMetrics = physicalDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_PHYSICAL) }
                             )
                         }
@@ -252,7 +357,7 @@ fun MonitorScreen(
                             SleepCard(
                                 sleepLoading = sleepLoading,
                                 sleepSummary = sleepSummary,
-                                displayMetrics = sleepConfig.sleepDisplayMetrics.take(3),
+                                displayMetrics = sleepDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_SLEEP) }
                             )
                         }
@@ -260,7 +365,7 @@ fun MonitorScreen(
                             MentalHealthCard(
                                 mentalLoading = mentalLoading,
                                 mentalSummary = mentalSummary,
-                                displayMetrics = mentalConfig.mentalDisplayMetrics.take(3),
+                                displayMetrics = mentalDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_MENTAL) }
                             )
                         }
@@ -305,8 +410,9 @@ private fun NutritionCard(
             ) {
                 displayMetrics.forEachIndexed { index, metric ->
                     val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
-                    val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
-                    val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                    val registryKey = MetricRegistry.nutritionRegistryKey(metric)
+                    val label = MetricRegistry.label(registryKey)
+                    val unit = MetricRegistry.unit(registryKey)
                     val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
                     val color = slotColors.getOrElse(index) { slotColors.last() }
                     
@@ -379,7 +485,7 @@ private fun EnvironmentCard(
     }
 }
 
-private fun getWeatherMetricValue(weather: WeatherSummary, metric: String): String {
+internal fun getWeatherMetricValue(weather: WeatherSummary, metric: String): String {
     return when (metric) {
         WeatherCardConfig.METRIC_TEMPERATURE -> weather.temperature.toString()
         WeatherCardConfig.METRIC_PRESSURE -> weather.pressure.toString()
@@ -711,7 +817,7 @@ private fun formatSleepHM(hm: Double): String {
 
 // Data classes for summaries
 
-data class WeatherSummary(
+internal data class WeatherSummary(
     val temperature: Int,
     val condition: String,
     val humidity: Int,
@@ -722,7 +828,7 @@ data class WeatherSummary(
     val altitudeChangeM: Double? = null
 )
 
-data class PhysicalSummary(
+internal data class PhysicalSummary(
     val recoveryScore: Double? = null,
     val hrv: Double? = null,
     val restingHr: Double? = null,
@@ -739,7 +845,7 @@ data class PhysicalSummary(
     val bloodGlucose: Double? = null
 )
 
-data class SleepSummary(
+internal data class SleepSummary(
     val durationHours: Double,
     val sleepScore: Int,
     val efficiency: Int,
@@ -754,7 +860,7 @@ data class SleepSummary(
 
 // Data loading functions
 
-private suspend fun loadWeatherSummary(ctx: android.content.Context, token: String, date: String): WeatherSummary? {
+internal suspend fun loadWeatherSummary(ctx: android.content.Context, token: String, date: String): WeatherSummary? {
     return withContext(Dispatchers.IO) {
         try {
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/user_weather_daily?user_id=eq.${SessionStore.readUserId(ctx)}&date=eq.$date&select=*"
@@ -838,7 +944,7 @@ private fun weatherCodeToCondition(code: Int): String {
     }
 }
 
-private suspend fun loadPhysicalSummary(ctx: android.content.Context, token: String, date: String): PhysicalSummary? {
+internal suspend fun loadPhysicalSummary(ctx: android.content.Context, token: String, date: String): PhysicalSummary? {
     val userId = SessionStore.readUserId(ctx) ?: return null
     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
     val key = BuildConfig.SUPABASE_ANON_KEY
@@ -937,7 +1043,7 @@ private suspend fun loadPhysicalSummary(ctx: android.content.Context, token: Str
     )
 }
 
-private suspend fun loadSleepSummary(ctx: android.content.Context, token: String, date: String): SleepSummary? {
+internal suspend fun loadSleepSummary(ctx: android.content.Context, token: String, date: String): SleepSummary? {
     val db = SupabaseMetricsService(ctx)
     
     // Fetch sleep metrics for today
@@ -1074,7 +1180,7 @@ private suspend fun loadSleepSummary(ctx: android.content.Context, token: String
 
 // ─── Mental Health Summary ──────────────────────────────────────────────────
 
-data class MentalSummary(
+internal data class MentalSummary(
     val stress: Double?,
     val screenTimeHours: Double?,
     val lateScreenTimeHours: Double?,
@@ -1097,7 +1203,7 @@ data class MentalSummary(
     }
 }
 
-private suspend fun loadMentalSummary(ctx: android.content.Context, token: String, date: String): MentalSummary? {
+internal suspend fun loadMentalSummary(ctx: android.content.Context, token: String, date: String): MentalSummary? {
     val userId = SessionStore.readUserId(ctx) ?: return null
     val client = OkHttpClient()
     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
@@ -1217,5 +1323,66 @@ private suspend fun loadMentalSummary(ctx: android.content.Context, token: Strin
     }
 
     return MentalSummary(stress, screenTime, lateScreen, noise, brightness, volume, darkMode, unlocks)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Risk Monitor Card (summary card on main Monitor screen)
+// ═══════════════════════════════════════════════════════════════════════════
+@Composable
+private fun RiskCard(
+    riskLive: SupabaseDbService.RiskScoreLiveRow?,
+    isLoading: Boolean,
+    favOfFavs: List<Pair<String, String>>, // key to label
+    resolveFavValue: (String) -> String,
+    onClick: () -> Unit
+) {
+    MonitorCategoryCard(
+        icon = Icons.Outlined.TrendingUp,
+        title = "Risk",
+        iconTint = Color(0xFFEF5350),
+        onClick = onClick
+    ) {
+        if (isLoading) {
+            Text("Loading...", color = AppTheme.SubtleTextColor)
+        } else if (riskLive == null) {
+            Text("No risk data yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        } else {
+            // Risk's own data
+            val zone = riskLive.zone.lowercase().replaceFirstChar { it.uppercase() }
+            val triggers = parseTopTriggersFromJson(riskLive.topTriggers)
+            val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("%.1f".format(riskLive.score), color = slotColors[0], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("Score", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(zone, color = slotColors[1], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("Zone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("${triggers.size}", color = slotColors[2], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("Triggers", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
+            // Fav-of-favs beneath
+            if (favOfFavs.isNotEmpty()) {
+                Spacer(Modifier.height(6.dp))
+                HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
+                Spacer(Modifier.height(6.dp))
+                val favColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    favOfFavs.take(3).forEachIndexed { i, (key, label) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(resolveFavValue(key), color = favColors.getOrElse(i) { favColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 

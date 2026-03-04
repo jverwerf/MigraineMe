@@ -73,6 +73,23 @@ fun ThirdPartyConnectionsScreen(
     val whoopErrorDialog = remember { mutableStateOf<String?>(null) }
     val showWhoopDisconnectDialog = remember { mutableStateOf(false) }
 
+    // Oura state
+    val ouraTokenStore = remember { OuraTokenStore(context) }
+    val hasOura = remember { mutableStateOf(ouraTokenStore.load() != null) }
+    val ouraErrorDialog = remember { mutableStateOf<String?>(null) }
+    val showOuraDisconnectDialog = remember { mutableStateOf(false) }
+
+    // Polar state
+    val polarTokenStore = remember { PolarTokenStore(context) }
+    val hasPolar = remember { mutableStateOf(polarTokenStore.load() != null) }
+    val polarErrorDialog = remember { mutableStateOf<String?>(null) }
+    val showPolarDisconnectDialog = remember { mutableStateOf(false) }
+
+    val garminTokenStore = remember { GarminTokenStore(context) }
+    val hasGarmin = remember { mutableStateOf(garminTokenStore.load() != null) }
+    val garminErrorDialog = remember { mutableStateOf<String?>(null) }
+    val showGarminDisconnectDialog = remember { mutableStateOf(false) }
+
     // Health Connect state
     val healthConnectChecking = remember { mutableStateOf(true) }
     val healthConnectAvailable = remember { mutableStateOf(true) }
@@ -302,6 +319,18 @@ fun ThirdPartyConnectionsScreen(
             .takeIf { it != 0 } ?: context.resources.getIdentifier("whoop_logo", "mipmap", context.packageName)
     }
 
+    val ouraLogoResId = remember {
+        context.resources.getIdentifier("oura_logo", "drawable", context.packageName)
+    }
+
+    val polarLogoResId = remember {
+        context.resources.getIdentifier("polar_logo", "drawable", context.packageName)
+    }
+
+    val garminLogoResId = remember {
+        context.resources.getIdentifier("garmin_logo", "drawable", context.packageName)
+    }
+
     suspend fun tryCompleteWhoopIfCallbackPresent() {
         val prefs = context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
         val lastUri = prefs.getString("last_uri", null)
@@ -336,6 +365,137 @@ fun ThirdPartyConnectionsScreen(
         } else {
             hasWhoop.value = false
             whoopErrorDialog.value = prefs.getString("token_error", "WHOOP authentication failed")
+            // Clear stale OAuth state so we don't retry on next screen visit
+            prefs.edit().remove("last_uri").remove("token_error").apply()
+        }
+    }
+
+    // ── Oura callback handling ──
+    val ouraLastProcessedUri = remember { mutableStateOf<String?>(null) }
+
+    suspend fun tryCompleteOuraIfCallbackPresent() {
+        val prefs = context.getSharedPreferences("oura_oauth", Context.MODE_PRIVATE)
+        val lastUri = prefs.getString("last_uri", null)
+        if (lastUri.isNullOrBlank()) return
+
+        // If already connected, just refresh UI state and return
+        val existingToken = ouraTokenStore.load()
+        if (existingToken != null) {
+            hasOura.value = true
+            return
+        }
+
+        // Only process if we haven't already processed this exact URI
+        if (ouraLastProcessedUri.value == lastUri) return
+        ouraLastProcessedUri.value = lastUri
+
+        val ok = withContext(Dispatchers.IO) { OuraAuthService().completeAuth(context) }
+        val localToken = ouraTokenStore.load()
+
+        if (ok && localToken != null) {
+            hasOura.value = true
+            withContext(Dispatchers.IO) {
+                val edge = EdgeFunctionsService()
+                val stored = edge.upsertOuraTokenToSupabase(context.applicationContext, localToken)
+                if (stored) {
+                    runCatching { edge.enableDefaultOuraMetricSettings(context.applicationContext) }
+                    // Switch phone sleep metrics to Oura source
+                    runCatching { switchPhoneSleepSource("oura") }
+                    // Pull Oura data before backfill-all runs triggers/risk
+                    runCatching { edge.backfillOura(context.applicationContext) }
+                    edge.enqueueLoginBackfill(context.applicationContext)
+                }
+            }
+        } else {
+            hasOura.value = false
+            ouraErrorDialog.value = prefs.getString("token_error", "Oura authentication failed")
+            // Clear stale OAuth state so we don't retry on next screen visit
+            prefs.edit().remove("last_uri").remove("token_error").apply()
+        }
+    }
+
+    // ── Polar callback handling ──
+    val polarLastProcessedUri = remember { mutableStateOf<String?>(null) }
+
+    suspend fun tryCompletePolarIfCallbackPresent() {
+        val prefs = context.getSharedPreferences("polar_oauth", Context.MODE_PRIVATE)
+        val lastUri = prefs.getString("last_uri", null)
+        if (lastUri.isNullOrBlank()) return
+
+        // If already connected, just refresh UI state and return
+        val existingToken = polarTokenStore.load()
+        if (existingToken != null) {
+            hasPolar.value = true
+            return
+        }
+
+        // Only process if we haven't already processed this exact URI
+        if (polarLastProcessedUri.value == lastUri) return
+        polarLastProcessedUri.value = lastUri
+
+        val ok = withContext(Dispatchers.IO) { PolarAuthService().completeAuth(context) }
+        val localToken = polarTokenStore.load()
+
+        if (ok && localToken != null) {
+            hasPolar.value = true
+            withContext(Dispatchers.IO) {
+                val edge = EdgeFunctionsService()
+                val stored = edge.upsertPolarTokenToSupabase(context.applicationContext, localToken)
+                if (stored) {
+                    runCatching { edge.enableDefaultPolarMetricSettings(context.applicationContext) }
+                    // Switch phone sleep metrics to Polar source
+                    runCatching { switchPhoneSleepSource("polar") }
+                    // Pull Polar data before backfill-all runs triggers/risk
+                    runCatching { edge.backfillPolar(context.applicationContext) }
+                    edge.enqueueLoginBackfill(context.applicationContext)
+                }
+            }
+        } else {
+            hasPolar.value = false
+            polarErrorDialog.value = prefs.getString("token_error", "Polar authentication failed")
+            // Clear stale OAuth state so we don't retry on next screen visit
+            prefs.edit().remove("last_uri").remove("token_error").apply()
+        }
+    }
+
+    // ── Garmin callback handling ──
+    val garminLastProcessedUri = remember { mutableStateOf<String?>(null) }
+
+    suspend fun tryCompleteGarminIfCallbackPresent() {
+        val prefs = context.getSharedPreferences("garmin_oauth", Context.MODE_PRIVATE)
+        val lastUri = prefs.getString("last_uri", null)
+        if (lastUri.isNullOrBlank()) return
+
+        val existingToken = garminTokenStore.load()
+        if (existingToken != null) {
+            hasGarmin.value = true
+            return
+        }
+
+        if (garminLastProcessedUri.value == lastUri) return
+        garminLastProcessedUri.value = lastUri
+
+        // Garmin token exchange happens server-side via Edge Function
+        val ok = withContext(Dispatchers.IO) { GarminAuthService().completeAuth(context) }
+        val localToken = garminTokenStore.load()
+
+        if (ok && localToken != null) {
+            hasGarmin.value = true
+            withContext(Dispatchers.IO) {
+                val edge = EdgeFunctionsService()
+                // Token exchange Edge Function already enables metrics + enqueues backfill
+                // But also enable on client side as backup
+                runCatching { edge.enableDefaultGarminMetricSettings(context.applicationContext) }
+                runCatching { switchPhoneSleepSource("garmin") }
+                // Pull Garmin data before backfill-all runs triggers/risk
+                runCatching { edge.backfillGarmin(context.applicationContext) }
+                edge.enqueueLoginBackfill(context.applicationContext)
+            }
+        } else {
+            hasGarmin.value = false
+            garminErrorDialog.value = prefs.getString("token_error", "Garmin authentication failed")
+            // Clear stale OAuth state so we don't retry on next screen visit
+            prefs.edit().remove("last_uri").remove("token_error").apply()
         }
     }
 
@@ -352,6 +512,54 @@ fun ThirdPartyConnectionsScreen(
             kotlinx.coroutines.delay(2000)
             lastProcessedUri.value = null
             tryCompleteWhoopIfCallbackPresent()
+        }
+    }
+
+    // Try completing Oura OAuth on first screen load
+    LaunchedEffect("oura_initial_check") {
+        hasOura.value = ouraTokenStore.load() != null
+        tryCompleteOuraIfCallbackPresent()
+        if (!hasOura.value) {
+            kotlinx.coroutines.delay(1500)
+            ouraLastProcessedUri.value = null
+            tryCompleteOuraIfCallbackPresent()
+        }
+        if (!hasOura.value) {
+            kotlinx.coroutines.delay(2000)
+            ouraLastProcessedUri.value = null
+            tryCompleteOuraIfCallbackPresent()
+        }
+    }
+
+    // Try completing Polar OAuth on first screen load
+    LaunchedEffect("polar_initial_check") {
+        hasPolar.value = polarTokenStore.load() != null
+        tryCompletePolarIfCallbackPresent()
+        if (!hasPolar.value) {
+            kotlinx.coroutines.delay(1500)
+            polarLastProcessedUri.value = null
+            tryCompletePolarIfCallbackPresent()
+        }
+        if (!hasPolar.value) {
+            kotlinx.coroutines.delay(2000)
+            polarLastProcessedUri.value = null
+            tryCompletePolarIfCallbackPresent()
+        }
+    }
+
+    // Try completing Garmin OAuth on first screen load
+    LaunchedEffect("garmin_initial_check") {
+        hasGarmin.value = garminTokenStore.load() != null
+        tryCompleteGarminIfCallbackPresent()
+        if (!hasGarmin.value) {
+            kotlinx.coroutines.delay(1500)
+            garminLastProcessedUri.value = null
+            tryCompleteGarminIfCallbackPresent()
+        }
+        if (!hasGarmin.value) {
+            kotlinx.coroutines.delay(2000)
+            garminLastProcessedUri.value = null
+            tryCompleteGarminIfCallbackPresent()
         }
     }
 
@@ -380,6 +588,45 @@ fun ThirdPartyConnectionsScreen(
             lastProcessedUri.value = null
             tryCompleteWhoopIfCallbackPresent()
         }
+        // Always refresh hasOura from token store on resume
+        hasOura.value = ouraTokenStore.load() != null
+        tryCompleteOuraIfCallbackPresent()
+        if (!hasOura.value) {
+            kotlinx.coroutines.delay(1500)
+            ouraLastProcessedUri.value = null
+            tryCompleteOuraIfCallbackPresent()
+        }
+        if (!hasOura.value) {
+            kotlinx.coroutines.delay(2000)
+            ouraLastProcessedUri.value = null
+            tryCompleteOuraIfCallbackPresent()
+        }
+        // Always refresh hasPolar from token store on resume
+        hasPolar.value = polarTokenStore.load() != null
+        tryCompletePolarIfCallbackPresent()
+        if (!hasPolar.value) {
+            kotlinx.coroutines.delay(1500)
+            polarLastProcessedUri.value = null
+            tryCompletePolarIfCallbackPresent()
+        }
+        if (!hasPolar.value) {
+            kotlinx.coroutines.delay(2000)
+            polarLastProcessedUri.value = null
+            tryCompletePolarIfCallbackPresent()
+        }
+        // Always refresh hasGarmin from token store on resume
+        hasGarmin.value = garminTokenStore.load() != null
+        tryCompleteGarminIfCallbackPresent()
+        if (!hasGarmin.value) {
+            kotlinx.coroutines.delay(1500)
+            garminLastProcessedUri.value = null
+            tryCompleteGarminIfCallbackPresent()
+        }
+        if (!hasGarmin.value) {
+            kotlinx.coroutines.delay(2000)
+            garminLastProcessedUri.value = null
+            tryCompleteGarminIfCallbackPresent()
+        }
         runCatching { refreshHealthConnectPermissions() }
         runCatching { refreshMetricEnabledFlags() }
     }
@@ -405,14 +652,23 @@ fun ThirdPartyConnectionsScreen(
                     scope.launch(Dispatchers.IO) {
                         WhoopAuthService().disconnectWithDebug(context.applicationContext)
 
-                        // Check if HC wearables still connected; if not, fall back to phone
+                        // Check if Oura, Polar, Garmin, or HC wearables still connected; if not, fall back to phone
+                        val ouraStillConnected = OuraTokenStore(context.applicationContext).load() != null
+                        val polarStillConnected = PolarTokenStore(context.applicationContext).load() != null
+                        val garminStillConnected = GarminTokenStore(context.applicationContext).load() != null
                         val hcStillConnected = try {
                             val hc = HealthConnectClient.getOrCreate(context)
                             val granted = hc.permissionController.getGrantedPermissions()
                             granted.contains(sleepPermission)
                         } catch (_: Exception) { false }
 
-                        if (hcStillConnected) {
+                        if (ouraStillConnected) {
+                            runCatching { switchPhoneSleepSource("oura") }
+                        } else if (polarStillConnected) {
+                            runCatching { switchPhoneSleepSource("polar") }
+                        } else if (garminStillConnected) {
+                            runCatching { switchPhoneSleepSource("garmin") }
+                        } else if (hcStillConnected) {
                             runCatching { switchPhoneSleepSource("health_connect") }
                         } else {
                             runCatching { switchPhoneSleepSource("phone") }
@@ -427,6 +683,170 @@ fun ThirdPartyConnectionsScreen(
                 }) { Text("Disconnect") }
             },
             dismissButton = { TextButton(onClick = { showWhoopDisconnectDialog.value = false }) { Text("Cancel") } }
+        )
+    }
+
+    // Oura dialogs
+    ouraErrorDialog.value?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { ouraErrorDialog.value = null },
+            title = { Text("Oura connection failed") },
+            text = { Text(msg) },
+            confirmButton = { TextButton(onClick = { ouraErrorDialog.value = null }) { Text("OK") } }
+        )
+    }
+
+    if (showOuraDisconnectDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showOuraDisconnectDialog.value = false },
+            title = { Text("Disconnect Oura?") },
+            text = { Text("Are you sure you want to disconnect Oura?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showOuraDisconnectDialog.value = false
+                    scope.launch(Dispatchers.IO) {
+                        OuraAuthService().disconnectWithDebug(context.applicationContext)
+
+                        // Check if WHOOP, Polar, Garmin, or HC wearables still connected; if not, fall back to phone
+                        val whoopStillConnected = WhoopTokenStore(context.applicationContext).load() != null
+                        val polarStillConnected = PolarTokenStore(context.applicationContext).load() != null
+                        val garminStillConnected = GarminTokenStore(context.applicationContext).load() != null
+                        val hcStillConnected = try {
+                            val hc = HealthConnectClient.getOrCreate(context)
+                            val granted = hc.permissionController.getGrantedPermissions()
+                            granted.contains(sleepPermission)
+                        } catch (_: Exception) { false }
+
+                        if (whoopStillConnected) {
+                            runCatching { switchPhoneSleepSource("whoop") }
+                        } else if (polarStillConnected) {
+                            runCatching { switchPhoneSleepSource("polar") }
+                        } else if (garminStillConnected) {
+                            runCatching { switchPhoneSleepSource("garmin") }
+                        } else if (hcStillConnected) {
+                            runCatching { switchPhoneSleepSource("health_connect") }
+                        } else {
+                            runCatching { switchPhoneSleepSource("phone") }
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            hasOura.value = false
+                            ouraLastProcessedUri.value = null
+                            android.widget.Toast.makeText(context, "Oura disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }) { Text("Disconnect") }
+            },
+            dismissButton = { TextButton(onClick = { showOuraDisconnectDialog.value = false }) { Text("Cancel") } }
+        )
+    }
+
+    // Polar dialogs
+    polarErrorDialog.value?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { polarErrorDialog.value = null },
+            title = { Text("Polar connection failed") },
+            text = { Text(msg) },
+            confirmButton = { TextButton(onClick = { polarErrorDialog.value = null }) { Text("OK") } }
+        )
+    }
+
+    if (showPolarDisconnectDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showPolarDisconnectDialog.value = false },
+            title = { Text("Disconnect Polar?") },
+            text = { Text("Are you sure you want to disconnect Polar?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showPolarDisconnectDialog.value = false
+                    scope.launch(Dispatchers.IO) {
+                        PolarAuthService().disconnectWithDebug(context.applicationContext)
+
+                        // Check if WHOOP, Oura, Garmin, or HC wearables still connected; if not, fall back to phone
+                        val whoopStillConnected = WhoopTokenStore(context.applicationContext).load() != null
+                        val ouraStillConnected = OuraTokenStore(context.applicationContext).load() != null
+                        val garminStillConnected = GarminTokenStore(context.applicationContext).load() != null
+                        val hcStillConnected = try {
+                            val hc = HealthConnectClient.getOrCreate(context)
+                            val granted = hc.permissionController.getGrantedPermissions()
+                            granted.contains(sleepPermission)
+                        } catch (_: Exception) { false }
+
+                        if (whoopStillConnected) {
+                            runCatching { switchPhoneSleepSource("whoop") }
+                        } else if (ouraStillConnected) {
+                            runCatching { switchPhoneSleepSource("oura") }
+                        } else if (garminStillConnected) {
+                            runCatching { switchPhoneSleepSource("garmin") }
+                        } else if (hcStillConnected) {
+                            runCatching { switchPhoneSleepSource("health_connect") }
+                        } else {
+                            runCatching { switchPhoneSleepSource("phone") }
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            hasPolar.value = false
+                            polarLastProcessedUri.value = null
+                            android.widget.Toast.makeText(context, "Polar disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }) { Text("Disconnect") }
+            },
+            dismissButton = { TextButton(onClick = { showPolarDisconnectDialog.value = false }) { Text("Cancel") } }
+        )
+    }
+
+    garminErrorDialog.value?.let { msg ->
+        AlertDialog(
+            onDismissRequest = { garminErrorDialog.value = null },
+            title = { Text("Garmin connection failed") },
+            text = { Text(msg) },
+            confirmButton = { TextButton(onClick = { garminErrorDialog.value = null }) { Text("OK") } }
+        )
+    }
+
+    if (showGarminDisconnectDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showGarminDisconnectDialog.value = false },
+            title = { Text("Disconnect Garmin?") },
+            text = { Text("Are you sure you want to disconnect Garmin?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showGarminDisconnectDialog.value = false
+                    scope.launch(Dispatchers.IO) {
+                        GarminAuthService().disconnectWithDebug(context.applicationContext)
+
+                        // Check if WHOOP, Oura, Polar, or HC wearables still connected; if not, fall back to phone
+                        val whoopStillConnected = WhoopTokenStore(context.applicationContext).load() != null
+                        val ouraStillConnected = OuraTokenStore(context.applicationContext).load() != null
+                        val polarStillConnected = PolarTokenStore(context.applicationContext).load() != null
+                        val hcStillConnected = try {
+                            val hc = HealthConnectClient.getOrCreate(context)
+                            val granted = hc.permissionController.getGrantedPermissions()
+                            granted.contains(sleepPermission)
+                        } catch (_: Exception) { false }
+
+                        if (whoopStillConnected) {
+                            runCatching { switchPhoneSleepSource("whoop") }
+                        } else if (ouraStillConnected) {
+                            runCatching { switchPhoneSleepSource("oura") }
+                        } else if (polarStillConnected) {
+                            runCatching { switchPhoneSleepSource("polar") }
+                        } else if (hcStillConnected) {
+                            runCatching { switchPhoneSleepSource("health_connect") }
+                        } else {
+                            runCatching { switchPhoneSleepSource("phone") }
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            hasGarmin.value = false
+                            garminLastProcessedUri.value = null
+                            android.widget.Toast.makeText(context, "Garmin disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }) { Text("Disconnect") }
+            },
+            dismissButton = { TextButton(onClick = { showGarminDisconnectDialog.value = false }) { Text("Cancel") } }
         )
     }
 
@@ -454,10 +874,19 @@ fun ThirdPartyConnectionsScreen(
                         edge.upsertMetricSetting(context.applicationContext, "menstruation", false, null)
                         edge.disableHealthConnectMetricSettings(context.applicationContext)
 
-                        // Check if WHOOP still connected; if not, fall back to phone
+                        // Check if WHOOP, Oura, Polar, or Garmin still connected; if not, fall back to phone
                         val whoopStillConnected = WhoopTokenStore(context.applicationContext).load() != null
+                        val ouraStillConnected = OuraTokenStore(context.applicationContext).load() != null
+                        val polarStillConnected = PolarTokenStore(context.applicationContext).load() != null
+                        val garminStillConnected = GarminTokenStore(context.applicationContext).load() != null
                         if (whoopStillConnected) {
                             runCatching { switchPhoneSleepSource("whoop") }
+                        } else if (ouraStillConnected) {
+                            runCatching { switchPhoneSleepSource("oura") }
+                        } else if (polarStillConnected) {
+                            runCatching { switchPhoneSleepSource("polar") }
+                        } else if (garminStillConnected) {
+                            runCatching { switchPhoneSleepSource("garmin") }
                         } else {
                             runCatching { switchPhoneSleepSource("phone") }
                         }
@@ -513,16 +942,14 @@ fun ThirdPartyConnectionsScreen(
 
             // Health Connect Row
             Box(Modifier.spotlightTarget("health_connect_card")) {
-                ConnectionRow(
-                    logoResId = R.drawable.ic_health_connect,
+                ConnectionRowLogoOnly(
+                    logoResId = R.drawable.health_connect_logo,
                     fallbackLetter = "H",
-                    title = "Health Connect",
                     isConnected = anyHCConnected,
-                    warningText = if (anyHCConnected && !allHCConnected) "Some permissions missing. Tap to enable all." else null,
                     onClick = {
                         if (!healthConnectAvailable.value) {
                             android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
-                            return@ConnectionRow
+                            return@ConnectionRowLogoOnly
                         }
                         scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
                     },
@@ -535,6 +962,7 @@ fun ThirdPartyConnectionsScreen(
             Spacer(Modifier.height(12.dp))
 
             // WHOOP Row
+            Column(Modifier.spotlightTarget("wearables_group")) {
             Box(Modifier.spotlightTarget("whoop_card")) {
                 ConnectionRowLogoOnly(
                     logoResId = whoopLogoResId,
@@ -555,6 +983,70 @@ fun ThirdPartyConnectionsScreen(
                     }
                 )
             }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Oura Row
+            ConnectionRowLogoOnly(
+                logoResId = ouraLogoResId,
+                fallbackLetter = "O",
+                isConnected = hasOura.value,
+                onClick = {
+                    if (!hasOura.value) {
+                        if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                            context.getSharedPreferences("oura_oauth", Context.MODE_PRIVATE)
+                                .edit().putBoolean("return_to_setup", true).apply()
+                        }
+                        activity?.let { OuraAuthService().startAuth(it) }
+                    }
+                },
+                onLongClick = {
+                    if (hasOura.value) showOuraDisconnectDialog.value = true
+                }
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            // Polar Row
+            ConnectionRowLogoOnly(
+                logoResId = polarLogoResId,
+                fallbackLetter = "P",
+                isConnected = hasPolar.value,
+                onClick = {
+                    if (!hasPolar.value) {
+                        if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                            context.getSharedPreferences("polar_oauth", Context.MODE_PRIVATE)
+                                .edit().putBoolean("return_to_setup", true).apply()
+                        }
+                        activity?.let { PolarAuthService().startAuth(it) }
+                    }
+                },
+                onLongClick = {
+                    if (hasPolar.value) showPolarDisconnectDialog.value = true
+                }
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            // Garmin Row
+            ConnectionRowLogoOnly(
+                logoResId = garminLogoResId,
+                fallbackLetter = "G",
+                isConnected = hasGarmin.value,
+                onClick = {
+                    if (!hasGarmin.value) {
+                        if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                            context.getSharedPreferences("garmin_oauth", Context.MODE_PRIVATE)
+                                .edit().putBoolean("return_to_setup", true).apply()
+                        }
+                        activity?.let { GarminAuthService().startAuth(it) }
+                    }
+                },
+                onLongClick = {
+                    if (hasGarmin.value) showGarminDisconnectDialog.value = true
+                }
+            )
+            } // end wearables_group spotlight
 
             Spacer(Modifier.height(32.dp))
         }

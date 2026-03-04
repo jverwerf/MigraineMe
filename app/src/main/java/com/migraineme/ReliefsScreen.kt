@@ -93,12 +93,14 @@ fun ReliefsScreen(
                 rebuildDraftWithRels(updated)
                 showAddDialog = false
             },
-            onConfirm = { startIso, endIso, relief ->
+            onConfirm = { startIso, endIso, relief, seScale, seNotes ->
                 val updated = draft.rels + ReliefDraft(
                     type = pendingLabel!!,
                     startAtIso = startIso,
                     endAtIso = endIso,
-                    reliefScale = relief
+                    reliefScale = relief,
+                    sideEffectScale = seScale,
+                    sideEffectNotes = seNotes.ifBlank { null }
                 )
                 rebuildDraftWithRels(updated)
                 showAddDialog = false
@@ -114,13 +116,17 @@ fun ReliefsScreen(
             initialStartIso = editing.startAtIso,
             initialEndIso = editing.endAtIso,
             initialRelief = editing.reliefScale ?: "NONE",
+            initialSideEffectScale = editing.sideEffectScale ?: "NONE",
+            initialSideEffectNotes = editing.sideEffectNotes ?: "",
             onDismiss = { showEditDialog = false },
-            onConfirm = { startIso, endIso, relief ->
+            onConfirm = { startIso, endIso, relief, seScale, seNotes ->
                 val updated = draft.rels.toMutableList().apply {
                     set(editIndex!!, editing.copy(
                         startAtIso = startIso,
                         endAtIso = endIso,
-                        reliefScale = relief
+                        reliefScale = relief,
+                        sideEffectScale = seScale,
+                        sideEffectNotes = seNotes.ifBlank { null }
                     ))
                 }
                 rebuildDraftWithRels(updated)
@@ -278,7 +284,7 @@ fun ReliefsScreen(
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { rel ->
-                            ReliefButton(rel.label, rel.label in selectedLabels) {
+                            ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {
                                 onReliefTap(rel.label)
                             }
                         }
@@ -293,7 +299,7 @@ fun ReliefsScreen(
                         Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { rel ->
-                                ReliefButton(rel.label, rel.label in selectedLabels) {
+                                ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {
                                     onReliefTap(rel.label)
                                 }
                             }
@@ -341,11 +347,13 @@ private fun ReliefAddDialog(
     title: String,
     onDismiss: () -> Unit,
     onSkip: () -> Unit,
-    onConfirm: (startIso: String?, endIso: String?, relief: String) -> Unit
+    onConfirm: (startIso: String?, endIso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
     var startIso by remember { mutableStateOf<String?>(null) }
     var endIso by remember { mutableStateOf<String?>(null) }
     var selectedRelief by remember { mutableStateOf(ReliefScale.NONE) }
+    var sideEffectScale by remember { mutableStateOf("NONE") }
+    var sideEffectNotes by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -388,10 +396,17 @@ private fun ReliefAddDialog(
                         )
                     }
                 }
+
+                SideEffectChips(
+                    sideEffectScale = sideEffectScale,
+                    onScaleChange = { sideEffectScale = it },
+                    sideEffectNotes = sideEffectNotes,
+                    onNotesChange = { sideEffectNotes = it }
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name) }) {
+            TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
                 Text("Add", color = AppTheme.AccentPurple)
             }
         },
@@ -418,12 +433,16 @@ private fun ReliefEditDialog(
     initialStartIso: String?,
     initialEndIso: String?,
     initialRelief: String,
+    initialSideEffectScale: String = "NONE",
+    initialSideEffectNotes: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (startIso: String?, endIso: String?, relief: String) -> Unit
+    onConfirm: (startIso: String?, endIso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
     var startIso by remember { mutableStateOf(initialStartIso) }
     var endIso by remember { mutableStateOf(initialEndIso) }
     var selectedRelief by remember { mutableStateOf(ReliefScale.fromString(initialRelief)) }
+    var sideEffectScale by remember { mutableStateOf(initialSideEffectScale) }
+    var sideEffectNotes by remember { mutableStateOf(initialSideEffectNotes) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -461,10 +480,17 @@ private fun ReliefEditDialog(
                         )
                     }
                 }
+
+                SideEffectChips(
+                    sideEffectScale = sideEffectScale,
+                    onScaleChange = { sideEffectScale = it },
+                    sideEffectNotes = sideEffectNotes,
+                    onNotesChange = { sideEffectNotes = it }
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name) }) {
+            TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
                 Text("Save", color = AppTheme.AccentPurple)
             }
         },
@@ -481,10 +507,11 @@ private fun ReliefEditDialog(
  * ──────────────────────────────────────────────── */
 
 @Composable
-private fun ReliefButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun ReliefButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
     val circleColor = if (isSelected) Color(0xFF81C784).copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val borderColor = if (isSelected) Color(0xFF81C784).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
+    val icon = ReliefIcons.forLabel(label, iconKey)
     val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
 
     Column(
@@ -505,11 +532,11 @@ private fun ReliefButton(label: String, isSelected: Boolean, onClick: () -> Unit
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                label.take(2).uppercase(),
-                color = iconTint,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
-            )
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(24.dp))
+            } else {
+                Text(label.take(2).uppercase(), color = iconTint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(

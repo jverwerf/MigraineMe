@@ -443,4 +443,39 @@ object ActivityIcons {
     ) }
 
     fun forKey(key: String?): ImageVector? = ALL_ICONS.find { it.key == key }?.icon
+
+    fun forLabel(label: String, iconKey: String? = null): ImageVector? {
+        if (iconKey != null) return forKey(iconKey)
+        val l = label.lowercase()
+        return when {
+            l.contains("cycl") || l.contains("bike") || l.contains("biking") -> Cycling
+            l.contains("exercis") || l.contains("workout") || l.contains("gym") -> Exercising
+            l.contains("run") || l.contains("jog") -> Running
+            l.contains("swim") -> Swimming
+            l.contains("walk") || l.contains("hike") -> Walking
+            l.contains("yoga") || l.contains("pilates") -> Yoga
+            l.contains("gam") || l.contains("video game") -> Gaming
+            l.contains("hobb") || l.contains("craft") -> Hobbies
+            l.contains("read") -> Reading
+            l.contains("child") || l.contains("kid") || l.contains("parent") -> Childcare
+            l.contains("clean") || l.contains("chore") || l.contains("housework") -> Cleaning
+            l.contains("cook") || l.contains("bak") -> Cooking
+            l.contains("shop") -> Shopping
+            l.contains("phone") || l.contains("call") -> Phone
+            l.contains("screen") || l.contains("comput") || l.contains("laptop") -> ScreenTime
+            l.contains("tv") || l.contains("film") || l.contains("movie") || l.contains("netflix") || l.contains("watch") -> TvFilm
+            l.contains("nap") -> Napping
+            l.contains("sleep") -> Sleeping
+            l.contains("eating out") || l.contains("restaurant") || l.contains("dinner out") -> EatingOut
+            l.contains("party") || l.contains("club") -> Partying
+            l.contains("social") || l.contains("friend") || l.contains("hangout") || l.contains("hang out") -> Socialising
+            l.contains("commut") || l.contains("train") || l.contains("bus") -> Commuting
+            l.contains("driv") || l.contains("car") -> Driving
+            l.contains("meeting") -> Meeting
+            l.contains("present") || l.contains("speech") || l.contains("talk") -> Presenting
+            l.contains("study") || l.contains("school") || l.contains("homework") || l.contains("exam") -> Studying
+            l.contains("work") || l.contains("office") || l.contains("job") -> Working
+            else -> null
+        }
+    }
 }

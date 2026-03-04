@@ -44,13 +44,13 @@ private val FilterCatColors = mapOf(
     "Severity" to Color(0xFFFF7043),
     "Symptom" to Color(0xFFCE93D8),
     "Pain Location" to Color(0xFFFF8A80),
-    "Trigger" to Color(0xFFFF8A65),
-    "Prodrome" to Color(0xFFFFD54F),
+    "Trigger" to Color(0xFFFFB74D),
+    "Prodrome" to Color(0xFF9575CD),
     "Medicine" to Color(0xFF4FC3F7),
     "Relief" to Color(0xFF81C784),
-    "Activity" to Color(0xFFBA68C8),
-    "Location" to Color(0xFF4DD0E1),
-    "Missed Activity" to Color(0xFFEF9A9A)
+    "Activity" to Color(0xFFFF8A65),
+    "Location" to Color(0xFF78909C),
+    "Missed Activity" to Color(0xFFFF7043)
 )
 
 // ======= Ordered categories to match the migraine log flow =======

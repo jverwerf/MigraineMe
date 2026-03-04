@@ -12,7 +12,28 @@
           "package_name": "com.migraineme"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "630053958216-1j5508t2t8s5c8013a2oc06ihuvdmk0u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.migraineme",
+            "certificate_hash": "914dd50891af99b95e9aeb52728518bc1aaa32b7"
+          }
+        },
+        {
+          "client_id": "630053958216-kne4o8e19orlrjehrc9a2fgck7qof3nl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.migraineme",
+            "certificate_hash": "84cf6a94a1719e5a08b1f6ab4a73d2dcc2964b90"
+          }
+        },
+        {
+          "client_id": "630053958216-5v26ghd1rnidjisdrsfa5a6bpgba3pi2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyByL9-b-2Ko-E0qoEs5N5iBzwkMIwYC8FI"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "630053958216-5v26ghd1rnidjisdrsfa5a6bpgba3pi2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

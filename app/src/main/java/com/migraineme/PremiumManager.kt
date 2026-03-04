@@ -55,21 +55,28 @@ object PremiumManager {
 
     fun initialize(context: Context, userId: String?) {
         try {
+            Log.d(TAG, "initialize() called — userId=$userId, isConfigured=${Purchases.isConfigured}")
             if (!Purchases.isConfigured) {
+                Log.d(TAG, "Configuring RevenueCat with key=${REVENUECAT_API_KEY.take(10)}...")
                 Purchases.configure(
                     PurchasesConfiguration.Builder(context, REVENUECAT_API_KEY).build()
                 )
+                Log.d(TAG, "RevenueCat configured successfully")
             }
 
             if (!userId.isNullOrBlank()) {
+                Log.d(TAG, "Logging in to RevenueCat with userId=$userId")
                 Purchases.sharedInstance.logIn(userId, object : LogInCallback {
                     override fun onReceived(customerInfo: CustomerInfo, created: Boolean) {
+                        Log.d(TAG, "RevenueCat login success — created=$created, entitlements=${customerInfo.entitlements.active.keys}")
                         updateFromRevenueCat(customerInfo)
                     }
                     override fun onError(error: PurchasesError) {
-                        Log.w(TAG, "RevenueCat login error: ${error.message}")
+                        Log.e(TAG, "RevenueCat login error: ${error.code} — ${error.message}")
                     }
                 })
+            } else {
+                Log.w(TAG, "No userId provided — skipping RevenueCat login")
             }
         } catch (e: Exception) {
             Log.e(TAG, "RevenueCat init failed: ${e.message}", e)
@@ -243,7 +250,9 @@ object PremiumManager {
     // ═══════════════════════════════════════════════════════════
 
     fun getOfferings(onResult: (List<PackageInfo>) -> Unit) {
+        Log.d(TAG, "getOfferings() called — isConfigured=${Purchases.isConfigured}")
         if (!Purchases.isConfigured) {
+            Log.w(TAG, "getOfferings: RevenueCat not configured")
             onResult(emptyList())
             return
         }
@@ -280,7 +289,9 @@ object PremiumManager {
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
+        Log.d(TAG, "purchase() called — isConfigured=${Purchases.isConfigured}, rcPackage=${packageInfo.rcPackage != null}, productId=${packageInfo.productId}")
         if (!Purchases.isConfigured || packageInfo.rcPackage == null) {
+            Log.e(TAG, "Purchase blocked — isConfigured=${Purchases.isConfigured}, rcPackage=${packageInfo.rcPackage != null}")
             onError("Billing not configured")
             return
         }
@@ -289,10 +300,12 @@ object PremiumManager {
             PurchaseParams.Builder(activity, packageInfo.rcPackage!!).build(),
             object : PurchaseCallback {
                 override fun onCompleted(storeTransaction: StoreTransaction, customerInfo: CustomerInfo) {
+                    Log.d(TAG, "Purchase SUCCESS — product=${storeTransaction.productIds}, entitlements=${customerInfo.entitlements.active.keys}")
                     updateFromRevenueCat(customerInfo)
                     onSuccess()
                 }
                 override fun onError(error: PurchasesError, userCancelled: Boolean) {
+                    Log.e(TAG, "Purchase FAILED — cancelled=$userCancelled, code=${error.code}, message=${error.message}")
                     if (userCancelled) {
                         onError("Purchase cancelled")
                     } else {

@@ -40,6 +40,7 @@ fun JournalEditScreen(
     itemType: String, // "trigger", "medicine", "relief", "prodrome", "activity", "location"
     itemId: String,
     authVm: AuthViewModel,
+    logVm: LogViewModel? = null,
     onBack: () -> Unit,
     onDeleted: () -> Unit = onBack,
 ) {
@@ -50,13 +51,31 @@ fun JournalEditScreen(
 
     // Editable state
     var label by remember { mutableStateOf("") }
-    var extraLabel by remember { mutableStateOf<String?>(null) } // amount for medicine, duration for relief
+    var extraLabel by remember { mutableStateOf<String?>(null) } // amount for medicine
     var startAt by remember { mutableStateOf(Instant.now()) }
+    var endAt by remember { mutableStateOf<Instant?>(null) } // end time for relief
     var notes by remember { mutableStateOf("") }
     var loaded by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var reliefScale by remember { mutableStateOf(ReliefScale.NONE) }
+    var sideEffectScale by remember { mutableStateOf("NONE") }
+    var sideEffectNotes by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
+            }
+        }
+    }
 
     // Trigger label map for display
     var triggerLabelMap by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
@@ -89,6 +108,9 @@ fun JournalEditScreen(
                             extraLabel = row.amount
                             startAt = Instant.parse(row.startAt)
                             notes = row.notes ?: ""
+                            reliefScale = ReliefScale.fromString(row.reliefScale)
+                            sideEffectScale = row.sideEffectScale ?: "NONE"
+                            sideEffectNotes = row.sideEffectNotes ?: ""
                         }
                     }
                     "relief" -> {
@@ -96,9 +118,12 @@ fun JournalEditScreen(
                         val row = rows.find { it.id == itemId }
                         if (row != null) {
                             label = row.type ?: ""
-                            extraLabel = row.durationMinutes?.let { "${it} min" }
                             startAt = Instant.parse(row.startAt)
+                            endAt = row.endAt?.takeIf { it.isNotBlank() && it != row.startAt }?.let { Instant.parse(it) }
                             notes = row.notes ?: ""
+                            reliefScale = ReliefScale.fromString(row.reliefScale)
+                            sideEffectScale = row.sideEffectScale ?: "NONE"
+                            sideEffectNotes = row.sideEffectNotes ?: ""
                         }
                     }
                     "prodrome" -> {
@@ -190,9 +215,26 @@ fun JournalEditScreen(
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 )
-                if (!extraLabel.isNullOrBlank()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(extraLabel!!, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+
+            // ── Amount (medicine only) ──
+            if (itemType == "medicine") {
+                BaseCard {
+                    Text("Amount", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = extraLabel ?: "",
+                        onValueChange = { extraLabel = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("e.g. 500mg, 2 tablets…", color = AppTheme.SubtleTextColor) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
+                            cursorColor = AppTheme.AccentPurple,
+                        ),
+                    )
                 }
             }
 
@@ -275,7 +317,96 @@ fun JournalEditScreen(
                 }
             }
 
-            // ── Notes ──
+            // ── End time (relief only) ──
+            if (itemType == "relief") {
+                val endZoned = endAt?.atZone(ZoneId.systemDefault())
+                var selectedEndDate by remember(loaded) { mutableStateOf(endZoned?.toLocalDate() ?: selectedDate) }
+                var selectedEndTime by remember(loaded) { mutableStateOf(endZoned?.toLocalTime() ?: selectedTime) }
+
+                // Sync endAt whenever end date/time changes
+                LaunchedEffect(selectedEndDate, selectedEndTime) {
+                    endAt = ZonedDateTime.of(selectedEndDate, selectedEndTime, ZoneId.systemDefault()).toInstant()
+                }
+
+                BaseCard {
+                    Text("End time", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        val endDatePickerState = rememberDatePickerState(
+                            initialSelectedDateMillis = selectedEndDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        )
+                        var showEndDatePicker by remember { mutableStateOf(false) }
+
+                        OutlinedButton(
+                            onClick = { showEndDatePicker = true },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        ) {
+                            Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(selectedEndDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")))
+                        }
+
+                        if (showEndDatePicker) {
+                            DatePickerDialog(
+                                onDismissRequest = { showEndDatePicker = false },
+                                confirmButton = {
+                                    TextButton(onClick = {
+                                        endDatePickerState.selectedDateMillis?.let {
+                                            selectedEndDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                                        }
+                                        showEndDatePicker = false
+                                    }) { Text("OK") }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showEndDatePicker = false }) { Text("Cancel") }
+                                },
+                            ) {
+                                DatePicker(state = endDatePickerState)
+                            }
+                        }
+
+                        val endTimePickerState = rememberTimePickerState(
+                            initialHour = selectedEndTime.hour,
+                            initialMinute = selectedEndTime.minute,
+                        )
+                        var showEndTimePicker by remember { mutableStateOf(false) }
+
+                        OutlinedButton(
+                            onClick = { showEndTimePicker = true },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        ) {
+                            Icon(Icons.Outlined.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(selectedEndTime.format(DateTimeFormatter.ofPattern("HH:mm")))
+                        }
+
+                        if (showEndTimePicker) {
+                            AlertDialog(
+                                onDismissRequest = { showEndTimePicker = false },
+                                confirmButton = {
+                                    TextButton(onClick = {
+                                        selectedEndTime = LocalTime.of(endTimePickerState.hour, endTimePickerState.minute)
+                                        showEndTimePicker = false
+                                    }) { Text("OK") }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showEndTimePicker = false }) { Text("Cancel") }
+                                },
+                                text = { TimePicker(state = endTimePickerState) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── Notes (migraine only — medicines & reliefs use side effect notes) ──
+            if (itemType == "migraine") {
             BaseCard {
                 Text("Notes", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
@@ -294,6 +425,94 @@ fun JournalEditScreen(
                     minLines = 2,
                     maxLines = 5,
                 )
+            }
+            }
+
+            // ── Relief scale + Side effects (medicine & relief only) ──
+            if (itemType == "medicine" || itemType == "relief") {
+                BaseCard {
+                    Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ReliefScale.entries.forEach { scale ->
+                            FilterChip(
+                                selected = reliefScale == scale,
+                                onClick = { reliefScale = scale },
+                                label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = scale.color.copy(alpha = 0.3f),
+                                    selectedLabelColor = Color.White,
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    labelColor = AppTheme.SubtleTextColor
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = reliefScale == scale,
+                                    borderColor = Color.White.copy(alpha = 0.12f),
+                                    selectedBorderColor = scale.color.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("NONE" to "None", "SOFT" to "Soft", "MODERATE" to "Moderate", "SEVERE" to "Severe").forEach { (key, display) ->
+                            val seColor = when (key) { "NONE" -> Color(0xFF81C784); "SOFT" -> Color(0xFFFFB74D); "MODERATE" -> Color(0xFFFF8A65); else -> Color(0xFFE57373) }
+                            FilterChip(
+                                selected = sideEffectScale == key,
+                                onClick = { sideEffectScale = key },
+                                label = { Text(display, style = MaterialTheme.typography.labelSmall) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = seColor.copy(alpha = 0.3f),
+                                    selectedLabelColor = Color.White,
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    labelColor = AppTheme.SubtleTextColor
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = sideEffectScale == key,
+                                    borderColor = Color.White.copy(alpha = 0.12f),
+                                    selectedBorderColor = seColor.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = sideEffectNotes,
+                        onValueChange = { sideEffectNotes = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Side effect notes", color = AppTheme.SubtleTextColor) },
+                        placeholder = { Text("e.g. drowsiness, nausea…", color = AppTheme.SubtleTextColor) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
+                            cursorColor = AppTheme.AccentPurple,
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                    putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
+                                }
+                                try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                    android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }) {
+                                Icon(Icons.Outlined.Mic, contentDescription = "Voice input", tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                            }
+                        },
+                        minLines = 1,
+                        maxLines = 3,
+                    )
+                }
             }
 
             // ── Error ──
@@ -319,8 +538,8 @@ fun JournalEditScreen(
                                     .toInstant().toString()
                                 when (itemType) {
                                     "trigger" -> db.updateTrigger(token, itemId, startAt = newStartAt, notes = notes)
-                                    "medicine" -> db.updateMedicine(token, itemId, startAt = newStartAt, notes = notes)
-                                    "relief" -> db.updateRelief(token, itemId, startAt = newStartAt, notes = notes)
+                                    "medicine" -> db.updateMedicine(token, itemId, startAt = newStartAt, amount = extraLabel?.ifBlank { null }, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null })
+                                    "relief" -> db.updateRelief(token, itemId, startAt = newStartAt, endAt = endAt?.toString(), notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null })
                                     "prodrome" -> db.updateProdromeLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
                                     "activity" -> db.updateActivityLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
                                     "location" -> db.updateLocationLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
@@ -331,7 +550,10 @@ fun JournalEditScreen(
                             }
                         }
                         saving = false
-                        if (error == null) onBack()
+                        if (error == null) {
+                            auth.accessToken?.let { logVm?.loadJournal(it) }
+                            onBack()
+                        }
                     }
                 },
                 enabled = !saving,
@@ -381,6 +603,7 @@ fun JournalEditScreen(
                                     } catch (_: Exception) {}
                                 }
                                 confirmDelete = false
+                                auth.accessToken?.let { logVm?.loadJournal(it) }
                                 onDeleted()
                             }
                         }) { Text("Delete", color = Color(0xFFE57373)) }

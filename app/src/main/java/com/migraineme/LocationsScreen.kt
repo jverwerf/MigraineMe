@@ -85,7 +85,7 @@ fun LocationsScreen(
 
             HeroCard {
                 Box(Modifier.size(40.dp).drawBehind {
-                    HubIcons.run { drawLocationPin(Color(0xFF64B5F6)) }
+                    HubIcons.run { drawLocationPin(Color(0xFF78909C)) }
                 })
                 Text("Where were you?", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
@@ -165,7 +165,7 @@ fun LocationsScreen(
 
 @Composable
 private fun CircleButton(label: String, isSelected: Boolean, accent: Color, iconKey: String? = null, onClick: () -> Unit) {
-    val icon = LocationIcons.forKey(iconKey)
+    val icon = LocationIcons.forLabel(label, iconKey)
     val bg = if (isSelected) accent.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val border = if (isSelected) accent.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     Column(

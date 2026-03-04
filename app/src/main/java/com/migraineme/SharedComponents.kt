@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -112,78 +113,37 @@ fun HeroCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val borderBrush = remember {
-        Brush.linearGradient(
-            colors = listOf(
-                AppTheme.AccentPurple.copy(alpha = 0.60f),
-                AppTheme.AccentPink.copy(alpha = 0.55f)
-            )
-        )
-    }
-    
-    Box(modifier = modifier.fillMaxWidth()) {
-        // Gradient border
-        Canvas(modifier = Modifier.matchParentSize()) {
-            val strokePx = 2.dp.toPx()
-            val cr = CornerRadius(24.dp.toPx(), 24.dp.toPx())
-            drawRoundRect(
-                brush = borderBrush,
-                topLeft = Offset(strokePx / 2f, strokePx / 2f),
-                size = Size(size.width - strokePx, size.height - strokePx),
-                cornerRadius = cr,
-                style = Stroke(width = strokePx)
-            )
-        }
-        
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = AppTheme.HeroCardShape,
-            colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
-            elevation = CardDefaults.cardElevation(0.dp)
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Top gradient accent line
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(AppTheme.AccentPurple, AppTheme.AccentPink)
-                            )
-                        )
+    val glowColor = remember { AppTheme.AccentPurple.copy(alpha = 0.20f) }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .drawBehind {
+                // Soft outer glow
+                drawRoundRect(
+                    color = glowColor,
+                    topLeft = Offset(-6.dp.toPx(), -4.dp.toPx()),
+                    size = Size(size.width + 12.dp.toPx(), size.height + 8.dp.toPx()),
+                    cornerRadius = CornerRadius(28.dp.toPx()),
+                    style = androidx.compose.ui.graphics.drawscope.Fill,
+                    alpha = 0.35f
                 )
-                
-                // Content with inner glow
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    // Subtle inner glow (visual only)
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        AppTheme.AccentPurple.copy(alpha = 0.18f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(0f, 0f),
-                                    radius = 800f
-                                )
-                            )
-                    )
-                    
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        content = content
-                    )
-                }
-            }
+            },
+        shape = AppTheme.HeroCardShape,
+        colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                content = content
+            )
         }
     }
 }

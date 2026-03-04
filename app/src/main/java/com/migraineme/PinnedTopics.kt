@@ -18,13 +18,13 @@ object PinnedTopics {
             id = "00000000-0000-0000-0000-000000000001",
             title = "What actually works for you?",
             description = "Share the treatments, habits, or lifestyle changes that have made a real difference for your migraines.",
-            drawIcon = { color -> HubIcons.run { drawLightbulb(color) } }
+            drawIcon = { color -> HubIcons.run { drawThumbsUp(color) } }
         ),
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000002",
             title = "Your most surprising trigger",
             description = "Tell us about a trigger you didn't expect — the one that took you ages to figure out.",
-            drawIcon = { color -> HubIcons.run { drawSurpriseBolt(color) } }
+            drawIcon = { color -> HubIcons.run { drawTriggerBolt(color) } }
         ),
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000003",
@@ -37,12 +37,6 @@ object PinnedTopics {
             title = "Sleep routines that help",
             description = "What does your sleep routine look like? Share what's helped you get better rest and fewer morning migraines.",
             drawIcon = { color -> HubIcons.run { drawMoonSleep(color) } }
-        ),
-        PinnedTopicData(
-            id = "00000000-0000-0000-0000-000000000005",
-            title = "Medication experiences — the good and bad",
-            description = "Share your honest experience with preventives, triptans, CGRPs, or anything else you've tried.",
-            drawIcon = { color -> HubIcons.run { drawCapsulePlus(color) } }
         ),
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000006",

@@ -198,6 +198,11 @@ fun QuickLogStrip(
                             notes = null
                         )
                     }
+                    // Trigger correlation recompute for migraines
+                    if (cat == QuickLogCategory.MIGRAINE) {
+                        try { EdgeFunctionsService().triggerCorrelationCompute(ctx) }
+                        catch (e: Exception) { e.printStackTrace() }
+                    }
                 }
                 savedLabel = "${cat.label}: ${label ?: cat.label}"
                 activeCategory = null

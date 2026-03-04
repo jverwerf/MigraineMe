@@ -66,7 +66,8 @@ fun SpiderChart(
     size: Dp = 180.dp,
     fillAlpha: Float = 0.25f,
     secondAxes: List<SpiderAxis>? = null,
-    secondColor: Color = Color(0xFF81C784)
+    secondColor: Color = Color(0xFF81C784),
+    seBadgeColors: List<Color>? = null
 ) {
     if (axes.size < 3) return
 
@@ -139,12 +140,18 @@ fun SpiderChart(
                     }
                 }
 
+                // Side-effect badge ring (colored ring around the dot)
+                if (seBadgeColors != null && i < seBadgeColors.size) {
+                    val seColor = seBadgeColors[i]
+                    drawCircle(seColor.copy(alpha = 0.7f), 8f, p, style = Stroke(width = 2.5f))
+                }
+
                 drawCircle(accentColor, 4f, p)
                 drawCircle(Color.White, 2f, p)
             }
 
             // Draw labels — pass accentColor and secondAxes for relief labels
-            drawLabels(axes, cx, cy, radius, n, accentColor, secondAxes) { angle(it) }
+            drawLabels(axes, cx, cy, radius, n, accentColor, secondAxes, seBadgeColors) { angle(it) }
         }
     }
 }
@@ -154,6 +161,7 @@ private fun DrawScope.drawLabels(
     cx: Float, cy: Float, radius: Float, n: Int,
     accentColor: Color,
     secondAxes: List<SpiderAxis>? = null,
+    seBadgeColors: List<Color>? = null,
     angle: (Int) -> Float
 ) {
     val density = this.size.width / 180f
@@ -237,6 +245,37 @@ private fun DrawScope.drawLabels(
                 else -> lx - rw / 2f
             }
             drawContext.canvas.nativeCanvas.drawText(reliefLabel, rx, ty + reliefTextSize + 2f, reliefPaint)
+        }
+
+        // Draw side-effect badge label below (if seBadgeColors provided)
+        if (seBadgeColors != null && i < seBadgeColors.size) {
+            val seCol = seBadgeColors[i]
+            val seArgb = android.graphics.Color.argb(
+                (seCol.alpha * 255).toInt().coerceIn(0, 255),
+                (seCol.red * 255).toInt().coerceIn(0, 255),
+                (seCol.green * 255).toInt().coerceIn(0, 255),
+                (seCol.blue * 255).toInt().coerceIn(0, 255)
+            )
+            // Position below relief label if present, otherwise below main label
+            val seYOffset = if (secondAxes != null && i < secondAxes.size) {
+                ty + reliefTextSize + 2f + reliefTextSize + 2f
+            } else {
+                ty + reliefTextSize + 2f
+            }
+            val sePaint = android.graphics.Paint(paint).apply {
+                this.textSize = reliefTextSize
+                color = seArgb
+            }
+            // Draw a small filled dot + "SE" text
+            val dotRadius = reliefTextSize * 0.22f
+            val seText = "SE"
+            val stw = sePaint.measureText(seText)
+            val sx = when {
+                cos(a) > 0.3f -> tx + (finalWidth - stw - dotRadius * 3f) / 2f
+                cos(a) < -0.3f -> tx + (finalWidth - stw - dotRadius * 3f) / 2f
+                else -> lx - (stw + dotRadius * 3f) / 2f
+            }
+            drawContext.canvas.nativeCanvas.drawText(seText, sx + dotRadius * 3f, seYOffset, sePaint)
         }
     }
 }

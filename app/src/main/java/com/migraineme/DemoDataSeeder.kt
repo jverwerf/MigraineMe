@@ -29,6 +29,12 @@ object DemoDataSeeder {
     val dataReady: StateFlow<Boolean> = _dataReady
     private fun prog(phase: String, f: Float) { _progress.value = SeedProgress(phase, f.coerceIn(0f, 1f)) }
 
+    /** Reset in-memory state so a fresh onboarding run doesn't see stale values. */
+    fun resetState() {
+        _dataReady.value = false
+        _progress.value = SeedProgress()
+    }
+
     private const val PREFS = "demo_seeder"
     private fun isDemoCleared(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("cleared", false)
     private fun markCleared(c: Context) { c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("cleared", true).apply() }
@@ -80,7 +86,9 @@ object DemoDataSeeder {
 
     // ── Main seed ───────────────────────────────────────────────────────────
 
-    suspend fun seedDemoData(context: Context) {
+    suspend fun seedDemoData(context: Context, logVm: LogViewModel? = null) {
+        _dataReady.value = false
+        _progress.value = SeedProgress()
         val ctx = context.applicationContext
         Log.d(TAG, "═══ seedDemoData START (30 days) ═══")
         val token = SessionStore.getValidAccessToken(ctx) ?: run { Log.e(TAG, "No token"); return }
@@ -100,6 +108,8 @@ object DemoDataSeeder {
                 seedSleep(token, metrics, today);            Log.d(TAG, "✓ Sleep done")
                 prog("Seeding physical data…", 0.15f)
                 seedPhysical(token, physical, today);        Log.d(TAG, "✓ Physical done")
+                prog("Seeding steps & activity…", 0.19f)
+                seedSteps(token, userId, base, key, today);  Log.d(TAG, "✓ Steps done")
                 prog("Seeding screen time…", 0.22f)
                 seedScreenTime(token, personal, today);      Log.d(TAG, "✓ Screen time done")
                 prog("Seeding mental health…", 0.30f)
@@ -108,10 +118,12 @@ object DemoDataSeeder {
                 seedWeather(token, userId, base, key, today);Log.d(TAG, "✓ Weather done")
                 prog("Seeding nutrition…", 0.55f)
                 seedNutrition(token, userId, base, key, today);Log.d(TAG, "✓ Nutrition done")
-                prog("Seeding migraines…", 0.70f)
-                seedMigraines(token, userId, db, base, key, today); Log.d(TAG, "✓ Migraines done")
-                prog("Setting risk score…", 0.85f)
+                prog("Seeding migraines…", 0.65f)
+                seedMigraines(token, userId, db, base, key, today, logVm); Log.d(TAG, "✓ Migraines done")
+                prog("Setting risk score…", 0.78f)
                 seedRiskScoreLive(token, userId, today)
+                prog("Seeding AI suggestions…", 0.88f)
+                seedAiSuggestions(token, userId, base, key); Log.d(TAG, "✓ AI suggestions done")
                 prog("All set!", 1.0f)
                 _progress.value = SeedProgress("Ready!", 1f, true)
                 _dataReady.value = true
@@ -161,8 +173,34 @@ object DemoDataSeeder {
                 p.upsertHrvDaily(token, d, if (bad) 20.0+Random.nextDouble(20.0) else 45.0+Random.nextDouble(45.0), SOURCE, "$SOURCE-$i")
                 p.upsertSpo2Daily(token, d, if (bad) 93.0+Random.nextDouble(3.0) else 96.0+Random.nextDouble(3.0), SOURCE, "$SOURCE-$i")
                 p.upsertSkinTempDaily(token, d, if (bad) 34.0+Random.nextDouble(1.5) else 33.0+Random.nextDouble(1.0), SOURCE, "$SOURCE-$i")
+                p.upsertHighHrDaily(token, d,
+                    totalMinutes = if (bad) 5.0+Random.nextDouble(10.0) else 20.0+Random.nextDouble(40.0),
+                    z3 = if (bad) 3.0+Random.nextDouble(5.0) else 8.0+Random.nextDouble(15.0),
+                    z4 = if (bad) 1.0+Random.nextDouble(3.0) else 5.0+Random.nextDouble(10.0),
+                    z5 = if (bad) 0.0+Random.nextDouble(2.0) else 3.0+Random.nextDouble(8.0),
+                    z6 = if (bad) 0.0 else Random.nextDouble(5.0),
+                    source = SOURCE, sourceId = "$SOURCE-$i")
             } catch (e: Exception) { Log.w(TAG, "Phys $i: ${e.message}") }
         }
+    }
+
+    // ── Steps: 14 days, low activity on bad days ──────────────────────
+
+    private suspend fun seedSteps(token: String, userId: String?, base: String, key: String, today: LocalDate) {
+        if (userId.isNullOrBlank()) { Log.e(TAG, "No userId for steps"); return }
+        val client = HttpClient()
+        try {
+            for (i in 0 until DAYS) {
+                val d = today.minusDays(i.toLong()).toString()
+                val bad = isBadDay(i)
+                insertRow(client, "$base/rest/v1/steps_daily", token, key,
+                    buildJsonObject {
+                        put("date", d); put("user_id", userId); put("source", SOURCE)
+                        put("source_measure_id", "$SOURCE-$i")
+                        put("value_count", if (bad) 1000 + Random.nextInt(3000) else 5000 + Random.nextInt(10000))
+                    })
+            }
+        } finally { client.close() }
     }
 
     // ── Screen time: 30 days, high screen on bad days ───────────────────
@@ -316,13 +354,14 @@ object DemoDataSeeder {
             // Today's nutrition_records for Monitor card
             val meals = listOf(
                 Triple("Oatmeal with berries", "breakfast", "08:00:00Z"),
-                Triple("Grilled chicken salad", "lunch", "12:30:00Z"),
-                Triple("Salmon with vegetables", "dinner", "19:00:00Z")
+                Triple("Aged cheddar and sourdough sandwich", "lunch", "12:30:00Z"),
+                Triple("Salmon with vegetables", "dinner", "19:00:00Z"),
+                Triple("Dark chocolate and red wine", "snack", "21:00:00Z")
             )
-            val cals = listOf(350.0, 520.0, 680.0)
-            val prot = listOf(12.0, 35.0, 42.0)
-            val carb = listOf(55.0, 30.0, 25.0)
-            val fat = listOf(8.0, 18.0, 28.0)
+            val cals = listOf(350.0, 580.0, 680.0, 320.0)
+            val prot = listOf(12.0, 28.0, 42.0, 4.0)
+            val carb = listOf(55.0, 45.0, 25.0, 30.0)
+            val fat = listOf(8.0, 24.0, 28.0, 18.0)
             for (idx in meals.indices) {
                 val (name, meal, time) = meals[idx]
                 insertRow(client, "$base/rest/v1/nutrition_records", token, key,
@@ -348,7 +387,7 @@ object DemoDataSeeder {
 
     // ── Migraines: 11 episodes with linked triggers, meds, reliefs ──────
 
-    private suspend fun seedMigraines(token: String, userId: String?, db: SupabaseDbService, base: String, key: String, today: LocalDate) {
+    private suspend fun seedMigraines(token: String, userId: String?, db: SupabaseDbService, base: String, key: String, today: LocalDate, logVm: LogViewModel? = null) {
         if (userId.isNullOrBlank()) { Log.e(TAG, "No userId for migraines"); return }
         // Pre-delete all demo entries so triggers get proper migraine_id on re-run
         val client = HttpClient()
@@ -356,7 +395,7 @@ object DemoDataSeeder {
             for (t in listOf("triggers","medicines","reliefs","migraines")) {
                 try { client.delete("$base/rest/v1/$t") {
                     header("Authorization","Bearer $token"); header("apikey",key)
-                    parameter("notes","like.*[demo]*")
+                    parameter("user_id","eq.$userId")
                 } } catch (_: Exception) {}
             }
             Log.d(TAG, "✓ Cleared old demo migraines/triggers/medicines/reliefs")
@@ -367,6 +406,19 @@ object DemoDataSeeder {
             "Sleep duration low", "Pressure low", "Screen time high",
             "Stress high", "Caffeine high", "Humidity high", "Late screen time high"
         )
+
+        // Seed user_triggers pool so TriggersScreen has items to display
+        for (trig in triggerTypes) {
+            try {
+                upsertRow(client, "$base/rest/v1/user_triggers", token, key, "user_id,label",
+                    buildJsonObject {
+                        put("user_id", userId)
+                        put("label", trig)
+                        put("prediction_value", if (trig.contains("Sleep") || trig.contains("Pressure")) "HIGH" else "MILD")
+                        put("source", "system")
+                    })
+            } catch (_: Exception) {}
+        }
 
         for ((idx, entry) in MIGRAINE_DAYS.withIndex()) {
             val (daysAgo, severity) = entry
@@ -405,7 +457,40 @@ object DemoDataSeeder {
                         "${day}T${(h+1).toString().padStart(2,'0')}:00:00Z", "[demo] Dark room + cold compress") } catch (_: Exception) {}
                 }
 
+                // Activity linked to migraine (for "What Were You Doing" on Insights)
+                val demoActivities = listOf("Working at desk", "Exercising", "Commuting", "Cooking", "Reading")
+                try {
+                    insertRow(client, "$base/rest/v1/time_in_high_hr_zones_daily", token, key,
+                        buildJsonObject {
+                            put("user_id", userId); put("migraine_id", m.id)
+                            put("activity_type", demoActivities[idx % demoActivities.size])
+                            put("start_at", "${day}T${(h-1).coerceAtLeast(4).toString().padStart(2,'0')}:00:00Z")
+                            put("date", day.toString()); put("notes", "[demo]")
+                            put("source", "manual"); put("value_minutes", 0)
+                        })
+                } catch (_: Exception) {}
+
+                // Location linked to migraine
+                val demoLocations = listOf("Office", "Home", "Outdoors", "Gym", "Car")
+                try {
+                    insertRow(client, "$base/rest/v1/locations", token, key,
+                        buildJsonObject {
+                            put("user_id", userId); put("migraine_id", m.id)
+                            put("type", demoLocations[idx % demoLocations.size])
+                            put("start_at", "${day}T${(h-1).coerceAtLeast(4).toString().padStart(2,'0')}:00:00Z")
+                            put("notes", "[demo]")
+                        })
+                } catch (_: Exception) {}
+
                 Log.d(TAG, "✓ Migraine ${idx+1}/${MIGRAINE_DAYS.size} on $day (sev=$severity)")
+
+                // Set the migraine draft so TriggersScreen shows age badges during tour
+                if (idx == 0 && logVm != null) {
+                    val isoStr = "${day}T${h.toString().padStart(2,'0')}:00:00Z"
+                    kotlinx.coroutines.withContext(Dispatchers.Main) {
+                        logVm.setMigraineDraft(beganAtIso = isoStr)
+                    }
+                }
             } catch (e: Exception) { Log.w(TAG, "Migraine $idx: ${e.message}") }
         }
 
@@ -464,40 +549,198 @@ object DemoDataSeeder {
             Log.d(TAG, "risk_score_live: ${r.status} → ${body.take(200)}")
             if (r.status.isSuccess() && body != "[]") Log.d(TAG, "✓ Risk score set")
             else Log.e(TAG, "✗ Risk score failed or empty")
+
+            // ── Seed risk_score_daily: 14-day history ──
+            // Requires RLS INSERT policy on risk_score_daily
+            val migraineDaysAgo = MIGRAINE_DAYS.map { it.first }.toSet()
+            var dailyOk = 0
+            for (daysAgo in 0..13) {
+                val date = today.minusDays(daysAgo.toLong())
+                val isMigraineDay = daysAgo in migraineDaysAgo
+                val isPreMigraine = (daysAgo + 1) in migraineDaysAgo || (daysAgo + 2) in migraineDaysAgo
+                val score = when {
+                    isMigraineDay -> 8.0 + Random.nextDouble(4.0)
+                    isPreMigraine -> 5.0 + Random.nextDouble(3.0)
+                    else -> 1.0 + Random.nextDouble(3.0)
+                }
+                val zone = when { score >= 10 -> "HIGH"; score >= 5 -> "MILD"; score >= 3 -> "LOW"; else -> "NONE" }
+                val pct = (score * 10).toInt().coerceIn(0, 100)
+                try {
+                    val row = buildJsonObject {
+                        put("user_id", userId); put("date", date.toString())
+                        put("score", score); put("zone", zone); put("percent", pct)
+                    }
+                    val resp = client.post("$base/rest/v1/risk_score_daily") {
+                        header("Authorization", "Bearer $token"); header("apikey", key)
+                        header("Prefer", "resolution=merge-duplicates,return=minimal")
+                        parameter("on_conflict", "user_id,date")
+                        contentType(ContentType.Application.Json)
+                        setBody(row.toString())
+                    }
+                    if (resp.status.isSuccess()) dailyOk++
+                    else Log.e(TAG, "risk_score_daily $date: ${resp.status} ${resp.bodyAsText().take(300)}")
+                } catch (e: Exception) {
+                    Log.e(TAG, "risk_score_daily $date error: ${e.message}")
+                }
+            }
+            Log.d(TAG, "risk_score_daily: $dailyOk/14 rows inserted")
         } catch (e: Exception) { Log.e(TAG, "risk: ${e.message}", e) }
+        finally { client.close() }
+    }
+
+    // ── AI Suggestions: recalibration proposals + correlation stats ────────
+
+    private suspend fun seedAiSuggestions(token: String, userId: String?, base: String, key: String) {
+        if (userId.isNullOrBlank()) { Log.e(TAG, "No userId for AI suggestions"); return }
+        val client = HttpClient()
+        try {
+            // Gauge threshold suggestion (pending proposal the user can accept/reject on Insights)
+            insertRow(client, "$base/rest/v1/recalibration_proposals", token, key,
+                buildJsonObject {
+                    put("user_id", userId); put("type", "gauge_threshold"); put("status", "pending")
+                    put("label", "HIGH"); put("from_value", 8.0); put("to_value", 6.5)
+                    put("reasoning", "Your HIGH migraines tend to trigger at lower cumulative scores. Lowering from 8.0 to 6.5 would have caught 2 more attacks in the past 14 days.")
+                })
+            insertRow(client, "$base/rest/v1/recalibration_proposals", token, key,
+                buildJsonObject {
+                    put("user_id", userId); put("type", "gauge_decay"); put("status", "pending")
+                    put("label", "MILD"); put("from_value", 0.6); put("to_value", 0.45)
+                    put("reasoning", "MILD triggers seem to linger longer before your migraines. Slowing the day-2 decay from 0.6 to 0.45 better matches your pattern.")
+                })
+
+            // Correlation stats (shown on Insights patterns & combinations)
+            val correlations = listOf(
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Sleep duration low")
+                    put("factor_type", "trigger"); put("lift_ratio", 3.8)
+                    put("p_value", 0.003); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 72.0); put("pct_control_windows", 19.0)
+                    put("sample_size", 14)
+                },
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Pressure low")
+                    put("factor_type", "trigger"); put("lift_ratio", 2.9)
+                    put("p_value", 0.012); put("best_lag_days", 1)
+                    put("pct_migraine_windows", 65.0); put("pct_control_windows", 22.0)
+                    put("sample_size", 14)
+                },
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Caffeine high")
+                    put("factor_type", "trigger"); put("lift_ratio", 2.4)
+                    put("p_value", 0.034); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 58.0); put("pct_control_windows", 24.0)
+                    put("sample_size", 14)
+                },
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Screen time high")
+                    put("factor_type", "trigger"); put("lift_ratio", 2.1)
+                    put("p_value", 0.048); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 55.0); put("pct_control_windows", 26.0)
+                    put("sample_size", 14)
+                },
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Sleep duration low")
+                    put("factor_b", "Pressure low")
+                    put("factor_type", "interaction"); put("lift_ratio", 5.2)
+                    put("p_value", 0.006); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 48.0); put("pct_control_windows", 9.0)
+                    put("sample_size", 14)
+                },
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Caffeine high")
+                    put("factor_b", "Screen time high")
+                    put("factor_type", "interaction"); put("lift_ratio", 4.1)
+                    put("p_value", 0.018); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 38.0); put("pct_control_windows", 9.0)
+                    put("sample_size", 14)
+                },
+                // Treatment effectiveness
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Ibuprofen")
+                    put("factor_type", "treatment"); put("lift_ratio", 2.8)
+                    put("p_value", 0.009); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 80.0); put("pct_control_windows", 0.0)
+                    put("sample_size", 14)
+                },
+                buildJsonObject {
+                    put("user_id", userId); put("factor_name", "Dark room")
+                    put("factor_type", "treatment"); put("lift_ratio", 2.2)
+                    put("p_value", 0.035); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 60.0); put("pct_control_windows", 0.0)
+                    put("sample_size", 14)
+                }
+            )
+            for (stat in correlations) {
+                try {
+                    insertRow(client, "$base/rest/v1/correlation_stats", token, key, stat)
+                } catch (_: Exception) {}
+            }
+            Log.d(TAG, "✓ Seeded ${correlations.size} correlation stats + 2 recalibration proposals")
+
+            // Gauge accuracy (shown on Insights → Accuracy card)
+            upsertRow(client, "$base/rest/v1/gauge_accuracy", token, key, "user_id",
+                buildJsonObject {
+                    put("user_id", userId)
+                    put("true_positives", 5); put("false_positives", 2)
+                    put("false_negatives", 1); put("true_negatives", 6)
+                    put("total_days", 14)
+                    put("sensitivity_pct", 83); put("specificity_pct", 75)
+                    put("false_alarm_rate_pct", 25)
+                })
+        } catch (e: Exception) { Log.e(TAG, "AI suggestions: ${e.message}", e) }
         finally { client.close() }
     }
 
     // ── Clear ALL ───────────────────────────────────────────────────────
 
-    suspend fun clearDemoData(context: Context) {
+    suspend fun clearDemoData(context: Context, logVm: LogViewModel? = null) {
         val ctx = context.applicationContext
         val token = SessionStore.getValidAccessToken(ctx) ?: return
         val base = BuildConfig.SUPABASE_URL.trimEnd('/'); val key = BuildConfig.SUPABASE_ANON_KEY
         val userId = SessionStore.readUserId(ctx) ?: JwtUtils.extractUserIdFromAccessToken(token)
         Log.d(TAG, "═══ clearDemoData START ═══")
-        val sourceTables = listOf("sleep_duration_daily","sleep_score_daily","sleep_efficiency_daily","sleep_disturbances_daily","fell_asleep_time_daily","woke_up_time_daily","recovery_score_daily","resting_hr_daily","hrv_daily","spo2_daily","skin_temp_daily","screen_time_daily","nutrition_daily","nutrition_records")
-        val userIdTables = listOf("stress_index_daily","ambient_noise_index_daily","screen_time_late_night","phone_unlock_daily","phone_brightness_daily","phone_volume_daily","phone_dark_mode_daily","user_weather_daily")
-        val notesTables = listOf("migraines","medicines","reliefs","triggers")
+
+        // All tables the seeder writes to — delete everything for this user
+        val allTables = listOf(
+            // Sleep & physical
+            "sleep_duration_daily","sleep_score_daily","sleep_efficiency_daily","sleep_disturbances_daily",
+            "fell_asleep_time_daily","woke_up_time_daily","recovery_score_daily","resting_hr_daily",
+            "hrv_daily","spo2_daily","skin_temp_daily",
+            // Activity & screen
+            "screen_time_daily","steps_daily","time_in_high_hr_zones_daily",
+            // Mental
+            "stress_index_daily","ambient_noise_index_daily","screen_time_late_night",
+            "phone_unlock_daily","phone_brightness_daily","phone_volume_daily","phone_dark_mode_daily",
+            // Weather & nutrition
+            "user_weather_daily","nutrition_daily","nutrition_records",
+            // Migraines & linked items
+            "triggers","medicines","reliefs","migraines","locations","prodromes",
+            // AI & analytics
+            "correlation_stats","recalibration_proposals","gauge_accuracy",
+            // Risk
+            "risk_score_daily"
+        )
+
         withContext(Dispatchers.IO) {
             val client = HttpClient()
             try {
-                for (t in sourceTables) { try { client.delete("$base/rest/v1/$t") { header("Authorization","Bearer $token"); header("apikey",key); parameter("source","eq.$SOURCE") } } catch (_: Exception) {} }
-                // userIdTables: ambient_noise & screen_time_late_night have source column; rest are app-only sensors (no WHOOP data)
-                val userIdWithSource = listOf("ambient_noise_index_daily","screen_time_late_night")
-                val userIdNoSource = listOf("stress_index_daily","phone_unlock_daily","phone_brightness_daily","phone_volume_daily","phone_dark_mode_daily","user_weather_daily")
-                for (t in userIdWithSource) { try { client.delete("$base/rest/v1/$t") { header("Authorization","Bearer $token"); header("apikey",key); parameter("source","eq.$SOURCE") } } catch (_: Exception) {} }
-                for (t in userIdNoSource) { try { client.delete("$base/rest/v1/$t") { header("Authorization","Bearer $token"); header("apikey",key); parameter("user_id","eq.$userId") } } catch (_: Exception) {} }
-                for (t in notesTables) { try { client.delete("$base/rest/v1/$t") { header("Authorization","Bearer $token"); header("apikey",key); parameter("notes","like.*[demo]*") } } catch (_: Exception) {} }
-                // Also delete auto-generated system triggers/prodromes (created by edge function from demo metrics)
-                try { client.delete("$base/rest/v1/triggers") { header("Authorization","Bearer $token"); header("apikey",key); parameter("source","eq.system") } } catch (_: Exception) {}
-                try { client.delete("$base/rest/v1/prodromes") { header("Authorization","Bearer $token"); header("apikey",key); parameter("source","eq.system") } } catch (_: Exception) {}
+                for (t in allTables) {
+                    try {
+                        val resp = client.delete("$base/rest/v1/$t") {
+                            header("Authorization","Bearer $token"); header("apikey",key)
+                            parameter("user_id","eq.$userId")
+                        }
+                        Log.d(TAG, "clear $t: ${resp.status}")
+                    } catch (e: Exception) { Log.e(TAG, "clear $t failed: ${e.message}") }
+                }
+                // Reset risk_score_live to zero (don't delete — keep the row)
                 if (!userId.isNullOrBlank()) { try {
                     val payload = buildJsonObject { put("user_id",userId); put("score",0); put("zone","NONE"); put("percent",0); put("top_triggers",JsonNull); put("forecast",JsonNull); put("day_risks",JsonNull); put("updated_at",java.time.Instant.now().toString()) }
                     client.post("$base/rest/v1/risk_score_live") { header("Authorization","Bearer $token"); header("apikey",key); header("Prefer","resolution=merge-duplicates,return=minimal"); parameter("on_conflict","user_id"); contentType(ContentType.Application.Json); setBody(JsonArray(listOf(payload)).toString()) }
                 } catch (_: Exception) {} }
                 Log.d(TAG, "═══ clearDemoData COMPLETE ═══")
                 markCleared(ctx); _dataReady.value = false; _progress.value = SeedProgress()
+                logVm?.clearDraft()
             } finally { client.close() }
         }
     }

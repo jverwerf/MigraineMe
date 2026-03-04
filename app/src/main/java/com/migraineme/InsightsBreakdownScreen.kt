@@ -1,5 +1,6 @@
 package com.migraineme
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
@@ -51,21 +54,6 @@ fun InsightsBreakdownScreen(
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-                Spacer(Modifier.width(4.dp))
-                Column {
-                    Text(
-                        logType,
-                        color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                    if (spiderData != null) {
-                        Text(
-                            "${spiderData.totalLogged} logged across ${spiderData.breakdown.size} categories",
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
                 }
             }
 
@@ -333,14 +321,14 @@ private fun CategoryBarRow(label: String, count: Int, maxCount: Int, color: Colo
 }
 
 internal fun colorForLogType(logType: String): Color = when (logType) {
-    "Triggers" -> Color(0xFFFF8A65)
-    "Prodromes" -> Color(0xFFFFD54F)
+    "Triggers" -> Color(0xFFFFB74D)
+    "Prodromes" -> Color(0xFF9575CD)
     "Symptoms" -> Color(0xFFE57373)
     "Medicines" -> Color(0xFF4FC3F7)
     "Reliefs" -> Color(0xFF81C784)
-    "Activities" -> Color(0xFFBA68C8)
+    "Activities" -> Color(0xFFFF8A65)
     "Missed Activities" -> Color(0xFFFF7043)
-    "Locations" -> Color(0xFF4DD0E1)
+    "Locations" -> Color(0xFF78909C)
     else -> AppTheme.AccentPurple
 }
 
@@ -502,12 +490,37 @@ private fun SpiderSection(title: String, spider: SpiderData, color: Color) {
 
         if (spider.axes.size >= 3) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                SpiderChart(axes = spider.axes, accentColor = color, size = 240.dp, fillAlpha = 0.2f)
+                SpiderChart(axes = spider.axes, accentColor = color, size = 240.dp, fillAlpha = 0.2f, seBadgeColors = spider.seBadgeColors)
             }
         } else if (spider.axes.size == 1) {
             StackedProportionalBar(axes = spider.axes, accentColor = color)
         } else {
             StackedProportionalBar(axes = spider.axes, accentColor = color)
+        }
+
+        // SE legend for medicines/reliefs
+        if (spider.seBadgeColors != null && (title == "Medicines" || title == "Reliefs")) {
+            Spacer(Modifier.height(6.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Side effects: ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                listOf(
+                    Color(0xFF81C784) to "none",
+                    Color(0xFFFFB74D) to "soft",
+                    Color(0xFFFF8A65) to "moderate",
+                    Color(0xFFE57373) to "severe",
+                ).forEach { (c, label) ->
+                    Spacer(Modifier.width(6.dp))
+                    Canvas(Modifier.size(8.dp)) {
+                        drawCircle(c.copy(alpha = 0.7f), size.minDimension / 2f, style = Stroke(width = 2f))
+                    }
+                    Spacer(Modifier.width(3.dp))
+                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                }
+            }
         }
     }
 }

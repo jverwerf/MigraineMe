@@ -103,12 +103,15 @@ fun ActivitySessionsScreen(
             // Summary
             val totalDuration = sessions.sumOf { it.durationMinutes }
             val totalHighZone = sessions.sumOf { it.zoneThree + it.zoneFour + it.zoneFive + it.zoneSix }
+            val hasZoneData = sessions.any { it.zoneThree > 0 || it.zoneFour > 0 || it.zoneFive > 0 || it.zoneSix > 0 }
 
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     SummaryItem("Activities", "${sessions.size}", Color(0xFFFF7043))
                     SummaryItem("Total Time", "${totalDuration.toInt()} min", Color(0xFF4FC3F7))
-                    SummaryItem("High HR", "${totalHighZone.toInt()} min", Color(0xFFE57373))
+                    if (hasZoneData) {
+                        SummaryItem("High HR", "${totalHighZone.toInt()} min", Color(0xFFE57373))
+                    }
                 }
             }
 
@@ -215,9 +218,10 @@ private fun ActivitySessionCard(session: ActivitySession) {
             }
         }
 
-        // High HR total
+        // High HR total — only shown for WHOOP (zone data present); HC rows show session duration label instead
         val highTotal = session.zoneThree + session.zoneFour + session.zoneFive + session.zoneSix
-        if (highTotal > 0) {
+        val isHcSource = session.source?.lowercase() == "health_connect"
+        if (highTotal > 0 && !isHcSource) {
             Spacer(Modifier.height(6.dp))
             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
             Spacer(Modifier.height(4.dp))
@@ -226,6 +230,18 @@ private fun ActivitySessionCard(session: ActivitySession) {
                 Text(
                     "${String.format("%.1f", highTotal)} min",
                     color = Color(0xFFE57373),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        } else if (isHcSource && session.durationMinutes > 0) {
+            Spacer(Modifier.height(6.dp))
+            HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
+            Spacer(Modifier.height(4.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Session Duration", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(
+                    "${String.format("%.1f", session.durationMinutes)} min",
+                    color = Color(0xFF4FC3F7),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                 )
             }

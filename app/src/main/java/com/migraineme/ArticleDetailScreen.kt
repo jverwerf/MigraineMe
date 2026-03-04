@@ -60,6 +60,7 @@ fun ArticleDetailScreen(
     }
 
     val isFavorite = article.id in state.favoriteIds
+    val meTooCount = state.meTooCountMap[article.id] ?: 0
     val allTags = article.articleTags?.mapNotNull { it.tags } ?: emptyList()
     val matchedTags = allTags.filter { it.id in state.userMatchingTagIds }
     val unmatchedTags = allTags.filter { it.id !in state.userMatchingTagIds }
@@ -96,14 +97,24 @@ fun ArticleDetailScreen(
                 modifier = Modifier.weight(1f)
             )
 
-            IconButton(onClick = {
-                accessToken?.let { vm.toggleFavorite(it, article.id) }
-            }) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                    tint = if (isFavorite) AppTheme.AccentPink else AppTheme.SubtleTextColor
-                )
+            // Heart = me too + follow + saved — with count
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (meTooCount > 0) {
+                    Text(
+                        "$meTooCount",
+                        color = if (isFavorite) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+                IconButton(onClick = {
+                    accessToken?.let { vm.toggleFavorite(it, article.id) }
+                }) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Unlike" else "Me too",
+                        tint = if (isFavorite) AppTheme.AccentPink else AppTheme.SubtleTextColor
+                    )
+                }
             }
 
             IconButton(onClick = {
@@ -245,13 +256,19 @@ fun ArticleDetailScreen(
             }
         }
 
+        // ── AI comment summary (shown when article has 10+ comments) ──
+        state.threadSummaries[articleId]?.let { summary ->
+            ThreadSummaryBanner(summary = summary)
+        }
+
         // ── Comments card ──
         BaseCard {
             ArticleCommentsSection(
                 articleId = articleId,
                 accessToken = accessToken,
                 currentUserId = currentUserId,
-                insightsVm = insightsVm
+                insightsVm = insightsVm,
+                communityVm = vm
             )
         }
 
@@ -263,11 +280,11 @@ fun ArticleDetailScreen(
 
 internal fun tagCategoryColor(category: String?): Color {
     return when (category) {
-        "trigger" -> Color(0xFFFF8A65)
+        "trigger" -> Color(0xFFFFB74D)
         "medicine" -> Color(0xFF4FC3F7)
         "relief" -> Color(0xFF81C784)
         "symptom" -> Color(0xFFEF9A9A)
-        "prodrome" -> Color(0xFFFFD54F)
+        "prodrome" -> Color(0xFF9575CD)
         "migraine_type" -> Color(0xFFCE93D8)
         "profile" -> Color(0xFF80CBC4)
         else -> Color(0xFFB0BEC5)
@@ -297,4 +314,3 @@ private fun formatFullDate(isoDate: String): String {
         ""
     }
 }
-

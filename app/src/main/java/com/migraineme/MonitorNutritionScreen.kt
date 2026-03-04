@@ -11,15 +11,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,7 +64,9 @@ fun MonitorNutritionScreen(
     val authState by authVm.state.collectAsState()
     
     val searchService = remember { USDAFoodSearchService(context) }
-    val config = remember { MonitorCardConfigStore.load(context) }
+    
+    // Display metrics from shared MetricRegistry
+    val displayKeys = remember { MetricDisplayStore.getDisplayMetrics(context, "nutrition") }
     
     // Today's logged items
     var todayItems by remember { mutableStateOf<List<NutritionLogItem>>(emptyList()) }
@@ -100,6 +106,39 @@ fun MonitorNutritionScreen(
     
     fun reloadTodayItems() {
         scope.launch { todayItems = searchService.getTodayNutritionItems() }
+    }
+
+    // ── Auto-type "red wine" during tour to showcase tyramine classification ──
+    LaunchedEffect(Unit) {
+        if (TourManager.isActive()) {
+            kotlinx.coroutines.delay(800L)
+            val demoQuery = "red wine"
+            for (i in demoQuery.indices) {
+                searchQuery = demoQuery.substring(0, i + 1)
+                kotlinx.coroutines.delay(80L)
+            }
+            kotlinx.coroutines.delay(400L)
+            // Trigger search
+            isSearching = true
+            searchError = null
+            foodRisks = emptyMap()
+            searchResults = searchService.searchFoods(searchQuery)
+            if (searchResults.isEmpty()) searchError = "No foods found for \"$searchQuery\""
+            isSearching = false
+            // Auto-classify risks for results
+            val token = authState.accessToken
+            if (token != null && searchResults.isNotEmpty()) {
+                scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    isClassifyingSearchRisks = true
+                    val classifier = FoodRiskClassifierService()
+                    val risks = mutableMapOf<Int, FoodRiskResult>()
+                    for (food in searchResults) {
+                        try { risks[food.fdcId] = classifier.classify(token, food.description) } catch (_: Exception) {}
+                    }
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { foodRisks = risks; isClassifyingSearchRisks = false }
+                }
+            }
+        }
     }
     
     fun performSearch() {
@@ -180,7 +219,7 @@ fun MonitorNutritionScreen(
             servings = selectedServings,
             onServingsChange = { selectedServings = it },
             isAdding = isAdding,
-            monitorMetrics = config.nutritionDisplayMetrics,
+            monitorMetrics = displayKeys.map { MetricRegistry.nutritionLegacyKey(it) },
             tyramineRisk = selectedFoodRisks?.tyramine,
             alcoholRisk = selectedFoodRisks?.alcohol,
             glutenRisk = selectedFoodRisks?.gluten,
@@ -283,12 +322,18 @@ fun MonitorNutritionScreen(
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
             }
-            BaseCard {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text("Certain foods and nutrients can trigger migraines. Tracking caffeine, sugar, tyramine, and sodium helps identify patterns.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
-                    }
+            // How it works — purple accent card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Text(
+                        "Certain foods and nutrients can trigger migraines. Tracking caffeine, sugar, tyramine, and sodium helps identify patterns.",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
             
@@ -363,7 +408,7 @@ fun MonitorNutritionScreen(
                     }
                     todayItems.isEmpty() -> Text("No food logged today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     else -> {
-                        val selectedMetrics = config.nutritionDisplayMetrics.take(3)
+                        val selectedMetrics = displayKeys.take(3)
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
 
                         // Top 3 selected metrics
@@ -371,10 +416,11 @@ fun MonitorNutritionScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            selectedMetrics.forEachIndexed { index, metric ->
-                                val total = todayItems.sumOf { it.metricValue(metric) ?: 0.0 }
-                                val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
-                                val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                            selectedMetrics.forEachIndexed { index, registryKey ->
+                                val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
+                                val total = todayItems.sumOf { it.metricValue(legacyKey) ?: 0.0 }
+                                val label = MetricRegistry.label(registryKey)
+                                val unit = MetricRegistry.unit(registryKey)
                                 val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
                                 NutritionSummaryValue(formatted, label, slotColors.getOrElse(index) { slotColors.last() })
                             }
@@ -400,17 +446,19 @@ fun MonitorNutritionScreen(
                         Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
 
-                        MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
-                            val isRisk = MonitorCardConfig.isRiskMetric(metric)
+                        val allNutritionKeys = MetricRegistry.byGroup("nutrition").map { it.key }
+                        allNutritionKeys.forEach { registryKey ->
+                            val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
+                            val isRisk = legacyKey in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure")
                             val total = if (isRisk) {
-                                todayItems.maxOfOrNull { it.metricValue(metric) ?: 0.0 } ?: 0.0
+                                todayItems.maxOfOrNull { it.metricValue(legacyKey) ?: 0.0 } ?: 0.0
                             } else {
-                                todayItems.sumOf { it.metricValue(metric) ?: 0.0 }
+                                todayItems.sumOf { it.metricValue(legacyKey) ?: 0.0 }
                             }
-                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
-                            val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                            val label = MetricRegistry.label(registryKey)
+                            val unit = MetricRegistry.unit(registryKey)
                             if (isRisk) {
-                                val (levelText, valueColor) = RiskColors.formatRiskLevel(metric, total.toInt())
+                                val (levelText, valueColor) = RiskColors.formatRiskLevel(legacyKey, total.toInt())
                                 val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
@@ -418,10 +466,10 @@ fun MonitorNutritionScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        when (metric) {
-                                            MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> CheeseIcon(valueColor, 12.dp)
-                                            MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> WineGlassIcon(valueColor, 12.dp)
-                                            MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> WheatIcon(valueColor, 12.dp)
+                                        when (legacyKey) {
+                                            "tyramine_exposure" -> CheeseIcon(valueColor, 12.dp)
+                                            "alcohol_exposure" -> WineGlassIcon(valueColor, 12.dp)
+                                            "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
                                         }
                                         Spacer(Modifier.width(5.dp))
                                         Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)

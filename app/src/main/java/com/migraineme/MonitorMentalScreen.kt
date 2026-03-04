@@ -12,10 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -23,21 +27,26 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneId
@@ -50,22 +59,66 @@ fun MonitorMentalScreen(
     val ctx = LocalContext.current.applicationContext
     val authState by authVm.state.collectAsState()
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
     val today = remember { LocalDate.now(ZoneId.systemDefault()).toString() }
 
     var mentalDetail by remember { mutableStateOf<MentalDetailData?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    val mentalConfig = remember { MentalCardConfigStore.load(ctx) }
 
-    LaunchedEffect(authState.accessToken, today) {
-        val token = authState.accessToken
-        if (token.isNullOrBlank()) {
-            isLoading = false
-            return@LaunchedEffect
+    // Data settings — which individual metrics are enabled
+    var enabledRegistryKeys by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var settingsLoaded by remember { mutableStateOf(false) }
+
+    // Re-fetch on every resume
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    isLoading = true
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val edge = EdgeFunctionsService()
+                            val settings = edge.getMetricSettings(ctx)
+                            enabledRegistryKeys = MetricRegistry.enabledKeys(settings, "mental")
+                        } catch (_: Exception) {
+                            enabledRegistryKeys = MetricRegistry.byGroup("mental").map { it.key }.toSet()
+                        }
+                        settingsLoaded = true
+                    }
+
+                    if (enabledRegistryKeys.isNotEmpty()) {
+                        val token = authState.accessToken
+                        if (!token.isNullOrBlank()) {
+                            withContext(Dispatchers.IO) {
+                                mentalDetail = try {
+                                    loadMentalDetailData(ctx, token, today)
+                                } catch (e: Exception) {
+                                    Log.e("MentalDetail", "Load failed", e); null
+                                }
+                            }
+                        }
+                    } else {
+                        mentalDetail = null
+                    }
+                    isLoading = false
+                }
+            }
         }
-        withContext(Dispatchers.IO) {
-            mentalDetail = try { loadMentalDetailData(ctx, token, today) } catch (e: Exception) { Log.e("MentalDetail", "Load failed", e); null }
-            isLoading = false
-        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // All mental metrics from registry, filtered by enabled state
+    val allMetrics = remember(settingsLoaded, enabledRegistryKeys) {
+        MetricRegistry.byGroup("mental").filter { it.key in enabledRegistryKeys }
+    }
+
+    // Display metrics — filtered to only enabled ones
+    val displayKeys = remember(settingsLoaded, enabledRegistryKeys) {
+        MetricDisplayStore.getDisplayMetrics(ctx, "mental")
+            .filter { it in enabledRegistryKeys }
+            .ifEmpty { allMetrics.take(3).map { it.key } }
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -83,109 +136,162 @@ fun MonitorMentalScreen(
                     Icon(Icons.Outlined.Tune, contentDescription = "Configure", tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Customize Monitor Card", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text(text = "Choose 3 metrics for the Mental Health card on Monitor", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text("Customize Monitor Card", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Choose 3 metrics for the Mental Health card on Monitor", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
-                    Text(text = "→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                    Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
             }
 
-            // Explainer
-            BaseCard {
-                Text(
-                    text = "Screen time, phone usage patterns, and environmental noise are linked to stress and migraine triggers. Tracking these passively helps identify behavioral patterns.",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-
-            // Today's Mental Health — shows ALL metrics
-            BaseCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.MENTAL_DATA_HISTORY) else navController.navigate(Routes.PAYWALL) },
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "Today's Data", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
-                }
-                Spacer(Modifier.height(8.dp))
-
-                if (isLoading) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
-                    }
-                } else if (mentalDetail == null) {
-                    Text(text = "No mental health data for today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.height(4.dp))
-                    Text(text = "Enable metrics in Data Settings to start tracking", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
-                } else {
-                    val detail = mentalDetail!!
-
-                    // Top 3 selected metrics
-                    val selectedMetrics = mentalConfig.mentalDisplayMetrics.take(3)
-                    val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        selectedMetrics.forEachIndexed { index, metric ->
-                            val value = detail.displayValue(metric) ?: "—"
-                            val label = MentalCardConfig.labelFor(metric)
-                            MentalMetricLargeItem(label, value, slotColors.getOrElse(index) { slotColors.last() })
-                        }
-                    }
-
-                    Spacer(Modifier.height(4.dp))
-                    HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
-                    Spacer(Modifier.height(8.dp))
-                    Text(text = "All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(Modifier.height(4.dp))
-
-                    // All metrics (show "—" for missing data)
-                    MentalCardConfig.ALL_MENTAL_METRICS.forEach { metric ->
-                        if (metric !in selectedMetrics) {
-                            val value = detail.displayValue(metric) ?: "—"
-                            val label = MentalCardConfig.labelFor(metric)
-                            MentalMetricRowItem(label, value, AppTheme.SubtleTextColor)
-                        }
-                    }
-                }
-            }
-
-            // History Graph — premium only
-            PremiumGate(
-                message = "Unlock Mental Health Trends",
-                subtitle = "Track your mental health patterns over time",
-                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+            // How it works — purple accent card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                MentalHistoryGraph(
-                    days = 14,
-                    onClick = { navController.navigate(Routes.FULL_GRAPH_MENTAL) }
-                )
+                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Text(
+                        "Screen time, phone usage patterns, and environmental noise are linked to stress and migraine triggers. Tracking these passively helps identify behavioral patterns.",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
+
+            // Show disabled message if ALL mental tracking is off
+            if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
+                BaseCard {
+                    Text(
+                        "Mental health tracking is disabled",
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Enable mental health metrics in Data Settings to start tracking.",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Go to Data Settings →",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.clickable { navController.navigate(Routes.DATA) }
+                    )
+                }
+            } else {
+                // Today's Mental Health
+                BaseCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            if (PremiumManager.isPremium) navController.navigate(Routes.MENTAL_DATA_HISTORY)
+                            else navController.navigate(Routes.PAYWALL)
+                        },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Today's Data", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        if (PremiumManager.isPremium) {
+                            Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
+                                Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+
+                    if (isLoading) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
+                        }
+                    } else if (mentalDetail == null) {
+                        Text("No mental health data for today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(4.dp))
+                        Text("Enable metrics in Data Settings to start tracking", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                    } else {
+                        val detail = mentalDetail!!
+
+                        // Top 3 selected metrics
+                        val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            displayKeys.forEachIndexed { index, key ->
+                                val metric = MetricRegistry.get(key)
+                                val value = mentalValueByKey(detail, key)
+                                val formatted = if (value != null && metric != null) {
+                                    MetricFormatter.format(value, metric.unit, metric.column)
+                                } else "—"
+                                val label = metric?.label ?: key
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+
+                        // "All Metrics" section
+                        val remainingMetrics = allMetrics.filter { it.key !in displayKeys }
+                        if (remainingMetrics.isNotEmpty()) {
+                            Spacer(Modifier.height(4.dp))
+                            HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                            Spacer(Modifier.height(8.dp))
+                            Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Spacer(Modifier.height(4.dp))
+
+                            remainingMetrics.forEach { m ->
+                                val value = mentalValueByKey(detail, m.key)
+                                val formatted = if (value != null) {
+                                    MetricFormatter.format(value, m.unit, m.column)
+                                } else "—"
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(m.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                                    Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // History Graph — premium only
+                PremiumGate(
+                    message = "Unlock Mental Health Trends",
+                    subtitle = "Track your mental health patterns over time",
+                    onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                ) {
+                    MentalHistoryGraph(
+                        days = 14,
+                        onClick = { navController.navigate(Routes.FULL_GRAPH_MENTAL) }
+                    )
+                }
+            } // end enabled check
         }
     }
 }
 
-@Composable
-private fun MentalMetricLargeItem(label: String, value: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, color = color, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Text(text = label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+/**
+ * Bridge: extract a value from MentalDetailData using a MetricRegistry key.
+ */
+private fun mentalValueByKey(detail: MentalDetailData, key: String): Double? {
+    return when (key) {
+        "stress_index_daily" -> detail.stress
+        "screen_time_daily" -> detail.screenTimeHours
+        "screen_time_late_night" -> detail.lateScreenTimeHours
+        "ambient_noise_index_daily::day_mean_lmean" -> detail.noiseIndex
+        "phone_brightness_daily" -> detail.brightness
+        "phone_volume_daily" -> detail.volumePct
+        "phone_dark_mode_daily" -> detail.darkModeHours
+        "phone_unlock_daily" -> detail.unlockCount?.toDouble()
+        else -> null
     }
 }
 
-@Composable
-private fun MentalMetricRowItem(label: String, value: String, color: Color) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-        Text(text = value, color = color, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-    }
-}
-
-// ─── Data class ──────────────────────────────────────────────────────────────
+// ─── Data class (kept for data loading compatibility) ────────────────────────
 
 private data class MentalDetailData(
     val stress: Double?,
@@ -196,31 +302,7 @@ private data class MentalDetailData(
     val volumePct: Double?,
     val darkModeHours: Double?,
     val unlockCount: Int?
-) {
-    fun displayValue(metric: String): String? = when (metric) {
-        MentalCardConfig.METRIC_STRESS -> stress?.let { String.format("%.0f", it) }
-        MentalCardConfig.METRIC_SCREEN_TIME -> screenTimeHours?.let { String.format("%.1fh", it) }
-        MentalCardConfig.METRIC_LATE_SCREEN_TIME -> lateScreenTimeHours?.let { String.format("%.1fh", it) }
-        MentalCardConfig.METRIC_NOISE -> noiseIndex?.let { String.format("%.0f dB", it) }
-        MentalCardConfig.METRIC_BRIGHTNESS -> brightness?.let { String.format("%.0f", it) }
-        MentalCardConfig.METRIC_VOLUME -> volumePct?.let { "${it.toInt()}%" }
-        MentalCardConfig.METRIC_DARK_MODE -> darkModeHours?.let { String.format("%.1fh", it) }
-        MentalCardConfig.METRIC_UNLOCKS -> unlockCount?.let { "$it" }
-        else -> null
-    }
-
-    fun numericValue(metric: String): Double? = when (metric) {
-        MentalCardConfig.METRIC_STRESS -> stress
-        MentalCardConfig.METRIC_SCREEN_TIME -> screenTimeHours
-        MentalCardConfig.METRIC_LATE_SCREEN_TIME -> lateScreenTimeHours
-        MentalCardConfig.METRIC_NOISE -> noiseIndex
-        MentalCardConfig.METRIC_BRIGHTNESS -> brightness
-        MentalCardConfig.METRIC_VOLUME -> volumePct
-        MentalCardConfig.METRIC_DARK_MODE -> darkModeHours
-        MentalCardConfig.METRIC_UNLOCKS -> unlockCount?.toDouble()
-        else -> null
-    }
-}
+)
 
 // ─── Data loading ────────────────────────────────────────────────────────────
 
@@ -334,7 +416,6 @@ private suspend fun loadMentalDetailData(
     val noise = fetchDouble("ambient_noise_index_daily", "day_mean_lmean")
         ?: fetchSamplesAvg("ambient_noise_samples", "l_mean", "start_ts")
 
-    // Phone behavior: try daily table first, fall back to live samples
     val brightness = fetchDouble("phone_brightness_daily", "value_mean")
         ?: fetchSamplesAvg("phone_brightness_samples", "value")
     val volume = fetchDouble("phone_volume_daily", "value_mean_pct")
@@ -348,7 +429,6 @@ private suspend fun loadMentalDetailData(
 
     if (stress == null && screenTime == null && lateScreenTime == null && noise == null &&
         brightness == null && volume == null && darkMode == null && unlocks == null) {
-        Log.d("MentalDetail", "All null — returning null")
         return@withContext null
     }
 
@@ -363,4 +443,3 @@ private suspend fun loadMentalDetailData(
         unlockCount = unlocks
     )
 }
-

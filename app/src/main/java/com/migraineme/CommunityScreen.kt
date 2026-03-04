@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.OpenInNew
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -61,7 +61,11 @@ fun CommunityScreen(
     val listState = rememberLazyListState()
     val density = LocalDensity.current
 
-    LaunchedEffect(authState.accessToken) {
+    // Refresh forum data every time this screen becomes visible
+    var refreshKey by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { refreshKey++ }
+
+    LaunchedEffect(authState.accessToken, refreshKey) {
         authState.accessToken?.let {
             vm.loadAll(it)
             vm.markAllRead(it)
@@ -245,21 +249,7 @@ private fun ArticlesContent(
             }
         }
     } else {
-        // ── For You hero (personalise prompt) ──
-        if (state.selectedTab == 0 && state.userMatchingTagIds.isEmpty()) {
-            PersonaliseCard(modifier = Modifier.padding(vertical = 4.dp)) {
-                Text(
-                    "Personalise your feed",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Text(
-                    "Log your triggers, medicines, and symptoms to get article recommendations tailored to your migraine profile.",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
+
 
         // ── Browse tags ──
         if (state.selectedTab == 2) {
@@ -299,6 +289,7 @@ private fun ArticlesContent(
                         isFavorite = article.id in state.favoriteIds,
                         matchingTagIds = state.userMatchingTagIds,
                         commentCount = state.commentCounts[article.id] ?: 0,
+                        meTooCount = state.meTooCountMap[article.id] ?: 0,
                         onFavorite = { accessToken?.let { vm.toggleFavorite(it, article.id) } },
                         onOpen = { navController.navigate("${Routes.COMMUNITY}/article/${article.id}") },
                         modifier = Modifier
@@ -350,13 +341,27 @@ private fun ForumContent(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // ── Pinned topics — always visible ──
+
+        // ── Discussion starter (contextual prompt based on user's top trigger) ──
+        state.discussionStarter?.let { starter ->
+            DiscussionStarterCard(
+                starter = starter,
+                onTap = {
+                    starter.pinnedTopicId?.let { id ->
+                        navController.navigate("${Routes.COMMUNITY}/forum/$id")
+                    }
+                }
+            )
+        }
+
+        // ── Pinned topics — heart = me too + follow ──
         PinnedTopics.all.forEach { topic ->
             PinnedTopicCard(
                 topic = topic,
-                isFavorited = topic.id in state.forumFavoriteIds,
+                isMeToo = topic.id in state.myMeTooIds,
+                meTooCount = state.meTooCountMap[topic.id] ?: 0,
                 onOpen = { navController.navigate("${Routes.COMMUNITY}/forum/${topic.id}") },
-                onToggleFavorite = { accessToken?.let { vm.toggleForumFavorite(it, topic.id) } }
+                onToggleMeToo = { accessToken?.let { vm.toggleMeToo(it, topic.id) } }
             )
         }
 
@@ -392,10 +397,11 @@ private fun ForumContent(
                 ForumPostCard(
                     post = post,
                     isOwn = post.userId == currentUserId,
-                    isFavorited = post.id in state.forumFavoriteIds,
+                    isMeToo = post.id in state.myMeTooIds,
+                    meTooCount = state.meTooCountMap[post.id] ?: 0,
                     onOpen = { navController.navigate("${Routes.COMMUNITY}/forum/${post.id}") },
                     onDelete = { accessToken?.let { vm.deleteForumPost(it, post.id) } },
-                    onToggleFavorite = { accessToken?.let { vm.toggleForumFavorite(it, post.id) } },
+                    onToggleMeToo = { accessToken?.let { vm.toggleMeToo(it, post.id) } },
                     onReport = { reportingPost = post },
                     modifier = Modifier
                 )
@@ -407,9 +413,10 @@ private fun ForumContent(
 @Composable
 private fun PinnedTopicCard(
     topic: PinnedTopicData,
-    isFavorited: Boolean,
+    isMeToo: Boolean,
+    meTooCount: Int,
     onOpen: () -> Unit,
-    onToggleFavorite: () -> Unit
+    onToggleMeToo: () -> Unit
 ) {
     val borderBrush = remember {
         Brush.linearGradient(
@@ -451,19 +458,6 @@ private fun PinnedTopicCard(
             Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "PINNED",
-                        color = AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
-                    )
-                }
-
-                Spacer(Modifier.height(4.dp))
-
                 Text(
                     topic.title,
                     color = Color.White,
@@ -481,16 +475,28 @@ private fun PinnedTopicCard(
                 )
             }
 
-            IconButton(
-                onClick = onToggleFavorite,
-                modifier = Modifier.size(32.dp)
+            // Heart = me too + follow — shows count
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
-                    tint = if (isFavorited) AppTheme.AccentPink else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                    modifier = Modifier.size(18.dp)
-                )
+                IconButton(
+                    onClick = onToggleMeToo,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        if (isMeToo) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (isMeToo) "Unlike" else "Me too",
+                        tint = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                if (meTooCount > 0) {
+                    Text(
+                        "$meTooCount",
+                        color = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
+                    )
+                }
             }
         }
     }
@@ -733,27 +739,12 @@ private fun BrowseTagsSection(
 // =====================================================
 
 @Composable
-private fun PersonaliseCard(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = AppTheme.BaseCardShape,
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
-        elevation = CardDefaults.cardElevation(0.dp),
-        border = AppTheme.BaseCardBorder
-    ) {
-        Column(modifier = Modifier.padding(16.dp), content = content)
-    }
-}
-
-@Composable
 private fun ArticleCard(
     article: ArticleRow,
     isFavorite: Boolean,
     matchingTagIds: Set<String> = emptySet(),
     commentCount: Int = 0,
+    meTooCount: Int = 0,
     onFavorite: () -> Unit,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier
@@ -886,6 +877,14 @@ private fun ArticleCard(
                                 )
                             }
                         }
+                        if (meTooCount > 0) {
+                            Text(
+                                "$meTooCount",
+                                color = if (isFavorite) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
                         Spacer(Modifier.width(4.dp))
                         if (commentCount > 0) {
                             Icon(Icons.Outlined.ChatBubbleOutline, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
@@ -893,11 +892,7 @@ private fun ArticleCard(
                             Text("$commentCount", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable(onClick = onOpen)) {
-                        Text("Read", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Spacer(Modifier.width(4.dp))
-                        Icon(Icons.Outlined.OpenInNew, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
-                    }
+
                 }
             }
         }
@@ -921,6 +916,3 @@ private fun formatRelativeDate(isoDate: String): String {
         }
     } catch (e: Exception) { "" }
 }
-
-
-

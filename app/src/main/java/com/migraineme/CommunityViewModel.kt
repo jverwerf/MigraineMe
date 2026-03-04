@@ -1,6 +1,8 @@
 // app/src/main/java/com/migraineme/CommunityViewModel.kt
 package com.migraineme
 
+import android.os.Build
+import android.text.Html
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -29,6 +31,13 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 private const val TAG = "CommunityVM"
+
+/** Decode HTML entities like &#8220; &amp; &#8217; etc. into plain text. */
+private fun decodeHtml(text: String): String =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+        Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY).toString().trim()
+    else
+        @Suppress("DEPRECATION") Html.fromHtml(text).toString().trim()
 
 // -- Article models --
 
@@ -174,6 +183,51 @@ private data class TagRow(
     val category: String? = null
 )
 
+// -- Me Too models --
+
+@Serializable
+private data class MeTooRow(
+    @SerialName("post_id") val postId: String
+)
+
+@Serializable
+private data class MeTooCountRow(
+    @SerialName("post_id") val postId: String,
+    @SerialName("me_too_count") val meTooCount: Int
+)
+
+// -- Thread summary model --
+
+@Serializable
+data class ThreadSummaryRow(
+    @SerialName("post_id") val postId: String,
+    val summary: String,
+    @SerialName("comment_count") val commentCount: Int = 0,
+    @SerialName("generated_at") val generatedAt: String? = null
+)
+
+// -- Discussion starter model --
+
+data class DiscussionStarter(
+    val triggerName: String,
+    val communityCount: Int,       // how many other users share this trigger
+    val pinnedTopicId: String?,    // deep-link to a relevant pinned topic
+    val tagId: String?             // or deep-link to a filtered article view
+)
+
+// -- Notification model --
+
+@Serializable
+data class CommunityNotificationRow(
+    val id: String,
+    val type: String? = null,        // "article", "comment_reply", "forum_reply", "me_too"
+    @SerialName("reference_id") val referenceId: String? = null,
+    val title: String? = null,
+    val body: String? = null,
+    val read: Boolean = false,
+    @SerialName("created_at") val createdAt: String? = null
+)
+
 // -- State --
 
 data class CommunityState(
@@ -191,8 +245,18 @@ data class CommunityState(
     val forumComments: List<ForumCommentRow> = emptyList(),
     val forumCommentsLoading: Boolean = false,
     val forumFavoriteIds: Set<String> = emptySet(),
+    // Me Too state (shared across articles + forum — same table)
+    val meTooCountMap: Map<String, Int> = emptyMap(),  // post_id or article_id -> count
+    val myMeTooIds: Set<String> = emptySet(),          // IDs the current user has me-too'd
+    // Thread/article summaries
+    val threadSummaries: Map<String, String> = emptyMap(),  // post_id or article_id -> summary text
+    // Discussion starters (computed from user profile)
+    val discussionStarter: DiscussionStarter? = null,
     // Notifications
-    val unreadCount: Int = 0
+    val unreadCount: Int = 0,
+    val notifications: List<CommunityNotificationRow> = emptyList(),
+    // Moderation
+    val showModerationAlert: Boolean = false
 )
 
 class CommunityViewModel : ViewModel() {
@@ -213,6 +277,10 @@ class CommunityViewModel : ViewModel() {
         _state.value = _state.value.copy(topTab = tab)
     }
 
+    fun dismissModerationAlert() {
+        _state.value = _state.value.copy(showModerationAlert = false)
+    }
+
     fun selectTab(tab: Int) {
         _state.value = _state.value.copy(selectedTab = tab)
     }
@@ -230,6 +298,10 @@ class CommunityViewModel : ViewModel() {
                 val forumDeferred = async { fetchForumPosts(accessToken) }
                 val forumFavDeferred = async { fetchForumFavorites(accessToken) }
                 val unreadDeferred = async { fetchUnreadCount(accessToken) }
+                val meTooCountsDeferred = async { fetchMeTooCounts(accessToken) }
+                val myMeTooDeferred = async { fetchMyMeToos(accessToken) }
+                val summariesDeferred = async { fetchThreadSummaries(accessToken) }
+                val starterDeferred = async { buildDiscussionStarter(accessToken) }
 
                 val articles = articlesDeferred.await()
                 val favoriteIds = favoritesDeferred.await()
@@ -239,6 +311,10 @@ class CommunityViewModel : ViewModel() {
                 val forumPosts = forumDeferred.await()
                 val forumFavoriteIds = forumFavDeferred.await()
                 val unreadCount = unreadDeferred.await()
+                val meTooCounts = meTooCountsDeferred.await()
+                val myMeToos = myMeTooDeferred.await()
+                val summaries = summariesDeferred.await()
+                val starter = starterDeferred.await()
 
                 // Map user labels -> tag IDs (case-insensitive match)
                 val tagByName = allTags.associateBy { it.name.lowercase() }
@@ -256,14 +332,229 @@ class CommunityViewModel : ViewModel() {
                     forumPosts = forumPosts,
                     forumFavoriteIds = forumFavoriteIds,
                     unreadCount = unreadCount,
+                    meTooCountMap = meTooCounts,
+                    myMeTooIds = myMeToos,
+                    threadSummaries = summaries,
+                    discussionStarter = starter,
                     loading = false
                 )
 
-                Log.d(TAG, "Loaded ${articles.size} articles, ${forumPosts.size} forum posts, ${matchedTagIds.size} matching tags, $unreadCount unread")
+                Log.d(TAG, "Loaded ${articles.size} articles, ${forumPosts.size} forum posts, ${matchedTagIds.size} matching tags, $unreadCount unread, ${meTooCounts.size} me-too counts")
             } catch (e: Exception) {
                 Log.e(TAG, "loadAll error", e)
                 _state.value = _state.value.copy(loading = false, error = e.message)
             }
+        }
+    }
+
+    // =====================
+    // ME TOO METHODS
+    // =====================
+
+    private suspend fun fetchMeTooCounts(accessToken: String): Map<String, Int> {
+        return try {
+            val response = client.get("$supabaseUrl/rest/v1/forum_me_too_counts") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("select", "post_id,me_too_count")
+            }
+            if (response.status.value !in 200..299) {
+                Log.w(TAG, "fetchMeTooCounts: ${response.status}")
+                emptyMap()
+            } else {
+                val rows: List<MeTooCountRow> = response.body()
+                rows.associate { it.postId to it.meTooCount }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "fetchMeTooCounts error: ${e.message}")
+            emptyMap()
+        }
+    }
+
+    private suspend fun fetchMyMeToos(accessToken: String): Set<String> {
+        return try {
+            val rows: List<MeTooRow> = fetchList(accessToken, "forum_me_too", "post_id")
+            rows.map { it.postId }.toSet()
+        } catch (e: Exception) {
+            Log.w(TAG, "fetchMyMeToos error: ${e.message}")
+            emptySet()
+        }
+    }
+
+    /**
+     * Unified heart action: toggles both me-too (public count) and
+     * forum_favorites (follow for notifications) in one tap.
+     */
+    fun toggleMeToo(accessToken: String, postId: String) {
+        viewModelScope.launch {
+            val currentIds = _state.value.myMeTooIds
+            val currentCounts = _state.value.meTooCountMap
+            val currentCount = currentCounts[postId] ?: 0
+            val currentFavIds = _state.value.forumFavoriteIds
+
+            if (postId in currentIds) {
+                // Optimistic remove from both
+                _state.value = _state.value.copy(
+                    myMeTooIds = currentIds - postId,
+                    meTooCountMap = currentCounts + (postId to maxOf(0, currentCount - 1)),
+                    forumFavoriteIds = currentFavIds - postId
+                )
+                try {
+                    // Remove me-too
+                    client.delete("$supabaseUrl/rest/v1/forum_me_too") {
+                        header(HttpHeaders.Authorization, "Bearer $accessToken")
+                        header("apikey", supabaseKey)
+                        parameter("post_id", "eq.$postId")
+                    }
+                    // Remove favorite (unfollows notifications)
+                    client.delete("$supabaseUrl/rest/v1/forum_favorites") {
+                        header(HttpHeaders.Authorization, "Bearer $accessToken")
+                        header("apikey", supabaseKey)
+                        parameter("post_id", "eq.$postId")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "toggleMeToo remove error", e)
+                    _state.value = _state.value.copy(
+                        myMeTooIds = currentIds,
+                        meTooCountMap = currentCounts,
+                        forumFavoriteIds = currentFavIds
+                    )
+                }
+            } else {
+                // Optimistic add to both
+                _state.value = _state.value.copy(
+                    myMeTooIds = currentIds + postId,
+                    meTooCountMap = currentCounts + (postId to currentCount + 1),
+                    forumFavoriteIds = currentFavIds + postId
+                )
+                try {
+                    // Add me-too
+                    client.post("$supabaseUrl/rest/v1/forum_me_too") {
+                        header(HttpHeaders.Authorization, "Bearer $accessToken")
+                        header("apikey", supabaseKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(mapOf("post_id" to postId))
+                    }
+                    // Add favorite (follows for notifications)
+                    client.post("$supabaseUrl/rest/v1/forum_favorites") {
+                        header(HttpHeaders.Authorization, "Bearer $accessToken")
+                        header("apikey", supabaseKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(mapOf("post_id" to postId))
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "toggleMeToo add error", e)
+                    _state.value = _state.value.copy(
+                        myMeTooIds = currentIds,
+                        meTooCountMap = currentCounts,
+                        forumFavoriteIds = currentFavIds
+                    )
+                }
+            }
+        }
+    }
+
+    // =====================
+    // THREAD SUMMARIES
+    // =====================
+
+    private suspend fun fetchThreadSummaries(accessToken: String): Map<String, String> {
+        return try {
+            val response = client.get("$supabaseUrl/rest/v1/forum_thread_summaries") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("select", "post_id,summary,comment_count,generated_at")
+            }
+            if (response.status.value !in 200..299) {
+                Log.w(TAG, "fetchThreadSummaries: ${response.status}")
+                emptyMap()
+            } else {
+                val rows: List<ThreadSummaryRow> = response.body()
+                rows.associate { it.postId to it.summary }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "fetchThreadSummaries error: ${e.message}")
+            emptyMap()
+        }
+    }
+
+    /** Trigger summary generation after posting a comment (fire-and-forget). Works for both forum posts and articles. */
+    fun triggerSummaryGeneration(accessToken: String, postId: String) {
+        viewModelScope.launch {
+            try {
+                client.post("$supabaseUrl/functions/v1/summarize-forum-thread") {
+                    header(HttpHeaders.Authorization, "Bearer $accessToken")
+                    header("apikey", supabaseKey)
+                    contentType(ContentType.Application.Json)
+                    setBody(mapOf("post_id" to postId))
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "triggerSummaryGeneration error: ${e.message}")
+            }
+        }
+    }
+
+    // =====================
+    // DISCUSSION STARTER
+    // =====================
+
+    /**
+     * Builds a contextual discussion starter from the user's top trigger.
+     * Counts how many other users share that trigger and links to a relevant
+     * pinned topic or article tag.
+     */
+    private suspend fun buildDiscussionStarter(accessToken: String): DiscussionStarter? {
+        try {
+            // Get user's top trigger (highest prediction_value)
+            val triggers: List<UserTriggerSlim> = fetchList(accessToken, "user_triggers", "label,prediction_value")
+            val severityOrder = mapOf("HIGH" to 3, "MILD" to 2, "LOW" to 1)
+            val topTrigger = triggers
+                .filter { it.predictionValue?.uppercase() in severityOrder }
+                .maxByOrNull { severityOrder[it.predictionValue?.uppercase()] ?: 0 }
+                ?: return null
+
+            // Count how many users share this trigger (approximate — count rows in user_triggers with same label)
+            val response = client.get("$supabaseUrl/rest/v1/user_triggers") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                header("Prefer", "count=exact")
+                parameter("label", "eq.${topTrigger.label}")
+                parameter("select", "id")
+                parameter("limit", "0")
+            }
+            val range = response.headers["content-range"]
+            val communityCount = range?.substringAfter("/")?.toIntOrNull() ?: 0
+
+            // Map trigger to a relevant pinned topic
+            val triggerLower = topTrigger.label.lowercase()
+            val pinnedTopicId = when {
+                triggerLower.contains("sleep") || triggerLower.contains("insomnia") || triggerLower.contains("fatigue") ->
+                    "00000000-0000-0000-0000-000000000004"  // Sleep routines
+                triggerLower.contains("stress") || triggerLower.contains("anxiety") || triggerLower.contains("work") ->
+                    "00000000-0000-0000-0000-000000000003"  // Managing at work
+                triggerLower.contains("food") || triggerLower.contains("diet") || triggerLower.contains("alcohol") ||
+                triggerLower.contains("cheese") || triggerLower.contains("chocolate") || triggerLower.contains("caffeine") ->
+                    "00000000-0000-0000-0000-000000000006"  // Food & diet
+                triggerLower.contains("weather") || triggerLower.contains("barometric") || triggerLower.contains("humidity") ->
+                    "00000000-0000-0000-0000-000000000002"  // Surprising triggers
+                else -> "00000000-0000-0000-0000-000000000001"  // What works for you (catch-all)
+            }
+
+            // Also find matching article tag for deep-linking to articles view
+            val allTags: List<TagRow> = fetchList(accessToken, "tags", "id,name,category")
+            val matchingTag = allTags.find { it.name.equals(topTrigger.label, ignoreCase = true) }
+
+            if (communityCount <= 1) return null  // Don't show if no one else has it
+
+            return DiscussionStarter(
+                triggerName = topTrigger.label,
+                communityCount = communityCount,
+                pinnedTopicId = pinnedTopicId,
+                tagId = matchingTag?.id  // for filtering articles by this trigger tag
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "buildDiscussionStarter error: ${e.message}")
+            return null
         }
     }
 
@@ -333,6 +624,15 @@ class CommunityViewModel : ViewModel() {
                 if (response.status.value in 200..299) {
                     Log.d(TAG, "Forum post created")
                     refreshForumPosts(accessToken)
+                    // Refresh again after moderation has had time to process
+                    launch {
+                        val preCount = _state.value.forumPosts.size
+                        kotlinx.coroutines.delay(4000L)
+                        refreshForumPosts(accessToken)
+                        if (_state.value.forumPosts.size < preCount) {
+                            _state.value = _state.value.copy(showModerationAlert = true)
+                        }
+                    }
                 } else {
                     Log.e(TAG, "createForumPost failed: ${response.status} ${response.bodyAsText()}")
                 }
@@ -370,6 +670,7 @@ class CommunityViewModel : ViewModel() {
                     header(HttpHeaders.Authorization, "Bearer $accessToken")
                     header("apikey", supabaseKey)
                     parameter("post_id", "eq.$postId")
+                    parameter("status", "eq.active")
                     parameter("select", "id,post_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
                     parameter("order", "created_at.asc")
                 }
@@ -412,6 +713,17 @@ class CommunityViewModel : ViewModel() {
                 Log.d(TAG, "postForumComment response: ${response.status}")
                 if (response.status.value in 200..299) {
                     loadForumComments(accessToken, postId)
+                    // Fire-and-forget: trigger AI summary if thread qualifies
+                    triggerSummaryGeneration(accessToken, postId)
+                    // Refresh again after moderation has had time to process
+                    launch {
+                        val preCount = _state.value.forumComments.size
+                        kotlinx.coroutines.delay(4000L)
+                        loadForumComments(accessToken, postId)
+                        if (_state.value.forumComments.size < preCount) {
+                            _state.value = _state.value.copy(showModerationAlert = true)
+                        }
+                    }
                 } else {
                     Log.e(TAG, "postForumComment failed: ${response.status} ${response.bodyAsText()}")
                 }
@@ -535,7 +847,12 @@ class CommunityViewModel : ViewModel() {
             Log.e(TAG, "fetchArticles: ${response.status} ${response.bodyAsText()}")
             return emptyList()
         }
-        return response.body()
+        return response.body<List<ArticleRow>>().map { article ->
+            article.copy(
+                title = decodeHtml(article.title),
+                aiSummary = article.aiSummary?.let { decodeHtml(it) }
+            )
+        }
     }
 
     private suspend fun fetchArticleFavorites(accessToken: String): Set<String> {
@@ -662,23 +979,49 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Unified article heart: toggles me-too (public count), article_favorites (Saved tab + notifications).
+     */
     fun toggleFavorite(accessToken: String, articleId: String) {
         viewModelScope.launch {
-            val current = _state.value.favoriteIds
-            if (articleId in current) {
-                _state.value = _state.value.copy(favoriteIds = current - articleId)
+            val currentFavs = _state.value.favoriteIds
+            val currentIds = _state.value.myMeTooIds
+            val currentCounts = _state.value.meTooCountMap
+            val currentCount = currentCounts[articleId] ?: 0
+
+            if (articleId in currentFavs) {
+                // Optimistic remove from all
+                _state.value = _state.value.copy(
+                    favoriteIds = currentFavs - articleId,
+                    myMeTooIds = currentIds - articleId,
+                    meTooCountMap = currentCounts + (articleId to maxOf(0, currentCount - 1))
+                )
                 try {
                     client.delete("$supabaseUrl/rest/v1/article_favorites") {
                         header(HttpHeaders.Authorization, "Bearer $accessToken")
                         header("apikey", supabaseKey)
                         parameter("article_id", "eq.$articleId")
                     }
+                    client.delete("$supabaseUrl/rest/v1/forum_me_too") {
+                        header(HttpHeaders.Authorization, "Bearer $accessToken")
+                        header("apikey", supabaseKey)
+                        parameter("post_id", "eq.$articleId")
+                    }
                 } catch (e: Exception) {
-                    Log.e(TAG, "unfavorite error", e)
-                    _state.value = _state.value.copy(favoriteIds = current)
+                    Log.e(TAG, "unfavorite article error", e)
+                    _state.value = _state.value.copy(
+                        favoriteIds = currentFavs,
+                        myMeTooIds = currentIds,
+                        meTooCountMap = currentCounts
+                    )
                 }
             } else {
-                _state.value = _state.value.copy(favoriteIds = current + articleId)
+                // Optimistic add to all
+                _state.value = _state.value.copy(
+                    favoriteIds = currentFavs + articleId,
+                    myMeTooIds = currentIds + articleId,
+                    meTooCountMap = currentCounts + (articleId to currentCount + 1)
+                )
                 try {
                     client.post("$supabaseUrl/rest/v1/article_favorites") {
                         header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -686,9 +1029,19 @@ class CommunityViewModel : ViewModel() {
                         contentType(ContentType.Application.Json)
                         setBody(mapOf("article_id" to articleId))
                     }
+                    client.post("$supabaseUrl/rest/v1/forum_me_too") {
+                        header(HttpHeaders.Authorization, "Bearer $accessToken")
+                        header("apikey", supabaseKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(mapOf("post_id" to articleId))
+                    }
                 } catch (e: Exception) {
-                    Log.e(TAG, "favorite error", e)
-                    _state.value = _state.value.copy(favoriteIds = current)
+                    Log.e(TAG, "favorite article error", e)
+                    _state.value = _state.value.copy(
+                        favoriteIds = currentFavs,
+                        myMeTooIds = currentIds,
+                        meTooCountMap = currentCounts
+                    )
                 }
             }
         }
@@ -732,7 +1085,7 @@ class CommunityViewModel : ViewModel() {
     // REPORT CONTENT
     // =====================
 
-    fun reportContent(accessToken: String, postId: String?, commentId: String?, reason: String) {
+    fun reportContent(accessToken: String, postId: String?, commentId: String?, reason: String, articleCommentId: String? = null) {
         viewModelScope.launch {
             try {
                 // 1. Insert into forum_reports table
@@ -741,6 +1094,7 @@ class CommunityViewModel : ViewModel() {
                     append("\"reason\":${Json.encodeToString(kotlinx.serialization.serializer<String>(), reason)}")
                     if (postId != null) append(",\"post_id\":\"$postId\"")
                     if (commentId != null) append(",\"comment_id\":\"$commentId\"")
+                    if (articleCommentId != null) append(",\"article_comment_id\":\"$articleCommentId\"")
                     append("}")
                 }
                 client.post("$supabaseUrl/rest/v1/forum_reports") {
@@ -752,13 +1106,18 @@ class CommunityViewModel : ViewModel() {
                 }
 
                 // 2. Send email notification to help@migraineme.app
-                val subject = if (postId != null) "Forum post reported" else "Forum comment reported"
+                val subject = when {
+                    postId != null -> "Forum post reported"
+                    articleCommentId != null -> "Article comment reported"
+                    else -> "Forum comment reported"
+                }
                 val html = buildString {
-                    append("<h2>New Forum Report</h2>")
+                    append("<h2>New Community Report</h2>")
                     append("<p><strong>Reason:</strong> $reason</p>")
                     if (postId != null) append("<p><strong>Post ID:</strong> $postId</p>")
-                    if (commentId != null) append("<p><strong>Comment ID:</strong> $commentId</p>")
-                    append("<p>Please review this content in the Supabase dashboard.</p>")
+                    if (commentId != null) append("<p><strong>Forum Comment ID:</strong> $commentId</p>")
+                    if (articleCommentId != null) append("<p><strong>Article Comment ID:</strong> $articleCommentId</p>")
+                    append("<p>Please review this content in the admin dashboard.</p>")
                 }
                 val emailBody = "{\"to\":\"help@migraineme.app\",\"subject\":\"$subject\",\"html\":${Json.encodeToString(kotlinx.serialization.serializer<String>(), html)}}"
                 client.post("$supabaseUrl/functions/v1/send-email") {
@@ -768,12 +1127,10 @@ class CommunityViewModel : ViewModel() {
                     setBody(emailBody)
                 }
 
-                Log.d(TAG, "reportContent: submitted reason=$reason postId=$postId commentId=$commentId")
+                Log.d(TAG, "reportContent: submitted reason=$reason postId=$postId commentId=$commentId articleCommentId=$articleCommentId")
             } catch (e: Exception) {
                 Log.e(TAG, "reportContent error", e)
             }
         }
     }
 }
-
-

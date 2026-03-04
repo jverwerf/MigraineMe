@@ -94,8 +94,8 @@ fun MedicinesScreen(
                 rebuildDraftWithMeds(updated)
                 showAddDialog = false
             },
-            onConfirm = { amount, iso, relief ->
-                val updated = draft.meds + MedicineDraft(name = pendingLabel!!, amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief)
+            onConfirm = { amount, iso, relief, seScale, seNotes ->
+                val updated = draft.meds + MedicineDraft(name = pendingLabel!!, amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief, sideEffectScale = seScale, sideEffectNotes = seNotes.ifBlank { null })
                 rebuildDraftWithMeds(updated)
                 showAddDialog = false
             }
@@ -110,10 +110,12 @@ fun MedicinesScreen(
             initialAmount = editing.amount ?: "",
             initialIso = editing.startAtIso,
             initialRelief = editing.reliefScale ?: "NONE",
+            initialSideEffectScale = editing.sideEffectScale ?: "NONE",
+            initialSideEffectNotes = editing.sideEffectNotes ?: "",
             onDismiss = { showEditDialog = false },
-            onConfirm = { amount, iso, relief ->
+            onConfirm = { amount, iso, relief, seScale, seNotes ->
                 val updated = draft.meds.toMutableList().apply {
-                    set(editIndex!!, editing.copy(amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief))
+                    set(editIndex!!, editing.copy(amount = amount.ifBlank { null }, startAtIso = iso, reliefScale = relief, sideEffectScale = seScale, sideEffectNotes = seNotes.ifBlank { null }))
                 }
                 rebuildDraftWithMeds(updated)
                 showEditDialog = false
@@ -262,7 +264,7 @@ fun MedicinesScreen(
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { med ->
-                            MedicineButton(med.label, med.label in selectedLabels) {
+                            MedicineButton(med.label, med.label in selectedLabels, med.category) {
                                 onMedicineTap(med.label)
                             }
                         }
@@ -278,7 +280,7 @@ fun MedicinesScreen(
                         Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { med ->
-                                MedicineButton(med.label, med.label in selectedLabels) {
+                                MedicineButton(med.label, med.label in selectedLabels, med.category) {
                                     onMedicineTap(med.label)
                                 }
                             }
@@ -326,11 +328,13 @@ private fun MedicineAddDialog(
     title: String,
     onDismiss: () -> Unit,
     onSkip: () -> Unit,
-    onConfirm: (amount: String, iso: String?, relief: String) -> Unit
+    onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
     var pickedIso by remember { mutableStateOf<String?>(null) }
     var selectedRelief by remember { mutableStateOf(ReliefScale.NONE) }
+    var sideEffectScale by remember { mutableStateOf("NONE") }
+    var sideEffectNotes by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -386,10 +390,18 @@ private fun MedicineAddDialog(
                         )
                     }
                 }
+
+                // Side effects
+                SideEffectChips(
+                    sideEffectScale = sideEffectScale,
+                    onScaleChange = { sideEffectScale = it },
+                    sideEffectNotes = sideEffectNotes,
+                    onNotesChange = { sideEffectNotes = it }
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name) }) {
+            TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
                 Text("Add", color = AppTheme.AccentPurple)
             }
         },
@@ -416,12 +428,16 @@ private fun MedicineEditDialog(
     initialAmount: String,
     initialIso: String?,
     initialRelief: String,
+    initialSideEffectScale: String = "NONE",
+    initialSideEffectNotes: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (amount: String, iso: String?, relief: String) -> Unit
+    onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
     var amount by remember { mutableStateOf(initialAmount) }
     var pickedIso by remember { mutableStateOf(initialIso) }
     var selectedRelief by remember { mutableStateOf(ReliefScale.fromString(initialRelief)) }
+    var sideEffectScale by remember { mutableStateOf(initialSideEffectScale) }
+    var sideEffectNotes by remember { mutableStateOf(initialSideEffectNotes) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -473,10 +489,18 @@ private fun MedicineEditDialog(
                         )
                     }
                 }
+
+                // Side effects
+                SideEffectChips(
+                    sideEffectScale = sideEffectScale,
+                    onScaleChange = { sideEffectScale = it },
+                    sideEffectNotes = sideEffectNotes,
+                    onNotesChange = { sideEffectNotes = it }
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name) }) {
+            TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
                 Text("Save", color = AppTheme.AccentPurple)
             }
         },
@@ -493,10 +517,11 @@ private fun MedicineEditDialog(
  * ──────────────────────────────────────────────── */
 
 @Composable
-private fun MedicineButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun MedicineButton(label: String, isSelected: Boolean, category: String? = null, onClick: () -> Unit) {
     val circleColor = if (isSelected) Color(0xFF4FC3F7).copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val borderColor = if (isSelected) Color(0xFF4FC3F7).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
+    val icon = MedicineIcons.forKey(category)
     val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
 
     Column(
@@ -517,11 +542,11 @@ private fun MedicineButton(label: String, isSelected: Boolean, onClick: () -> Un
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                label.take(2).uppercase(),
-                color = iconTint,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
-            )
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(24.dp))
+            } else {
+                Text(label.take(2).uppercase(), color = iconTint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(

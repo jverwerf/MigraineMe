@@ -72,6 +72,9 @@ fun QuickLogMedicineScreen(
     var amount by rememberSaveable { mutableStateOf("") }
     var startAtIso by rememberSaveable { mutableStateOf<String?>(null) }
     var notes by rememberSaveable { mutableStateOf("") }
+    var reliefScale by rememberSaveable { mutableStateOf("NONE") }
+    var sideEffectScale by rememberSaveable { mutableStateOf("NONE") }
+    var sideEffectNotes by rememberSaveable { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
     
     val scrollState = rememberScrollState()
@@ -238,6 +241,77 @@ fun QuickLogMedicineScreen(
                         ),
                         minLines = 2
                     )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // Relief scale
+                    Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ReliefScale.entries.forEach { scale ->
+                            androidx.compose.material3.FilterChip(
+                                selected = reliefScale == scale.name,
+                                onClick = { reliefScale = scale.name },
+                                label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = scale.color.copy(alpha = 0.3f),
+                                    selectedLabelColor = Color.White,
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    labelColor = AppTheme.SubtleTextColor
+                                ),
+                                border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = reliefScale == scale.name,
+                                    borderColor = Color.White.copy(alpha = 0.12f),
+                                    selectedBorderColor = scale.color.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // Side effects
+                    Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("NONE" to "None", "SOFT" to "Soft", "MODERATE" to "Moderate", "SEVERE" to "Severe").forEach { (key, display) ->
+                            val seColor = when (key) { "NONE" -> Color(0xFF81C784); "SOFT" -> Color(0xFFFFB74D); "MODERATE" -> Color(0xFFFF8A65); else -> Color(0xFFE57373) }
+                            androidx.compose.material3.FilterChip(
+                                selected = sideEffectScale == key,
+                                onClick = { sideEffectScale = key },
+                                label = { Text(display, style = MaterialTheme.typography.labelSmall) },
+                                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = seColor.copy(alpha = 0.3f),
+                                    selectedLabelColor = Color.White,
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    labelColor = AppTheme.SubtleTextColor
+                                ),
+                                border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = sideEffectScale == key,
+                                    borderColor = Color.White.copy(alpha = 0.12f),
+                                    selectedBorderColor = seColor.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = sideEffectNotes,
+                        onValueChange = { sideEffectNotes = it },
+                        label = { Text("Side effect notes", color = AppTheme.SubtleTextColor) },
+                        placeholder = { Text("e.g. drowsiness, nausea…", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
+                        ),
+                        minLines = 1, maxLines = 3
+                    )
                 }
                 
                 // Action Buttons
@@ -275,7 +349,10 @@ fun QuickLogMedicineScreen(
                                                 name = medicine,
                                                 amount = amount.ifBlank { null },
                                                 startAt = startAtIso ?: Instant.now().toString(),
-                                                notes = notes.ifBlank { null }
+                                                notes = notes.ifBlank { null },
+                                                reliefScale = reliefScale,
+                                                sideEffectScale = sideEffectScale,
+                                                sideEffectNotes = sideEffectNotes.ifBlank { null }
                                             )
                                         }
                                         snackbarHostState.showSnackbar("Medicine logged!")

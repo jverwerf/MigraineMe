@@ -63,59 +63,73 @@ data class TourStep(
     val interactive: Boolean = false,
     val spotlightKey: String? = null,
     val navHint: NavHintLocation? = null,
+    val bottomCard: Boolean = false,
 )
 
 val tourSteps = listOf(
     TourStep(Routes.HOME, Icons.Outlined.Home, "Home — Your Risk Gauge",
-        "This gauge shows your real-time migraine risk based on active triggers. The 7-day forecast lets you tap any day to preview future risk. Active Triggers shows exactly what's driving your score and how much each contributes.",
-        "Your daily command centre — always start here.",
+        "Your real-time migraine risk, 7-day forecast, and the triggers driving your score.",
+        "Tap any day on the forecast to preview future risk.",
         navHint = NavHintLocation.BOTTOM_HOME),
     TourStep(Routes.MONITOR, Icons.Outlined.Timeline, "Monitor — Live Data",
-        "All your data streams in one place: sleep, recovery, heart rate, weather, screen time, nutrition. Each card shows today's value and a trend graph. Tap any card for detailed history and configuration.",
-        "Keep an eye on your body and environment.",
+        "All your data in one place: sleep, recovery, heart rate, weather, nutrition, and screen time.",
+        "Scroll down to see your full history timeline.",
         navHint = NavHintLocation.BOTTOM_MONITOR),
-    TourStep(Routes.INSIGHTS, Icons.Outlined.BarChart, "Insights — Migraine Analysis",
-        "Explore each migraine in detail: see what was happening in your body and environment before, during, and after. Toggle metrics to spot patterns. Drill into breakdowns by trigger, medicine, relief, and more.",
-        "Understand what's really going on.",
+    TourStep(Routes.MONITOR_NUTRITION, Icons.Outlined.Restaurant, "Nutrition — Food Tracking",
+        "Search any food and MigraineMe flags migraine risks like tyramine and alcohol automatically.",
+        "Try it! Search \"red wine\" or \"aged cheese\" above.",
+        interactive = true,
+        navHint = NavHintLocation.BOTTOM_MONITOR),
+    TourStep(Routes.INSIGHTS, Icons.Outlined.BarChart, "Insights — Your Analytics Hub",
+        "Pattern analysis, spider charts, and doctor-ready PDF reports you can bring to appointments.",
+        "Check the migraine timeline to see what happened before each attack.",
+        navHint = NavHintLocation.BOTTOM_INSIGHTS),
+    TourStep(Routes.RECALIBRATION_REVIEW, Icons.Outlined.AutoAwesome, "AI Calibration",
+        "Each month MigraineMe analyses your data and suggests improvements to your triggers, thresholds, and decay weights.",
+        "Review and accept or reject each suggestion with one tap.",
         navHint = NavHintLocation.BOTTOM_INSIGHTS),
     TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Log — Log Attacks",
-        "When a migraine hits, log everything here: pain location, severity, and symptoms. Quick-log buttons at the top let you rapidly log a trigger, medicine, relief, or activity without the full wizard.",
-        "Your go-to when a migraine hits.",
+        "Log pain location, severity, and symptoms. Quick-log buttons at the top let you log without the full wizard.",
+        "Try the quick-log buttons for triggers, medicines, and reliefs.",
         navHint = NavHintLocation.BOTTOM_MIGRAINE),
+    TourStep(Routes.TRIGGERS, Icons.Outlined.Whatshot, "Auto-Captured Triggers",
+        "Most triggers are detected automatically from your wearable and phone data. Each one shows its age so you can see when it was picked up.",
+        "Look for the coloured age badges on each trigger.",
+        navHint = NavHintLocation.BOTTOM_MIGRAINE, bottomCard = true),
+    TourStep(Routes.EVENING_CHECKIN, Icons.Outlined.Nightlight, "Evening Check-In",
+        "Each evening you get a quick notification to review your day. Just tap the mic and talk — voice-to-text AI captures everything, or manually confirm what the app caught and rate your day.",
+        "This is what the daily check-in looks like.",
+        navHint = NavHintLocation.BOTTOM_MIGRAINE, bottomCard = true),
+    TourStep(Routes.MENSTRUATION_SETTINGS, Icons.Outlined.CalendarMonth, "Menstrual Cycle Tracking",
+        "Track your cycle and see how it correlates with your migraines. The app predicts period-related risk automatically.",
+        "Set your cycle length and last period date to get started.",
+        navHint = NavHintLocation.BOTTOM_MONITOR),
     TourStep(Routes.JOURNAL, Icons.Outlined.History, "Journal — Your Timeline",
-        "Every migraine, trigger, medicine, relief, activity, and location — all in chronological order. Tap any entry to edit. The badge shows items that need your attention.",
-        "Your complete migraine diary.",
+        "Every migraine, trigger, medicine, and activity in chronological order. Tap any entry to edit.",
+        "The badge shows items that still need your attention.",
         navHint = NavHintLocation.BOTTOM_JOURNAL),
     TourStep(Routes.COMMUNITY, Icons.Outlined.Forum, "Community — Articles & Forum",
-        "Read expert articles on migraine science, triggers, and treatment. Join the forum to share experiences, ask questions, and connect with others who understand what you're going through.",
-        "You're not alone — learn and share.",
+        "Expert articles on migraine science and a forum to connect with others. Connect to one of our AI companions and get notified when an article is useful to you.",
+        "Browse the articles or jump into a discussion.",
         navHint = NavHintLocation.TOP_COMMUNITY),
-    TourStep(Routes.MANAGE_ITEMS, Icons.Outlined.Tune, "Settings — Manage Items",
-        "Add, remove, or customise your triggers, medicines, reliefs, prodromes, and activities. Set severity levels for triggers and prodromes. Reorder your favourites for quick logging.",
-        "Make the app truly yours.",
-        navHint = NavHintLocation.TOP_SETTINGS),
-    TourStep(Routes.RISK_WEIGHTS, Icons.Outlined.Speed, "Settings — Risk Model",
-        "Customise how your risk score is calculated. Decay weights control how fast triggers lose influence over days. Thresholds set where the gauge transitions between None, Low, Mild, and High zones.",
-        "Advanced control over your predictions.",
-        navHint = NavHintLocation.TOP_SETTINGS),
-    TourStep(Routes.PROFILE, Icons.Outlined.Person, "Settings — Profile",
-        "Your account details and app preferences. Change your password, manage your data, and configure notification settings.",
-        "Your account, your rules.",
+    TourStep(Routes.RISK_WEIGHTS, Icons.Outlined.Tune, "Settings — Make It Yours",
+        "Customise your triggers, medicines, and reliefs. Fine-tune your risk model with decay weights and thresholds.",
+        "Adjust how fast triggers lose influence over 7 days.",
         navHint = NavHintLocation.TOP_SETTINGS),
 )
 
 val setupSteps = listOf(
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.FavoriteBorder, "Connect Health Connect",
-        "Health Connect links your phone's health data — sleep, steps, heart rate, nutrition, and more from any compatible app.",
-        "Tap Connect on the Health Connect card below",
-        interactive = true, spotlightKey = "health_connect_card"),
-    TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect WHOOP",
-        "If you have a WHOOP band, tap the Connect button below to link it. This will automatically import your sleep, recovery, HRV, and more.",
-        "Tap Connect on the WHOOP card below",
-        interactive = true, spotlightKey = "whoop_card"),
+        "Health Connect pulls health data from apps on your phone. If apps like MyFitnessPal, Cronometer, or Samsung Health share data with Health Connect, we can use it too.",
+        "Tap Connect on the Health Connect card below.",
+        interactive = true, spotlightKey = "health_connect_card", bottomCard = true),
+    TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect Your Wearable",
+        "We support WHOOP, Oura, Polar, and Garmin. Connect yours to automatically import sleep, recovery, HRV, skin temp, and more.",
+        "Tap Connect on your wearable below.",
+        interactive = true, spotlightKey = "wearables_group"),
     TourStep(Routes.DATA, Icons.Outlined.Storage, "Configure Data Collection",
         "Control exactly which metrics MigraineMe collects. Scroll through and toggle on the data you want to track. You can always change these later in Settings.",
-        "Toggle on the metrics that matter to you ↓",
+        "Toggle on the metrics that matter to you.",
         interactive = true),
 )
 
@@ -302,12 +316,12 @@ fun CoachOverlay(
         isCollapsed = false
         val currentStep = steps.getOrNull(tourState.stepIndex)
         if (currentStep?.interactive == true) {
-            // TOUR: don't collapse page 1 (Home, idx 0)
+            // TOUR: don't collapse page 1 (Home, idx 0) or page 3 (Nutrition, idx 2)
             // SETUP: don't collapse page 1 (HC, idx 0) or page 2 (WHOOP, idx 1)
             // SETUP: DO collapse page 3 (Data Collection, idx 2) after delay
             val shouldCollapse = when (tourState.phase) {
-                CoachPhase.TOUR -> tourState.stepIndex > 0
-                CoachPhase.SETUP -> tourState.stepIndex >= 2
+                CoachPhase.TOUR -> tourState.stepIndex > 0 && tourState.stepIndex != 2
+                CoachPhase.SETUP -> true
             }
             if (shouldCollapse) {
                 kotlinx.coroutines.delay(3000)
@@ -327,10 +341,11 @@ fun CoachOverlay(
     }
 
     val isSetupConnectionStep = tourState.phase == CoachPhase.SETUP && tourState.stepIndex < 2
-    AnimatedVisibility(visible = step != null, enter = slideInVertically { if (step?.route == Routes.PROFILE || isSetupConnectionStep) it else -it } + fadeIn(tween(300)), exit = slideOutVertically { if (step?.route == Routes.PROFILE || isSetupConnectionStep) it else -it } + fadeOut(tween(200))) {
+    AnimatedVisibility(visible = step != null, enter = slideInVertically { if (step?.route == Routes.PROFILE || step?.route == Routes.RISK_WEIGHTS) it else -it } + fadeIn(tween(300)), exit = slideOutVertically { if (step?.route == Routes.PROFILE || step?.route == Routes.RISK_WEIGHTS) it else -it } + fadeOut(tween(200))) {
         if (step != null) {
             val isInteractive = step.interactive
             val isProfileStep = step.route == Routes.PROFILE
+            val isRiskModelStep = step.route == Routes.RISK_WEIGHTS
 
             Box(
                 Modifier
@@ -340,7 +355,7 @@ fun CoachOverlay(
                         if (isProfileStep) Modifier.padding(bottom = 12.dp)
                         else Modifier.padding(top = 12.dp, bottom = 12.dp)
                     ),
-                contentAlignment = if (isProfileStep || isSetupConnectionStep) Alignment.BottomCenter else Alignment.TopCenter
+                contentAlignment = if (isProfileStep || isRiskModelStep || step.bottomCard) Alignment.BottomCenter else Alignment.TopCenter
             ) {
                 AnimatedContent(
                     targetState = isCollapsed,
@@ -386,12 +401,11 @@ fun CoachOverlay(
                             elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                             modifier = Modifier.fillMaxWidth()
                                 .animateContentSize(spring(dampingRatio = 0.8f))
-                                .then(
-                                    if (isInteractive) Modifier.border(
-                                        2.dp,
-                                        Color(0xFFFF7BB0).copy(alpha = pulseAlpha),
-                                        RoundedCornerShape(18.dp)
-                                    ) else Modifier
+                                .border(
+                                    2.dp,
+                                    if (isInteractive) Brush.linearGradient(listOf(Color(0xFFFF7BB0).copy(alpha = pulseAlpha), Color(0xFFFF7BB0).copy(alpha = pulseAlpha)))
+                                    else Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.5f), AppTheme.AccentPink.copy(alpha = 0.3f))),
+                                    RoundedCornerShape(18.dp)
                                 )
                         ) {
                             Box(Modifier.fillMaxWidth().height(3.dp).background(
@@ -412,13 +426,11 @@ fun CoachOverlay(
                                         Text(step.title, color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
                                         Text("${tourState.stepIndex + 1} of ${steps.size}", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                                     }
-                                    if (isInteractive) {
-                                        // Hide minimize on SETUP pages 1+2 (WHOOP, HC) — always expanded
-                                        val allowMinimize = !(tourState.phase == CoachPhase.SETUP && tourState.stepIndex < 2)
-                                        if (allowMinimize) {
-                                            IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
-                                                Icon(Icons.Outlined.UnfoldLess, "Minimize", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
-                                            }
+                                    // Allow minimize on all steps except SETUP pages 1+2 (HC, WHOOP)
+                                    val allowMinimize = true
+                                    if (allowMinimize) {
+                                        IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
+                                            Icon(Icons.Outlined.UnfoldLess, "Minimize", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
                                         }
                                     }
                                     // ★ Never show X during onboarding (TOUR or SETUP)

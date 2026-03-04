@@ -22,8 +22,10 @@ data class MonitorCardConfig(
         const val CARD_MENTAL = "mental"
         const val CARD_ENVIRONMENT = "environment"
         const val CARD_MENSTRUATION = "menstruation"
+        const val CARD_RISK = "risk"
         
         val DEFAULT_ORDER = listOf(
+            CARD_RISK,
             CARD_NUTRITION,
             CARD_ENVIRONMENT,
             CARD_PHYSICAL,
@@ -33,6 +35,7 @@ data class MonitorCardConfig(
         )
         
         val CARD_LABELS = mapOf(
+            CARD_RISK to "Risk",
             CARD_NUTRITION to "Nutrition",
             CARD_PHYSICAL to "Physical Health",
             CARD_SLEEP to "Sleep",
@@ -265,7 +268,7 @@ object MonitorCardConfigStore {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val jsonStr = prefs.getString(KEY_CONFIG, null)
         
-        return if (jsonStr != null) {
+        val config = if (jsonStr != null) {
             try {
                 json.decodeFromString<MonitorCardConfig>(jsonStr)
             } catch (e: Exception) {
@@ -274,6 +277,11 @@ object MonitorCardConfigStore {
         } else {
             MonitorCardConfig()
         }
+        // Migration: ensure new card types are in the order
+        val missing = MonitorCardConfig.DEFAULT_ORDER.filter { it !in config.cardOrder }
+        return if (missing.isNotEmpty()) {
+            config.copy(cardOrder = missing + config.cardOrder)
+        } else config
     }
     
     fun save(context: Context, config: MonitorCardConfig) {

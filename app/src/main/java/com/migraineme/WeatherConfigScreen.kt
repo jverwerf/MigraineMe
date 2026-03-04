@@ -21,7 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +32,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/**
+ * Metric enable/disable lookup centralised in MetricRegistry.enabledKeys().
+ */
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -43,37 +49,44 @@ fun WeatherConfigScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    val initialConfig = remember { WeatherCardConfigStore.load(context) }
-    var selectedMetrics by remember { mutableStateOf(initialConfig.weatherDisplayMetrics.toSet()) }
+    // Read from MetricDisplayStore
+    var selectedMetrics by remember {
+        mutableStateOf(MetricDisplayStore.getDisplayMetrics(context, "environment").toSet())
+    }
 
-    // Check if any weather metric is enabled in data settings
-    var anyWeatherEnabled by remember { mutableStateOf(true) } // default true until loaded
+    // Which metrics are enabled in data settings
+    var enabledRegistryKeys by remember { mutableStateOf<Set<String>>(emptySet()) }
     var settingsLoaded by remember { mutableStateOf(false) }
 
-    val weatherTables = setOf(
-        "temperature_daily", "pressure_daily", "humidity_daily",
-        "wind_daily", "uv_daily", "thunderstorm_daily"
-    )
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                val edge = EdgeFunctionsService()
-                val settings = edge.getMetricSettings(context)
-                val map = settings.associateBy { it.metric }
-                // Only hide if there are settings and ALL weather metrics are explicitly disabled
-                val hasAnySettings = weatherTables.any { map.containsKey(it) }
-                anyWeatherEnabled = !hasAnySettings || weatherTables.any { map[it]?.enabled != false }
-            } catch (_: Exception) { }
-            settingsLoaded = true
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val edge = EdgeFunctionsService()
+                            val settings = edge.getMetricSettings(context)
+                            enabledRegistryKeys = MetricRegistry.enabledKeys(settings, "environment")
+                        } catch (_: Exception) {
+                            enabledRegistryKeys = MetricRegistry.byGroup("environment").map { it.key }.toSet()
+                        }
+                        settingsLoaded = true
+                    }
+                }
+            }
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Only show enabled metrics from registry
+    val availableMetrics = remember(settingsLoaded, enabledRegistryKeys) {
+        MetricRegistry.byGroup("environment").filter { it.key in enabledRegistryKeys }
     }
 
     fun saveConfig() {
-        WeatherCardConfigStore.save(
-            context,
-            WeatherCardConfigData(weatherDisplayMetrics = selectedMetrics.toList())
-        )
+        MetricDisplayStore.setDisplayMetrics(context, "environment", selectedMetrics.toList())
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -108,7 +121,7 @@ fun WeatherConfigScreen(
                 )
             }
 
-            if (settingsLoaded && !anyWeatherEnabled) {
+            if (settingsLoaded && availableMetrics.isEmpty()) {
                 BaseCard {
                     Text(
                         text = "No environment source enabled",
@@ -143,20 +156,19 @@ fun WeatherConfigScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-                        for (metric in WeatherCardConfig.ALL_WEATHER_METRICS) {
-                            val isSelected = metric in selectedMetrics
-                            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
-                            val canSelect = isSelected || selectedMetrics.size < 3
-                            val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metric) else -1
+                        for (metric in availableMetrics) {
+                            val isSelected = metric.key in selectedMetrics
+                            val label = metric.label
+                            val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metric.key) else -1
                             val slotColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
 
                             FilterChip(
                                 selected = isSelected,
                                 onClick = {
                                     selectedMetrics = if (isSelected) {
-                                        selectedMetrics.minus(metric)
+                                        selectedMetrics.minus(metric.key)
                                     } else if (selectedMetrics.size < 3) {
-                                        selectedMetrics.plus(metric)
+                                        selectedMetrics.plus(metric.key)
                                     } else {
                                         selectedMetrics
                                     }
@@ -213,4 +225,3 @@ fun WeatherConfigScreen(
         }
     }
 }
-

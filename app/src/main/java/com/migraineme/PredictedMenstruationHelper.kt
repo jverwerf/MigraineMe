@@ -4,6 +4,13 @@ import android.content.Context
 import android.util.Log
 import java.time.LocalDate
 
+/**
+ * Manages the single system-generated menstruation_predicted trigger.
+ *
+ * Places ONE trigger on the predicted period date. The edge function
+ * applies the user's menstruation_decay_weights curve (day_m7…day_p7)
+ * centered on that date, so the gauge ramps up before and tapers after.
+ */
 object PredictedMenstruationHelper {
 
     private const val TAG = "PredictedMenstruation"
@@ -13,47 +20,18 @@ object PredictedMenstruationHelper {
             val appContext = context.applicationContext
             val accessToken = SessionStore.getValidAccessToken(appContext) ?: return
 
-            val db = SupabaseDbService(
-                BuildConfig.SUPABASE_URL,
-                BuildConfig.SUPABASE_ANON_KEY
-            )
-
-            // Check if predicted trigger already exists
+            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
             val allTriggers = db.getAllTriggers(accessToken)
-            val existing = allTriggers.firstOrNull { trigger ->
-                trigger.type == "menstruation_predicted" &&
-                        trigger.source == "system"
-            }
 
-            if (existing != null) {
-                Log.d(TAG, "Predicted trigger already exists")
-                return
-            }
-
-            // Get menstruation settings
             val menstruationService = SupabaseMenstruationService(appContext)
-            val settings = menstruationService.getSettings(accessToken) ?: run {
-                // Create default settings if they don't exist
-                menstruationService.updateSettings(
-                    accessToken = accessToken,
-                    lastMenstruationDate = null,
-                    avgCycleLength = 28,
-                    autoUpdateAverage = true
-                )
-                MenstruationSettings(
-                    lastMenstruationDate = null,
-                    avgCycleLength = 28,
-                    autoUpdateAverage = true
-                )
-            }
+            val settings = menstruationService.getSettings(accessToken)
+                ?: MenstruationSettings(null, 28, true)
 
-            // Get last real menstruation trigger
             val lastPeriod = allTriggers
                 .filter { it.type == "menstruation" && it.source != "system" }
                 .maxByOrNull { it.startAt }
 
-            // Calculate predicted date
-            val predictedDate = if (lastPeriod != null) {
+            val predictedDate: LocalDate = if (lastPeriod != null) {
                 val lastDate = LocalDate.parse(lastPeriod.startAt.substring(0, 10))
                 lastDate.plusDays(settings.avgCycleLength.toLong())
             } else if (settings.lastMenstruationDate != null) {
@@ -62,7 +40,19 @@ object PredictedMenstruationHelper {
                 LocalDate.now().plusDays(settings.avgCycleLength.toLong())
             }
 
-            // Create predicted trigger using insertTrigger
+            // Delete existing predicted triggers
+            val existingPredicted = allTriggers.filter { trigger ->
+                trigger.type == "menstruation_predicted" && trigger.source == "system"
+            }
+            for (old in existingPredicted) {
+                try {
+                    db.deleteTrigger(accessToken, old.id)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to delete old predicted trigger ${old.id}: ${e.message}")
+                }
+            }
+
+            // Create single predicted trigger on the predicted date
             db.insertTrigger(
                 accessToken = accessToken,
                 migraineId = null,
@@ -71,8 +61,7 @@ object PredictedMenstruationHelper {
                 notes = "Predicted menstruation"
             )
 
-            Log.d(TAG, "Created predicted trigger for date: $predictedDate")
-
+            Log.d(TAG, "Created predicted trigger for $predictedDate")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to ensure predicted trigger exists", e)
         }
@@ -83,37 +72,20 @@ object PredictedMenstruationHelper {
             val appContext = context.applicationContext
             val accessToken = SessionStore.getValidAccessToken(appContext) ?: return
 
-            val db = SupabaseDbService(
-                BuildConfig.SUPABASE_URL,
-                BuildConfig.SUPABASE_ANON_KEY
-            )
-
-            // Find predicted trigger
+            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
             val allTriggers = db.getAllTriggers(accessToken)
-            val predicted = allTriggers.firstOrNull { trigger ->
-                trigger.type == "menstruation_predicted" &&
-                        trigger.source == "system"
+            val predicted = allTriggers.filter { trigger ->
+                trigger.type == "menstruation_predicted" && trigger.source == "system"
             }
 
-            if (predicted == null) {
-                Log.d(TAG, "No predicted trigger found")
-                return
+            for (trigger in predicted) {
+                try { db.deleteTrigger(accessToken, trigger.id) }
+                catch (e: Exception) { Log.w(TAG, "Failed to delete predicted trigger ${trigger.id}: ${e.message}") }
             }
 
-            // Update to inactive using updateTrigger
-            db.updateTrigger(
-                accessToken = accessToken,
-                id = predicted.id,
-                type = predicted.type,
-                startAt = predicted.startAt,
-                notes = predicted.notes,
-                migraineId = predicted.migraineId
-            )
-
-            Log.d(TAG, "Deactivated predicted trigger")
-
+            Log.d(TAG, "Deleted ${predicted.size} predicted trigger(s)")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete predicted trigger", e)
+            Log.e(TAG, "Failed to delete predicted triggers", e)
         }
     }
 }

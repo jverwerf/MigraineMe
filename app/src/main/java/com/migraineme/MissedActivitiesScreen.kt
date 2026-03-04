@@ -91,7 +91,7 @@ fun MissedActivitiesScreen(
 
             HeroCard {
                 Box(Modifier.size(40.dp).drawBehind {
-                    HubIcons.run { drawMissedActivity(Color(0xFFEF9A9A)) }
+                    HubIcons.run { drawMissedActivity(Color(0xFFFF7043)) }
                 })
                 Text("What did you miss?", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
@@ -154,7 +154,7 @@ fun MissedActivitiesScreen(
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text("Back") }
-                Button(onClick = { navController.navigate(Routes.NOTES) },
+                Button(onClick = { navController.navigate(Routes.REVIEW) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text("Next") }
             }
@@ -166,7 +166,7 @@ fun MissedActivitiesScreen(
 @Composable
 private fun MissedCircleButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
     val accent = Color(0xFFEF9A9A)
-    val icon = MissedActivityIcons.forKey(iconKey)
+    val icon = MissedActivityIcons.forLabel(label, iconKey)
     val bg = if (isSelected) accent.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val border = if (isSelected) accent.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     Column(

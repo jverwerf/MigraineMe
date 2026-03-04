@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,8 +40,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
-private enum class CheckInPage { TRIGGERS, PRODROMES, MEDICINES, RELIEFS, NOTE, REVIEW }
+private enum class CheckInPage { NOTE, TRIGGERS, PRODROMES, MEDICINES, RELIEFS, REVIEW }
 
 private data class SelectableItem(
     val label: String,
@@ -48,7 +51,18 @@ private data class SelectableItem(
     val isFavourite: Boolean = false,
 )
 
+// Keep legacy types for backward compat with other files that import them
 data class AiMatchItem(val label: String, val category: String)
+
+/**
+ * Full migraine log AI parse result — used by PaintThePictureScreen (legacy, kept for compat).
+ */
+data class AiLogParseResult(
+    val severity: Int? = null,
+    val painLocations: List<String> = emptyList(),
+    val symptoms: List<String> = emptyList(),
+    val matches: List<AiMatchItem> = emptyList()
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -83,8 +97,7 @@ fun EveningCheckInScreen(
 
     val triggerFavIds = remember(triggerFreq) { triggerFreq.map { it.triggerId }.toSet() }
     val triggerItems = remember(triggerPool, triggerFavIds) {
-        triggerPool.filter { it.predictionValue?.uppercase() != "NONE" }
-            .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds) }
+        triggerPool.map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds) }
     }
     val prodromeFavIds = remember(prodromeFreq) { prodromeFreq.map { it.prodromeId }.toSet() }
     val prodromeItems = remember(prodromePool, prodromeFavIds) {
@@ -99,30 +112,35 @@ fun EveningCheckInScreen(
         reliefPool.map { SelectableItem(it.label, it.iconKey, it.id in reliefFavIds) }
     }
 
-    val selectedTriggers = remember { mutableStateListOf<String>() }
-    val selectedProdromes = remember { mutableStateListOf<String>() }
-    val selectedMedicines = remember { mutableStateListOf<String>() }
-    val selectedReliefs = remember { mutableStateListOf<String>() }
+    // ── Rich item state (carries all fields) ──
+    val selectedTriggers = remember { mutableStateListOf<CheckInTriggerItem>() }
+    val selectedProdromes = remember { mutableStateListOf<CheckInProdromeItem>() }
+    val selectedMedicines = remember { mutableStateListOf<CheckInMedicineItem>() }
+    val selectedReliefs = remember { mutableStateListOf<CheckInReliefItem>() }
 
     var noteText by remember { mutableStateOf("") }
-    var aiMatches by remember { mutableStateOf<List<AiMatchItem>>(emptyList()) }
+    var aiParseResult by remember { mutableStateOf<CheckInParseResult?>(null) }
     var aiParsed by remember { mutableStateOf(false) }
     var aiLoading by remember { mutableStateOf(false) }
 
-    var currentPage by remember { mutableStateOf(CheckInPage.TRIGGERS) }
+    var currentPage by remember { mutableStateOf(CheckInPage.NOTE) }
     var saving by remember { mutableStateOf(false) }
     var saved by remember { mutableStateOf(false) }
 
+    // Helper: check if a label is selected in any list
+    fun isTriggerSelected(label: String) = selectedTriggers.any { it.label == label }
+    fun isProdromeSelected(label: String) = selectedProdromes.any { it.label == label }
+    fun isMedicineSelected(label: String) = selectedMedicines.any { it.label == label }
+    fun isReliefSelected(label: String) = selectedReliefs.any { it.label == label }
+
     fun runAiParse() {
         if (noteText.isBlank()) { aiParsed = true; return }
-        if (!PremiumManager.state.value.isPremium) { aiParsed = true; return }
-        val token = authState.accessToken ?: return
         aiLoading = true
         scope.launch {
             try {
-                val matches = withContext(Dispatchers.IO) {
-                    callGptForMatches(
-                        token,
+                // Step 1: Deterministic parse (free, instant)
+                val deterResult = withContext(Dispatchers.IO) {
+                    deterministicParseCheckIn(
                         noteText,
                         triggerPool.map { it.label },
                         prodromePool.map { it.label },
@@ -130,28 +148,59 @@ fun EveningCheckInScreen(
                         reliefPool.map { it.label }
                     )
                 }
-                aiMatches = matches
-                matches.forEach { m ->
-                    when (m.category) {
-                        "trigger" -> if (m.label !in selectedTriggers) selectedTriggers.add(m.label)
-                        "prodrome" -> if (m.label !in selectedProdromes) selectedProdromes.add(m.label)
-                        "medicine" -> if (m.label !in selectedMedicines) selectedMedicines.add(m.label)
-                        "relief" -> if (m.label !in selectedReliefs) selectedReliefs.add(m.label)
+
+                // Step 2: GPT enhancement (premium only)
+                val token = authState.accessToken
+                val gptResult = if (PremiumManager.state.value.isPremium && token != null) {
+                    try {
+                        withContext(Dispatchers.IO) {
+                            callGptForCheckInParse(
+                                token, noteText,
+                                triggerPool.map { it.label },
+                                prodromePool.map { it.label },
+                                medicinePool.map { it.label },
+                                reliefPool.map { it.label },
+                                deterResult
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e("EveningCheckIn", "GPT parse failed", e)
+                        null
                     }
+                } else null
+
+                // Step 3: Merge
+                val merged = mergeCheckInResults(deterResult, gptResult)
+                aiParseResult = merged
+
+                // Inject into selected lists (don't duplicate)
+                merged.triggers.forEach { t ->
+                    if (!isTriggerSelected(t.label)) selectedTriggers.add(t)
                 }
+                merged.prodromes.forEach { p ->
+                    if (!isProdromeSelected(p.label)) selectedProdromes.add(p)
+                }
+                merged.medicines.forEach { m ->
+                    if (!isMedicineSelected(m.label)) selectedMedicines.add(m)
+                }
+                merged.reliefs.forEach { r ->
+                    if (!isReliefSelected(r.label)) selectedReliefs.add(r)
+                }
+
             } catch (e: Exception) {
-                Log.e("EveningCheckIn", "AI parse failed, falling back to local", e)
-                // Fallback to local matching
-                val matches = matchNoteTextLocal(noteText, triggerPool.map { it.label }, prodromePool.map { it.label }, medicinePool.map { it.label }, reliefPool.map { it.label })
-                aiMatches = matches
-                matches.forEach { m ->
-                    when (m.category) {
-                        "trigger" -> if (m.label !in selectedTriggers) selectedTriggers.add(m.label)
-                        "prodrome" -> if (m.label !in selectedProdromes) selectedProdromes.add(m.label)
-                        "medicine" -> if (m.label !in selectedMedicines) selectedMedicines.add(m.label)
-                        "relief" -> if (m.label !in selectedReliefs) selectedReliefs.add(m.label)
-                    }
-                }
+                Log.e("EveningCheckIn", "AI parse failed, falling back to deterministic", e)
+                val deterResult = deterministicParseCheckIn(
+                    noteText,
+                    triggerPool.map { it.label },
+                    prodromePool.map { it.label },
+                    medicinePool.map { it.label },
+                    reliefPool.map { it.label }
+                )
+                aiParseResult = deterResult
+                deterResult.triggers.forEach { t -> if (!isTriggerSelected(t.label)) selectedTriggers.add(t) }
+                deterResult.prodromes.forEach { p -> if (!isProdromeSelected(p.label)) selectedProdromes.add(p) }
+                deterResult.medicines.forEach { m -> if (!isMedicineSelected(m.label)) selectedMedicines.add(m) }
+                deterResult.reliefs.forEach { r -> if (!isReliefSelected(r.label)) selectedReliefs.add(r) }
             }
             aiParsed = true; aiLoading = false
         }
@@ -165,10 +214,37 @@ fun EveningCheckInScreen(
                 withContext(Dispatchers.IO) {
                     val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
                     val now = Instant.now().toString()
-                    selectedTriggers.forEach { runCatching { db.insertTrigger(token, null, it, now, "evening check-in") } }
-                    selectedProdromes.forEach { runCatching { db.insertProdrome(token, null, it, now, "evening check-in") } }
-                    selectedMedicines.forEach { runCatching { db.insertMedicine(token, null, it, null, now, "evening check-in") } }
-                    selectedReliefs.forEach { runCatching { db.insertRelief(token, null, it, now, "evening check-in") } }
+                    selectedTriggers.forEach { t ->
+                        runCatching {
+                            db.insertTrigger(token, null, t.label, t.startAtIso ?: now, t.note ?: "evening check-in")
+                        }
+                    }
+                    selectedProdromes.forEach { p ->
+                        runCatching {
+                            db.insertProdrome(token, null, p.label, p.startAtIso ?: now, p.note ?: "evening check-in")
+                        }
+                    }
+                    selectedMedicines.forEach { m ->
+                        runCatching {
+                            db.insertMedicine(
+                                token, null, m.label, m.amount, m.startAtIso ?: now, m.note ?: "evening check-in",
+                                reliefScale = m.reliefScale ?: "NONE",
+                                sideEffectScale = m.sideEffectScale ?: "NONE",
+                                sideEffectNotes = m.sideEffectNotes
+                            )
+                        }
+                    }
+                    selectedReliefs.forEach { r ->
+                        runCatching {
+                            db.insertRelief(
+                                token, null, r.label, r.startAtIso ?: now, r.note ?: "evening check-in",
+                                endAt = r.endAtIso,
+                                reliefScale = r.reliefScale ?: "NONE",
+                                sideEffectScale = r.sideEffectScale ?: "NONE",
+                                sideEffectNotes = r.sideEffectNotes
+                            )
+                        }
+                    }
                 }
                 saved = true
                 kotlinx.coroutines.delay(1200)
@@ -181,13 +257,35 @@ fun EveningCheckInScreen(
     val pages = CheckInPage.entries
     val pageIndex = pages.indexOf(currentPage)
 
+    // Auto-advance from NOTE to TRIGGERS once parsing completes
+    var pendingAdvance by remember { mutableStateOf(false) }
+    LaunchedEffect(aiParsed, pendingAdvance) {
+        if (aiParsed && pendingAdvance && currentPage == CheckInPage.NOTE) {
+            pendingAdvance = false
+            currentPage = CheckInPage.TRIGGERS
+        }
+    }
+
     fun goNext() {
-        if (currentPage == CheckInPage.NOTE && noteText.isNotBlank() && !aiParsed) runAiParse()
+        if (currentPage == CheckInPage.NOTE) {
+            if (noteText.isBlank()) {
+                currentPage = CheckInPage.TRIGGERS
+                return
+            }
+            if (!aiParsed) {
+                runAiParse()
+                pendingAdvance = true
+                return
+            }
+        }
         pages.getOrNull(pageIndex + 1)?.let { currentPage = it }
     }
+
     fun goBack() { pages.getOrNull(pageIndex - 1)?.let { currentPage = it } }
 
     // ── UI ──
+
+    fun nowIso(): String = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
     val bgBrush = remember { androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
 
@@ -214,19 +312,59 @@ fun EveningCheckInScreen(
                     else
                         slideInHorizontally { -it } + fadeIn() togetherWith slideOutHorizontally { it } + fadeOut()
                 }, label = "checkinPage"
-            ) { page -> when (page) {
-                CheckInPage.TRIGGERS -> FavouritesPage("Any triggers today?", "Tap anything that happened", triggerItems, selectedTriggers, Color(0xFFFFB74D), { TriggerIcons.forKey(it) }) { l -> if (l in selectedTriggers) selectedTriggers.remove(l) else selectedTriggers.add(l) }
-                CheckInPage.PRODROMES -> FavouritesPage("Any warning signs?", "Body signals you noticed", prodromeItems, selectedProdromes, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }) { l -> if (l in selectedProdromes) selectedProdromes.remove(l) else selectedProdromes.add(l) }
-                CheckInPage.MEDICINES -> FavouritesPage("Take any medicine?", "What did you take today", medicineItems, selectedMedicines, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }) { l -> if (l in selectedMedicines) selectedMedicines.remove(l) else selectedMedicines.add(l) }
-                CheckInPage.RELIEFS -> FavouritesPage("Use any relief methods?", "What helped today", reliefItems, selectedReliefs, Color(0xFF81C784), { ReliefIcons.forKey(it) }) { l -> if (l in selectedReliefs) selectedReliefs.remove(l) else selectedReliefs.add(l) }
-                CheckInPage.NOTE -> NotePage(noteText, { noteText = it; if (aiParsed) { aiParsed = false; aiMatches = emptyList() } }, aiLoading, aiParsed, aiMatches, navController) { runAiParse() }
-                CheckInPage.REVIEW -> ReviewPage(selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs, aiMatches.map { it.label }.toSet(), saving, saved, { selectedTriggers.remove(it) }, { selectedProdromes.remove(it) }, { selectedMedicines.remove(it) }, { selectedReliefs.remove(it) }) { save() }
+            ) { page ->
+                // Collect AI-matched labels per category
+                val aiTriggerLabels = remember(aiParseResult) { aiParseResult?.triggers?.map { it.label }?.toSet() ?: emptySet() }
+                val aiProdromeLabels = remember(aiParseResult) { aiParseResult?.prodromes?.map { it.label }?.toSet() ?: emptySet() }
+                val aiMedicineLabels = remember(aiParseResult) { aiParseResult?.medicines?.map { it.label }?.toSet() ?: emptySet() }
+                val aiReliefLabels = remember(aiParseResult) { aiParseResult?.reliefs?.map { it.label }?.toSet() ?: emptySet() }
+
+                when (page) {
+                CheckInPage.NOTE -> NotePage(noteText, { noteText = it; if (aiParsed) { aiParsed = false; aiParseResult = null } }, aiLoading, aiParsed, aiParseResult, navController,
+                    onRemoveMatch = { label, category ->
+                        when (category) {
+                            "trigger" -> selectedTriggers.removeAll { it.label == label }
+                            "prodrome" -> selectedProdromes.removeAll { it.label == label }
+                            "medicine" -> selectedMedicines.removeAll { it.label == label }
+                            "relief" -> selectedReliefs.removeAll { it.label == label }
+                        }
+                    }
+                ) { runAiParse() }
+                CheckInPage.TRIGGERS -> FavouritesPage("Any triggers today?", if (aiTriggerLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything that happened", triggerItems, selectedTriggers.map { it.label }, Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
+                    if (isTriggerSelected(l)) selectedTriggers.removeAll { it.label == l } else selectedTriggers.add(CheckInTriggerItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
+                }
+                CheckInPage.PRODROMES -> FavouritesPage("Any warning signs?", if (aiProdromeLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Body signals you noticed", prodromeItems, selectedProdromes.map { it.label }, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }, aiProdromeLabels) { l ->
+                    if (isProdromeSelected(l)) selectedProdromes.removeAll { it.label == l } else selectedProdromes.add(CheckInProdromeItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
+                }
+                CheckInPage.MEDICINES -> FavouritesPage("Take any medicine?", if (aiMedicineLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What did you take today", medicineItems, selectedMedicines.map { it.label }, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }, aiMedicineLabels) { l ->
+                    if (isMedicineSelected(l)) selectedMedicines.removeAll { it.label == l } else selectedMedicines.add(CheckInMedicineItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
+                }
+                CheckInPage.RELIEFS -> FavouritesPage("Use any relief methods?", if (aiReliefLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What helped today", reliefItems, selectedReliefs.map { it.label }, Color(0xFF81C784), { ReliefIcons.forKey(it) }, aiReliefLabels) { l ->
+                    if (isReliefSelected(l)) selectedReliefs.removeAll { it.label == l } else selectedReliefs.add(CheckInReliefItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
+                }
+                CheckInPage.REVIEW -> ReviewPage(
+                    selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs,
+                    aiParseResult, saving, saved,
+                    rmTrigger = { label -> selectedTriggers.removeAll { it.label == label } },
+                    rmProdrome = { label -> selectedProdromes.removeAll { it.label == label } },
+                    rmMedicine = { label -> selectedMedicines.removeAll { it.label == label } },
+                    rmRelief = { label -> selectedReliefs.removeAll { it.label == label } },
+                    onUpdateMedicine = { updated ->
+                        val idx = selectedMedicines.indexOfFirst { it.label == updated.label }
+                        if (idx >= 0) selectedMedicines[idx] = updated
+                    },
+                    onUpdateRelief = { updated ->
+                        val idx = selectedReliefs.indexOfFirst { it.label == updated.label }
+                        if (idx >= 0) selectedReliefs[idx] = updated
+                    },
+                    onSave = { save() }
+                )
             } }
         }
 
         if (!saved) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                if (currentPage == CheckInPage.TRIGGERS) {
+                if (currentPage == CheckInPage.NOTE) {
                     TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text("Cancel", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
                 } else {
                     TextButton(onClick = { goBack() }, modifier = Modifier.height(36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text("Back", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
@@ -235,8 +373,8 @@ fun EveningCheckInScreen(
                     CheckInPage.REVIEW -> Button(onClick = { save() }, enabled = !saving, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
                         if (saving) { CircularProgressIndicator(Modifier.size(14.dp), Color.White, strokeWidth = 2.dp) } else { Icon(Icons.Outlined.Check, null, Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Save", style = MaterialTheme.typography.bodySmall) }
                     }
-                    CheckInPage.NOTE -> Button(onClick = { if (noteText.isNotBlank() && !aiParsed) runAiParse(); goNext() }, enabled = !aiLoading, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
-                        Text(if (noteText.isNotBlank() && !aiParsed) "Match & review" else "Review", style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
+                    CheckInPage.NOTE -> Button(onClick = { goNext() }, enabled = !aiLoading, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
+                        Text(if (noteText.isNotBlank() && !aiParsed) "Match & continue" else if (noteText.isBlank()) "Skip" else "Next", style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
                     }
                     else -> Button(onClick = { goNext() }, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
                         Text("Next", style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
@@ -253,9 +391,8 @@ fun EveningCheckInScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FavouritesPage(title: String, subtitle: String, items: List<SelectableItem>, selected: List<String>, accentColor: Color, iconResolver: (String?) -> ImageVector?, onToggle: (String) -> Unit) {
+private fun FavouritesPage(title: String, subtitle: String, items: List<SelectableItem>, selected: List<String>, accentColor: Color, iconResolver: (String?) -> ImageVector?, aiMatched: Set<String> = emptySet(), onToggle: (String) -> Unit) {
     val scrollState = rememberScrollState()
-    var showAll by remember { mutableStateOf(false) }
     val favourites = remember(items) { items.filter { it.isFavourite } }
     val others = remember(items) { items.filter { !it.isFavourite } }
 
@@ -263,14 +400,51 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
         Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
         Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(20.dp))
+
+        // Selected items summary at top
+        if (selected.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(accentColor.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                    .border(1.dp, accentColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                selected.forEach { label ->
+                    val isAi = label in aiMatched
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (isAi) {
+                            Text("✦ ", color = Color(0xFFFFD54F), style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text(
+                            label,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            Icons.Outlined.Close,
+                            contentDescription = "Remove",
+                            tint = accentColor.copy(alpha = 0.6f),
+                            modifier = Modifier.size(16.dp).clickable { onToggle(label) }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         if (favourites.isNotEmpty()) {
             Text("Favourites", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
                 favourites.forEach { item ->
-                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor) { onToggle(item.label) }
+                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -278,24 +452,16 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
 
         if (others.isNotEmpty()) {
             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
-            Row(Modifier.fillMaxWidth().clickable { showAll = !showAll }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(if (showAll) "Show less" else "Show all (${others.size} more)", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                Icon(if (showAll) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-            }
-            AnimatedVisibility(visible = showAll) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                    others.forEach { item ->
-                        CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor) { onToggle(item.label) }
-                    }
+            Spacer(Modifier.height(12.dp))
+            Text("All", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.height(12.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                others.forEach { item ->
+                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
                 }
             }
         }
 
-        val count = selected.size
-        if (count > 0) {
-            Spacer(Modifier.height(8.dp))
-            Text("$count selected", color = accentColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-        }
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -305,7 +471,7 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading: Boolean, aiParsed: Boolean, aiMatches: List<AiMatchItem>, navController: NavController, onParse: () -> Unit) {
+private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading: Boolean, aiParsed: Boolean, aiResult: CheckInParseResult?, navController: NavController, onRemoveMatch: (String, String) -> Unit = { _, _ -> }, onParse: () -> Unit) {
     val scrollState = rememberScrollState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -327,70 +493,22 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
     fun launchVoice() {
         val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe your day…")
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "One thing at a time — what happened today?")
         }
         try { speechLauncher.launch(intent) } catch (_: Exception) {
             android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
-    val premiumState by PremiumManager.state.collectAsState()
-
-    if (!premiumState.isLoading && !premiumState.isPremium) {
-        Column(
-            Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                Icons.Outlined.Mic,
-                contentDescription = null,
-                tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Voice & AI Matching",
-                color = Color.White,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Speak or type freely about your day and our AI will automatically match your entries to triggers, prodromes, medicines and reliefs.",
-                color = AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = { navController.navigate(Routes.PAYWALL) },
-                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-            ) {
-                Text("Unlock with Premium", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-            }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "You can still review and save on the next page",
-                color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center
-            )
-        }
-        return
-    }
-
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        Text("Tell our AI about your day", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Text("Tell us about your day", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
-        Text("Type or speak freely — we'll match it to your triggers, prodromes, medicines and reliefs as best we can", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text("Type or speak freely — keep each thing separate so we can match it accurately", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(20.dp))
 
         OutlinedTextField(
             value = noteText, onValueChange = onNoteChange,
-            placeholder = { Text("e.g. \"had red wine, neck felt stiff, took ibuprofen\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+            placeholder = { Text("e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple, unfocusedBorderColor = Color.White.copy(alpha = 0.15f)),
             minLines = 3, maxLines = 6
@@ -425,20 +543,35 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
         }
         Spacer(Modifier.height(12.dp))
 
-        if (aiParsed && aiMatches.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text("Found ${aiMatches.size} match${if (aiMatches.size > 1) "es" else ""} — added to review:", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(8.dp))
-            aiMatches.forEach { m ->
-                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp).background(catColor(m.category).copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(m.label, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
-                    Text(m.category.replaceFirstChar { it.uppercase() }, color = catColor(m.category), style = MaterialTheme.typography.labelSmall)
+        if (aiParsed && aiResult != null) {
+            val total = aiResult.triggers.size + aiResult.prodromes.size + aiResult.medicines.size + aiResult.reliefs.size
+            if (total > 0) {
+                Spacer(Modifier.height(16.dp))
+                Text("Found $total match${if (total > 1) "es" else ""} — added to review:", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(8.dp))
+
+                aiResult.triggers.forEach { t ->
+                    NoteMatchPill(t.label, "trigger", Color(0xFFFFB74D), t.inferred, t.startAtIso, onRemove = { onRemoveMatch(t.label, "trigger") })
+                }
+                aiResult.prodromes.forEach { p ->
+                    NoteMatchPill(p.label, "prodrome", Color(0xFF9575CD), p.inferred, p.startAtIso, onRemove = { onRemoveMatch(p.label, "prodrome") })
+                }
+                aiResult.medicines.forEach { m ->
+                    val detail = buildString {
+                        m.amount?.let { append("${it} · ") }
+                        if (m.reliefScale != null && m.reliefScale != "NONE") append("relief: ${m.reliefScale.lowercase()}")
+                    }.trimEnd(' ', '·')
+                    NoteMatchPill(m.label, "medicine", Color(0xFF4FC3F7), m.inferred, m.startAtIso, detail.ifBlank { null }, onRemove = { onRemoveMatch(m.label, "medicine") })
+                }
+                aiResult.reliefs.forEach { r ->
+                    val detail = if (r.reliefScale != null && r.reliefScale != "NONE") "relief: ${r.reliefScale.lowercase()}" else null
+                    NoteMatchPill(r.label, "relief", Color(0xFF81C784), r.inferred, r.startAtIso, detail, onRemove = { onRemoveMatch(r.label, "relief") })
                 }
             }
         }
-        if (aiParsed && aiMatches.isEmpty() && noteText.isNotBlank()) {
+        if (aiParsed && (aiResult == null || (aiResult.triggers.isEmpty() && aiResult.prodromes.isEmpty() && aiResult.medicines.isEmpty() && aiResult.reliefs.isEmpty())) && noteText.isNotBlank()) {
             Spacer(Modifier.height(12.dp))
-            Text("No extra matches found", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text("No matches found", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
         if (noteText.isBlank()) {
             Spacer(Modifier.height(12.dp))
@@ -447,19 +580,79 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
     }
 }
 
+@Composable
+private fun NoteMatchPill(label: String, category: String, color: Color, inferred: Boolean, startAtIso: String?, extraDetail: String? = null, onRemove: () -> Unit = {}) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 3.dp)
+            .then(if (inferred) Modifier.border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(10.dp)) else Modifier)
+            .background(if (inferred) color.copy(alpha = 0.06f) else color.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+            .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                label, color = if (inferred) Color.White.copy(alpha = 0.7f) else Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (inferred) FontWeight.Normal else FontWeight.Medium,
+                    fontStyle = if (inferred) FontStyle.Italic else FontStyle.Normal
+                )
+            )
+            val subParts = mutableListOf<String>()
+            startAtIso?.let {
+                try {
+                    val odt = OffsetDateTime.parse(it)
+                    subParts.add(odt.format(DateTimeFormatter.ofPattern("HH:mm")))
+                } catch (_: Exception) {}
+            }
+            extraDetail?.let { subParts.add(it) }
+            if (subParts.isNotEmpty()) {
+                Text(subParts.joinToString(" · "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+        if (inferred) {
+            Text("suggested", color = color.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), modifier = Modifier.padding(end = 4.dp))
+        }
+        Text(category.replaceFirstChar { it.uppercase() }, color = color, style = MaterialTheme.typography.labelSmall)
+        IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
+            Icon(Icons.Outlined.Close, "Remove", tint = color.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+
 // ═══════════════════════════════════════════════════════════════════
-//  Review Page
+//  Review Page — shows all fields, tap to expand and edit
 // ═══════════════════════════════════════════════════════════════════
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ReviewPage(triggers: List<String>, prodromes: List<String>, medicines: List<String>, reliefs: List<String>, aiLabels: Set<String>, saving: Boolean, saved: Boolean, rmTrigger: (String) -> Unit, rmProdrome: (String) -> Unit, rmMedicine: (String) -> Unit, rmRelief: (String) -> Unit, onSave: () -> Unit) {
+private fun ReviewPage(
+    triggers: List<CheckInTriggerItem>,
+    prodromes: List<CheckInProdromeItem>,
+    medicines: List<CheckInMedicineItem>,
+    reliefs: List<CheckInReliefItem>,
+    aiResult: CheckInParseResult?,
+    saving: Boolean, saved: Boolean,
+    rmTrigger: (String) -> Unit,
+    rmProdrome: (String) -> Unit,
+    rmMedicine: (String) -> Unit,
+    rmRelief: (String) -> Unit,
+    onUpdateMedicine: (CheckInMedicineItem) -> Unit,
+    onUpdateRelief: (CheckInReliefItem) -> Unit,
+    onSave: () -> Unit
+) {
     val scrollState = rememberScrollState()
     val total = triggers.size + prodromes.size + medicines.size + reliefs.size
+    val aiLabels = aiResult?.let {
+        (it.triggers.map { t -> t.label } + it.prodromes.map { p -> p.label } + it.medicines.map { m -> m.label } + it.reliefs.map { r -> r.label }).toSet()
+    } ?: emptySet()
+
+    var expandedKey by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
         Text("Review", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
-        Text(LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("EEEE d MMMM")), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM")), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(20.dp))
 
         AnimatedVisibility(visible = saved) {
@@ -473,10 +666,91 @@ private fun ReviewPage(triggers: List<String>, prodromes: List<String>, medicine
             Text("Nothing selected — go back to tap items, or save an empty check-in", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
 
-        if (triggers.isNotEmpty()) ReviewSection("Triggers", Color(0xFFFFB74D), triggers, aiLabels, rmTrigger)
-        if (prodromes.isNotEmpty()) ReviewSection("Prodromes", Color(0xFF9575CD), prodromes, aiLabels, rmProdrome)
-        if (medicines.isNotEmpty()) ReviewSection("Medicines", Color(0xFF4FC3F7), medicines, aiLabels, rmMedicine)
-        if (reliefs.isNotEmpty()) ReviewSection("Reliefs", Color(0xFF81C784), reliefs, aiLabels, rmRelief)
+        if (triggers.isNotEmpty()) {
+            ReviewSectionHeader("Triggers", Color(0xFFFFB74D), triggers.size)
+            triggers.forEach { t ->
+                val key = "trigger_${t.label}"
+                if (expandedKey == key) {
+                    TriggerEditorPill(t, Color(0xFFFFB74D),
+                        onDone = { expandedKey = null },
+                        onRemove = { rmTrigger(t.label); expandedKey = null }
+                    )
+                } else {
+                    ReviewItemRow(t.label, Color(0xFFFFB74D), t.label in aiLabels, t.inferred,
+                        subtitle = formatTimeSubtitle(t.startAtIso),
+                        onRemove = { rmTrigger(t.label) },
+                        onClick = { expandedKey = key }
+                    )
+                }
+            }
+        }
+        if (prodromes.isNotEmpty()) {
+            ReviewSectionHeader("Prodromes", Color(0xFF9575CD), prodromes.size)
+            prodromes.forEach { p ->
+                val key = "prodrome_${p.label}"
+                if (expandedKey == key) {
+                    ProdromeEditorPill(p, Color(0xFF9575CD),
+                        onDone = { expandedKey = null },
+                        onRemove = { rmProdrome(p.label); expandedKey = null }
+                    )
+                } else {
+                    ReviewItemRow(p.label, Color(0xFF9575CD), p.label in aiLabels, p.inferred,
+                        subtitle = formatTimeSubtitle(p.startAtIso),
+                        onRemove = { rmProdrome(p.label) },
+                        onClick = { expandedKey = key }
+                    )
+                }
+            }
+        }
+        if (medicines.isNotEmpty()) {
+            ReviewSectionHeader("Medicines", Color(0xFF4FC3F7), medicines.size)
+            medicines.forEach { m ->
+                val key = "medicine_${m.label}"
+                if (expandedKey == key) {
+                    MedicineEditorPill(m, Color(0xFF4FC3F7),
+                        onUpdate = onUpdateMedicine,
+                        onDone = { expandedKey = null },
+                        onRemove = { rmMedicine(m.label); expandedKey = null }
+                    )
+                } else {
+                    val sub = buildString {
+                        m.amount?.let { append("Amount: $it") }
+                        formatTimeSubtitle(m.startAtIso)?.let { if (isNotEmpty()) append(" · "); append(it) }
+                        if (m.reliefScale != null && m.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${m.reliefScale.lowercase()}") }
+                        if (m.sideEffectScale != null && m.sideEffectScale != "NONE") { if (isNotEmpty()) append(" · "); append("Side effects: ${m.sideEffectScale.lowercase()}") }
+                        m.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
+                    }.ifBlank { null }
+                    ReviewItemRow(m.label, Color(0xFF4FC3F7), m.label in aiLabels, m.inferred,
+                        subtitle = sub, onRemove = { rmMedicine(m.label) },
+                        onClick = { expandedKey = key }
+                    )
+                }
+            }
+        }
+        if (reliefs.isNotEmpty()) {
+            ReviewSectionHeader("Reliefs", Color(0xFF81C784), reliefs.size)
+            reliefs.forEach { r ->
+                val key = "relief_${r.label}"
+                if (expandedKey == key) {
+                    ReliefEditorPill(r, Color(0xFF81C784),
+                        onUpdate = onUpdateRelief,
+                        onDone = { expandedKey = null },
+                        onRemove = { rmRelief(r.label); expandedKey = null }
+                    )
+                } else {
+                    val sub = buildString {
+                        formatTimeSubtitle(r.startAtIso)?.let { append(it) }
+                        if (r.reliefScale != null && r.reliefScale != "NONE") { if (isNotEmpty()) append(" · "); append("Relief: ${r.reliefScale.lowercase()}") }
+                        if (r.sideEffectScale != null && r.sideEffectScale != "NONE") { if (isNotEmpty()) append(" · "); append("Side effects: ${r.sideEffectScale.lowercase()}") }
+                        r.sideEffectNotes?.let { if (isNotEmpty()) append(" · "); append(it) }
+                    }.ifBlank { null }
+                    ReviewItemRow(r.label, Color(0xFF81C784), r.label in aiLabels, r.inferred,
+                        subtitle = sub, onRemove = { rmRelief(r.label) },
+                        onClick = { expandedKey = key }
+                    )
+                }
+            }
+        }
 
         if (total > 0 && !saved) {
             Spacer(Modifier.height(12.dp))
@@ -487,21 +761,296 @@ private fun ReviewPage(triggers: List<String>, prodromes: List<String>, medicine
 }
 
 @Composable
-private fun ReviewSection(title: String, color: Color, items: List<String>, aiLabels: Set<String>, onRemove: (String) -> Unit) {
+private fun ReviewSectionHeader(title: String, color: Color, count: Int) {
     Spacer(Modifier.height(12.dp))
-    Text("$title (${items.size})", color = color, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+    Text("$title ($count)", color = color, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
     Spacer(Modifier.height(8.dp))
-    items.forEach { label ->
-        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.10f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Column(Modifier.weight(1f)) {
-                Text(label, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-                if (label in aiLabels) Text("matched from note", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+}
+
+@Composable
+private fun ReviewItemRow(label: String, color: Color, isAiMatched: Boolean, inferred: Boolean, subtitle: String?, onRemove: () -> Unit, onClick: () -> Unit = {}) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 2.dp)
+            .then(if (inferred) Modifier.border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(10.dp)) else Modifier)
+            .background(if (inferred) color.copy(alpha = 0.06f) else color.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                label, color = if (inferred) Color.White.copy(alpha = 0.7f) else Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (inferred) FontWeight.Normal else FontWeight.Medium,
+                    fontStyle = if (inferred) FontStyle.Italic else FontStyle.Normal
+                )
+            )
+            val tagParts = mutableListOf<String>()
+            if (isAiMatched) tagParts.add("matched from note")
+            if (inferred) tagParts.add("suggested")
+            subtitle?.let { tagParts.add(it) }
+            if (tagParts.isNotEmpty()) {
+                Text(tagParts.joinToString(" · "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            } else {
+                Text("Tap to edit", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
             }
-            IconButton(onClick = { onRemove(label) }, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Outlined.Close, "Remove", tint = color.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+        }
+        IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+            Icon(Icons.Outlined.Close, "Remove", tint = color.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Time Editor — shared by all editor pills
+// ═══════════════════════════════════════════════════════════════════
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimeEditor(
+    initialIso: String?,
+    color: Color,
+    onTimeChanged: (String) -> Unit
+) {
+    val parsedTime = remember(initialIso) {
+        initialIso?.let { try { OffsetDateTime.parse(it) } catch (_: Exception) { null } }
+    }
+    var selectedDate by remember { mutableStateOf(parsedTime?.toLocalDate() ?: java.time.LocalDate.now()) }
+    var hour by remember { mutableStateOf(parsedTime?.hour ?: OffsetDateTime.now().hour) }
+    var minute by remember { mutableStateOf(parsedTime?.minute ?: 0) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    fun commit() {
+        val zone = java.time.ZoneId.systemDefault()
+        val iso = selectedDate.atTime(hour, minute).atZone(zone).toOffsetDateTime()
+            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+        onTimeChanged(iso)
+    }
+
+    Text("When?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    Spacer(Modifier.height(2.dp))
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            selectedDate.format(DateTimeFormatter.ofPattern("EEE d MMM")),
+            color = AppTheme.AccentPurple,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(AppTheme.AccentPurple.copy(alpha = 0.1f)).clickable { showDatePicker = true }.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+        Text("%02d:%02d".format(hour, minute), color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        selectedDate = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                    }
+                    showDatePicker = false; commit()
+                }, enabled = datePickerState.selectedDateMillis != null) { Text("OK", color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancel", color = AppTheme.SubtleTextColor) } },
+            colors = DatePickerDefaults.colors(containerColor = Color(0xFF1E0A2E))
+        ) { DatePicker(state = datePickerState, colors = appDatePickerColors(), title = { Text("Select date", color = Color.White, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) }, headline = null, showModeToggle = false) }
+    }
+
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Hour", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Slider(value = hour.toFloat(), onValueChange = { hour = it.toInt(); commit() }, valueRange = 0f..23f, steps = 22,
+                colors = SliderDefaults.colors(thumbColor = color, activeTrackColor = color, inactiveTrackColor = color.copy(alpha = 0.2f)))
+        }
+        Column(Modifier.weight(1f)) {
+            Text("Min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Slider(value = minute.toFloat(), onValueChange = { minute = (it.toInt() / 5) * 5; commit() }, valueRange = 0f..55f, steps = 10,
+                colors = SliderDefaults.colors(thumbColor = color, activeTrackColor = color, inactiveTrackColor = color.copy(alpha = 0.2f)))
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Relief Scale Picker — shared by medicine/relief editors
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun ScalePicker(label: String, value: String, onChanged: (String) -> Unit, colorMap: Map<String, Color>) {
+    val options = listOf("NONE", "LOW", "MODERATE", "HIGH")
+    val labels = listOf("None", "Low", "Moderate", "High")
+    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    Spacer(Modifier.height(4.dp))
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        options.forEachIndexed { idx, scale ->
+            val selected = value == scale
+            val chipColor = colorMap[scale] ?: Color.White.copy(alpha = 0.2f)
+            Box(
+                Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                    .background(if (selected) chipColor.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.05f))
+                    .border(1.dp, if (selected) chipColor else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                    .clickable { onChanged(scale) }.padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(labels[idx], color = if (selected) Color.White else AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal))
             }
         }
     }
+}
+
+private val reliefColorMap = mapOf("HIGH" to Color(0xFF81C784), "MODERATE" to Color(0xFFFFB74D), "LOW" to Color(0xFFEF5350), "NONE" to Color.White.copy(alpha = 0.2f))
+private val sideEffectColorMap = mapOf("HIGH" to Color(0xFFEF5350), "MODERATE" to Color(0xFFFFB74D), "LOW" to Color(0xFF81C784), "NONE" to Color.White.copy(alpha = 0.2f))
+
+// ═══════════════════════════════════════════════════════════════════
+//  Editor Header — shared by all editor pills
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun EditorHeader(label: String, color: Color, onDone: () -> Unit, onRemove: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
+        Row {
+            Text("Done", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { onDone() }.padding(horizontal = 8.dp, vertical = 4.dp))
+            Box(Modifier.size(28.dp).clip(CircleShape).clickable { onRemove() }, contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.Close, "Remove", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Trigger Editor Pill — time only
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun TriggerEditorPill(item: CheckInTriggerItem, color: Color, onDone: () -> Unit, onRemove: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
+        EditorHeader(item.label, color, onDone, onRemove)
+        Spacer(Modifier.height(10.dp))
+        TimeEditor(item.startAtIso, color) { /* triggers don't update time in current model */ }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Prodrome Editor Pill — time only
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun ProdromeEditorPill(item: CheckInProdromeItem, color: Color, onDone: () -> Unit, onRemove: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
+        EditorHeader(item.label, color, onDone, onRemove)
+        Spacer(Modifier.height(10.dp))
+        TimeEditor(item.startAtIso, color) { /* prodromes don't update time in current model */ }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Medicine Editor Pill — time + amount + relief + side effects
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, onUpdate: (CheckInMedicineItem) -> Unit, onDone: () -> Unit, onRemove: () -> Unit) {
+    var timeIso by remember(item.label) { mutableStateOf(item.startAtIso) }
+    var amount by remember(item.label) { mutableStateOf(item.amount ?: "") }
+    var reliefScale by remember(item.label) { mutableStateOf(item.reliefScale ?: "NONE") }
+    var sideEffectScale by remember(item.label) { mutableStateOf(item.sideEffectScale ?: "NONE") }
+    var sideEffectNotes by remember(item.label) { mutableStateOf(item.sideEffectNotes ?: "") }
+
+    fun commit() {
+        onUpdate(item.copy(startAtIso = timeIso, amount = amount.ifBlank { null }, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }))
+    }
+
+    Column(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
+        EditorHeader(item.label, color, { commit(); onDone() }, onRemove)
+        Spacer(Modifier.height(10.dp))
+
+        TimeEditor(timeIso, color) { timeIso = it }
+        Spacer(Modifier.height(10.dp))
+
+        Text("Amount / dosage", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Spacer(Modifier.height(4.dp))
+        OutlinedTextField(
+            value = amount, onValueChange = { amount = it },
+            placeholder = { Text("e.g. 2 tablets, 400mg", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
+            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
+            singleLine = true
+        )
+        Spacer(Modifier.height(10.dp))
+
+        ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap)
+        Spacer(Modifier.height(10.dp))
+        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap)
+
+        if (sideEffectScale != "NONE") {
+            Spacer(Modifier.height(10.dp))
+            Text("Side effect details", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Spacer(Modifier.height(4.dp))
+            OutlinedTextField(
+                value = sideEffectNotes, onValueChange = { sideEffectNotes = it },
+                placeholder = { Text("e.g. drowsy, nauseous", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
+                singleLine = true
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Relief Editor Pill — time + relief scale + side effects
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun ReliefEditorPill(item: CheckInReliefItem, color: Color, onUpdate: (CheckInReliefItem) -> Unit, onDone: () -> Unit, onRemove: () -> Unit) {
+    var timeIso by remember(item.label) { mutableStateOf(item.startAtIso) }
+    var reliefScale by remember(item.label) { mutableStateOf(item.reliefScale ?: "NONE") }
+    var sideEffectScale by remember(item.label) { mutableStateOf(item.sideEffectScale ?: "NONE") }
+    var sideEffectNotes by remember(item.label) { mutableStateOf(item.sideEffectNotes ?: "") }
+
+    fun commit() {
+        onUpdate(item.copy(startAtIso = timeIso, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }))
+    }
+
+    Column(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
+        EditorHeader(item.label, color, { commit(); onDone() }, onRemove)
+        Spacer(Modifier.height(10.dp))
+
+        TimeEditor(timeIso, color) { timeIso = it }
+        Spacer(Modifier.height(10.dp))
+
+        ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap)
+        Spacer(Modifier.height(10.dp))
+        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap)
+
+        if (sideEffectScale != "NONE") {
+            Spacer(Modifier.height(10.dp))
+            Text("Side effect details", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Spacer(Modifier.height(4.dp))
+            OutlinedTextField(
+                value = sideEffectNotes, onValueChange = { sideEffectNotes = it },
+                placeholder = { Text("e.g. drowsy, nauseous", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
+                singleLine = true
+            )
+        }
+    }
+}
+
+private fun formatTimeSubtitle(iso: String?): String? {
+    if (iso == null) return null
+    return try {
+        val odt = OffsetDateTime.parse(iso)
+        odt.format(DateTimeFormatter.ofPattern("HH:mm"))
+    } catch (_: Exception) { null }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -509,16 +1058,23 @@ private fun ReviewSection(title: String, color: Color, items: List<String>, aiLa
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolean, color: Color, onClick: () -> Unit) {
+private fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolean, color: Color, isAiMatched: Boolean = false, onClick: () -> Unit) {
     val bg = if (isSelected) color.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.08f)
-    val bdr = if (isSelected) color.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
+    val bdr = if (isAiMatched && isSelected) Color(0xFFFFD54F) else if (isSelected) color.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     val tint = if (isSelected) Color.White else AppTheme.SubtleTextColor
     val txt = if (isSelected) Color.White else AppTheme.BodyTextColor
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)) {
-        Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(1.5.dp, bdr, CircleShape), contentAlignment = Alignment.Center) {
-            if (icon != null) Icon(icon, label, tint = tint, modifier = Modifier.size(24.dp))
-            else Text(label.take(2).uppercase(), color = tint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+        Box(contentAlignment = Alignment.Center) {
+            Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(if (isAiMatched && isSelected) 2.dp else 1.5.dp, bdr, CircleShape), contentAlignment = Alignment.Center) {
+                if (icon != null) Icon(icon, label, tint = tint, modifier = Modifier.size(24.dp))
+                else Text(label.take(2).uppercase(), color = tint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+            }
+            if (isAiMatched && isSelected) {
+                Box(Modifier.align(Alignment.TopEnd).size(16.dp).clip(CircleShape).background(Color(0xFFFFD54F)), contentAlignment = Alignment.Center) {
+                    Text("✦", color = Color(0xFF1A0029), style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                }
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(label, color = txt, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
@@ -526,10 +1082,10 @@ private fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolean
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  GPT Matching via Edge Function
+//  Legacy GPT Matching — kept for backward compat
 // ═══════════════════════════════════════════════════════════════════
 
-private suspend fun callGptForMatches(
+internal suspend fun callGptForMatches(
     accessToken: String,
     noteText: String,
     triggers: List<String>,
@@ -622,10 +1178,41 @@ Which items from these pools are likely relevant to what the user described? Thi
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Local Fallback Matching (no API cost)
+//  Full Migraine Log AI Parse — covers entire wizard (legacy)
 // ═══════════════════════════════════════════════════════════════════
 
-private fun matchNoteTextLocal(text: String, triggers: List<String>, prodromes: List<String>, medicines: List<String>, reliefs: List<String>): List<AiMatchItem> {
+internal suspend fun callGptForFullLogParse(
+    accessToken: String,
+    noteText: String,
+    triggers: List<String>,
+    prodromes: List<String>,
+    medicines: List<String>,
+    reliefs: List<String>,
+    activities: List<String>,
+    locations: List<String>,
+    missedActivities: List<String>,
+    painLocationOptions: List<String>,
+    symptomOptions: List<String>
+): AiLogParseResult {
+    // Delegate to V2 and convert back for legacy callers
+    val deterResult = deterministicParse(noteText, triggers, prodromes, medicines, reliefs, activities, locations, missedActivities, painLocationOptions, symptomOptions)
+    val gptResult = try {
+        callGptForFullLogParseV2(accessToken, noteText, triggers, prodromes, medicines, reliefs, activities, locations, missedActivities, painLocationOptions, symptomOptions, deterResult)
+    } catch (_: Exception) { null }
+    val merged = mergeResults(deterResult, gptResult)
+    return AiLogParseResult(
+        severity = merged.severity?.value,
+        painLocations = merged.painLocations.map { it.value },
+        symptoms = merged.symptoms.map { it.value },
+        matches = merged.matches.map { AiMatchItem(it.label, it.category) }
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Local Fallback Matching (no API cost) — legacy
+// ═══════════════════════════════════════════════════════════════════
+
+internal fun matchNoteTextLocal(text: String, triggers: List<String>, prodromes: List<String>, medicines: List<String>, reliefs: List<String>): List<AiMatchItem> {
     val lower = text.lowercase()
     val matches = mutableListOf<AiMatchItem>()
     triggers.forEach { if (hit(lower, it)) matches.add(AiMatchItem(it, "trigger")) }
@@ -672,4 +1259,3 @@ private val SYNONYMS: Map<String, List<String>> = mapOf(
     "rest" to listOf("rested", "nap", "napped", "lay down"),
     "dark room" to listOf("darkness", "lay in dark"),
 )
-

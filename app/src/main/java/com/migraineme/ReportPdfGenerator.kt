@@ -34,10 +34,10 @@ class ReportPdfGenerator(private val context: Context) {
     private val SMO    = Color.parseColor("#FFB74D")
     private val SS     = Color.parseColor("#E57373")
     private val LOG_COLORS = mapOf(
-        "Triggers" to Color.parseColor("#FF8A65"), "Prodromes" to Color.parseColor("#FFD54F"),
+        "Triggers" to Color.parseColor("#FFB74D"), "Prodromes" to Color.parseColor("#9575CD"),
         "Symptoms" to Color.parseColor("#E57373"), "Medicines" to Color.parseColor("#4FC3F7"),
-        "Reliefs" to Color.parseColor("#81C784"), "Activities" to Color.parseColor("#BA68C8"),
-        "Missed Activities" to Color.parseColor("#FF7043"), "Locations" to Color.parseColor("#4DD0E1")
+        "Reliefs" to Color.parseColor("#81C784"), "Activities" to Color.parseColor("#FF8A65"),
+        "Missed Activities" to Color.parseColor("#FF7043"), "Locations" to Color.parseColor("#78909C")
     )
     private val BAR_COLORS = listOf(Color.parseColor("#FF8A65"), Color.parseColor("#BA68C8"),
         Color.parseColor("#4FC3F7"), Color.parseColor("#81C784"))
@@ -78,7 +78,32 @@ class ReportPdfGenerator(private val context: Context) {
         val enabledMetrics: List<MetricSeries>,
         val autoMetricKeys: Set<String>,
         val allDailyMetrics: Map<String, List<InsightsViewModel.DailyValue>>,
-        val timelineCaptures: List<TimelineCapture> = emptyList()
+        val timelineCaptures: List<TimelineCapture> = emptyList(),
+        // New: clinical & statistical sections for doctor report
+        val correlationStats: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
+        val gaugeAccuracy: EdgeFunctionsService.GaugeAccuracy? = null,
+        val clinicalAssessment: String? = null,
+        // Full profile data
+        val profileSummary: String? = null,
+        val profileFrequency: String? = null,
+        val profileDuration: String? = null,
+        val profileExperience: String? = null,
+        val profileTrajectory: String? = null,
+        val profileGender: String? = null,
+        val profileAgeRange: String? = null,
+        val profileSeasonalPattern: String? = null,
+        val profileTracksCycle: Boolean = false,
+        val profileTriggerAreas: List<String> = emptyList(),
+        val profileFreeText: String? = null,
+        val medicineEffectiveness: List<InsightsViewModel.ReliefEffectiveness> = emptyList(),
+        val reliefEffectiveness: List<InsightsViewModel.ReliefEffectiveness> = emptyList(),
+        // Insights cards data
+        val contextItems: List<InsightsViewModel.ContextItem> = emptyList(),
+        val impactItems: List<InsightsViewModel.ImpactItem> = emptyList(),
+        val painLocationCounts: List<Pair<String, Int>> = emptyList(),
+        val severityCounts: List<Pair<Int, Int>> = emptyList(),
+        val totalMigraineCount: Int = 0,
+        val overallAvgSeverity: Float = 5f,
     )
 
     // ======= Public =======
@@ -87,16 +112,62 @@ class ReportPdfGenerator(private val context: Context) {
         return try {
             Log.d(TAG, "generate: starting, ${data.timelineCaptures.size} captures, ${data.enabledMetrics.size} metrics")
             doc = PdfDocument(); pn = 0; newPage()
+
+            // 1. Cover
             Log.d(TAG, "generate: drawCover")
             drawCover(data)
+
+            // 2. Stats overview
             Log.d(TAG, "generate: drawStats")
             drawStats(data)
-            Log.d(TAG, "generate: drawLogCompact")
-            drawLogCompact(data)
 
+            // 3. Profile
+            if (!data.clinicalAssessment.isNullOrBlank() || !data.profileSummary.isNullOrBlank()) {
+                Log.d(TAG, "generate: drawProfile"); drawProfile(data)
+            }
+
+            // 4. Migraine log
+            Log.d(TAG, "generate: drawLogCompact")
+            newPage(); drawLogCompact(data)
+
+            // 5. Frequency trends
+            if (data.filteredMigraines.size >= 3) { Log.d(TAG, "generate: drawFrequencyTrends"); drawFrequencyTrends(data) }
+
+            // 6. What Happened (patterns + correlations)
+            val significant = data.correlationStats.filter { it.isSignificant() }
+            val treatments = data.correlationStats.filter { it.factorType == "treatment" && it.liftRatio > 1.2f }
+            val treatmentInteractions = data.correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
+            val interactions = significant.filter { it.factorType == "interaction" }
+            val singles = significant.filter { it.factorType != "interaction" && it.factorType != "treatment" && it.factorType != "treatment_interaction" }
+            if (interactions.isNotEmpty() || singles.isNotEmpty()) {
+                Log.d(TAG, "generate: drawCorrelations (${significant.size} significant)")
+                newPage(); drawCorrelations(singles, interactions)
+            }
+
+            // 7. What Worked (treatments)
+            if (treatments.isNotEmpty() || treatmentInteractions.isNotEmpty()) {
+                Log.d(TAG, "generate: drawTreatmentCorrelations (${treatments.size} treatments, ${treatmentInteractions.size} combos)")
+                newPage(); drawTreatmentCorrelations(treatments, treatmentInteractions)
+            }
+
+            // 8. What Were You Doing
+            if (data.contextItems.isNotEmpty()) {
+                Log.d(TAG, "generate: drawContext (${data.contextItems.size} items)")
+                newPage(); drawContext(data)
+            }
+
+            // 9. How Did It Impact You (severity + pain locations + missed activities)
+            if (data.severityCounts.isNotEmpty() || data.painLocationCounts.isNotEmpty() || data.impactItems.isNotEmpty()) {
+                Log.d(TAG, "generate: drawImpact")
+                newPage(); drawImpact(data)
+            }
+
+            // 10. Migraine timelines
+            if (data.timelineCaptures.isNotEmpty()) { Log.d(TAG, "generate: drawTimelines (${data.timelineCaptures.size})"); newPage(); drawTimelines(data) }
+
+            // 11. Symptoms breakdown + Spider breakdowns
             Log.d(TAG, "generate: drawing breakdowns")
             if (hasSymptomsData(data)) { newPage(); drawSymptomsBreakdown(data) }
-
             listOf(
                 data.spiders.prodromes, data.spiders.triggers,
                 data.spiders.medicines, data.spiders.reliefs,
@@ -109,8 +180,9 @@ class ReportPdfGenerator(private val context: Context) {
                 }
             }
 
-            if (data.timelineCaptures.isNotEmpty()) { Log.d(TAG, "generate: drawTimelines (${data.timelineCaptures.size})"); newPage(); drawTimelines(data) }
+            // 12. Health metrics
             if (data.enabledMetrics.isNotEmpty()) { Log.d(TAG, "generate: drawMetrics (${data.enabledMetrics.size})"); newPage(); drawMetrics(data) }
+
             Log.d(TAG, "generate: footer + finishPage")
             footer(); finishPage()
 
@@ -299,6 +371,548 @@ class ReportPdfGenerator(private val context: Context) {
             listOf(Triple(m.size.toString(), "Migraines", 0), Triple(String.format("%.1f", avgS), "Avg Severity", 0), Triple(String.format("%.1fh", avgD), "Avg Duration", 0))
                 .forEachIndexed { i, (v, lb, _) -> val cx = l + i * cw + cw / 2f; c.drawText(v, cx, t + 26f, tp(Color.WHITE, 20f, true, Paint.Align.CENTER)); c.drawText(lb, cx, t + 40f, tp(SUBTLE, 9f, a = Paint.Align.CENTER)) }
         }
+    }
+
+    // ===============================================================
+    //  CLINICAL ASSESSMENT
+    // ===============================================================
+
+    private fun drawProfile(d: ReportData) {
+        val c = cv ?: return
+        need(60f)
+        heading("Profile", ACCENT)
+
+        // Quick stats grid: frequency, duration, experience, trajectory
+        val statsItems = listOfNotNull(
+            d.profileFrequency?.let { "Frequency" to it },
+            d.profileDuration?.let { "Duration" to it },
+            d.profileExperience?.let { "Experience" to it },
+            d.profileTrajectory?.let { "Trajectory" to it },
+        )
+        if (statsItems.isNotEmpty()) {
+            need(50f)
+            val colW = (PW - 2 * M) / 2f
+            for (i in statsItems.indices step 2) {
+                need(30f)
+                val c2 = cv ?: return
+                val (label1, value1) = statsItems[i]
+                c2.drawText(value1, M + 12f, y + 12f, tp(Color.WHITE, 9f, true))
+                c2.drawText(label1, M + 12f, y + 24f, tp(SUBTLE, 7f))
+                if (i + 1 < statsItems.size) {
+                    val (label2, value2) = statsItems[i + 1]
+                    c2.drawText(value2, M + colW + 12f, y + 12f, tp(Color.WHITE, 9f, true))
+                    c2.drawText(label2, M + colW + 12f, y + 24f, tp(SUBTLE, 7f))
+                }
+                y += 32f
+            }
+        }
+
+        // Demographics: gender, age, seasonal, cycle
+        val demoItems = listOfNotNull(
+            d.profileGender?.let { "Gender: $it" },
+            d.profileAgeRange?.let { "Age: $it" },
+            d.profileSeasonalPattern?.let { "Seasonal: $it" },
+            if (d.profileTracksCycle) "Cycle: Tracking" else null,
+        )
+        if (demoItems.isNotEmpty()) {
+            need(24f)
+            val c2 = cv ?: return
+            c2.drawText(demoItems.joinToString("  •  "), M + 12f, y + 12f, tp(BODY, 8f))
+            y += 22f
+        }
+
+        // Trigger areas
+        if (d.profileTriggerAreas.isNotEmpty()) {
+            need(30f)
+            val c2 = cv ?: return
+            c2.drawText("Trigger areas", M + 12f, y + 12f, tp(TITLE, 9f, true))
+            y += 18f
+            val c3 = cv ?: return
+            c3.drawText(d.profileTriggerAreas.joinToString("  •  "), M + 12f, y + 10f, tp(BODY, 8f))
+            y += 18f
+        }
+
+        // Assessment
+        if (!d.clinicalAssessment.isNullOrBlank()) {
+            need(30f)
+            val c2 = cv ?: return
+            c2.drawText("Assessment", M + 12f, y + 12f, tp(PINK, 9f, true))
+            y += 20f
+
+            val paint = tp(BODY, 9f)
+            val maxW = PW - 2 * M - 32f
+            val lines = wrapText(d.clinicalAssessment, paint, maxW)
+            val lineH = 13f
+            for (line in lines) {
+                need(lineH + 4f)
+                val c3 = cv ?: return
+                c3.drawText(line, M + 16f, y + 10f, paint)
+                y += lineH
+            }
+            y += 8f
+        }
+
+    }
+
+    /** Word-wrap text to fit within maxWidth */
+    private fun wrapText(text: String, paint: Paint, maxWidth: Float): List<String> {
+        val lines = mutableListOf<String>()
+        for (paragraph in text.split("\n")) {
+            if (paragraph.isBlank()) { lines.add(""); continue }
+            val words = paragraph.split(" ")
+            var current = ""
+            for (word in words) {
+                val test = if (current.isEmpty()) word else "$current $word"
+                if (paint.measureText(test) <= maxWidth) {
+                    current = test
+                } else {
+                    if (current.isNotEmpty()) lines.add(current)
+                    current = word
+                }
+            }
+            if (current.isNotEmpty()) lines.add(current)
+        }
+        return lines
+    }
+
+    // ===============================================================
+    //  FREQUENCY TRENDS (monthly migraine count bar chart)
+    // ===============================================================
+
+    private fun drawFrequencyTrends(d: ReportData) {
+        val c = cv ?: return
+        val zone = java.time.ZoneId.systemDefault()
+        // Group migraines by month
+        val byMonth = d.filteredMigraines.groupBy {
+            it.start.atZone(zone).toLocalDate().withDayOfMonth(1)
+        }.toSortedMap()
+        if (byMonth.size < 2) return
+
+        heading("Frequency Trends", Color.parseColor("#64B5F6"))
+
+        val months = byMonth.keys.toList()
+        val counts = months.map { (byMonth[it]?.size ?: 0) }
+        val maxCount = counts.max().coerceAtLeast(1)
+        val avgCount = counts.average()
+
+        val barCount = months.size.coerceAtMost(12)
+        val displayMonths = months.takeLast(barCount)
+        val displayCounts = counts.takeLast(barCount)
+
+        val chartH = 120f
+        need(chartH + 60f)
+        card(chartH + 40f) { cv2, l, t, r, _ ->
+            val padL = l + 30f; val padR = r - 12f; val padT = t + 12f; val padB = t + chartH + 12f
+            val cw = padR - padL; val ch = padB - padT
+            val barW = (cw / barCount) * 0.7f
+            val gap = (cw / barCount) * 0.3f
+
+            // Avg line
+            val avgY = padB - (avgCount.toFloat() / maxCount) * ch
+            val dashPaint = Paint().apply { color = SUBTLE; strokeWidth = 1f; style = Paint.Style.STROKE; pathEffect = DashPathEffect(floatArrayOf(4f, 3f), 0f) }
+            cv2.drawLine(padL, avgY, padR, avgY, dashPaint)
+            cv2.drawText("avg ${String.format("%.1f", avgCount)}", padR + 2f, avgY + 4f, tp(SUBTLE, 7f))
+
+            // Bars
+            val fmt = java.time.format.DateTimeFormatter.ofPattern("MMM")
+            val fmtYear = java.time.format.DateTimeFormatter.ofPattern("yy")
+            for (i in displayCounts.indices) {
+                val x = padL + i * (barW + gap) + gap / 2f
+                val count = displayCounts[i]
+                val barH = (count.toFloat() / maxCount) * ch
+                val barTop = padB - barH
+
+                val barColor = if (count > avgCount * 1.5) Color.parseColor("#E57373")
+                    else if (count < avgCount * 0.5) Color.parseColor("#81C784")
+                    else Color.parseColor("#64B5F6")
+
+                cv2.drawRoundRect(x, barTop, x + barW, padB, 3f, 3f, fp(barColor, 180))
+
+                // Count on top
+                if (count > 0) {
+                    cv2.drawText("$count", x + barW / 2f, barTop - 3f, tp(Color.WHITE, 7f, true, Paint.Align.CENTER))
+                }
+
+                // Month label
+                cv2.drawText(displayMonths[i].format(fmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
+                // Year on first + whenever year changes
+                if (i == 0 || displayMonths[i].year != displayMonths[i - 1].year) {
+                    cv2.drawText("'${displayMonths[i].format(fmtYear)}", x + barW / 2f, padB + 18f, tp(SUBTLE, 5.5f, a = Paint.Align.CENTER))
+                }
+            }
+        }
+
+        // Summary stats row
+        need(55f)
+        val total = d.filteredMigraines.size
+        val monthSpan = byMonth.size
+        val perMonth = if (monthSpan > 0) total.toFloat() / monthSpan else 0f
+        val trendText = if (displayCounts.size >= 3) {
+            val firstHalf = displayCounts.take(displayCounts.size / 2).average()
+            val secondHalf = displayCounts.drop(displayCounts.size / 2).average()
+            when {
+                secondHalf < firstHalf * 0.8 -> "↓ Improving"
+                secondHalf > firstHalf * 1.2 -> "↑ Worsening"
+                else -> "→ Stable"
+            }
+        } else "—"
+
+        card(40f) { cv2, l, t, r, _ ->
+            val cw2 = (r - l) / 3f
+            listOf(
+                Triple(String.format("%.1f", perMonth), "Per Month", 0),
+                Triple("$total", "Total", 0),
+                Triple(trendText, "Trend", 0)
+            ).forEachIndexed { i, (v, lb, _) ->
+                val cx = l + i * cw2 + cw2 / 2f
+                cv2.drawText(v, cx, t + 16f, tp(Color.WHITE, 12f, true, Paint.Align.CENTER))
+                cv2.drawText(lb, cx, t + 28f, tp(SUBTLE, 8f, a = Paint.Align.CENTER))
+            }
+        }
+    }
+
+    // ===============================================================
+    //  CORRELATIONS (Patterns + Top Triggers/Metrics)
+    // ===============================================================
+
+    private fun drawCorrelations(singles: List<EdgeFunctionsService.CorrelationStat>, interactions: List<EdgeFunctionsService.CorrelationStat>) {
+        val purple = Color.parseColor("#CE93D8")
+        val purpleDim = Color.parseColor("#4A3560")
+        val red = Color.parseColor("#E57373")
+
+        heading("What Happened", purple)
+
+        // Confidence legend
+        need(22f)
+        val c = cv ?: return
+        val lx = M + 12f
+        val ly = y + 10f
+        c.drawText("Confidence:", lx, ly, tp(SUBTLE, 7.5f))
+        var dx = lx + 52f
+        for (j in 0 until 3) { c.drawCircle(dx + j * 9f, ly - 3f, 3f, fp(purple)) }
+        c.drawText("strong", dx + 30f, ly, tp(SUBTLE, 7f))
+        dx += 72f
+        for (j in 0 until 2) { c.drawCircle(dx + j * 9f, ly - 3f, 3f, fp(purple)) }
+        c.drawCircle(dx + 18f, ly - 3f, 3f, fp(purpleDim))
+        c.drawText("likely", dx + 30f, ly, tp(SUBTLE, 7f))
+        dx += 68f
+        c.drawCircle(dx, ly - 3f, 3f, fp(purple))
+        for (j in 1 until 3) { c.drawCircle(dx + j * 9f, ly - 3f, 3f, fp(purpleDim)) }
+        c.drawText("possible", dx + 30f, ly, tp(SUBTLE, 7f))
+        y += 20f
+
+        // ── Top Patterns (singles) ──
+        if (singles.isNotEmpty()) {
+            need(24f)
+            cv?.drawText("Top Patterns", M + 12f, y + 12f, tp(purple, 10f, true))
+            y += 20f
+
+            val maxNameW = PW - 2 * M - 90f // leave room for lift + dots
+            for (stat in singles.sortedByDescending { it.liftRatio }.take(10)) {
+                need(34f)
+                val filled = when {
+                    stat.pValue < 0.01f -> 3
+                    stat.pValue < 0.05f -> 2
+                    else -> 1
+                }
+                card(28f) { cv2, l, t, r, _ ->
+                    val namePaint = tp(Color.WHITE, 9f, true)
+                    val name = ellipsize(stat.factorName, namePaint, maxNameW)
+                    cv2.drawText(name, l + 4f, t + 2f, namePaint)
+                    cv2.drawText("${String.format("%.1f", stat.liftRatio)}×", r - 34f, t + 2f, tp(purple, 9f, true, Paint.Align.RIGHT))
+                    val dotX = r - 2f
+                    for (j in 2 downTo 0) {
+                        val col = if (j < filled) purple else purpleDim
+                        cv2.drawCircle(dotX - j * 9f, t, 3f, fp(col))
+                    }
+                    val lag = if (stat.bestLagDays > 0) "${stat.bestLagDays}d before" else "same day"
+                    val sevStr = stat.avgSeverity?.let { sev ->
+                        " • sev ${String.format("%.0f", sev)}/10"
+                    } ?: ""
+                    val durStr = stat.avgDurationHrs?.let { hrs ->
+                        if (hrs >= 24f) " • ~${String.format("%.0f", hrs / 24f)}d"
+                        else " • ~${String.format("%.0f", hrs)}h"
+                    } ?: ""
+                    cv2.drawText("${stat.pctMigraineWindows.toInt()}% of migraines • $lag$sevStr$durStr", l + 4f, t + 14f, tp(SUBTLE, 7f))
+                }
+            }
+        }
+
+        // ── Dangerous Combinations ──
+        if (interactions.isNotEmpty()) {
+            need(28f)
+            cv?.drawText("Dangerous Combinations", M + 12f, y + 14f, tp(red, 10f, true))
+            y += 22f
+
+            for (stat in interactions.sortedByDescending { it.liftRatio }.take(8)) {
+                need(44f)
+                val filled = when {
+                    stat.pValue < 0.01f -> 3
+                    stat.pValue < 0.05f -> 2
+                    else -> 1
+                }
+                card(36f) { cv2, l, t, r, _ ->
+                    val maxW = r - l - 60f
+                    val namePaint = tp(Color.WHITE, 9f, true)
+                    cv2.drawText(ellipsize(stat.factorName, namePaint, maxW), l + 4f, t + 2f, namePaint)
+                    cv2.drawText("+", l + 4f, t + 14f, tp(red, 8f))
+                    cv2.drawText(ellipsize(stat.factorB ?: "?", namePaint, maxW), l + 14f, t + 14f, namePaint)
+                    cv2.drawText("${String.format("%.1f", stat.liftRatio)}×", r - 34f, t + 8f, tp(red, 9f, true, Paint.Align.RIGHT))
+                    val dotX = r - 2f
+                    for (j in 2 downTo 0) {
+                        val col = if (j < filled) purple else purpleDim
+                        cv2.drawCircle(dotX - j * 9f, t + 6f, 3f, fp(col))
+                    }
+                }
+            }
+        }
+    }
+
+    /** Ellipsize text to fit within maxWidth */
+    private fun ellipsize(text: String, paint: Paint, maxWidth: Float): String {
+        if (paint.measureText(text) <= maxWidth) return text
+        var t = text
+        while (t.length > 3 && paint.measureText("$t…") > maxWidth) t = t.dropLast(1)
+        return "$t…"
+    }
+
+    // ===============================================================
+    //  TREATMENT CORRELATIONS (What Worked — liftRatio based)
+    // ===============================================================
+
+    private fun drawTreatmentCorrelations(
+        treatments: List<EdgeFunctionsService.CorrelationStat>,
+        treatmentInteractions: List<EdgeFunctionsService.CorrelationStat>
+    ) {
+        val green = Color.parseColor("#81C784")
+
+        if (treatments.isNotEmpty()) {
+            heading("What Worked", green)
+
+            need(18f)
+            cv?.drawText("shorter = reduced duration • milder = reduced severity • based on your migraine data", M + 12f, y + 10f, tp(SUBTLE, 7.5f))
+            y += 18f
+
+            for (stat in treatments.sortedByDescending { it.liftRatio }.take(10)) {
+                need(30f)
+                val liftParts = mutableListOf<String>()
+                if (stat.durationLift > 1f) liftParts.add("${String.format("%.1f", stat.durationLift)}× shorter")
+                if (stat.severityLift > 1f) liftParts.add("${String.format("%.1f", stat.severityLift)}× milder")
+                if (liftParts.isEmpty()) liftParts.add("${String.format("%.1f", stat.liftRatio)}× effective")
+                val liftText = liftParts.joinToString(" • ")
+                card(24f) { cv2, l, t, r, _ ->
+                    cv2.drawText(stat.factorName, l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
+                    cv2.drawText(liftText, r - 4f, t + 2f, tp(green, 8f, true, Paint.Align.RIGHT))
+                    cv2.drawText("Used in ${stat.pctMigraineWindows.toInt()}% of migraines", l + 4f, t + 14f, tp(SUBTLE, 7f))
+                }
+            }
+        }
+
+        if (treatmentInteractions.isNotEmpty()) {
+            need(30f)
+            heading("Effective Combinations", green)
+
+            for (stat in treatmentInteractions.sortedByDescending { it.liftRatio }.take(8)) {
+                need(38f)
+                val liftParts = mutableListOf<String>()
+                if (stat.durationLift > 1f) liftParts.add("${String.format("%.1f", stat.durationLift)}× shorter")
+                if (stat.severityLift > 1f) liftParts.add("${String.format("%.1f", stat.severityLift)}× milder")
+                if (liftParts.isEmpty()) liftParts.add("${String.format("%.1f", stat.liftRatio)}× effective")
+                val liftText = liftParts.joinToString(" • ")
+                card(30f) { cv2, l, t, r, _ ->
+                    cv2.drawText(stat.factorName, l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
+                    cv2.drawText("+", l + 4f, t + 14f, tp(green, 8f))
+                    cv2.drawText(stat.factorB ?: "?", l + 14f, t + 14f, tp(Color.WHITE, 9f, true))
+                    cv2.drawText(liftText, r - 4f, t + 8f, tp(green, 8f, true, Paint.Align.RIGHT))
+                }
+            }
+        }
+    }
+
+    // ===============================================================
+    //  WHAT WERE YOU DOING (Context items with severity diff)
+    // ===============================================================
+
+    private fun drawContext(data: ReportData) {
+        val teal = Color.parseColor("#4DD0E1")
+        heading("What Were You Doing", teal)
+
+        need(18f)
+        cv?.drawText("Activities & locations during your migraines", M + 12f, y + 10f, tp(SUBTLE, 7.5f))
+        y += 18f
+
+        for (item in data.contextItems.take(12)) {
+            need(30f)
+            val sevColor = when {
+                item.avgSeverity >= 7f -> Color.parseColor("#E57373")
+                item.avgSeverity >= 5f -> Color.parseColor("#FFB74D")
+                else -> Color.parseColor("#81C784")
+            }
+            val durStr = item.avgDurationHrs?.let { hrs ->
+                if (hrs >= 24f) " • avg ${String.format("%.0f", hrs / 24f)}d"
+                else " • avg ${String.format("%.0f", hrs)}h"
+            } ?: ""
+            card(24f) { cv2, l, t, r, _ ->
+                cv2.drawText(item.name, l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
+                cv2.drawText("severity ${String.format("%.0f", item.avgSeverity)}/10$durStr", r - 4f, t + 2f, tp(sevColor, 8f, true, Paint.Align.RIGHT))
+                cv2.drawText("${item.count} migraines (${item.pctOfMigraines.toInt()}%)", l + 4f, t + 14f, tp(SUBTLE, 7f))
+            }
+        }
+    }
+
+    // ===============================================================
+    //  HOW DID IT IMPACT YOU (Severity + Pain locations + Missed)
+    // ===============================================================
+
+    private fun drawImpact(data: ReportData) {
+        val red = Color.parseColor("#E57373")
+
+        heading("How Did It Impact You", red)
+
+        // ── Severity Distribution ──
+        if (data.severityCounts.isNotEmpty()) {
+            need(24f)
+            cv?.drawText("Severity Distribution", M + 12f, y + 12f, tp(Color.parseColor("#FF8A65"), 10f, true))
+            y += 20f
+
+            need(70f)
+            val c = cv ?: return
+            val avgSev = data.overallAvgSeverity
+            val maxCount = data.severityCounts.maxOfOrNull { it.second } ?: 1
+            val barAreaLeft = M + 60f
+            val barAreaWidth = PW - 2 * M - 70f
+            val bw = barAreaWidth / 10f
+            val barMaxH = 40f
+
+            // Avg severity big number
+            c.drawText(String.format("%.1f", avgSev), M + 12f, y + 24f, tp(red, 22f, true))
+            c.drawText("avg /10", M + 12f, y + 36f, tp(SUBTLE, 7f))
+
+            // Bar chart
+            for (sev in 1..10) {
+                val count = data.severityCounts.toMap()[sev] ?: 0
+                val fraction = if (maxCount > 0) count.toFloat() / maxCount else 0f
+                val barH = barMaxH * fraction.coerceAtLeast(0.03f)
+                val x = barAreaLeft + (sev - 1) * bw
+                val barTop = y + barMaxH - barH
+                val t = (sev - 1) / 9f
+                val barColor = interpolateColor(ACCENT, red, t)
+                val alpha = if (count > 0) 180 else 40
+                c.drawRoundRect(RectF(x + 1f, barTop, x + bw - 1f, y + barMaxH), 2f, 2f, fp(barColor, alpha))
+                c.drawText("$sev", x + bw / 2f, y + barMaxH + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
+            }
+            y += barMaxH + 18f
+        }
+
+        // ── Pain Locations ──
+        if (data.painLocationCounts.isNotEmpty() && data.totalMigraineCount > 0) {
+            y += 8f // spacing from severity
+            need(30f)
+            val c = cv ?: return
+            val subCol = Color.parseColor("#FF8A65")
+            c.drawText("Pain Locations", M + 12f, y + 12f, tp(subCol, 10f, true))
+            y += 22f
+
+            // Draw front + back head silhouettes side by side
+            val imgH = 180f
+            val imgW = (PW - 2 * M - 16f) / 2f
+            need(imgH + 10f)
+            val c2 = cv ?: return
+            val countsMap = data.painLocationCounts.toMap()
+
+            try {
+                val frontBmp = android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.painpoints)
+                val backBmp = android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.painpointsback)
+
+                if (frontBmp != null) {
+                    val imgAspect = frontBmp.width.toFloat() / frontBmp.height
+                    val drawW = (imgH * imgAspect).coerceAtMost(imgW)
+                    val frontLeft = M + (imgW - drawW) / 2f
+                    val dst = RectF(frontLeft, y, frontLeft + drawW, y + imgH)
+                    val imgPaint = Paint().apply { alpha = 80 }
+                    c2.drawBitmap(frontBmp, null, dst, imgPaint)
+                    FRONT_PAIN_POINTS.forEach { point ->
+                        val count = countsMap[point.id] ?: return@forEach
+                        val pct = (count.toFloat() / data.totalMigraineCount * 100).toInt()
+                        if (pct <= 0) return@forEach
+                        val dotAlpha = (pct / 100f * 255).toInt().coerceIn(50, 230)
+                        val dotR = 4f + (pct / 100f * 4f)
+                        val ddx = frontLeft + point.xPct * drawW
+                        val dy = y + point.yPct * imgH
+                        c2.drawCircle(ddx, dy, dotR, fp(SS, dotAlpha))
+                        c2.drawText("$pct", ddx, dy + 3f, tp(Color.WHITE, 6f, true, Paint.Align.CENTER))
+                    }
+                    frontBmp.recycle()
+                }
+                if (backBmp != null) {
+                    val imgAspect = backBmp.width.toFloat() / backBmp.height
+                    val drawW = (imgH * imgAspect).coerceAtMost(imgW)
+                    val backLeft = M + imgW + 16f + (imgW - drawW) / 2f
+                    val dst = RectF(backLeft, y, backLeft + drawW, y + imgH)
+                    val imgPaint = Paint().apply { alpha = 80 }
+                    c2.drawBitmap(backBmp, null, dst, imgPaint)
+                    BACK_PAIN_POINTS.forEach { point ->
+                        val count = countsMap[point.id] ?: return@forEach
+                        val pct = (count.toFloat() / data.totalMigraineCount * 100).toInt()
+                        if (pct <= 0) return@forEach
+                        val dotAlpha = (pct / 100f * 255).toInt().coerceIn(50, 230)
+                        val dotR = 4f + (pct / 100f * 4f)
+                        val ddx = backLeft + point.xPct * drawW
+                        val dy = y + point.yPct * imgH
+                        c2.drawCircle(ddx, dy, dotR, fp(SS, dotAlpha))
+                        c2.drawText("$pct", ddx, dy + 3f, tp(Color.WHITE, 6f, true, Paint.Align.CENTER))
+                    }
+                    backBmp.recycle()
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to draw pain location images: ${e.message}")
+            }
+            y += imgH + 8f
+
+            // Location list
+            for ((locId, count) in data.painLocationCounts.take(10)) {
+                need(20f)
+                val c3 = cv ?: return
+                val label = ALL_PAIN_POINTS_MAP[locId] ?: locId
+                val pct = (count.toFloat() / data.totalMigraineCount * 100).toInt()
+                val pctColor = when {
+                    pct >= 60 -> SS
+                    pct >= 30 -> SMO
+                    else -> SUBTLE
+                }
+                val dotAlpha = (pct / 100f * 255).toInt().coerceIn(50, 230)
+                c3.drawCircle(M + 18f, y + 6f, 3.5f, fp(SS, dotAlpha))
+                c3.drawText(label, M + 30f, y + 10f, tp(Color.WHITE, 8.5f))
+                c3.drawText("$pct%", PW - M - 12f, y + 10f, tp(pctColor, 8.5f, true, Paint.Align.RIGHT))
+                y += 16f
+            }
+        }
+
+        // ── Missed Activities ──
+        if (data.impactItems.isNotEmpty()) {
+            y += 10f // spacing from pain locations
+            need(30f)
+            val c = cv ?: return
+            c.drawText("Missed Activities", M + 12f, y + 12f, tp(SS, 10f, true))
+            y += 22f
+
+            for (item in data.impactItems.take(10)) {
+                need(30f)
+                card(24f) { cv2, l, t, r, _ ->
+                    cv2.drawText(item.name, l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
+                    cv2.drawText("${item.totalMissed}×", r - 4f, t + 2f, tp(SS, 9f, true, Paint.Align.RIGHT))
+                    cv2.drawText("missed during ${item.pctOfMigraines.toInt()}% of migraines", l + 4f, t + 14f, tp(SUBTLE, 7f))
+                }
+            }
+        }
+    }
+
+    /** Linear interpolation between two Android Color ints */
+    private fun interpolateColor(c1: Int, c2: Int, t: Float): Int {
+        val r = ((Color.red(c1) * (1 - t) + Color.red(c2) * t)).toInt()
+        val g = ((Color.green(c1) * (1 - t) + Color.green(c2) * t)).toInt()
+        val b = ((Color.blue(c1) * (1 - t) + Color.blue(c2) * t)).toInt()
+        return Color.rgb(r, g, b)
     }
 
     // ===============================================================

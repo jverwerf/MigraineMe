@@ -85,10 +85,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -121,8 +123,15 @@ object Routes {
     const val FORUM_POST_DETAIL = "community/forum"
     const val INSIGHTS = "insights"
     const val INSIGHTS_DETAIL = "insights_detail"
+    const val INSIGHTS_TIMELINE = "insights_timeline"
     const val INSIGHTS_REPORT = "insights_report"
     const val INSIGHTS_BREAKDOWN = "insights_breakdown"
+        const val INSIGHTS_PATTERNS = "insights_patterns"
+        const val INSIGHTS_TREATMENTS = "insights_treatments"
+        const val INSIGHTS_CONTEXT = "insights_context"
+        const val INSIGHTS_IMPACT = "insights_impact"
+        const val INSIGHTS_THRESHOLDS = "insights_thresholds"
+        const val FREQUENCY_TRENDS = "frequency_trends"
     const val MONITOR = "monitor"
     const val MONITOR_CONFIG = "monitor_config"
     const val JOURNAL = "journal"
@@ -155,6 +164,10 @@ object Routes {
     const val FULL_GRAPH_WEATHER = "full_graph_weather"
     const val FULL_GRAPH_NUTRITION = "full_graph_nutrition"
     const val MONITOR_MENTAL = "monitor_mental"
+        const val MONITOR_RISK = "monitor_risk"
+        const val RISK_CONFIG = "risk_config"
+        const val RISK_DATA_HISTORY = "risk_data_history"
+        const val FULL_GRAPH_RISK = "full_graph_risk"
     const val MENTAL_CONFIG = "mental_config"
     const val MENTAL_DATA_HISTORY = "mental_data_history"
     const val FULL_GRAPH_MENTAL = "full_graph_mental"
@@ -195,6 +208,7 @@ object Routes {
     const val MISSED_ACTIVITIES = "missed_activities"
     const val MANAGE_MISSED_ACTIVITIES = "manage_missed_activities"
     const val TIMING = "timing"
+    const val PAINT_PICTURE = "paint_picture"
 
 
     const val THIRD_PARTY_CONNECTIONS = "third_party_connections"
@@ -232,6 +246,9 @@ class MainActivity : ComponentActivity() {
         window.setBackgroundDrawable(null)
 
         handleWhoopOAuthIntent(intent)
+        handleOuraOAuthIntent(intent)
+        handlePolarOAuthIntent(intent)
+        handleGarminOAuthIntent(intent)
         handleSupabaseOAuthIntent(intent)
         handleNavigationIntent(intent)
 
@@ -245,6 +262,9 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleWhoopOAuthIntent(intent)
+        handleOuraOAuthIntent(intent)
+        handlePolarOAuthIntent(intent)
+        handleGarminOAuthIntent(intent)
         handleSupabaseOAuthIntent(intent)
         handleNavigationIntent(intent)
     }
@@ -278,6 +298,112 @@ class MainActivity : ComponentActivity() {
                     Toast.makeText(this, "WHOOP callback opened.", Toast.LENGTH_SHORT).show()
                 }
             }
+
+            // Navigate back to connections screen so the user lands where they started
+            pendingNavigationRoute.value = Routes.THIRD_PARTY_CONNECTIONS
+        }
+    }
+
+    private fun handleOuraOAuthIntent(intent: Intent?) {
+        val data: Uri? = intent?.data
+        if (data?.scheme == "migraineme" && data.host == "oura" && data.path == "/callback") {
+
+            val code = data.getQueryParameter("code")
+            val state = data.getQueryParameter("state")
+            val error = data.getQueryParameter("error")
+
+            val prefs = getSharedPreferences("oura_oauth", MODE_PRIVATE)
+            prefs.edit()
+                .putString("last_uri", data.toString())
+                .putString("code", code)
+                .putString("state", state)
+                .putString("error", error)
+                .apply()
+
+            when {
+                !error.isNullOrBlank() -> {
+                    Toast.makeText(this, "Oura auth error: $error", Toast.LENGTH_SHORT).show()
+                }
+
+                !code.isNullOrBlank() -> {
+                    Toast.makeText(this, "Returning from Oura...", Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {
+                    Toast.makeText(this, "Oura callback opened.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            // Navigate back to connections screen so the user lands where they started
+            pendingNavigationRoute.value = Routes.THIRD_PARTY_CONNECTIONS
+        }
+    }
+
+    private fun handlePolarOAuthIntent(intent: Intent?) {
+        val data: Uri? = intent?.data
+        if (data?.scheme == "migraineme" && data.host == "polar" && data.path == "/callback") {
+
+            val code = data.getQueryParameter("code")
+            val state = data.getQueryParameter("state")
+            val error = data.getQueryParameter("error")
+
+            val prefs = getSharedPreferences("polar_oauth", MODE_PRIVATE)
+            prefs.edit()
+                .putString("last_uri", data.toString())
+                .putString("code", code)
+                .putString("state", state)
+                .putString("error", error)
+                .apply()
+
+            when {
+                !error.isNullOrBlank() -> {
+                    Toast.makeText(this, "Polar auth error: $error", Toast.LENGTH_SHORT).show()
+                }
+
+                !code.isNullOrBlank() -> {
+                    Toast.makeText(this, "Returning from Polar...", Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {
+                    Toast.makeText(this, "Polar callback opened.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            // Navigate back to connections screen so the user lands where they started
+            pendingNavigationRoute.value = Routes.THIRD_PARTY_CONNECTIONS
+        }
+    }
+
+    private fun handleGarminOAuthIntent(intent: Intent?) {
+        val data: Uri? = intent?.data
+        if (data?.scheme == "migraineme" && data.host == "garmin" && data.path == "/callback") {
+
+            val code = data.getQueryParameter("code")
+            val state = data.getQueryParameter("state")
+            val error = data.getQueryParameter("error")
+
+            val prefs = getSharedPreferences("garmin_oauth", MODE_PRIVATE)
+            prefs.edit()
+                .putString("last_uri", data.toString())
+                .putString("code", code)
+                .putString("state", state)
+                .putString("error", error)
+                .apply()
+
+            when {
+                !error.isNullOrBlank() -> {
+                    Toast.makeText(this, "Garmin auth error: $error", Toast.LENGTH_SHORT).show()
+                }
+
+                !code.isNullOrBlank() -> {
+                    Toast.makeText(this, "Returning from Garmin...", Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {
+                    Toast.makeText(this, "Garmin callback opened.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            // Navigate back to connections screen so the user lands where they started
+            pendingNavigationRoute.value = Routes.THIRD_PARTY_CONNECTIONS
         }
     }
 
@@ -343,6 +469,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             val userId = SessionStore.readUserId(appCtx)
             PremiumManager.initialize(appCtx, userId)
             PremiumManager.loadState(appCtx)
+
+            // Populate MetricRegistry so Monitor sub-screens know which metrics exist
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                    val triggers = db.getAllTriggerPool(token)
+                    val prodromes = db.getAllProdromePool(token)
+                    MetricRegistry.init(triggers, prodromes)
+                } catch (e: Exception) {
+                    android.util.Log.w("MainActivity", "MetricRegistry init failed: ${e.message}")
+                }
+            }
         } else {
             PremiumManager.reset()
         }
@@ -478,6 +616,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         label = { Text(item.title) },
                         selected = false,
                         onClick = {
+                            val ts = TourManager.state.value
+                            if (ts.active && ts.phase == CoachPhase.TOUR) {
+                                val currentStep = tourSteps.getOrNull(ts.stepIndex)
+                                if (currentStep?.route != item.route) {
+                                    scope.launch { drawerState.close() }
+                                    return@NavigationDrawerItem
+                                }
+                            }
                             scope.launch { drawerState.close() }
                             nav.navigate(item.route) { launchSingleTop = true }
                         },
@@ -511,7 +657,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.HOME || 
             current == Routes.INSIGHTS || 
             current == Routes.INSIGHTS_DETAIL ||
+            current == Routes.INSIGHTS_TIMELINE ||
             current == Routes.INSIGHTS_REPORT ||
+            current == Routes.INSIGHTS_PATTERNS ||
+            current == Routes.INSIGHTS_TREATMENTS ||
+            current == Routes.INSIGHTS_CONTEXT ||
+            current == Routes.INSIGHTS_IMPACT ||
+            current == Routes.INSIGHTS_THRESHOLDS ||
+            current == Routes.FREQUENCY_TRENDS ||
             current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true ||
             current == Routes.JOURNAL ||
             current == Routes.MIGRAINE ||
@@ -529,6 +682,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.NOTES ||
             current == Routes.REVIEW ||
             current == Routes.TIMING ||
+            current == Routes.PAINT_PICTURE ||
             current == Routes.MANAGE_SYMPTOMS ||
             current == Routes.MANAGE_ITEMS ||
             current == Routes.MANAGE_TRIGGERS ||
@@ -559,6 +713,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.FULL_GRAPH_WEATHER ||
             current == Routes.FULL_GRAPH_NUTRITION ||
             current == Routes.MONITOR_MENTAL ||
+            current == Routes.MONITOR_RISK ||
+            current == Routes.RISK_CONFIG ||
+            current == Routes.RISK_DATA_HISTORY ||
+            current == Routes.FULL_GRAPH_RISK ||
             current == Routes.MENTAL_CONFIG ||
             current == Routes.MENTAL_DATA_HISTORY ||
             current == Routes.FULL_GRAPH_MENTAL ||
@@ -579,7 +737,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         // Wizard fullscreen: hide top bar + bottom nav for immersive logging
         val isWizardFullscreen = current in setOf(
             Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
-            Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAIN_LOCATION,
+            Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAINT_PICTURE, Routes.PAIN_LOCATION,
             Routes.TRIGGERS, Routes.MEDICINES,
             Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES,
             Routes.NOTES, Routes.REVIEW,
@@ -626,14 +784,19 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             actionIconContentColor = Color.White
                         ),
                         title = {
-                            Text(
-                                when (current) {
+                            val titleText = when (current) {
                                     Routes.MONITOR -> "Monitor"
                                     Routes.MONITOR_CONFIG -> "Configure Monitor"
                                     Routes.INSIGHTS -> "Insights"
-                                    Routes.INSIGHTS_DETAIL -> "Insights"
-                                    Routes.INSIGHTS_REPORT -> "Insights"
-                                    "${Routes.INSIGHTS_BREAKDOWN}/{logType}" -> "Insights"
+                                    Routes.INSIGHTS_DETAIL -> "Explore Migraines"
+                                    Routes.INSIGHTS_TIMELINE -> "Migraine Timeline"
+                                    Routes.INSIGHTS_REPORT -> "Full Report"
+                                    Routes.INSIGHTS_PATTERNS -> "What Happened"
+                                    Routes.INSIGHTS_TREATMENTS -> "What Worked"
+                                    Routes.INSIGHTS_CONTEXT -> "What Were You Doing"
+                                    Routes.INSIGHTS_IMPACT -> "How Did It Impact You"
+                                    Routes.INSIGHTS_THRESHOLDS -> "Accuracy"
+                                    Routes.FREQUENCY_TRENDS -> "Frequency Trends"
                                     Routes.HOME -> "Home"
                                     Routes.MIGRAINE -> "Log"
                                     Routes.LOG_MIGRAINE -> "Log Migraine"
@@ -658,6 +821,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.MONITOR_PHYSICAL -> "Physical Health"
                                     Routes.MONITOR_SLEEP -> "Sleep"
                                     Routes.MONITOR_MENTAL -> "Mental Health"
+                                    Routes.MONITOR_RISK -> "Risk"
+                                    Routes.RISK_CONFIG -> "Risk Card Settings"
+                                    Routes.RISK_DATA_HISTORY -> "Risk Data"
                                     Routes.COMMUNITY -> "Community"
                                     Routes.JOURNAL -> "Journal"
                                     Routes.LOGIN -> "Sign in"
@@ -689,17 +855,26 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.MANAGE_RELIEFS -> "Manage Reliefs"
                                     Routes.MANAGE_PRODROMES -> "Manage Prodromes"
                                     Routes.TIMING -> "Timing"
+                                    Routes.PAINT_PICTURE -> "Paint the Picture"
                                     Routes.THIRD_PARTY_CONNECTIONS -> "Connections"
                                     Routes.CHANGE_PASSWORD -> "Change password"
                                     Routes.RISK_WEIGHTS -> "Risk Model"
                                     Routes.RISK_DETAIL -> "Risk Detail"
-                                    else -> ""
+                                    else -> when {
+                                        current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true ->
+                                            backStack?.arguments?.getString("logType") ?: "Breakdown"
+                                        else -> ""
+                                    }
                                 }
-                            )
+                            Text(titleText)
                         },
                         navigationIcon = {
                             if (current != Routes.LOGIN && current != Routes.SIGNUP) {
-                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                IconButton(onClick = {
+                                    val ts = TourManager.state.value
+                                    if (ts.active && ts.phase == CoachPhase.TOUR && topBarTourHint != NavHintLocation.TOP_SETTINGS) return@IconButton
+                                    scope.launch { drawerState.open() }
+                                }) {
                                     Box(contentAlignment = Alignment.Center) {
                                         if (topBarTourHint == NavHintLocation.TOP_SETTINGS) {
                                             Box(
@@ -715,7 +890,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         },
                         actions = {
                             if (current != Routes.LOGIN && current != Routes.SIGNUP) {
-                                IconButton(onClick = { nav.navigate(Routes.COMMUNITY) }) {
+                                IconButton(onClick = {
+                                    val ts = TourManager.state.value
+                                    if (ts.active && ts.phase == CoachPhase.TOUR && topBarTourHint != NavHintLocation.TOP_COMMUNITY) return@IconButton
+                                    nav.navigate(Routes.COMMUNITY)
+                                }) {
                                     Box(contentAlignment = Alignment.Center) {
                                         if (topBarTourHint == NavHintLocation.TOP_COMMUNITY) {
                                             Box(
@@ -745,6 +924,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 }
             ) { inner ->
                 Box(modifier = Modifier.fillMaxSize().padding(inner)) {
+                // ── Global onboarding guard: redirect to onboarding if not completed and not in tour ──
+                // Disabled — was causing screen pop-back issues during onboarding/tour transitions.
+                // Tour navigation is already guarded by blocking bottom nav + drawer during tour.
+                // After tour completes, user is sent to onboarding/setup. Login already checks completion.
+
                 NavHost(
                     navController = nav,
                     startDestination = Routes.LOGIN,
@@ -811,6 +995,29 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         } else { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.MONITOR_MENTAL) { MonitorMentalScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.MONITOR_RISK) { MonitorRiskScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.RISK_CONFIG) { RiskConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.RISK_DATA_HISTORY) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { RiskDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    }
+                    composable(
+                        Routes.FULL_GRAPH_RISK + "?contributors={contributors}",
+                        arguments = listOf(navArgument("contributors") { type = NavType.StringType; defaultValue = "" })
+                    ) { backStackEntry ->
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else {
+                            val contribArg = java.net.URLDecoder.decode(
+                                backStackEntry.arguments?.getString("contributors") ?: "", "UTF-8"
+                            )
+                            val contributors = if (contribArg.isNotBlank()) contribArg.split("|") else emptyList()
+                            FullScreenGraphScreen(graphType = "risk", onBack = { nav.popBackStack() }, highlightContributors = contributors)
+                        }
+                    }
                     composable(Routes.MENTAL_CONFIG) { MentalConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.MENTAL_DATA_HISTORY) {
                         val pState by PremiumManager.state.collectAsState()
@@ -832,14 +1039,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         InsightsScreen(navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_DETAIL) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
-                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
-                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                            InsightsDetailScreen(navController = nav, vm = insightsVm)
-                        }
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        InsightsExploreScreen(navController = nav, vm = insightsVm)
+                    }
+                    composable(Routes.INSIGHTS_TIMELINE) {
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        InsightsDetailScreen(navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_REPORT) {
                         val pState by PremiumManager.state.collectAsState()
@@ -852,15 +1059,65 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         }
                     }
                     composable("${Routes.INSIGHTS_BREAKDOWN}/{logType}") { backStack ->
+                        val logType = backStack.arguments?.getString("logType") ?: "Triggers"
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
+                    }
+                    composable(Routes.INSIGHTS_PATTERNS) {
                         val pState by PremiumManager.state.collectAsState()
                         if (!pState.isLoading && !pState.isPremium) {
                             LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
                         } else {
-                            val logType = backStack.arguments?.getString("logType") ?: "Triggers"
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                            InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
+                            InsightsPatternsScreen(navController = nav, vm = insightsVm)
                         }
+                    }
+                    composable(Routes.INSIGHTS_THRESHOLDS) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsThresholdsScreen(navController = nav, vm = insightsVm)
+                        }
+                    }
+                    composable(Routes.INSIGHTS_TREATMENTS) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsTreatmentsScreen(navController = nav, vm = insightsVm)
+                        }
+                    }
+                    composable(Routes.INSIGHTS_CONTEXT) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsContextScreen(navController = nav, vm = insightsVm)
+                        }
+                    }
+                    composable(Routes.INSIGHTS_IMPACT) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsImpactScreen(navController = nav, vm = insightsVm)
+                        }
+                    }
+                    composable(Routes.FREQUENCY_TRENDS) {
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        FrequencyTrendsScreen(onBack = { nav.popBackStack() }, vm = insightsVm)
                     }
                     composable(Routes.TRIGGERS_SETTINGS) { TriggersSettingsScreen(navController = nav, authVm = authVm) }
                     composable(Routes.CUSTOMIZE_TRIGGERS) { CustomizeTriggersScreen() }
@@ -923,6 +1180,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
                     composable(Routes.LOG_MIGRAINE) { LogHomeScreen(navController = nav, authVm = authVm, vm = logVm, symptomVm = symptomVm, onClose = wizardClose) }
                     composable(Routes.TIMING) { TimingScreen(navController = nav, vm = logVm, onClose = wizardClose) }
+                    composable(Routes.PAINT_PICTURE) { PaintThePictureScreen(navController = nav, authVm = authVm, vm = logVm, symptomVm = symptomVm, onClose = wizardClose) }
                     composable(Routes.PAIN_LOCATION) { PainLocationScreen(navController = nav, vm = logVm, onClose = wizardClose) }
                     composable(Routes.PRODROMES_LOG) {
                         val prodromeVm: ProdromeViewModel = viewModel()
@@ -1104,7 +1362,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         if (!prefilling) {
                             // Navigate to wizard, replacing this route
                             LaunchedEffect(Unit) {
-                                nav.navigate(Routes.LOG_MIGRAINE) {
+                                nav.navigate(Routes.TIMING) {
                                     popUpTo("${Routes.EDIT_MIGRAINE}/{id}") { inclusive = true }
                                 }
                             }
@@ -1212,7 +1470,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 items = items,
                                 showPrediction = true,
                                 categories = listOf("Body", "Cognitive", "Diet", "Environment", "Menstrual Cycle", "Physical", "Sleep"),
-                                iconResolver = { key -> TriggerIcons.forKey(key) },
+                                iconResolver = { key, _ -> TriggerIcons.forKey(key) },
                                 pickerIcons = TriggerIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, prediction ->
                                     authState.accessToken?.let { triggerVm.addNewToPool(it, label, category, prediction.name) }
@@ -1299,7 +1557,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 drawHeroIcon = { HubIcons.run { drawMedicinePill(it) } },
                                 items = items,
                                 categories = listOf("Analgesic", "Anti-Nausea", "CGRP", "Preventive", "Supplement", "Triptan", "Other"),
-                                iconResolver = { key -> MedicineIcons.forKey(key) },
+                                iconResolver = { key, _ -> MedicineIcons.forKey(key) },
                                 pickerIcons = MedicineIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ ->
                                     authState.accessToken?.let { medicineVm.addNewToPool(it, label, category) }
@@ -1353,7 +1611,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 drawHeroIcon = { HubIcons.run { drawReliefLeaf(it) } },
                                 items = items,
                                 categories = listOf("Breathing", "Cold/Heat", "Darkness", "Hydration", "Massage", "Meditation", "Movement", "Rest", "Supplement", "Other"),
-                                iconResolver = { key -> ReliefIcons.forKey(key) },
+                                iconResolver = { key, label -> ReliefIcons.forLabel(label, key) },
                                 pickerIcons = ReliefIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ ->
                                     authState.accessToken?.let { reliefVm.addNewToPool(it, label, category) }
@@ -1438,7 +1696,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 items = items,
                                 showPrediction = true,
                                 categories = listOf("Autonomic", "Cognitive", "Digestive", "Mood", "Physical", "Sensitivity", "Sensory", "Sleep", "Speech", "Visual"),
-                                iconResolver = { key -> ProdromeIcons.forKey(key) },
+                                iconResolver = { key, _ -> ProdromeIcons.forKey(key) },
                                 pickerIcons = ProdromeIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, prediction ->
                                     authState.accessToken?.let { prodromeVm.addNewToPool(it, label, category, prediction.name) }
@@ -1518,7 +1776,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 drawHeroIcon = { HubIcons.run { drawLocationPin(it) } },
                                 items = items,
                                 categories = listOf("Exercise", "Home", "Medical", "Outdoors", "Social", "Transport", "Work", "Other"),
-                                iconResolver = { key -> LocationIcons.forKey(key) },
+                                iconResolver = { key, label -> LocationIcons.forLabel(label, key) },
                                 pickerIcons = LocationIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ -> authState.accessToken?.let { locationVm.addNewToPool(it, label, category) } },
                                 onDelete = { id -> authState.accessToken?.let { locationVm.removeFromPool(it, id) } },
@@ -1561,7 +1819,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 drawHeroIcon = { HubIcons.run { drawActivityPulse(it) } },
                                 items = items,
                                 categories = listOf("Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
-                                iconResolver = { key -> ActivityIcons.forKey(key) },
+                                iconResolver = { key, label -> ActivityIcons.forLabel(label, key) },
                                 pickerIcons = ActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ -> authState.accessToken?.let { activityVm.addNewToPool(it, label, category) } },
                                 onDelete = { id -> authState.accessToken?.let { activityVm.removeFromPool(it, id) } },
@@ -1604,7 +1862,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 drawHeroIcon = { HubIcons.run { drawMissedActivity(it) } },
                                 items = items,
                                 categories = listOf("Care", "Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
-                                iconResolver = { key -> MissedActivityIcons.forKey(key) },
+                                iconResolver = { key, label -> MissedActivityIcons.forLabel(label, key) },
                                 pickerIcons = MissedActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ -> authState.accessToken?.let { missedVm.addNewToPool(it, label, category) } },
                                 onDelete = { id -> authState.accessToken?.let { missedVm.removeFromPool(it, id) } },
@@ -1623,12 +1881,15 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         val a by authVm.state.collectAsState()
                         val loginCtx = LocalContext.current
                         LaunchedEffect(a.accessToken) {
+                            // Only navigate if we're actually on the login screen
+                            val currentRoute = nav.currentBackStackEntry?.destination?.route
+                            if (currentRoute != Routes.LOGIN) return@LaunchedEffect
                             if (!a.accessToken.isNullOrBlank()) {
-                                // If returning from WHOOP OAuth during setup, go back to Connections
+                                // Always clear the WHOOP return flag on login
                                 val whoopPrefs = loginCtx.getSharedPreferences("whoop_oauth", android.content.Context.MODE_PRIVATE)
                                 val returnToSetup = whoopPrefs.getBoolean("return_to_setup", false)
+                                whoopPrefs.edit().putBoolean("return_to_setup", false).apply()
                                 if (returnToSetup) {
-                                    whoopPrefs.edit().putBoolean("return_to_setup", false).apply()
                                     nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) {
                                         popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                         launchSingleTop = true
@@ -1683,12 +1944,33 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onBack = { nav.popBackStack() },
                             onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) },
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
-                            onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) }
+                            onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
+                            onNavigateToCompanions = { nav.navigate("companions_manage") },
+                            onLoggedOut = {
+                                nav.navigate(Routes.LOGIN) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
                         )
                     }
 
                     composable(Routes.CHANGE_PASSWORD) {
                         ChangePasswordScreen(authVm = authVm, onDone = { nav.popBackStack() })
+                    }
+
+                    composable("companions_manage") {
+                        val companionToken = remember { mutableStateOf<String?>(null) }
+                        val ctx = LocalContext.current
+                        LaunchedEffect(Unit) {
+                            companionToken.value = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                SessionStore.getValidAccessToken(ctx)
+                            }
+                        }
+                        CompanionsOnboardingScreen(
+                            accessToken = companionToken.value,
+                            onContinue = { nav.popBackStack() }
+                        )
                     }
 
                     composable(Routes.THIRD_PARTY_CONNECTIONS) {
@@ -1729,6 +2011,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable(Routes.ONBOARDING) {
                         OnboardingScreen(
                             startAtSetup = false,
+                            logVm = logVm,
                             onComplete = {
                                 nav.navigate(Routes.HOME) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
@@ -1760,6 +2043,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable("${Routes.ONBOARDING}/setup") {
                         OnboardingScreen(
                             startAtSetup = true,
+                            logVm = logVm,
                             onComplete = {
                                 nav.navigate(Routes.AI_SETUP) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
@@ -1832,7 +2116,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                                         // Update status text based on progress
                                         statusText = when {
-                                            elapsed < 12_000 -> "Fetching your WHOOP data..."
+                                            elapsed < 12_000 -> "Fetching your data..."
                                             elapsed < 22_000 -> "Loading weather patterns..."
                                             elapsed < 38_000 -> "Evaluating your triggers..."
                                             elapsed < 52_000 -> "Calculating risk scores..."
@@ -2097,7 +2381,14 @@ private fun BottomBar(
             val showBadge = item.route == Routes.JOURNAL && journalBadgeCount > 0
             val selected = currentRoute == item.route ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_DETAIL) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_TIMELINE) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_REPORT) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_PATTERNS) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_TREATMENTS) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_CONTEXT) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_IMPACT) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_THRESHOLDS) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.FREQUENCY_TRENDS) ||
                     (item.route == Routes.INSIGHTS && currentRoute?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true) ||
                     (item.route == Routes.MONITOR && currentRoute == Routes.MONITOR_CONFIG)
             val isTourTarget = tourHintRoute == item.route
@@ -2105,6 +2396,10 @@ private fun BottomBar(
             NavigationBarItem(
                 selected = selected,
                 onClick = {
+                    // During tour, only allow navigating to the tour's highlighted tab
+                    if (tourState.active && tourState.phase == CoachPhase.TOUR && isTourTarget.not()) {
+                        return@NavigationBarItem
+                    }
                     nav.navigate(item.route) {
                         popUpTo(nav.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true

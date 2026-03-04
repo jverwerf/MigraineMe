@@ -22,7 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,33 +31,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
- * Maps a sleep graph metric key to its Supabase metric_settings table name.
- */
-private fun sleepMetricToTable(metric: String): String = when (metric) {
-    SleepCardConfig.METRIC_DURATION -> "sleep_duration_daily"
-    SleepCardConfig.METRIC_SCORE -> "sleep_score_daily"
-    SleepCardConfig.METRIC_EFFICIENCY -> "sleep_efficiency_daily"
-    SleepCardConfig.METRIC_DISTURBANCES -> "sleep_disturbances_daily"
-    SleepCardConfig.METRIC_STAGES_DEEP,
-    SleepCardConfig.METRIC_STAGES_REM,
-    SleepCardConfig.METRIC_STAGES_LIGHT -> "sleep_stages_daily"
-    else -> ""
-}
-
-/**
- * Determines the source type for a metric based on its preferred_source.
- * Returns: "wearable", "phone", or null if no source.
+ * Determines the source icon type based on preferred_source from metric_settings.
  */
 private fun sourceTypeFor(preferredSource: String?): String? = when (preferredSource) {
-    "whoop", "garmin", "oura", "fitbit" -> "external"
-    "health_connect" -> "external"
+    "whoop", "garmin", "oura", "fitbit", "health_connect" -> "external"
     "phone" -> "phone"
-    null -> null
     else -> null
 }
 
@@ -70,31 +58,47 @@ fun SleepConfigScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    val initialConfig = remember { SleepCardConfigStore.load(context) }
-    var selectedMetrics by remember { mutableStateOf<Set<String>>(initialConfig.sleepDisplayMetrics.toSet()) }
+    var selectedMetrics by remember {
+        mutableStateOf(MetricDisplayStore.getDisplayMetrics(context, "sleep").toSet())
+    }
 
-    // Load metric settings to know which sources are active
-    var metricSettings by remember {
+    // Which metrics are enabled + their settings (for source icons)
+    var enabledRegistryKeys by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var metricSettingsMap by remember {
         mutableStateOf<Map<String, EdgeFunctionsService.MetricSettingResponse>>(emptyMap())
     }
     var settingsLoaded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                val edge = EdgeFunctionsService()
-                val settings = edge.getMetricSettings(context)
-                metricSettings = settings.associateBy { it.metric }
-            } catch (_: Exception) { }
-            settingsLoaded = true
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val edge = EdgeFunctionsService()
+                            val settings = edge.getMetricSettings(context)
+                            metricSettingsMap = settings.associateBy { it.metric }
+                            enabledRegistryKeys = MetricRegistry.enabledKeys(settings, "sleep")
+                        } catch (_: Exception) {
+                            enabledRegistryKeys = MetricRegistry.byGroup("sleep").map { it.key }.toSet()
+                        }
+                        settingsLoaded = true
+                    }
+                }
+            }
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Only show enabled metrics from registry
+    val availableMetrics = remember(settingsLoaded, enabledRegistryKeys) {
+        MetricRegistry.byGroup("sleep").filter { it.key in enabledRegistryKeys }
     }
 
     fun saveConfig() {
-        SleepCardConfigStore.save(
-            context,
-            SleepCardConfigData(sleepDisplayMetrics = selectedMetrics.toList())
-        )
+        MetricDisplayStore.setDisplayMetrics(context, "sleep", selectedMetrics.toList())
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -129,117 +133,135 @@ fun SleepConfigScreen(
                 )
             }
 
-            BaseCard {
-                Text(
-                    text = "Display Metrics (${selectedMetrics.size}/3)",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "Select up to 3 sleep metrics to show on the Monitor card.",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Spacer(Modifier.height(12.dp))
-
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    for (metric in SleepCardConfig.ALL_SLEEP_METRICS) {
-                        val table = sleepMetricToTable(metric)
-                        val setting = metricSettings[table]
-                        val source = sourceTypeFor(setting?.preferredSource)
-
-                        // Only hide if settings are loaded AND the metric is explicitly disabled
-                        if (settingsLoaded && setting != null && !setting.enabled) continue
-
-                        val isSelected = metric in selectedMetrics
-                        val label = SleepCardConfig.labelFor(metric)
-                        val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-                        val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metric) else -1
-                        val chipColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                if (isSelected) {
-                                    selectedMetrics = selectedMetrics.minus(metric)
-                                } else if (selectedMetrics.size < 3) {
-                                    selectedMetrics = selectedMetrics.plus(metric)
-                                }
-                                saveConfig()
-                            },
-                            label = {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            },
-                            leadingIcon = if (isSelected) {
-                                {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            } else null,
-                            trailingIcon = when (source) {
-                                "external" -> {
-                                    {
-                                        Icon(
-                                            Icons.Default.Watch,
-                                            contentDescription = "External",
-                                            modifier = Modifier.size(14.dp),
-                                            tint = if (isSelected) chipColor else AppTheme.SubtleTextColor
-                                        )
-                                    }
-                                }
-                                "phone" -> {
-                                    {
-                                        Icon(
-                                            Icons.Default.PhoneAndroid,
-                                            contentDescription = "Phone",
-                                            modifier = Modifier.size(14.dp),
-                                            tint = if (isSelected) chipColor else AppTheme.SubtleTextColor
-                                        )
-                                    }
-                                }
-                                else -> null
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = chipColor.copy(alpha = 0.3f),
-                                selectedLabelColor = chipColor,
-                                containerColor = AppTheme.BaseCardContainer,
-                                labelColor = AppTheme.BodyTextColor
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                borderColor = if (isSelected) chipColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                                selectedBorderColor = chipColor,
-                                enabled = true,
-                                selected = isSelected
-                            )
-                        )
-                    }
+            if (settingsLoaded && availableMetrics.isEmpty()) {
+                BaseCard {
+                    Text(
+                        text = "No sleep source enabled",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Enable sleep tracking in Data Settings to customize metrics.",
+                        color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
+            } else {
+                BaseCard {
+                    Text(
+                        text = "Display Metrics (${selectedMetrics.size}/3)",
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Select up to 3 sleep metrics to show on the Monitor card.",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(12.dp))
 
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Default.Watch, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                        Text(text = "External", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+                        for (metric in availableMetrics) {
+                            val isSelected = metric.key in selectedMetrics
+                            val label = metric.label
+                            val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metric.key) else -1
+                            val slotColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
+
+                            // Determine source icon from metric_settings
+                            val settingsKey = MetricRegistry.dataSettingsKey(metric.key)
+                            val setting = metricSettingsMap[settingsKey]
+                            val source = sourceTypeFor(setting?.preferredSource)
+
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    selectedMetrics = if (isSelected) {
+                                        selectedMetrics.minus(metric.key)
+                                    } else if (selectedMetrics.size < 3) {
+                                        selectedMetrics.plus(metric.key)
+                                    } else {
+                                        selectedMetrics
+                                    }
+                                    saveConfig()
+                                },
+                                enabled = true,
+                                label = {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                },
+                                leadingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                } else null,
+                                trailingIcon = when (source) {
+                                    "external" -> {
+                                        {
+                                            Icon(
+                                                Icons.Default.Watch,
+                                                contentDescription = "External",
+                                                modifier = Modifier.size(14.dp),
+                                                tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
+                                            )
+                                        }
+                                    }
+                                    "phone" -> {
+                                        {
+                                            Icon(
+                                                Icons.Default.PhoneAndroid,
+                                                contentDescription = "Phone",
+                                                modifier = Modifier.size(14.dp),
+                                                tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
+                                            )
+                                        }
+                                    }
+                                    else -> null
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = slotColor.copy(alpha = 0.3f),
+                                    selectedLabelColor = AppTheme.TitleColor,
+                                    selectedLeadingIconColor = slotColor,
+                                    containerColor = AppTheme.BaseCardContainer,
+                                    labelColor = AppTheme.BodyTextColor
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    borderColor = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                                    selectedBorderColor = slotColor,
+                                    enabled = true,
+                                    selected = isSelected
+                                )
+                            )
+                        }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                        Text(text = "Phone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Default.Watch, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
+                            Text(text = "External", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
+                            Text(text = "Phone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }
         }
     }
 }
-

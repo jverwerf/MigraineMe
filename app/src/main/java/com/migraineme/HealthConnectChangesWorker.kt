@@ -232,9 +232,9 @@ class HealthConnectChangesWorker(
                 .toSet()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch metric_settings: ${e.message}")
-            // On error, return ALL metrics as enabled to avoid blocking data collection
-            // This is a fail-open approach to prevent data loss on network issues
-            RECORD_TYPE_TO_METRIC.values.toSet()
+            // Fail-closed: if we can't verify what's enabled, don't sync anything.
+            // Data will be picked up on the next successful run.
+            emptySet()
         }
     }
 

@@ -359,4 +359,33 @@ object MissedActivityIcons {
     ) }
 
     fun forKey(key: String?): ImageVector? = ALL_ICONS.find { it.key == key }?.icon
+
+    fun forLabel(label: String, iconKey: String? = null): ImageVector? {
+        if (iconKey != null) return forKey(iconKey)
+        val l = label.lowercase()
+        return when {
+            l.contains("child") || l.contains("kid") || l.contains("parent") -> Childcare
+            l.contains("pet") || l.contains("dog") || l.contains("cat") -> PetCare
+            l.contains("self-care") || l.contains("self care") || l.contains("groom") -> SelfCare
+            l.contains("exercis") || l.contains("workout") -> Exercise
+            l.contains("gym") || l.contains("weight") -> Gym
+            l.contains("sport") || l.contains("match") || l.contains("game") -> Sport
+            l.contains("walk") || l.contains("hike") || l.contains("run") -> Walk
+            l.contains("hobb") || l.contains("craft") -> Hobbies
+            l.contains("chore") || l.contains("clean") || l.contains("housework") -> Chores
+            l.contains("cook") || l.contains("bak") || l.contains("meal") -> Cooking
+            l.contains("shop") -> Shopping
+            l.contains("date") -> Date
+            l.contains("family") || l.contains("gathering") || l.contains("reunion") -> FamilyEvent
+            l.contains("night out") || l.contains("party") || l.contains("club") -> NightOut
+            l.contains("social") || l.contains("friend") || l.contains("plan") || l.contains("hangout") -> SocialPlans
+            l.contains("driv") || l.contains("car") -> Driving
+            l.contains("travel") || l.contains("trip") || l.contains("flight") || l.contains("vacat") -> Travel
+            l.contains("meeting") -> Meeting
+            l.contains("school") || l.contains("class") -> School
+            l.contains("study") || l.contains("exam") || l.contains("homework") -> Study
+            l.contains("work") || l.contains("office") || l.contains("job") || l.contains("shift") -> Work
+            else -> null
+        }
+    }
 }

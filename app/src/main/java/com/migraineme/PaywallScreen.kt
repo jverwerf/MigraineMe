@@ -25,7 +25,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun PaywallScreen(
@@ -42,6 +56,12 @@ fun PaywallScreen(
     var purchasing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    var promoCode by remember { mutableStateOf("") }
+    var promoLoading by remember { mutableStateOf(false) }
+    var promoSuccess by remember { mutableStateOf<String?>(null) }
+    var promoExpanded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
     val premiumState by PremiumManager.state.collectAsState()
 
     // Load offerings — with fallback for when RevenueCat isn't configured yet
@@ -50,15 +70,15 @@ fun PaywallScreen(
             PackageInfo(
                 identifier = "annual",
                 productId = "migraineme_premium_annual",
-                price = "£34.99/year",
-                pricePerMonth = "£2.92",
+                price = "£59.99/year",
+                pricePerMonth = "£5.00",
                 isAnnual = true,
                 rcPackage = null
             ),
             PackageInfo(
                 identifier = "monthly",
                 productId = "migraineme_premium_monthly",
-                price = "£4.99/month",
+                price = "£6.99/month",
                 pricePerMonth = null,
                 isAnnual = false,
                 rcPackage = null
@@ -325,10 +345,10 @@ fun PaywallScreen(
                     FeatureItem(Icons.Outlined.Timeline, "7-Day Risk Forecast", "Know your migraine risk before it happens"),
                     FeatureItem(Icons.Outlined.Speed, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
                     FeatureItem(Icons.Outlined.History, "Full History & Journal", "Search and filter your complete migraine history"),
-                    FeatureItem(Icons.Outlined.Psychology, "AI Calibration", "Personalised AI neurologist for your risk model"),
+                    FeatureItem(Icons.Outlined.Psychology, "Smart Calibration", "Personalised neurologist for your risk model"),
                     FeatureItem(Icons.Outlined.Description, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
                     FeatureItem(Icons.Outlined.TrendingUp, "Monitor Dashboard Trends", "Sleep, physical, mental, and nutrition history"),
-                    FeatureItem(Icons.Outlined.Restaurant, "AI Food Risk Analysis", "Tyramine, gluten, and alcohol risk classification"),
+                    FeatureItem(Icons.Outlined.Restaurant, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk classification"),
                 )
 
                 features.forEach { feat ->
@@ -359,6 +379,85 @@ fun PaywallScreen(
                 }
             }
 
+            // ── Promo Code ──
+            TextButton(onClick = { promoExpanded = !promoExpanded }) {
+                Text(
+                    if (promoExpanded) "Hide promo code" else "Have a promo code?",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            if (promoExpanded) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = promoCode,
+                        onValueChange = { promoCode = it.uppercase().take(30); promoSuccess = null; error = null },
+                        placeholder = { Text("Enter code", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                            cursorColor = AppTheme.AccentPurple
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Characters,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(onDone = { /* handled by button */ })
+                    )
+                    Button(
+                        onClick = {
+                            if (promoCode.isBlank()) return@Button
+                            promoLoading = true
+                            error = null
+                            promoSuccess = null
+                            scope.launch {
+                                val result = withContext(Dispatchers.IO) { redeemPromoCode(context, promoCode.trim()) }
+                                promoLoading = false
+                                if (result.success) {
+                                    promoSuccess = result.message
+                                    PremiumManager.loadState(context)
+                                } else {
+                                    error = result.message
+                                }
+                            }
+                        },
+                        enabled = promoCode.isNotBlank() && !promoLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppTheme.AccentPurple,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        if (promoLoading) {
+                            CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("Apply", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+
+                if (promoSuccess != null) {
+                    Text(
+                        promoSuccess!!,
+                        color = Color(0xFF81C784),
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                    )
+                }
+            }
+
             // ── Restore + Legal ──
             TextButton(
                 onClick = {
@@ -385,7 +484,10 @@ fun PaywallScreen(
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall.copy(
                         textDecoration = TextDecoration.Underline
-                    )
+                    ),
+                    modifier = Modifier.clickable {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.migraineme.app/terms")))
+                    }
                 )
                 Text(
                     "  \u2022  ",
@@ -397,7 +499,10 @@ fun PaywallScreen(
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall.copy(
                         textDecoration = TextDecoration.Underline
-                    )
+                    ),
+                    modifier = Modifier.clickable {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.migraineme.app/privacy")))
+                    }
                 )
             }
 
@@ -424,4 +529,34 @@ private data class FeatureItem(
     val title: String,
     val subtitle: String
 )
+
+private data class PromoResult(val success: Boolean, val message: String)
+
+private suspend fun redeemPromoCode(context: android.content.Context, code: String): PromoResult {
+    val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return PromoResult(false, "Not signed in")
+    val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
+    val jsonBody = """{"code":"$code"}"""
+    val request = Request.Builder()
+        .url("${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/redeem-promo")
+        .post(jsonBody.toRequestBody("application/json".toMediaType()))
+        .header("Authorization", "Bearer $accessToken")
+        .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+        .build()
+
+    return try {
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            val json = org.json.JSONObject(body)
+            if (response.isSuccessful && json.optBoolean("ok")) {
+                val days = json.optInt("days_granted", 0)
+                PromoResult(true, "🎉 $days days of Premium unlocked!")
+            } else {
+                PromoResult(false, json.optString("message", "Invalid promo code"))
+            }
+        }
+    } catch (e: Exception) {
+        PromoResult(false, "Connection error. Please try again.")
+    }
+}
+
 

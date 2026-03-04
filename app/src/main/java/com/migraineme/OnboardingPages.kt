@@ -2,6 +2,7 @@ package com.migraineme
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,32 +48,42 @@ fun WelcomePage() {
     OnboardingCenteredPage {
         val anim = rememberInfiniteTransition(label = "pulse")
         val scale by anim.animateFloat(0.95f, 1.05f, infiniteRepeatable(tween(2000), RepeatMode.Reverse), label = "s")
-        Box(Modifier.size((100 * scale).dp), contentAlignment = Alignment.Center) {
-            Canvas(Modifier.size(80.dp)) {
-                drawArc(brush = Brush.sweepGradient(listOf(Color(0xFFB97BFF), Color(0xFFFF7BB0), Color(0xFFB97BFF))),
-                    startAngle = 180f, sweepAngle = 180f, useCenter = false, style = Stroke(width = 8.dp.toPx(), cap = StrokeCap.Round))
-            }
-        }
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "MigraineMe",
+            modifier = Modifier.size((90 * scale).dp)
+        )
         Spacer(Modifier.height(24.dp))
         Text("Welcome to MigraineMe", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
-        Text("Your personal migraine prediction companion.\n\nLet's get you set up in a few minutes.",
-            color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
+        Text("Understand your triggers.\nPredict attacks before they happen.",
+            color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium), textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
+        Spacer(Modifier.height(8.dp))
+        Text("Let's show you around and get things personalised.",
+            color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
     }
 }
 
 @Composable
-fun HowItWorksPage() {
+fun HowItWorksPage(
+    alreadyRevealed: Boolean = false,
+    onAllRevealed: () -> Unit = {}
+) {
     val steps = listOf(
         Triple(Icons.Outlined.Sensors, "Connect", "Data flows in from your wearable, Health Connect and phone"),
-        Triple(Icons.Outlined.Bolt, "Detect", "Unusual patterns get flagged automatically"),
+        Triple(Icons.Outlined.Bolt, "Detect", "Sleep changes, weather shifts, and stress spikes get flagged automatically"),
         Triple(Icons.Outlined.Speed, "Score", "Everything adds up to your daily risk"),
         Triple(Icons.Outlined.CalendarMonth, "Predict", "See what's coming 7 days ahead"),
         Triple(Icons.Outlined.AutoAwesome, "Learn", "Gets smarter the more you use it"),
     )
-    var activeStep by remember { mutableIntStateOf(-1) }
-    var allRevealed by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { delay(600); for (i in steps.indices) { activeStep = i; delay(1200) }; delay(500); allRevealed = true }
+    var activeStep by remember { mutableIntStateOf(if (alreadyRevealed) steps.lastIndex else -1) }
+    var allRevealed by remember { mutableStateOf(alreadyRevealed) }
+    LaunchedEffect(alreadyRevealed) {
+        if (!alreadyRevealed) {
+            delay(600); for (i in steps.indices) { activeStep = i; delay(1200) }; delay(500)
+            allRevealed = true; onAllRevealed()
+        }
+    }
     val lineProgress by animateFloatAsState(if (activeStep >= 0) ((activeStep + 1).toFloat() / steps.size) else 0f, tween(900, easing = FastOutSlowInEasing), label = "line")
 
     Column(Modifier.fillMaxSize().padding(horizontal = 32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {

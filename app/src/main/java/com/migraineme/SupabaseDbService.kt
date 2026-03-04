@@ -334,15 +334,14 @@ class SupabaseDbService(
     suspend fun getRecentTriggers(accessToken: String, daysBack: Int = 3, referenceDate: String? = null): List<RecentTriggerRow> {
         val refDate = referenceDate?.let {
             try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
-        } ?: java.time.LocalDate.now()
+        } ?: return emptyList() // No reference date → no suggestions
         val cutoffStart = refDate.minusDays(daysBack.toLong()).toString() + "T00:00:00Z"
         val cutoffEnd = refDate.plusDays(1).toString() + "T00:00:00Z"
         val response = client.get("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("select", "id,type,start_at")
-            parameter("start_at", "gte.$cutoffStart")
-            parameter("start_at", "lte.$cutoffEnd")
+            parameter("and", "(start_at.gte.$cutoffStart,start_at.lte.$cutoffEnd)")
             parameter("order", "start_at.desc")
         }
         if (!response.status.isSuccess()) return emptyList()
@@ -413,7 +412,9 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
         @SerialName("migraine_id") val migraineId: String? = null,
-        val source: String? = "manual"
+        val source: String? = "manual",
+        @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
     )
     @Serializable
     data class MedicineInsert(
@@ -423,7 +424,9 @@ class SupabaseDbService(
         val notes: String? = null,
         val category: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
     )
     suspend fun insertMedicine(
         accessToken: String,
@@ -433,10 +436,12 @@ class SupabaseDbService(
         startAt: String?,
         notes: String?,
         category: String? = null,
-        reliefScale: String? = "NONE"
+        reliefScale: String? = "NONE",
+        sideEffectScale: String? = "NONE",
+        sideEffectNotes: String? = null
     ): MedicineRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
-        val payload = MedicineInsert(name, amount, safeStart, notes, category, reliefScale, migraineId)
+        val payload = MedicineInsert(name, amount, safeStart, notes, category, reliefScale, migraineId, sideEffectScale, sideEffectNotes)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -474,7 +479,10 @@ class SupabaseDbService(
         startAt: String? = null,
         notes: String? = null,
         migraineId: String? = null,
-        clearMigraineId: Boolean = false
+        clearMigraineId: Boolean = false,
+        reliefScale: String? = null,
+        sideEffectScale: String? = null,
+        sideEffectNotes: String? = null
     ): MedicineRow {
         val payload = buildJsonObject {
             name?.let { put("name", it) }
@@ -483,6 +491,9 @@ class SupabaseDbService(
             notes?.let { put("notes", it) }
             if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
             else migraineId?.let { put("migraine_id", it) }
+            reliefScale?.let { put("relief_scale", it) }
+            sideEffectScale?.let { put("side_effect_scale", it) }
+            sideEffectNotes?.let { put("side_effect_notes", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -515,7 +526,9 @@ class SupabaseDbService(
         @SerialName("end_at") val endAt: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
         @SerialName("migraine_id") val migraineId: String? = null,
-        val source: String? = "manual"
+        val source: String? = "manual",
+        @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
     )
     @Serializable
     data class ReliefInsert(
@@ -526,6 +539,8 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("end_at") val endAt: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
+        @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
+        @SerialName("side_effect_notes") val sideEffectNotes: String? = null
     )
     suspend fun insertRelief(
         accessToken: String,
@@ -534,11 +549,13 @@ class SupabaseDbService(
         startAt: String?,
         notes: String?,
         endAt: String? = null,
-        reliefScale: String? = "NONE"
+        reliefScale: String? = "NONE",
+        sideEffectScale: String? = "NONE",
+        sideEffectNotes: String? = null
     ): ReliefRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         val safeEnd = endAt?.takeIf { it.isNotBlank() } ?: safeStart
-        val payload = ReliefInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId, endAt = safeEnd, reliefScale = reliefScale)
+        val payload = ReliefInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId, endAt = safeEnd, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -576,7 +593,10 @@ class SupabaseDbService(
         notes: String? = null,
         migraineId: String? = null,
         endAt: String? = null,
-        clearMigraineId: Boolean = false
+        clearMigraineId: Boolean = false,
+        reliefScale: String? = null,
+        sideEffectScale: String? = null,
+        sideEffectNotes: String? = null
     ): ReliefRow {
         val payload = buildJsonObject {
             type?.let { put("type", it) }
@@ -585,6 +605,9 @@ class SupabaseDbService(
             if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
             else migraineId?.let { put("migraine_id", it) }
             endAt?.let { put("end_at", it) }
+            reliefScale?.let { put("relief_scale", it) }
+            sideEffectScale?.let { put("side_effect_scale", it) }
+            sideEffectNotes?.let { put("side_effect_notes", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -1897,7 +1920,7 @@ class SupabaseDbService(
         val score: Double,
         val zone: String,
         val percent: Int,
-        @SerialName("top_triggers") val topTriggers: String? = null,
+        @SerialName("top_triggers") val topTriggers: kotlinx.serialization.json.JsonElement? = null,
         @SerialName("created_at") val createdAt: String? = null,
     )
 
@@ -1912,6 +1935,102 @@ class SupabaseDbService(
         }
         if (!response.status.isSuccess()) return emptyList()
         return response.body()
+    }
+
+    companion object {
+        /** Convert DB metric_table + metric_column → graph chip key (e.g. "sleep:duration"). */
+        fun tableColToChipKey(table: String, column: String?): String? =
+            TABLE_COL_TO_CHIP_KEY["$table|${column.orEmpty()}"]
+
+        /** Derive graph category from chip key prefix. */
+        fun chipCategory(chipKey: String): String = when (chipKey.substringBefore(':')) {
+            "sleep" -> "Sleep"; "weather" -> "Weather"; "physical" -> "Physical"
+            "mental" -> "Mental"; "nutrition" -> "Nutrition"; else -> "Other"
+        }
+
+        // (metric_table|metric_column) → chip key
+        val TABLE_COL_TO_CHIP_KEY = mapOf(
+            // Sleep
+            "sleep_duration_daily|value_hours" to "sleep:duration",
+            "sleep_score_daily|value_pct" to "sleep:score",
+            "sleep_efficiency_daily|value_pct" to "sleep:efficiency",
+            "sleep_disturbances_daily|value_count" to "sleep:disturbances",
+            "sleep_stages_daily|value_sws_hm" to "sleep:stages_deep",
+            "sleep_stages_daily|value_rem_hm" to "sleep:stages_rem",
+            "sleep_stages_daily|value_light_hm" to "sleep:stages_light",
+            "fell_asleep_time_daily|value_at" to "sleep:fell_asleep",
+            "woke_up_time_daily|value_at" to "sleep:woke_up",
+            // Weather
+            "user_weather_daily|temp_c_mean" to "weather:temp_c_mean",
+            "user_weather_daily|pressure_hpa_mean" to "weather:pressure_hpa_mean",
+            "user_weather_daily|humidity_pct_mean" to "weather:humidity_pct_mean",
+            "user_weather_daily|wind_speed_mps_mean" to "weather:wind_speed_mps_mean",
+            "user_weather_daily|uv_index_max" to "weather:uv_index_max",
+            "user_location_daily|altitude_max_m" to "weather:altitude_m",
+            "user_location_daily|altitude_change_m" to "weather:altitude_change_m",
+            // Physical
+            "recovery_score_daily|value_pct" to "physical:recovery",
+            "hrv_daily|value_rmssd_ms" to "physical:hrv",
+            "resting_hr_daily|value_bpm" to "physical:resting_hr",
+            "spo2_daily|value_pct" to "physical:spo2",
+            "skin_temp_daily|value_celsius" to "physical:skin_temp",
+            "respiratory_rate_daily|value_bpm" to "physical:respiratory_rate",
+            "stress_index_daily|value" to "physical:stress",
+            "time_in_high_hr_zones_daily|value_minutes" to "physical:high_hr_zones",
+            "steps_daily|value_count" to "physical:steps",
+            "weight_daily|value_kg" to "physical:weight",
+            "body_fat_daily|value_pct" to "physical:body_fat",
+            "blood_pressure_daily|value_systolic" to "physical:blood_pressure",
+            "blood_glucose_daily|value_mgdl" to "physical:blood_glucose",
+            // Mental
+            "screen_time_daily|total_hours" to "mental:screen_time",
+            "screen_time_late_night|value_hours" to "mental:late_screen_time",
+            "ambient_noise_index_daily|day_mean_lmean" to "mental:noise_avg",
+            "ambient_noise_index_daily|day_max_lmax" to "mental:noise_high",
+            "ambient_noise_index_daily|day_min_lmean" to "mental:noise_low",
+            "phone_brightness_daily|value_mean" to "mental:brightness",
+            "phone_volume_daily|value_mean_pct" to "mental:volume",
+            "phone_dark_mode_daily|value_hours" to "mental:dark_mode",
+            "phone_unlock_daily|value_count" to "mental:unlocks",
+            // Nutrition
+            "nutrition_daily|total_calories" to "nutrition:calories",
+            "nutrition_daily|total_protein_g" to "nutrition:protein",
+            "nutrition_daily|total_carbs_g" to "nutrition:carbs",
+            "nutrition_daily|total_fat_g" to "nutrition:fat",
+            "nutrition_daily|total_fiber_g" to "nutrition:fiber",
+            "nutrition_daily|total_sugar_g" to "nutrition:sugar",
+            "nutrition_daily|total_sodium_mg" to "nutrition:sodium",
+            "nutrition_daily|total_caffeine_mg" to "nutrition:caffeine",
+            "nutrition_daily|total_cholesterol_mg" to "nutrition:cholesterol",
+            "nutrition_daily|total_saturated_fat_g" to "nutrition:saturated_fat",
+            "nutrition_daily|total_unsaturated_fat_g" to "nutrition:unsaturated_fat",
+            "nutrition_daily|total_trans_fat_g" to "nutrition:trans_fat",
+            "nutrition_daily|total_potassium_mg" to "nutrition:potassium",
+            "nutrition_daily|total_calcium_mg" to "nutrition:calcium",
+            "nutrition_daily|total_iron_mg" to "nutrition:iron",
+            "nutrition_daily|total_magnesium_mg" to "nutrition:magnesium",
+            "nutrition_daily|total_zinc_mg" to "nutrition:zinc",
+            "nutrition_daily|total_selenium_mcg" to "nutrition:selenium",
+            "nutrition_daily|total_phosphorus_mg" to "nutrition:phosphorus",
+            "nutrition_daily|total_copper_mg" to "nutrition:copper",
+            "nutrition_daily|total_manganese_mg" to "nutrition:manganese",
+            "nutrition_daily|total_vitamin_a_mcg" to "nutrition:vitamin_a",
+            "nutrition_daily|total_vitamin_c_mg" to "nutrition:vitamin_c",
+            "nutrition_daily|total_vitamin_d_mcg" to "nutrition:vitamin_d",
+            "nutrition_daily|total_vitamin_e_mg" to "nutrition:vitamin_e",
+            "nutrition_daily|total_vitamin_k_mcg" to "nutrition:vitamin_k",
+            "nutrition_daily|total_vitamin_b6_mg" to "nutrition:vitamin_b6",
+            "nutrition_daily|total_vitamin_b12_mcg" to "nutrition:vitamin_b12",
+            "nutrition_daily|total_thiamin_mg" to "nutrition:thiamin",
+            "nutrition_daily|total_riboflavin_mg" to "nutrition:riboflavin",
+            "nutrition_daily|total_niacin_mg" to "nutrition:niacin",
+            "nutrition_daily|total_folate_mcg" to "nutrition:folate",
+            "nutrition_daily|total_biotin_mcg" to "nutrition:biotin",
+            "nutrition_daily|total_pantothenic_acid_mg" to "nutrition:pantothenic_acid",
+            "nutrition_daily|max_tyramine_exposure" to "nutrition:tyramine_exposure",
+            "nutrition_daily|max_alcohol_exposure" to "nutrition:alcohol_exposure",
+            "nutrition_daily|max_gluten_exposure" to "nutrition:gluten_exposure",
+        )
     }
 }
 

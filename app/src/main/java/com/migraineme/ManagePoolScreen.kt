@@ -81,7 +81,7 @@ data class PoolConfig(
     val items: List<PoolItem>,
     val categories: List<String> = emptyList(),
     val showPrediction: Boolean = false,
-    val iconResolver: ((String?) -> ImageVector?)? = null,
+    val iconResolver: ((String?, String) -> ImageVector?)? = null,
     val pickerIcons: List<PickerIconEntry> = emptyList(),
     val onAdd: (label: String, category: String?, prediction: PredictionValue) -> Unit,
     val onDelete: (itemId: String) -> Unit,
@@ -230,7 +230,7 @@ fun ManagePoolScreen(
                         displayGroups.forEach { (groupName, members) ->
                             val isGroupExpanded = groupName in expandedGroups
                             // Use first member's icon as group icon
-                            val groupIcon = effectiveConfig.iconResolver?.invoke(members.firstOrNull()?.iconKey)
+                            val groupIcon = effectiveConfig.iconResolver?.invoke(members.firstOrNull()?.iconKey, members.firstOrNull()?.label ?: "")
                             // Group-level prediction = highest among members
                             val groupPrediction = members.map { it.prediction }
                                 .maxByOrNull { it.ordinal } ?: PredictionValue.NONE
@@ -616,7 +616,7 @@ private fun PoolItemRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Icon circle
-            val icon = config.iconResolver?.invoke(item.iconKey)
+            val icon = config.iconResolver?.invoke(item.iconKey, item.label)
             Box(
                 modifier = Modifier
                     .size(34.dp)

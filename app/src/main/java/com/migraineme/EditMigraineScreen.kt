@@ -1,5 +1,6 @@
 package com.migraineme
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -53,6 +55,8 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 /* ---------- Top-level types ---------- */
 
@@ -853,7 +857,8 @@ private fun TimeAddDialog(
 ) {
     var pickedIso by remember { mutableStateOf<String?>(null) }
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {},
+        modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
         confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text("Add") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
         title = { Text(title) },
@@ -878,7 +883,8 @@ private fun MedicineAddDialog(
     var notes by remember { mutableStateOf("") }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {},
+        modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
         confirmButton = {
             TextButton(onClick = { onConfirm(amount.ifBlank { null }, pickedIso, notes.ifBlank { null }) }) {
                 Text("Add")
@@ -919,7 +925,8 @@ private fun ReliefAddDialog(
     var notes by remember { mutableStateOf("") }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {},
+        modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
         confirmButton = {
             TextButton(
                 onClick = {

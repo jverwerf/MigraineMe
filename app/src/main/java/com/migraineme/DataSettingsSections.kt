@@ -45,7 +45,7 @@ object DataSettingsSections {
                 wearableRow("hrv_daily", "HRV"),
                 wearableRow("skin_temp_daily", "Skin temperature"),
                 wearableRow("spo2_daily", "Blood oxygen (SpO2)"),
-                wearableRow("time_in_high_hr_zones_daily", "Time in high HR zones"),
+                wearableRow("time_in_high_hr_zones_daily", "Activities"),
                 wearableRow("activity_hr_zones_sessions", "Workout HR zones"),
                 wearableRow("steps_daily", "Steps"),
                 wearableRow("strain_daily", "Strain")
@@ -54,7 +54,7 @@ object DataSettingsSections {
         DataSection(
             title = "Mental Health",
             rows = listOf(
-                computedRow("stress_index_daily", "Stress index"),
+                wearableRow("stress_index_daily", "Stress index"),
                 phoneRow("screen_time_daily", "Phone screen time tracking"),
                 phoneRow("screen_time_late_night", "Late night screen time"),
                 phoneRow("ambient_noise_samples", "Noise Sampling"),

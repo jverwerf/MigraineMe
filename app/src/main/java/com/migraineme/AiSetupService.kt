@@ -55,6 +55,8 @@ object AiSetupService {
         val stressLevel: String? = null,
         val trackCycle: String? = null,
         val cycleRelated: String? = null,
+        val cycleLength: String? = null,
+        val cycleMigraineTiming: String? = null,
         val waterIntake: String? = null,
 
         // Page 3 — Medicines, Reliefs & Activities
@@ -70,7 +72,11 @@ object AiSetupService {
     data class DataContext(
         val whoopConnected: Boolean,
         val healthConnectConnected: Boolean,
+        val ouraConnected: Boolean = false,
+        val polarConnected: Boolean = false,
+        val garminConnected: Boolean = false,
         val enabledMetrics: Map<String, Boolean>,   // metric name → enabled
+        val metricSources: Map<String, String> = emptyMap(), // metric name → preferred_source (e.g. "oura", "whoop", "polar", "garmin")
     )
 
     data class AvailableItems(
@@ -118,9 +124,11 @@ object AiSetupService {
         @SerialName("gauge_thresholds") val gaugeThresholds: AiGaugeThresholds = AiGaugeThresholds(),
         @SerialName("decay_weights") val decayWeights: List<AiDecayWeights> = emptyList(),
         @SerialName("data_warnings") val dataWarnings: List<AiDataWarning> = emptyList(),
+        @SerialName("menstruation_config") val menstruationConfig: AiMenstruationConfig? = null,
         val summary: String = "",
         @SerialName("clinical_assessment") val clinicalAssessment: String = "",
         @SerialName("calibration_notes") val calibrationNotes: String = "",
+        @SerialName("recommended_companions") val recommendedCompanions: List<String> = emptyList(),
     )
 
     @Serializable
@@ -163,6 +171,14 @@ object AiSetupService {
         val message: String = "",
         val metric: String? = null,   // which metric to enable
         val severity: String = "medium",  // "high", "medium", "low"
+    )
+
+    @Serializable
+    data class AiMenstruationConfig(
+        @SerialName("avg_cycle_length") val avgCycleLength: Int = 28,
+        val severity: String = "MILD",
+        @SerialName("decay_curve") val decayCurve: List<Double> = emptyList(), // 15 values: m7..0..p7
+        val reasoning: String = "",
     )
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -260,6 +276,8 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         answers.waterIntake?.let { appendLine("- Water intake: $it") }
         answers.trackCycle?.let { appendLine("- Tracks menstrual cycle: $it") }
         answers.cycleRelated?.let { appendLine("- Migraines cycle-related: $it") }
+        answers.cycleLength?.let { appendLine("- Average cycle length: $it") }
+        answers.cycleMigraineTiming?.let { appendLine("- Migraines relative to period: $it") }
         appendLine()
 
         // Page 3
@@ -326,15 +344,27 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         } catch (_: Exception) { false }
 
         // Fetch metric settings
-        val metrics = try {
+        val metricSettingsList = try {
             EdgeFunctionsService().getMetricSettings(appCtx)
-                .associate { it.metric to it.enabled }
-        } catch (_: Exception) { emptyMap() }
+        } catch (_: Exception) { emptyList() }
+
+        val metrics = metricSettingsList.associate { it.metric to it.enabled }
+        val sources = metricSettingsList
+            .filter { !it.preferredSource.isNullOrBlank() }
+            .associate { it.metric to it.preferredSource!! }
+
+        val ouraConnected = sources.values.any { it.equals("oura", ignoreCase = true) }
+        val polarConnected = sources.values.any { it.equals("polar", ignoreCase = true) }
+        val garminConnected = sources.values.any { it.equals("garmin", ignoreCase = true) }
 
         DataContext(
             whoopConnected = whoopConnected,
             healthConnectConnected = hcConnected,
+            ouraConnected = ouraConnected,
+            polarConnected = polarConnected,
+            garminConnected = garminConnected,
             enabledMetrics = metrics,
+            metricSources = sources,
         )
     }
 

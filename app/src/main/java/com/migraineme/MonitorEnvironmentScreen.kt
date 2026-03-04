@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -22,7 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,9 +39,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+/**
+ * Maps data_settings metric keys → MetricRegistry keys.
+ * Centralised in MetricRegistry.dataSettingsKey() / MetricRegistry.enabledKeys().
+ */
 
 @Composable
 fun MonitorEnvironmentScreen(
@@ -53,21 +64,62 @@ fun MonitorEnvironmentScreen(
     // Today's weather
     var todayWeather by remember { mutableStateOf<WeatherDayData?>(null) }
     var isLoadingToday by remember { mutableStateOf(true) }
-    val weatherConfig = remember { WeatherCardConfigStore.load(context) }
 
     // Forecast data (next 6 days)
     var forecastDays by remember { mutableStateOf<List<WeatherDayData>>(emptyList()) }
 
-    // Load today's weather + forecast
-    LaunchedEffect(Unit) {
-        scope.launch {
+    // Data settings — which individual metrics are enabled
+    var enabledRegistryKeys by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var settingsLoaded by remember { mutableStateOf(false) }
+
+    // Track resume count to trigger reloads
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    var resumeCount by remember { mutableStateOf(0) }
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                resumeCount++
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Load data on first composition and on each resume
+    androidx.compose.runtime.LaunchedEffect(resumeCount) {
+        val firstLoad = !settingsLoaded
+        if (firstLoad) isLoadingToday = true
+
+        withContext(Dispatchers.IO) {
+            try {
+                val edge = EdgeFunctionsService()
+                val settings = edge.getMetricSettings(context)
+                enabledRegistryKeys = MetricRegistry.enabledKeys(settings, "environment")
+            } catch (_: Exception) {
+                enabledRegistryKeys = MetricRegistry.byGroup("environment").map { it.key }.toSet()
+            }
+            settingsLoaded = true
+        }
+
+        if (enabledRegistryKeys.isNotEmpty()) {
             todayWeather = weatherService.getTodayWeather()
-            // Fetch 7 days ending 6 days from now to get forecast
             val today = LocalDate.now()
             val result = weatherService.getWeatherHistory(7, today.plusDays(6))
             forecastDays = result.days.filter { it.date > today.toString() }
-            isLoadingToday = false
         }
+        isLoadingToday = false
+    }
+
+    // All environment metrics from registry, filtered by enabled state
+    val allMetrics = remember(settingsLoaded, enabledRegistryKeys) {
+        MetricRegistry.byGroup("environment").filter { it.key in enabledRegistryKeys }
+    }
+
+    // Display metrics — filtered to only enabled ones
+    val displayKeys = remember(settingsLoaded, enabledRegistryKeys) {
+        MetricDisplayStore.getDisplayMetrics(context, "environment")
+            .filter { it in enabledRegistryKeys }
+            .ifEmpty { allMetrics.take(3).map { it.key } }
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -86,8 +138,7 @@ fun MonitorEnvironmentScreen(
                 }
             }
 
-
-            // Customize card - controls what shows on MONITOR screen's weather card
+            // Customize card
             HeroCard(
                 modifier = Modifier.clickable { navController.navigate(Routes.WEATHER_CONFIG) }
             ) {
@@ -121,222 +172,255 @@ fun MonitorEnvironmentScreen(
                     )
                 }
             }
-            BaseCard {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text("Barometric pressure changes, humidity, and temperature fluctuations are common migraine triggers. We track these automatically based on your location.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
-                    }
+            // How it works — purple accent card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Text(
+                        "Barometric pressure changes, humidity, and temperature fluctuations are common migraine triggers. We track these automatically based on your location.",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
-            // Today's weather card - show ALL metrics
-            BaseCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.ENV_DATA_HISTORY) else navController.navigate(Routes.PAYWALL) },
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+
+            // Show disabled message if ALL environment tracking is off
+            if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
+                BaseCard {
                     Text(
-                        "Today's Weather",
+                        "Environment tracking is disabled",
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
-                }
-                Spacer(Modifier.height(8.dp))
-
-                if (isLoadingToday) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = AppTheme.AccentPurple,
-                            strokeWidth = 2.dp
-                        )
-                    }
-                } else if (todayWeather == null) {
+                    Spacer(Modifier.height(4.dp))
                     Text(
-                        "No weather data for today",
+                        "Enable environment tracking in Data Settings to see weather data and correlations.",
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
-                } else {
-                    // Weather condition
-                    val condition = weatherCodeToCondition(todayWeather!!.weatherCode)
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        condition,
-                        color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        "Go to Data Settings →",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.clickable { navController.navigate(Routes.DATA) }
                     )
-
-                    if (todayWeather!!.isThunderstormDay) {
+                }
+            } else {
+                // Today's weather card
+                BaseCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.ENV_DATA_HISTORY) else navController.navigate(Routes.PAYWALL) },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            "⚡ Thunderstorm detected",
-                            color = Color(0xFFFFB74D),
+                            "Today's Weather",
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
+                    }
+                    Spacer(Modifier.height(8.dp))
+
+                    if (isLoadingToday) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = AppTheme.AccentPurple,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    } else if (todayWeather == null) {
+                        Text(
+                            "No weather data for today",
+                            color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
-                    }
+                    } else {
+                        // Weather condition
+                        val condition = weatherCodeToCondition(todayWeather!!.weatherCode)
+                        Text(
+                            condition,
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
 
-                    Spacer(Modifier.height(8.dp))
-
-                    // Top 3 selected metrics
-                    val selectedMetrics = weatherConfig.weatherDisplayMetrics.take(3)
-                    val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        selectedMetrics.forEachIndexed { index, metric ->
-                            val value = weatherMetricValue(todayWeather!!, metric) ?: "—"
-                            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(4.dp))
-                    HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
-                    Spacer(Modifier.height(8.dp))
-                    Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(Modifier.height(4.dp))
-
-                    // All remaining metrics
-                    WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
-                        if (metric !in selectedMetrics) {
-                            val value = weatherMetricValue(todayWeather!!, metric) ?: "—"
-                            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
-                                Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 7-Day Forecast — premium only
-            if (forecastDays.isNotEmpty()) {
-                PremiumGate(
-                    message = "Unlock 7-Day Forecast",
-                    subtitle = "See weather conditions ahead of time",
-                    onUpgrade = { navController.navigate(Routes.PAYWALL) }
-                ) {
-                BaseCard {
-                    Text(
-                        "7-Day Forecast",
-                        color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    Spacer(Modifier.height(8.dp))
-
-                    val dayFormatter = DateTimeFormatter.ofPattern("EEE")
-                    val dateFormatter = DateTimeFormatter.ofPattern("d MMM")
-                    val selectedMetrics = weatherConfig.weatherDisplayMetrics.take(3)
-                    val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-
-                    forecastDays.forEach { day ->
-                        val date = LocalDate.parse(day.date)
-                        val dayLabel = if (date == LocalDate.now().plusDays(1)) "Tomorrow" else date.format(dayFormatter)
-                        val condition = weatherCodeToCondition(day.weatherCode)
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(0.8f)) {
-                                Text(
-                                    dayLabel,
-                                    color = Color(0xFF4FC3F7),
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                                )
-                                Text(
-                                    date.format(dateFormatter),
-                                    color = AppTheme.SubtleTextColor,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
+                        if (todayWeather!!.isThunderstormDay) {
                             Text(
-                                condition,
-                                color = AppTheme.BodyTextColor,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
+                                "⚡ Thunderstorm detected",
+                                color = Color(0xFFFFB74D),
+                                style = MaterialTheme.typography.bodySmall
                             )
-                            Column(horizontalAlignment = Alignment.End) {
-                                selectedMetrics.forEachIndexed { index, metric ->
-                                    val value = weatherMetricValue(day, metric) ?: "—"
-                                    val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
-                                    Text(
-                                        "$value",
-                                        color = slotColors.getOrElse(index) { slotColors.last() },
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
-                                    )
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        // Top 3 selected metrics (only enabled ones)
+                        val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            displayKeys.forEachIndexed { index, key ->
+                                val metric = MetricRegistry.get(key)
+                                val value = weatherValueByKey(todayWeather!!, key)
+                                val formatted = if (value != null && metric != null) {
+                                    MetricFormatter.format(value, metric.unit, metric.column)
+                                } else "—"
+                                val label = metric?.label ?: key
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
-                        if (day != forecastDays.last()) {
-                            HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.1f))
+
+                        // "All Metrics" section — only if there are non-displayed enabled metrics
+                        val remainingMetrics = allMetrics.filter { it.key !in displayKeys }
+                        if (remainingMetrics.isNotEmpty()) {
+                            Spacer(Modifier.height(4.dp))
+                            HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                            Spacer(Modifier.height(8.dp))
+                            Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Spacer(Modifier.height(4.dp))
+
+                            remainingMetrics.forEach { m ->
+                                val value = weatherValueByKey(todayWeather!!, m.key)
+                                val formatted = if (value != null) {
+                                    MetricFormatter.format(value, m.unit, m.column)
+                                } else "—"
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(m.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+                                }
+                            }
                         }
                     }
                 }
-                } // end PremiumGate
-            }
 
-            // History + Forecast Graph — premium only
-            PremiumGate(
-                message = "Unlock Weather Trends",
-                subtitle = "Track environmental patterns over time",
-                onUpgrade = { navController.navigate(Routes.PAYWALL) }
-            ) {
-                WeatherHistoryGraph(
-                    days = 21,
-                    endDate = LocalDate.now().plusDays(6),
-                    forecastStartDate = LocalDate.now().plusDays(1).toString(),
-                    onClick = { navController.navigate(Routes.FULL_GRAPH_WEATHER) }
-                )
-            }
+                // 7-Day Forecast — premium only
+                if (forecastDays.isNotEmpty()) {
+                    PremiumGate(
+                        message = "Unlock 7-Day Forecast",
+                        subtitle = "See weather conditions ahead of time",
+                        onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                    ) {
+                    BaseCard {
+                        Text(
+                            "7-Day Forecast",
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        Spacer(Modifier.height(8.dp))
 
+                        val dayFormatter = DateTimeFormatter.ofPattern("EEE")
+                        val dateFormatter = DateTimeFormatter.ofPattern("d MMM")
+                        val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
 
+                        forecastDays.forEach { day ->
+                            val date = LocalDate.parse(day.date)
+                            val dayLabel = if (date == LocalDate.now().plusDays(1)) "Tomorrow" else date.format(dayFormatter)
+                            val condition = weatherCodeToCondition(day.weatherCode)
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(0.8f)) {
+                                    Text(
+                                        dayLabel,
+                                        color = Color(0xFF4FC3F7),
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                                    )
+                                    Text(
+                                        date.format(dateFormatter),
+                                        color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                Text(
+                                    condition,
+                                    color = AppTheme.BodyTextColor,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Column(horizontalAlignment = Alignment.End) {
+                                    displayKeys.forEachIndexed { index, key ->
+                                        val metric = MetricRegistry.get(key)
+                                        val value = weatherValueByKey(day, key)
+                                        val formatted = if (value != null && metric != null) {
+                                            MetricFormatter.format(value, metric.unit, metric.column)
+                                        } else "—"
+                                        Text(
+                                            formatted,
+                                            color = slotColors.getOrElse(index) { slotColors.last() },
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                                        )
+                                    }
+                                }
+                            }
+                            if (day != forecastDays.last()) {
+                                HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.1f))
+                            }
+                        }
+                    }
+                    } // end PremiumGate
+                }
+
+                // History + Forecast Graph — premium only
+                PremiumGate(
+                    message = "Unlock Weather Trends",
+                    subtitle = "Track environmental patterns over time",
+                    onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                ) {
+                    BaseCard {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.FULL_GRAPH_WEATHER) },
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("History + Forecast", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        WeatherHistoryGraph(
+                            days = 21,
+                            endDate = LocalDate.now().plusDays(6),
+                            forecastStartDate = LocalDate.now().plusDays(1).toString(),
+                            onClick = { navController.navigate(Routes.FULL_GRAPH_WEATHER) }
+                        )
+                    }
+                }
+            } // end enabled check
         }
     }
 }
 
-private fun weatherMetricValue(weather: WeatherDayData, metric: String): String? {
-    val v = when (metric) {
-        WeatherCardConfig.METRIC_TEMPERATURE -> weather.tempMean
-        WeatherCardConfig.METRIC_PRESSURE -> weather.pressureMean
-        WeatherCardConfig.METRIC_HUMIDITY -> weather.humidityMean
-        WeatherCardConfig.METRIC_WIND_SPEED -> weather.windSpeedMean
-        WeatherCardConfig.METRIC_UV_INDEX -> weather.uvIndexMax
-        WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM
-        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM
+/**
+ * Bridge: extract a value from WeatherDayData using a MetricRegistry key.
+ */
+private fun weatherValueByKey(weather: WeatherDayData, key: String): Double? {
+    val v = when (key) {
+        "user_weather_daily::temp_c_mean" -> weather.tempMean
+        "user_weather_daily::pressure_hpa_mean" -> weather.pressureMean
+        "user_weather_daily::humidity_pct_mean" -> weather.humidityMean
+        "user_weather_daily::wind_speed_mps_mean" -> weather.windSpeedMean
+        "user_weather_daily::uv_index_max" -> weather.uvIndexMax
+        "user_location_daily::altitude_max_m" -> weather.altitudeMaxM
+        "user_location_daily::altitude_change_m" -> weather.altitudeChangeM
         else -> null
-    } ?: return null
-    if (v == 0.0 && metric != WeatherCardConfig.METRIC_UV_INDEX && metric != WeatherCardConfig.METRIC_ALTITUDE) return null
-    val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
-    return when (metric) {
-        WeatherCardConfig.METRIC_PRESSURE -> String.format("%.0f%s", v, unit)
-        WeatherCardConfig.METRIC_ALTITUDE -> String.format("%.0f%s", v, unit)
-        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> String.format("%.0f%s", v, unit)
-        else -> String.format("%.1f%s", v, unit)
     }
-}
-
-private fun weatherMetricColor(metric: String): Color = when (metric) {
-    WeatherCardConfig.METRIC_TEMPERATURE -> Color(0xFFFF8A65)
-    WeatherCardConfig.METRIC_PRESSURE -> Color(0xFF7986CB)
-    WeatherCardConfig.METRIC_HUMIDITY -> Color(0xFF4FC3F7)
-    WeatherCardConfig.METRIC_WIND_SPEED -> Color(0xFF81C784)
-    WeatherCardConfig.METRIC_UV_INDEX -> Color(0xFFFFB74D)
-    WeatherCardConfig.METRIC_ALTITUDE -> Color(0xFFCE93D8)
-    WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> Color(0xFFBA68C8)
-    else -> Color(0xFF4FC3F7)
+    return v?.takeIf { it != 0.0 || key == "user_weather_daily::uv_index_max" || key == "user_location_daily::altitude_max_m" }
 }
 
 private fun weatherCodeToCondition(code: Int): String {
@@ -359,6 +443,3 @@ private fun weatherCodeToCondition(code: Int): String {
         else -> "Unknown"
     }
 }
-
-
-

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +82,7 @@ private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING }
 @Composable
 fun OnboardingScreen(
     startAtSetup: Boolean = false,
+    logVm: LogViewModel? = null,
     onComplete: () -> Unit,
     onStartTour: () -> Unit = {},
     onStartSetup: () -> Unit = {},
@@ -90,19 +92,21 @@ fun OnboardingScreen(
     val appCtx = ctx.applicationContext
 
     val pages = PageId.entries
-    var currentIdx by remember { mutableStateOf(if (startAtSetup) pages.indexOf(PageId.SETUP_LANDING) else 0) }
+    var currentIdx by rememberSaveable { mutableStateOf(if (startAtSetup) pages.indexOf(PageId.SETUP_LANDING) else 0) }
     val currentPage = pages[currentIdx]
 
     // ── Observe seeder progress directly ──
     val seedProgress by DemoDataSeeder.progress.collectAsState()
     val dataReady by DemoDataSeeder.dataReady.collectAsState()
-    var seedingStarted by remember { mutableStateOf(false) }
+    var seedingStarted by rememberSaveable { mutableStateOf(false) }
+    var hasNavigatedToTour by rememberSaveable { mutableStateOf(false) }
+    var howItWorksRevealed by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     // ── Skip exit: clear demo data + mark complete in Supabase + navigate ──
     fun skipOnboarding(then: () -> Unit) {
         scope.launch(Dispatchers.IO) {
-            DemoDataSeeder.clearDemoData(appCtx)
+            DemoDataSeeder.clearDemoData(appCtx, logVm)
             OnboardingPrefs.setCompletedInSupabase(appCtx)
             kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
         }
@@ -120,6 +124,7 @@ fun OnboardingScreen(
     LaunchedEffect(currentPage) {
         if (currentPage == PageId.LOADING_DATA && !seedingStarted && !startAtSetup) {
             seedingStarted = true
+            hasNavigatedToTour = false
             // Ensure userId is set before seeding
             withContext(Dispatchers.IO) {
                 val token = SessionStore.getValidAccessToken(appCtx)
@@ -135,14 +140,15 @@ fun OnboardingScreen(
             }
             // Seed everything (including risk_score_live directly)
             launch(Dispatchers.IO) {
-                DemoDataSeeder.seedDemoData(appCtx)
+                DemoDataSeeder.seedDemoData(appCtx, logVm)
             }
         }
     }
 
     // ── Auto-advance to tour when data is ready ──
-    LaunchedEffect(dataReady) {
-        if (dataReady && currentPage == PageId.LOADING_DATA) {
+    LaunchedEffect(dataReady, currentPage) {
+        if (dataReady && seedingStarted && !hasNavigatedToTour && currentPage == PageId.LOADING_DATA) {
+            hasNavigatedToTour = true
             kotlinx.coroutines.delay(600L)
             proceedWithTour { onStartTour() }
         }
@@ -155,22 +161,39 @@ fun OnboardingScreen(
             Spacer(Modifier.height(20.dp))
 
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                AnimatedContent(
-                    targetState = currentIdx,
-                    transitionSpec = {
-                        if (targetState > initialState) slideInHorizontally { it } + fadeIn() togetherWith slideOutHorizontally { -it } + fadeOut()
-                        else slideInHorizontally { -it } + fadeIn() togetherWith slideOutHorizontally { it } + fadeOut()
-                    }, label = "page"
-                ) { idx ->
-                    when (pages[idx]) {
-                        PageId.WELCOME -> WelcomePage()
-                        PageId.HOW_IT_WORKS -> HowItWorksPage()
-                        PageId.LOADING_DATA -> LoadingDataPage(
-                            progress = seedProgress.fraction,
-                            statusText = seedProgress.phase,
-                            isComplete = dataReady
+                // HowItWorksPage is always composed (with key to keep it stable) but only visible when on that page.
+                // This prevents AnimatedContent from ever creating/destroying it.
+                key("how_it_works_stable") {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = currentPage == PageId.HOW_IT_WORKS,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        HowItWorksPage(
+                            alreadyRevealed = howItWorksRevealed,
+                            onAllRevealed = { howItWorksRevealed = true }
                         )
-                        PageId.SETUP_LANDING -> SetupLandingPage()
+                    }
+                }
+
+                if (currentPage != PageId.HOW_IT_WORKS) {
+                    AnimatedContent(
+                        targetState = currentIdx,
+                        transitionSpec = {
+                            if (targetState > initialState) slideInHorizontally { it } + fadeIn() togetherWith slideOutHorizontally { -it } + fadeOut()
+                            else slideInHorizontally { -it } + fadeIn() togetherWith slideOutHorizontally { it } + fadeOut()
+                        }, label = "page"
+                    ) { idx ->
+                        when (pages[idx]) {
+                            PageId.WELCOME -> WelcomePage()
+                            PageId.HOW_IT_WORKS -> Box(Modifier.fillMaxSize()) // placeholder, never visible
+                            PageId.LOADING_DATA -> LoadingDataPage(
+                                progress = seedProgress.fraction,
+                                statusText = seedProgress.phase,
+                                isComplete = dataReady
+                            )
+                            PageId.SETUP_LANDING -> SetupLandingPage()
+                        }
                     }
                 }
             }
@@ -189,7 +212,7 @@ fun OnboardingScreen(
                         }
                     }
                     PageId.HOW_IT_WORKS -> {
-                        TextButton(onClick = { currentIdx-- }) {
+                        TextButton(onClick = { howItWorksRevealed = false; currentIdx-- }) {
                             Text("Back", color = AppTheme.SubtleTextColor)
                         }
                     }
@@ -220,7 +243,11 @@ fun OnboardingScreen(
                     PageId.HOW_IT_WORKS -> {
                         Button(
                             onClick = { currentIdx = pages.indexOf(PageId.LOADING_DATA) },
-                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                            enabled = howItWorksRevealed,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AppTheme.AccentPink,
+                                disabledContainerColor = AppTheme.AccentPink.copy(alpha = 0.3f)
+                            ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("Take the Tour"); Spacer(Modifier.width(4.dp))
@@ -228,16 +255,17 @@ fun OnboardingScreen(
                         }
                     }
                     PageId.LOADING_DATA -> {
+                        val canStart = dataReady && seedingStarted && !hasNavigatedToTour
                         Button(
-                            onClick = { proceedWithTour { onStartTour() } },
-                            enabled = dataReady,
+                            onClick = { if (!hasNavigatedToTour) { hasNavigatedToTour = true; proceedWithTour { onStartTour() } } },
+                            enabled = canStart,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AppTheme.AccentPink,
                                 disabledContainerColor = AppTheme.AccentPink.copy(alpha = 0.3f)
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            if (dataReady) {
+                            if (canStart) {
                                 Text("Start Tour"); Spacer(Modifier.width(4.dp))
                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                             } else {
@@ -315,7 +343,7 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
         Spacer(Modifier.height(28.dp))
 
         Text(
-            if (isComplete) "All set!" else "Preparing your onboarding",
+            if (isComplete) "All set!" else "Getting things ready",
             color = Color.White,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
             textAlign = TextAlign.Center
@@ -435,14 +463,14 @@ private fun SetupLandingPage() {
         Spacer(Modifier.height(28.dp))
         Text("Now let's set up\nyour data", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(16.dp))
-        Text("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes about 2 minutes.",
+        Text("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes a few minutes.",
             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
         Spacer(Modifier.height(28.dp))
-        SetupStepPreview(Icons.Outlined.Link, "1. Connect", "WHOOP, Health Connect")
+        SetupStepPreview(Icons.Outlined.Link, "1. Connect", "Health Connect, WHOOP, Oura, Polar, Garmin")
         Spacer(Modifier.height(10.dp))
         SetupStepPreview(Icons.Outlined.Storage, "2. Configure", "Choose which data to collect")
         Spacer(Modifier.height(10.dp))
-        SetupStepPreview(Icons.Outlined.AutoAwesome, "3. AI Personalisation", "Answer a few questions, AI sets up everything")
+        SetupStepPreview(Icons.Outlined.AutoAwesome, "3. AI Personalisation", "Answer questions about your migraines, AI configures everything")
     }
 }
 

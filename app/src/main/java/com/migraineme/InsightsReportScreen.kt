@@ -54,13 +54,13 @@ private val FilterCatColors = mapOf(
     "Severity" to Color(0xFFFF7043),
     "Symptom" to Color(0xFFCE93D8),
     "Pain Location" to Color(0xFFFF8A80),
-    "Trigger" to Color(0xFFFF8A65),
-    "Prodrome" to Color(0xFFFFD54F),
+    "Trigger" to Color(0xFFFFB74D),
+    "Prodrome" to Color(0xFF9575CD),
     "Medicine" to Color(0xFF4FC3F7),
     "Relief" to Color(0xFF81C784),
-    "Activity" to Color(0xFFBA68C8),
-    "Location" to Color(0xFF4DD0E1),
-    "Missed Activity" to Color(0xFFEF9A9A)
+    "Activity" to Color(0xFFFF8A65),
+    "Location" to Color(0xFF78909C),
+    "Missed Activity" to Color(0xFFFF7043)
 )
 
 // ======= Ordered categories to match the migraine log flow =======
@@ -153,6 +153,85 @@ fun InsightsReportScreen(
     val allMissed by vm.allMissedActivities.collectAsState()
     val allActs by vm.allActivities.collectAsState()
 
+    // Data for comprehensive doctor report
+    val correlationStats by vm.correlationStats.collectAsState()
+    val gaugeAccuracy by vm.gaugeAccuracy.collectAsState()
+    val medEffectiveness by vm.medicineEffectiveness.collectAsState()
+    val reliefEffectiveness by vm.reliefEffectiveness.collectAsState()
+    val contextItems by vm.contextItems.collectAsState()
+    val impactItems by vm.impactItems.collectAsState()
+    val painLocationCounts by vm.painLocationCounts.collectAsState()
+    val severityCounts by vm.severityCounts.collectAsState()
+    val totalMigraineCount by vm.totalMigraineCount.collectAsState()
+    val overallAvgSeverity = remember(migraines) {
+        val severities = migraines.mapNotNull { it.severity }
+        if (severities.isEmpty()) 5f else severities.average().toFloat()
+    }
+
+    // Profile data — fetched from ai_setup_profiles
+    var clinicalAssessment by remember { mutableStateOf<String?>(null) }
+    var profileSummary by remember { mutableStateOf<String?>(null) }
+    var profileFrequency by remember { mutableStateOf<String?>(null) }
+    var profileDuration by remember { mutableStateOf<String?>(null) }
+    var profileExperience by remember { mutableStateOf<String?>(null) }
+    var profileTrajectory by remember { mutableStateOf<String?>(null) }
+    var profileGender by remember { mutableStateOf<String?>(null) }
+    var profileAgeRange by remember { mutableStateOf<String?>(null) }
+    var profileSeasonalPattern by remember { mutableStateOf<String?>(null) }
+    var profileTracksCycle by remember { mutableStateOf(false) }
+    var profileTriggerAreas by remember { mutableStateOf<List<String>>(emptyList()) }
+    var profileFreeText by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val token = SessionStore.getValidAccessToken(ctx) ?: return@withContext
+                val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ai_setup_profiles" +
+                    "?select=clinical_assessment,summary,frequency,duration,experience,trajectory,gender,age_range,seasonal_pattern,tracks_cycle,trigger_areas,answers&limit=1"
+                val client = okhttp3.OkHttpClient()
+                val req = okhttp3.Request.Builder().url(url).get()
+                    .header("Authorization", "Bearer $token")
+                    .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    .header("Accept", "application/vnd.pgrst.object+json")
+                    .build()
+                client.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val body = resp.body?.string() ?: "{}"
+                        val obj = org.json.JSONObject(body)
+                        val ca = obj.optString("clinical_assessment", "")
+                        if (ca.isNotBlank()) clinicalAssessment = ca
+                        val s = obj.optString("summary", "")
+                        if (s.isNotBlank()) profileSummary = s
+                        val f = obj.optString("frequency", "")
+                        if (f.isNotBlank()) profileFrequency = f
+                        val d = obj.optString("duration", "")
+                        if (d.isNotBlank()) profileDuration = d
+                        val e = obj.optString("experience", "")
+                        if (e.isNotBlank()) profileExperience = e
+                        val t = obj.optString("trajectory", "")
+                        if (t.isNotBlank()) profileTrajectory = t
+                        val g = obj.optString("gender", "")
+                        if (g.isNotBlank()) profileGender = g
+                        val a = obj.optString("age_range", "")
+                        if (a.isNotBlank()) profileAgeRange = a
+                        val sp = obj.optString("seasonal_pattern", "")
+                        if (sp.isNotBlank()) profileSeasonalPattern = sp
+                        profileTracksCycle = obj.optBoolean("tracks_cycle", false)
+                        val ta = obj.optJSONArray("trigger_areas")
+                        if (ta != null) {
+                            profileTriggerAreas = (0 until ta.length()).mapNotNull { ta.optString(it).takeIf { s2 -> s2.isNotBlank() } }
+                        }
+                        val answers = obj.optJSONObject("answers")
+                        val ft = answers?.optString("free_text", "") ?: ""
+                        if (ft.isNotBlank()) profileFreeText = ft
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ReportScreen", "Failed to load profile: ${e.message}")
+            }
+        }
+    }
+
     val windowEvents = remember(linkedItems, allMissed, allActs, sel?.id) {
         val actsForMigraine = allActs.filter { it.migraineId == sel?.id }
         val missedForMigraine = allMissed.filter { it.migraineId == sel?.id }
@@ -192,7 +271,7 @@ fun InsightsReportScreen(
     val enabledKeys = (allAutoSelectedKeys - userDisabledKeys) + userToggledKeys
 
     //  Report generation gate 
-    var reportGenerated by remember { mutableStateOf(false) }
+    val reportGenerated by vm.reportGenerated.collectAsState()
 
     val enabledSeries = remember(available, enabledKeys, allDailyMetrics, windowDates) {
         available.filter { it.key in enabledKeys }.map { d ->
@@ -248,12 +327,16 @@ fun InsightsReportScreen(
                 if (spiderLoading) InsightsViewModel.FilteredSpiders()
                 else vm.buildFilteredSpiders(filteredIds)
             }
+            val filteredImpact = remember(filteredIds, spiderLoading) {
+                if (spiderLoading) InsightsViewModel.FilteredImpactData()
+                else vm.buildFilteredImpactData(filteredIds)
+            }
 
             // ========== GENERATE / DOWNLOAD REPORT BUTTON ==========
             if (!reportGenerated) {
                 Spacer(Modifier.height(8.dp))
                 Button(
-                    onClick = { reportGenerated = true },
+                    onClick = { vm.setReportGenerated(true) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -270,7 +353,7 @@ fun InsightsReportScreen(
                 }
             }
 
-            // ========== 2. REPORT CONTENT (shown after Generate) ==========
+            // ========== REPORT CONTENT (shown after Generate) ==========
             if (reportGenerated) {
 
             // ========== DOWNLOAD REPORT BUTTON ==========
@@ -395,7 +478,29 @@ fun InsightsReportScreen(
                                 filteredMigraines = filteredSorted, timeFrameLabel = timeLabel,
                                 spiders = spiders, enabledMetrics = enabledSeries,
                                 autoMetricKeys = allAutoSelectedKeys, allDailyMetrics = allDailyMetrics,
-                                timelineCaptures = captures)
+                                timelineCaptures = captures,
+                                correlationStats = correlationStats,
+                                gaugeAccuracy = gaugeAccuracy,
+                                clinicalAssessment = clinicalAssessment,
+                                profileSummary = profileSummary,
+                                profileFrequency = profileFrequency,
+                                profileDuration = profileDuration,
+                                profileExperience = profileExperience,
+                                profileTrajectory = profileTrajectory,
+                                profileGender = profileGender,
+                                profileAgeRange = profileAgeRange,
+                                profileSeasonalPattern = profileSeasonalPattern,
+                                profileTracksCycle = profileTracksCycle,
+                                profileTriggerAreas = profileTriggerAreas,
+                                profileFreeText = profileFreeText,
+                                medicineEffectiveness = medEffectiveness,
+                                reliefEffectiveness = reliefEffectiveness,
+                                contextItems = filteredImpact.contextItems,
+                                impactItems = filteredImpact.impactItems,
+                                painLocationCounts = filteredImpact.painLocationCounts,
+                                severityCounts = filteredImpact.severityCounts,
+                                totalMigraineCount = filteredImpact.totalMigraineCount,
+                                overallAvgSeverity = filteredImpact.overallAvgSeverity)
                             val generator = ReportPdfGenerator(ctx)
                             android.util.Log.d("ReportPDF", "Calling generator.generate()")
                             val file = generator.generate(reportData)
@@ -431,7 +536,183 @@ fun InsightsReportScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            HeroCard {
+            // ========== 1. FREQUENCY TRENDS (filtered) ==========
+            if (filteredSorted.size >= 2) {
+                val filteredByMonth = remember(filteredSorted) {
+                    filteredSorted.groupBy {
+                        it.start.atZone(zone).toLocalDate().withDayOfMonth(1)
+                    }.toSortedMap()
+                }
+                val filteredByWeek = remember(filteredSorted) {
+                    filteredSorted.groupBy {
+                        val d = it.start.atZone(zone).toLocalDate()
+                        d.minusDays(d.dayOfWeek.value.toLong() - 1)
+                    }.toSortedMap()
+                }
+
+                // Monthly
+                if (filteredByMonth.size >= 2) {
+                    BaseCard {
+                        Text("Monthly Frequency", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(8.dp))
+                        val months = filteredByMonth.keys.toList()
+                        val counts = months.map { filteredByMonth[it]?.size ?: 0 }
+                        val maxCount = counts.max().coerceAtLeast(1)
+                        val avgCount = counts.average().toFloat()
+                        MonthlyBarChart(months, counts, maxCount, avgCount,
+                            Modifier.fillMaxWidth().height(200.dp))
+
+                        if (counts.size >= 4) {
+                            val firstHalf = counts.take(counts.size / 2).average()
+                            val secondHalf = counts.drop(counts.size / 2).average()
+                            val trendText = when {
+                                secondHalf < firstHalf * 0.75 -> "↓ Improving — frequency decreasing"
+                                secondHalf > firstHalf * 1.25 -> "↑ Worsening — frequency increasing"
+                                else -> "→ Stable — consistent frequency"
+                            }
+                            val trendColor = when {
+                                secondHalf < firstHalf * 0.75 -> Color(0xFF81C784)
+                                secondHalf > firstHalf * 1.25 -> Color(0xFFE57373)
+                                else -> AppTheme.BodyTextColor
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(trendText, color = trendColor,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                }
+
+                // Weekly
+                if (filteredByWeek.size >= 3) {
+                    BaseCard {
+                        Text("Weekly Frequency", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(8.dp))
+                        val weeks = filteredByWeek.keys.toList()
+                        val weekCounts = weeks.map { filteredByWeek[it]?.size ?: 0 }
+                        val maxWk = weekCounts.max().coerceAtLeast(1)
+                        val avgWk = weekCounts.average().toFloat()
+                        WeeklyBarChart(weeks, weekCounts, maxWk, avgWk,
+                            Modifier.fillMaxWidth().height(160.dp))
+                    }
+                }
+
+                // Day of week (filtered)
+                val filteredDayOfWeek = remember(filteredSorted) {
+                    val grouped = filteredSorted.groupBy {
+                        it.start.atZone(zone).toLocalDate().dayOfWeek.value
+                    }
+                    val total = filteredSorted.size.coerceAtLeast(1)
+                    (1..7).map { day ->
+                        val count = grouped[day]?.size ?: 0
+                        InsightsViewModel.DayOfWeekStat(
+                            dayName = java.time.DayOfWeek.of(day).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()),
+                            dayIndex = day,
+                            count = count,
+                            pct = count * 100f / total
+                        )
+                    }
+                }
+                if (filteredDayOfWeek.any { it.count > 0 }) {
+                    BaseCard {
+                        Text("Day of Week", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(8.dp))
+                        val maxPct = filteredDayOfWeek.maxOf { it.pct }.coerceAtLeast(1f)
+                        Row(
+                            Modifier.fillMaxWidth().height(120.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            filteredDayOfWeek.sortedBy { it.dayIndex }.forEach { stat ->
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("${stat.count}", color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    Spacer(Modifier.height(2.dp))
+                                    val barH = (stat.pct / maxPct * 80f).coerceAtLeast(4f)
+                                    val barColor = if (stat.pct > maxPct * 0.8f) Color(0xFFE57373) else AppTheme.AccentPurple
+                                    Canvas(Modifier.fillMaxWidth(0.6f).height(barH.dp)) {
+                                        drawRoundRect(barColor, cornerRadius = CornerRadius(4f, 4f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(stat.dayName, color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ========== 2. WHAT HAPPENED (all time) ==========
+            val previewTriggers = remember(correlationStats) {
+                correlationStats.filter { it.isSignificant() && it.factorType == "trigger" }
+                    .sortedByDescending { it.liftRatio }.take(3)
+            }
+            val previewInteractions = remember(correlationStats) {
+                correlationStats.filter { it.isSignificant() && it.factorType == "interaction" }
+                    .sortedByDescending { it.liftRatio }.take(3)
+            }
+            if (previewTriggers.isNotEmpty() || previewInteractions.isNotEmpty()) {
+                Column {
+                    PatternsPreviewCard(
+                        patterns = previewTriggers,
+                        interactions = previewInteractions,
+                        onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
+                    )
+                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                }
+            }
+
+            // ========== 3. WHAT WORKED (all time) ==========
+            val previewTreatments = remember(correlationStats) {
+                correlationStats.filter { it.factorType == "treatment" && it.liftRatio > 1.2f }
+                    .sortedByDescending { it.liftRatio }.take(2)
+            }
+            val previewTreatmentInteractions = remember(correlationStats) {
+                correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
+                    .sortedByDescending { it.liftRatio }.take(2)
+            }
+            if (previewTreatments.isNotEmpty() || previewTreatmentInteractions.isNotEmpty()) {
+                Column {
+                    TreatmentPreviewCard(
+                        treatments = previewTreatments,
+                        treatmentInteractions = previewTreatmentInteractions,
+                        onShowAll = { navController.navigate(Routes.INSIGHTS_TREATMENTS) }
+                    )
+                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                }
+            }
+
+            // ========== 4. WHAT WERE YOU DOING (filtered) ==========
+            if (filteredImpact.contextItems.isNotEmpty()) {
+                ContextCard(filteredImpact.contextItems.take(5), filteredImpact.overallAvgSeverity,
+                    onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) })
+            }
+
+            // ========== 5. HOW DID IT IMPACT YOU (filtered) ==========
+            if (filteredImpact.severityCounts.isNotEmpty() || filteredImpact.painLocationCounts.isNotEmpty() || filteredImpact.impactItems.isNotEmpty()) {
+                ImpactCard(
+                    impactItems = filteredImpact.impactItems.take(3),
+                    painLocationCounts = filteredImpact.painLocationCounts,
+                    severityCounts = filteredImpact.severityCounts,
+                    totalMigraines = filteredImpact.totalMigraineCount,
+                    overallAvgSeverity = filteredImpact.overallAvgSeverity,
+                    onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
+                )
+            }
+
+            // ========== 6. MIGRAINE TIMELINE ==========
+            BaseCard {
                 Text("Migraine Timeline", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
 
@@ -442,52 +723,50 @@ fun InsightsReportScreen(
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    return@HeroCard
-                }
-
-                // Migraine selector (navigates filtered list)
-                DetailMigraineSelector(filteredSorted, clampedIdx, sel,
-                    onPrev = { if (clampedIdx < filteredSorted.size - 1) vm.selectMigraine(clampedIdx + 1) },
-                    onNext = { if (clampedIdx > 0) vm.selectMigraine(clampedIdx - 1) })
-
-                if (linkedLoading) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        CircularProgressIndicator(Modifier.size(16.dp),
-                            strokeWidth = 2.dp, color = AppTheme.AccentPurple)
-                    }
                 } else {
-                    val catCounts = remember(windowEvents) {
-                        windowEvents.groupBy { it.category }.mapValues { it.value.size }
-                    }
-                    if (catCounts.isNotEmpty()) {
-                        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            catCounts.forEach { (c, n) ->
-                                DetailChip(n, c, EventCategoryColors[c] ?: AppTheme.AccentPurple)
+                    // Migraine selector
+                    DetailMigraineSelector(filteredSorted, clampedIdx, sel,
+                        onPrev = { if (clampedIdx < filteredSorted.size - 1) vm.selectMigraine(clampedIdx + 1) },
+                        onNext = { if (clampedIdx > 0) vm.selectMigraine(clampedIdx - 1) })
+
+                    if (linkedLoading) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            CircularProgressIndicator(Modifier.size(16.dp),
+                                strokeWidth = 2.dp, color = AppTheme.AccentPurple)
+                        }
+                    } else {
+                        val catCounts = remember(windowEvents) {
+                            windowEvents.groupBy { it.category }.mapValues { it.value.size }
+                        }
+                        if (catCounts.isNotEmpty()) {
+                            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                catCounts.forEach { (c, n) ->
+                                    DetailChip(n, c, EventCategoryColors[c] ?: AppTheme.AccentPurple)
+                                }
                             }
                         }
                     }
+
+                    // Graph
+                    InsightsTimelineGraph(
+                        windowMigs, windowEvents, enabledSeries,
+                        wStart, wEnd, sel?.start,
+                        Modifier.fillMaxWidth().height(360.dp))
+
+                    Text("Window around migraine", color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+
+                    // Window adjustment
+                    WindowDaysControl(wBefore, wAfter, onChanged = { b, a -> vm.setWindowDays(b, a) })
                 }
-
-                // Graph
-                InsightsTimelineGraph(
-                    windowMigs, windowEvents, enabledSeries,
-                    wStart, wEnd, sel?.start,
-                    Modifier.fillMaxWidth().height(360.dp))
-
-                Text("Window around migraine", color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-
-                // Window adjustment
-                WindowDaysControl(wBefore, wAfter, onChanged = { b, a -> vm.setWindowDays(b, a) })
             }
 
-            // ========== 3. FILTERED INSIGHT CARDS (same as main page, filtered aggregation) ==========
+            // ========== 7. SPIDERS (filtered) ==========
 
             if (filteredSorted.isNotEmpty()) {
-                // Symptoms card (same as SymptomsInsightCard on main page)
                 spiders.symptoms?.takeIf { it.totalLogged > 0 }?.let {
                     FilteredSymptomsCard(
                         migCount = filteredSorted.size,
@@ -497,7 +776,6 @@ fun InsightsReportScreen(
                     )
                 }
 
-                // All other spiders (same as SpiderInsightCard on main page)
                 listOf(
                     spiders.prodromes, spiders.triggers,
                     spiders.medicines, spiders.reliefs,
@@ -523,7 +801,7 @@ fun InsightsReportScreen(
                 }
             }
 
-            // ========== HEALTH METRICS SPARKLINES ==========
+            // ========== 8. HEALTH METRICS (filtered) ==========
             if (enabledSeries.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
                 Text("Health Metrics", color = AppTheme.TitleColor,

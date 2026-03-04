@@ -386,6 +386,8 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         is JournalEvent.Migraine -> {
                             JournalEntryHeader("Migraine", AppTheme.AccentPink, event.row.startAt, needsAttention(event))
                             Spacer(Modifier.height(8.dp))
+                            val missing = missingFields(event)
+                            if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             event.row.severity?.let { JournalDetail("Severity", "$it / 10") }
                             event.row.type?.let { JournalDetail("Type", it.replaceFirstChar { c -> c.uppercase() }) }
                             if (!event.row.endAt.isNullOrBlank()) JournalDetail("End", formatTimestamp(event.row.endAt!!))
@@ -403,51 +405,61 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         }
                         is JournalEvent.Trigger -> {
                             val isMenstruation = event.row.type == "menstruation" && event.row.source == "system"
-                            JournalEntryHeader("Trigger", Color(0xFFFFB74D), event.row.startAt)
+                            JournalEntryHeader("Trigger", Color(0xFFFFB74D), event.row.startAt, needsAttention(event))
                             Spacer(Modifier.height(8.dp))
+                            val missing = missingFields(event)
+                            if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             JournalDetail("Type", event.row.type?.let { triggerLabelMap[it] ?: it.replace("_", " ").replaceFirstChar { c -> c.uppercase() } } ?: "-")
                             if (event.row.source == "system") JournalDetail("Source", "Auto-detected")
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
                             if (!isMenstruation) JournalActions({ navController.navigate("${Routes.EDIT_TRIGGER}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Medicine -> {
-                            JournalEntryHeader("Medicine", Color(0xFF4FC3F7), event.row.startAt)
+                            JournalEntryHeader("Medicine", Color(0xFF4FC3F7), event.row.startAt, needsAttention(event))
                             Spacer(Modifier.height(8.dp))
+                            val missing = missingFields(event)
+                            if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             JournalDetail("Name", event.row.name ?: "-")
                             if (!event.row.amount.isNullOrBlank()) JournalDetail("Amount", event.row.amount!!)
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
                             JournalActions({ navController.navigate("${Routes.EDIT_MEDICINE}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Relief -> {
-                            JournalEntryHeader("Relief", Color(0xFF81C784), event.row.startAt)
+                            JournalEntryHeader("Relief", Color(0xFF81C784), event.row.startAt, needsAttention(event))
                             Spacer(Modifier.height(8.dp))
+                            val missing = missingFields(event)
+                            if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             JournalDetail("Type", event.row.type?.replaceFirstChar { c -> c.uppercase() } ?: "-")
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
                             JournalActions({ navController.navigate("${Routes.EDIT_RELIEF}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Prodrome -> {
-                            JournalEntryHeader("Prodrome", AppTheme.AccentPurple, event.row.startAt)
+                            JournalEntryHeader("Prodrome", AppTheme.AccentPurple, event.row.startAt, needsAttention(event))
                             Spacer(Modifier.height(8.dp))
+                            val missing = missingFields(event)
+                            if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             JournalDetail("Type", event.row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: "-")
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
                             JournalActions({ navController.navigate("${Routes.EDIT_PRODROME}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Location -> {
-                            JournalEntryHeader("Location", Color(0xFFCE93D8), event.row.startAt)
+                            JournalEntryHeader("Location", Color(0xFF78909C), event.row.startAt)
                             Spacer(Modifier.height(8.dp))
                             JournalDetail("Name", event.row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: "-")
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
                             JournalActions({ navController.navigate("${Routes.EDIT_LOCATION}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Activity -> {
-                            JournalEntryHeader("Activity", Color(0xFFFF8A65), event.row.startAt)
+                            JournalEntryHeader("Activity", Color(0xFFFF8A65), event.row.startAt, needsAttention(event))
                             Spacer(Modifier.height(8.dp))
+                            val missing = missingFields(event)
+                            if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             JournalDetail("Type", event.row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: "-")
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
                             JournalActions({ navController.navigate("${Routes.EDIT_ACTIVITY}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.MissedActivity -> {
-                            JournalEntryHeader("Missed Activity", Color(0xFFEF9A9A), event.row.startAt)
+                            JournalEntryHeader("Missed Activity", Color(0xFFFF7043), event.row.startAt)
                             Spacer(Modifier.height(8.dp))
                             JournalDetail("Type", event.row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: "-")
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
@@ -503,9 +515,33 @@ private fun eventStartAt(ev: JournalEvent): String? = when (ev) {
     is JournalEvent.MissedActivity -> ev.row.startAt
 }
 
-private fun needsAttention(event: JournalEvent): Boolean = when (event) {
-    is JournalEvent.Migraine -> event.linked.triggers.isEmpty() && event.linked.medicines.isEmpty() && event.linked.reliefs.isEmpty()
-    else -> false
+private fun needsAttention(event: JournalEvent): Boolean = missingFields(event).isNotEmpty()
+
+private fun missingFields(event: JournalEvent): List<String> = when (event) {
+    is JournalEvent.Migraine -> buildList {
+        if (event.row.startAt.isNullOrBlank()) add("start time")
+        if (event.row.endAt.isNullOrBlank()) add("end time")
+        if (event.row.severity == null) add("severity")
+    }
+    is JournalEvent.Trigger -> buildList {
+        if (event.row.startAt.isNullOrBlank()) add("time")
+    }
+    is JournalEvent.Medicine -> buildList {
+        if (event.row.amount.isNullOrBlank()) add("amount")
+        if (event.row.startAt.isNullOrBlank()) add("time")
+    }
+    is JournalEvent.Relief -> buildList {
+        if (event.row.startAt.isNullOrBlank()) add("start time")
+        if (event.row.endAt.isNullOrBlank() || event.row.endAt == event.row.startAt) add("end time")
+    }
+    is JournalEvent.Prodrome -> buildList {
+        if (event.row.startAt.isNullOrBlank()) add("time")
+    }
+    is JournalEvent.Activity -> buildList {
+        if (event.row.startAt.isNullOrBlank()) add("time")
+    }
+    is JournalEvent.Location -> emptyList()
+    is JournalEvent.MissedActivity -> emptyList()
 }
 
 private fun formatTimestamp(iso: String): String = try {

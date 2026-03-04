@@ -57,7 +57,7 @@ fun RecalibrationReviewScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
                 }
                 Text(
-                    "AI Recalibration",
+                    "Recalibration",
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 )

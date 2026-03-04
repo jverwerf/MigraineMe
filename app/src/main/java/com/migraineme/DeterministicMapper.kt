@@ -424,13 +424,18 @@ object DeterministicMapper {
         val exercisePattern: Set<String> = emptySet(),
         val tracksCycle: String? = null,
         val cyclePatterns: Map<String, Certainty> = emptyMap(),
+        val cycleLength: String? = null,
+        val cycleMigraineTiming: Set<String> = emptySet(),
+        val lastPeriodDate: String? = null,
         val usesContraception: String? = null,
         val contraceptionEffect: String? = null,
         // Page 7 — Prodromes
         val physicalProdromes: Map<String, Certainty> = emptyMap(),
         val moodProdromes: Map<String, Certainty> = emptyMap(),
         val sensoryProdromes: Map<String, Certainty> = emptyMap(),
-        // Page 8
+        // Page 8 — Pool selections
+        val selectedTriggers: Set<String> = emptySet(),
+        val selectedProdromes: Set<String> = emptySet(),
         val selectedMigraineTypes: Set<String> = emptySet(),
         val selectedSymptoms: Set<String> = emptySet(),
         val selectedMedicines: Set<String> = emptySet(),
@@ -524,10 +529,23 @@ object DeterministicMapper {
     // MAIN ENTRY POINT
     // ═════════════════════════════════════════════════════════════════════
 
-    fun map(answers: QuestionnaireAnswers, enabledMetrics: Map<String, Boolean> = emptyMap()): MappingResult {
+    fun map(answers: QuestionnaireAnswers, enabledMetrics: Map<String, Boolean> = emptyMap(), metricSources: Map<String, String> = emptyMap()): MappingResult {
         // 1) Personalize defaults for demographics (shifts CENTER)
         val d = personalizeDefaults(answers.gender, answers.ageRange)
         val pd = personalizeProdromeDefaults(answers.gender, answers.ageRange)
+
+        // Source-aware overrides: Oura reports skin temp as deviation from baseline (centered at 0)
+        // instead of absolute temperature. Polar Elixir™ and Garmin also report deviation.
+        // Adjust thresholds accordingly.
+        val skinTempSource = metricSources["skin_temp_daily"]?.lowercase()
+        if (skinTempSource == "oura" || skinTempSource == "polar" || skinTempSource == "garmin") {
+            // Deviation values, normal range roughly -0.5 to +0.5°C
+            // Trigger thresholds at ±0.8°C deviation (significant change)
+            d["Skin temp high"] = 0.8
+            d["Skin temp low"] = -0.8
+            pd["Skin temp high"] = 0.8
+            pd["Skin temp low"] = -0.8
+        }
 
         // 2) Override with user-reported specifics (shifts CENTER)
         sleepDurationCenter(answers.sleepHours)?.let {
@@ -563,6 +581,22 @@ object DeterministicMapper {
         mapHormones(answers, triggers)
         mapConnectedMetrics(enabledMetrics, d, pd, triggers, prodromes)
         mapProdromes(answers, pd, prodromes)
+
+        // User-selected triggers/prodromes from pool (mark favorite, ensure they exist)
+        for (label in answers.selectedTriggers) {
+            if (label !in triggers) {
+                triggers[label] = TriggerSetting(label, "LOW", favorite = true)
+            } else {
+                triggers[label] = triggers[label]!!.copy(favorite = true)
+            }
+        }
+        for (label in answers.selectedProdromes) {
+            if (label !in prodromes) {
+                prodromes[label] = ProdromeSetting(label, "LOW", favorite = true)
+            } else {
+                prodromes[label] = prodromes[label]!!.copy(favorite = true)
+            }
+        }
 
         return MappingResult(
             triggers, prodromes, buildFavorites(answers, triggers, prodromes),
@@ -869,14 +903,94 @@ object DeterministicMapper {
             if (cert == Certainty.NO) continue
             val sev = certaintyToSeverity(cert)
             when (pattern) {
-                "Around my period"  -> out["Menstruation"] = trigManual("Menstruation", sev, fav = true)
+                "Around my period"  -> {
+                    out["Menstruation"] = trigManual("Menstruation", sev, fav = true)
+                    // Also create menstruation_predicted with same severity for gauge scoring
+                    out["menstruation_predicted"] = TriggerSetting("menstruation_predicted", sev)
+                }
                 "Around ovulation"  -> out["Ovulation"] = trigManual("Ovulation", sev)
             }
+        }
+        // If user tracks cycle but hasn't selected "Around my period", still create predicted trigger at LOW
+        if (a.tracksCycle == "Yes" && "menstruation_predicted" !in out) {
+            out["menstruation_predicted"] = TriggerSetting("menstruation_predicted", "LOW")
         }
         when (a.contraceptionEffect) {
             "Made them worse — every time" -> out["Contraceptive"] = trigManual("Contraceptive", "HIGH")
             "Made them worse — sometimes"  -> out["Contraceptive"] = trigManual("Contraceptive", "MILD")
         }
+    }
+
+    /**
+     * Build menstruation decay weights from questionnaire answers.
+     * Returns null if user doesn't track their cycle.
+     */
+    fun buildMenstruationDecayWeights(a: QuestionnaireAnswers): MenstruationDecayWeights? {
+        if (a.tracksCycle != "Yes") return null
+
+        val periodCert = a.cyclePatterns["Around my period"] ?: Certainty.NO
+        if (periodCert == Certainty.NO && a.cycleMigraineTiming.isEmpty()) {
+            // User tracks cycle but no period-related migraines — use mild defaults
+            return MenstruationDecayWeights.DEFAULT
+        }
+
+        val peakWeight = when (periodCert) {
+            Certainty.EVERY_TIME, Certainty.OFTEN -> 8.0
+            Certainty.SOMETIMES -> 6.0
+            Certainty.RARELY -> 4.0
+            Certainty.NO -> 4.0
+        }
+
+        var dayM5 = 0.0; var dayM4 = 0.0; var dayM3 = 0.0; var dayM2 = 0.0; var dayM1 = 0.0
+        var day0 = peakWeight
+        var dayP1 = peakWeight * 0.5; var dayP2 = peakWeight * 0.25
+
+        // Apply timing preferences
+        if ("1-2 days before" in a.cycleMigraineTiming) {
+            dayM2 = peakWeight * 0.5
+            dayM1 = peakWeight * 0.75
+        }
+        if ("3-5 days before" in a.cycleMigraineTiming) {
+            dayM5 = peakWeight * 0.2
+            dayM4 = peakWeight * 0.3
+            dayM3 = peakWeight * 0.5
+            if (dayM2 == 0.0) dayM2 = peakWeight * 0.4
+            if (dayM1 == 0.0) dayM1 = peakWeight * 0.5
+        }
+        if ("During my period" in a.cycleMigraineTiming) {
+            dayP1 = peakWeight * 0.75
+            dayP2 = peakWeight * 0.5
+        }
+        if ("1-2 days after" in a.cycleMigraineTiming) {
+            dayP1 = maxOf(dayP1, peakWeight * 0.5)
+            dayP2 = maxOf(dayP2, peakWeight * 0.4)
+        }
+
+        // If no timing selected, use sensible defaults
+        if (a.cycleMigraineTiming.isEmpty()) {
+            dayM2 = peakWeight * 0.5
+            dayM1 = peakWeight * 0.75
+        }
+
+        return MenstruationDecayWeights(
+            dayM7 = 0.0, dayM6 = 0.0, dayM5 = dayM5, dayM4 = dayM4,
+            dayM3 = dayM3, dayM2 = dayM2, dayM1 = dayM1, day0 = day0,
+            dayP1 = dayP1, dayP2 = dayP2, dayP3 = 0.0, dayP4 = 0.0,
+            dayP5 = 0.0, dayP6 = 0.0, dayP7 = 0.0,
+        )
+    }
+
+    /**
+     * Derive average cycle length from the questionnaire answer.
+     */
+    fun deriveCycleLength(a: QuestionnaireAnswers): Int = when (a.cycleLength) {
+        "< 25 days" -> 23
+        "25-28 days" -> 27
+        "28-32 days" -> 30
+        "32-35 days" -> 33
+        "> 35 days" -> 38
+        "Irregular" -> 28
+        else -> 28
     }
 
     // ═════════════════════════════════════════════════════════════════════
@@ -962,8 +1076,8 @@ object DeterministicMapper {
     // ═════════════════════════════════════════════════════════════════════
 
     private fun buildFavorites(a: QuestionnaireAnswers, t: Map<String, TriggerSetting>, p: Map<String, ProdromeSetting>) = Favorites(
-        triggers = t.filter { it.value.severity != "NONE" }.map { it.key },
-        prodromes = p.filter { it.value.severity != "NONE" }.map { it.key },
+        triggers = (t.filter { it.value.severity != "NONE" }.map { it.key } + a.selectedTriggers).distinct(),
+        prodromes = (p.filter { it.value.severity != "NONE" }.map { it.key } + a.selectedProdromes).distinct(),
         symptoms = a.selectedSymptoms.toList(), medicines = a.selectedMedicines.toList(),
         reliefs = a.selectedReliefs.toList(), activities = a.selectedActivities.toList(),
         missedActivities = a.selectedMissedActivities.toList(),

@@ -211,16 +211,20 @@ fun LoginScreen(
                     credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
                 ) GoogleIdTokenCredential.createFrom(credential.data) else null
                 val idToken = googleCred?.idToken
-                if (idToken.isNullOrBlank()) { error = "Google sign-in failed."; return@launch }
+                if (idToken.isNullOrBlank()) { error = "Google sign-in failed: no ID token received."; return@launch }
+                Log.d(LOG_TAG, "Got Google ID token, exchanging with Supabase...")
                 val ses = SupabaseAuthService.signInWithGoogleIdToken(idToken)
+                Log.d(LOG_TAG, "Supabase response: accessToken=${ses.accessToken?.take(10)}, error=${ses.accessToken == null}")
                 ses.accessToken?.let {
                     handleSuccessfulSession(token = it, refreshToken = ses.refreshToken, expiresIn = ses.expiresIn,
                         displayNameHint = googleCred?.displayName, avatarUrlHint = googleCred?.profilePictureUri?.toString(), providerHint = "google")
-                } ?: run { error = "Invalid login response." }
+                } ?: run { error = "Supabase returned no access token." }
             } catch (e: GetCredentialException) {
-                error = e.message
+                Log.e(LOG_TAG, "GetCredentialException: ${e.type} - ${e.message}", e)
+                error = "Credential error: ${e.type} - ${e.message}"
             } catch (t: Throwable) {
-                error = t.message ?: "Google sign-in failed."
+                Log.e(LOG_TAG, "Google sign-in error: ${t.javaClass.simpleName} - ${t.message}", t)
+                error = "${t.javaClass.simpleName}: ${t.message}"
             } finally {
                 busy = false
             }
@@ -552,3 +556,4 @@ private fun themedTextFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedTextColor = Color.White,
     cursorColor = AppTheme.AccentPurple
 )
+

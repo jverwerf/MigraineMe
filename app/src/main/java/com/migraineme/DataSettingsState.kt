@@ -48,6 +48,15 @@ class DataSettingsState(private val context: Context) {
     private val _whoopConnected = MutableStateFlow(false)
     val whoopConnected: StateFlow<Boolean> = _whoopConnected.asStateFlow()
 
+    private val _ouraConnected = MutableStateFlow(false)
+    val ouraConnected: StateFlow<Boolean> = _ouraConnected.asStateFlow()
+
+    private val _polarConnected = MutableStateFlow(false)
+    val polarConnected: StateFlow<Boolean> = _polarConnected.asStateFlow()
+
+    private val _garminConnected = MutableStateFlow(false)
+    val garminConnected: StateFlow<Boolean> = _garminConnected.asStateFlow()
+
     private val _healthConnectWearablesConnected = MutableStateFlow(false)
     val healthConnectWearablesConnected: StateFlow<Boolean> = _healthConnectWearablesConnected.asStateFlow()
 
@@ -107,6 +116,31 @@ class DataSettingsState(private val context: Context) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Optimistic Local Updates
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Optimistically update a metric's enabled state locally.
+     * This immediately updates the UI (e.g. weather rows grey-out reacts instantly
+     * when location is toggled) without waiting for the Supabase round-trip.
+     * The subsequent refreshMetricSettings() call will reconcile with server state.
+     */
+    fun updateMetricLocally(metric: String, enabled: Boolean, preferredSource: String? = null) {
+        val current = _metricSettings.value[metric]
+        if (current != null) {
+            // Update existing entry — preserves userId, updatedAt, etc.
+            val updated = current.copy(
+                enabled = enabled,
+                preferredSource = preferredSource ?: current.preferredSource
+            )
+            _metricSettings.value = _metricSettings.value.toMutableMap().apply {
+                put(metric, updated)
+            }
+        }
+        // If no existing entry, skip — the server round-trip will create it.
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Data Loading
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -153,6 +187,15 @@ class DataSettingsState(private val context: Context) {
             // Check WHOOP
             _whoopConnected.value = WhoopTokenStore(appContext).load() != null
 
+            // Check Oura
+            _ouraConnected.value = OuraTokenStore(appContext).load() != null
+
+            // Check Polar
+            _polarConnected.value = PolarTokenStore(appContext).load() != null
+
+            // Check Garmin
+            _garminConnected.value = GarminTokenStore(appContext).load() != null
+
             // Check Health Connect wearables
             _healthConnectWearablesConnected.value =
                 DataSettingsPermissionHelper.hasHealthConnectWearablesPermission(appContext)
@@ -160,6 +203,9 @@ class DataSettingsState(private val context: Context) {
             // Update combined list
             _connectedWearables.value = buildList {
                 if (_whoopConnected.value) add(WearableSource.WHOOP)
+                if (_ouraConnected.value) add(WearableSource.OURA)
+                if (_polarConnected.value) add(WearableSource.POLAR)
+                if (_garminConnected.value) add(WearableSource.GARMIN)
                 if (_healthConnectWearablesConnected.value) add(WearableSource.HEALTH_CONNECT)
             }
         }
@@ -252,6 +298,8 @@ class DataSettingsState(private val context: Context) {
         withContext(Dispatchers.IO) {
             if (DataSettingsPermissionHelper.hasLocationPermission(appContext)) {
                 Log.d(TAG, "Auto-enabling location after permission grant")
+                // Optimistic local update — UI reacts immediately
+                updateMetricLocally("user_location_daily", true)
                 edge.upsertMetricSetting(
                     context = appContext,
                     metric = "user_location_daily",
@@ -311,4 +359,3 @@ class DataSettingsState(private val context: Context) {
         }
     }
 }
-

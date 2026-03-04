@@ -28,7 +28,7 @@ android {
         applicationId = "com.migraineme"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
+        versionCode = 14
         versionName = "1.0"
 
         // ── All keys loaded from local.properties ──
@@ -44,6 +44,14 @@ android {
             "\"${localProp("REVENUECAT_API_KEY")}\"")
         buildConfigField("String", "WHOOP_CLIENT_ID",
             "\"${localProp("WHOOP_CLIENT_ID")}\"")
+        buildConfigField("String", "OURA_CLIENT_ID",
+            "\"${localProp("OURA_CLIENT_ID")}\"")
+        buildConfigField("String", "POLAR_CLIENT_ID",
+            "\"${localProp("POLAR_CLIENT_ID")}\"")
+        buildConfigField("String", "POLAR_CLIENT_SECRET",
+            "\"${localProp("POLAR_CLIENT_SECRET")}\"")
+        buildConfigField("String", "GARMIN_CLIENT_ID",
+            "\"${localProp("GARMIN_CLIENT_ID")}\"")
     }
 
     buildTypes {

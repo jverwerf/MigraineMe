@@ -124,6 +124,10 @@ object DataSettingsPermissionHelper {
             if (WhoopTokenStore(context).load() != null) {
                 add(WearableSource.WHOOP)
             }
+            // Check Oura
+            if (OuraTokenStore(context).load() != null) {
+                add(WearableSource.OURA)
+            }
             // Check Health Connect
             if (hasHealthConnectWearablesPermission(context)) {
                 add(WearableSource.HEALTH_CONNECT)

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="100" android:viewportHeight="100">
+    <!-- Capsule outline -->
+    <path android:pathData="M36,15 L64,15 A18,18 0 0,1 82,33 L82,67 A18,18 0 0,1 64,85 L36,85 A18,18 0 0,1 18,67 L18,33 A18,18 0 0,1 36,15 Z"
+        android:strokeColor="#4FC3F7" android:strokeWidth="7"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"/>
+    <!-- Divider line -->
+    <path android:pathData="M18,50 L82,50"
+        android:strokeColor="#4FC3F7" android:strokeWidth="6" android:strokeLineCap="round"/>
+    <!-- Cross on upper half (vertical) -->
+    <path android:pathData="M50,25 L50,40"
+        android:strokeColor="#4FC3F7" android:strokeWidth="6" android:strokeLineCap="round"/>
+    <!-- Cross on upper half (horizontal) -->
+    <path android:pathData="M42,32.5 L58,32.5"
+        android:strokeColor="#4FC3F7" android:strokeWidth="6" android:strokeLineCap="round"/>
+</vector>

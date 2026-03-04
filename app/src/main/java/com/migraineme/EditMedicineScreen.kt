@@ -3,6 +3,7 @@ package com.migraineme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,6 +63,9 @@ fun EditMedicineScreen(
     var startAt by rememberSaveable(row?.id) { mutableStateOf(row?.startAt ?: "") }
     var notes by rememberSaveable(row?.id) { mutableStateOf(row?.notes ?: "") }
     var migraineId by rememberSaveable(row?.id) { mutableStateOf(row?.migraineId ?: "") }
+    var reliefScale by rememberSaveable(row?.id) { mutableStateOf(row?.reliefScale ?: "NONE") }
+    var sideEffectScale by rememberSaveable(row?.id) { mutableStateOf(row?.sideEffectScale ?: "NONE") }
+    var sideEffectNotes by rememberSaveable(row?.id) { mutableStateOf(row?.sideEffectNotes ?: "") }
 
     var nameMenuOpen by rememberSaveable { mutableStateOf(false) }
     var migraineMenuOpen by rememberSaveable { mutableStateOf(false) }
@@ -182,6 +186,33 @@ fun EditMedicineScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        // Relief scale
+        Spacer(Modifier.height(4.dp))
+        Text("How much relief?")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ReliefScale.entries.forEach { scale ->
+                androidx.compose.material3.FilterChip(
+                    selected = reliefScale == scale.name,
+                    onClick = { reliefScale = scale.name },
+                    label = { Text(scale.display) },
+                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = scale.color.copy(alpha = 0.3f),
+                        selectedLabelColor = androidx.compose.ui.graphics.Color.White,
+                        containerColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.06f)
+                    )
+                )
+            }
+        }
+
+        // Side effects
+        Spacer(Modifier.height(4.dp))
+        SideEffectChips(
+            sideEffectScale = sideEffectScale,
+            onScaleChange = { sideEffectScale = it },
+            sideEffectNotes = sideEffectNotes,
+            onNotesChange = { sideEffectNotes = it }
+        )
+
         // Linked Migraine dropdown with time/day labels
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
@@ -235,7 +266,10 @@ fun EditMedicineScreen(
                         amount = amount.ifBlank { null },
                         startAt = startAt.ifBlank { null },
                         notes = notes.ifBlank { null },
-                        migraineId = migraineId.ifBlank { null }
+                        migraineId = migraineId.ifBlank { null },
+                        reliefScale = reliefScale,
+                        sideEffectScale = sideEffectScale,
+                        sideEffectNotes = sideEffectNotes.ifBlank { null }
                     )
                     navController.popBackStack()
                 }

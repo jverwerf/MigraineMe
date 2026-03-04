@@ -71,7 +71,7 @@ fun NutritionHistoryScreen(
     var editMealType by remember { mutableStateOf("lunch") }
     
     val searchService = remember { USDAFoodSearchService(context) }
-    val nutritionConfig = remember { MonitorCardConfigStore.load(context) }
+    val nutritionDisplayKeys = remember { MetricDisplayStore.getDisplayMetrics(context, "nutrition") }
     
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
     val today = LocalDate.now()
@@ -233,7 +233,7 @@ fun NutritionHistoryScreen(
                 } else {
                     val grouped = items.groupBy { it.mealType }
                     val mealOrder = listOf("breakfast", "lunch", "dinner", "snack", "unknown")
-                    val selectedMetrics = nutritionConfig.nutritionDisplayMetrics.take(3)
+                    val selectedMetrics = nutritionDisplayKeys.take(3)
 
                     val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
 
@@ -242,10 +242,11 @@ fun NutritionHistoryScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        selectedMetrics.forEachIndexed { index, metric ->
-                            val total = items.sumOf { it.metricValue(metric) ?: 0.0 }
-                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
-                            val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                        selectedMetrics.forEachIndexed { index, registryKey ->
+                            val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
+                            val total = items.sumOf { it.metricValue(legacyKey) ?: 0.0 }
+                            val label = MetricRegistry.label(registryKey)
+                            val unit = MetricRegistry.unit(registryKey)
                             val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
                             HistorySummaryValue(formatted, label, slotColors.getOrElse(index) { slotColors.last() })
                         }
@@ -296,17 +297,19 @@ fun NutritionHistoryScreen(
                     Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
-                    MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
-                        val isRisk = MonitorCardConfig.isRiskMetric(metric)
+                    val allNutritionKeys = MetricRegistry.byGroup("nutrition").map { it.key }
+                    allNutritionKeys.forEach { registryKey ->
+                        val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
+                        val isRisk = legacyKey in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure")
                         val total = if (isRisk) {
-                            items.maxOfOrNull { it.metricValue(metric) ?: 0.0 } ?: 0.0
+                            items.maxOfOrNull { it.metricValue(legacyKey) ?: 0.0 } ?: 0.0
                         } else {
-                            items.sumOf { it.metricValue(metric) ?: 0.0 }
+                            items.sumOf { it.metricValue(legacyKey) ?: 0.0 }
                         }
-                        val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
-                        val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
+                        val label = MetricRegistry.label(registryKey)
+                        val unit = MetricRegistry.unit(registryKey)
                         if (isRisk) {
-                            val (levelText, valueColor) = RiskColors.formatRiskLevel(metric, total.toInt())
+                            val (levelText, valueColor) = RiskColors.formatRiskLevel(legacyKey, total.toInt())
                             val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
@@ -314,10 +317,10 @@ fun NutritionHistoryScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    when (metric) {
-                                        MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> CheeseIcon(valueColor, 12.dp)
-                                        MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> WineGlassIcon(valueColor, 12.dp)
-                                        MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> WheatIcon(valueColor, 12.dp)
+                                    when (legacyKey) {
+                                        "tyramine_exposure" -> CheeseIcon(valueColor, 12.dp)
+                                        "alcohol_exposure" -> WineGlassIcon(valueColor, 12.dp)
+                                        "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
                                     }
                                     Spacer(Modifier.width(5.dp))
                                     Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)

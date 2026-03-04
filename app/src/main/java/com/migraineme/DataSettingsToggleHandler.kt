@@ -225,6 +225,7 @@ object DataSettingsToggleHandler {
             } else {
                 PredictedMenstruationHelper.delete(context)
                 MetricToggleHelper.toggle(context, "menstruation", false)
+                MenstruationSyncScheduler.cancel(context)
             }
 
             edge.upsertMetricSetting(

@@ -146,7 +146,7 @@ fun TimingScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text("Back") }
                 Button(
-                    onClick = { navController.navigate(Routes.PAIN_LOCATION) },
+                    onClick = { navController.navigate(Routes.PAINT_PICTURE) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text("Next") }
             }

@@ -6,14 +6,21 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
@@ -40,12 +47,12 @@ fun WearableSourceSelector(
     var expanded by remember(options, selected) { mutableStateOf(false) }
 
     Box {
-        TextButton(
-            onClick = { if (enabled && options.size > 1) expanded = true },
-            enabled = enabled
-        ) {
-            Text(selected.label, color = Color.White, style = MaterialTheme.typography.bodySmall)
-        }
+        SourceBadge(
+            label = selected.label,
+            hasMultiple = options.size > 1,
+            enabled = enabled,
+            onClick = { if (enabled && options.size > 1) expanded = true }
+        )
 
         DropdownMenu(
             expanded = expanded,
@@ -79,12 +86,12 @@ fun PhoneSourceSelector(
     var expanded by remember(options, selected) { mutableStateOf(false) }
 
     Box {
-        TextButton(
-            onClick = { if (enabled && options.size > 1) expanded = true },
-            enabled = enabled
-        ) {
-            Text(selected.label, color = Color.White, style = MaterialTheme.typography.bodySmall)
-        }
+        SourceBadge(
+            label = selected.label,
+            hasMultiple = options.size > 1,
+            enabled = enabled,
+            onClick = { if (enabled && options.size > 1) expanded = true }
+        )
 
         DropdownMenu(
             expanded = expanded,
@@ -121,12 +128,12 @@ fun HybridSourceSelector(
     val selectedLabel = options.firstOrNull { it.first == selectedKey }?.second ?: "Phone"
 
     Box {
-        TextButton(
-            onClick = { if (enabled && options.size > 1) expanded = true },
-            enabled = enabled
-        ) {
-            Text(selectedLabel, color = Color.White, style = MaterialTheme.typography.bodySmall)
-        }
+        SourceBadge(
+            label = selectedLabel,
+            hasMultiple = options.size > 1,
+            enabled = enabled,
+            onClick = { if (enabled && options.size > 1) expanded = true }
+        )
 
         DropdownMenu(
             expanded = expanded,
@@ -142,6 +149,42 @@ fun HybridSourceSelector(
                     }
                 )
             }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Source Badge — tappable pill showing current source
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+fun SourceBadge(
+    label: String,
+    hasMultiple: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    val badgeColor = Color(0xFF81C784)
+    Row(
+        modifier = Modifier
+            .background(badgeColor.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+            .then(if (hasMultiple && enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Box(
+            Modifier
+                .size(6.dp)
+                .background(badgeColor, RoundedCornerShape(3.dp))
+        )
+        Text(label, color = badgeColor, style = MaterialTheme.typography.labelSmall)
+        if (hasMultiple) {
+            Icon(
+                Icons.Filled.KeyboardArrowDown, null,
+                tint = badgeColor,
+                modifier = Modifier.size(12.dp)
+            )
         }
     }
 }
@@ -192,12 +235,14 @@ fun PermissionSubRow(
         ) {
             Switch(
                 checked = isGranted,
+                modifier = Modifier.scale(0.8f),
                 onCheckedChange = { newVal ->
                     if (newVal && !isGranted) {
                         onRequestPermission()
                     }
                 },
-                enabled = !isGranted
+                enabled = !isGranted,
+                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
             )
         }
     }
@@ -332,9 +377,9 @@ fun MenstruationDetailCard(
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
             Divider()
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             // Average Cycle Row
             Row(
@@ -365,9 +410,9 @@ fun MenstruationDetailCard(
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
             Divider()
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             // Auto-update Row
             Row(
@@ -390,11 +435,13 @@ fun MenstruationDetailCard(
                 }
                 Switch(
                     checked = settings.autoUpdateAverage,
-                    onCheckedChange = onAutoUpdateToggle
+                    modifier = Modifier.scale(0.8f),
+                    onCheckedChange = onAutoUpdateToggle,
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             // Next expected (only show if lastMenstruationDate is not null)
             settings.lastMenstruationDate?.let { lastDate ->
@@ -457,18 +504,26 @@ fun NotificationsCard(
         }
     }
 
-    val providerColWidth = 120.dp
     val toggleColWidth = 56.dp
 
-    HeroCard {
-        Text(
-            "Notifications",
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+    BaseCard {
+        // Section header — same style as other data sections
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(
+                Icons.Outlined.Notifications, null,
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(18.dp)
             )
-        )
-        Spacer(Modifier.height(12.dp))
+            Text(
+                "Notifications",
+                color = Color.White,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.SemiBold
+                )
+            )
+        }
+
+        HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
 
         // Evening check-in row
         Row(
@@ -498,6 +553,7 @@ fun NotificationsCard(
             ) {
                 Switch(
                     checked = notificationPermissionGranted && eveningCheckinEnabled,
+                    modifier = Modifier.scale(0.8f),
                     onCheckedChange = { newValue ->
                         if (newValue) {
                             if (!notificationPermissionGranted) {
@@ -510,19 +566,19 @@ fun NotificationsCard(
                             // Turn off — open notification settings so user can disable the channel
                             openNotificationSettings(appContext)
                         }
-                    }
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
                 )
             }
         }
 
         // Permission sub-row (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Spacer(Modifier.height(4.dp))
             PermissionSubRow(
                 label = "Notification permission",
                 isGranted = notificationPermissionGranted,
                 alpha = 1.0f,
-                providerColWidth = providerColWidth,
+                providerColWidth = 0.dp,
                 toggleColWidth = toggleColWidth,
                 onRequestPermission = onRequestNotificationPermission
             )
@@ -530,7 +586,6 @@ fun NotificationsCard(
 
         // Channel warning
         if (notificationPermissionGranted && !eveningCheckinEnabled) {
-            Spacer(Modifier.height(4.dp))
             Text(
                 "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings.",
                 style = MaterialTheme.typography.bodySmall,

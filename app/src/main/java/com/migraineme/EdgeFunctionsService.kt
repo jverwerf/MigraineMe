@@ -31,6 +31,21 @@ class EdgeFunctionsService {
     )
 
     @Serializable
+    private data class OuraTokenUpsertBody(
+        @SerialName("access_token") val accessToken: String,
+        @SerialName("refresh_token") val refreshToken: String,
+        @SerialName("token_type") val tokenType: String,
+        @SerialName("expires_at") val expiresAtIso: String? = null
+    )
+
+    @Serializable
+    private data class PolarTokenUpsertBody(
+        @SerialName("access_token") val accessToken: String,
+        @SerialName("token_type") val tokenType: String = "Bearer",
+        @SerialName("x_user_id") val xUserId: String? = null
+    )
+
+    @Serializable
     private data class MetricSettingUpsertBody(
         @SerialName("user_id") val userId: String,
         val metric: String,
@@ -155,6 +170,46 @@ class EdgeFunctionsService {
         }
     }
 
+    suspend fun upsertOuraTokenToSupabase(context: Context, token: OuraToken): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val expiresIso = token.expiresAtMillis
+            .takeIf { it > 0L }
+            ?.let { Instant.ofEpochMilli(it).toString() }
+
+        val body = OuraTokenUpsertBody(
+            accessToken = token.accessToken,
+            refreshToken = token.refreshToken,
+            tokenType = token.tokenType.ifBlank { "Bearer" },
+            expiresAtIso = expiresIso
+        )
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/upsert-oura-token"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
+                Log.e("EdgeFunctionsService", "upsertOuraToken failed: ${res.status.value} $bodyText")
+            }
+            ok
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "upsertOuraToken exception", t)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
     suspend fun enqueueLoginBackfill(context: Context): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
@@ -176,6 +231,106 @@ class EdgeFunctionsService {
             ok
         } catch (t: Throwable) {
             Log.e("EdgeFunctionsService", "enqueueLoginBackfill exception", t)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * Invoke backfill-polar edge function (awaited).
+     * Ensures Polar sync_jobs exist and invokes sync-worker-polar to pull data.
+     * Call BEFORE enqueueLoginBackfill so data is available for triggers/risk.
+     */
+    suspend fun backfillPolar(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/backfill-polar"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "backfillPolar failed: ${res.status.value}")
+            }
+            ok
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "backfillPolar exception", t)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * Invoke backfill-oura edge function (awaited).
+     * Ensures Oura sync_jobs exist and invokes sync-worker-oura to pull data.
+     * Call BEFORE enqueueLoginBackfill so data is available for triggers/risk.
+     */
+    suspend fun backfillOura(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/backfill-oura"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "backfillOura failed: ${res.status.value}")
+            }
+            ok
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "backfillOura exception", t)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    /**
+     * Invoke backfill-garmin edge function (awaited).
+     * Ensures Garmin sync_jobs exist and invokes sync-worker-garmin to pull data.
+     * Supplements the push-based garmin-backfill with immediate pull-based sync.
+     * Call BEFORE enqueueLoginBackfill so data is available for triggers/risk.
+     */
+    suspend fun backfillGarmin(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/backfill-garmin"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "backfillGarmin failed: ${res.status.value}")
+            }
+            ok
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "backfillGarmin exception", t)
             false
         } finally {
             client.close()
@@ -324,6 +479,183 @@ class EdgeFunctionsService {
             if (!ok) {
                 allOk = false
                 Log.w("EdgeFunctionsService", "Failed to enable WHOOP metric setting: $metric")
+            }
+        }
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Oura Metric Settings
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun enableDefaultOuraMetricSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val ouraKey = "oura"
+
+        val metrics = listOf(
+            "sleep_duration_daily",
+            "sleep_score_daily",
+            "sleep_efficiency_daily",
+            "sleep_stages_daily",
+            "sleep_disturbances_daily",
+            "fell_asleep_time_daily",
+            "woke_up_time_daily",
+            "recovery_score_daily",
+            "resting_hr_daily",
+            "hrv_daily",
+            "skin_temp_daily",
+            "spo2_daily",
+            "steps_daily",
+            "stress_index_daily"
+        )
+
+        var allOk = true
+        for (metric in metrics) {
+            val ok = runCatching {
+                upsertMetricSetting(
+                    context = appCtx,
+                    metric = metric,
+                    enabled = true,
+                    preferredSource = ouraKey
+                )
+            }.getOrDefault(false)
+
+            if (!ok) {
+                allOk = false
+                Log.w("EdgeFunctionsService", "Failed to enable Oura metric setting: $metric")
+            }
+        }
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Polar Token & Metric Settings
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun upsertPolarTokenToSupabase(context: Context, token: PolarToken): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+
+        val body = PolarTokenUpsertBody(
+            accessToken = token.accessToken,
+            tokenType = token.tokenType.ifBlank { "Bearer" },
+            xUserId = token.polarUserId
+        )
+
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/upsert-polar-token"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
+                Log.e("EdgeFunctionsService", "upsertPolarToken failed: ${res.status.value} $bodyText")
+            }
+            ok
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "upsertPolarToken exception", t)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun enableDefaultPolarMetricSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val polarKey = "polar"
+
+        // Polar provides 16 metrics (no stress — computed from HRV/RHR z-scores)
+        val metrics = listOf(
+            "sleep_duration_daily",
+            "sleep_score_daily",
+            "sleep_efficiency_daily",
+            "sleep_stages_daily",
+            "sleep_disturbances_daily",
+            "fell_asleep_time_daily",
+            "woke_up_time_daily",
+            "recovery_score_daily",
+            "resting_hr_daily",
+            "hrv_daily",
+            "respiratory_rate_daily",
+            "steps_daily",
+            "strain_daily",
+            "time_in_high_hr_zones_daily",
+            "skin_temp_daily",
+            "spo2_daily"
+        )
+
+        var allOk = true
+        for (metric in metrics) {
+            val ok = runCatching {
+                upsertMetricSetting(
+                    context = appCtx,
+                    metric = metric,
+                    enabled = true,
+                    preferredSource = polarKey
+                )
+            }.getOrDefault(false)
+
+            if (!ok) {
+                allOk = false
+                Log.w("EdgeFunctionsService", "Failed to enable Polar metric setting: $metric")
+            }
+        }
+        return allOk
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Garmin Token Exchange & Metric Settings
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // NOTE: Garmin token exchange happens server-side (garmin-token-exchange Edge Function)
+    // because Garmin requires client_secret which must NOT be embedded in mobile apps.
+    // The Edge Function is called directly by GarminAuthService.exchangeCodeViaServer().
+
+    suspend fun enableDefaultGarminMetricSettings(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val garminKey = "garmin"
+
+        // Garmin provides 16 metrics (stress is DIRECT, not computed)
+        val metrics = listOf(
+            "sleep_duration_daily",
+            "sleep_score_daily",
+            "sleep_efficiency_daily",
+            "sleep_stages_daily",
+            "sleep_disturbances_daily",
+            "fell_asleep_time_daily",
+            "woke_up_time_daily",
+            "recovery_score_daily",
+            "resting_hr_daily",
+            "hrv_daily",
+            "respiratory_rate_daily",
+            "spo2_daily",
+            "steps_daily",
+            "strain_daily",
+            "stress_index_daily",
+            "skin_temp_daily"
+        )
+
+        var allOk = true
+        for (metric in metrics) {
+            val ok = runCatching {
+                upsertMetricSetting(
+                    context = appCtx,
+                    metric = metric,
+                    enabled = true,
+                    preferredSource = garminKey
+                )
+            }.getOrDefault(false)
+
+            if (!ok) {
+                allOk = false
+                Log.w("EdgeFunctionsService", "Failed to enable Garmin metric setting: $metric")
             }
         }
         return allOk
@@ -1248,6 +1580,168 @@ class EdgeFunctionsService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Menstruation Decay Weights (centered curve for menstruation_predicted)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Serializable
+    data class MenstruationDecayWeightResponse(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        @SerialName("day_m7") val dayM7: Double,
+        @SerialName("day_m6") val dayM6: Double,
+        @SerialName("day_m5") val dayM5: Double,
+        @SerialName("day_m4") val dayM4: Double,
+        @SerialName("day_m3") val dayM3: Double,
+        @SerialName("day_m2") val dayM2: Double,
+        @SerialName("day_m1") val dayM1: Double,
+        @SerialName("day_0") val day0: Double,
+        @SerialName("day_p1") val dayP1: Double,
+        @SerialName("day_p2") val dayP2: Double,
+        @SerialName("day_p3") val dayP3: Double,
+        @SerialName("day_p4") val dayP4: Double,
+        @SerialName("day_p5") val dayP5: Double,
+        @SerialName("day_p6") val dayP6: Double,
+        @SerialName("day_p7") val dayP7: Double,
+        @SerialName("updated_at") val updatedAt: String
+    )
+
+    @Serializable
+    private data class MenstruationDecayWeightUpsertBody(
+        @SerialName("user_id") val userId: String,
+        @SerialName("day_m7") val dayM7: Double,
+        @SerialName("day_m6") val dayM6: Double,
+        @SerialName("day_m5") val dayM5: Double,
+        @SerialName("day_m4") val dayM4: Double,
+        @SerialName("day_m3") val dayM3: Double,
+        @SerialName("day_m2") val dayM2: Double,
+        @SerialName("day_m1") val dayM1: Double,
+        @SerialName("day_0") val day0: Double,
+        @SerialName("day_p1") val dayP1: Double,
+        @SerialName("day_p2") val dayP2: Double,
+        @SerialName("day_p3") val dayP3: Double,
+        @SerialName("day_p4") val dayP4: Double,
+        @SerialName("day_p5") val dayP5: Double,
+        @SerialName("day_p6") val dayP6: Double,
+        @SerialName("day_p7") val dayP7: Double,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
+    suspend fun getMenstruationDecayWeights(context: Context): MenstruationDecayWeightResponse? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+        val userId = SessionStore.readUserId(appCtx) ?: return null
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/menstruation_decay_weights?user_id=eq.$userId&select=*&limit=1"
+
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+
+            if (res.status.value in 200..299) {
+                val list = res.body<List<MenstruationDecayWeightResponse>>()
+                list.firstOrNull()
+            } else {
+                Log.e("EdgeFunctionsService", "getMenstruationDecayWeights failed: ${res.status}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getMenstruationDecayWeights error: ${e.message}", e)
+            null
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertMenstruationDecayWeights(
+        context: Context,
+        weights: MenstruationDecayWeights
+    ): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = MenstruationDecayWeightUpsertBody(
+            userId = userId,
+            dayM7 = weights.dayM7, dayM6 = weights.dayM6, dayM5 = weights.dayM5,
+            dayM4 = weights.dayM4, dayM3 = weights.dayM3, dayM2 = weights.dayM2,
+            dayM1 = weights.dayM1, day0 = weights.day0,
+            dayP1 = weights.dayP1, dayP2 = weights.dayP2, dayP3 = weights.dayP3,
+            dayP4 = weights.dayP4, dayP5 = weights.dayP5, dayP6 = weights.dayP6,
+            dayP7 = weights.dayP7,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/menstruation_decay_weights?on_conflict=user_id"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e("EdgeFunctionsService", "upsertMenstruationDecayWeights failed: ${res.status} - ${res.bodyAsText()}")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "upsertMenstruationDecayWeights exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun seedDefaultMenstruationDecayWeights(context: Context): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = MenstruationDecayWeightUpsertBody(
+            userId = userId,
+            dayM7 = 0.0, dayM6 = 0.0, dayM5 = 0.0, dayM4 = 0.0,
+            dayM3 = 0.0, dayM2 = 3.0, dayM1 = 4.5, day0 = 6.0,
+            dayP1 = 3.0, dayP2 = 1.5, dayP3 = 0.0, dayP4 = 0.0,
+            dayP5 = 0.0, dayP6 = 0.0, dayP7 = 0.0,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/menstruation_decay_weights?on_conflict=user_id"
+
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=ignore-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.w("EdgeFunctionsService", "seedDefaultMenstruationDecayWeights failed: ${res.status}")
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "seedDefaultMenstruationDecayWeights exception", e)
+            false
+        } finally {
+            client.close()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Correlation Stats
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -1255,7 +1749,7 @@ class EdgeFunctionsService {
     data class CorrelationStat(
         val id: String = "",
         @SerialName("factor_name") val factorName: String = "",
-        @SerialName("factor_type") val factorType: String = "",   // trigger, metric, interaction
+        @SerialName("factor_type") val factorType: String = "",   // trigger, treatment, metric, interaction, treatment_interaction
         @SerialName("factor_b") val factorB: String? = null,
         @SerialName("best_lag_days") val bestLagDays: Int = 0,
         @SerialName("lift_ratio") val liftRatio: Float = 0f,
@@ -1265,24 +1759,80 @@ class EdgeFunctionsService {
         @SerialName("p_value") val pValue: Float = 1f,
         @SerialName("suggested_threshold") val suggestedThreshold: Float? = null,
         @SerialName("current_threshold") val currentThreshold: Float? = null,
+        @SerialName("threshold_direction") val thresholdDirection: String? = null,
+        @SerialName("metric_table") val metricTable: String? = null,
+        @SerialName("metric_column") val metricColumn: String? = null,
+        @SerialName("lag_details") val lagDetails: kotlinx.serialization.json.JsonObject? = null,
         @SerialName("updated_at") val updatedAt: String = "",
     ) {
+        /** Duration lift from lag_details (treatment/treatment_interaction only) */
+        val durationLift: Float get() {
+            val v = lagDetails?.get("duration_lift")
+            return when (v) {
+                is kotlinx.serialization.json.JsonPrimitive -> v.content.toFloatOrNull() ?: 0f
+                else -> 0f
+            }
+        }
+
+        /** Severity lift from lag_details (treatment/treatment_interaction only) */
+        val severityLift: Float get() {
+            val v = lagDetails?.get("severity_lift")
+            return when (v) {
+                is kotlinx.serialization.json.JsonPrimitive -> v.content.toFloatOrNull() ?: 0f
+                else -> 0f
+            }
+        }
+
+        /** Avg severity of migraines preceded by this trigger */
+        val avgSeverity: Float? get() {
+            val v = lagDetails?.get("avg_severity")
+            return when (v) {
+                is kotlinx.serialization.json.JsonPrimitive -> v.content.toFloatOrNull()
+                else -> null
+            }
+        }
+
+        /** Avg duration (hrs) of migraines preceded by this trigger */
+        val avgDurationHrs: Float? get() {
+            val v = lagDetails?.get("avg_duration_hrs")
+            return when (v) {
+                is kotlinx.serialization.json.JsonPrimitive -> v.content.toFloatOrNull()
+                else -> null
+            }
+        }
+
         /** Human-readable description of this finding */
         fun toInsightText(): String = when (factorType) {
             "trigger" -> {
                 val lagText = if (bestLagDays == 0) "on the same day"
                     else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
-                "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your migraines ($lagText). " +
+                val base = "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your migraines ($lagText). " +
                     "That's ${String.format("%.1f", liftRatio)}x more than normal days."
+                val parts = mutableListOf(base)
+                val durStr = avgDurationHrs?.let { "avg ${String.format("%.0f", it)}hrs" }
+                val sevStr = avgSeverity?.let { "severity ${String.format("%.0f", it)}/10" }
+                val extras = listOfNotNull(durStr, sevStr)
+                if (extras.isNotEmpty()) parts.add("These migraines: ${extras.joinToString(", ")}.")
+                parts.joinToString(" ")
             }
             "metric" -> {
                 if (suggestedThreshold != null && currentThreshold != null &&
                     kotlin.math.abs(suggestedThreshold - currentThreshold) > currentThreshold * 0.05f) {
-                    "Your migraine risk jumps when ${factorName.lowercase()} crosses " +
+                    val dirText = when (thresholdDirection) {
+                        "low" -> "drops below"
+                        "high" -> "rises above"
+                        else -> "crosses"
+                    }
+                    "Your migraine risk jumps when ${factorName.lowercase()} $dirText " +
                         "${fmtThreshold(suggestedThreshold, factorName)} — your current alert is set at " +
                         "${fmtThreshold(currentThreshold, factorName)}."
                 } else if (suggestedThreshold != null) {
-                    "Your migraines cluster around ${factorName.lowercase()} of " +
+                    val dirText = when (thresholdDirection) {
+                        "low" -> "below"
+                        "high" -> "above"
+                        else -> "around"
+                    }
+                    "Your migraines cluster when ${factorName.lowercase()} is $dirText " +
                         "${fmtThreshold(suggestedThreshold, factorName)} " +
                         "(${String.format("%.1f", liftRatio)}x lift)."
                 } else {
@@ -1294,10 +1844,39 @@ class EdgeFunctionsService {
                     "${pctMigraineWindows.toInt()}% of your migraines — " +
                     "${String.format("%.1f", liftRatio)}x more likely than either alone."
             }
+            "treatment_interaction" -> {
+                val parts = mutableListOf("${factorName} + ${factorB ?: "?"} used together:")
+                if (durationLift > 1f) parts.add("${String.format("%.1f", durationLift)}\u00D7 shorter")
+                if (severityLift > 1f) parts.add("${String.format("%.1f", severityLift)}\u00D7 milder")
+                if (durationLift <= 1f && severityLift <= 1f) parts.add("${String.format("%.1f", liftRatio)}\u00D7 more effective")
+                parts.joinToString(" ")
+            }
+            "treatment" -> {
+                val usagePct = pctMigraineWindows.toInt()
+                val avgRelief = pctControlWindows // reused field: avg relief score 0-3
+                val reliefLabel = when {
+                    avgRelief >= 2.5f -> "strong"
+                    avgRelief >= 1.5f -> "moderate"
+                    avgRelief >= 0.5f -> "mild"
+                    else -> "minimal"
+                }
+                val parts = mutableListOf<String>()
+                parts.add("Used in $usagePct% of your migraines with $reliefLabel reported relief.")
+                if (durationLift > 1f) parts.add("${String.format("%.1f", durationLift)}\u00D7 shorter migraines.")
+                if (severityLift > 1f) parts.add("${String.format("%.1f", severityLift)}\u00D7 milder migraines.")
+                if (durationLift <= 1f && severityLift <= 1f) parts.add("No significant duration or severity improvement detected yet.")
+                parts.joinToString(" ")
+            }
             else -> "${factorName}: ${String.format("%.1f", liftRatio)}x lift"
         }
 
-        fun isSignificant(): Boolean = pValue < 0.1f && liftRatio > 1.3f
+        fun isSignificant(): Boolean = when (factorType) {
+            "treatment", "treatment_interaction" -> {
+                // Show if either duration or severity is meaningful, or overall lift is significant
+                pValue < 0.1f && (durationLift > 1.1f || severityLift > 1.1f || liftRatio > 1.3f)
+            }
+            else -> pValue < 0.1f && liftRatio > 1.3f
+        }
 
         companion object {
             fun fmtThreshold(value: Float, metricLabel: String): String {
@@ -1372,19 +1951,19 @@ class EdgeFunctionsService {
     /**
      * Read top significant correlations from PostgREST.
      */
-    suspend fun getTopCorrelations(context: Context, limit: Int = 10): List<CorrelationStat> {
+    suspend fun getTopCorrelations(context: Context, limit: Int = 50): List<CorrelationStat> {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
 
         val client = buildClient()
         return try {
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/correlation_stats" +
-                "?p_value=lt.0.1&lift_ratio=gt.1.3" +
-                "&order=lift_ratio.desc" +
+                "?order=lift_ratio.desc" +
                 "&limit=$limit" +
                 "&select=id,factor_name,factor_type,factor_b,best_lag_days,lift_ratio," +
                 "pct_migraine_windows,pct_control_windows,sample_size,p_value," +
-                "suggested_threshold,current_threshold,updated_at"
+                "suggested_threshold,current_threshold,threshold_direction," +
+                "metric_table,metric_column,lag_details,updated_at"
 
             val res = client.get(url) {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)

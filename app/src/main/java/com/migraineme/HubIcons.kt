@@ -1,8 +1,10 @@
 package com.migraineme
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -203,6 +205,36 @@ object HubIcons {
         drawCircle(color, radius = w * 0.04f, center = Offset(w * 0.50f, h * 0.35f))
     }
 
+    /** Thumbs up – "what actually works for you" */
+    fun DrawScope.drawThumbsUp(color: Color) {
+        val w = size.width; val h = size.height
+        val stroke = Stroke(w * 0.055f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // Thumb shape
+        val thumb = Path().apply {
+            moveTo(w * 0.30f, h * 0.45f)
+            cubicTo(w * 0.30f, h * 0.30f, w * 0.38f, h * 0.15f, w * 0.50f, h * 0.12f)
+            cubicTo(w * 0.58f, h * 0.10f, w * 0.60f, h * 0.18f, w * 0.58f, h * 0.28f)
+            lineTo(w * 0.56f, h * 0.38f)
+            lineTo(w * 0.78f, h * 0.38f)
+            cubicTo(w * 0.86f, h * 0.38f, w * 0.88f, h * 0.46f, w * 0.86f, h * 0.52f)
+            lineTo(w * 0.82f, h * 0.68f)
+            cubicTo(w * 0.80f, h * 0.76f, w * 0.74f, h * 0.80f, w * 0.66f, h * 0.80f)
+            lineTo(w * 0.42f, h * 0.80f)
+            lineTo(w * 0.42f, h * 0.45f)
+            close()
+        }
+        drawPath(thumb, color, style = stroke)
+        // Fist/grip rectangle
+        val grip = Path().apply {
+            moveTo(w * 0.18f, h * 0.45f)
+            lineTo(w * 0.35f, h * 0.45f)
+            lineTo(w * 0.35f, h * 0.80f)
+            lineTo(w * 0.18f, h * 0.80f)
+            close()
+        }
+        drawPath(grip, color, style = stroke)
+    }
+
     /** Lightning with question mark – surprising trigger */
     fun DrawScope.drawSurpriseBolt(color: Color) {
         val w = size.width; val h = size.height
@@ -256,20 +288,17 @@ object HubIcons {
     /** Moon with stars – sleep */
     fun DrawScope.drawMoonSleep(color: Color) {
         val w = size.width; val h = size.height
-        val stroke = Stroke(w * 0.055f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        // Crescent moon
-        val moon = Path().apply {
-            moveTo(w * 0.55f, h * 0.12f)
-            cubicTo(w * 0.20f, h * 0.15f, w * 0.20f, h * 0.80f, w * 0.55f, h * 0.85f)
-            cubicTo(w * 0.35f, h * 0.72f, w * 0.35f, h * 0.25f, w * 0.55f, h * 0.12f)
+        val cx = w * 0.45f; val cy = h * 0.50f; val r1 = w * 0.35f
+        val cx2 = w * 0.58f; val cy2 = h * 0.46f; val r2 = w * 0.28f
+        // Full circle
+        val moonPath = Path().apply {
+            addOval(androidx.compose.ui.geometry.Rect(cx - r1, cy - r1, cx + r1, cy + r1))
+            // Cut out inner circle for crescent
+            op(this, Path().apply {
+                addOval(androidx.compose.ui.geometry.Rect(cx2 - r2, cy2 - r2, cx2 + r2, cy2 + r2))
+            }, PathOperation.Difference)
         }
-        drawPath(moon, color, style = stroke)
-        // Stars — small crosses
-        drawLine(color, Offset(w * 0.70f, h * 0.20f), Offset(w * 0.70f, h * 0.30f), strokeWidth = w * 0.04f, cap = StrokeCap.Round)
-        drawLine(color, Offset(w * 0.65f, h * 0.25f), Offset(w * 0.75f, h * 0.25f), strokeWidth = w * 0.04f, cap = StrokeCap.Round)
-        // Small star
-        drawLine(color, Offset(w * 0.82f, h * 0.38f), Offset(w * 0.82f, h * 0.45f), strokeWidth = w * 0.035f, cap = StrokeCap.Round)
-        drawLine(color, Offset(w * 0.785f, h * 0.415f), Offset(w * 0.855f, h * 0.415f), strokeWidth = w * 0.035f, cap = StrokeCap.Round)
+        drawPath(moonPath, color)
     }
 
     /** Capsule with plus – medication experience */
@@ -313,6 +342,182 @@ object HubIcons {
         drawLine(color, Offset(w * 0.65f, h * 0.25f), Offset(w * 0.65f, h * 0.55f), strokeWidth = w * 0.035f, cap = StrokeCap.Round)
         // Leaf stem
         drawLine(color, Offset(w * 0.65f, h * 0.60f), Offset(w * 0.65f, h * 0.88f), strokeWidth = w * 0.05f, cap = StrokeCap.Round)
+    }
+
+    fun DrawScope.drawPatternsVenn(color: Color) {
+        val w = size.width; val h = size.height
+        val stroke = Stroke(w * 0.07f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // Left circle
+        drawCircle(color.copy(alpha = 0.15f), radius = w * 0.32f, center = Offset(w * 0.38f, h * 0.5f), style = Fill)
+        drawCircle(color.copy(alpha = 0.5f), radius = w * 0.32f, center = Offset(w * 0.38f, h * 0.5f), style = stroke)
+        // Right circle
+        drawCircle(color.copy(alpha = 0.15f), radius = w * 0.32f, center = Offset(w * 0.62f, h * 0.5f), style = Fill)
+        drawCircle(color.copy(alpha = 0.5f), radius = w * 0.32f, center = Offset(w * 0.62f, h * 0.5f), style = stroke)
+        // Intersection highlight
+        drawCircle(color.copy(alpha = 0.35f), radius = w * 0.12f, center = Offset(w * 0.5f, h * 0.5f), style = Fill)
+    }
+
+    /** Gauge performance — speedometer dial with needle */
+    fun DrawScope.drawGaugePerformance(color: Color) {
+        val w = size.width; val h = size.height
+        val cx = w * 0.5f; val cy = h * 0.58f
+        val radius = w * 0.38f
+        val stroke = Stroke(w * 0.07f, cap = StrokeCap.Round)
+
+        // Arc background (semi-circle from 180° to 360°)
+        drawArc(
+            color = color.copy(alpha = 0.15f),
+            startAngle = 180f, sweepAngle = 180f,
+            useCenter = true,
+            topLeft = Offset(cx - radius, cy - radius),
+            size = Size(radius * 2, radius * 2),
+            style = Fill,
+        )
+        drawArc(
+            color = color.copy(alpha = 0.5f),
+            startAngle = 180f, sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(cx - radius, cy - radius),
+            size = Size(radius * 2, radius * 2),
+            style = stroke,
+        )
+
+        // Tick marks at 0%, 50%, 100%
+        val tickStroke = Stroke(w * 0.04f, cap = StrokeCap.Round)
+        for (pct in listOf(0f, 0.5f, 1f)) {
+            val angle = Math.toRadians((180.0 + pct * 180.0))
+            val outerR = radius * 1.0f
+            val innerR = radius * 0.82f
+            drawLine(
+                color.copy(alpha = 0.6f),
+                start = Offset(cx + (outerR * kotlin.math.cos(angle)).toFloat(), cy + (outerR * kotlin.math.sin(angle)).toFloat()),
+                end = Offset(cx + (innerR * kotlin.math.cos(angle)).toFloat(), cy + (innerR * kotlin.math.sin(angle)).toFloat()),
+                strokeWidth = tickStroke.width,
+            )
+        }
+
+        // Needle pointing at ~70% (252°)
+        val needleAngle = Math.toRadians(252.0)
+        val needleLen = radius * 0.72f
+        drawLine(
+            color,
+            start = Offset(cx, cy),
+            end = Offset(cx + (needleLen * kotlin.math.cos(needleAngle)).toFloat(), cy + (needleLen * kotlin.math.sin(needleAngle)).toFloat()),
+            strokeWidth = w * 0.06f,
+        )
+
+        // Centre hub dot
+        drawCircle(color, radius = w * 0.07f, center = Offset(cx, cy), style = Fill)
+    }
+
+    /** Threshold target — concentric rings with a horizontal slider arrow */
+    fun DrawScope.drawThresholdTarget(color: Color) {
+        val w = size.width; val h = size.height
+        val cx = w * 0.45f; val cy = h * 0.5f
+        val stroke = Stroke(w * 0.06f, cap = StrokeCap.Round)
+        // Outer ring
+        drawCircle(color.copy(alpha = 0.15f), radius = w * 0.36f, center = Offset(cx, cy), style = Fill)
+        drawCircle(color.copy(alpha = 0.5f), radius = w * 0.36f, center = Offset(cx, cy), style = stroke)
+        // Inner ring
+        drawCircle(color.copy(alpha = 0.25f), radius = w * 0.18f, center = Offset(cx, cy), style = Fill)
+        drawCircle(color.copy(alpha = 0.7f), radius = w * 0.18f, center = Offset(cx, cy), style = stroke)
+        // Centre dot
+        drawCircle(color, radius = w * 0.06f, center = Offset(cx, cy), style = Fill)
+        // Small right arrow (adjustment nudge)
+        val arrowX = w * 0.78f; val arrowY = h * 0.5f; val arrowLen = w * 0.14f
+        val arrowStroke = Stroke(w * 0.065f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        drawLine(color, start = Offset(arrowX - arrowLen, arrowY), end = Offset(arrowX + arrowLen * 0.2f, arrowY), strokeWidth = arrowStroke.width)
+        drawLine(color, start = Offset(arrowX, arrowY - arrowLen * 0.5f), end = Offset(arrowX + arrowLen * 0.2f, arrowY), strokeWidth = arrowStroke.width)
+        drawLine(color, start = Offset(arrowX, arrowY + arrowLen * 0.5f), end = Offset(arrowX + arrowLen * 0.2f, arrowY), strokeWidth = arrowStroke.width)
+    }
+
+    /** Shield with checkmark — "What Worked" / treatment effectiveness */
+    fun DrawScope.drawShieldCheck(color: Color) {
+        val w = size.width; val h = size.height
+        val stroke = Stroke(w * 0.06f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // Shield shape
+        val shield = Path().apply {
+            moveTo(w * 0.50f, h * 0.08f)
+            lineTo(w * 0.85f, h * 0.22f)
+            lineTo(w * 0.82f, h * 0.58f)
+            cubicTo(w * 0.78f, h * 0.75f, w * 0.60f, h * 0.90f, w * 0.50f, h * 0.95f)
+            cubicTo(w * 0.40f, h * 0.90f, w * 0.22f, h * 0.75f, w * 0.18f, h * 0.58f)
+            lineTo(w * 0.15f, h * 0.22f)
+            close()
+        }
+        drawPath(shield, color, style = stroke)
+        // Checkmark inside
+        val check = Path().apply {
+            moveTo(w * 0.32f, h * 0.50f)
+            lineTo(w * 0.45f, h * 0.64f)
+            lineTo(w * 0.68f, h * 0.36f)
+        }
+        drawPath(check, color, style = Stroke(w * 0.07f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+
+    /** Compass rose — "What Were You Doing?" context card */
+    fun DrawScope.drawCompass(color: Color) {
+        val w = size.width; val h = size.height
+        val stroke = Stroke(w * 0.055f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // Outer circle
+        drawCircle(color, radius = w * 0.40f, center = Offset(w * 0.50f, h * 0.50f), style = stroke)
+        // North arrow (filled)
+        val north = Path().apply {
+            moveTo(w * 0.50f, h * 0.14f)
+            lineTo(w * 0.44f, h * 0.44f)
+            lineTo(w * 0.56f, h * 0.44f)
+            close()
+        }
+        drawPath(north, color, style = Fill)
+        // South arrow (outline)
+        val south = Path().apply {
+            moveTo(w * 0.50f, h * 0.86f)
+            lineTo(w * 0.44f, h * 0.56f)
+            lineTo(w * 0.56f, h * 0.56f)
+            close()
+        }
+        drawPath(south, color, style = Stroke(w * 0.03f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        // East/West ticks
+        drawLine(color, Offset(w * 0.14f, h * 0.50f), Offset(w * 0.26f, h * 0.50f), strokeWidth = w * 0.04f, cap = StrokeCap.Round)
+        drawLine(color, Offset(w * 0.74f, h * 0.50f), Offset(w * 0.86f, h * 0.50f), strokeWidth = w * 0.04f, cap = StrokeCap.Round)
+        // Centre dot
+        drawCircle(color, radius = w * 0.04f, center = Offset(w * 0.50f, h * 0.50f), style = Fill)
+    }
+
+    /** Ripple/shockwave — "How Did It Impact You?" card */
+    fun DrawScope.drawRipple(color: Color) {
+        val w = size.width; val h = size.height
+        // Centre impact dot
+        drawCircle(color, radius = w * 0.06f, center = Offset(w * 0.50f, h * 0.50f), style = Fill)
+        // Ripple rings (fading out)
+        val ringStroke = Stroke(w * 0.045f, cap = StrokeCap.Round)
+        drawCircle(color.copy(alpha = 0.8f), radius = w * 0.18f, center = Offset(w * 0.50f, h * 0.50f), style = ringStroke)
+        drawCircle(color.copy(alpha = 0.5f), radius = w * 0.30f, center = Offset(w * 0.50f, h * 0.50f), style = ringStroke)
+        drawCircle(color.copy(alpha = 0.25f), radius = w * 0.42f, center = Offset(w * 0.50f, h * 0.50f), style = ringStroke)
+    }
+
+    /** Calendar with "7" — weekly summary */
+    fun DrawScope.drawCalendarWeek(color: Color) {
+        val w = size.width
+        val h = size.height
+        val stroke = Stroke(w * 0.07f, cap = StrokeCap.Round)
+
+        // Calendar body (rounded rect)
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(w * 0.12f, h * 0.22f),
+            size = Size(w * 0.76f, h * 0.66f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.10f, w * 0.10f),
+            style = stroke
+        )
+        // Top bar (thicker)
+        drawLine(color, Offset(w * 0.12f, h * 0.36f), Offset(w * 0.88f, h * 0.36f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
+        // Two hanging tabs
+        drawLine(color, Offset(w * 0.33f, h * 0.12f), Offset(w * 0.33f, h * 0.28f), strokeWidth = w * 0.08f, cap = StrokeCap.Round)
+        drawLine(color, Offset(w * 0.67f, h * 0.12f), Offset(w * 0.67f, h * 0.28f), strokeWidth = w * 0.08f, cap = StrokeCap.Round)
+        // "7" in the centre
+        drawLine(color, Offset(w * 0.36f, h * 0.48f), Offset(w * 0.64f, h * 0.48f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
+        drawLine(color, Offset(w * 0.64f, h * 0.48f), Offset(w * 0.46f, h * 0.78f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
     }
 }
 

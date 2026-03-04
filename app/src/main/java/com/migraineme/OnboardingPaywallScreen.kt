@@ -30,6 +30,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun OnboardingPaywallScreen(
@@ -45,6 +59,12 @@ fun OnboardingPaywallScreen(
     var purchasing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    var promoCode by remember { mutableStateOf("") }
+    var promoLoading by remember { mutableStateOf(false) }
+    var promoSuccess by remember { mutableStateOf<String?>(null) }
+    var promoExpanded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
     val premiumState by PremiumManager.state.collectAsState()
 
     val fallbackPackages = remember {
@@ -52,15 +72,15 @@ fun OnboardingPaywallScreen(
             PackageInfo(
                 identifier = "annual",
                 productId = "migraineme_premium_annual",
-                price = "£34.99/year",
-                pricePerMonth = "£2.92",
+                price = "£59.99/year",
+                pricePerMonth = "£5.00",
                 isAnnual = true,
                 rcPackage = null
             ),
             PackageInfo(
                 identifier = "monthly",
                 productId = "migraineme_premium_monthly",
-                price = "£4.99/month",
+                price = "£6.99/month",
                 pricePerMonth = null,
                 isAnnual = false,
                 rcPackage = null
@@ -142,7 +162,7 @@ fun OnboardingPaywallScreen(
                         .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        "PREMIUM",
+                        "30-DAY FREE TRIAL",
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
@@ -154,7 +174,7 @@ fun OnboardingPaywallScreen(
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    "Your data is\nready to talk",
+                    "Try Premium free\nfor 30 days",
                     color = Color.White,
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center
@@ -163,7 +183,7 @@ fun OnboardingPaywallScreen(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "Unlock the patterns hidden in your migraine history",
+                    "Unlock all insights, risk forecasts, and AI features. Cancel anytime before your trial ends — you won't be charged.",
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
@@ -259,9 +279,9 @@ fun OnboardingPaywallScreen(
                     Triple(Icons.Outlined.Analytics, "Full Insights & Spider Charts", "Treatment effectiveness and trigger patterns"),
                     Triple(Icons.Outlined.Timeline, "7-Day Risk Forecast", "Know your migraine risk before it happens"),
                     Triple(Icons.Outlined.Speed, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
-                    Triple(Icons.Outlined.Psychology, "AI Calibration", "Personalised risk model tuned to you"),
+                    Triple(Icons.Outlined.Psychology, "Smart Calibration", "Personalised risk model tuned to you"),
                     Triple(Icons.Outlined.Description, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
-                    Triple(Icons.Outlined.Restaurant, "AI Food Risk Analysis", "Tyramine, gluten, and alcohol risk scoring"),
+                    Triple(Icons.Outlined.Restaurant, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk scoring"),
                 )
 
                 features.forEach { (icon, title, subtitle) ->
@@ -289,6 +309,85 @@ fun OnboardingPaywallScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                // ── Promo Code ──
+                TextButton(onClick = { promoExpanded = !promoExpanded }) {
+                    Text(
+                        if (promoExpanded) "Hide promo code" else "Have a promo code?",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                if (promoExpanded) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = promoCode,
+                            onValueChange = { promoCode = it.uppercase().take(30); promoSuccess = null; error = null },
+                            placeholder = { Text("Enter code", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = AppTheme.AccentPurple,
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                                cursorColor = AppTheme.AccentPurple
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Characters,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = { /* handled by button */ })
+                        )
+                        Button(
+                            onClick = {
+                                if (promoCode.isBlank()) return@Button
+                                promoLoading = true
+                                error = null
+                                promoSuccess = null
+                                scope.launch {
+                                    val result = withContext(Dispatchers.IO) { redeemOnboardingPromo(context, promoCode.trim()) }
+                                    promoLoading = false
+                                    if (result.first) {
+                                        promoSuccess = result.second
+                                        PremiumManager.loadState(context)
+                                    } else {
+                                        error = result.second
+                                    }
+                                }
+                            },
+                            enabled = promoCode.isNotBlank() && !promoLoading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AppTheme.AccentPurple,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            if (promoLoading) {
+                                CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                            } else {
+                                Text("Apply", fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+
+                    if (promoSuccess != null) {
+                        Text(
+                            promoSuccess!!,
+                            color = Color(0xFF81C784),
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                        )
+                    }
+                }
+
                 // ── Restore + Legal ──
                 TextButton(onClick = {
                     PremiumManager.restorePurchases(
@@ -303,13 +402,19 @@ fun OnboardingPaywallScreen(
                     Text(
                         "Terms of Service",
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
-                        style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline)
+                        style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
+                        modifier = Modifier.clickable {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.migraineme.app/terms")))
+                        }
                     )
                     Text("  •  ", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f), style = MaterialTheme.typography.labelSmall)
                     Text(
                         "Privacy Policy",
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
-                        style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline)
+                        style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
+                        modifier = Modifier.clickable {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.migraineme.app/privacy")))
+                        }
                     )
                 }
 
@@ -323,7 +428,7 @@ fun OnboardingPaywallScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Not now", color = AppTheme.SubtleTextColor)
+                    Text("Maybe later", color = AppTheme.SubtleTextColor)
                 }
 
                 Button(
@@ -354,11 +459,38 @@ fun OnboardingPaywallScreen(
                         Spacer(Modifier.width(8.dp))
                         Text("Processing…")
                     } else {
-                        Text("Subscribe"); Spacer(Modifier.width(4.dp))
+                        Text("Start Free Trial"); Spacer(Modifier.width(4.dp))
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                     }
                 }
             }
         }
+    }
+}
+
+private suspend fun redeemOnboardingPromo(context: android.content.Context, code: String): Pair<Boolean, String> {
+    val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return Pair(false, "Not signed in")
+    val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
+    val jsonBody = """{"code":"$code"}"""
+    val request = Request.Builder()
+        .url("${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/redeem-promo")
+        .post(jsonBody.toRequestBody("application/json".toMediaType()))
+        .header("Authorization", "Bearer $accessToken")
+        .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+        .build()
+
+    return try {
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            val json = org.json.JSONObject(body)
+            if (response.isSuccessful && json.optBoolean("ok")) {
+                val days = json.optInt("days_granted", 0)
+                Pair(true, "🎉 $days days of Premium unlocked!")
+            } else {
+                Pair(false, json.optString("message", "Invalid promo code"))
+            }
+        }
+    } catch (e: Exception) {
+        Pair(false, "Connection error. Please try again.")
     }
 }

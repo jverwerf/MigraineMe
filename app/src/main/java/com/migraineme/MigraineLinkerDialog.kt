@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -106,7 +107,8 @@ fun MigraineLinkerDialog(
     val suggestedIds = remember(suggested) { suggested.map { it.id }.toSet() }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {},
+        modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
         containerColor = Color(0xFF1E0A2E),
         titleContentColor = Color.White,
         textContentColor = AppTheme.BodyTextColor,

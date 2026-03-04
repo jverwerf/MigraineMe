@@ -348,4 +348,36 @@ object ReliefIcons {
     ) }
 
     fun forKey(key: String?): ImageVector? = ALL_ICONS.find { it.key == key }?.icon
+
+    fun forLabel(label: String, iconKey: String? = null): ImageVector? {
+        if (iconKey != null) return forKey(iconKey)
+        val l = label.lowercase()
+        return when {
+            l.contains("breath") -> Breathing
+            l.contains("box breath") -> BoxBreathing
+            l.contains("ice") || l.contains("cold") -> Ice
+            l.contains("heat") || l.contains("hot pack") || l.contains("warm") -> Heat
+            l.contains("dark") -> Darkness
+            l.contains("eye mask") || l.contains("eyemask") -> EyeMask
+            l.contains("sunglass") -> Sunglasses
+            l.contains("water") || l.contains("hydrat") -> Water
+            l.contains("electrolyte") -> Electrolytes
+            l.contains("massage") -> Massage
+            l.contains("acupressure") || l.contains("acupuncture") -> Acupressure
+            l.contains("meditat") || l.contains("mindful") -> Meditation
+            l.contains("relax") || l.contains("progressive") -> Progressive
+            l.contains("walk") -> Walk
+            l.contains("stretch") -> Stretch
+            l.contains("yoga") -> Yoga
+            l.contains("rest") || l.contains("nap") || l.contains("sleep") || l.contains("lie down") -> Rest
+            l.contains("coffee") || l.contains("caffeine") || l.contains("espresso") -> Coffee
+            l.contains("ginger") -> Ginger
+            l.contains("peppermint") || l.contains("mint") -> Peppermint
+            l.contains("bath") -> Bath
+            l.contains("shower") -> Shower
+            l.contains("fresh air") || l.contains("outside") || l.contains("ventilat") -> FreshAir
+            l.contains("quiet") || l.contains("silence") -> Quiet
+            else -> null
+        }
+    }
 }

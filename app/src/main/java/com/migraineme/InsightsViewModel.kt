@@ -6,11 +6,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import java.time.Instant
 import java.time.LocalDate
@@ -27,7 +32,8 @@ data class SpiderData(
     val logType: String,
     val axes: List<SpiderAxis>,
     val totalLogged: Int,
-    val breakdown: List<CategoryBreakdown>
+    val breakdown: List<CategoryBreakdown>,
+    val seBadgeColors: List<androidx.compose.ui.graphics.Color>? = null
 )
 
 class InsightsViewModel : ViewModel() {
@@ -91,6 +97,13 @@ class InsightsViewModel : ViewModel() {
     private val _severityCounts = MutableStateFlow<List<Pair<Int, Int>>>(emptyList())
     val severityCounts: StateFlow<List<Pair<Int, Int>>> = _severityCounts
 
+    private val _reportGenerated = MutableStateFlow(false)
+    val reportGenerated: StateFlow<Boolean> = _reportGenerated
+    fun setReportGenerated(v: Boolean) { _reportGenerated.value = v }
+
+    private val _totalMigraineCount = MutableStateFlow(0)
+    val totalMigraineCount: StateFlow<Int> = _totalMigraineCount
+
     data class DurationStats(
         val avgHours: Float, val minHours: Float, val maxHours: Float, val durations: List<Float>
     )
@@ -120,6 +133,31 @@ class InsightsViewModel : ViewModel() {
     private val _reliefItemEffectiveness = MutableStateFlow<Map<String, Float>>(emptyMap())
     val reliefItemEffectiveness: StateFlow<Map<String, Float>> = _reliefItemEffectiveness
 
+    // Item-level effectiveness with counts for Treatment Ranking card
+    data class TreatmentItem(val name: String, val count: Int, val avgRelief: Float)
+
+    /** Descriptive stats for an activity/location logged with migraines */
+    data class ContextItem(
+        val name: String,
+        val count: Int,            // how many migraines it appeared with
+        val pctOfMigraines: Float, // % of total migraines
+        val avgSeverity: Float,    // average severity of those migraines
+        val avgDurationHrs: Float? = null, // average duration of those migraines
+    )
+
+    /** Descriptive stats for a missed activity */
+    data class ImpactItem(
+        val name: String,
+        val totalMissed: Int,      // total times missed
+        val pctOfMigraines: Float, // % of migraines where this was missed
+    )
+
+    private val _medicineItems = MutableStateFlow<List<TreatmentItem>>(emptyList())
+    val medicineItems: StateFlow<List<TreatmentItem>> = _medicineItems
+
+    private val _reliefItems = MutableStateFlow<List<TreatmentItem>>(emptyList())
+    val reliefItems: StateFlow<List<TreatmentItem>> = _reliefItems
+
     private val _activitySpider = MutableStateFlow<SpiderData?>(null)
     val activitySpider: StateFlow<SpiderData?> = _activitySpider
 
@@ -131,6 +169,63 @@ class InsightsViewModel : ViewModel() {
 
     private val _spiderLoading = MutableStateFlow(true)
     val spiderLoading: StateFlow<Boolean> = _spiderLoading
+
+    // ======= Correlation & Gauge flows =======
+
+    private val _correlationStats = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
+    val correlationStats: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _correlationStats
+
+    private val _gaugeAccuracy = MutableStateFlow<EdgeFunctionsService.GaugeAccuracy?>(null)
+    val gaugeAccuracy: StateFlow<EdgeFunctionsService.GaugeAccuracy?> = _gaugeAccuracy
+
+    // Pending gauge recalibration proposals (gauge_threshold + gauge_decay)
+    data class GaugeProposal(
+        val id: String,
+        val type: String,       // "gauge_threshold" or "gauge_decay"
+        val label: String,      // e.g. "LOW", "MILD", "HIGH" or severity name
+        val fromValue: String?,
+        val toValue: String?,
+        val reasoning: String?,
+    )
+    private val _gaugeProposals = MutableStateFlow<List<GaugeProposal>>(emptyList())
+    val gaugeProposals: StateFlow<List<GaugeProposal>> = _gaugeProposals
+    private val _gaugeProposalApplying = MutableStateFlow<Set<String>>(emptySet())
+    val gaugeProposalApplying: StateFlow<Set<String>> = _gaugeProposalApplying
+
+    private val _correlationsLoading = MutableStateFlow(true)
+    val correlationsLoading: StateFlow<Boolean> = _correlationsLoading
+
+    // ======= Insight history =======
+
+    data class DailyInsightRow(
+        val date: String,
+        val insight: String,
+        val riskZone: String? = null,
+    )
+
+    private val _insightHistory = MutableStateFlow<List<DailyInsightRow>>(emptyList())
+    val insightHistory: StateFlow<List<DailyInsightRow>> = _insightHistory
+
+    // ======= Weekly summary (derived from migraines) =======
+
+    data class WeeklySummary(
+        val thisWeekCount: Int,
+        val lastWeekCount: Int,
+        val thisWeekAvgSeverity: Float?,
+        val lastWeekAvgSeverity: Float?,
+        val trend: String, // "up", "down", "stable"
+        val totalLogged: Int,
+    )
+
+    private val _weeklySummary = MutableStateFlow<WeeklySummary?>(null)
+    val weeklySummary: StateFlow<WeeklySummary?> = _weeklySummary
+
+    // ======= Day-of-week pattern =======
+
+    data class DayOfWeekStat(val dayName: String, val dayIndex: Int, val count: Int, val pct: Float)
+
+    private val _dayOfWeekPattern = MutableStateFlow<List<DayOfWeekStat>>(emptyList())
+    val dayOfWeekPattern: StateFlow<List<DayOfWeekStat>> = _dayOfWeekPattern
 
     // ======= Per-migraine linked items =======
 
@@ -154,6 +249,14 @@ class InsightsViewModel : ViewModel() {
     private val _allReliefs = MutableStateFlow<List<SupabaseDbService.ReliefRow>>(emptyList())
     private val _allProdromes = MutableStateFlow<List<SupabaseDbService.ProdromeLogRow>>(emptyList())
     private val _allLocations = MutableStateFlow<List<SupabaseDbService.LocationLogRow>>(emptyList())
+
+    // "What Were You Doing?" card data (activities + locations)
+    private val _contextItems = MutableStateFlow<List<ContextItem>>(emptyList())
+    val contextItems: StateFlow<List<ContextItem>> = _contextItems
+
+    // "How Did It Impact You?" card data (missed activities)
+    private val _impactItems = MutableStateFlow<List<ImpactItem>>(emptyList())
+    val impactItems: StateFlow<List<ImpactItem>> = _impactItems
 
     // Category maps (label.lowercase -> category)
     private val _catMaps = MutableStateFlow<CatMaps>(CatMaps())
@@ -232,8 +335,8 @@ class InsightsViewModel : ViewModel() {
             painChar = if (painCharLabels.isNotEmpty()) buildFlatSpider("Pain Character", painCharLabels) else null,
             accompanying = if (accompLabels.isNotEmpty()) buildFlatSpider("Accompanying", accompLabels) else null,
             painLocations = if (allPainLocs.isNotEmpty()) buildFlatSpider("Pain Locations", allPainLocs) else null,
-            medicines = if (fM.isNotEmpty()) buildSpider("Medicines", fM.mapNotNull { it.name }, cm.medicine) else null,
-            reliefs = if (fR.isNotEmpty()) buildSpider("Reliefs", fR.mapNotNull { it.type }, cm.relief) else null,
+            medicines = if (fM.isNotEmpty()) buildSpider("Medicines", fM.mapNotNull { it.name }, cm.medicine).withMedicineSEBadges(fM, cm.medicine) else null,
+            reliefs = if (fR.isNotEmpty()) buildSpider("Reliefs", fR.mapNotNull { it.type }, cm.relief).withReliefSEBadges(fR, cm.relief) else null,
             activities = if (fA.isNotEmpty()) buildSpider("Activities", fA.mapNotNull { it.type }, cm.activity) else null,
             locations = if (fL.isNotEmpty()) buildSpider("Locations", fL.mapNotNull { it.type }, cm.location) else null,
             missedActivities = if (fMs.isNotEmpty()) buildSpider("Missed Activities", fMs.mapNotNull { it.type }, cm.missedActivity) else null,
@@ -259,6 +362,92 @@ class InsightsViewModel : ViewModel() {
             reliefItemEffectiveness = fR
                 .groupBy { it.type?.lowercase() ?: "unknown" }
                 .mapValues { entry -> entry.value.map { reliefToNum(it.reliefScale) }.average().toFloat() }
+        )
+    }
+
+    /** Impact data filtered by a set of migraine IDs */
+    data class FilteredImpactData(
+        val contextItems: List<ContextItem> = emptyList(),
+        val impactItems: List<ImpactItem> = emptyList(),
+        val painLocationCounts: List<Pair<String, Int>> = emptyList(),
+        val severityCounts: List<Pair<Int, Int>> = emptyList(),
+        val totalMigraineCount: Int = 0,
+        val overallAvgSeverity: Float = 5f,
+    )
+
+    fun buildFilteredImpactData(migraineIds: Set<String>): FilteredImpactData {
+        val rows = _rawMigraineRows.value.filter { it.id in migraineIds }
+        val totalMigraines = rows.size.coerceAtLeast(1)
+        val migSeverityMap = rows.associate { it.id to (it.severity ?: 5) }
+
+        val fA = _allActivities.value.filter { it.migraineId in migraineIds }
+        val fL = _allLocations.value.filter { it.migraineId in migraineIds }
+        val fMs = _allMissedActivities.value.filter { it.migraineId in migraineIds }
+
+        // Context items (activities + locations)
+        val contextEntries = mutableMapOf<String, MutableList<String>>()
+        for (a in fA) {
+            val name = a.type ?: continue
+            val mId = a.migraineId ?: continue
+            contextEntries.getOrPut(name) { mutableListOf() }.add(mId)
+        }
+        for (l in fL) {
+            val name = l.type ?: continue
+            val mId = l.migraineId ?: continue
+            contextEntries.getOrPut(name) { mutableListOf() }.add(mId)
+        }
+        val contextItems = contextEntries.map { (name, mIds) ->
+            val uniqueMigraines = mIds.distinct()
+            val avgSev = uniqueMigraines.mapNotNull { migSeverityMap[it] }.let {
+                if (it.isEmpty()) 5f else it.average().toFloat()
+            }
+            ContextItem(
+                name = name,
+                count = uniqueMigraines.size,
+                pctOfMigraines = (uniqueMigraines.size.toFloat() / totalMigraines * 100),
+                avgSeverity = avgSev,
+            )
+        }.sortedByDescending { it.count }
+
+        // Impact items (missed activities)
+        val missedEntries = mutableMapOf<String, MutableList<String>>()
+        for (ms in fMs) {
+            val name = ms.type ?: continue
+            val mId = ms.migraineId ?: continue
+            missedEntries.getOrPut(name) { mutableListOf() }.add(mId)
+        }
+        val impactItems = missedEntries.map { (name, mIds) ->
+            val uniqueMigraines = mIds.distinct()
+            ImpactItem(
+                name = name,
+                totalMissed = mIds.size,
+                pctOfMigraines = (uniqueMigraines.size.toFloat() / totalMigraines * 100),
+            )
+        }.sortedByDescending { it.totalMissed }
+
+        // Pain location counts (per migraine)
+        val painLocPerMigraine = rows.flatMap { m ->
+            (m.painLocations ?: emptyList()).distinct().map { it to m.id }
+        }.groupBy({ it.first }, { it.second })
+        val painLocationCounts = painLocPerMigraine.map { (loc, migIds) ->
+            loc to migIds.distinct().size
+        }.sortedByDescending { it.second }
+
+        // Severity counts
+        val severityCounts = rows.mapNotNull { it.severity }
+            .groupingBy { it }.eachCount().toList().sortedBy { it.first }
+
+        val avgSev = rows.mapNotNull { it.severity }.let {
+            if (it.isEmpty()) 5f else it.average().toFloat()
+        }
+
+        return FilteredImpactData(
+            contextItems = contextItems,
+            impactItems = impactItems,
+            painLocationCounts = painLocationCounts,
+            severityCounts = severityCounts,
+            totalMigraineCount = rows.size,
+            overallAvgSeverity = avgSev,
         )
     }
 
@@ -655,12 +844,12 @@ class InsightsViewModel : ViewModel() {
                 _reliefs.value = rels.map { row ->
                     val s = Instant.parse(row.startAt)
                     val e = row.durationMinutes?.let { s.plus(it.toLong(), ChronoUnit.MINUTES) } ?: now
-                    ReliefSpan(s, e, null, row.type ?: "Relief")
+                    ReliefSpan(s, e, null, row.type ?: "Relief", row.sideEffectScale)
                 }
 
                 val meds = db.getAllMedicines(accessToken)
                 _medicines.value = meds.map { row ->
-                    MedicinePoint(Instant.parse(row.startAt), row.name ?: "Medicine", row.amount)
+                    MedicinePoint(Instant.parse(row.startAt), row.name ?: "Medicine", row.amount, row.sideEffectScale)
                 }
 
                 val trigs = db.getAllTriggers(accessToken)
@@ -697,6 +886,12 @@ class InsightsViewModel : ViewModel() {
 
                 // Spider data
                 loadSpiderData(accessToken, trigs, meds, rels, prods)
+
+                // Correlation stats + gauge accuracy + insight history (fire in parallel, non-blocking)
+                loadCorrelationData(context)
+                loadInsightHistory(context)
+                computeWeeklySummary()
+                computeDayOfWeekPattern()
             } catch (_: Exception) {
                 _migraines.value = emptyList()
                 _reliefs.value = emptyList()
@@ -1090,8 +1285,8 @@ class InsightsViewModel : ViewModel() {
 
             _triggerSpider.value = buildSpider("Triggers", linkedT.mapNotNull { it.type }, tc)
             _prodromeSpider.value = buildSpider("Prodromes", linkedP.mapNotNull { it.type }, pc)
-            _medicineSpider.value = buildSpider("Medicines", linkedM.mapNotNull { it.name }, mc)
-            _reliefSpider.value = buildSpider("Reliefs", linkedR.mapNotNull { it.type }, rc)
+            _medicineSpider.value = buildSpider("Medicines", linkedM.mapNotNull { it.name }, mc).withMedicineSEBadges(linkedM, mc)
+            _reliefSpider.value = buildSpider("Reliefs", linkedR.mapNotNull { it.type }, rc).withReliefSEBadges(linkedR, rc)
 
             _medicineEffectiveness.value = linkedM
                 .groupBy { mc[it.name?.lowercase()] ?: "Other" }
@@ -1107,6 +1302,13 @@ class InsightsViewModel : ViewModel() {
                 .groupBy { it.name?.lowercase() ?: "unknown" }
                 .mapValues { entry -> entry.value.map { reliefToNum(it.reliefScale) }.average().toFloat() }
 
+            _medicineItems.value = linkedM
+                .groupBy { it.name ?: "Unknown" }
+                .map { (name, items) ->
+                    TreatmentItem(name, items.size, items.map { reliefToNum(it.reliefScale) }.average().toFloat())
+                }
+                .sortedByDescending { it.avgRelief }
+
             _reliefEffectiveness.value = linkedR
                 .groupBy { rc[it.type?.lowercase()] ?: "Other" }
                 .map { entry ->
@@ -1121,12 +1323,73 @@ class InsightsViewModel : ViewModel() {
                 .groupBy { it.type?.lowercase() ?: "unknown" }
                 .mapValues { entry -> entry.value.map { reliefToNum(it.reliefScale) }.average().toFloat() }
 
+            _reliefItems.value = linkedR
+                .groupBy { it.type ?: "Unknown" }
+                .map { (name, items) ->
+                    TreatmentItem(name, items.size, items.map { reliefToNum(it.reliefScale) }.average().toFloat())
+                }
+                .sortedByDescending { it.avgRelief }
+
             _activitySpider.value = buildSpider("Activities", linkedA.mapNotNull { it.type }, ac)
             _locationSpider.value = buildSpider("Locations", linkedL.mapNotNull { it.type }, lc)
             _missedActivitySpider.value = buildSpider("Missed Activities", linkedMs.mapNotNull { it.type }, msc)
 
-            // Symptoms from migraine type field
+            // ── "What Were You Doing?" + "How Did It Impact You?" cards ──
             val migs = db.getMigraines(accessToken)
+            val totalMigraines = migs.size.coerceAtLeast(1)
+            _totalMigraineCount.value = migs.size
+            val migSeverityMap = migs.associate { it.id to (it.severity ?: 5) }
+            val migDurationMap = migs.associate { it.id to run {
+                val s = it.startAt
+                val e = it.endAt ?: return@run null
+                val hrs = (java.time.Instant.parse(e).toEpochMilli() - java.time.Instant.parse(s).toEpochMilli()) / (1000.0 * 60 * 60)
+                if (hrs > 0 && hrs < 168) hrs.toFloat() else null
+            }}
+
+            // Activities + Locations → ContextItems
+            val contextEntries = mutableMapOf<String, MutableList<String>>() // name → list of migraineIds
+            for (a in linkedA) {
+                val name = a.type ?: continue
+                val mId = a.migraineId ?: continue
+                contextEntries.getOrPut(name) { mutableListOf() }.add(mId)
+            }
+            for (l in linkedL) {
+                val name = l.type ?: continue
+                val mId = l.migraineId ?: continue
+                contextEntries.getOrPut(name) { mutableListOf() }.add(mId)
+            }
+            _contextItems.value = contextEntries.map { (name, mIds) ->
+                val uniqueMigraines = mIds.distinct()
+                val avgSev = uniqueMigraines.mapNotNull { migSeverityMap[it] }.let {
+                    if (it.isEmpty()) 0f else it.average().toFloat()
+                }
+                val avgDur = uniqueMigraines.mapNotNull { migDurationMap[it] }.let {
+                    if (it.isEmpty()) null else it.average().toFloat()
+                }
+                ContextItem(
+                    name = name,
+                    count = uniqueMigraines.size,
+                    pctOfMigraines = (uniqueMigraines.size.toFloat() / totalMigraines * 100),
+                    avgSeverity = avgSev,
+                    avgDurationHrs = avgDur,
+                )
+            }.sortedByDescending { it.count }
+
+            // Missed Activities → ImpactItems
+            val missedEntries = mutableMapOf<String, MutableList<String>>() // name → list of migraineIds
+            for (ms in linkedMs) {
+                val name = ms.type ?: continue
+                val mId = ms.migraineId ?: continue
+                missedEntries.getOrPut(name) { mutableListOf() }.add(mId)
+            }
+            _impactItems.value = missedEntries.map { (name, mIds) ->
+                val uniqueMigraines = mIds.distinct()
+                ImpactItem(
+                    name = name,
+                    totalMissed = mIds.size, // total count (can be > 1 per migraine)
+                    pctOfMigraines = (uniqueMigraines.size.toFloat() / totalMigraines * 100),
+                )
+            }.sortedByDescending { it.totalMissed }
             val allSym = migs.flatMap { row ->
                 row.type?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() && it != "Migraine" } ?: emptyList()
             }
@@ -1140,6 +1403,14 @@ class InsightsViewModel : ViewModel() {
 
             val allPainLocs = migs.flatMap { it.painLocations ?: emptyList() }
             _painLocationSpider.value = buildFlatSpider("Pain Locations", allPainLocs)
+
+            // Pain location counts as % of migraines (how many migraines had each location)
+            val painLocPerMigraine = migs.flatMap { m ->
+                (m.painLocations ?: emptyList()).distinct().map { it to m.id }
+            }.groupBy({ it.first }, { it.second })
+            _painLocationCounts.value = painLocPerMigraine.map { (loc, migraineIds) ->
+                loc to migraineIds.distinct().size
+            }.sortedByDescending { it.second }
 
             _severityCounts.value = migs.mapNotNull { it.severity }
                 .groupingBy { it }.eachCount().toList().sortedBy { it.first }
@@ -1221,6 +1492,426 @@ class InsightsViewModel : ViewModel() {
         "MILD" -> 2f
         "LOW" -> 1f
         else -> 0f
+    }
+
+    private fun seToNum(scale: String?): Float = when (scale?.uppercase()) {
+        "SEVERE" -> 3f
+        "MODERATE" -> 2f
+        "SOFT" -> 1f
+        else -> 0f
+    }
+
+    private fun seAvgToColor(avgSe: Float): androidx.compose.ui.graphics.Color = when {
+        avgSe <= 0f -> androidx.compose.ui.graphics.Color(0xFF81C784) // green — no SE
+        avgSe < 1f -> androidx.compose.ui.graphics.Color(0xFFFFB74D)  // orange — soft
+        avgSe < 2f -> androidx.compose.ui.graphics.Color(0xFFFF8A65)  // deep orange — moderate
+        else -> androidx.compose.ui.graphics.Color(0xFFE57373)        // red — severe
+    }
+
+    /** Attach per-category SE badge colors to a medicine SpiderData. */
+    private fun SpiderData.withMedicineSEBadges(
+        rows: List<SupabaseDbService.MedicineRow>,
+        catMap: Map<String, String>
+    ): SpiderData {
+        // Group rows by category (same logic as buildSpider)
+        val catSE = mutableMapOf<String, MutableList<Float>>()
+        for (row in rows) {
+            val cat = catMap[row.name?.lowercase()] ?: "Other"
+            catSE.getOrPut(cat) { mutableListOf() }.add(seToNum(row.sideEffectScale))
+        }
+        // Match order of axes (breakdown categories sorted by count desc)
+        val colors = breakdown.map { bd ->
+            val seVals = catSE[bd.categoryName]
+            if (seVals.isNullOrEmpty()) seAvgToColor(0f)
+            else seAvgToColor(seVals.average().toFloat())
+        }
+        return copy(seBadgeColors = colors)
+    }
+
+    /** Attach per-category SE badge colors to a relief SpiderData. */
+    private fun SpiderData.withReliefSEBadges(
+        rows: List<SupabaseDbService.ReliefRow>,
+        catMap: Map<String, String>
+    ): SpiderData {
+        val catSE = mutableMapOf<String, MutableList<Float>>()
+        for (row in rows) {
+            val cat = catMap[row.type?.lowercase()] ?: "Other"
+            catSE.getOrPut(cat) { mutableListOf() }.add(seToNum(row.sideEffectScale))
+        }
+        val colors = breakdown.map { bd ->
+            val seVals = catSE[bd.categoryName]
+            if (seVals.isNullOrEmpty()) seAvgToColor(0f)
+            else seAvgToColor(seVals.average().toFloat())
+        }
+        return copy(seBadgeColors = colors)
+    }
+
+    // ======= Correlation stats + Gauge accuracy =======
+
+    private fun loadCorrelationData(context: Context) {
+        viewModelScope.launch {
+            _correlationsLoading.value = true
+            try {
+                val edge = EdgeFunctionsService()
+                val stats = withContext(Dispatchers.IO) { edge.getTopCorrelations(context, 50) }
+                _correlationStats.value = stats
+
+                val accuracy = withContext(Dispatchers.IO) { edge.getGaugeAccuracy(context) }
+                _gaugeAccuracy.value = accuracy
+
+                // Load pending gauge recalibration proposals
+                val proposals = withContext(Dispatchers.IO) { loadGaugeProposals(context) }
+                _gaugeProposals.value = proposals
+            } catch (e: Exception) {
+                android.util.Log.w("InsightsVM", "loadCorrelationData failed: ${e.message}")
+                _correlationStats.value = emptyList()
+                _gaugeAccuracy.value = null
+                _gaugeProposals.value = emptyList()
+            } finally {
+                _correlationsLoading.value = false
+            }
+        }
+    }
+
+    // ======= Gauge recalibration proposals =======
+
+    private suspend fun loadGaugeProposals(context: Context): List<GaugeProposal> {
+        val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return emptyList()
+        val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/recalibration_proposals" +
+            "?status=eq.pending&type=in.(gauge_threshold,gauge_decay)" +
+            "&select=id,type,label,from_value,to_value,reasoning" +
+            "&order=created_at.desc"
+        val client = okhttp3.OkHttpClient()
+        val request = okhttp3.Request.Builder().url(url).get()
+            .header("Authorization", "Bearer $accessToken")
+            .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            .build()
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return emptyList()
+                val arr = org.json.JSONArray(response.body?.string() ?: "[]")
+                (0 until arr.length()).map { i ->
+                    val obj = arr.getJSONObject(i)
+                    GaugeProposal(
+                        id = obj.getString("id"),
+                        type = obj.getString("type"),
+                        label = obj.getString("label"),
+                        fromValue = obj.optString("from_value", null)?.takeIf { it != "null" },
+                        toValue = obj.optString("to_value", null)?.takeIf { it != "null" },
+                        reasoning = obj.optString("reasoning", null)?.takeIf { it != "null" },
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("InsightsVM", "loadGaugeProposals failed: ${e.message}")
+            emptyList()
+        }
+    }
+
+    fun acceptGaugeProposal(context: Context, proposalId: String) {
+        viewModelScope.launch {
+            _gaugeProposalApplying.value = _gaugeProposalApplying.value + proposalId
+            try {
+                withContext(Dispatchers.IO) { applyGaugeProposal(context, proposalId, accept = true) }
+                // Remove from list optimistically
+                _gaugeProposals.value = _gaugeProposals.value.filter { it.id != proposalId }
+            } catch (e: Exception) {
+                android.util.Log.e("InsightsVM", "acceptGaugeProposal failed", e)
+            } finally {
+                _gaugeProposalApplying.value = _gaugeProposalApplying.value - proposalId
+            }
+        }
+    }
+
+    fun rejectGaugeProposal(context: Context, proposalId: String) {
+        viewModelScope.launch {
+            _gaugeProposalApplying.value = _gaugeProposalApplying.value + proposalId
+            try {
+                withContext(Dispatchers.IO) { applyGaugeProposal(context, proposalId, accept = false) }
+                _gaugeProposals.value = _gaugeProposals.value.filter { it.id != proposalId }
+            } catch (e: Exception) {
+                android.util.Log.e("InsightsVM", "rejectGaugeProposal failed", e)
+            } finally {
+                _gaugeProposalApplying.value = _gaugeProposalApplying.value - proposalId
+            }
+        }
+    }
+
+    fun acceptAllGaugeProposals(context: Context) {
+        val ids = _gaugeProposals.value.map { it.id }
+        viewModelScope.launch {
+            _gaugeProposalApplying.value = _gaugeProposalApplying.value + ids
+            try {
+                withContext(Dispatchers.IO) {
+                    applyGaugeProposals(context, ids, accept = true)
+                }
+                _gaugeProposals.value = emptyList()
+            } catch (e: Exception) {
+                android.util.Log.e("InsightsVM", "acceptAllGaugeProposals failed", e)
+            } finally {
+                _gaugeProposalApplying.value = emptySet()
+            }
+        }
+    }
+
+    private suspend fun applyGaugeProposal(context: Context, proposalId: String, accept: Boolean) {
+        applyGaugeProposals(context, listOf(proposalId), accept)
+    }
+
+    private suspend fun applyGaugeProposals(context: Context, ids: List<String>, accept: Boolean) {
+        val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return
+        val body = org.json.JSONObject().apply {
+            put("accepted", org.json.JSONArray(if (accept) ids else emptyList<String>()))
+            put("rejected", org.json.JSONArray(if (!accept) ids else emptyList<String>()))
+        }
+        val client = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+        val request = okhttp3.Request.Builder()
+            .url("${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/apply-recalibration")
+            .post(body.toString().toRequestBody("application/json".toMediaType()))
+            .header("Authorization", "Bearer $accessToken")
+            .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            .build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw Exception("Apply gauge proposal failed: ${response.code}")
+            }
+        }
+    }
+
+    // ======= Threshold adjust action =======
+
+    /** IDs of stats currently being adjusted (allows parallel clicks) */
+    private val _adjustingIds = MutableStateFlow<Set<String>>(emptySet())
+    val adjustingIds: StateFlow<Set<String>> = _adjustingIds
+
+    /** Legacy single-boolean for backward compat — true when ANY adjustment in progress */
+    val adjustingThreshold: StateFlow<Boolean> = _adjustingIds.map { it.isNotEmpty() }
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, false)
+
+    /** Debounce job for the expensive recalc + recompute after adjustments */
+    private var recalcDebounceJob: kotlinx.coroutines.Job? = null
+
+    fun adjustThreshold(context: Context, stat: EdgeFunctionsService.CorrelationStat) {
+        if (stat.suggestedThreshold == null) return
+        if (stat.id in _adjustingIds.value) return // prevent double-tap on same stat
+        android.util.Log.d("InsightsVM", "adjustThreshold START: factor=${stat.factorName}, table=${stat.metricTable}, col=${stat.metricColumn}, dir=${stat.thresholdDirection}, suggested=${stat.suggestedThreshold}")
+        viewModelScope.launch {
+            _adjustingIds.value = _adjustingIds.value + stat.id
+            try {
+                val token = SessionStore.getValidAccessToken(context) ?: run {
+                    android.util.Log.w("InsightsVM", "adjustThreshold: no valid token")
+                    return@launch
+                }
+                val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                val triggers = db.getAllTriggerPool(token)
+                android.util.Log.d("InsightsVM", "adjustThreshold: ${triggers.size} triggers loaded, metric triggers: ${triggers.count { it.metricTable != null }}")
+
+                // Match by metric_table + metric_column + direction (reliable) — these come from the Edge Function
+                val match = if (stat.metricTable != null && stat.metricColumn != null) {
+                    android.util.Log.d("InsightsVM", "adjustThreshold: matching by table+col: ${stat.metricTable}::${stat.metricColumn}")
+                    triggers.firstOrNull { t ->
+                        t.metricTable == stat.metricTable &&
+                        t.metricColumn == stat.metricColumn &&
+                        (stat.thresholdDirection == null || t.direction == stat.thresholdDirection)
+                    } ?: triggers.firstOrNull { t ->
+                        t.metricTable == stat.metricTable && t.metricColumn == stat.metricColumn
+                    }
+                } else {
+                    // Fallback: try label match (strip direction suffix like " low" / " high")
+                    android.util.Log.d("InsightsVM", "adjustThreshold: fallback label match for '${stat.factorName}'")
+                    triggers.filter { it.metricTable != null }.forEach { t ->
+                        val baseLabel = t.label.replace(Regex("\\s+(low|high)$", RegexOption.IGNORE_CASE), "")
+                        android.util.Log.d("InsightsVM", "  trigger: label='${t.label}' base='$baseLabel' table=${t.metricTable} col=${t.metricColumn}")
+                    }
+                    triggers.firstOrNull { t ->
+                        val baseLabel = t.label.replace(Regex("\\s+(low|high)$", RegexOption.IGNORE_CASE), "")
+                        baseLabel.equals(stat.factorName, ignoreCase = true)
+                    }
+                }
+
+                if (match != null) {
+                    android.util.Log.d("InsightsVM", "adjustThreshold: MATCHED trigger id=${match.id} label=${match.label}, updating threshold to ${stat.suggestedThreshold}")
+                    // Fast: just update the trigger threshold in DB
+                    db.updateTriggerPoolItem(token, match.id, defaultThreshold = stat.suggestedThreshold.toDouble())
+
+                    // Optimistic UI: remove this stat from the displayed list immediately
+                    _correlationStats.value = _correlationStats.value.map { s ->
+                        if (s.id == stat.id) s.copy(currentThreshold = stat.suggestedThreshold) else s
+                    }
+
+                    android.util.Log.d("InsightsVM", "adjustThreshold: threshold saved, scheduling recalc")
+
+                    // Debounce the expensive recalc — only fires 1.5s after last click
+                    recalcDebounceJob?.cancel()
+                    recalcDebounceJob = viewModelScope.launch {
+                        kotlinx.coroutines.delay(1500)
+                        android.util.Log.d("InsightsVM", "adjustThreshold: running debounced recalc+recompute")
+                        try {
+                            val edge = EdgeFunctionsService()
+                            withContext(Dispatchers.IO) { edge.triggerRecalc(context) }
+                            withContext(Dispatchers.IO) { edge.triggerCorrelationCompute(context) }
+                            kotlinx.coroutines.delay(2000)
+                            loadCorrelationData(context)
+                        } catch (e: Exception) {
+                            android.util.Log.w("InsightsVM", "adjustThreshold debounced recalc failed: ${e.message}", e)
+                        }
+                    }
+                } else {
+                    android.util.Log.w("InsightsVM", "adjustThreshold: NO MATCH for ${stat.factorName} (${stat.metricTable}::${stat.metricColumn})")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("InsightsVM", "adjustThreshold failed: ${e.message}", e)
+            } finally {
+                _adjustingIds.value = _adjustingIds.value - stat.id
+            }
+        }
+    }
+
+    // ======= Force recompute correlations =======
+
+    private val _recomputeStatus = MutableStateFlow<String?>(null)
+    val recomputeStatus: StateFlow<String?> = _recomputeStatus
+
+    fun forceRecomputeCorrelations(context: Context) {
+        viewModelScope.launch {
+            _recomputeStatus.value = "Computing..."
+            try {
+                val edge = EdgeFunctionsService()
+                val ok = withContext(Dispatchers.IO) { edge.triggerCorrelationCompute(context) }
+                if (ok) {
+                    _recomputeStatus.value = "Done! Reloading..."
+                    // Wait a moment for edge function to finish writing
+                    kotlinx.coroutines.delay(2000)
+                    loadCorrelationData(context)
+                    _recomputeStatus.value = null
+                } else {
+                    _recomputeStatus.value = "Edge function returned error"
+                }
+            } catch (e: Exception) {
+                _recomputeStatus.value = "Failed: ${e.message}"
+                android.util.Log.e("InsightsVM", "forceRecomputeCorrelations failed", e)
+            }
+        }
+    }
+
+    // ======= Insight history =======
+
+    private fun loadInsightHistory(context: Context) {
+        viewModelScope.launch {
+            try {
+                val token = SessionStore.getValidAccessToken(context) ?: return@launch
+                val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+                val key = BuildConfig.SUPABASE_ANON_KEY
+                val client = OkHttpClient()
+                val rows = withContext(Dispatchers.IO) {
+                    val url = "$base/rest/v1/daily_insights" +
+                        "?select=date,insight,risk_zone" +
+                        "&order=date.desc&limit=30"
+                    val req = Request.Builder().url(url)
+                        .addHeader("apikey", key)
+                        .addHeader("Authorization", "Bearer $token")
+                        .addHeader("Accept", "application/json")
+                        .build()
+                    val res = client.newCall(req).execute()
+                    val body = res.body?.string() ?: "[]"
+                    val arr = JSONArray(body)
+                    (0 until arr.length()).map { i ->
+                        val o = arr.getJSONObject(i)
+                        DailyInsightRow(
+                            date = o.optString("date", ""),
+                            insight = o.optString("insight", ""),
+                            riskZone = o.optString("risk_zone", null),
+                        )
+                    }
+                }
+                _insightHistory.value = rows
+            } catch (e: Exception) {
+                android.util.Log.w("InsightsVM", "loadInsightHistory failed: ${e.message}")
+                _insightHistory.value = emptyList()
+            }
+        }
+    }
+
+    // ======= Weekly summary (computed from loaded migraines) =======
+
+    private fun computeWeeklySummary() {
+        viewModelScope.launch {
+            try {
+                val migs = _migraines.value
+                if (migs.isEmpty()) return@launch
+
+                val today = LocalDate.now()
+                val thisWeekStart = today.minusDays(6)
+                val lastWeekStart = today.minusDays(13)
+                val zone = ZoneId.systemDefault()
+
+                val thisWeek = migs.filter {
+                    val d = LocalDate.ofInstant(it.start, zone)
+                    !d.isBefore(thisWeekStart) && !d.isAfter(today)
+                }
+                val lastWeek = migs.filter {
+                    val d = LocalDate.ofInstant(it.start, zone)
+                    !d.isBefore(lastWeekStart) && d.isBefore(thisWeekStart)
+                }
+
+                val thisAvg = thisWeek.mapNotNull { it.severity }.takeIf { it.isNotEmpty() }
+                    ?.let { it.sum().toFloat() / it.size }
+                val lastAvg = lastWeek.mapNotNull { it.severity }.takeIf { it.isNotEmpty() }
+                    ?.let { it.sum().toFloat() / it.size }
+
+                val trend = when {
+                    thisWeek.size > lastWeek.size + 1 -> "up"
+                    thisWeek.size < lastWeek.size - 1 -> "down"
+                    else -> "stable"
+                }
+
+                _weeklySummary.value = WeeklySummary(
+                    thisWeekCount = thisWeek.size,
+                    lastWeekCount = lastWeek.size,
+                    thisWeekAvgSeverity = thisAvg,
+                    lastWeekAvgSeverity = lastAvg,
+                    trend = trend,
+                    totalLogged = migs.size,
+                )
+            } catch (_: Exception) {
+                _weeklySummary.value = null
+            }
+        }
+    }
+
+    // ======= Day-of-week pattern (computed from loaded migraines) =======
+
+    private fun computeDayOfWeekPattern() {
+        viewModelScope.launch {
+            try {
+                val migs = _migraines.value
+                if (migs.size < 3) return@launch
+
+                val zone = ZoneId.systemDefault()
+                val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                val counts = IntArray(7)
+
+                for (m in migs) {
+                    val dow = LocalDate.ofInstant(m.start, zone).dayOfWeek.value // 1=Mon, 7=Sun
+                    counts[dow - 1]++
+                }
+
+                val total = counts.sum().coerceAtLeast(1)
+                _dayOfWeekPattern.value = counts.mapIndexed { i, count ->
+                    DayOfWeekStat(
+                        dayName = dayNames[i],
+                        dayIndex = i,
+                        count = count,
+                        pct = count.toFloat() / total * 100f,
+                    )
+                }
+            } catch (_: Exception) {
+                _dayOfWeekPattern.value = emptyList()
+            }
+        }
     }
 }
 

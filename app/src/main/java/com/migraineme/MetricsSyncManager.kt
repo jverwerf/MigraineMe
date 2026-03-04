@@ -65,6 +65,14 @@ object MetricsSyncManager {
         val expires_at: String?
     )
 
+    @Serializable
+    private data class UpsertOuraTokenBody(
+        val access_token: String,
+        val refresh_token: String,
+        val token_type: String,
+        val expires_at: String?
+    )
+
     private suspend fun enqueueLoginBackfillBestEffort(accessToken: String) {
         val url = "$baseUrl/functions/v1/enqueue-login-backfill"
 
@@ -131,6 +139,50 @@ object MetricsSyncManager {
             }
         } catch (t: Throwable) {
             Log.w("MetricsSyncManager", "upsert-whoop-token error: ${t.message}")
+        }
+    }
+
+    private suspend fun upsertOuraTokenToSupabaseBestEffort(
+        context: Context,
+        accessToken: String
+    ) {
+        val appCtx = context.applicationContext
+        val localTok = runCatching { OuraTokenStore(appCtx).load() }.getOrNull() ?: return
+
+        val url = "$baseUrl/functions/v1/upsert-oura-token"
+
+        val expiresAtIso = if (localTok.expiresAtMillis > 0L) {
+            runCatching { Date(localTok.expiresAtMillis).toInstant().toString() }.getOrNull()
+        } else {
+            null
+        }
+
+        val body = UpsertOuraTokenBody(
+            access_token = localTok.accessToken,
+            refresh_token = localTok.refreshToken,
+            token_type = localTok.tokenType.ifBlank { "Bearer" },
+            expires_at = expiresAtIso
+        )
+
+        try {
+            val resp = client.post(url) {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", anonKey)
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            if (!resp.status.isSuccess()) {
+                val txt = runCatching { resp.bodyAsText() }.getOrNull()
+                Log.w(
+                    "MetricsSyncManager",
+                    "upsert-oura-token failed: HTTP ${resp.status.value} ${txt ?: ""}".trim()
+                )
+            } else {
+                Log.d("MetricsSyncManager", "upsert-oura-token ok")
+            }
+        } catch (t: Throwable) {
+            Log.w("MetricsSyncManager", "upsert-oura-token error: ${t.message}")
         }
     }
 
@@ -208,6 +260,9 @@ object MetricsSyncManager {
 
                 // If WHOOP token exists locally, upload it to Supabase (best-effort)
                 upsertWhoopTokenToSupabaseBestEffort(appCtx, token)
+
+                // If Oura token exists locally, upload it to Supabase (best-effort)
+                upsertOuraTokenToSupabaseBestEffort(appCtx, token)
 
                 // Seed default metric settings (best-effort, ignores duplicates)
                 seedMetricSettingsBestEffort(appCtx)

@@ -77,8 +77,8 @@ val FRONT_PAIN_POINTS = listOf(
 
 val BACK_PAIN_POINTS = listOf(
     PainPoint("vertex",            "Top of Head",         0.496f, 0.177f, PainView.BOTH),
-    PainPoint("back_upper_left",   "Back Upper Left",     0.345f, 0.222f, PainView.BACK),
-    PainPoint("back_upper_right",  "Back Upper Right",    0.651f, 0.222f, PainView.BACK),
+    PainPoint("top_of_back_head_left",  "Top of Back Head Left",  0.345f, 0.222f, PainView.BACK),
+    PainPoint("top_of_back_head_right", "Top of Back Head Right", 0.651f, 0.222f, PainView.BACK),
     PainPoint("occipital_center",  "Occipital Center",    0.500f, 0.285f, PainView.BACK),
     PainPoint("behind_ear_left",   "Behind Left Ear",     0.298f, 0.339f, PainView.BACK),
     PainPoint("behind_ear_right",  "Behind Right Ear",    0.712f, 0.339f, PainView.BACK),

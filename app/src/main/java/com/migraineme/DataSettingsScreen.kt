@@ -7,9 +7,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -135,149 +144,214 @@ fun DataSettingsScreen(
     // UI
     // ─────────────────────────────────────────────────────────────────────────
 
+    val sections = remember { DataSettingsSections.getAllSections() }
+    val weatherMetrics = remember { DataSettingsSections.weatherMetrics }
+    val hasAnyWearable = connectedWearables.isNotEmpty()
+    val locationEnabled = state.isLocationEnabled()
+
+    // Derive counts reactively from metricSettings
+    // Only count metrics that are defined in sections (Supabase may contain extras
+    // from Health Connect / Polar / Garmin that aren't displayed in the UI)
+    val sectionMetricKeys = remember(sections) {
+        sections.flatMap { section -> section.rows.map { it.table } }.toSet()
+    }
+    val enabledCount = metricSettings.count { it.key in sectionMetricKeys && it.value.enabled }
+    val totalCount = sectionMetricKeys.size
+    val sourceCount = metricSettings.values.mapNotNull { it.preferredSource }.toSet().size
+
     val scrollState = rememberScrollState()
 
     // Report scroll position for setup coach overlay
     LaunchedEffect(scrollState.value, scrollState.maxValue) {
         if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
             if (scrollState.maxValue > 0 && scrollState.value >= scrollState.maxValue - 50) {
-                SetupScrollState.scrollPosition = -1  // at bottom → expand coach card
+                SetupScrollState.scrollPosition = -1
             } else {
                 SetupScrollState.scrollPosition = scrollState.value
             }
         }
     }
-    val sections = remember { DataSettingsSections.getAllSections() }
-    val weatherMetrics = remember { DataSettingsSections.weatherMetrics }
-    val hasAnyWearable = connectedWearables.isNotEmpty()
-    val locationEnabled = state.isLocationEnabled()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp)
-    ) {
-        // Info card
-        HeroCard {
-            Text(
-                "Data Collection",
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Connect WHOOP or Health Connect in the Connections section to enable wearable data. Some toggles require phone permissions.",
-                color = AppTheme.BodyTextColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+    // Section icon mapping
+    val sectionIcons = mapOf(
+        "Sleep" to Icons.Outlined.Bedtime,
+        "Physical Health" to Icons.Outlined.FitnessCenter,
+        "Mental Health" to Icons.Outlined.Psychology,
+        "Environment" to Icons.Outlined.Cloud,
+        "Diet" to Icons.Outlined.Restaurant,
+        "Menstruation" to Icons.Outlined.FavoriteBorder
+    )
 
-        // Render sections
-        for (section in sections) {
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+
+            // ═══════════════════════════════════════════════════════════
+            // HERO — Data collection summary
+            // ═══════════════════════════════════════════════════════════
             HeroCard {
-                Text(
-                    section.title,
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Spacer(Modifier.height(12.dp))
+                Text("Data Collection", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text("$enabledCount / $totalCount", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+                Text("metrics active", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
-                for ((idx, row) in section.rows.withIndex()) {
-                    val greyOutWearableRow = row.collectedByKind == CollectedByKind.WEARABLE && !hasAnyWearable
-                    val greyOutWeatherRow = row.table in weatherMetrics && !locationEnabled
+                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
-                    DataSettingsRow(
-                        row = row,
-                        metricSettings = metricSettings,
-                        connectedWearables = connectedWearables,
-                        menstruationSettings = menstruationSettings,
-                        nutritionPermissionGranted = nutritionPermissionGranted,
-                        menstruationPermissionGranted = menstruationPermissionGranted,
-                        greyOut = greyOutWearableRow || greyOutWeatherRow,
-                        weatherMetrics = weatherMetrics,
-                        onToggle = { metric, enabled, source ->
-                            scope.launch {
-                                val result = DataSettingsToggleHandler.toggleMetric(
-                                    context = appContext,
-                                    metric = metric,
-                                    enabled = enabled,
-                                    preferredSource = source,
-                                    metricSettingsMap = metricSettings
-                                )
-                                handleToggleResult(
-                                    result = result,
-                                    metric = metric,
-                                    state = state,
-                                    activity = activity,
-                                    appContext = appContext,
-                                    micPermissionLauncher = micPermissionLauncher,
-                                    locationPermissionLauncher = locationPermissionLauncher,
-                                    onShowScreenTimeDialog = { showScreenTimePermissionDialog = true },
-                                    onShowBatteryDialog = { showBatteryOptDialog = true }
-                                )
-                                refreshTick++
-                            }
-                        },
-                        onSourceChange = { metric, newSource, currentEnabled ->
-                            scope.launch {
-                                DataSettingsToggleHandler.changeMetricSource(
-                                    context = appContext,
-                                    metric = metric,
-                                    newSource = newSource,
-                                    currentEnabled = currentEnabled
-                                )
-                                refreshTick++
-                            }
-                        },
-                        // Permission request handlers
-                        onRequestMicPermission = {
-                            requestMicPermission(activity, appContext, micPermissionLauncher)
-                        },
-                        onRequestBatteryExemption = { showBatteryOptDialog = true },
-                        onRequestBackgroundLocation = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                            }
-                        },
-                        onRequestScreenTimePermission = {
-                            ScreenTimePermissionHelper.openUsageAccessSettings(appContext)
-                        },
-                        onRequestLocationPermission = {
-                            requestLocationPermission(activity, appContext, locationPermissionLauncher)
-                        }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    DStatColumn("Sections", "${sections.size}")
+                    DStatColumn("Sources", if (sourceCount > 0) "$sourceCount" else "—")
+                    DStatColumn("Wearables", if (connectedWearables.any { it == WearableSource.WHOOP }) "1" else "0")
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // HOW IT WORKS — purple accent card
+            // ═══════════════════════════════════════════════════════════
+            Card(
+                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Text(
+                        "Toggle the metrics MigraineMe collects each day. " +
+                        "Enabled metrics feed into your daily risk score and AI insights. " +
+                        "Some metrics need a wearable (WHOOP / Health Connect) or phone permissions — the row will guide you.",
+                        color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall
                     )
+                }
+            }
 
-                    if (idx != section.rows.lastIndex) {
-                        Spacer(Modifier.height(12.dp))
-                        Divider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
-                        Spacer(Modifier.height(12.dp))
+            // ═══════════════════════════════════════════════════════════
+            // SECTIONS — one BaseCard per category
+            // ═══════════════════════════════════════════════════════════
+            for (section in sections) {
+                BaseCard {
+                    // Section header
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        sectionIcons[section.title]?.let { icon ->
+                            Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                        }
+                        Text(section.title, color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+
+                        Spacer(Modifier.weight(1f))
+
+                        // Enabled count badge
+                        val sectionEnabled = section.rows.count { row -> metricSettings[row.table]?.enabled == true }
+                        Text(
+                            "$sectionEnabled/${section.rows.size}",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+
+                    for ((idx, row) in section.rows.withIndex()) {
+                        val greyOutWearableRow = row.collectedByKind == CollectedByKind.WEARABLE && !hasAnyWearable
+                        val greyOutWeatherRow = row.table in weatherMetrics && !locationEnabled
+
+                        DataSettingsRow(
+                            row = row,
+                            metricSettings = metricSettings,
+                            connectedWearables = connectedWearables,
+                            menstruationSettings = menstruationSettings,
+                            nutritionPermissionGranted = nutritionPermissionGranted,
+                            menstruationPermissionGranted = menstruationPermissionGranted,
+                            greyOut = greyOutWearableRow || greyOutWeatherRow,
+                            weatherMetrics = weatherMetrics,
+                            onToggle = { metric, enabled, source ->
+                                state.updateMetricLocally(metric, enabled, source)
+                                scope.launch {
+                                    val result = DataSettingsToggleHandler.toggleMetric(
+                                        context = appContext,
+                                        metric = metric,
+                                        enabled = enabled,
+                                        preferredSource = source,
+                                        metricSettingsMap = metricSettings
+                                    )
+                                    handleToggleResult(
+                                        result = result,
+                                        metric = metric,
+                                        state = state,
+                                        activity = activity,
+                                        appContext = appContext,
+                                        micPermissionLauncher = micPermissionLauncher,
+                                        locationPermissionLauncher = locationPermissionLauncher,
+                                        onShowScreenTimeDialog = { showScreenTimePermissionDialog = true },
+                                        onShowBatteryDialog = { showBatteryOptDialog = true }
+                                    )
+                                    refreshTick++
+                                }
+                            },
+                            onSourceChange = { metric, newSource, currentEnabled ->
+                                scope.launch {
+                                    DataSettingsToggleHandler.changeMetricSource(
+                                        context = appContext,
+                                        metric = metric,
+                                        newSource = newSource,
+                                        currentEnabled = currentEnabled
+                                    )
+                                    refreshTick++
+                                }
+                            },
+                            onRequestMicPermission = {
+                                requestMicPermission(activity, appContext, micPermissionLauncher)
+                            },
+                            onRequestBatteryExemption = { showBatteryOptDialog = true },
+                            onRequestBackgroundLocation = {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                }
+                            },
+                            onRequestScreenTimePermission = {
+                                ScreenTimePermissionHelper.openUsageAccessSettings(appContext)
+                            },
+                            onRequestLocationPermission = {
+                                requestLocationPermission(activity, appContext, locationPermissionLauncher)
+                            }
+                        )
+
+                        if (idx != section.rows.lastIndex) {
+                            HorizontalDivider(
+                                color = Color.White.copy(alpha = 0.06f),
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        // ── Notifications Card ──────────────────────────────────────────────
-        NotificationsCard(
-            onRequestNotificationPermission = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    val askedBefore = hasAskedNotificationPermission(appContext)
-                    val canRationale = activity?.let {
-                        ActivityCompat.shouldShowRequestPermissionRationale(
-                            it, Manifest.permission.POST_NOTIFICATIONS
-                        )
-                    } ?: true
+            // ═══════════════════════════════════════════════════════════
+            // NOTIFICATIONS — BaseCard
+            // ═══════════════════════════════════════════════════════════
+            NotificationsCard(
+                onRequestNotificationPermission = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val askedBefore = hasAskedNotificationPermission(appContext)
+                        val canRationale = activity?.let {
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                it, Manifest.permission.POST_NOTIFICATIONS
+                            )
+                        } ?: true
 
-                    if (askedBefore && !canRationale) {
-                        openAppSettings(appContext)
-                    } else {
-                        markAskedNotificationPermission(appContext)
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        if (askedBefore && !canRationale) {
+                            openAppSettings(appContext)
+                        } else {
+                            markAskedNotificationPermission(appContext)
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
                     }
-                }
-            },
-            refreshTick = refreshTick
-        )
+                },
+                refreshTick = refreshTick
+            )
+
+            Spacer(Modifier.height(16.dp))
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -320,6 +394,18 @@ fun DataSettingsScreen(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Helper Composables
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun DStatColumn(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Helper Functions
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -337,6 +423,8 @@ private fun handleToggleResult(
     when (result) {
         is DataSettingsToggleHandler.ToggleResult.Success -> { /* UI will refresh */ }
         is DataSettingsToggleHandler.ToggleResult.NeedsPermission -> {
+            // Permission was missing — revert the optimistic update
+            state.updateMetricLocally(metric, false)
             state.markPendingEnable(metric)
             when (result.permissionType) {
                 DataSettingsToggleHandler.PermissionType.SCREEN_TIME -> onShowScreenTimeDialog()
@@ -351,6 +439,7 @@ private fun handleToggleResult(
             }
         }
         is DataSettingsToggleHandler.ToggleResult.Error -> {
+            // Toggle failed — the refreshTick will reconcile with server state
             android.util.Log.e("DataSettings", "Toggle error: ${result.message}")
         }
     }
@@ -408,4 +497,3 @@ private fun markAskedNotificationPermission(context: android.content.Context) {
         .putBoolean("notification_permission_asked", true)
         .apply()
 }
-

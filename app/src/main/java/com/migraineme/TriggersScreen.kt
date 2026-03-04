@@ -378,7 +378,8 @@ private fun TriggerTimeDialog(
     var pickedIso by remember { mutableStateOf(initialIso) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {},
+        modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
         containerColor = Color(0xFF1E0A2E),
         titleContentColor = Color.White,
         textContentColor = AppTheme.BodyTextColor,

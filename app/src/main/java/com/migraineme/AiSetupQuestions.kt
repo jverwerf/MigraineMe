@@ -8,8 +8,10 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -97,22 +100,71 @@ private fun QMultiChips(options: List<String>, selected: Set<String>, onToggle: 
     }
 }
 
+private enum class PoolType { SYMPTOM, MEDICINE, RELIEF, ACTIVITY, MISSED_ACTIVITY, TRIGGER, PRODROME }
+
 @Composable
-private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, accentColor: Color = AppTheme.AccentPink) {
+private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, accentColor: Color = AppTheme.AccentPink, poolType: PoolType = PoolType.SYMPTOM) {
     val grouped: Map<String, List<AiSetupService.PoolLabel>> = items.groupBy { item -> item.category ?: "Other" }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         for ((category, poolItems) in grouped) {
             Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-            val rows = poolItems.chunked(2)
+            val rows = poolItems.chunked(4)
             for (row in rows) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
                     for (item in row) {
                         val sel = item.label in selected
-                        Row(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (sel) accentColor.copy(alpha = 0.25f) else AppTheme.TrackColor.copy(alpha = 0.25f)).border(1.dp, if (sel) accentColor else Color.Transparent, RoundedCornerShape(8.dp)).clickable { onToggle(item.label) }.padding(vertical = 8.dp, horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(item.label, color = if (sel) Color.White else AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.weight(1f))
+                        val circleColor = if (sel) accentColor.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
+                        val borderColor = if (sel) accentColor.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
+                        val iconTint = if (sel) Color.White else AppTheme.SubtleTextColor
+                        val textColor = if (sel) Color.White else AppTheme.BodyTextColor
+
+                        val icon: ImageVector? = when (poolType) {
+                            PoolType.MEDICINE -> MedicineIcons.forKey(item.category)
+                            PoolType.RELIEF -> ReliefIcons.forLabel(item.label, item.iconKey)
+                            PoolType.SYMPTOM -> SymptomIcons.forLabel(item.label, item.iconKey)
+                            PoolType.ACTIVITY -> ActivityIcons.forLabel(item.label, item.iconKey)
+                            PoolType.MISSED_ACTIVITY -> MissedActivityIcons.forLabel(item.label, item.iconKey)
+                            PoolType.TRIGGER -> TriggerIcons.forKey(item.iconKey) ?: TriggerIcons.forKey(item.label.lowercase())
+                            PoolType.PRODROME -> ProdromeIcons.forKey(item.iconKey) ?: ProdromeIcons.forKey(item.label.lowercase())
+                        }
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { onToggle(item.label) }
+                                )
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(circleColor)
+                                    .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (icon != null) {
+                                    Icon(imageVector = icon, contentDescription = item.label, tint = iconTint, modifier = Modifier.size(22.dp))
+                                } else {
+                                    Text(item.label.take(2).uppercase(), color = iconTint, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                item.label,
+                                color = textColor,
+                                style = MaterialTheme.typography.labelSmall,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
-                    repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
+                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
@@ -373,6 +425,9 @@ fun AiQuestionsPage6(
     exercisePattern: Set<String>, onToggleExercisePattern: (String) -> Unit,
     tracksCycle: String?, onTracksCycle: (String) -> Unit,
     cyclePatterns: Map<String, DeterministicMapper.Certainty>, onCyclePatterns: (Map<String, DeterministicMapper.Certainty>) -> Unit,
+    cycleLength: String?, onCycleLength: (String) -> Unit,
+    cycleMigraineTiming: Set<String>, onToggleCycleMigraineTiming: (String) -> Unit,
+    lastPeriodDate: String?, onLastPeriodDate: (String) -> Unit,
     usesContraception: String?, onUsesContraception: (String) -> Unit,
     contraceptionEffect: String?, onContraceptionEffect: (String) -> Unit,
 ) {
@@ -385,8 +440,34 @@ fun AiQuestionsPage6(
         }
         QCard("Do you track your menstrual cycle?", Icons.Outlined.Female) { QSingleChips(listOf("Yes", "No", "Not applicable"), tracksCycle, onTracksCycle) }
         AnimatedVisibility(visible = tracksCycle == "Yes", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("Do migraines relate to your cycle?", Icons.Outlined.Loop, "Select all, set certainty") {
-                CertaintyMultiSelect(items = listOf(CertaintyItem("Around my period", "Around my period"), CertaintyItem("Around ovulation", "Around ovulation (mid-cycle)")), selections = cyclePatterns, onSelectionChanged = onCyclePatterns, showNoneOption = true)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                QCard("Do migraines relate to your cycle?", Icons.Outlined.Loop, "Select all, set certainty") {
+                    CertaintyMultiSelect(items = listOf(CertaintyItem("Around my period", "Around my period"), CertaintyItem("Around ovulation", "Around ovulation (mid-cycle)")), selections = cyclePatterns, onSelectionChanged = onCyclePatterns, showNoneOption = true)
+                }
+                QCard("How long is your average cycle?", Icons.Outlined.CalendarMonth) { QSingleChips(listOf("< 25 days", "25-28 days", "28-32 days", "32-35 days", "> 35 days", "Irregular"), cycleLength, onCycleLength) }
+                QCard("When did your last period start?", Icons.Outlined.DateRange, "Helps us predict your next one") {
+                    val ctx = LocalContext.current
+                    val parsed = lastPeriodDate?.takeIf { it.isNotBlank() }?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
+                    val initial = parsed ?: java.time.LocalDate.now()
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = {
+                                android.app.DatePickerDialog(ctx, { _, y, m, d -> onLastPeriodDate("%04d-%02d-%02d".format(y, m + 1, d)) },
+                                    initial.year, initial.monthValue - 1, initial.dayOfMonth).show()
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        ) { Text(if (lastPeriodDate.isNullOrBlank()) "Select date" else lastPeriodDate, color = Color.White) }
+                        if (!lastPeriodDate.isNullOrBlank()) {
+                            TextButton(onClick = { onLastPeriodDate("") }) { Text("Clear", color = AppTheme.AccentPurple) }
+                        }
+                    }
+                    if (lastPeriodDate.isNullOrBlank()) Text("Optional — you can set this later", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
+                AnimatedVisibility(visible = cyclePatterns.any { it.key == "Around my period" && it.value != DeterministicMapper.Certainty.NO }, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                    QCard("When relative to your period?", Icons.Outlined.Schedule, "Select all that apply") {
+                        QMultiChips(listOf("1-2 days before", "3-5 days before", "During my period", "1-2 days after"), cycleMigraineTiming, onToggleCycleMigraineTiming)
+                    }
+                }
             }
         }
         AnimatedVisibility(visible = tracksCycle != "Not applicable" && tracksCycle != null, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
@@ -446,12 +527,163 @@ fun AiQuestionsPage8(
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         QPageHeader(Icons.Outlined.MedicalServices, "Symptoms, Medicines & More", "Select what you experience and use", 8, 8)
-        QCard("What symptoms do you experience?", Icons.Outlined.Healing, "Tap all that apply") { QPoolMultiSelect(symptomPool, selectedSymptoms, onToggleSymptom, AppTheme.AccentPink) }
-        QCard("What medicines do you take?", Icons.Outlined.Medication, "Tap all that apply") { QPoolMultiSelect(medicinePool, selectedMedicines, onToggleMedicine, Color(0xFF4FC3F7)) }
-        QCard("What helps relieve your migraines?", Icons.Outlined.Spa, "Tap all that apply") { QPoolMultiSelect(reliefPool, selectedReliefs, onToggleRelief, Color(0xFF81C784)) }
-        QCard("What are you usually doing when migraines hit?", Icons.Outlined.DirectionsRun, "Tap all that apply") { QPoolMultiSelect(activityPool, selectedActivities, onToggleActivity, Color(0xFFFF8A65)) }
-        QCard("What do you miss because of migraines?", Icons.Outlined.EventBusy, "Tap all that apply") { QPoolMultiSelect(missedActivityPool, selectedMissedActivities, onToggleMissed, Color(0xFFEF9A9A)) }
+        QCard("What symptoms do you experience?", Icons.Outlined.Healing, "Tap all that apply") { QPoolMultiSelect(symptomPool, selectedSymptoms, onToggleSymptom, AppTheme.AccentPink, PoolType.SYMPTOM) }
+        QCard("What medicines do you take?", Icons.Outlined.Medication, "Tap all that apply") { QPoolMultiSelect(medicinePool, selectedMedicines, onToggleMedicine, Color(0xFF4FC3F7), PoolType.MEDICINE) }
+        QCard("What helps relieve your migraines?", Icons.Outlined.Spa, "Tap all that apply") { QPoolMultiSelect(reliefPool, selectedReliefs, onToggleRelief, Color(0xFF81C784), PoolType.RELIEF) }
+        QCard("What are you usually doing when migraines hit?", Icons.Outlined.DirectionsRun, "Tap all that apply") { QPoolMultiSelect(activityPool, selectedActivities, onToggleActivity, Color(0xFFFF8A65), PoolType.ACTIVITY) }
+        QCard("What do you miss because of migraines?", Icons.Outlined.EventBusy, "Tap all that apply") { QPoolMultiSelect(missedActivityPool, selectedMissedActivities, onToggleMissed, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY) }
         QCard("Anything else we should know?", Icons.Outlined.Mic, "Type or speak — helps AI understand you better") { QFreeText(additionalNotes ?: "", onAdditionalNotes, "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...") }
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Story Page — voice/text input to pre-fill everything
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun AiQuestionsPageStory(
+    text: String,
+    onTextChange: (String) -> Unit,
+    isLoading: Boolean,
+    onParse: () -> Unit,
+    onSkip: () -> Unit,
+) {
+    val context = LocalContext.current
+
+    val speechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                onTextChange(if (text.isBlank()) spoken else "$text $spoken")
+            }
+        }
+    }
+
+    fun launchVoice() {
+        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Tell us about your migraines…")
+        }
+        try { speechLauncher.launch(intent) } catch (_: Exception) {
+            android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QPageHeader(
+            Icons.Outlined.Mic, "Tell Us About Your Migraines",
+            "Type or speak freely — we'll pre-fill the setup questionnaire based on what you tell us",
+            0, 0
+        )
+
+        QCard("Your migraine story", Icons.Outlined.Notes, "Describe your migraines in your own words — frequency, triggers, what helps, warning signs, medicines, anything relevant") {
+            OutlinedTextField(
+                value = text,
+                onValueChange = onTextChange,
+                placeholder = { Text("e.g. \"I get migraines about twice a month, usually triggered by poor sleep and stress. They last about a day. I take sumatriptan and lie in a dark room. I notice neck stiffness before they start…\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
+                    cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f)
+                ),
+                minLines = 5, maxLines = 10,
+                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White)
+            )
+            Spacer(Modifier.height(8.dp))
+
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { launchVoice() },
+                    modifier = Modifier.height(40.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+                ) {
+                    Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Voice", style = MaterialTheme.typography.bodySmall)
+                }
+
+                if (isLoading) {
+                    Button(
+                        onClick = {},
+                        enabled = false,
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Analysing…", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
+
+        QCard("How does this work?", Icons.Outlined.AutoAwesome) {
+            Text(
+                "We'll match what you describe against your trigger, prodrome, medicine, and relief lists. " +
+                "Anything we find gets pre-selected in the questionnaire — you can review and change everything on the next pages.",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Triggers Page — pool selector (same style as symptoms/medicines on Q8)
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun AiQuestionsPageTriggers(
+    triggerPool: List<AiSetupService.PoolLabel>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QPageHeader(Icons.Outlined.Whatshot, "Your Triggers", "Tap anything that triggers your migraines — we've pre-selected what we found", 9, 14)
+        if (selected.isNotEmpty()) {
+            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+        }
+        QPoolMultiSelect(triggerPool, selected, onToggle, Color(0xFFFFB74D), PoolType.TRIGGER)
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Prodromes Page — pool selector (same style as symptoms/medicines on Q8)
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun AiQuestionsPageProdromes(
+    prodromePool: List<AiSetupService.PoolLabel>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QPageHeader(Icons.Outlined.Sensors, "Warning Signs", "Tap any signs you notice before a migraine — we've pre-selected what we found", 10, 14)
+        if (selected.isNotEmpty()) {
+            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+        }
+        QPoolMultiSelect(prodromePool, selected, onToggle, Color(0xFF9575CD), PoolType.PRODROME)
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -472,7 +704,7 @@ fun AiProcessingPage(isLoading: Boolean, error: String?, onRetry: () -> Unit) {
         if (isLoading) {
             Text("Personalising your app...", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
             Spacer(Modifier.height(8.dp))
-            Text("AI is analysing your migraine profile to configure everything.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+            Text("MigraineMe is analysing your migraine profile to configure everything.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
             Spacer(Modifier.height(32.dp))
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth(0.6f).height(4.dp).clip(RoundedCornerShape(2.dp)), color = AppTheme.AccentPink, trackColor = AppTheme.TrackColor)
             Spacer(Modifier.height(12.dp))

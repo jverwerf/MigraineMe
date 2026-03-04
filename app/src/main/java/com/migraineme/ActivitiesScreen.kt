@@ -299,7 +299,7 @@ fun ActivitiesScreen(
 @Composable
 private fun ActCircleButton(label: String, isSelected: Boolean, iconKey: String? = null, daysAgo: Int? = null, onClick: () -> Unit) {
     val accent = Color(0xFFFF8A65)
-    val icon = ActivityIcons.forKey(iconKey)
+    val icon = ActivityIcons.forLabel(label, iconKey)
 
     val (bg, border) = when {
         isSelected && daysAgo == null -> accent.copy(alpha = 0.40f) to accent.copy(alpha = 0.7f)

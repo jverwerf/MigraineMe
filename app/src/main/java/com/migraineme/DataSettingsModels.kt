@@ -18,7 +18,10 @@ enum class CollectedByKind {
 
 enum class WearableSource(val key: String, val label: String) {
     WHOOP("whoop", "WHOOP"),
-    HEALTH_CONNECT("health_connect", "Health Connect")
+    HEALTH_CONNECT("health_connect", "Health Connect"),
+    OURA("oura", "Oura"),
+    POLAR("polar", "Polar"),
+    GARMIN("garmin", "Garmin")
 }
 
 enum class PhoneSource(val key: String, val label: String) {

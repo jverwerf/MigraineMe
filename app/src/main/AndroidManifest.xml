@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
+    <!-- In-app billing -->
+    <uses-permission android:name="com.android.vending.BILLING" />
+
     <!-- Ambient noise sampling -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -136,15 +139,58 @@
                     android:path="/callback" />
             </intent-filter>
 
+            <!-- Oura OAuth redirect -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="migraineme"
+                    android:host="oura"
+                    android:path="/callback" />
+            </intent-filter>
+
+            <!-- Polar OAuth redirect -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="migraineme"
+                    android:host="polar"
+                    android:path="/callback" />
+            </intent-filter>
+
+            <!-- Garmin OAuth redirect -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="migraineme"
+                    android:host="garmin"
+                    android:path="/callback" />
+            </intent-filter>
+
             <!-- Supabase OAuth redirect (Facebook now; reusable for other providers later) -->
             <intent-filter>
-                <action android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
                 <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="migraineme"
                     android:host="auth"
                     android:path="/callback" />
+            </intent-filter>
+
+            <!-- Email confirmation deep link -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.migraineme"
+                    android:host="login-callback" />
             </intent-filter>
 
         </activity>
@@ -175,7 +221,6 @@
             </intent-filter>
         </activity-alias>
 
-    
         <!-- FileProvider for sharing PDF reports -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -186,5 +231,21 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+    
+        <!-- === Home-screen Widget === -->
+        <receiver
+            android:name=".widget.MigraineMeWidget"
+            android:exported="true"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.migraineme.widget.ACTION_QUICK_LOG" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_migraineme_info" />
+        </receiver>
     </application>
 </manifest>

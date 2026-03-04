@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
@@ -38,6 +39,7 @@ fun QuickMigraineScreen(
     onClose: () -> Unit = {}
 ) {
     val authState by authVm.state.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -73,6 +75,10 @@ fun QuickMigraineScreen(
                     notes = null,
                     painLocations = null
                 )
+                launch(Dispatchers.IO) {
+                    try { EdgeFunctionsService().triggerCorrelationCompute(context) }
+                    catch (e: Exception) { e.printStackTrace() }
+                }
                 navController.popBackStack()
             } catch (e: Exception) {
                 e.printStackTrace()

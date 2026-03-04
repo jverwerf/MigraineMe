@@ -3,6 +3,7 @@ package com.migraineme
 import android.content.Context
 import android.util.Log
 import io.ktor.client.HttpClient
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -102,15 +103,26 @@ object AiCalibrationService {
                 classified, prodromeStats, dataContext
             )
 
+            // ── CALL 3: Companion Matcher ──
+            onProgress?.invoke("Matching AI companions…")
+            val recommendedCompanions = try {
+                executeCall3(accessToken, call1Result.clinicalAssessment, mapping.profileContext, classified, prodromeStats, mapping.favorites)
+            } catch (e: Exception) {
+                Log.w(TAG, "Call 3 (companions) failed, will show no pre-selection: ${e.message}")
+                emptyList()
+            }
+
             // ── Merge everything into final AiConfig ──
             val config = buildFinalConfig(
                 mapping, mergedTriggers, call1Result, call2Result,
+                recommendedCompanions = recommendedCompanions,
                 autoTriggerLabels = items?.autoTriggerLabels ?: emptySet(),
                 autoProdromeLabels = items?.autoProdromeLabels ?: emptySet(),
             )
 
-            Log.d(TAG, "Two-call calibration complete: ${config.triggers.size} triggers, " +
-                    "${config.prodromes.size} prodromes, gauge=${config.gaugeThresholds.low}/${config.gaugeThresholds.mild}/${config.gaugeThresholds.high}")
+            Log.d(TAG, "Three-call calibration complete: ${config.triggers.size} triggers, " +
+                    "${config.prodromes.size} prodromes, gauge=${config.gaugeThresholds.low}/${config.gaugeThresholds.mild}/${config.gaugeThresholds.high}, " +
+                    "companions=${config.recommendedCompanions}")
             Result.success(config)
 
         } catch (e: Exception) {
@@ -164,6 +176,7 @@ RULES:
 - Limit adjustments to genuinely meaningful ones (typically 3-8, not dozens)
 
 Also generate data_warnings where a HIGH or MILD trigger lacks the relevant data source.
+Do NOT generate data_warnings for manual-only triggers that have no automatic data source (e.g. Sleep apnea, Jet lag, Menstruation, Ovulation, Contraceptive, Let-down, Dehydration, and any food/drink triggers) — these are logged manually by the user and do not need connected metrics.
 
 Respond with ONLY valid JSON (no markdown fences):
 {
@@ -253,9 +266,32 @@ Respond with ONLY valid JSON (no markdown fences):
         if (dataContext != null) {
             appendLine("=== CONNECTED DATA SOURCES ===")
             appendLine("WHOOP: ${if (dataContext.whoopConnected) "connected" else "not connected"}")
+            appendLine("Oura: ${if (dataContext.ouraConnected) "connected" else "not connected"}")
+            appendLine("Polar: ${if (dataContext.polarConnected) "connected" else "not connected"}")
+            appendLine("Garmin: ${if (dataContext.garminConnected) "connected" else "not connected"}")
             appendLine("Health Connect: ${if (dataContext.healthConnectConnected) "connected" else "not connected"}")
             appendLine("Enabled metrics: ${dataContext.enabledMetrics.filter { it.value }.keys.joinToString(", ").ifEmpty { "none" }}")
             appendLine("Disabled metrics: ${dataContext.enabledMetrics.filter { !it.value }.keys.joinToString(", ").ifEmpty { "none" }}")
+            if (dataContext.metricSources.isNotEmpty()) {
+                appendLine("Metric sources: ${dataContext.metricSources.entries.joinToString(", ") { "${it.key}=${it.value}" }}")
+            }
+            if (dataContext.ouraConnected) {
+                appendLine("NOTE: Oura skin_temp_daily is a DEVIATION from baseline (°C), not absolute temperature. Normal range: -0.5 to +0.5. Thresholds are set at ±0.8°C.")
+                appendLine("NOTE: Oura stress_index_daily is computed as stress_high/(stress_high+recovery_high)*100, a 0-100 index.")
+            }
+            if (dataContext.polarConnected) {
+                appendLine("NOTE: Polar sleep_efficiency is derived from continuity (1-5 scale), not a direct percentage.")
+                appendLine("NOTE: Polar sleep_disturbances_daily is total interruption duration in minutes, not a wake-up count.")
+                appendLine("NOTE: Polar does not provide a stress metric — stress_index_daily uses computed HRV/RHR z-scores.")
+                appendLine("NOTE: Polar skin_temp_daily and spo2_daily require Elixir™-compatible devices and may not always be available.")
+            }
+            if (dataContext.garminConnected) {
+                appendLine("NOTE: Garmin provides direct stress scores (1–100) via HRV algorithms — no proxy computation needed.")
+                appendLine("NOTE: Garmin HRV is from overnight sleep window; reports 7-day average and last-night values.")
+                appendLine("NOTE: Garmin data is only retained for 7 days — backfill is limited to the past week.")
+                appendLine("NOTE: Garmin access tokens expire every 24h; refresh is handled server-side automatically.")
+                appendLine("NOTE: Garmin skin_temp_daily and spo2_daily require compatible devices (Venu 3, Fenix 8, etc.).")
+            }
             appendLine()
         }
 
@@ -441,7 +477,7 @@ Respond with ONLY valid JSON (no markdown fences):
     // CALL 2 — The Statistician
     // ═════════════════════════════════════════════════════════════════════
 
-    private val CALL2_SYSTEM_PROMPT = """
+    private val CALL2_SYSTEM_PROMPT_BASE = """
 You are a biostatistician calibrating a migraine risk gauge. You need to understand exactly how this app's scoring engine works, then set thresholds that make sense for this specific patient.
 
 === HOW THE SCORING ENGINE WORKS ===
@@ -506,6 +542,9 @@ Given this patient's clinical profile, their trigger list (auto vs manual, with 
 
 6. WRITE a combined summary (2-3 sentences) covering the clinical insight + gauge setup.
 
+""".trimIndent()
+
+    private val CALL2_JSON_FORMAT = """
 Respond with ONLY valid JSON (no markdown fences):
 {
   "gauge_thresholds": {"low": N, "mild": N, "high": N, "reasoning": "brief technical reasoning"},
@@ -518,6 +557,43 @@ Respond with ONLY valid JSON (no markdown fences):
   "summary": "2-3 sentence combined summary"
 }
 """.trimIndent()
+
+    private suspend fun fetchCompanionRoster(accessToken: String): String {
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ai_companions?is_active=eq.true&select=slug,name,triggers,interests&order=slug.asc"
+            val client = HttpClient(io.ktor.client.engine.android.Android)
+            try {
+                val response = client.get(url) {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header("Authorization", "Bearer $accessToken")
+                }
+                val body = response.bodyAsText()
+                val arr = org.json.JSONArray(body)
+                if (arr.length() == 0) return ""
+                val roster = StringBuilder()
+                for (i in 0 until arr.length()) {
+                    val c = arr.getJSONObject(i)
+                    val slug = c.getString("slug")
+                    val name = c.getString("name")
+                    val triggers = mutableListOf<String>()
+                    val interests = mutableListOf<String>()
+                    c.optJSONArray("triggers")?.let { t -> for (j in 0 until t.length()) triggers.add(t.getString(j)) }
+                    c.optJSONArray("interests")?.let { t -> for (j in 0 until t.length()) interests.add(t.getString(j)) }
+                    roster.appendLine("- \"$slug\" ($name) — Triggers: ${triggers.joinToString(", ")}. Interests: ${interests.joinToString(", ")}.")
+                }
+                roster.toString().trim()
+            } finally {
+                client.close()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch companion roster: ${e.message}")
+            ""
+        }
+    }
+
+    private fun buildCall2SystemPrompt(): String {
+        return CALL2_SYSTEM_PROMPT_BASE + "\n\n" + CALL2_JSON_FORMAT
+    }
 
     private fun buildCall2UserMessage(
         profile: DeterministicMapper.ProfileContext,
@@ -541,11 +617,16 @@ Respond with ONLY valid JSON (no markdown fences):
         appendLine("=== CONNECTED DATA SOURCES ===")
         if (dataContext != null) {
             appendLine("WHOOP: ${if (dataContext.whoopConnected) "YES (provides sleep, HRV, recovery, strain)" else "NO"}")
+            appendLine("Oura: ${if (dataContext.ouraConnected) "YES (provides sleep, HRV, readiness, skin temp deviation, steps, stress)" else "NO"}")
             appendLine("Health Connect: ${if (dataContext.healthConnectConnected) "YES (provides steps, sleep, heart rate)" else "NO"}")
             val enabled = dataContext.enabledMetrics.filter { it.value }.keys
             val disabled = dataContext.enabledMetrics.filter { !it.value }.keys
             if (enabled.isNotEmpty()) appendLine("Enabled metrics: ${enabled.joinToString(", ")}")
             if (disabled.isNotEmpty()) appendLine("Disabled metrics: ${disabled.joinToString(", ")}")
+            if (dataContext.ouraConnected) {
+                appendLine("NOTE: Oura skin_temp_daily is a DEVIATION from baseline (°C), not absolute. Thresholds at ±0.8°C.")
+                appendLine("NOTE: Oura stress_index_daily is stress_high/(stress_high+recovery_high)*100, scale 0-100.")
+            }
         } else {
             appendLine("No data source information available.")
         }
@@ -592,7 +673,8 @@ Respond with ONLY valid JSON (no markdown fences):
         )
         Log.d(TAG, "Call 2 user message: ${userMessage.length} chars")
 
-        val responseJson = callEdgeFunction(accessToken, CALL2_SYSTEM_PROMPT, userMessage)
+        val systemPrompt = buildCall2SystemPrompt()
+        val responseJson = callEdgeFunction(accessToken, systemPrompt, userMessage)
         return parseCall2Response(responseJson)
     }
 
@@ -646,6 +728,81 @@ Respond with ONLY valid JSON (no markdown fences):
     }
 
     // ═════════════════════════════════════════════════════════════════════
+    // CALL 3 — Companion Matcher
+    // ═════════════════════════════════════════════════════════════════════
+
+    private suspend fun executeCall3(
+        accessToken: String,
+        clinicalAssessment: String,
+        profile: DeterministicMapper.ProfileContext,
+        classified: ClassifiedTriggers,
+        prodromeStats: TriggerStats,
+        favorites: DeterministicMapper.Favorites,
+    ): List<String> {
+        val roster = fetchCompanionRoster(accessToken)
+        if (roster.isBlank()) return emptyList()
+
+        val systemPrompt = """
+You are matching a migraine patient to AI companion curators. Each companion covers specific triggers and interests. Your job is to compare the patient's clinical picture against each companion's triggers and interests, and return only the companions where there is a clear overlap.
+
+=== COMPANIONS ===
+$roster
+
+=== RULES ===
+- A companion is a match ONLY if the patient's triggers, prodromes, medicines, symptoms, or reliefs overlap with that companion's triggers or interests.
+- You may return 0-4 companions. Fewer genuine matches is better than padding with weak ones.
+- If nothing overlaps, return an empty array.
+
+Respond with ONLY a JSON array of slugs. Examples: ["luna", "kai"] or []
+""".trimIndent()
+
+        val userMessage = buildString {
+            appendLine("=== CLINICAL ASSESSMENT ===")
+            appendLine(clinicalAssessment.ifBlank { "Not available" })
+            appendLine()
+            appendLine("=== TRIGGERS ===")
+            val autoAll = classified.autoHigh + classified.autoMild + classified.autoLow
+            val manualAll = classified.manualHigh + classified.manualMild + classified.manualLow
+            if (autoAll.isNotEmpty()) appendLine("Auto-detected: ${autoAll.joinToString(", ")}")
+            if (manualAll.isNotEmpty()) appendLine("Manual: ${manualAll.joinToString(", ")}")
+            if (autoAll.isEmpty() && manualAll.isEmpty()) appendLine("None")
+            appendLine()
+            appendLine("=== PRODROMES ===")
+            val allProdromes = prodromeStats.highLabels + prodromeStats.mildLabels + prodromeStats.lowLabels
+            appendLine(if (allProdromes.isNotEmpty()) allProdromes.joinToString(", ") else "None")
+            appendLine()
+            appendLine("=== MEDICINES ===")
+            appendLine(if (favorites.medicines.isNotEmpty()) favorites.medicines.joinToString(", ") else "None")
+            appendLine()
+            appendLine("=== RELIEFS ===")
+            appendLine(if (favorites.reliefs.isNotEmpty()) favorites.reliefs.joinToString(", ") else "None")
+            appendLine()
+            appendLine("=== SYMPTOMS ===")
+            appendLine(if (favorites.symptoms.isNotEmpty()) favorites.symptoms.joinToString(", ") else "None")
+        }
+
+        val responseJson = callEdgeFunction(accessToken, systemPrompt, userMessage)
+        return parseCall3Response(responseJson)
+    }
+
+    private fun parseCall3Response(json: String): List<String> {
+        return try {
+            val arr = org.json.JSONArray(json)
+            val validSlugs = setOf("luna", "nora", "lena", "kai", "maya", "sam", "priya", "jake")
+            val result = mutableListOf<String>()
+            for (i in 0 until arr.length()) {
+                val slug = arr.optString(i, "").lowercase().trim()
+                if (slug in validSlugs) result.add(slug)
+            }
+            Log.d(TAG, "Call 3 recommended companions: $result")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse Call 3 response: $json", e)
+            emptyList()
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════
     // Shared edge function caller
     // ═════════════════════════════════════════════════════════════════════
 
@@ -695,6 +852,7 @@ Respond with ONLY valid JSON (no markdown fences):
         mergedTriggers: Map<String, DeterministicMapper.TriggerSetting>,
         call1: Call1Result,
         call2: Call2Result,
+        recommendedCompanions: List<String> = emptyList(),
         autoTriggerLabels: Set<String> = emptySet(),
         autoProdromeLabels: Set<String> = emptySet(),
     ): AiSetupService.AiConfig {
@@ -745,6 +903,7 @@ Respond with ONLY valid JSON (no markdown fences):
             summary = call2.summary,
             clinicalAssessment = call1.clinicalAssessment,
             calibrationNotes = call2.calibrationNotes,
+            recommendedCompanions = recommendedCompanions,
         )
     }
 

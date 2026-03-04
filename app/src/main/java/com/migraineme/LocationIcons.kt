@@ -338,4 +338,32 @@ object LocationIcons {
     ) }
 
     fun forKey(key: String?): ImageVector? = ALL_ICONS.find { it.key == key }?.icon
+
+    fun forLabel(label: String, iconKey: String? = null): ImageVector? {
+        if (iconKey != null) return forKey(iconKey)
+        val l = label.lowercase()
+        return when {
+            l.contains("gym") || l.contains("fitness") -> Gym
+            l.contains("home") || l.contains("house") || l.contains("flat") || l.contains("apartment") -> Home
+            l.contains("doctor") || l.contains("gp") || l.contains("clinic") || l.contains("dentist") -> Doctor
+            l.contains("hospital") || l.contains("a&e") || l.contains("emergency") -> Hospital
+            l.contains("church") || l.contains("mosque") || l.contains("temple") || l.contains("synagogue") -> Church
+            l.contains("school") || l.contains("university") || l.contains("college") || l.contains("campus") -> School
+            l.contains("shop") || l.contains("store") || l.contains("mall") -> Shop
+            l.contains("supermarket") || l.contains("grocery") || l.contains("tesco") || l.contains("sainsbury") -> Supermarket
+            l.contains("beach") || l.contains("coast") || l.contains("seaside") -> Beach
+            l.contains("outdoor") || l.contains("garden") || l.contains("nature") || l.contains("hike") -> Outdoors
+            l.contains("park") -> Park
+            l.contains("bar") || l.contains("pub") || l.contains("club") -> Bar
+            l.contains("cinema") || l.contains("theatre") || l.contains("theater") || l.contains("movie") -> Cinema
+            l.contains("restaurant") || l.contains("cafe") || l.contains("coffee") || l.contains("dining") -> Restaurant
+            l.contains("bus") -> Bus
+            l.contains("car") || l.contains("driv") -> Car
+            l.contains("plane") || l.contains("airport") || l.contains("flight") || l.contains("fly") -> Plane
+            l.contains("train") || l.contains("metro") || l.contains("tube") || l.contains("subway") -> Train
+            l.contains("office") -> Office
+            l.contains("work") || l.contains("job") -> Work
+            else -> null
+        }
+    }
 }

@@ -46,11 +46,12 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun FullScreenGraphScreen(
     graphType: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    highlightContributors: List<String> = emptyList()
 ) {
     val scrollState = rememberScrollState()
 
-    val rangeOptions = listOf(1 to "Day", 7 to "Week", 14 to "2 Weeks", 30 to "Month")
+    val rangeOptions = listOf(2 to "2 Days", 7 to "Week", 14 to "2 Weeks", 30 to "Month")
     var selectedDays by remember { mutableStateOf(14) }
     var periodOffset by remember { mutableStateOf(0) }
     var showCustomPicker by remember { mutableStateOf(false) }
@@ -59,23 +60,33 @@ fun FullScreenGraphScreen(
     var customDays by remember { mutableStateOf(14) }
 
     val today = remember { LocalDate.now() }
-    val endDate = if (isCustomRange) customEndDate else today.minusDays((periodOffset * selectedDays).toLong())
-    val startDate = if (isCustomRange) customEndDate.minusDays(customDays.toLong() - 1) else endDate.minusDays(selectedDays.toLong() - 1)
+    // Step size matches the selected range
+    val stepSize = selectedDays
+    // Base end date from offset
+    val baseEndDate = if (isCustomRange) customEndDate else today.minusDays((periodOffset * stepSize).toLong())
     val activeDays = if (isCustomRange) customDays else selectedDays
+    // Start date is always endDate - days + 1
+    val startDate = baseEndDate.minusDays(activeDays.toLong() - 1)
+    // For the graph, we pass baseEndDate and activeDays directly
+    val endDate = baseEndDate
 
     val isAtPresent = if (isCustomRange) false else periodOffset == 0
+    // Forward nav: risk can go up to today+7, others cap at today
+    val maxForwardEnd = if (graphType == "risk") today.plusDays(7) else today
+    val canGoForward = !isCustomRange && endDate.isBefore(maxForwardEnd)
 
     // For weather at present, extend end date to include forecast
     val isWeatherForecast = graphType == "weather" && isAtPresent && !isCustomRange
-    val displayEndDate = if (isWeatherForecast) endDate.plusDays(6) else endDate
 
     val dateFormat = DateTimeFormatter.ofPattern("MMM d")
-    val dateRangeLabel = "${startDate.format(dateFormat)} – ${displayEndDate.format(dateFormat)}"
+    // Title always matches what the graph actually shows
+    val dateRangeLabel = "${startDate.format(dateFormat)} – ${endDate.format(dateFormat)}"
 
     val title = when (graphType) {
         "sleep" -> "Sleep History"
         "weather" -> if (isWeatherForecast) "Weather History + Forecast" else "Weather History"
         "nutrition" -> "Nutrition History"
+        "risk" -> "Risk History"
         else -> "History"
     }
 
@@ -182,13 +193,13 @@ fun FullScreenGraphScreen(
             )
 
             IconButton(
-                onClick = { if (!isAtPresent && !isCustomRange) periodOffset -= 1 },
-                enabled = !isAtPresent && !isCustomRange
+                onClick = { if (canGoForward) periodOffset -= 1 },
+                enabled = canGoForward
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "Later",
-                    tint = if (isAtPresent || isCustomRange) AppTheme.SubtleTextColor.copy(alpha = 0.3f) else AppTheme.AccentPurple,
+                    tint = if (!canGoForward) AppTheme.SubtleTextColor.copy(alpha = 0.3f) else AppTheme.AccentPurple,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -209,6 +220,9 @@ fun FullScreenGraphScreen(
                 )
             }
             "nutrition" -> NutritionHistoryGraph(days = activeDays, endDate = endDate)
+            "risk" -> RiskHistoryGraph(days = activeDays, endDate = endDate, highlightContributors = highlightContributors)
+            "physical" -> PhysicalHistoryGraph(days = activeDays, endDate = endDate)
+            "mental" -> MentalHistoryGraph(days = activeDays, endDate = endDate)
         }
 
         Spacer(Modifier.height(16.dp))

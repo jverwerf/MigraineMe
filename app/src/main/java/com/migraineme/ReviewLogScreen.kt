@@ -119,7 +119,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Locations
             if (draft.locations.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawLocationPin(it) } }, title = "Locations (${draft.locations.size})", iconTint = Color(0xFF64B5F6)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawLocationPin(it) } }, title = "Locations (${draft.locations.size})", iconTint = Color(0xFF78909C)) {
                     draft.locations.forEach { loc ->
                         ReviewRow(loc.type, formatIsoDdMmYyHm(loc.startAtIso))
                     }
@@ -137,7 +137,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Missed Activities
             if (draft.missedActivities.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMissedActivity(it) } }, title = "Missed (${draft.missedActivities.size})", iconTint = Color(0xFFEF9A9A)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMissedActivity(it) } }, title = "Missed (${draft.missedActivities.size})", iconTint = Color(0xFFFF7043)) {
                     draft.missedActivities.forEach { ma ->
                         ReviewRow(ma.type, formatIsoDdMmYyHm(ma.startAtIso))
                     }

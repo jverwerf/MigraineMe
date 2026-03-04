@@ -224,10 +224,9 @@ class SupabaseHealthConnectService(context: Context) {
     @Serializable
     private data class SleepStagesRow(
         val date: String,
-        val rem_minutes: Int,
-        val deep_minutes: Int,
-        val light_minutes: Int,
-        val awake_minutes: Int,
+        val value_rem_hm: Double,
+        val value_sws_hm: Double,
+        val value_light_hm: Double,
         val source: String = SOURCE,
         val source_measure_id: String? = null
     )
@@ -262,10 +261,17 @@ class SupabaseHealthConnectService(context: Context) {
                 SleepTimeRow(date, endTime, SOURCE, sourceId)))
         }
 
-        // Sleep stages (if available)
+        // Sleep stages — convert minutes to decimal hours to match DB columns (value_*_hm)
         if (remMinutes > 0 || deepMinutes > 0 || lightMinutes > 0) {
             results.add(upsertDailyCompat(accessToken, "sleep_stages_daily",
-                SleepStagesRow(date, remMinutes, deepMinutes, lightMinutes, awakeMinutes, SOURCE, sourceId)))
+                SleepStagesRow(
+                    date = date,
+                    value_rem_hm = remMinutes / 60.0,
+                    value_sws_hm = deepMinutes / 60.0,
+                    value_light_hm = lightMinutes / 60.0,
+                    source = SOURCE,
+                    source_measure_id = sourceId
+                )))
         }
 
         return results.all { it }
@@ -326,11 +332,13 @@ class SupabaseHealthConnectService(context: Context) {
     @Serializable
     private data class ExerciseRow(
         val date: String,
+        // For Health Connect we have no HR zone data, so value_minutes stores full session
+        // duration (best available approximation). WHOOP stores high-zone-only minutes here.
+        // The UI differentiates by checking source and hides the zone breakdown for HC rows.
         val value_minutes: Int,
         val activity_type: String? = null,
         val source: String = SOURCE,
         val source_measure_id: String? = null,
-        // Include start/end times to match WHOOP schema
         val start_at: String? = null,
         val end_at: String? = null
     )

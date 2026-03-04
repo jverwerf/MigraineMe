@@ -34,6 +34,8 @@ data class MedicineDraft(
     val notes: String? = null,
     val startAtIso: String? = null,
     val reliefScale: String? = "NONE",
+    val sideEffectScale: String? = "NONE",
+    val sideEffectNotes: String? = null,
     val existingId: String? = null
 )
 
@@ -43,6 +45,8 @@ data class ReliefDraft(
     val startAtIso: String? = null,
     val endAtIso: String? = null,
     val reliefScale: String? = "NONE",
+    val sideEffectScale: String? = "NONE",
+    val sideEffectNotes: String? = null,
     val existingId: String? = null
 )
 
@@ -261,15 +265,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun addMedicineDraft(name: String, amount: String?, notes: String?, startAtIso: String? = null, reliefScale: String? = "NONE") {
+    fun addMedicineDraft(name: String, amount: String?, notes: String?, startAtIso: String? = null, reliefScale: String? = "NONE", sideEffectScale: String? = "NONE", sideEffectNotes: String? = null) {
         _draft.value = _draft.value.copy(
-            meds = _draft.value.meds + MedicineDraft(name, amount, notes, startAtIso, reliefScale)
+            meds = _draft.value.meds + MedicineDraft(name, amount, notes, startAtIso, reliefScale, sideEffectScale, sideEffectNotes)
         )
     }
 
-    fun addReliefDraft(type: String, notes: String? = null, startAtIso: String? = null, endAtIso: String? = null, reliefScale: String? = "NONE") {
+    fun addReliefDraft(type: String, notes: String? = null, startAtIso: String? = null, endAtIso: String? = null, reliefScale: String? = "NONE", sideEffectScale: String? = "NONE", sideEffectNotes: String? = null) {
         _draft.value = _draft.value.copy(
-            rels = _draft.value.rels + ReliefDraft(type, notes, startAtIso, endAtIso, reliefScale)
+            rels = _draft.value.rels + ReliefDraft(type, notes, startAtIso, endAtIso, reliefScale, sideEffectScale, sideEffectNotes)
         )
     }
 
@@ -329,6 +333,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 val nowIso = Instant.now().toString()
                 db.insertMigraine(accessToken, type = "Migraine", severity = null, startAt = nowIso, endAt = null, notes = null)
                 loadJournal(accessToken)
+                launch(Dispatchers.IO) {
+                    try { edge.triggerCorrelationCompute(getApplication()) }
+                    catch (e: Exception) { e.printStackTrace() }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -410,9 +418,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 for (m in meds.filter { !it.name.isNullOrBlank() }) {
                     if (m.existingId != null) {
-                        runCatching { db.updateMedicine(accessToken, m.existingId, m.name, m.amount, m.startAtIso ?: migraineStart, m.notes) }
+                        runCatching { db.updateMedicine(accessToken, m.existingId, m.name, m.amount, m.startAtIso ?: migraineStart, m.notes, reliefScale = m.reliefScale, sideEffectScale = m.sideEffectScale, sideEffectNotes = m.sideEffectNotes) }
                     } else {
-                        runCatching { db.insertMedicine(accessToken, migraineId, m.name, m.amount, m.startAtIso ?: migraineStart, m.notes, m.reliefScale) }
+                        runCatching { db.insertMedicine(accessToken, migraineId, m.name, m.amount, m.startAtIso ?: migraineStart, m.notes, reliefScale = m.reliefScale, sideEffectScale = m.sideEffectScale, sideEffectNotes = m.sideEffectNotes) }
                     }
                 }
 
@@ -425,9 +433,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     val rStart = r.startAtIso ?: migraineStart
                     val rEnd = r.endAtIso ?: rStart
                     if (r.existingId != null) {
-                        runCatching { db.updateRelief(accessToken, r.existingId, r.type, rStart, r.notes, endAt = rEnd) }
+                        runCatching { db.updateRelief(accessToken, r.existingId, r.type, rStart, r.notes, endAt = rEnd, reliefScale = r.reliefScale, sideEffectScale = r.sideEffectScale, sideEffectNotes = r.sideEffectNotes) }
                     } else {
-                        runCatching { db.insertRelief(accessToken, migraineId, r.type, rStart, r.notes, rEnd, r.reliefScale) }
+                        runCatching { db.insertRelief(accessToken, migraineId, r.type, rStart, r.notes, rEnd, r.reliefScale, sideEffectScale = r.sideEffectScale, sideEffectNotes = r.sideEffectNotes) }
                     }
                 }
 
@@ -553,7 +561,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             amount = m.amount,
                             startAt = m.startAtIso ?: migraineStart,
                             notes = m.notes,
-                            reliefScale = m.reliefScale
+                            reliefScale = m.reliefScale,
+                            sideEffectScale = m.sideEffectScale,
+                            sideEffectNotes = m.sideEffectNotes
                         )
                     } catch (e: Exception) { e.printStackTrace() }
                 }
@@ -568,7 +578,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             startAt = rStart,
                             notes = r.notes,
                             endAt = r.endAtIso ?: rStart,
-                            reliefScale = r.reliefScale
+                            reliefScale = r.reliefScale,
+                            sideEffectScale = r.sideEffectScale,
+                            sideEffectNotes = r.sideEffectNotes
                         )
                     } catch (e: Exception) { e.printStackTrace() }
                 }
@@ -861,11 +873,14 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         amount: String? = null,
         startAt: String? = null,
         notes: String? = null,
-        migraineId: String? = null
+        migraineId: String? = null,
+        reliefScale: String? = null,
+        sideEffectScale: String? = null,
+        sideEffectNotes: String? = null
     ) {
         viewModelScope.launch {
             try {
-                val updated = db.updateMedicine(accessToken, id, name, amount, startAt, notes, migraineId)
+                val updated = db.updateMedicine(accessToken, id, name, amount, startAt, notes, migraineId, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
                 _editMedicine.value = updated
                 loadJournal(accessToken)
             } catch (e: Exception) { e.printStackTrace() }
@@ -877,12 +892,16 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         id: String,
         type: String? = null,
         startAt: String? = null,
+        endAt: String? = null,
         notes: String? = null,
-        migraineId: String? = null
+        migraineId: String? = null,
+        reliefScale: String? = null,
+        sideEffectScale: String? = null,
+        sideEffectNotes: String? = null
     ) {
         viewModelScope.launch {
             try {
-                val updated = db.updateRelief(accessToken, id, type, startAt, notes, migraineId)
+                val updated = db.updateRelief(accessToken, id, type, startAt, notes, migraineId, endAt = endAt, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
                 _editRelief.value = updated
                 loadJournal(accessToken)
             } catch (e: Exception) { e.printStackTrace() }

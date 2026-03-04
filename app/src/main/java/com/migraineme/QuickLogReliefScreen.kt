@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -40,7 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -71,9 +71,12 @@ fun QuickLogReliefScreen(
     // Form state
     var selectedRelief by rememberSaveable { mutableStateOf<String?>(null) }
     var menuOpen by rememberSaveable { mutableStateOf(false) }
-    var durationMinutes by rememberSaveable { mutableStateOf("") }
     var startAtIso by rememberSaveable { mutableStateOf<String?>(null) }
+    var endAtIso by rememberSaveable { mutableStateOf<String?>(null) }
     var notes by rememberSaveable { mutableStateOf("") }
+    var reliefScale by rememberSaveable { mutableStateOf("NONE") }
+    var sideEffectScale by rememberSaveable { mutableStateOf("NONE") }
+    var sideEffectNotes by rememberSaveable { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
     
     val scrollState = rememberScrollState()
@@ -197,31 +200,27 @@ fun QuickLogReliefScreen(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     
-                    // Duration
-                    OutlinedTextField(
-                        value = durationMinutes,
-                        onValueChange = { durationMinutes = it.filter { c -> c.isDigit() } },
-                        label = { Text("Duration (minutes)", color = AppTheme.SubtleTextColor) },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = AppTheme.AccentPurple,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
-                        )
-                    )
+                    // Start time picker
+                    Column(Modifier.fillMaxWidth()) {
+                        Text("When did you start?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(4.dp))
+                        AppDateTimePicker(
+                            label = startAtIso?.let { formatIsoForDisplay(it) } ?: "Select start time..."
+                        ) { iso ->
+                            startAtIso = iso
+                        }
+                    }
                     
                     Spacer(Modifier.height(8.dp))
                     
-                    // Time picker
+                    // End time picker
                     Column(Modifier.fillMaxWidth()) {
-                        Text("When did you do this?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text("When did you finish?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(4.dp))
                         AppDateTimePicker(
-                            label = startAtIso?.let { formatIsoForDisplay(it) } ?: "Select time..."
+                            label = endAtIso?.let { formatIsoForDisplay(it) } ?: "Select end time..."
                         ) { iso ->
-                            startAtIso = iso
+                            endAtIso = iso
                         }
                     }
                     
@@ -240,6 +239,77 @@ fun QuickLogReliefScreen(
                             unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
                         ),
                         minLines = 2
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // Relief scale
+                    Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ReliefScale.entries.forEach { scale ->
+                            androidx.compose.material3.FilterChip(
+                                selected = reliefScale == scale.name,
+                                onClick = { reliefScale = scale.name },
+                                label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = scale.color.copy(alpha = 0.3f),
+                                    selectedLabelColor = Color.White,
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    labelColor = AppTheme.SubtleTextColor
+                                ),
+                                border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = reliefScale == scale.name,
+                                    borderColor = Color.White.copy(alpha = 0.12f),
+                                    selectedBorderColor = scale.color.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // Side effects
+                    Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("NONE" to "None", "SOFT" to "Soft", "MODERATE" to "Moderate", "SEVERE" to "Severe").forEach { (key, display) ->
+                            val seColor = when (key) { "NONE" -> Color(0xFF81C784); "SOFT" -> Color(0xFFFFB74D); "MODERATE" -> Color(0xFFFF8A65); else -> Color(0xFFE57373) }
+                            androidx.compose.material3.FilterChip(
+                                selected = sideEffectScale == key,
+                                onClick = { sideEffectScale = key },
+                                label = { Text(display, style = MaterialTheme.typography.labelSmall) },
+                                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = seColor.copy(alpha = 0.3f),
+                                    selectedLabelColor = Color.White,
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    labelColor = AppTheme.SubtleTextColor
+                                ),
+                                border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = sideEffectScale == key,
+                                    borderColor = Color.White.copy(alpha = 0.12f),
+                                    selectedBorderColor = seColor.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = sideEffectNotes,
+                        onValueChange = { sideEffectNotes = it },
+                        label = { Text("Side effect notes", color = AppTheme.SubtleTextColor) },
+                        placeholder = { Text("e.g. drowsiness, nausea…", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
+                        ),
+                        minLines = 1, maxLines = 3
                     )
                 }
                 
@@ -277,7 +347,11 @@ fun QuickLogReliefScreen(
                                                 migraineId = null, // Standalone relief
                                                 type = relief,
                                                 startAt = startAtIso ?: Instant.now().toString(),
-                                                notes = notes.ifBlank { null }
+                                                notes = notes.ifBlank { null },
+                                                endAt = endAtIso,
+                                                reliefScale = reliefScale,
+                                                sideEffectScale = sideEffectScale,
+                                                sideEffectNotes = sideEffectNotes.ifBlank { null }
                                             )
                                         }
                                         snackbarHostState.showSnackbar("Relief logged!")

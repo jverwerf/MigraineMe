@@ -53,9 +53,19 @@ class TriggerViewModel : ViewModel() {
     fun loadRecent(accessToken: String, referenceDate: String? = null) {
         viewModelScope.launch {
             try {
-                val refDate = referenceDate?.let {
-                    try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
-                } ?: java.time.LocalDate.now()
+                // No migraine date set → don't suggest triggers from any date
+                if (referenceDate.isNullOrBlank()) {
+                    _recentDaysAgo.value = emptyMap()
+                    _recentStartAts.value = emptyMap()
+                    return@launch
+                }
+                val refDate = try {
+                    java.time.LocalDate.parse(referenceDate.substring(0, 10))
+                } catch (_: Exception) {
+                    _recentDaysAgo.value = emptyMap()
+                    _recentStartAts.value = emptyMap()
+                    return@launch
+                }
                 val rows = db.getRecentTriggers(accessToken, daysBack = 3, referenceDate = refDate.toString())
                 val map = mutableMapOf<String, Int>()
                 val isoMap = mutableMapOf<String, String>()

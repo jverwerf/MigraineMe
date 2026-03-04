@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
@@ -79,7 +80,8 @@ fun ManageSymptomsScreen(
 
     if (showAddDialog) {
         AlertDialog(
-            onDismissRequest = { showAddDialog = false; addLabel = ""; addIconKey = null; addSubCategory = addCategory },
+            onDismissRequest = {},
+            modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
@@ -192,7 +194,8 @@ fun ManageSymptomsScreen(
 
     if (showDeleteDialog && deleteTarget != null) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = {},
+            modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,

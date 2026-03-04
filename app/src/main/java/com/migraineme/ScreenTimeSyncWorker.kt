@@ -45,31 +45,52 @@ class ScreenTimeSyncWorker(
                 return@withContext Result.success()
             }
 
+            // Check which screen time metrics are enabled in metric_settings
+            val enabledMetrics = try {
+                val edge = EdgeFunctionsService()
+                val settings = edge.getMetricSettings(applicationContext)
+                settings.filter { it.enabled }.map { it.metric }.toSet()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to check metric settings: ${e.message} — skipping")
+                return@withContext Result.success()
+            }
+
+            val screenTimeEnabled = "screen_time_daily" in enabledMetrics
+            val lateNightEnabled = "screen_time_late_night" in enabledMetrics
+
+            if (!screenTimeEnabled && !lateNightEnabled) {
+                Log.d(TAG, "Both screen time metrics disabled — skipping")
+                return@withContext Result.success()
+            }
+
             val svc = SupabasePersonalService(applicationContext)
             val today = LocalDate.now()
             val yesterday = today.minusDays(1)
             val timezone = ZoneId.systemDefault().id
 
-            // ========== 1. UPDATE TODAY'S LIVE DATA ==========
-            runCatching {
-                val todayData = ScreenTimeCollector.getDailyScreenTime(applicationContext, today.toString())
-                if (todayData != null) {
-                    val totalHours = todayData.totalSeconds / 3600.0
-                    svc.upsertScreenTimeLive(
-                        accessToken = access,
-                        date = today.toString(),
-                        totalHours = totalHours,
-                        appCount = todayData.appCount,
-                        source = "android",
-                        timezone = timezone
-                    )
-                    Log.d(TAG, "Updated live screen time for today: ${String.format("%.2f", totalHours)}h")
+            // ========== 1. UPDATE TODAY'S LIVE DATA (only if screen_time_daily enabled) ==========
+            if (screenTimeEnabled) {
+                runCatching {
+                    val todayData = ScreenTimeCollector.getDailyScreenTime(applicationContext, today.toString())
+                    if (todayData != null) {
+                        val totalHours = todayData.totalSeconds / 3600.0
+                        svc.upsertScreenTimeLive(
+                            accessToken = access,
+                            date = today.toString(),
+                            totalHours = totalHours,
+                            appCount = todayData.appCount,
+                            source = "android",
+                            timezone = timezone
+                        )
+                        Log.d(TAG, "Updated live screen time for today: ${String.format("%.2f", totalHours)}h")
+                    }
+                }.onFailure { e ->
+                    Log.e(TAG, "Failed to update live screen time", e)
                 }
-            }.onFailure { e ->
-                Log.e(TAG, "Failed to update live screen time", e)
             }
 
-            // ========== 2. FINALIZE COMPLETED DAYS ==========
+            // ========== 2. FINALIZE COMPLETED DAYS (only if screen_time_daily enabled) ==========
+            if (screenTimeEnabled) {
             // Get the latest date in screen_time_daily
             val latestDailyStr = svc.latestScreenTimeDate(access, source = "android")
             val latestDaily = latestDailyStr?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
@@ -128,11 +149,13 @@ class ScreenTimeSyncWorker(
 
                 Log.d(TAG, "Finalized $ok of ${toFinalize.size} days (fail=$fail)")
             }
+            } // end screenTimeEnabled
 
             // ========== 3. FINALIZE LATE-NIGHT SCREEN TIME ==========
             // A late-night window for date D = 22:00 on D → 06:00 on D+1.
             // It is complete once we are past 06:00 on D+1, i.e. today >= D+2,
             // meaning we can finalize D = today - 2 (yesterday's evening is not yet complete).
+            if (lateNightEnabled) {
             runCatching {
                 val latestLateNightStr = svc.latestScreenTimeLateNightDate(access, source = "android")
                 val latestLateNight = latestLateNightStr?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
@@ -189,6 +212,7 @@ class ScreenTimeSyncWorker(
             }.onFailure { e ->
                 Log.e(TAG, "Failed late-night screen time finalization", e)
             }
+            } // end lateNightEnabled
 
             Result.success()
 

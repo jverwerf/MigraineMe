@@ -33,12 +33,28 @@ class CommunityGraphViewModel : ViewModel() {
     private val _windowEnd = MutableStateFlow<Instant?>(null)
     val windowEnd: StateFlow<Instant?> = _windowEnd
 
+    // ── Risk graph data ──
+    private val _riskDays = MutableStateFlow<List<RiskDayPoint>>(emptyList())
+    val riskDays: StateFlow<List<RiskDayPoint>> = _riskDays
+
+    private val _isRiskGraph = MutableStateFlow(false)
+    val isRiskGraph: StateFlow<Boolean> = _isRiskGraph
+
     /**
      * Parse JSON attachment into the same types InsightsTimelineGraph uses.
-     * JSON shape matches what GraphAttachmentPicker serialises:
+     * Detects "type": "risk" for risk graph attachments.
+     * Default (no type field) = insights timeline graph:
      * { start, end, migraines[], events[], metrics[] }
      */
     fun loadFromJson(attachment: JsonObject) {
+        val type = attachment["type"]?.jsonPrimitive?.content
+
+        if (type == "risk") {
+            loadRiskFromJson(attachment)
+            return
+        }
+
+        _isRiskGraph.value = false
         _windowStart.value = attachment["start"]?.jsonPrimitive?.content
             ?.let { runCatching { Instant.parse(it) }.getOrNull() }
         _windowEnd.value = attachment["end"]?.jsonPrimitive?.content
@@ -82,6 +98,32 @@ class CommunityGraphViewModel : ViewModel() {
             }
             if (points.isEmpty()) return@mapNotNull null
             MetricSeries(label.lowercase().replace(" ", "_"), label, unit, color, points)
+        }
+    }
+
+    private fun loadRiskFromJson(attachment: JsonObject) {
+        _isRiskGraph.value = true
+        _riskDays.value = (attachment["days"]?.jsonArray ?: emptyList()).mapNotNull { el ->
+            val obj = el.jsonObject
+            val date = obj["date"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            val score = obj["score"]?.jsonPrimitive?.double?.toFloat() ?: return@mapNotNull null
+            val zone = obj["zone"]?.jsonPrimitive?.content ?: "LOW"
+            RiskDayPoint(date, score, zone)
+        }
+        // Parse optional metric overlay lines
+        _metricSeries.value = (attachment["metrics"]?.jsonArray ?: emptyList()).mapNotNull { el ->
+            val obj = el.jsonObject
+            val label = obj["label"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            val color = obj["color"]?.jsonPrimitive?.content?.let { parseHex(it) } ?: Color(0xFF90CAF9)
+            val points = (obj["points"]?.jsonArray ?: emptyList()).mapNotNull { pt ->
+                val po = pt.jsonObject
+                val date = po["date"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                val value = po["value"]?.jsonPrimitive?.double ?: return@mapNotNull null
+                DailyMetricPoint(date, value)
+            }
+            if (points.isEmpty()) return@mapNotNull null
+            val key = obj["key"]?.jsonPrimitive?.content ?: label.lowercase().replace(" ", "_")
+            MetricSeries(key, label, "", color, points)
         }
     }
 
