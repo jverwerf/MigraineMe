@@ -126,8 +126,8 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 
-    implementation("androidx.credentials:credentials:1.5.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("androidx.credentials:credentials:1.5.0-rc01")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-rc01")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
