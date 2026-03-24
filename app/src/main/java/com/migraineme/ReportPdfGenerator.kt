@@ -1459,9 +1459,9 @@ class ReportPdfGenerator(private val context: Context) {
             } else {
                 val remaining = itemTexts.toMutableList()
                 while (remaining.isNotEmpty()) {
-                    var line = remaining.removeFirst()
+                    var line = remaining.removeAt(0)
                     while (remaining.isNotEmpty() && textP.measureText("$line  *  ${remaining.first()}") <= maxW) {
-                        line += "  *  ${remaining.removeFirst()}"
+                        line += "  *  ${remaining.removeAt(0)}"
                     }
                     y += 10f; need(10f)
                     (cv ?: return).drawText(line, M + 18f, y + 7f, textP)
