@@ -73,6 +73,17 @@ fun ThirdPartyConnectionsScreen(
     val whoopErrorDialog = remember { mutableStateOf<String?>(null) }
     val showWhoopDisconnectDialog = remember { mutableStateOf(false) }
 
+    // WHOOP access gate
+    val whoopAccessStatus = remember { mutableStateOf<WhoopAccessGate.AccessStatus?>(null) }
+    val showWhoopAccessDialog = remember { mutableStateOf(false) }
+    val whoopAccessRequesting = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (!hasWhoop.value) {
+            whoopAccessStatus.value = WhoopAccessGate.checkAccess(context)
+        }
+    }
+
     // Oura state
     val ouraTokenStore = remember { OuraTokenStore(context) }
     val hasOura = remember { mutableStateOf(ouraTokenStore.load() != null) }
@@ -632,6 +643,54 @@ fun ThirdPartyConnectionsScreen(
     }
 
     // Dialogs
+
+    // WHOOP access request dialog
+    if (showWhoopAccessDialog.value) {
+        val isPending = whoopAccessStatus.value == WhoopAccessGate.AccessStatus.PENDING
+        AlertDialog(
+            onDismissRequest = { showWhoopAccessDialog.value = false },
+            title = { Text("WHOOP Integration") },
+            text = {
+                Text(
+                    if (isPending)
+                        "Your request is being reviewed. We\u2019ll enable WHOOP for your account shortly."
+                    else
+                        "WHOOP integration is currently invite-only. Request access and we\u2019ll enable it for your account."
+                )
+            },
+            confirmButton = {
+                if (!isPending) {
+                    TextButton(
+                        onClick = {
+                            whoopAccessRequesting.value = true
+                            scope.launch {
+                                val ok = WhoopAccessGate.requestAccess(context)
+                                if (ok) whoopAccessStatus.value = WhoopAccessGate.AccessStatus.PENDING
+                                whoopAccessRequesting.value = false
+                                showWhoopAccessDialog.value = false
+                                if (ok) {
+                                    withContext(Dispatchers.Main) {
+                                        android.widget.Toast.makeText(context, "Access requested!", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        },
+                        enabled = !whoopAccessRequesting.value
+                    ) {
+                        Text(if (whoopAccessRequesting.value) "Requesting\u2026" else "Request Access")
+                    }
+                } else {
+                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text("OK") }
+                }
+            },
+            dismissButton = {
+                if (!isPending) {
+                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text("Cancel") }
+                }
+            }
+        )
+    }
+
     whoopErrorDialog.value?.let { msg ->
         AlertDialog(
             onDismissRequest = { whoopErrorDialog.value = null },
@@ -968,14 +1027,29 @@ fun ThirdPartyConnectionsScreen(
                     logoResId = whoopLogoResId,
                     fallbackLetter = "W",
                     isConnected = hasWhoop.value,
+                    statusLabel = if (!hasWhoop.value) {
+                        when (whoopAccessStatus.value) {
+                            WhoopAccessGate.AccessStatus.PENDING -> "Requested"
+                            WhoopAccessGate.AccessStatus.NONE -> "Request Access"
+                            else -> null
+                        }
+                    } else null,
                     onClick = {
                         if (!hasWhoop.value) {
-                            // Flag to return here after OAuth if setup coach is active
-                            if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
-                                context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
-                                    .edit().putBoolean("return_to_setup", true).apply()
+                            when (whoopAccessStatus.value) {
+                                WhoopAccessGate.AccessStatus.APPROVED -> {
+                                    // Access granted — proceed with OAuth
+                                    if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                                        context.getSharedPreferences("whoop_oauth", Context.MODE_PRIVATE)
+                                            .edit().putBoolean("return_to_setup", true).apply()
+                                    }
+                                    activity?.let { WhoopAuthService().startAuth(it) }
+                                }
+                                else -> {
+                                    // Not approved yet — show request dialog
+                                    showWhoopAccessDialog.value = true
+                                }
                             }
-                            activity?.let { WhoopAuthService().startAuth(it) }
                         }
                     },
                     onLongClick = {
@@ -1058,6 +1132,7 @@ private fun ConnectionRowLogoOnly(
     logoResId: Int,
     fallbackLetter: String,
     isConnected: Boolean,
+    statusLabel: String? = null,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -1096,17 +1171,25 @@ private fun ConnectionRowLogoOnly(
 
             Spacer(Modifier.weight(1f))
 
-            // Connect/Connected Button
+            // Connect/Connected/Custom status Button
+            val buttonLabel = when {
+                isConnected -> "Connected"
+                statusLabel != null -> statusLabel
+                else -> "Connect"
+            }
+            val buttonColor = when {
+                isConnected -> AppTheme.AccentPurple.copy(alpha = 0.3f)
+                statusLabel == "Requested" -> Color.White.copy(alpha = 0.15f)
+                else -> AppTheme.AccentPurple
+            }
             Button(
                 onClick = onClick,
                 shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isConnected) AppTheme.AccentPurple.copy(alpha = 0.3f) else AppTheme.AccentPurple
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
-                    if (isConnected) "Connected" else "Connect",
+                    buttonLabel,
                     color = Color.White,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
