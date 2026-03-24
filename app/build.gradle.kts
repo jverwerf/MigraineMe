@@ -28,7 +28,7 @@ android {
         applicationId = "com.migraineme"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
+        versionCode = 20
         versionName = "1.0"
 
         // ── All keys loaded from local.properties ──
