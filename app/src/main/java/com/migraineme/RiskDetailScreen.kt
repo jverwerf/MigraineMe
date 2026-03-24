@@ -59,8 +59,7 @@ fun RiskDetailScreen(
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
                 }
-                Text("Risk Model", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Spacer(Modifier.size(48.dp))
+                Spacer(Modifier.weight(1f))
             }
 
             // Gauge + forecast — exact same as HomeScreen

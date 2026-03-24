@@ -63,6 +63,7 @@ fun MonitorPhysicalScreen(
 
     var physicalDetail by remember { mutableStateOf<PhysicalDetailData?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var sources by remember { mutableStateOf<List<String>>(emptyList()) }
 
     var enabledRegistryKeys by remember { mutableStateOf<Set<String>>(emptySet()) }
     var settingsLoaded by remember { mutableStateOf(false) }
@@ -91,6 +92,9 @@ fun MonitorPhysicalScreen(
                                 physicalDetail = try {
                                     loadPhysicalDetailData(ctx, token, today)
                                 } catch (_: Exception) { null }
+                                sources = try {
+                                    fetchSourcesForDate(ctx, token, today, listOf("hrv_daily", "resting_hr_daily", "recovery_score_daily", "steps_daily"))
+                                } catch (_: Exception) { emptyList() }
                             }
                         }
                     } else {
@@ -104,14 +108,22 @@ fun MonitorPhysicalScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // Physical uses PhysicalCardConfig as source of truth (strain_daily has no trigger template
+    // row so MetricRegistry never populates it). Each entry is a Pair(tableKey, label).
     val allMetrics = remember(settingsLoaded, enabledRegistryKeys) {
-        MetricRegistry.byGroup("physical").filter { it.key in enabledRegistryKeys }
+        PhysicalCardConfig.ALL_PHYSICAL_METRICS.mapNotNull { configKey ->
+            val tableKey = PhysicalCardConfig.metricToTable(configKey)
+            // enabledRegistryKeys uses table names for physical metrics
+            if (tableKey.isNotBlank() && (enabledRegistryKeys.isEmpty() || tableKey in enabledRegistryKeys || configKey in enabledRegistryKeys)) {
+                Pair(tableKey, PhysicalCardConfig.labelFor(configKey))
+            } else null
+        }
     }
 
     val displayKeys = remember(settingsLoaded, enabledRegistryKeys) {
         MetricDisplayStore.getDisplayMetrics(ctx, "physical")
-            .filter { it in enabledRegistryKeys }
-            .ifEmpty { allMetrics.take(3).map { it.key } }
+            .filter { key -> allMetrics.any { it.first == key || PhysicalCardConfig.metricToTable(key) == it.first } }
+            .ifEmpty { allMetrics.take(3).map { it.first } }
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -193,9 +205,9 @@ fun MonitorPhysicalScreen(
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             displayKeys.forEachIndexed { index, key ->
-                                val metric = MetricRegistry.get(key)
                                 val formatted = physicalDisplayByKey(detail, key) ?: "—"
-                                val label = metric?.label ?: key
+                                val label = MetricRegistry.get(key)?.label
+                                    ?: PhysicalCardConfig.labelFor(PhysicalCardConfig.ALL_PHYSICAL_METRICS.firstOrNull { PhysicalCardConfig.metricToTable(it) == key } ?: key)
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                     Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -203,7 +215,7 @@ fun MonitorPhysicalScreen(
                             }
                         }
 
-                        val remainingMetrics = allMetrics.filter { it.key !in displayKeys }
+                        val remainingMetrics = allMetrics.filter { it.first !in displayKeys }
                         if (remainingMetrics.isNotEmpty()) {
                             Spacer(Modifier.height(4.dp))
                             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
@@ -211,19 +223,26 @@ fun MonitorPhysicalScreen(
                             Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                             Spacer(Modifier.height(4.dp))
 
-                            remainingMetrics.forEach { m ->
-                                val formatted = physicalDisplayByKey(detail, m.key)
+                            remainingMetrics.forEach { (tableKey, label) ->
+                                val formatted = physicalDisplayByKey(detail, tableKey)
                                 if (formatted != null) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth().height(24.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(m.label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
+                                        Text(label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
                                         Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                                     }
                                 }
                             }
+                        }
+                        // Source attribution
+                        if (sources.isNotEmpty()) {
+                            Spacer(Modifier.height(4.dp))
+                            HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                            Spacer(Modifier.height(8.dp))
+                            SourceBadgeRow(sources)
                         }
                     }
                 }
@@ -254,6 +273,7 @@ private fun physicalDisplayByKey(detail: PhysicalDetailData, key: String): Strin
         "skin_temp_daily" -> detail.skinTemp?.let { String.format("%.1f°C", it) }
         "respiratory_rate_daily" -> detail.respiratoryRate?.let { String.format("%.1f bpm", it) }
         "stress_index_daily" -> detail.stress?.let { String.format("%.0f", it) }
+        "strain_daily" -> detail.strain?.let { "%.0f kJ".format(it) }
         "time_in_high_hr_zones_daily" -> detail.highHrZonesMinutes?.let { "${it.toInt()} min" }
         "steps_daily" -> detail.steps?.let { "%,d".format(it) }
         "weight_daily" -> detail.weight?.let { String.format("%.1f kg", it) }
@@ -278,6 +298,7 @@ private data class PhysicalDetailData(
     val skinTemp: Double?,
     val respiratoryRate: Double?,
     val stress: Double?,
+    val strain: Double?,
     val highHrZonesMinutes: Double?,
     val steps: Int?,
     val weight: Double?,
@@ -312,6 +333,7 @@ private suspend fun loadPhysicalDetailData(
     val bodyFat = if (userId != null) fetchSingleDouble(client, token, "body_fat_daily", userId, date, "value_pct") else null
     val respiratoryRate = if (userId != null) fetchSingleDouble(client, token, "respiratory_rate_daily", userId, date, "value_bpm") else null
     val bloodGlucose = if (userId != null) fetchSingleDouble(client, token, "blood_glucose_daily", userId, date, "value_mgdl") else null
+    val strain = if (userId != null) fetchSingleDouble(client, token, "strain_daily", userId, date, "value_kilojoule") else null
 
     var bpSystolic: Double? = null
     var bpDiastolic: Double? = null
@@ -336,7 +358,7 @@ private suspend fun loadPhysicalDetailData(
 
     if (recovery == null && hrv == null && rhr == null && spo2 == null && skinTemp == null &&
         stress == null && highHr == null && steps == null && weight == null && bodyFat == null &&
-        respiratoryRate == null && bloodGlucose == null && bpSystolic == null) {
+        respiratoryRate == null && bloodGlucose == null && bpSystolic == null && strain == null) {
         return@withContext null
     }
 
@@ -348,6 +370,7 @@ private suspend fun loadPhysicalDetailData(
         skinTemp = skinTemp?.value_celsius,
         respiratoryRate = respiratoryRate,
         stress = stress?.value,
+        strain = strain,
         highHrZonesMinutes = highHr?.value_minutes,
         steps = steps,
         weight = weight,

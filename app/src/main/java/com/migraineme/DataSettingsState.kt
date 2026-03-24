@@ -155,10 +155,16 @@ class DataSettingsState(private val context: Context) {
             refreshWearableConnections()
             refreshHealthConnectPermissions()
             loadMenstruationSettings()
+            // Preload Garmin device name for display labels
+            if (_garminConnected.value) {
+                GarminDeviceNameProvider.preload(appContext)
+            }
         } finally {
             _isLoading.value = false
         }
     }
+
+    fun garminDisplayLabel(): String = GarminDeviceNameProvider.getLabel(appContext)
 
     /**
      * Refresh only the metric settings from Supabase.

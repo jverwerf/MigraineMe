@@ -30,6 +30,12 @@ class TriggerViewModel : ViewModel() {
     private val _recentStartAts = MutableStateFlow<Map<String, String>>(emptyMap())
     val recentStartAts: StateFlow<Map<String, String>> = _recentStartAts
 
+    /** Clear cached recent trigger data (call on wizard exit / draft clear). */
+    fun clearRecent() {
+        _recentDaysAgo.value = emptyMap()
+        _recentStartAts.value = emptyMap()
+    }
+
     private fun safeSortPrefs(prefs: List<SupabaseDbService.TriggerPrefRow>) =
         prefs.sortedBy { it.position }
 

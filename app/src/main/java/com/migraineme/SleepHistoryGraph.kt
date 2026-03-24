@@ -76,11 +76,16 @@ fun SleepHistoryGraph(
     var isLoading by remember { mutableStateOf(true) }
     var selectedMetrics by remember { mutableStateOf<Set<String>>(setOf(SleepCardConfig.METRIC_DURATION)) }
     var migraineDates by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var sources by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(days, endDate) {
         scope.launch {
             graphResult = loadSleepGraphData(context, days, endDate)
             migraineDates = MigraineOverlayHelper.fetchMigraineDates(context, days, endDate)
+            val token = SessionStore.getValidAccessToken(context)
+            if (token != null) {
+                sources = fetchSourcesForDate(context, token, java.time.LocalDate.now().toString(), listOf("sleep_duration_daily", "sleep_score_daily"))
+            }
             isLoading = false
         }
     }
@@ -105,6 +110,11 @@ fun SleepHistoryGraph(
             if (onClick != null) {
                 Text("View Full →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
             }
+        }
+
+        if (sources.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            SourceBadgeRow(sources)
         }
 
         Spacer(Modifier.height(8.dp))

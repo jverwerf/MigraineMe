@@ -45,10 +45,11 @@ fun WearableSourceSelector(
     onSelected: (WearableSource) -> Unit
 ) {
     var expanded by remember(options, selected) { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Box {
         SourceBadge(
-            label = selected.label,
+            label = if (selected == WearableSource.GARMIN) GarminDeviceNameProvider.getLabel(context) else selected.label,
             hasMultiple = options.size > 1,
             enabled = enabled,
             onClick = { if (enabled && options.size > 1) expanded = true }
@@ -60,8 +61,9 @@ fun WearableSourceSelector(
             modifier = Modifier.background(Color(0xFF1E0A2E))
         ) {
             options.forEach { opt ->
+                val optLabel = if (opt == WearableSource.GARMIN) GarminDeviceNameProvider.getLabel(context) else opt.label
                 DropdownMenuItem(
-                    text = { Text(opt.label, color = Color.White) },
+                    text = { Text(optLabel, color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(opt)

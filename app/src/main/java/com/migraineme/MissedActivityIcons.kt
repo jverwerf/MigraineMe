@@ -329,6 +329,185 @@ object MissedActivityIcons {
         }.build()
     }
 
+    /** hiking — person with mountain */
+    val Hiking: ImageVector by lazy {
+        ImageVector.Builder("MissedHiking", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(1f, 20f); lineTo(8f, 8f); lineTo(13f, 14f); lineTo(17f, 10f); lineTo(23f, 20f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.3f, strokeLineCap = StrokeCap.Round) {
+                moveTo(9.8f, 6.8f)
+                arcTo(1.8f, 1.8f, 0f, isMoreThanHalf = true, isPositiveArc = true, 6.2f, 6.8f)
+                arcTo(1.8f, 1.8f, 0f, isMoreThanHalf = true, isPositiveArc = true, 9.8f, 6.8f)
+                moveTo(11f, 8f); lineTo(13f, 15f)
+            }
+        }.build()
+    }
+
+    /** flying — airplane */
+    val Flying: ImageVector by lazy {
+        ImageVector.Builder("MissedFlying", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(22f, 8f)
+                curveTo(22f, 8f, 20f, 6f, 17f, 7f)
+                lineTo(13f, 9f); lineTo(5f, 5f); lineTo(3f, 7f); lineTo(9f, 12f)
+                lineTo(6f, 14f); lineTo(3f, 13f); lineTo(2f, 14.5f); lineTo(6f, 16.5f)
+                lineTo(8f, 21f); lineTo(10f, 20f); lineTo(9f, 16f); lineTo(12f, 14f)
+                lineTo(14f, 20f); lineTo(16f, 19f); lineTo(14f, 12f)
+                lineTo(18f, 10f)
+                curveTo(21f, 9f, 22f, 8f, 22f, 8f)
+                close()
+            }
+        }.build()
+    }
+
+    /** concert — stage spotlight with music notes */
+    val Concert: ImageVector by lazy {
+        ImageVector.Builder("MissedConcert", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(4f, 20f); lineTo(8f, 12f); lineTo(16f, 12f); lineTo(20f, 20f); close()
+            }
+            path(stroke = stroke, strokeLineWidth = 1.3f, strokeLineCap = StrokeCap.Round) {
+                moveTo(12f, 12f); lineTo(12f, 6f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.1f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(8f, 9f); lineTo(8f, 5f); lineTo(14f, 4f); lineTo(14f, 8f)
+            }
+            path(fill = SolidColor(Color.White)) {
+                moveTo(9.2f, 9f)
+                arcTo(1.2f, 1.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 6.8f, 9f)
+                arcTo(1.2f, 1.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 9.2f, 9f)
+            }
+            path(fill = SolidColor(Color.White)) {
+                moveTo(15.2f, 8f)
+                arcTo(1.2f, 1.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 12.8f, 8f)
+                arcTo(1.2f, 1.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 15.2f, 8f)
+            }
+        }.build()
+    }
+
+    /** meditation — seated figure with aura */
+    val Meditation: ImageVector by lazy {
+        ImageVector.Builder("Meditation", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(14f, 5f); arcTo(2f, 2f, 0f, true, true, 10f, 5f); arcTo(2f, 2f, 0f, true, true, 14f, 5f)
+                moveTo(12f, 7f); lineTo(12f, 14f)
+                moveTo(12f, 14f); lineTo(7f, 18f); moveTo(12f, 14f); lineTo(17f, 18f)
+                moveTo(12f, 10f); lineTo(7.5f, 14f); moveTo(12f, 10f); lineTo(16.5f, 14f)
+            }
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12f, 1.5f); arcTo(0.7f, 0.7f, 0f, true, true, 12f, 2.9f); arcTo(0.7f, 0.7f, 0f, true, true, 12f, 1.5f)
+                moveTo(6f, 8f); arcTo(0.6f, 0.6f, 0f, true, true, 6f, 9.2f); arcTo(0.6f, 0.6f, 0f, true, true, 6f, 8f)
+                moveTo(18f, 8f); arcTo(0.6f, 0.6f, 0f, true, true, 18f, 9.2f); arcTo(0.6f, 0.6f, 0f, true, true, 18f, 8f)
+            }
+        }.build()
+    }
+
+    /** gardening — flower / plant */
+    val Gardening: ImageVector by lazy {
+        ImageVector.Builder("Gardening", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 22f); lineTo(12f, 10f)
+                moveTo(12f, 16f); curveTo(6f, 14f, 6f, 10f, 12f, 12f)
+                moveTo(12f, 14f); curveTo(18f, 12f, 18f, 8f, 12f, 10f)
+                moveTo(12f, 10f); curveTo(10f, 8f, 8f, 5f, 10f, 3f)
+                moveTo(12f, 10f); curveTo(14f, 8f, 16f, 5f, 14f, 3f)
+                moveTo(12f, 10f); curveTo(9f, 9f, 6f, 7f, 8f, 4f)
+                moveTo(12f, 10f); curveTo(15f, 9f, 18f, 7f, 16f, 4f)
+            }
+            path(fill = SolidColor(Color.White)) {
+                moveTo(13.2f, 9f); arcTo(1.2f, 1.2f, 0f, true, true, 10.8f, 9f); arcTo(1.2f, 1.2f, 0f, true, true, 13.2f, 9f)
+            }
+        }.build()
+    }
+
+    /** dancing — figure with arms up */
+    val Dancing: ImageVector by lazy {
+        ImageVector.Builder("Dancing", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(14f, 4f); arcTo(2f, 2f, 0f, true, true, 10f, 4f); arcTo(2f, 2f, 0f, true, true, 14f, 4f)
+                moveTo(12f, 6f); curveTo(12f, 9f, 13f, 11f, 12f, 14f)
+                moveTo(12f, 8f); curveTo(9f, 6f, 6f, 4f, 5f, 2f)
+                moveTo(12f, 8f); curveTo(15f, 6f, 18f, 5f, 20f, 3f)
+                moveTo(12f, 14f); curveTo(10f, 17f, 8f, 19f, 6f, 21f)
+                moveTo(12f, 14f); curveTo(14f, 16f, 16f, 17f, 18f, 20f)
+            }
+        }.build()
+    }
+
+    /** music — music notes */
+    val Music: ImageVector by lazy {
+        ImageVector.Builder("Music", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(9f, 18f); lineTo(9f, 6f); lineTo(19f, 4f); lineTo(19f, 16f)
+            }
+            path(fill = SolidColor(Color.White), stroke = stroke, strokeLineWidth = 1.2f) {
+                moveTo(11f, 18f); arcTo(2f, 1.5f, 330f, true, true, 7f, 18f); arcTo(2f, 1.5f, 330f, true, true, 11f, 18f)
+            }
+            path(fill = SolidColor(Color.White), stroke = stroke, strokeLineWidth = 1.2f) {
+                moveTo(21f, 16f); arcTo(2f, 1.5f, 330f, true, true, 17f, 16f); arcTo(2f, 1.5f, 330f, true, true, 21f, 16f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(9f, 8f); lineTo(19f, 6f)
+            }
+        }.build()
+    }
+
+    /** swimming — swimmer figure */
+    val Swimming: ImageVector by lazy {
+        ImageVector.Builder("Swimming", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(8f, 8f); arcTo(2f, 2f, 0f, true, true, 4f, 8f); arcTo(2f, 2f, 0f, true, true, 8f, 8f)
+                moveTo(6f, 10f); lineTo(10f, 12f); lineTo(18f, 10f)
+                moveTo(10f, 12f); lineTo(8f, 16f)
+                // Waves
+                moveTo(2f, 18f); curveTo(4f, 16f, 6f, 20f, 8f, 18f); curveTo(10f, 16f, 12f, 20f, 14f, 18f); curveTo(16f, 16f, 18f, 20f, 20f, 18f); curveTo(21f, 17f, 22f, 19f, 22f, 18f)
+            }
+        }.build()
+    }
+
+    /** cycling — bicycle (for missed activities) */
+    val Cycling: ImageVector by lazy {
+        ImageVector.Builder("Cycling", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(7f, 18f); arcTo(3f, 3f, 0f, true, true, 1f, 18f); arcTo(3f, 3f, 0f, true, true, 7f, 18f)
+                moveTo(23f, 18f); arcTo(3f, 3f, 0f, true, true, 17f, 18f); arcTo(3f, 3f, 0f, true, true, 23f, 18f)
+                moveTo(12f, 18f); lineTo(12f, 12f); lineTo(17f, 7f)
+                moveTo(12f, 12f); lineTo(4f, 18f)
+                moveTo(17f, 7f); lineTo(20f, 7f)
+            }
+        }.build()
+    }
+
+    /** reading — open book */
+    val Reading: ImageVector by lazy {
+        ImageVector.Builder("Reading", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 6f); curveTo(10f, 4f, 6f, 4f, 2f, 5f); lineTo(2f, 20f); curveTo(6f, 19f, 10f, 19f, 12f, 21f)
+                moveTo(12f, 6f); curveTo(14f, 4f, 18f, 4f, 22f, 5f); lineTo(22f, 20f); curveTo(18f, 19f, 14f, 19f, 12f, 21f)
+                moveTo(12f, 6f); lineTo(12f, 21f)
+            }
+        }.build()
+    }
+
+    /** napping — moon with z's */
+    val Napping: ImageVector by lazy {
+        ImageVector.Builder("Napping", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                // Crescent moon
+                moveTo(15f, 4f); curveTo(10f, 4f, 6f, 8f, 6f, 13f); curveTo(6f, 18f, 10f, 22f, 15f, 22f)
+                curveTo(12f, 20f, 10f, 17f, 10f, 13f); curveTo(10f, 9f, 12f, 6f, 15f, 4f)
+            }
+            // Z's
+            path(stroke = stroke, strokeLineWidth = 1.3f, strokeLineCap = StrokeCap.Round) {
+                moveTo(17f, 7f); lineTo(21f, 7f); lineTo(17f, 11f); lineTo(21f, 11f)
+            }
+        }.build()
+    }
+
+    /** partying — same as NightOut */
+    val Partying: ImageVector get() = NightOut
+
     // ─── LOOKUP ────────────────────────────────────────────────
 
     data class MissedActivityPickerIcon(val key: String, val label: String, val icon: ImageVector)
@@ -339,6 +518,7 @@ object MissedActivityIcons {
         MissedActivityPickerIcon("self_care", "Self-care", SelfCare),
         MissedActivityPickerIcon("exercise", "Exercise", Exercise),
         MissedActivityPickerIcon("gym", "Gym", Gym),
+        MissedActivityPickerIcon("hiking", "Hiking", Hiking),
         MissedActivityPickerIcon("sport", "Sport", Sport),
         MissedActivityPickerIcon("walk", "Walk", Walk),
         MissedActivityPickerIcon("hobbies", "Hobbies", Hobbies),
@@ -348,13 +528,24 @@ object MissedActivityIcons {
         MissedActivityPickerIcon("date", "Date", Date),
         MissedActivityPickerIcon("family_event", "Family event", FamilyEvent),
         MissedActivityPickerIcon("night_out", "Night out", NightOut),
+        MissedActivityPickerIcon("concert", "Concert / event", Concert),
         MissedActivityPickerIcon("social_plans", "Social plans", SocialPlans),
         MissedActivityPickerIcon("driving", "Driving", Driving),
+        MissedActivityPickerIcon("flying", "Flying", Flying),
         MissedActivityPickerIcon("travel", "Travel", Travel),
         MissedActivityPickerIcon("meeting", "Meeting", Meeting),
         MissedActivityPickerIcon("school", "School", School),
         MissedActivityPickerIcon("study", "Study", Study),
         MissedActivityPickerIcon("work", "Work", Work),
+        MissedActivityPickerIcon("meditation", "Meditation", Meditation),
+        MissedActivityPickerIcon("gardening", "Gardening", Gardening),
+        MissedActivityPickerIcon("dancing", "Dancing", Dancing),
+        MissedActivityPickerIcon("music", "Music", Music),
+        MissedActivityPickerIcon("swimming", "Swimming", Swimming),
+        MissedActivityPickerIcon("cycling", "Cycling", Cycling),
+        MissedActivityPickerIcon("reading", "Reading", Reading),
+        MissedActivityPickerIcon("napping", "Napping", Napping),
+        MissedActivityPickerIcon("partying", "Partying", Partying),
         MissedActivityPickerIcon("other", "Other", Other),
     ) }
 
@@ -369,23 +560,35 @@ object MissedActivityIcons {
             l.contains("self-care") || l.contains("self care") || l.contains("groom") -> SelfCare
             l.contains("exercis") || l.contains("workout") -> Exercise
             l.contains("gym") || l.contains("weight") -> Gym
+            l.contains("hik") || l.contains("trek") -> Hiking
             l.contains("sport") || l.contains("match") || l.contains("game") -> Sport
-            l.contains("walk") || l.contains("hike") || l.contains("run") -> Walk
-            l.contains("hobb") || l.contains("craft") -> Hobbies
+            l.contains("walk") || l.contains("hike") || l.contains("run") || l.contains("jog") -> Walk
+            l.contains("swim") -> Swimming
+            l.contains("cycl") || l.contains("bike") -> Cycling
+            l.contains("hobb") || l.contains("craft") || l.contains("diy") || l.contains("garden") -> Hobbies
+            l.contains("garden") -> Gardening
+            l.contains("read") -> Reading
             l.contains("chore") || l.contains("clean") || l.contains("housework") -> Chores
             l.contains("cook") || l.contains("bak") || l.contains("meal") -> Cooking
             l.contains("shop") -> Shopping
-            l.contains("date") -> Date
+            l.contains("date") || l.contains("sex") || l.contains("intimat") -> Date
             l.contains("family") || l.contains("gathering") || l.contains("reunion") -> FamilyEvent
             l.contains("night out") || l.contains("party") || l.contains("club") -> NightOut
+            l.contains("danc") -> Dancing
+            l.contains("concert") || l.contains("gig") || l.contains("show") || l.contains("event") -> Concert
+            l.contains("music") || l.contains("listen") -> Music
             l.contains("social") || l.contains("friend") || l.contains("plan") || l.contains("hangout") -> SocialPlans
             l.contains("driv") || l.contains("car") -> Driving
-            l.contains("travel") || l.contains("trip") || l.contains("flight") || l.contains("vacat") -> Travel
+            l.contains("fly") || l.contains("flight") || l.contains("plane") || l.contains("airport") -> Flying
+            l.contains("travel") || l.contains("trip") || l.contains("vacat") || l.contains("commut") -> Travel
             l.contains("meeting") -> Meeting
             l.contains("school") || l.contains("class") -> School
             l.contains("study") || l.contains("exam") || l.contains("homework") -> Study
             l.contains("work") || l.contains("office") || l.contains("job") || l.contains("shift") -> Work
-            else -> null
+            l.contains("yoga") || l.contains("pilates") || l.contains("stretch") -> Exercise
+            l.contains("meditat") || l.contains("mindful") -> Meditation
+            l.contains("nap") || l.contains("sleep") -> Napping
+            else -> Other
         }
     }
 }

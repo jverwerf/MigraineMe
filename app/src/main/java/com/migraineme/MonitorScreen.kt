@@ -581,6 +581,10 @@ private fun SleepCard(
                     SleepMetric(label, value, color)
                 }
             }
+            if (sleep.sourceLabel.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                SourceBadgeRow(listOf(sleep.sourceLabel.lowercase()))
+            }
         }
     }
 }
@@ -1144,12 +1148,7 @@ internal suspend fun loadSleepSummary(ctx: android.content.Context, token: Strin
                 val arr = org.json.JSONArray(body)
                 if (arr.length() > 0) {
                     val src = arr.getJSONObject(0).optString("source", "")
-                    sourceLabel = when (src) {
-                        "phone" -> "Phone"
-                        "whoop" -> "WHOOP"
-                        "health_connect" -> "Health Connect"
-                        else -> ""
-                    }
+                    sourceLabel = sourceDisplayLabel(src, ctx)
                 }
             }
         } catch (_: Exception) {}

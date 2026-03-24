@@ -52,10 +52,15 @@ fun ActivitiesScreen(
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
+    // Track which reference date the recent data was loaded for
+    var recentLoadedForDate by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(authState.accessToken, draft.migraine?.beganAtIso) {
         authState.accessToken?.let {
             vm.loadAll(it)
-            vm.loadRecent(it, draft.migraine?.beganAtIso)
+            val refDate = draft.migraine?.beganAtIso
+            vm.loadRecent(it, refDate)
+            recentLoadedForDate = refDate
         }
     }
 
@@ -76,8 +81,11 @@ fun ActivitiesScreen(
     // ── Auto-select recent activities (once, on first load — wizard only) ──
     // Recent data uses lowercase activity_type; pool uses title case labels
     // Only auto-select when user has explicitly set a migraine date
-    LaunchedEffect(recentDaysAgo, pool) {
-        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty() && draft.migraine?.beganAtIso != null) {
+    // AND the recent data was loaded for the CURRENT date (not stale from a previous migraine)
+    LaunchedEffect(recentDaysAgo, pool, recentLoadedForDate) {
+        val currentDate = draft.migraine?.beganAtIso
+        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty()
+            && currentDate != null && recentLoadedForDate == currentDate) {
             val currentLabels = draft.activities.map { it.type.lowercase() }.toSet()
             // Build lowercase → title case mapping from pool
             val poolLabelMap = pool.associate { it.label.lowercase() to it.label }

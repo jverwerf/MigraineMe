@@ -183,86 +183,55 @@ object AiOnboardingParser {
         missedActivityLabels: List<String>,
         deterministicResult: OnboardingPreFill,
     ): OnboardingPreFill? {
+        // Build a summary of everything the deterministic parser already extracted
         val alreadyFound = buildString {
+            deterministicResult.gender?.let { append("gender=$it, ") }
+            deterministicResult.ageRange?.let { append("age_range=$it, ") }
             deterministicResult.frequency?.let { append("frequency=$it, ") }
             deterministicResult.duration?.let { append("duration=$it, ") }
             deterministicResult.experience?.let { append("experience=$it, ") }
+            deterministicResult.trajectory?.let { append("trajectory=$it, ") }
+            deterministicResult.warningBefore?.let { append("warning_before=$it, ") }
+            deterministicResult.triggerDelay?.let { append("trigger_delay=$it, ") }
+            deterministicResult.dailyRoutine?.let { append("daily_routine=$it, ") }
+            deterministicResult.seasonalPattern?.let { append("seasonal_pattern=$it, ") }
+            deterministicResult.sleepHours?.let { append("sleep_hours=$it, ") }
+            deterministicResult.sleepQuality?.let { append("sleep_quality=$it, ") }
+            deterministicResult.stressLevel?.let { append("stress_level=$it, ") }
+            deterministicResult.screenTimeDaily?.let { append("screen_time_daily=$it, ") }
+            deterministicResult.caffeineIntake?.let { append("caffeine_intake=$it, ") }
+            deterministicResult.alcoholFrequency?.let { append("alcohol_frequency=$it, ") }
+            deterministicResult.exerciseFrequency?.let { append("exercise_frequency=$it, ") }
+            deterministicResult.tracksCycle?.let { append("tracks_cycle=$it, ") }
             if (deterministicResult.matchedTriggers.isNotEmpty()) append("triggers=${deterministicResult.matchedTriggers}, ")
             if (deterministicResult.matchedProdromes.isNotEmpty()) append("prodromes=${deterministicResult.matchedProdromes}, ")
+            if (deterministicResult.matchedSymptoms.isNotEmpty()) append("symptoms=${deterministicResult.matchedSymptoms}, ")
             if (deterministicResult.matchedMedicines.isNotEmpty()) append("medicines=${deterministicResult.matchedMedicines}, ")
             if (deterministicResult.matchedReliefs.isNotEmpty()) append("reliefs=${deterministicResult.matchedReliefs}, ")
-            if (deterministicResult.matchedSymptoms.isNotEmpty()) append("symptoms=${deterministicResult.matchedSymptoms}, ")
+            if (deterministicResult.matchedActivities.isNotEmpty()) append("activities=${deterministicResult.matchedActivities}, ")
+            if (deterministicResult.matchedMissedActivities.isNotEmpty()) append("missed_activities=${deterministicResult.matchedMissedActivities}, ")
         }
 
-        val systemPrompt = """
-You are helping a migraine patient set up their tracking app. They've described their migraine history in natural language. Extract everything you can.
-
-A deterministic parser already found: $alreadyFound
-ADD anything it missed. Only use values from the EXACT option lists provided.
-
-=== QUESTIONNAIRE FIELDS (use EXACT option values or null) ===
-gender: "Female", "Male", "Prefer not to say"
-age_range: "18-25", "26-35", "36-45", "46-55", "56+"
-frequency: "A few per year", "Every 1-2 months", "1-3 per month", "Weekly", "Chronic"
-duration: "< 4 hours", "4-12 hours", "12-24 hours", "1-3 days", "3+ days"
-experience: "New / recent", "1-5 years", "5-10 years", "10+ years"
-trajectory: "Getting worse", "Getting better", "About the same", "Just started"
-warning_before: "Yes, always", "Sometimes", "Rarely", "Never"
-trigger_delay: "Within hours", "Next day", "Within 2-3 days", "Up to a week", "Not sure"
-daily_routine: "Regular 9-5", "Shift work / rotating", "Irregular / freelance", "Student", "Stay at home"
-seasonal_pattern: "Worse in winter", "Worse in summer", "Worse in spring", "No pattern", "Not sure"
-sleep_hours: "< 5h", "5-6h", "6-7h", "7-8h", "8-9h", "9+h"
-sleep_quality: "Good", "OK", "Poor", "Varies a lot"
-stress_level: "Low", "Moderate", "High", "Very high"
-screen_time_daily: "< 2h", "2-4h", "4-8h", "8-12h", "12h+"
-caffeine_intake: "None", "1-2 cups", "3-4 cups", "5+ cups"
-alcohol_frequency: "Never", "Occasionally", "Weekly", "Daily"
-exercise_frequency: "Daily", "Few times/week", "Weekly", "Rarely", "Never"
-tracks_cycle: "Yes", "No", "Not applicable"
-
-=== POOL ITEMS (only return labels from these EXACT lists) ===
-TRIGGERS: ${triggerLabels.joinToString(", ")}
-PRODROMES: ${prodromeLabels.joinToString(", ")}
-SYMPTOMS: ${symptomLabels.joinToString(", ")}
-MEDICINES: ${medicineLabels.joinToString(", ")}
-RELIEFS: ${reliefLabels.joinToString(", ")}
-ACTIVITIES: ${activityLabels.joinToString(", ")}
-MISSED_ACTIVITIES: ${missedActivityLabels.joinToString(", ")}
-
-Respond with ONLY valid JSON, no markdown:
-{
-  "gender": "..." or null,
-  "age_range": "..." or null,
-  "frequency": "..." or null,
-  "duration": "..." or null,
-  "experience": "..." or null,
-  "trajectory": "..." or null,
-  "warning_before": "..." or null,
-  "trigger_delay": "..." or null,
-  "daily_routine": "..." or null,
-  "seasonal_pattern": "..." or null,
-  "sleep_hours": "..." or null,
-  "sleep_quality": "..." or null,
-  "stress_level": "..." or null,
-  "screen_time_daily": "..." or null,
-  "caffeine_intake": "..." or null,
-  "alcohol_frequency": "..." or null,
-  "exercise_frequency": "..." or null,
-  "tracks_cycle": "..." or null,
-  "triggers": ["exact label", ...],
-  "prodromes": ["exact label", ...],
-  "symptoms": ["exact label", ...],
-  "medicines": ["exact label", ...],
-  "reliefs": ["exact label", ...],
-  "activities": ["exact label", ...],
-  "missed_activities": ["exact label", ...]
-}
-""".trimIndent()
-
+        // System prompt lives server-side under context_type "onboarding_parser".
+        // user_message carries all dynamic data: user text, parser results, pool labels.
         return try {
+            val userMessage = buildString {
+                appendLine("User said: \"$text\"")
+                appendLine()
+                appendLine("Already found by deterministic parser: $alreadyFound")
+                appendLine()
+                appendLine("=== POOL ITEMS (only return labels from these EXACT lists) ===")
+                appendLine("TRIGGERS: ${triggerLabels.joinToString(", ")}")
+                appendLine("PRODROMES: ${prodromeLabels.joinToString(", ")}")
+                appendLine("SYMPTOMS: ${symptomLabels.joinToString(", ")}")
+                appendLine("MEDICINES: ${medicineLabels.joinToString(", ")}")
+                appendLine("RELIEFS: ${reliefLabels.joinToString(", ")}")
+                appendLine("ACTIVITIES: ${activityLabels.joinToString(", ")}")
+                appendLine("MISSED_ACTIVITIES: ${missedActivityLabels.joinToString(", ")}")
+            }
             val requestBody = JSONObject().apply {
-                put("system_prompt", systemPrompt)
-                put("user_message", text)
+                put("context_type", "onboarding_parser")
+                put("user_message", userMessage)
             }
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/ai-setup"
             val client = HttpClient(Android)

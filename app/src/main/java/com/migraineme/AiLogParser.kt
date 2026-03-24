@@ -528,77 +528,13 @@ internal suspend fun callGptForFullLogParseV2(
         if (deterministicResult.matches.isNotEmpty()) append("items: ${deterministicResult.matches.map { "${it.label} (${it.category})" }}")
     }
 
-    val systemPrompt = """
-You are a migraine specialist AI. The user is logging a migraine and describing what happened in natural language. Your job is to extract EVERYTHING relevant from their narrative.
-
-A deterministic parser has already found some items. You should:
-1. CONFIRM or ADJUST what was already found (if the parser made mistakes)
-2. ADD anything the parser MISSED — especially contextual inferences
-3. For fields with NO data yet, provide your BEST GUESS and mark it as inferred
-
-ALREADY FOUND BY PARSER: $alreadyFound
-
-Extract ALL of the following:
-
-1. **severity** (1-10 scale): Infer from language/context. "worst migraine ever" = 9-10, "mild headache" = 2-3, "pretty bad" = 6-7. If nothing indicates severity, suggest 4 and mark inferred=true.
-2. **severity_inferred**: true if you're guessing, false if explicitly stated or strongly implied.
-3. **began_at**: ISO datetime string if mentioned. Infer from context ("woke up with" → morning). null only if completely unknowable.
-4. **began_at_inferred**: true if guessed.
-5. **ended_at**: ISO datetime string if mentioned. null if still ongoing or unknown.
-6. **ended_at_inferred**: true if guessed.
-7. **pain_locations**: Match EXACTLY from the provided list. Infer from vague descriptions.
-8. **pain_locations_inferred**: list of booleans, same length, true for each inferred location.
-9. **symptoms**: Match EXACTLY from the provided list.
-10. **symptoms_inferred**: list of booleans, same length.
-11. **items**: Triggers, prodromes, medicines, reliefs, activities, locations, missed activities. Match EXACTLY from pools.
-12. **items_inferred**: list of booleans, same length, true for contextual inferences.
-
-PAIN LOCATION GUIDANCE:
-- "left side" → Left Temple, possibly Left Eye, Left Brow
-- "right side" → Right Temple, possibly Right Eye, Right Brow
-- "both sides" → Left Temple + Right Temple
-- "behind my eyes" → Left Eye + Right Eye
-- "top of my head" → Top of Head
-- "neck" → Neck Left + Neck Right
-- "back of my head" → Occipital Center, Base of Skull Center
-
-INFERENCE EXAMPLES:
-- "woke up with a headache" → severity ~4 (inferred), began_at morning (inferred), pain_locations inferred
-- "took some tablets" → look for medicine matches in pool
-- "busy day at work" → Stress, Screen time (if in trigger pool)
-
-RULES:
-- ONLY return labels whose EXACT text exists in the provided pools/lists.
-- Be thorough — flag anything likely or plausible.
-- Return a single JSON object. No markdown, no explanation.
-- Today's date is ${LocalDate.now()}.
-- Format:
-{
-  "severity": 7, "severity_inferred": false,
-  "began_at": "2025-01-15T07:00:00+00:00", "began_at_inferred": true,
-  "ended_at": null, "ended_at_inferred": false,
-  "pain_locations": ["Left Temple", "Left Eye"], "pain_locations_inferred": [false, true],
-  "symptoms": ["Throbbing", "Nausea"], "symptoms_inferred": [false, true],
-  "items": [
-    {"label": "Alcohol", "category": "trigger", "inferred": false, "start_at": "2025-01-15T19:00:00+00:00"},
-    {"label": "Ibuprofen", "category": "medicine", "inferred": false, "start_at": "2025-01-15T12:00:00+00:00", "amount": "2 tablets", "relief_scale": "HIGH", "side_effect_scale": "NONE", "side_effect_notes": null},
-    {"label": "Dark room", "category": "relief", "inferred": false, "start_at": "2025-01-15T14:00:00+00:00", "end_at": "2025-01-15T15:00:00+00:00", "relief_scale": "MODERATE", "side_effect_scale": "NONE", "side_effect_notes": null},
-    {"label": "Stress", "category": "trigger", "inferred": true, "start_at": null}
-  ]
-}
-
-EVERY ITEM MUST INCLUDE ALL RELEVANT FIELDS — use your best guess when not explicitly stated:
-- ALL items: "start_at" (ISO datetime, best guess from context, null only if completely unknowable)
-- Triggers, prodromes, locations, missed_activities: "start_at"
-- Activities: "start_at", "end_at"
-- Medicines: "start_at", "amount" (dosage/count — best guess e.g. "1" if not stated), "relief_scale" (NONE/LOW/MODERATE/HIGH — best guess from context), "side_effect_scale" (NONE/LOW/MODERATE/HIGH), "side_effect_notes"
-- Reliefs: "start_at", "end_at", "relief_scale" (NONE/LOW/MODERATE/HIGH — best guess), "side_effect_scale", "side_effect_notes"
-- Default relief_scale to "NONE" only if there's genuinely no information. If they took medicine for a migraine and it's common (ibuprofen, sumatriptan), guess "MODERATE".
-- Default side_effect_scale to "NONE" unless side effects mentioned.
-""".trimIndent()
-
+    // System prompt lives server-side under context_type "log_parser".
+    // user_message carries all dynamic data: user text, parser results, pools.
     val userMessage = """
 User said: "$noteText"
+
+Already found by deterministic parser: $alreadyFound
+Today's date: ${java.time.LocalDate.now()}
 
 TRIGGER pool: ${triggers.joinToString(", ")}
 PRODROME pool: ${prodromes.joinToString(", ")}
@@ -614,7 +550,7 @@ Extract everything you can. JSON object only.
 """.trimIndent()
 
     val requestBody = org.json.JSONObject().apply {
-        put("system_prompt", systemPrompt)
+        put("context_type", "log_parser")
         put("user_message", userMessage)
     }
 
@@ -1053,43 +989,13 @@ internal suspend fun callGptForCheckInParse(
 
     val today = LocalDate.now()
 
-    val systemPrompt = """
-You are a migraine specialist AI. The user is doing their evening check-in, describing their day. Extract ALL relevant items with as much detail as possible.
-
-A deterministic parser already found: $alreadyFound
-Fill in gaps and add anything missed — especially contextual inferences.
-
-For each item, extract:
-- **label**: exact match from the provided pool
-- **category**: trigger, prodrome, medicine, or relief
-- **inferred**: true if you're guessing from context, false if explicitly mentioned
-- **start_at**: ISO datetime if mentioned or inferable (today is $today). null if unknown.
-- **amount**: for medicines only — dosage or count. null if unknown.
-- **relief_scale**: NONE, LOW, MODERATE, or HIGH — how much it helped. NONE if not mentioned.
-- **side_effect_scale**: NONE, LOW, MODERATE, or HIGH — for medicines and reliefs. NONE if not mentioned.
-- **side_effect_notes**: description of side effects. null if none.
-
-INFERENCE EXAMPLES:
-- "had red wine at dinner" → trigger: Alcohol, start_at: ~19:00, inferred: false
-- "took 2 ibuprofen at lunch, helped a lot" → medicine: Ibuprofen, amount: "2", start_at: ~12:00, relief_scale: HIGH
-- "lay in dark room for an hour, took edge off" → relief: Dark room, relief_scale: MODERATE
-- "sumatriptan made me drowsy" → medicine: Sumatriptan, side_effect_scale: MODERATE, side_effect_notes: "drowsy"
-- "busy day at work" → trigger: Stress (inferred), trigger: Screen time (inferred)
-
-RULES:
-- ONLY return labels whose EXACT text exists in the provided pools.
-- Return a single JSON object. No markdown.
-- Format:
-{
-  "items": [
-    {"label": "Ibuprofen", "category": "medicine", "inferred": false, "start_at": "2025-01-15T12:00:00+00:00", "amount": "2", "relief_scale": "HIGH", "side_effect_scale": "NONE", "side_effect_notes": null},
-    {"label": "Stress", "category": "trigger", "inferred": true, "start_at": null, "amount": null, "relief_scale": null, "side_effect_scale": null, "side_effect_notes": null}
-  ]
-}
-""".trimIndent()
-
+    // System prompt lives server-side under context_type "log_parser_evening".
+    // user_message carries all dynamic data: user text, parser results, pools.
     val userMessage = """
 User said: "$noteText"
+
+Already found by deterministic parser: $alreadyFound
+Today's date: $today
 
 TRIGGER pool: ${triggers.joinToString(", ")}
 PRODROME pool: ${prodromes.joinToString(", ")}
@@ -1100,7 +1006,7 @@ Extract everything. JSON only.
 """.trimIndent()
 
     val requestBody = org.json.JSONObject().apply {
-        put("system_prompt", systemPrompt)
+        put("context_type", "log_parser_evening")
         put("user_message", userMessage)
     }
 

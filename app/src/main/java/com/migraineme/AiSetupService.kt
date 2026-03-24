@@ -464,13 +464,12 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         val accessToken = SessionStore.getValidAccessToken(appCtx)
             ?: return@withContext Result.failure(Exception("Not authenticated"))
 
-        val systemPrompt = buildSystemPrompt()
         val userMessage = buildUserMessage(answers, dataContext, availableItems)
 
-        Log.d(TAG, "Sending to ai-setup edge function. System: ${systemPrompt.length} chars, User: ${userMessage.length} chars")
+        Log.d(TAG, "Sending to ai-setup edge function. User: ${userMessage.length} chars")
 
         val requestBody = buildJsonObject {
-            put("system_prompt", systemPrompt)
+            put("context_type", "ai_setup")
             put("user_message", userMessage)
         }
 

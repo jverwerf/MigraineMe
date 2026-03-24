@@ -225,6 +225,7 @@ object Routes {
     const val EVENING_CHECKIN = "evening_checkin"
     const val RECALIBRATION_REVIEW = "recalibration_review"
     const val PAYWALL = "paywall"
+    const val CHAT_ASSISTANT = "chat_assistant"
 }
 
 class MainActivity : ComponentActivity() {
@@ -732,7 +733,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.COMMUNITY ||
             current?.startsWith(Routes.ARTICLE_DETAIL) == true ||
             current?.startsWith(Routes.FORUM_POST_DETAIL) == true ||
-            current == Routes.PAYWALL
+            current == Routes.PAYWALL ||
+            current == Routes.CHAT_ASSISTANT
 
         // Wizard fullscreen: hide top bar + bottom nav for immersive logging
         val isWizardFullscreen = current in setOf(
@@ -746,7 +748,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
             Routes.ONBOARDING, Routes.AI_SETUP, "${Routes.ONBOARDING}/setup",
             Routes.EVENING_CHECKIN, "backfill_loading", "subscribe",
-            Routes.PAYWALL
+            Routes.PAYWALL, Routes.CHAT_ASSISTANT
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -1128,6 +1130,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateToRiskDetail = { nav.navigate(Routes.RISK_DETAIL) },
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
+                            onNavigateToChatAssistant = { nav.navigate(Routes.CHAT_ASSISTANT) },
                             authVm = authVm,
                             logVm = logVm,
                             vm = homeVm,
@@ -1135,6 +1138,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             medicineVm = medVm,
                             reliefVm = reliefVm,
                             symptomVm = symptomVm,
+                        )
+                    }
+                    composable(Routes.CHAT_ASSISTANT) {
+                        ChatAssistantScreen(
+                            onBack = { nav.popBackStack() },
+                            onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) }
                         )
                     }
                     composable(Routes.COMMUNITY) {
@@ -1176,6 +1185,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     // Full migraine wizard flow
                     val wizardClose: () -> Unit = {
                         logVm.clearDraft()
+                        triggerVm.clearRecent()
                         nav.popBackStack(Routes.MIGRAINE, inclusive = false)
                     }
                     composable(Routes.LOG_MIGRAINE) { LogHomeScreen(navController = nav, authVm = authVm, vm = logVm, symptomVm = symptomVm, onClose = wizardClose) }

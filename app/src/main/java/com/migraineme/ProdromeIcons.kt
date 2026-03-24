@@ -467,6 +467,93 @@ object ProdromeIcons {
         }.build()
     }
 
+    // ─── NEW PHYSICAL ────────────────────────────────────────
+
+    /** fatigue — drooping eye with heavy lid */
+    val Fatigue: ImageVector by lazy {
+        ImageVector.Builder("Fatigue", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(2f, 12f); curveTo(6f, 8f, 18f, 8f, 22f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.6f) {
+                moveTo(2f, 12f); curveTo(6f, 14f, 18f, 14f, 22f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.3f, strokeLineCap = StrokeCap.Round) {
+                moveTo(14f, 12f)
+                arcTo(2.2f, 2.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 9.6f, 12f)
+                arcTo(2.2f, 2.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 14f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.5f) {
+                moveTo(8f, 5.5f); lineTo(7.5f, 8f)
+                moveTo(12f, 4.5f); lineTo(12f, 7.5f)
+                moveTo(16f, 5.5f); lineTo(16.5f, 8f)
+            }
+        }.build()
+    }
+
+    /** neck_stiffness — head + shoulders with stiffness marks */
+    val NeckStiffness: ImageVector by lazy {
+        ImageVector.Builder("NeckStiffness", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(15.8f, 7f)
+                arcTo(3.8f, 3.8f, 0f, isMoreThanHalf = true, isPositiveArc = true, 8.2f, 7f)
+                arcTo(3.8f, 3.8f, 0f, isMoreThanHalf = true, isPositiveArc = true, 15.8f, 7f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(10f, 10.8f); lineTo(10f, 13.5f)
+                moveTo(14f, 10.8f); lineTo(14f, 13.5f)
+                moveTo(10f, 13.5f); curveTo(7f, 13.5f, 4f, 16f, 4f, 19f)
+                moveTo(14f, 13.5f); curveTo(17f, 13.5f, 20f, 16f, 20f, 19f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.2f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.7f) {
+                moveTo(3f, 12f); lineTo(5.5f, 13f)
+                moveTo(21f, 12f); lineTo(18.5f, 13f)
+            }
+        }.build()
+    }
+
+    /** thirst — droplet with upward arrow inside */
+    val Thirst: ImageVector by lazy {
+        ImageVector.Builder("Thirst", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 3f)
+                curveTo(12f, 3f, 6f, 10f, 6f, 15f)
+                arcTo(6f, 6f, 0f, isMoreThanHalf = false, isPositiveArc = false, 18f, 15f)
+                curveTo(18f, 10f, 12f, 3f, 12f, 3f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.2f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.7f) {
+                moveTo(12f, 17f); lineTo(12f, 11f)
+                moveTo(9.5f, 13.5f); lineTo(12f, 11f); lineTo(14.5f, 13.5f)
+            }
+        }.build()
+    }
+
+    /** fluid_retention — puffy torso with swell marks on sides */
+    val FluidRetention: ImageVector by lazy {
+        ImageVector.Builder("FluidRetention", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round) {
+                moveTo(15f, 6f)
+                arcTo(3f, 3f, 0f, isMoreThanHalf = true, isPositiveArc = true, 9f, 6f)
+                arcTo(3f, 3f, 0f, isMoreThanHalf = true, isPositiveArc = true, 15f, 6f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(7f, 10f)
+                curveTo(5f, 10f, 4f, 13f, 4f, 16f)
+                curveTo(4f, 18f, 5f, 19f, 7f, 19f)
+                lineTo(17f, 19f)
+                curveTo(19f, 19f, 20f, 18f, 20f, 16f)
+                curveTo(20f, 13f, 19f, 10f, 17f, 10f)
+                close()
+            }
+            path(stroke = stroke, strokeLineWidth = 1.1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.6f) {
+                moveTo(3f, 13f); lineTo(4.5f, 13f)
+                moveTo(3f, 15.5f); lineTo(4.5f, 15.5f)
+                moveTo(21f, 13f); lineTo(19.5f, 13f)
+                moveTo(21f, 15.5f); lineTo(19.5f, 15.5f)
+            }
+        }.build()
+    }
+
     // ─── LOOKUP ──────────────────────────────────────────────
 
     data class ProdromePickerIcon(val key: String, val label: String, val icon: ImageVector)
@@ -489,6 +576,10 @@ object ProdromeIcons {
         // Physical
         ProdromePickerIcon("neck", "Neck / tension", Neck),
         ProdromePickerIcon("frequent_urination", "Frequent urination", FrequentUrination),
+        ProdromePickerIcon("fatigue", "Fatigue", Fatigue),
+        ProdromePickerIcon("neck_stiffness", "Neck stiffness", NeckStiffness),
+        ProdromePickerIcon("thirst", "Thirst", Thirst),
+        ProdromePickerIcon("fluid_retention", "Fluid retention", FluidRetention),
         // Sensitivity
         ProdromePickerIcon("light", "Light sensitivity", Light),
         ProdromePickerIcon("sound", "Sound sensitivity", Sound),

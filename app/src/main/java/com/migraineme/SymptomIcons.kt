@@ -139,6 +139,175 @@ object SymptomIcons {
         }.build()
     }
 
+    // ─── HEADACHE TYPES ───────────────────────────────────────
+
+    /** Regular Migraine — starburst with inner/outer rings and 8 rays */
+    val MigraineStarburst: ImageVector by lazy {
+        ImageVector.Builder("MigraineStarburst", W.dp, H.dp, W, H).apply {
+            // Inner dot
+            path(fill = SolidColor(Color.White), fillAlpha = 0.7f) {
+                moveTo(13.8f, 12f)
+                arcTo(1.8f, 1.8f, 0f, true, true, 10.2f, 12f)
+                arcTo(1.8f, 1.8f, 0f, true, true, 13.8f, 12f)
+            }
+            // Inner ring
+            path(stroke = stroke, strokeLineWidth = 0.85f, strokeLineCap = StrokeCap.Round) {
+                moveTo(15.5f, 12f)
+                arcTo(3.5f, 3.5f, 0f, true, true, 8.5f, 12f)
+                arcTo(3.5f, 3.5f, 0f, true, true, 15.5f, 12f)
+            }
+            // Cardinal rays
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round) {
+                moveTo(12f, 7.1f); lineTo(12f, 2f)
+                moveTo(12f, 16.9f); lineTo(12f, 22f)
+                moveTo(7.1f, 12f); lineTo(2f, 12f)
+                moveTo(16.9f, 12f); lineTo(22f, 12f)
+            }
+            // Diagonal rays
+            path(stroke = stroke, strokeLineWidth = 0.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(8.7f, 8.7f); lineTo(4.8f, 4.8f)
+                moveTo(15.3f, 8.7f); lineTo(19.2f, 4.8f)
+                moveTo(8.7f, 15.3f); lineTo(4.8f, 19.2f)
+                moveTo(15.3f, 15.3f); lineTo(19.2f, 19.2f)
+            }
+            // Outer ring
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round) {
+                moveTo(17.7f, 12f)
+                arcTo(5.7f, 5.7f, 0f, true, true, 6.3f, 12f)
+                arcTo(5.7f, 5.7f, 0f, true, true, 17.7f, 12f)
+            }
+        }.build()
+    }
+
+    /** Vestibular migraine — ripple rings (dizziness/shockwave) */
+    val Vestibular: ImageVector by lazy {
+        ImageVector.Builder("Vestibular", W.dp, H.dp, W, H).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(13.4f, 12f)
+                arcTo(1.4f, 1.4f, 0f, true, true, 10.6f, 12f)
+                arcTo(1.4f, 1.4f, 0f, true, true, 13.4f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.8f) {
+                moveTo(16.2f, 12f)
+                arcTo(4.2f, 4.2f, 0f, true, true, 7.8f, 12f)
+                arcTo(4.2f, 4.2f, 0f, true, true, 16.2f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 0.85f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.5f) {
+                moveTo(19f, 12f)
+                arcTo(7f, 7f, 0f, true, true, 5f, 12f)
+                arcTo(7f, 7f, 0f, true, true, 19f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 0.7f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.25f) {
+                moveTo(21.8f, 12f)
+                arcTo(9.8f, 9.8f, 0f, true, true, 2.2f, 12f)
+                arcTo(9.8f, 9.8f, 0f, true, true, 21.8f, 12f)
+            }
+        }.build()
+    }
+
+    /** Ocular migraine — eye with inner circle and pupil */
+    val Ocular: ImageVector by lazy {
+        ImageVector.Builder("Ocular", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.2f, strokeLineCap = StrokeCap.Round) {
+                moveTo(2f, 12f)
+                curveTo(6f, 5f, 18f, 5f, 22f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.2f, strokeLineCap = StrokeCap.Round) {
+                moveTo(2f, 12f)
+                curveTo(6f, 19f, 18f, 19f, 22f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.1f, strokeLineCap = StrokeCap.Round) {
+                moveTo(15.2f, 12f)
+                arcTo(3.2f, 3.2f, 0f, true, true, 8.8f, 12f)
+                arcTo(3.2f, 3.2f, 0f, true, true, 15.2f, 12f)
+            }
+            path(fill = SolidColor(Color.White)) {
+                moveTo(13.3f, 12f)
+                arcTo(1.3f, 1.3f, 0f, true, true, 10.7f, 12f)
+                arcTo(1.3f, 1.3f, 0f, true, true, 13.3f, 12f)
+            }
+        }.build()
+    }
+
+    /** Hemiplegic migraine — filled lightning bolt */
+    val Hemiplegic: ImageVector by lazy {
+        ImageVector.Builder("Hemiplegic", W.dp, H.dp, W, H).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(13.2f, 1.2f)
+                lineTo(7.2f, 10.8f)
+                lineTo(12f, 10.8f)
+                lineTo(6.7f, 22.8f)
+                lineTo(16.8f, 9.6f)
+                lineTo(12f, 9.6f)
+                lineTo(16.8f, 1.2f)
+                close()
+            }
+        }.build()
+    }
+
+    /** Tension headache — concentric rings with centre dot */
+    val Tension: ImageVector by lazy {
+        ImageVector.Builder("Tension", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.3f, strokeLineCap = StrokeCap.Round) {
+                moveTo(21f, 12f)
+                arcTo(9f, 9f, 0f, true, true, 3f, 12f)
+                arcTo(9f, 9f, 0f, true, true, 21f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.55f) {
+                moveTo(17f, 12f)
+                arcTo(5f, 5f, 0f, true, true, 7f, 12f)
+                arcTo(5f, 5f, 0f, true, true, 17f, 12f)
+            }
+            path(fill = SolidColor(Color.White), fillAlpha = 0.5f) {
+                moveTo(13.8f, 12f)
+                arcTo(1.8f, 1.8f, 0f, true, true, 10.2f, 12f)
+                arcTo(1.8f, 1.8f, 0f, true, true, 13.8f, 12f)
+            }
+        }.build()
+    }
+
+    /** Cluster headache — offset target with right arrow */
+    val Cluster: ImageVector by lazy {
+        ImageVector.Builder("Cluster", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.5f) {
+                moveTo(18f, 12f)
+                arcTo(8f, 8f, 0f, true, true, 2f, 12f)
+                arcTo(8f, 8f, 0f, true, true, 18f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.75f) {
+                moveTo(14f, 12f)
+                arcTo(4f, 4f, 0f, true, true, 6f, 12f)
+                arcTo(4f, 4f, 0f, true, true, 14f, 12f)
+            }
+            path(fill = SolidColor(Color.White)) {
+                moveTo(11.4f, 12f)
+                arcTo(1.4f, 1.4f, 0f, true, true, 8.6f, 12f)
+                arcTo(1.4f, 1.4f, 0f, true, true, 11.4f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(16f, 12f); lineTo(22f, 12f)
+                moveTo(19.5f, 9.5f); lineTo(22f, 12f); lineTo(19.5f, 14.5f)
+            }
+        }.build()
+    }
+
+    /** Sinus headache — droplet with horizontal line */
+    val Sinus: ImageVector by lazy {
+        ImageVector.Builder("Sinus", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 3f)
+                curveTo(12f, 3f, 5f, 10f, 5f, 15f)
+                curveTo(5f, 18.9f, 8.1f, 22f, 12f, 22f)
+                curveTo(15.9f, 22f, 19f, 18.9f, 19f, 15f)
+                curveTo(19f, 10f, 12f, 3f, 12f, 3f)
+                close()
+            }
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.55f) {
+                moveTo(9f, 15.5f); lineTo(15f, 15.5f)
+            }
+        }.build()
+    }
+
     // ─── ACCOMPANYING EXPERIENCE ──────────────────────────────
 
     /** With aura — starburst / sparkle */
@@ -610,6 +779,13 @@ object SymptomIcons {
         PickerIcon("fatigue", "Fatigue", Fatigue),
         PickerIcon("blur", "Blur", BlurredVision),
         PickerIcon("tingling", "Tingle", Tingling),
+        PickerIcon("migraine_starburst", "Migraine", MigraineStarburst),
+        PickerIcon("vestibular", "Vestibular", Vestibular),
+        PickerIcon("ocular", "Ocular", Ocular),
+        PickerIcon("hemiplegic", "Hemiplegic", Hemiplegic),
+        PickerIcon("tension", "Tension", Tension),
+        PickerIcon("cluster", "Cluster", Cluster),
+        PickerIcon("sinus", "Sinus", Sinus),
     ) }
 
     /** Look up icon by key (for DB-stored custom icon choices) */
@@ -638,6 +814,13 @@ object SymptomIcons {
         label.contains("Fatigue", ignoreCase = true) -> Fatigue
         label.contains("Blur", ignoreCase = true) || label.contains("vision", ignoreCase = true) -> BlurredVision
         label.contains("Tingl", ignoreCase = true) || label.contains("numb", ignoreCase = true) -> Tingling
+        label.contains("Vestibular", ignoreCase = true) -> Vestibular
+        label.contains("Ocular", ignoreCase = true) -> Ocular
+        label.contains("Hemiplegic", ignoreCase = true) -> Hemiplegic
+        label.contains("Tension", ignoreCase = true) -> Tension
+        label.contains("Cluster", ignoreCase = true) -> Cluster
+        label.contains("Sinus", ignoreCase = true) -> Sinus
+        label.contains("Migraine", ignoreCase = true) -> MigraineStarburst
         else -> null
         }
     }

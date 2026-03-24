@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -85,6 +86,9 @@ fun QuickLogMedicineScreen(
     }
     val allLabels = remember(pool) { pool.map { it.label } }
 
+    // Icon lookup: label → category (medicines use category for icon resolution)
+    val categoryByLabel = remember(pool) { pool.associate { it.label to it.category } }
+
     Box {
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -150,8 +154,10 @@ fun QuickLogMedicineScreen(
                                     enabled = false
                                 )
                                 frequentLabels.forEach { label ->
+                                    val icon = MedicineIcons.forKey(categoryByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
+                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
                                         onClick = {
                                             selectedMedicine = label
                                             menuOpen = false
@@ -168,8 +174,10 @@ fun QuickLogMedicineScreen(
                                     enabled = false
                                 )
                                 allLabels.forEach { label ->
+                                    val icon = MedicineIcons.forKey(categoryByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
+                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
                                         onClick = {
                                             selectedMedicine = label
                                             menuOpen = false

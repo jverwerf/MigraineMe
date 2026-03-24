@@ -78,10 +78,15 @@ fun TriggersScreen(
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
+    // Track which reference date the recent data was loaded for
+    var recentLoadedForDate by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(authState.accessToken, draft.migraine?.beganAtIso) {
         authState.accessToken?.let { token ->
             vm.loadAll(token)
-            vm.loadRecent(token, draft.migraine?.beganAtIso)
+            val refDate = draft.migraine?.beganAtIso
+            vm.loadRecent(token, refDate)
+            recentLoadedForDate = refDate
         }
     }
 
@@ -102,8 +107,11 @@ fun TriggersScreen(
 
     // ── Auto-select recent triggers (once, on first load — wizard only) ──
     // Only auto-select when user has explicitly set a migraine date
-    LaunchedEffect(recentDaysAgo, pool) {
-        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty() && draft.migraine?.beganAtIso != null) {
+    // AND the recent data was loaded for the CURRENT date (not stale from a previous migraine)
+    LaunchedEffect(recentDaysAgo, pool, recentLoadedForDate) {
+        val currentDate = draft.migraine?.beganAtIso
+        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty()
+            && currentDate != null && recentLoadedForDate == currentDate) {
             val currentLabels = draft.triggers.map { it.type }.toSet()
             val poolLabelsSet = pool.map { it.label }.toSet()
             val toAdd = recentDaysAgo.keys

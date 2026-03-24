@@ -22,6 +22,7 @@ class GarminTokenStore(context: Context) {
         private const val KEY_EXPIRES_AT = "expires_at_millis"
         private const val KEY_GARMIN_USER_ID = "garmin_user_id"
         private const val KEY_OWNER = "owner_user_id"
+        private const val KEY_DEVICE_NAME = "device_name"
     }
 
     private val prefs = context.applicationContext
@@ -90,5 +91,13 @@ class GarminTokenStore(context: Context) {
 
     fun clear() {
         prefs.edit().clear().apply()
+    }
+
+    fun saveDeviceName(name: String) {
+        prefs.edit().putString(KEY_DEVICE_NAME, name).apply()
+    }
+
+    fun loadDeviceName(): String? {
+        return prefs.getString(KEY_DEVICE_NAME, null)
     }
 }

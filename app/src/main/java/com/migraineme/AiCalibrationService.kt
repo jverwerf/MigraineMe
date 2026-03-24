@@ -143,52 +143,8 @@ object AiCalibrationService {
 
     // ═════════════════════════════════════════════════════════════════════
     // CALL 1 — The Neurologist
+    // System prompt lives server-side under context_type "calibration_call1".
     // ═════════════════════════════════════════════════════════════════════
-
-    private val CALL1_SYSTEM_PROMPT = """
-You are a neurologist and migraine specialist assessing a new patient's profile to configure a migraine prediction app.
-
-You will receive:
-1. The patient's questionnaire answers as a narrative profile
-2. LOCKED trigger/prodrome ratings from their direct answers (these are FLOOR values — NEVER lower them)
-3. Their connected data sources and enabled metrics
-4. Available trigger and prodrome labels you may reference
-
-YOUR TASK — Two steps:
-
-STEP 1 — CLINICAL ASSESSMENT:
-Analyse this patient as a neurologist would. Write 2-3 short paragraphs covering:
-- Key patterns you see in their profile
-- Interactions between lifestyle factors (e.g. poor sleep + high stress + caffeine)
-- Triggers or risks they may be underestimating based on the overall picture
-- What their trajectory and experience tell you about their migraine evolution
-Write this for the PATIENT to read — warm, clear, insightful. No medical jargon. Address them as "you/your". Keep it concise but meaningful.
-
-STEP 2 — SEVERITY ADJUSTMENTS:
-Based on your clinical assessment, identify triggers and prodromes that should be ELEVATED or ACTIVATED.
-
-RULES:
-- NEVER lower a LOCKED rating — these are the user's own reported experience
-- You may ELEVATE locked ratings (LOW → MILD, MILD → HIGH) if clinical evidence supports it
-- You may ACTIVATE triggers currently rated NONE if the profile strongly suggests them — but be conservative
-- Use ONLY exact label strings from the AVAILABLE ITEMS lists
-- For each adjustment, provide clear reasoning tied to your clinical assessment
-- Limit adjustments to genuinely meaningful ones (typically 3-8, not dozens)
-
-Also generate data_warnings where a HIGH or MILD trigger lacks the relevant data source.
-Do NOT generate data_warnings for manual-only triggers that have no automatic data source (e.g. Sleep apnea, Jet lag, Menstruation, Ovulation, Contraceptive, Let-down, Dehydration, and any food/drink triggers) — these are logged manually by the user and do not need connected metrics.
-
-Respond with ONLY valid JSON (no markdown fences):
-{
-  "clinical_assessment": "Your 2-3 paragraph assessment for the patient...",
-  "adjustments": [
-    {"label": "exact label from pool", "from": "CURRENT_SEVERITY", "to": "NEW_SEVERITY", "reasoning": "brief clinical justification"}
-  ],
-  "data_warnings": [
-    {"type": "missing_data|missing_connection|suggestion", "message": "user-facing message", "metric": "metric_name|null", "severity": "high|medium|low"}
-  ]
-}
-""".trimIndent()
 
     private fun buildCall1UserMessage(
         mapping: DeterministicMapper.MappingResult,
@@ -276,7 +232,6 @@ Respond with ONLY valid JSON (no markdown fences):
                 appendLine("Metric sources: ${dataContext.metricSources.entries.joinToString(", ") { "${it.key}=${it.value}" }}")
             }
             if (dataContext.ouraConnected) {
-                appendLine("NOTE: Oura skin_temp_daily is a DEVIATION from baseline (°C), not absolute temperature. Normal range: -0.5 to +0.5. Thresholds are set at ±0.8°C.")
                 appendLine("NOTE: Oura stress_index_daily is computed as stress_high/(stress_high+recovery_high)*100, a 0-100 index.")
             }
             if (dataContext.polarConnected) {
@@ -319,7 +274,7 @@ Respond with ONLY valid JSON (no markdown fences):
         val userMessage = buildCall1UserMessage(mapping, items, answers, dataContext)
         Log.d(TAG, "Call 1 user message: ${userMessage.length} chars")
 
-        val responseJson = callEdgeFunction(accessToken, CALL1_SYSTEM_PROMPT, userMessage)
+        val responseJson = callEdgeFunction(accessToken, "calibration_call1", userMessage)
         return parseCall1Response(responseJson)
     }
 
@@ -475,125 +430,9 @@ Respond with ONLY valid JSON (no markdown fences):
 
     // ═════════════════════════════════════════════════════════════════════
     // CALL 2 — The Statistician
+    // System prompt lives server-side under context_type "calibration_call2".
+    // Companion roster for call3 is fetched server-side.
     // ═════════════════════════════════════════════════════════════════════
-
-    private val CALL2_SYSTEM_PROMPT_BASE = """
-You are a biostatistician calibrating a migraine risk gauge. You need to understand exactly how this app's scoring engine works, then set thresholds that make sense for this specific patient.
-
-=== HOW THE SCORING ENGINE WORKS ===
-
-Every day, the app calculates a RISK SCORE by looking at all trigger events from the last 7 days.
-
-For each event, the score contribution = decay_weight[severity][days_ago].
-Default decay weights:
-  HIGH:  day0=10, day1=5, day2=2.5, day3=1, day4=0, day5=0, day6=0
-  MILD:  day0=6,  day1=3, day2=1.5, day3=0.5, day4=0, day5=0, day6=0
-  LOW:   day0=3,  day1=1.5, day2=0, day3=0, day4=0, day5=0, day6=0
-
-The daily score = SUM of all event contributions.
-
-Example: If today the user has 1 HIGH trigger (10pts) + 1 MILD trigger (6pts) + yesterday had 1 HIGH (5pts decay), today's score = 21.
-
-The gauge zones are:
-  score >= HIGH threshold → RED (genuine warning)
-  score >= MILD threshold → YELLOW (building risk)
-  score >= LOW threshold  → AMBER (worth noticing)
-  score < LOW threshold   → GREEN (normal)
-
-=== TWO TYPES OF TRIGGERS ===
-
-AUTO-DETECTED triggers fire automatically when connected data (wearables, weather, nutrition tracking) crosses a threshold. These can fire EVERY DAY without the user doing anything. Examples: sleep duration, weather pressure, HRV, screen time.
-
-MANUAL triggers are logged by the user when they experience them. These fire occasionally. Examples: stress, alcohol, skipped meals, strong smells.
-
-This distinction is CRITICAL for calibration:
-- A user with many auto-detected triggers will have a higher BASELINE score every day
-- The thresholds must sit ABOVE that baseline, otherwise the gauge is permanently yellow/red
-- Manual triggers stacking ON TOP of the auto baseline is what should push into warning zones
-
-=== YOUR TASK ===
-
-Given this patient's clinical profile, their trigger list (auto vs manual, with severities), and their migraine frequency:
-
-1. THINK about what a normal day looks like for this patient score-wise:
-   - How many auto triggers will realistically fire on a typical day? (Not all of them — only when metrics cross thresholds)
-   - What's the baseline score from auto-detect alone?
-
-2. THINK about what a pre-migraine buildup looks like:
-   - They get migraines at [frequency]. So most days should be GREEN.
-   - A few days per month should climb into yellow/red as triggers stack up before an attack.
-   - Manual triggers (stress, alcohol, etc.) piling onto a bad auto day is what creates real risk.
-
-3. SET THRESHOLDS so that:
-   - Normal days (just routine auto-detect) → GREEN
-   - A few extra triggers stacking → AMBER (LOW threshold)
-   - Genuine buildup with multiple triggers converging → YELLOW (MILD threshold)  
-   - Serious warning with many triggers + decay stacking from previous days → RED (HIGH threshold)
-   - Someone who gets migraines "1-3 per month" should NOT be in red every day. Maybe 2-4 days/month.
-
-4. SET DECAY CURVES:
-   - Frequent migraines: steeper curves (triggers hit hard, fade fast)
-   - Infrequent migraines: flatter curves (cumulative buildup matters more)
-
-5. WRITE calibration_notes for the patient (2-3 paragraphs, warm, no jargon, address as "you/your"):
-   - What their trigger setup looks like (auto vs manual breakdown)
-   - How the gauge will behave for them day-to-day
-   - What pushing into yellow/red actually means for them
-
-6. WRITE a combined summary (2-3 sentences) covering the clinical insight + gauge setup.
-
-""".trimIndent()
-
-    private val CALL2_JSON_FORMAT = """
-Respond with ONLY valid JSON (no markdown fences):
-{
-  "gauge_thresholds": {"low": N, "mild": N, "high": N, "reasoning": "brief technical reasoning"},
-  "decay_weights": [
-    {"severity": "HIGH", "day0": N, "day1": N, "day2": N, "day3": N, "day4": N, "day5": N, "day6": N, "reasoning": "..."},
-    {"severity": "MILD", "day0": N, "day1": N, "day2": N, "day3": N, "day4": N, "day5": N, "day6": N, "reasoning": "..."},
-    {"severity": "LOW", "day0": N, "day1": N, "day2": N, "day3": N, "day4": N, "day5": N, "day6": N, "reasoning": "..."}
-  ],
-  "calibration_notes": "Your 2-3 paragraph explanation for the patient...",
-  "summary": "2-3 sentence combined summary"
-}
-""".trimIndent()
-
-    private suspend fun fetchCompanionRoster(accessToken: String): String {
-        return try {
-            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/ai_companions?is_active=eq.true&select=slug,name,triggers,interests&order=slug.asc"
-            val client = HttpClient(io.ktor.client.engine.android.Android)
-            try {
-                val response = client.get(url) {
-                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                    header("Authorization", "Bearer $accessToken")
-                }
-                val body = response.bodyAsText()
-                val arr = org.json.JSONArray(body)
-                if (arr.length() == 0) return ""
-                val roster = StringBuilder()
-                for (i in 0 until arr.length()) {
-                    val c = arr.getJSONObject(i)
-                    val slug = c.getString("slug")
-                    val name = c.getString("name")
-                    val triggers = mutableListOf<String>()
-                    val interests = mutableListOf<String>()
-                    c.optJSONArray("triggers")?.let { t -> for (j in 0 until t.length()) triggers.add(t.getString(j)) }
-                    c.optJSONArray("interests")?.let { t -> for (j in 0 until t.length()) interests.add(t.getString(j)) }
-                    roster.appendLine("- \"$slug\" ($name) — Triggers: ${triggers.joinToString(", ")}. Interests: ${interests.joinToString(", ")}.")
-                }
-                roster.toString().trim()
-            } finally {
-                client.close()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch companion roster: ${e.message}")
-            ""
-        }
-    }
-
-    private fun buildCall2SystemPrompt(): String {
-        return CALL2_SYSTEM_PROMPT_BASE + "\n\n" + CALL2_JSON_FORMAT
-    }
 
     private fun buildCall2UserMessage(
         profile: DeterministicMapper.ProfileContext,
@@ -624,7 +463,6 @@ Respond with ONLY valid JSON (no markdown fences):
             if (enabled.isNotEmpty()) appendLine("Enabled metrics: ${enabled.joinToString(", ")}")
             if (disabled.isNotEmpty()) appendLine("Disabled metrics: ${disabled.joinToString(", ")}")
             if (dataContext.ouraConnected) {
-                appendLine("NOTE: Oura skin_temp_daily is a DEVIATION from baseline (°C), not absolute. Thresholds at ±0.8°C.")
                 appendLine("NOTE: Oura stress_index_daily is stress_high/(stress_high+recovery_high)*100, scale 0-100.")
             }
         } else {
@@ -673,8 +511,7 @@ Respond with ONLY valid JSON (no markdown fences):
         )
         Log.d(TAG, "Call 2 user message: ${userMessage.length} chars")
 
-        val systemPrompt = buildCall2SystemPrompt()
-        val responseJson = callEdgeFunction(accessToken, systemPrompt, userMessage)
+        val responseJson = callEdgeFunction(accessToken, "calibration_call2", userMessage)
         return parseCall2Response(responseJson)
     }
 
@@ -739,23 +576,6 @@ Respond with ONLY valid JSON (no markdown fences):
         prodromeStats: TriggerStats,
         favorites: DeterministicMapper.Favorites,
     ): List<String> {
-        val roster = fetchCompanionRoster(accessToken)
-        if (roster.isBlank()) return emptyList()
-
-        val systemPrompt = """
-You are matching a migraine patient to AI companion curators. Each companion covers specific triggers and interests. Your job is to compare the patient's clinical picture against each companion's triggers and interests, and return only the companions where there is a clear overlap.
-
-=== COMPANIONS ===
-$roster
-
-=== RULES ===
-- A companion is a match ONLY if the patient's triggers, prodromes, medicines, symptoms, or reliefs overlap with that companion's triggers or interests.
-- You may return 0-4 companions. Fewer genuine matches is better than padding with weak ones.
-- If nothing overlaps, return an empty array.
-
-Respond with ONLY a JSON array of slugs. Examples: ["luna", "kai"] or []
-""".trimIndent()
-
         val userMessage = buildString {
             appendLine("=== CLINICAL ASSESSMENT ===")
             appendLine(clinicalAssessment.ifBlank { "Not available" })
@@ -781,7 +601,7 @@ Respond with ONLY a JSON array of slugs. Examples: ["luna", "kai"] or []
             appendLine(if (favorites.symptoms.isNotEmpty()) favorites.symptoms.joinToString(", ") else "None")
         }
 
-        val responseJson = callEdgeFunction(accessToken, systemPrompt, userMessage)
+        val responseJson = callEdgeFunction(accessToken, "calibration_call3", userMessage)
         return parseCall3Response(responseJson)
     }
 
@@ -808,11 +628,11 @@ Respond with ONLY a JSON array of slugs. Examples: ["luna", "kai"] or []
 
     private suspend fun callEdgeFunction(
         accessToken: String,
-        systemPrompt: String,
+        contextType: String,
         userMessage: String,
     ): String {
         val requestBody = JSONObject().apply {
-            put("system_prompt", systemPrompt)
+            put("context_type", contextType)
             put("user_message", userMessage)
         }
 

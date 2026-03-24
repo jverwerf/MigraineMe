@@ -250,6 +250,13 @@ fun MonitorSleepScreen(
                                 }
                             }
                         }
+                        // Source attribution
+                        if (detail.sourceLabel.isNotBlank() && detail.sourceLabel != "Unknown") {
+                            Spacer(Modifier.height(4.dp))
+                            HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                            Spacer(Modifier.height(8.dp))
+                            SourceBadgeRow(listOf(detail.sourceLabel.lowercase()))
+                        }
                     }
                 }
 
@@ -338,12 +345,7 @@ private suspend fun loadSleepDetailData(
     if (duration == null) return@withContext null
 
     val sourceInfo = try { sleepFetchSource(ctx, token, date) } catch (_: Exception) { null }
-    val sourceLabel = when (sourceInfo) {
-        "phone" -> "Phone"
-        "whoop" -> "WHOOP"
-        "health_connect" -> "Health Connect"
-        else -> "Unknown"
-    }
+    val sourceLabel = if (sourceInfo != null) sourceDisplayLabel(sourceInfo, ctx) else "Unknown"
 
     val fellAsleep = try { sleepFetchTime(ctx, token, date, "fell_asleep_time_daily") } catch (_: Exception) { null }
     val wokeUp = try { sleepFetchTime(ctx, token, date, "woke_up_time_daily") } catch (_: Exception) { null }

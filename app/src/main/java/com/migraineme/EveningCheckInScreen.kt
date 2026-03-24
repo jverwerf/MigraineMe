@@ -1093,36 +1093,8 @@ internal suspend fun callGptForMatches(
     medicines: List<String>,
     reliefs: List<String>
 ): List<AiMatchItem> {
-    val systemPrompt = """
-You are a migraine specialist AI. The user describes their day in natural language. Your job is to figure out which items from their personal pools are LIKELY relevant — even if not explicitly mentioned.
-
-Think like a neurologist and infer what the situation implies:
-
-EXAMPLES:
-- "went to a festival" → Loud noise, Bright light, Alcohol, Dehydration, Poor sleep, Stress, Overexertion
-- "busy day at work" → Stress, Excessive screen time, Poor posture, Skipped meal, Dehydration
-- "flew to Spain" → Travel, Altitude change, Dehydration, Irregular sleep, Jet lag, Poor diet
-- "had pizza and beer with mates" → Alcohol, Processed food, Cheese, Late meal
-- "kids kept me up all night" → Poor sleep, Sleep deprivation, Stress, Fatigue
-- "spent all day painting the house" → Overexertion, Strong smell, Neck tension, Dehydration, Skipped meal
-- "had a migraine this morning, took tablets and lay down" → look for medicines (tablets, pills) and reliefs (rest, dark room) in their pools
-- "feeling off, bit dizzy and nauseous" → look for prodromes like Dizziness, Nausea, Fatigue
-- "period started today" → Menstruation, Hormonal change
-- "skipped breakfast, only had coffee" → Skipped meal, Caffeine, Dehydration
-- "hungover" → Alcohol, Dehydration, Poor sleep, Nausea
-- "stared at screens all day on deadline" → Excessive screen time, Stress, Poor posture, Skipped meal, Eye strain
-- "went for a long run" → Overexertion, Dehydration
-- "argument with partner" → Emotional stress, Stress, Anxiety
-- "weather changed suddenly, got really hot" → Weather change, Dehydration, Bright light
-
-RULES:
-- ONLY return items whose EXACT label exists in the provided pools. Never invent labels.
-- Be thorough — flag anything that is likely or plausible, not just certain.
-- Return a JSON array only. No markdown, no explanation.
-- Each item: {"label": "exact pool label", "category": "trigger|prodrome|medicine|relief"}
-- If genuinely nothing matches, return: []
-""".trimIndent()
-
+    // System prompt lives server-side under context_type "evening_checkin".
+    // user_message carries all dynamic data: user text and pool labels.
     val userMessage = """
 User said: "$noteText"
 
@@ -1135,7 +1107,7 @@ Which items from these pools are likely relevant to what the user described? Thi
 """.trimIndent()
 
     val requestBody = org.json.JSONObject().apply {
-        put("system_prompt", systemPrompt)
+        put("context_type", "evening_checkin")
         put("user_message", userMessage)
     }
 

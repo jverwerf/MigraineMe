@@ -54,6 +54,7 @@ data class PhysicalGraphDay(
     val skinTemp: Double?,
     val respiratoryRate: Double?,
     val stress: Double?,
+    val strain: Double?,
     val highHrZones: Double?,
     val steps: Double?,
     val weight: Double?,
@@ -82,11 +83,16 @@ fun PhysicalHistoryGraph(
     var isLoading by remember { mutableStateOf(true) }
     var selectedMetrics by remember { mutableStateOf<Set<String>>(setOf(PhysicalCardConfig.METRIC_RECOVERY)) }
     var migraineDates by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var sources by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(days, endDate) {
         scope.launch {
             graphResult = loadPhysicalGraphData(context, days, endDate)
             migraineDates = MigraineOverlayHelper.fetchMigraineDates(context, days, endDate)
+            val token = SessionStore.getValidAccessToken(context)
+            if (token != null) {
+                sources = fetchSourcesForDate(context, token, java.time.LocalDate.now().toString(), listOf("hrv_daily", "resting_hr_daily", "recovery_score_daily", "steps_daily"))
+            }
             isLoading = false
         }
     }
@@ -113,6 +119,11 @@ fun PhysicalHistoryGraph(
             if (onClick != null) {
                 Text("View Full →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
             }
+        }
+
+        if (sources.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            SourceBadgeRow(sources)
         }
 
         Spacer(Modifier.height(8.dp))
@@ -402,6 +413,7 @@ private fun getPhysicalDayValue(day: PhysicalGraphDay, metric: String): Float? {
         PhysicalCardConfig.METRIC_SKIN_TEMP -> day.skinTemp?.toFloat()
         PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> day.respiratoryRate?.toFloat()
         PhysicalCardConfig.METRIC_STRESS -> day.stress?.toFloat()
+        PhysicalCardConfig.METRIC_STRAIN -> day.strain?.toFloat()
         PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> day.highHrZones?.toFloat()
         PhysicalCardConfig.METRIC_STEPS -> day.steps?.toFloat()
         PhysicalCardConfig.METRIC_WEIGHT -> day.weight?.toFloat()
@@ -416,6 +428,7 @@ private fun formatPhysicalValue(value: Float, unit: String): String {
     return when (unit) {
         "%", "bpm", "min", "mmHg", "mg/dL" -> "${value.toInt()}$unit"
         "ms" -> "${value.toInt()} ms"
+        "kJ" -> "${value.toInt()} kJ"
         "°C" -> String.format("%.1f°C", value)
         "kg" -> String.format("%.1f kg", value)
         "" -> "%,d".format(value.toInt())
@@ -454,6 +467,7 @@ private suspend fun loadPhysicalGraphData(
         val bodyFatList = fetchDailyDoubles(client, token, "body_fat_daily", userId, "value_pct", fetchLimit)
         val respRateList = fetchDailyDoubles(client, token, "respiratory_rate_daily", userId, "value_bpm", fetchLimit)
         val glucoseList = fetchDailyDoubles(client, token, "blood_glucose_daily", userId, "value_mgdl", fetchLimit)
+        val strainList = fetchDailyDoubles(client, token, "strain_daily", userId, "value_kilojoule", fetchLimit)
         val bpList = fetchDailyBp(client, token, userId, fetchLimit)
 
         // Build maps by date
@@ -469,6 +483,7 @@ private suspend fun loadPhysicalGraphData(
         val bodyFatMap = bodyFatList.associateBy { it.first }
         val respRateMap = respRateList.associateBy { it.first }
         val glucoseMap = glucoseList.associateBy { it.first }
+        val strainMap = strainList.associateBy { it.first }
         val bpMap = bpList.associateBy { it.first }
 
         // Collect all dates that have any data
@@ -485,6 +500,7 @@ private suspend fun loadPhysicalGraphData(
         bodyFatMap.keys.forEach { allDates.add(it) }
         respRateMap.keys.forEach { allDates.add(it) }
         glucoseMap.keys.forEach { allDates.add(it) }
+        strainMap.keys.forEach { allDates.add(it) }
         bpMap.keys.forEach { allDates.add(it) }
 
         val graphDays = allDates
@@ -500,6 +516,7 @@ private suspend fun loadPhysicalGraphData(
                     skinTemp = skinTempMap[date]?.value_celsius,
                     respiratoryRate = respRateMap[date]?.second,
                     stress = stressMap[date]?.value,
+                    strain = strainMap[date]?.second,
                     highHrZones = highHrMap[date]?.value_minutes,
                     steps = stepsMap[date]?.second,
                     weight = weightMap[date]?.second,

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 
 import androidx.compose.material.icons.Icons
@@ -87,6 +88,9 @@ fun QuickLogReliefScreen(
     }
     val allLabels = remember(pool) { pool.map { it.label } }
 
+    // Icon lookup: label → iconKey
+    val iconKeyByLabel = remember(pool) { pool.associate { it.label to it.iconKey } }
+
     Box {
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -152,8 +156,10 @@ fun QuickLogReliefScreen(
                                     enabled = false
                                 )
                                 frequentLabels.forEach { label ->
+                                    val icon = ReliefIcons.forLabel(label, iconKeyByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
+                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
                                         onClick = {
                                             selectedRelief = label
                                             menuOpen = false
@@ -170,8 +176,10 @@ fun QuickLogReliefScreen(
                                     enabled = false
                                 )
                                 allLabels.forEach { label ->
+                                    val icon = ReliefIcons.forLabel(label, iconKeyByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
+                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
                                         onClick = {
                                             selectedRelief = label
                                             menuOpen = false

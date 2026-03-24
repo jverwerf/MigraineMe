@@ -1046,7 +1046,7 @@ class InsightsViewModel : ViewModel() {
         }
 
         //  Additional physical 
-        map["strain"] = fetchAndParse(client, base, key, token, userId, "strain_daily", "value_strain", cutoff)
+        map["strain"] = fetchAndParse(client, base, key, token, userId, "strain_daily", "value_kilojoule", cutoff)
 
         //  Additional mental / phone 
         map["late_screen"] = fetchAndParse(client, base, key, token, userId, "screen_time_late_night", "value_hours", cutoff)

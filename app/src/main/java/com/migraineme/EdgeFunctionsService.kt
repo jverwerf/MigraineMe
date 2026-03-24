@@ -245,6 +245,7 @@ class EdgeFunctionsService {
     suspend fun backfillPolar(context: Context): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
 
         val client = buildClient()
         return try {
@@ -254,12 +255,13 @@ class EdgeFunctionsService {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
                 contentType(ContentType.Application.Json)
-                setBody("{}")
+                setBody("""{"user_id":"$userId"}""")
             }
 
             val ok = res.status.value in 200..299
             if (!ok) {
-                Log.e("EdgeFunctionsService", "backfillPolar failed: ${res.status.value}")
+                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
+                Log.e("EdgeFunctionsService", "backfillPolar failed: ${res.status.value} $bodyText")
             }
             ok
         } catch (t: Throwable) {
@@ -278,6 +280,7 @@ class EdgeFunctionsService {
     suspend fun backfillOura(context: Context): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
 
         val client = buildClient()
         return try {
@@ -287,12 +290,13 @@ class EdgeFunctionsService {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
                 contentType(ContentType.Application.Json)
-                setBody("{}")
+                setBody("""{"user_id":"$userId"}""")
             }
 
             val ok = res.status.value in 200..299
             if (!ok) {
-                Log.e("EdgeFunctionsService", "backfillOura failed: ${res.status.value}")
+                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
+                Log.e("EdgeFunctionsService", "backfillOura failed: ${res.status.value} $bodyText")
             }
             ok
         } catch (t: Throwable) {
@@ -312,6 +316,7 @@ class EdgeFunctionsService {
     suspend fun backfillGarmin(context: Context): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
 
         val client = buildClient()
         return try {
@@ -321,12 +326,13 @@ class EdgeFunctionsService {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
                 contentType(ContentType.Application.Json)
-                setBody("{}")
+                setBody("""{"user_id":"$userId"}""")
             }
 
             val ok = res.status.value in 200..299
             if (!ok) {
-                Log.e("EdgeFunctionsService", "backfillGarmin failed: ${res.status.value}")
+                val bodyText = runCatching { res.bodyAsText() }.getOrDefault("")
+                Log.e("EdgeFunctionsService", "backfillGarmin failed: ${res.status.value} $bodyText")
             }
             ok
         } catch (t: Throwable) {

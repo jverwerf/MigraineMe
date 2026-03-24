@@ -317,6 +317,82 @@ object ReliefIcons {
         }.build()
     }
 
+    /** Acupuncture — person silhouette with inserted needles */
+    val Acupuncture: ImageVector by lazy {
+        ImageVector.Builder("Acupuncture", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round) {
+                moveTo(14.5f, 5f)
+                arcTo(2.5f, 2.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, 9.5f, 5f)
+                arcTo(2.5f, 2.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, 14.5f, 5f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 7.5f); lineTo(12f, 15f)
+                moveTo(12f, 10f); lineTo(8f, 13f)
+                moveTo(12f, 10f); lineTo(16f, 13f)
+                moveTo(12f, 15f); lineTo(9.5f, 20f)
+                moveTo(12f, 15f); lineTo(14.5f, 20f)
+            }
+            // needles left
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.7f) {
+                moveTo(5.5f, 8.5f); lineTo(10f, 10.5f)
+            }
+            path(stroke = stroke, strokeLineWidth = 0.8f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.5f) {
+                moveTo(4f, 8f); lineTo(5.5f, 8.5f)
+            }
+            // needles right
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.7f) {
+                moveTo(18.5f, 8.5f); lineTo(14f, 10.5f)
+            }
+            path(stroke = stroke, strokeLineWidth = 0.8f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.5f) {
+                moveTo(20f, 8f); lineTo(18.5f, 8.5f)
+            }
+            // needle torso
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.7f) {
+                moveTo(7.5f, 14.5f); lineTo(9f, 13.5f)
+            }
+            path(stroke = stroke, strokeLineWidth = 0.8f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.5f) {
+                moveTo(6f, 15f); lineTo(7.5f, 14.5f)
+            }
+        }.build()
+    }
+
+    /** Noise cancelling headphones — headband arc with ear cups and X */
+    val NoiseCancellingHeadphones: ImageVector by lazy {
+        ImageVector.Builder("NoiseCancellingHeadphones", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(5f, 12f); curveTo(5f, 7f, 8f, 4f, 12f, 4f); curveTo(16f, 4f, 19f, 7f, 19f, 12f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(2.5f, 11f); lineTo(6.5f, 11f); lineTo(6.5f, 17f); lineTo(2.5f, 17f); close()
+            }
+            path(stroke = stroke, strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(17.5f, 11f); lineTo(21.5f, 11f); lineTo(21.5f, 17f); lineTo(17.5f, 17f); close()
+            }
+            // X inside (noise cancel)
+            path(stroke = stroke, strokeLineWidth = 1f, strokeLineCap = StrokeCap.Round, strokeAlpha = 0.5f) {
+                moveTo(9.5f, 13f); lineTo(14.5f, 17f)
+                moveTo(14.5f, 13f); lineTo(9.5f, 17f)
+            }
+        }.build()
+    }
+
+    /** Screen break — monitor with pause symbol */
+    val ScreenBreak: ImageVector by lazy {
+        ImageVector.Builder("ScreenBreak", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(2f, 3f); lineTo(22f, 3f); lineTo(22f, 17f); lineTo(2f, 17f); close()
+            }
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(12f, 17f); lineTo(12f, 21f)
+                moveTo(8f, 21f); lineTo(16f, 21f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(9.5f, 7.5f); lineTo(9.5f, 12.5f)
+                moveTo(14.5f, 7.5f); lineTo(14.5f, 12.5f)
+            }
+        }.build()
+    }
+
     data class ReliefPickerIcon(val key: String, val label: String, val icon: ImageVector)
 
     val ALL_ICONS: List<ReliefPickerIcon> by lazy { listOf(
@@ -331,12 +407,14 @@ object ReliefIcons {
         ReliefPickerIcon("electrolytes", "Electrolytes", Electrolytes),
         ReliefPickerIcon("massage", "Massage", Massage),
         ReliefPickerIcon("acupressure", "Acupressure", Acupressure),
+        ReliefPickerIcon("acupuncture", "Acupuncture", Acupuncture),
         ReliefPickerIcon("meditation", "Meditation", Meditation),
         ReliefPickerIcon("progressive", "Relaxation", Progressive),
         ReliefPickerIcon("walk", "Walk", Walk),
         ReliefPickerIcon("stretch", "Stretch", Stretch),
         ReliefPickerIcon("yoga", "Yoga", Yoga),
         ReliefPickerIcon("rest", "Rest / Nap", Rest),
+        ReliefPickerIcon("screen_break", "Screen break", ScreenBreak),
         ReliefPickerIcon("coffee", "Caffeine", Coffee),
         ReliefPickerIcon("ginger", "Ginger tea", Ginger),
         ReliefPickerIcon("peppermint", "Peppermint", Peppermint),
@@ -344,6 +422,7 @@ object ReliefIcons {
         ReliefPickerIcon("shower", "Shower", Shower),
         ReliefPickerIcon("fresh_air", "Fresh air", FreshAir),
         ReliefPickerIcon("quiet", "Quiet", Quiet),
+        ReliefPickerIcon("noise_cancelling", "Headphones", NoiseCancellingHeadphones),
         ReliefPickerIcon("other", "Other", Other),
     ) }
 
@@ -363,13 +442,15 @@ object ReliefIcons {
             l.contains("water") || l.contains("hydrat") -> Water
             l.contains("electrolyte") -> Electrolytes
             l.contains("massage") -> Massage
-            l.contains("acupressure") || l.contains("acupuncture") -> Acupressure
+            l.contains("acupuncture") -> Acupuncture
+            l.contains("acupressure") -> Acupressure
             l.contains("meditat") || l.contains("mindful") -> Meditation
             l.contains("relax") || l.contains("progressive") -> Progressive
             l.contains("walk") -> Walk
             l.contains("stretch") -> Stretch
             l.contains("yoga") -> Yoga
             l.contains("rest") || l.contains("nap") || l.contains("sleep") || l.contains("lie down") -> Rest
+            l.contains("screen break") || l.contains("screen rest") -> ScreenBreak
             l.contains("coffee") || l.contains("caffeine") || l.contains("espresso") -> Coffee
             l.contains("ginger") -> Ginger
             l.contains("peppermint") || l.contains("mint") -> Peppermint
@@ -377,6 +458,7 @@ object ReliefIcons {
             l.contains("shower") -> Shower
             l.contains("fresh air") || l.contains("outside") || l.contains("ventilat") -> FreshAir
             l.contains("quiet") || l.contains("silence") -> Quiet
+            l.contains("headphone") || l.contains("noise cancel") -> NoiseCancellingHeadphones
             else -> null
         }
     }

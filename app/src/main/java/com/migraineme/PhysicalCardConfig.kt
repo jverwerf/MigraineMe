@@ -11,6 +11,7 @@ object PhysicalCardConfig {
     const val METRIC_SKIN_TEMP = "skin_temp"
     const val METRIC_RESPIRATORY_RATE = "respiratory_rate"
     const val METRIC_STRESS = "stress"
+    const val METRIC_STRAIN = "strain"
     const val METRIC_HIGH_HR_ZONES = "high_hr_zones"
     const val METRIC_STEPS = "steps"
     const val METRIC_WEIGHT = "weight"
@@ -21,7 +22,7 @@ object PhysicalCardConfig {
     val ALL_PHYSICAL_METRICS: List<String> = listOf(
         METRIC_RECOVERY, METRIC_HRV, METRIC_RESTING_HR,
         METRIC_SPO2, METRIC_SKIN_TEMP, METRIC_RESPIRATORY_RATE,
-        METRIC_STRESS, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
+        METRIC_STRESS, METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
         METRIC_WEIGHT, METRIC_BODY_FAT,
         METRIC_BLOOD_PRESSURE, METRIC_BLOOD_GLUCOSE
     )
@@ -33,7 +34,7 @@ object PhysicalCardConfig {
     val GRAPHABLE_METRICS: List<String> = listOf(
         METRIC_RECOVERY, METRIC_HRV, METRIC_RESTING_HR,
         METRIC_SPO2, METRIC_SKIN_TEMP, METRIC_RESPIRATORY_RATE,
-        METRIC_STRESS, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
+        METRIC_STRESS, METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
         METRIC_WEIGHT, METRIC_BODY_FAT, METRIC_BLOOD_GLUCOSE
     )
 
@@ -45,6 +46,7 @@ object PhysicalCardConfig {
         METRIC_SKIN_TEMP -> "Skin Temp"
         METRIC_RESPIRATORY_RATE -> "Resp. Rate"
         METRIC_STRESS -> "Stress"
+        METRIC_STRAIN -> "Strain"
         METRIC_HIGH_HR_ZONES -> "High HR Zones"
         METRIC_STEPS -> "Steps"
         METRIC_WEIGHT -> "Weight"
@@ -62,6 +64,7 @@ object PhysicalCardConfig {
         METRIC_SKIN_TEMP -> "°C"
         METRIC_RESPIRATORY_RATE -> "bpm"
         METRIC_STRESS -> ""
+        METRIC_STRAIN -> "kJ"
         METRIC_HIGH_HR_ZONES -> "min"
         METRIC_STEPS -> ""
         METRIC_WEIGHT -> "kg"
@@ -79,6 +82,7 @@ object PhysicalCardConfig {
         METRIC_SKIN_TEMP -> Color(0xFFFFB74D)
         METRIC_RESPIRATORY_RATE -> Color(0xFF9575CD)
         METRIC_STRESS -> Color(0xFFE57373)
+        METRIC_STRAIN -> Color(0xFFFF8A80)
         METRIC_HIGH_HR_ZONES -> Color(0xFFFF7043)
         METRIC_STEPS -> Color(0xFF66BB6A)
         METRIC_WEIGHT -> Color(0xFF78909C)
@@ -97,6 +101,7 @@ object PhysicalCardConfig {
         METRIC_SKIN_TEMP -> "skin_temp_daily"
         METRIC_RESPIRATORY_RATE -> "respiratory_rate_daily"
         METRIC_STRESS -> "stress_index_daily"
+        METRIC_STRAIN -> "strain_daily"
         METRIC_HIGH_HR_ZONES -> "time_in_high_hr_zones_daily"
         METRIC_STEPS -> "steps_daily"
         METRIC_WEIGHT -> "weight_daily"

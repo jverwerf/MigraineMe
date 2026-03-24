@@ -206,8 +206,9 @@ class GarminAuthService {
     suspend fun disconnectWithDebug(context: Context): Pair<Boolean, String> {
         val appCtx = context.applicationContext
 
-        // Clear local tokens
+        // Clear local tokens and cached device name
         runCatching { GarminTokenStore(appCtx).clear() }
+        GarminDeviceNameProvider.clear()
         runCatching {
             appCtx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit().clear().apply()

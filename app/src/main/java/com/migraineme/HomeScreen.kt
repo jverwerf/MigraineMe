@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.ui.draw.blur
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
@@ -50,6 +52,7 @@ fun HomeScreenRoot(
     onNavigateToRiskDetail: () -> Unit = {},
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
+    onNavigateToChatAssistant: () -> Unit = {},
     authVm: AuthViewModel,
     logVm: LogViewModel,
     vm: HomeViewModel = viewModel(),
@@ -223,6 +226,49 @@ fun HomeScreenRoot(
                     symptomVm = symptomVm,
                     onLogComplete = { vm.loadRisk(appCtx) }
                 )
+
+                // ── Ask MigraineMe — chat assistant (premium only) ──
+                PremiumGate(
+                    message = "Unlock AI Chat",
+                    subtitle = "Ask questions about your health data",
+                    onUpgrade = onNavigateToPaywall
+                ) {
+                    Surface(
+                        onClick = onNavigateToChatAssistant,
+                        shape = AppTheme.BaseCardShape,
+                        color = AppTheme.BaseCardContainer,
+                        border = AppTheme.BaseCardBorder,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                    ) {
+                        Row(
+                            Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("\u2726", fontSize = 20.sp, color = AppTheme.AccentPurple)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "Ask MigraineMe",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    "Chat with your health data",
+                                    color = Color.White.copy(alpha = 0.55f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = AppTheme.AccentPurple.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
 
                 // ── AI Daily Insight — premium only, today only ──
                 if (selectedDay == 0 && !state.dailyInsight.isNullOrBlank()) {

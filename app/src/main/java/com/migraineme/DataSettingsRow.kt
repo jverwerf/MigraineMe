@@ -113,6 +113,7 @@ fun DataSettingsRow(
             "phone" -> "Phone"
             "whoop" -> "WHOOP"
             "health_connect" -> "Health Connect"
+            "garmin" -> GarminDeviceNameProvider.getLabel(context)
             else -> "Phone"
         }
     }
@@ -122,7 +123,12 @@ fun DataSettingsRow(
             add("phone" to "Phone")
             for (w in connectedWearables) {
                 if (MetricSourceSupport.supportsMetric(w, row.table)) {
-                    add(w.key to w.label)
+                    val displayLabel = if (w == WearableSource.GARMIN) {
+                        GarminDeviceNameProvider.getLabel(context)
+                    } else {
+                        w.label
+                    }
+                    add(w.key to displayLabel)
                 }
             }
         }

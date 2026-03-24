@@ -330,10 +330,10 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             if (weeklySummary != null) {
                 WeeklySummaryCard(weeklySummary!!, onClick = { navController.navigate(Routes.FREQUENCY_TRENDS) })
             } else {
-                HeroCard {
+                BaseCard {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Canvas(Modifier.size(24.dp)) { HubIcons.run { drawCalendarWeek(AppTheme.AccentPurple) } }
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text("Weekly Summary", color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -411,22 +411,18 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     if (significantCorrelations.isEmpty()) {
-                        BaseCard {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()
-                                .clickable { navController.navigate(Routes.INSIGHTS_PATTERNS) }) {
-                                Canvas(Modifier.size(36.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
-                                Spacer(Modifier.height(8.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("What Happened", color = AppTheme.TitleColor,
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
-                                }
-                                Spacer(Modifier.height(4.dp))
-                                Text("Discover correlations and dangerous trigger combinations from your data.",
-                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center)
+                        BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.INSIGHTS_PATTERNS) }) {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Canvas(Modifier.size(24.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
+                                Spacer(Modifier.width(10.dp))
+                                Text("What Happened", color = AppTheme.TitleColor,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                    modifier = Modifier.weight(1f))
+                                Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                             }
+                            Spacer(Modifier.height(4.dp))
+                            Text("Discover correlations and dangerous trigger combinations from your data.",
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     } else {
                         val previewPatterns = remember(triggerCorrelations, metricCorrelations) {
