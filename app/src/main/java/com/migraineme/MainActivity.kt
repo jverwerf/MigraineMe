@@ -471,6 +471,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             PremiumManager.initialize(appCtx, userId)
             PremiumManager.loadState(appCtx)
 
+            RemoteConfig.load(appCtx)
+
             // Populate MetricRegistry so Monitor sub-screens know which metrics exist
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 try {

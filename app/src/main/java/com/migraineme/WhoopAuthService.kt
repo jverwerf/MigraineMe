@@ -22,7 +22,7 @@ class WhoopAuthService {
         private const val TAG = "WHOOP"
 
         // Client ID loaded from BuildConfig (set in local.properties)
-        private val CLIENT_ID = BuildConfig.WHOOP_CLIENT_ID
+        private val CLIENT_ID: String get() = RemoteConfig.whoopClientId()
 
         // Client secret is SERVER-SIDE ONLY — never in the APK.
         // Token exchange happens via the whoop-token-exchange Edge Function.

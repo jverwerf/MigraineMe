@@ -19,7 +19,7 @@ class GarminAuthService {
     companion object {
         private const val TAG = "GARMIN"
 
-        private val CLIENT_ID = BuildConfig.GARMIN_CLIENT_ID
+        private val CLIENT_ID: String get() = RemoteConfig.garminClientId()
 
         // Garmin OAuth2 PKCE endpoints
         private const val AUTH_URL = "https://connect.garmin.com/oauth2Confirm"
