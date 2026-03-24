@@ -2,7 +2,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.google.devtools.ksp") version "1.9.24-1.0.20"  // For Room
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"  // For Room
     id("com.google.gms.google-services")  // Firebase
 }
 
@@ -73,11 +74,7 @@ android {
         buildConfig = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
-
-    kotlinOptions {
+kotlinOptions {
         jvmTarget = "17"
     }
 
@@ -126,8 +123,8 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 
-    implementation("androidx.credentials:credentials:1.5.0-beta01")
-    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-beta01")
+    implementation("androidx.credentials:credentials:1.6.0-rc02")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0-rc02")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
