@@ -271,10 +271,7 @@ fun ThirdPartyConnectionsScreen(
         withContext(Dispatchers.IO) {
             val edge = EdgeFunctionsService()
             runCatching { edge.enableDefaultHealthConnectMetricSettings(context.applicationContext) }
-            // Use SyncManager instead of scheduling periodic workers
             HealthConnectSyncManager.markAsConnected(context.applicationContext)
-            // Switch phone sleep metrics to Health Connect source
-            runCatching { switchPhoneSleepSource("health_connect") }
         }
         withContext(Dispatchers.Main) {
             android.widget.Toast.makeText(context, "Health Connect wearables connected!", android.widget.Toast.LENGTH_LONG).show()
@@ -471,8 +468,10 @@ fun ThirdPartyConnectionsScreen(
 
     // ── Garmin callback handling ──
     val garminLastProcessedUri = remember { mutableStateOf<String?>(null) }
+    val garminExchangeInProgress = remember { mutableStateOf(false) }
 
     suspend fun tryCompleteGarminIfCallbackPresent() {
+        if (garminExchangeInProgress.value) return
         val prefs = context.getSharedPreferences("garmin_oauth", Context.MODE_PRIVATE)
         val lastUri = prefs.getString("last_uri", null)
         if (lastUri.isNullOrBlank()) return
@@ -485,28 +484,33 @@ fun ThirdPartyConnectionsScreen(
 
         if (garminLastProcessedUri.value == lastUri) return
         garminLastProcessedUri.value = lastUri
+        garminExchangeInProgress.value = true
 
-        // Garmin token exchange happens server-side via Edge Function
-        val ok = withContext(Dispatchers.IO) { GarminAuthService().completeAuth(context) }
-        val localToken = garminTokenStore.load()
+        try {
+            // Garmin token exchange happens server-side via Edge Function
+            val ok = withContext(Dispatchers.IO) { GarminAuthService().completeAuth(context) }
+            val localToken = garminTokenStore.load()
 
-        if (ok && localToken != null) {
-            hasGarmin.value = true
-            withContext(Dispatchers.IO) {
-                val edge = EdgeFunctionsService()
-                // Token exchange Edge Function already enables metrics + enqueues backfill
-                // But also enable on client side as backup
-                runCatching { edge.enableDefaultGarminMetricSettings(context.applicationContext) }
-                runCatching { switchPhoneSleepSource("garmin") }
-                // Pull Garmin data before backfill-all runs triggers/risk
-                runCatching { edge.backfillGarmin(context.applicationContext) }
-                edge.enqueueLoginBackfill(context.applicationContext)
+            if (ok && localToken != null) {
+                hasGarmin.value = true
+                withContext(Dispatchers.IO) {
+                    val edge = EdgeFunctionsService()
+                    // Token exchange Edge Function already enables metrics + enqueues backfill
+                    // But also enable on client side as backup
+                    runCatching { edge.enableDefaultGarminMetricSettings(context.applicationContext) }
+                    runCatching { switchPhoneSleepSource("garmin") }
+                    // Pull Garmin data before backfill-all runs triggers/risk
+                    runCatching { edge.backfillGarmin(context.applicationContext) }
+                    edge.enqueueLoginBackfill(context.applicationContext)
+                }
+            } else {
+                hasGarmin.value = false
+                garminErrorDialog.value = prefs.getString("token_error", "Garmin authentication failed")
+                // Clear stale OAuth state so we don't retry on next screen visit
+                prefs.edit().remove("last_uri").remove("token_error").apply()
             }
-        } else {
-            hasGarmin.value = false
-            garminErrorDialog.value = prefs.getString("token_error", "Garmin authentication failed")
-            // Clear stale OAuth state so we don't retry on next screen visit
-            prefs.edit().remove("last_uri").remove("token_error").apply()
+        } finally {
+            garminExchangeInProgress.value = false
         }
     }
 

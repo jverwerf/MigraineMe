@@ -31,7 +31,7 @@ object GarminDeviceNameProvider {
 
         // Try SharedPreferences cache
         val stored = GarminTokenStore(context).loadDeviceName()
-        if (!stored.isNullOrBlank()) {
+        if (!stored.isNullOrBlank() && !stored.equals("null", ignoreCase = true)) {
             val label = formatLabel(stored)
             cachedLabel = label
             return label
@@ -97,7 +97,7 @@ object GarminDeviceNameProvider {
      * Otherwise prefix with "Garmin ".
      */
     private fun formatLabel(deviceName: String): String {
-        if (deviceName.isBlank()) return "Garmin"
+        if (deviceName.isBlank() || deviceName.equals("null", ignoreCase = true)) return "Garmin"
         return if (deviceName.startsWith("Garmin", ignoreCase = true)) {
             deviceName
         } else {

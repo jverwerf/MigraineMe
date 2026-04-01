@@ -674,6 +674,7 @@ class EdgeFunctionsService {
     suspend fun enableDefaultHealthConnectMetricSettings(context: Context): Boolean {
         val appCtx = context.applicationContext
         val hcKey = "health_connect"
+        val wearableSources = setOf("garmin", "whoop", "oura", "polar")
 
         val metrics = listOf(
             "sleep_duration_daily",
@@ -695,8 +696,16 @@ class EdgeFunctionsService {
             "stress_index_daily"
         )
 
+        // Load current settings so we don't overwrite wearable sources
+        val currentSettings = runCatching { getMetricSettings(appCtx) }.getOrDefault(emptyList())
+        val currentSourceMap = currentSettings.associate { it.metric to it.preferredSource }
+
         var allOk = true
         for (metric in metrics) {
+            // Skip if this metric already has a wearable source
+            val currentSource = currentSourceMap[metric]
+            if (currentSource != null && wearableSources.contains(currentSource)) continue
+
             val ok = runCatching {
                 upsertMetricSetting(
                     context = appCtx,

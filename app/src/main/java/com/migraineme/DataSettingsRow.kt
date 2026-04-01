@@ -376,7 +376,7 @@ fun DataSettingsRow(
             ) {
                 Switch(
                     checked = enabledBySupabase,
-                    enabled = !finalGreyOut && canToggleAmbient,
+                    enabled = !finalGreyOut && canToggleAmbient && !(isWearableRow && allowedWearables.isEmpty()),
                     modifier = Modifier.scale(0.8f),
                     onCheckedChange = { newValue ->
                         if (finalGreyOut) return@Switch
