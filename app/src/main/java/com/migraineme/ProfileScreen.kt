@@ -475,22 +475,6 @@ fun ProfileScreen(
             }
         }
 
-        // ── Rerun Onboarding (card style, matches iOS) ──
-        BaseCard {
-            Row(
-                Modifier.fillMaxWidth().clickable { onNavigateToOnboarding() },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(Icons.Outlined.Replay, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Restart the onboarding flow", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                }
-                Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
-            }
-        }
-
         // ── Delete Account (card style, matches iOS) ──
         BaseCard {
             Row(
