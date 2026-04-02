@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -1003,16 +1004,14 @@ fun ThirdPartyConnectionsScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Health Connect Row
+            // Health Connect Row — heart icon + label (matches iOS Apple Health style)
             Box(Modifier.spotlightTarget("health_connect_card")) {
-                ConnectionRowLogoOnly(
-                    logoResId = R.drawable.health_connect_logo,
-                    fallbackLetter = "H",
+                HealthConnectRow(
                     isConnected = anyHCConnected,
                     onClick = {
                         if (!healthConnectAvailable.value) {
                             android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
-                            return@ConnectionRowLogoOnly
+                            return@HealthConnectRow
                         }
                         scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }
                     },
@@ -1194,6 +1193,58 @@ private fun ConnectionRowLogoOnly(
             ) {
                 Text(
                     buttonLabel,
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HealthConnectRow(
+    isConnected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
+    BaseCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .padding(start = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.size(100.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(38.dp)
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Health Connect",
+                    color = Color.White.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = onClick,
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isConnected) AppTheme.AccentPurple.copy(alpha = 0.3f) else AppTheme.AccentPurple
+                ),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    if (isConnected) "Connected" else "Connect",
                     color = Color.White,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )

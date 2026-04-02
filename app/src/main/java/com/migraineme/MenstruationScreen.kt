@@ -383,26 +383,7 @@ fun MenstruationScreen() {
                 }
             }
 
-            // Info card
-            BaseCard {
-                Text(
-                    "About Cycle Tracking",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Menstrual cycles can affect migraine patterns. Many women experience migraines around their period due to hormonal fluctuations, particularly drops in estrogen.",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    "Tracking your cycle helps identify patterns and predict high-risk days for migraines.",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            // About Cycle Tracking card removed
         }
     }
 }

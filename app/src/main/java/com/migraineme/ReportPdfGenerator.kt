@@ -19,7 +19,35 @@ import kotlin.math.sin
 
 class ReportPdfGenerator(private val context: Context) {
 
-    companion object { private const val TAG = "ReportPDF" }
+    companion object {
+        private const val TAG = "ReportPDF"
+
+        /** Resolve legacy/label pain location IDs to canonical point IDs (matches iOS PainHeatMapView). */
+        fun resolvePainLocationCounts(raw: List<Pair<String, Int>>): Map<String, Int> {
+            val labelToIds = mapOf(
+                "forehead" to listOf("forehead_center", "forehead_left", "forehead_right"),
+                "both temples" to listOf("temple_left", "temple_right"),
+                "behind left eye" to listOf("eye_left"), "behind right eye" to listOf("eye_right"),
+                "behind both eyes" to listOf("eye_left", "eye_right"),
+                "back of head" to listOf("occipital_center"),
+                "base of skull" to listOf("base_skull_center", "base_skull_left", "base_skull_right"),
+                "jaw" to listOf("jaw_left", "jaw_right"), "neck" to listOf("neck_left", "neck_right"),
+                "sinus" to listOf("sinus_left", "sinus_right"), "ear" to listOf("ear_left", "ear_right"),
+                "brow" to listOf("brow_left", "brow_right"), "teeth" to listOf("teeth_left", "teeth_right"),
+                "upper back" to listOf("upper_back_center", "upper_back_left", "upper_back_right"),
+                "shoulder" to listOf("shoulder_left", "shoulder_right"),
+                "top of head" to listOf("vertex"), "top_of_head" to listOf("vertex"),
+                "right_temple" to listOf("temple_right"), "left_temple" to listOf("temple_left"),
+                "behind_right_eye" to listOf("eye_right"), "behind_left_eye" to listOf("eye_left"),
+            )
+            val result = mutableMapOf<String, Int>()
+            for ((loc, count) in raw) {
+                result[loc] = count
+                labelToIds[loc.lowercase()]?.forEach { id -> result[id] = maxOf(result[id] ?: 0, count) }
+            }
+            return result
+        }
+    }
 
     // ======= Theme =======
     private val BG     = Color.parseColor("#1A0028")
@@ -818,7 +846,7 @@ class ReportPdfGenerator(private val context: Context) {
             val imgW = (PW - 2 * M - 16f) / 2f
             need(imgH + 10f)
             val c2 = cv ?: return
-            val countsMap = data.painLocationCounts.toMap()
+            val countsMap = resolvePainLocationCounts(data.painLocationCounts)
 
             try {
                 val frontBmp = android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.painpoints)

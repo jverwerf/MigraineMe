@@ -1,6 +1,8 @@
 package com.migraineme
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -144,8 +146,15 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
 
     ScrollableScreenContent(scrollState = scrollState, logoRevealHeight = 0.dp) {
 
-            // ── Filter Card ──
-            HeroCard {
+            // ── Filter Card (compact, matches iOS) ──
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = AppTheme.BaseCardShape,
+                colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                elevation = CardDefaults.cardElevation(0.dp),
+                border = AppTheme.BaseCardBorder
+            ) {
+                Column(Modifier.fillMaxWidth().padding(14.dp)) {
                 // Title + entry count
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -173,14 +182,12 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                 }
 
                 if (premiumState.isPremium) {
-                    Spacer(Modifier.height(10.dp))
-                    Divider(color = Color.White.copy(alpha = 0.08f))
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(6.dp))
 
                     // Type dropdown
                     var typeExpanded by remember { mutableStateOf(false) }
                     Text("Type", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(2.dp))
                     Box {
                         Box(
                             modifier = Modifier
@@ -189,7 +196,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                 .background(Color.White.copy(alpha = 0.06f))
                                 .border(1.dp, AppTheme.SubtleTextColor.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
                                 .clickable { typeExpanded = true }
-                                .padding(horizontal = 14.dp, vertical = 12.dp)
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -228,13 +235,11 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         }
                     }
 
-                    Spacer(Modifier.height(10.dp))
-                    Divider(color = Color.White.copy(alpha = 0.08f))
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(6.dp))
 
                     // Source chips
                     Text("Source", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(2.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("All", "Manual").forEach { s ->
                             val sel = selectedSourceFilter == s
@@ -257,13 +262,11 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         }
                     }
 
-                    Spacer(Modifier.height(10.dp))
-                    Divider(color = Color.White.copy(alpha = 0.08f))
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(6.dp))
 
                     // Timeframe chips
                     Text("Timeframe", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(2.dp))
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -354,8 +357,6 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
 
                 } else {
                     Spacer(Modifier.height(8.dp))
-                    Divider(color = Color.White.copy(alpha = 0.08f))
-                    Spacer(Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.PAYWALL) },
                         horizontalArrangement = Arrangement.Center,
@@ -366,7 +367,8 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         Text("Upgrade to filter & search your full history", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                     }
                 }
-            }
+                } // Column
+            } // Card
 
             // ── Empty state ──
             if (filtered.isEmpty()) {
@@ -381,11 +383,16 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
             for (event in filtered) {
                 var confirmDelete by rememberSaveable(event.hashCode()) { mutableStateOf(false) }
 
-                BaseCard {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = AppTheme.BaseCardShape,
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                    elevation = CardDefaults.cardElevation(0.dp),
+                    border = AppTheme.BaseCardBorder
+                ) { Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     when (event) {
                         is JournalEvent.Migraine -> {
                             JournalEntryHeader("Migraine", AppTheme.AccentPink, event.row.startAt, needsAttention(event))
-                            Spacer(Modifier.height(8.dp))
                             val missing = missingFields(event)
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             event.row.severity?.let { JournalDetail("Severity", "$it / 10") }
@@ -486,7 +493,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             }
                         )
                     }
-                }
+                } }
             }
         }
 }

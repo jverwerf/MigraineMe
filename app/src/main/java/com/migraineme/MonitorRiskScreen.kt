@@ -156,20 +156,10 @@ fun MonitorRiskScreen(
                 }
             }
 
-            // How it works — purple accent card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                    Text(
-                        "Your risk score aggregates data from sleep, weather, physical health, mental health, and nutrition. Tracking these metrics helps identify patterns and predict migraine risk.",
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+            DismissableInfoCard(
+                key = "monitor_risk",
+                text = "Your risk score aggregates data from sleep, weather, physical health, mental health, and nutrition. Tracking these metrics helps identify patterns and predict migraine risk."
+            )
 
             // 3. Today's Data card — mirrors main card layout
             BaseCard {

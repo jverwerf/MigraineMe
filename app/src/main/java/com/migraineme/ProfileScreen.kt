@@ -60,6 +60,7 @@ fun ProfileScreen(
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
     onNavigateToCompanions: () -> Unit = {},
+    onNavigateToOnboarding: () -> Unit = {},
     onLoggedOut: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()
@@ -78,6 +79,7 @@ fun ProfileScreen(
     val avatarUploading = remember { mutableStateOf(false) }
 
     val canChangePassword = remember { mutableStateOf(false) }
+    val userEmail = remember { mutableStateOf<String?>(null) }
 
     // ── Delete account state ──
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -107,6 +109,7 @@ fun ProfileScreen(
         try {
             val user = withContext(Dispatchers.IO) { SupabaseAuthService.getUser(token) }
             canChangePassword.value = user.identities?.any { it.provider == "email" } == true
+            userEmail.value = user.email
         } catch (_: Throwable) {
             canChangePassword.value = false
         }
@@ -209,11 +212,12 @@ fun ProfileScreen(
 
     // Load subscribed companions
     LaunchedEffect(auth.accessToken) {
-        val token = auth.accessToken ?: return@LaunchedEffect
+        val token = auth.accessToken
+        if (token.isNullOrBlank()) return@LaunchedEffect
         try {
             val baseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
             val anonKey = BuildConfig.SUPABASE_ANON_KEY
-            withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 // Fetch subscription companion_ids
                 val subsUrl = "$baseUrl/rest/v1/ai_companion_subscriptions?select=id,companion_id"
                 val subsConn = (URL(subsUrl).openConnection() as HttpURLConnection).apply {
@@ -246,11 +250,12 @@ fun ProfileScreen(
                             val text = compsConn.inputStream.bufferedReader().readText()
                             val companions: List<CompanionRow> = Json { ignoreUnknownKeys = true; explicitNulls = false }
                                 .decodeFromString(text)
-                            subscribedCompanions = companions.filter { it.id in subIds }
-                        }
+                            companions.filter { it.id in subIds }
+                        } else emptyList()
                     } finally { compsConn.disconnect() }
-                }
+                } else emptyList()
             }
+            subscribedCompanions = result
         } catch (_: Throwable) {}
         companionsLoaded = true
     }
@@ -337,12 +342,12 @@ fun ProfileScreen(
 
         HeroCard {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box {
+                Box(contentAlignment = Alignment.BottomEnd) {
                     // Avatar
                     Box(
-                        Modifier.size(80.dp)
+                        Modifier.size(88.dp)
                             .clip(CircleShape)
-                            .background(Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f)))),
+                            .background(Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.4f), AppTheme.AccentPink.copy(alpha = 0.2f)))),
                         contentAlignment = Alignment.Center
                     ) {
                         val bmp = avatarBitmap.value
@@ -352,9 +357,26 @@ fun ProfileScreen(
                             Text(headerName.trim().firstOrNull()?.uppercase() ?: "?", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
                         }
                     }
+
+                    // Camera overlay button (always visible, matches iOS)
+                    Box(
+                        Modifier.size(28.dp)
+                            .clip(CircleShape)
+                            .background(AppTheme.AccentPurple)
+                            .clickable { imagePickerLauncher.launch("image/*") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Outlined.CameraAlt, "Change picture", tint = Color.White, modifier = Modifier.size(14.dp))
+                    }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                // "Change profile picture" link
+                Spacer(Modifier.height(6.dp))
+                TextButton(onClick = { imagePickerLauncher.launch("image/*") }) {
+                    Text("Change profile picture", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+                }
+
+                Spacer(Modifier.height(4.dp))
 
                 if (isEditing.value) {
                     OutlinedTextField(
@@ -375,24 +397,31 @@ fun ProfileScreen(
                             Icon(Icons.Outlined.Close, "Cancel", tint = AppTheme.SubtleTextColor)
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = { imagePickerLauncher.launch("image/*") },
-                        enabled = auth.accessToken != null && !profileLoading.value,
-                        shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.5f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPink),
-                    ) {
-                        Icon(Icons.Outlined.CameraAlt, null, Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Change profile picture", style = MaterialTheme.typography.bodySmall)
-                    }
                 } else {
-                    Text(headerName, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(4.dp))
-                    IconButton(onClick = { isEditing.value = true }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Outlined.Edit, "Edit", tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(headerName, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                        IconButton(onClick = { isEditing.value = true }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Outlined.Edit, "Edit", tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
+                        }
                     }
+                }
+
+                // Email below name
+                userEmail.value?.let { email ->
+                    Text(email, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+
+                // Migraine type capsule
+                current?.migraineType?.let { type ->
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        type.label,
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier
+                            .background(AppTheme.AccentPurple.copy(alpha = 0.15f), RoundedCornerShape(50))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
                 }
             }
         }
@@ -428,36 +457,54 @@ fun ProfileScreen(
             )
         }
 
-        // ── Change Password ──
+        // ── Change Password (card style, matches iOS) ──
         if (canChangePassword.value) {
-            OutlinedButton(
-                onClick = { onNavigateChangePassword() },
-                enabled = auth.accessToken != null && !profileLoading.value,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-            ) {
-                Icon(Icons.Outlined.Lock, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Change password")
+            BaseCard {
+                Row(
+                    Modifier.fillMaxWidth().clickable { onNavigateChangePassword() },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(Icons.Outlined.Lock, null, tint = Color(0xFF4FC3F7), modifier = Modifier.size(20.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Change Password", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Send a password reset link to your email", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                }
             }
         }
 
-        // ── Delete Account ──
-        Spacer(Modifier.height(16.dp))
+        // ── Rerun Onboarding (card style, matches iOS) ──
+        BaseCard {
+            Row(
+                Modifier.fillMaxWidth().clickable { onNavigateToOnboarding() },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(Icons.Outlined.Replay, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Restart the onboarding flow", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+            }
+        }
 
-        OutlinedButton(
-            onClick = { showDeleteDialog = true; deleteConfirmText = ""; deleteError = null },
-            enabled = auth.accessToken != null && !profileLoading.value,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE57373).copy(alpha = 0.5f)),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE57373))
-        ) {
-            Icon(Icons.Outlined.DeleteForever, null, Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Delete account")
+        // ── Delete Account (card style, matches iOS) ──
+        BaseCard {
+            Row(
+                Modifier.fillMaxWidth().clickable { showDeleteDialog = true; deleteConfirmText = ""; deleteError = null },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(Icons.Outlined.DeleteForever, null, tint = Color(0xFFE57373), modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Delete Account", color = Color(0xFFE57373), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Permanently removes all your data", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+            }
         }
 
         // Delete account confirmation dialog

@@ -38,7 +38,7 @@ data class TriggerScore(
 
 /** Risk zone derived from gauge thresholds */
 enum class RiskZone(val label: String) {
-    NONE("None"),
+    NONE("Negligible"),
     LOW("Low"),
     MILD("Mild"),
     HIGH("High")

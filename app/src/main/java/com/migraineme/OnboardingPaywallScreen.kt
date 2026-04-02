@@ -67,6 +67,54 @@ fun OnboardingPaywallScreen(
 
     val premiumState by PremiumManager.state.collectAsState()
 
+    // ── Wait for premium state to load before deciding what to show ──
+    if (premiumState.isLoading) {
+        val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
+        Box(Modifier.fillMaxSize().background(bgBrush), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = AppTheme.AccentPurple, strokeWidth = 2.dp, modifier = Modifier.size(32.dp))
+                Spacer(Modifier.height(16.dp))
+                Text("Preparing your experience...", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        return
+    }
+
+    // ── Auto-continue if user already has access (trial OR paid) ──
+    if (premiumState.isPremium) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(1500)
+            onSubscribed()
+        }
+        val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
+        Box(Modifier.fillMaxSize().background(bgBrush), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    Modifier.size(80.dp).background(
+                        Brush.linearGradient(listOf(AppTheme.AccentPurple, AppTheme.AccentPink)),
+                        CircleShape
+                    ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(40.dp))
+                }
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    if (premiumState.tier == PremiumTier.TRIAL) "Your Free Trial is Active!" else "You're Premium!",
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "All features are unlocked.",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        return
+    }
+
     val fallbackPackages = remember {
         listOf(
             PackageInfo(
@@ -95,42 +143,6 @@ fun OnboardingPaywallScreen(
             selectedPackage = displayPackages.firstOrNull { it.isAnnual } ?: displayPackages.firstOrNull()
             loading = false
         }
-    }
-
-    // Auto-continue when premium is confirmed
-    if (premiumState.tier == PremiumTier.PREMIUM) {
-        LaunchedEffect(Unit) {
-            kotlinx.coroutines.delay(1500)
-            onSubscribed()
-        }
-
-        val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
-        Box(Modifier.fillMaxSize().background(bgBrush), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    Modifier.size(80.dp).background(
-                        Brush.linearGradient(listOf(AppTheme.AccentPurple, AppTheme.AccentPink)),
-                        CircleShape
-                    ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(40.dp))
-                }
-                Spacer(Modifier.height(24.dp))
-                Text(
-                    "You're Premium!",
-                    color = Color.White,
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "All features are unlocked.",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-        return
     }
 
     val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }

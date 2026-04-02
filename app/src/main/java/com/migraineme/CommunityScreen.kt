@@ -93,24 +93,23 @@ fun CommunityScreen(
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── Community HeroCard with tabs + content ──
-            item("community_hero") {
-                CommunityHeroCard {
-                    // ── Top-level tab row: Articles / Forum ──
-                    SegmentedTabRow(
-                        tabs = listOf("Articles", "Forum"),
-                        selectedIndex = state.topTab,
-                        onSelect = { vm.selectTopTab(it) },
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                    )
+            // ── Top-level tab row: Articles / Forum (matches iOS: standalone, not in hero card) ──
+            item("tabs") {
+                SegmentedTabRow(
+                    tabs = listOf("Articles", "Forum"),
+                    selectedIndex = state.topTab,
+                    onSelect = { vm.selectTopTab(it) },
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
 
-                    // ── Tab content ──
-                    when (state.topTab) {
-                        0 -> ArticlesContent(vm, state, authState.accessToken, navController)
-                        1 -> ForumContent(vm, state, authState.accessToken, authState.userId, navController)
-                    }
+            // ── Tab content (each article/forum post is its own card) ──
+            item("content") {
+                when (state.topTab) {
+                    0 -> ArticlesContent(vm, state, authState.accessToken, navController)
+                    1 -> ForumContent(vm, state, authState.accessToken, authState.userId, navController)
                 }
             }
 
@@ -178,7 +177,7 @@ private fun ArticlesContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
         articleSubTabs.forEachIndexed { index, label ->

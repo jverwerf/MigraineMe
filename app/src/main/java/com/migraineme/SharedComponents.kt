@@ -1,21 +1,40 @@
 package com.migraineme
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -174,5 +193,50 @@ fun BaseCard(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             content = content
         )
+    }
+}
+
+/**
+ * Info card that can be swiped away to dismiss. State persisted in SharedPreferences.
+ */
+@Composable
+fun DismissableInfoCard(
+    key: String,
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("info_cards", android.content.Context.MODE_PRIVATE) }
+    var dismissed by remember { mutableStateOf(prefs.getBoolean("dismissed_$key", false)) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+
+    AnimatedVisibility(
+        visible = !dismissed,
+        exit = slideOutHorizontally { it } + fadeOut()
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = modifier
+                .offset(x = offsetX.dp)
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            if (kotlin.math.abs(offsetX) > 80f) {
+                                dismissed = true
+                                prefs.edit().putBoolean("dismissed_$key", true).apply()
+                            } else {
+                                offsetX = 0f
+                            }
+                        },
+                        onHorizontalDrag = { _, dragAmount -> offsetX += dragAmount }
+                    )
+                }
+        ) {
+            Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                Text(text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
     }
 }

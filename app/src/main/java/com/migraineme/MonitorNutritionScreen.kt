@@ -11,19 +11,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Info
+
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -322,20 +321,10 @@ fun MonitorNutritionScreen(
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
             }
-            // How it works — purple accent card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                    Text(
-                        "Certain foods and nutrients can trigger migraines. Tracking caffeine, sugar, tyramine, and sodium helps identify patterns.",
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+            DismissableInfoCard(
+                key = "monitor_nutrition",
+                text = "Certain foods and nutrients can trigger migraines. Tracking caffeine, sugar, tyramine, and sodium helps identify patterns."
+            )
             
             // Search
             BaseCard {

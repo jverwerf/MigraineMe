@@ -657,6 +657,7 @@ internal fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes
 @Composable
 internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
     val vm: InsightsViewModel = viewModel(LocalContext.current as ViewModelStoreOwner)
+    val ss by vm.symptomSpider.collectAsState()
     val pcs by vm.painCharSpider.collectAsState()
     val acs by vm.accompSpider.collectAsState()
     BaseCard(modifier = Modifier.clickable(onClick = onClick)) {
@@ -671,8 +672,17 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
         }
-        pcs?.takeIf { it.axes.isNotEmpty() }?.let { data ->
+        // Overall symptom spider (matches iOS — shows migraine types as spider chart)
+        ss?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(12.dp))
+            if (data.axes.size >= 3) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    SpiderChart(axes = data.axes, accentColor = AppTheme.AccentPink, size = 200.dp)
+                }
+            } else StackedProportionalBar(axes = data.axes, accentColor = AppTheme.AccentPink)
+        }
+        pcs?.takeIf { it.axes.isNotEmpty() }?.let { data ->
+            Spacer(Modifier.height(16.dp))
             Text("Pain Character", color = Color(0xFFEF5350),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
@@ -1737,7 +1747,40 @@ internal fun PainHeatMap(
 ) {
     val density = LocalDensity.current
     var imageSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
-    val countsMap = remember(painLocationCounts) { painLocationCounts.toMap() }
+    // Resolve both direct IDs and legacy label-based entries (matches iOS PainHeatMapView)
+    val countsMap = remember(painLocationCounts) {
+        val labelToIds = mapOf(
+            "forehead" to listOf("forehead_center", "forehead_left", "forehead_right"),
+            "both temples" to listOf("temple_left", "temple_right"),
+            "behind left eye" to listOf("eye_left"),
+            "behind right eye" to listOf("eye_right"),
+            "behind both eyes" to listOf("eye_left", "eye_right"),
+            "back of head" to listOf("occipital_center"),
+            "base of skull" to listOf("base_skull_center", "base_skull_left", "base_skull_right"),
+            "jaw" to listOf("jaw_left", "jaw_right"),
+            "neck" to listOf("neck_left", "neck_right"),
+            "sinus" to listOf("sinus_left", "sinus_right"),
+            "ear" to listOf("ear_left", "ear_right"),
+            "brow" to listOf("brow_left", "brow_right"),
+            "teeth" to listOf("teeth_left", "teeth_right"),
+            "upper back" to listOf("upper_back_center", "upper_back_left", "upper_back_right"),
+            "shoulder" to listOf("shoulder_left", "shoulder_right"),
+            "top of head" to listOf("vertex"),
+            "top_of_head" to listOf("vertex"),
+            "right_temple" to listOf("temple_right"),
+            "left_temple" to listOf("temple_left"),
+            "behind_right_eye" to listOf("eye_right"),
+            "behind_left_eye" to listOf("eye_left"),
+        )
+        val result = mutableMapOf<String, Int>()
+        for ((loc, count) in painLocationCounts) {
+            result[loc] = count
+            labelToIds[loc.lowercase()]?.forEach { id ->
+                result[id] = maxOf(result[id] ?: 0, count)
+            }
+        }
+        result.toMap()
+    }
 
     Box(modifier.clip(RoundedCornerShape(12.dp))) {
         Image(

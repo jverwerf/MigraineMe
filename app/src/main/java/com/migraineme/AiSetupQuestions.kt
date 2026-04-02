@@ -43,8 +43,10 @@ private fun QPageHeader(icon: ImageVector, title: String, subtitle: String, page
         Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(4.dp))
         Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(4.dp))
-        Text("Question page $pageNum of $totalPages", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
+        if (pageNum > 0 || totalPages > 0) {
+            Spacer(Modifier.height(4.dp))
+            Text("Question page $pageNum of $totalPages", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
+        }
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -576,66 +578,66 @@ fun AiQuestionsPageStory(
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        QPageHeader(
-            Icons.Outlined.Mic, "Tell Us About Your Migraines",
-            "Type or speak freely — we'll pre-fill the setup questionnaire based on what you tell us",
-            0, 0
-        )
-
-        QCard("Your migraine story", Icons.Outlined.Notes, "Describe your migraines in your own words — frequency, triggers, what helps, warning signs, medicines, anything relevant") {
-            OutlinedTextField(
-                value = text,
-                onValueChange = onTextChange,
-                placeholder = { Text("e.g. \"I get migraines about twice a month, usually triggered by poor sleep and stress. They last about a day. I take sumatriptan and lie in a dark room. I notice neck stiffness before they start…\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
-                    cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f)
-                ),
-                minLines = 5, maxLines = 10,
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White)
-            )
-            Spacer(Modifier.height(8.dp))
-
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
-                    onClick = { launchVoice() },
-                    modifier = Modifier.height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+        // Hero card with speech bubble icon, title & subtitle (matches iOS)
+        Card(
+            colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    Modifier.size(48.dp).background(AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(14.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Voice", style = MaterialTheme.typography.bodySmall)
+                    Icon(Icons.Outlined.Chat, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                 }
-
-                if (isLoading) {
-                    Button(
-                        onClick = {},
-                        enabled = false,
-                        modifier = Modifier.weight(1f).height(40.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
-                        Spacer(Modifier.width(6.dp))
-                        Text("Analysing…", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
+                Spacer(Modifier.height(12.dp))
+                Text("Tell us about your migraines", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+                Spacer(Modifier.height(4.dp))
+                Text("Tap the mic and talk, or type below. AI will use this to pre-fill your profile.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
         }
 
-        QCard("How does this work?", Icons.Outlined.AutoAwesome) {
-            Text(
-                "We'll match what you describe against your trigger, prodrome, medicine, and relief lists. " +
-                "Anything we find gets pre-selected in the questionnaire — you can review and change everything on the next pages.",
-                color = AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.bodySmall
-            )
+        // Mic button
+        Button(
+            onClick = { launchVoice() },
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.15f)),
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            Icon(Icons.Outlined.Mic, contentDescription = "Tap to speak", tint = AppTheme.AccentPurple, modifier = Modifier.size(36.dp))
+        }
+        Text("Tap to speak", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+
+        // Text input area
+        OutlinedTextField(
+            value = text,
+            onValueChange = onTextChange,
+            placeholder = { Text("e.g. \"I get migraines about twice a month, usually triggered by poor sleep and stress. They last about a day. I take sumatriptan and lie in a dark room. I notice neck stiffness before they start…\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
+                cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.12f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.06f),
+                focusedContainerColor = Color.White.copy(alpha = 0.06f)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            minLines = 5, maxLines = 10,
+            textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White)
+        )
+
+        // Loading indicator
+        if (isLoading) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
+                Text("Analysing…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
         }
 
         Spacer(Modifier.height(80.dp))

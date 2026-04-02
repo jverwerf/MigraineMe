@@ -222,11 +222,7 @@ fun RecalibrationReviewScreen(
                     )
                     Spacer(Modifier.height(4.dp))
 
-                    // Gauge thresholds: combined table at the top
-                    if (type == "gauge_threshold" && proposals.size > 1) {
-                        GaugeThresholdTable(proposals)
-                        Spacer(Modifier.height(8.dp))
-                    }
+                    // Gauge thresholds table removed — Was/New now shown on each card
 
                     for (proposal in proposals) {
                         ProposalRow(
@@ -321,16 +317,24 @@ private fun ProposalRow(
                 )
 
                 if (proposal.fromValue != null && proposal.toValue != null &&
-                    proposal.type !in listOf("data_warning", "gauge_decay", "gauge_threshold", "clinical_assessment")) {
+                    proposal.type !in listOf("data_warning", "clinical_assessment")) {
                     Spacer(Modifier.width(8.dp))
-                    SeverityBadge(proposal.fromValue)
-                    Text(" → ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    SeverityBadge(proposal.toValue)
+                    if (proposal.type == "gauge_threshold" || proposal.type == "gauge_decay") {
+                        Text("Was ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(proposal.fromValue, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(" → ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(proposal.toValue, color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                    } else {
+                        SeverityBadge(proposal.fromValue)
+                        Text(" → ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        SeverityBadge(proposal.toValue)
+                    }
                 }
             }
 
-            // Decay curve visualization
-            if (proposal.type == "gauge_decay" && proposal.fromValue != null && proposal.toValue != null) {
+            // Decay curve visualization (only if values are JSON day maps)
+            if (proposal.type == "gauge_decay" && proposal.fromValue != null && proposal.toValue != null
+                && proposal.fromValue.contains("day")) {
                 Spacer(Modifier.height(4.dp))
                 DecayCurveComparison(proposal.fromValue, proposal.toValue, proposal.accepted)
             }

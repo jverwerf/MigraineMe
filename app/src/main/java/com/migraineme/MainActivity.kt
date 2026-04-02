@@ -436,6 +436,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val onboardingTransitioning = remember { mutableStateOf(false) }
 
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
@@ -773,6 +774,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 }
             }
 
+            Box(Modifier.fillMaxSize()) {
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 containerColor = Color.Transparent,
@@ -1958,6 +1960,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
                             onNavigateToCompanions = { nav.navigate("companions_manage") },
+                            onNavigateToOnboarding = { nav.navigate(Routes.ONBOARDING) { launchSingleTop = true } },
                             onLoggedOut = {
                                 nav.navigate(Routes.LOGIN) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
@@ -2031,6 +2034,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 }
                             },
                             onStartTour = {
+                                onboardingTransitioning.value = true
                                 nav.navigate(Routes.HOME) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
@@ -2038,6 +2042,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 TourManager.startTour()
                             },
                             onStartSetup = {
+                                onboardingTransitioning.value = true
                                 nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) {
                                     launchSingleTop = true
                                 }
@@ -2064,6 +2069,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             },
                             onStartTour = { /* already done */ },
                             onStartSetup = {
+                                onboardingTransitioning.value = true
                                 nav.navigate(Routes.THIRD_PARTY_CONNECTIONS) {
                                     launchSingleTop = true
                                 }
@@ -2302,6 +2308,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             }
                         },
                         onTourFinished = {
+                            onboardingTransitioning.value = true
                             nav.navigate("${Routes.ONBOARDING}/setup") {
                                 popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                 launchSingleTop = true
@@ -2317,6 +2324,22 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 } // end Box wrapper
             }
         }
+            // Loading overlay — on top of EVERYTHING including Scaffold
+            if (onboardingTransitioning.value) {
+                Box(Modifier.fillMaxSize().background(Color(0xFF1A0029)),
+                    contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(painter = painterResource(id = R.drawable.logo), contentDescription = null, modifier = Modifier.size(80.dp))
+                        Spacer(Modifier.height(16.dp))
+                        CircularProgressIndicator(color = AppTheme.AccentPurple, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+                    }
+                }
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(1500)
+                    onboardingTransitioning.value = false
+                }
+            }
+            } // end wrapping Box
     }
 }
 

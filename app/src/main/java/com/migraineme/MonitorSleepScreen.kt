@@ -11,14 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
+
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -142,20 +141,10 @@ fun MonitorSleepScreen(
                 }
             }
 
-            // How it works — purple accent card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                    Text(
-                        "Poor sleep quality and irregular sleep patterns are among the most common migraine triggers. Tracking your sleep helps identify patterns and predict migraine risk.",
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+            DismissableInfoCard(
+                key = "monitor_sleep",
+                text = "Poor sleep quality and irregular sleep patterns are among the most common migraine triggers. Tracking your sleep helps identify patterns and predict migraine risk."
+            )
 
             // Show disabled message if ALL sleep tracking is off
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {

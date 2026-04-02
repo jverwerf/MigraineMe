@@ -77,7 +77,7 @@ object OnboardingPrefs {
     }
 }
 
-private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING }
+private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, SCREEN_TIME_PERMISSION, BACKGROUND_LOCATION_PERMISSION, BATTERY_OPTIMIZATION }
 
 @Composable
 fun OnboardingScreen(
@@ -94,6 +94,43 @@ fun OnboardingScreen(
     val pages = PageId.entries
     var currentIdx by rememberSaveable { mutableStateOf(if (startAtSetup) pages.indexOf(PageId.SETUP_LANDING) else 0) }
     val currentPage = pages[currentIdx]
+
+    // Auto-skip permission pages if already granted
+    fun isPermissionGranted(page: PageId): Boolean = try {
+        when (page) {
+            PageId.LOCATION_PERMISSION ->
+                appCtx.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            PageId.NOTIFICATION_PERMISSION ->
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU)
+                    appCtx.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                else true
+            PageId.MICROPHONE_PERMISSION ->
+                appCtx.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            PageId.SCREEN_TIME_PERMISSION -> {
+                val appOps = appCtx.getSystemService(android.content.Context.APP_OPS_SERVICE) as android.app.AppOpsManager
+                appOps.unsafeCheckOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), appCtx.packageName) == android.app.AppOpsManager.MODE_ALLOWED
+            }
+            PageId.BACKGROUND_LOCATION_PERMISSION ->
+                appCtx.checkSelfPermission(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            PageId.BATTERY_OPTIMIZATION ->
+                (appCtx.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager).isIgnoringBatteryOptimizations(appCtx.packageName)
+            else -> false
+        }
+    } catch (_: Exception) { false }
+
+    LaunchedEffect(currentIdx) {
+        val page = pages.getOrNull(currentIdx) ?: return@LaunchedEffect
+        if (page.name.contains("PERMISSION") || page == PageId.BATTERY_OPTIMIZATION) {
+            if (isPermissionGranted(page)) {
+                if (page == PageId.BATTERY_OPTIMIZATION) {
+                    // Last permission — trigger setup flow instead of incrementing past the end
+                    onStartSetup()
+                } else {
+                    currentIdx++
+                }
+            }
+        }
+    }
 
     // ── Observe seeder progress directly ──
     val seedProgress by DemoDataSeeder.progress.collectAsState()
@@ -145,7 +182,7 @@ fun OnboardingScreen(
         }
     }
 
-    // ── Auto-advance to tour when data is ready ──
+    // ── Auto-advance to permission pages when data is ready ──
     LaunchedEffect(dataReady, currentPage) {
         if (dataReady && seedingStarted && !hasNavigatedToTour && currentPage == PageId.LOADING_DATA) {
             hasNavigatedToTour = true
@@ -192,6 +229,12 @@ fun OnboardingScreen(
                                 statusText = seedProgress.phase,
                                 isComplete = dataReady
                             )
+                            PageId.LOCATION_PERMISSION -> LocationPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
+                            PageId.NOTIFICATION_PERMISSION -> NotificationPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
+                            PageId.MICROPHONE_PERMISSION -> MicrophonePermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
+                            PageId.SCREEN_TIME_PERMISSION -> ScreenTimePermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
+                            PageId.BACKGROUND_LOCATION_PERMISSION -> BackgroundLocationPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
+                            PageId.BATTERY_OPTIMIZATION -> BatteryOptimizationPage(onGrant = { onStartSetup() }, onSkip = { onStartSetup() })
                             PageId.SETUP_LANDING -> SetupLandingPage()
                         }
                     }
@@ -199,23 +242,49 @@ fun OnboardingScreen(
             }
 
             // ── Bottom buttons ──
-            Row(
+            if (currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BACKGROUND_LOCATION_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
+                // Permission pages handle their own buttons
+            } else if (currentPage == PageId.WELCOME || currentPage == PageId.HOW_IT_WORKS) {
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (currentPage == PageId.WELCOME) {
+                        Button(
+                            onClick = { currentIdx++ },
+                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth().height(52.dp)
+                        ) {
+                            Text("Next", fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+                        }
+                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
+                            Text("Skip", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    } else {
+                        Button(
+                            onClick = { currentIdx = pages.indexOf(PageId.LOADING_DATA) },
+                            enabled = howItWorksRevealed,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AppTheme.AccentPink,
+                                disabledContainerColor = AppTheme.AccentPink.copy(alpha = 0.3f)
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth().height(52.dp)
+                        ) {
+                            Text("Take the Tour", fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            } else Row(
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Left
                 when (currentPage) {
-                    PageId.WELCOME -> {
-                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
-                            Text("Skip", color = AppTheme.SubtleTextColor)
-                        }
-                    }
-                    PageId.HOW_IT_WORKS -> {
-                        TextButton(onClick = { howItWorksRevealed = false; currentIdx-- }) {
-                            Text("Back", color = AppTheme.SubtleTextColor)
-                        }
-                    }
                     PageId.LOADING_DATA -> {
                         TextButton(onClick = { skipOnboarding { onComplete() } }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
@@ -226,34 +295,19 @@ fun OnboardingScreen(
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
+                    else -> {}
                 }
 
                 // Right
                 when (currentPage) {
-                    PageId.WELCOME -> {
-                        Button(
-                            onClick = { currentIdx++ },
-                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Next"); Spacer(Modifier.width(4.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
-                        }
-                    }
-                    PageId.HOW_IT_WORKS -> {
-                        Button(
-                            onClick = { currentIdx = pages.indexOf(PageId.LOADING_DATA) },
-                            enabled = howItWorksRevealed,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = AppTheme.AccentPink,
-                                disabledContainerColor = AppTheme.AccentPink.copy(alpha = 0.3f)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Take the Tour"); Spacer(Modifier.width(4.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
-                        }
-                    }
+                    PageId.HOW_IT_WORKS -> {}
+                    PageId.WELCOME -> {}
+                    PageId.LOCATION_PERMISSION -> {}
+                    PageId.NOTIFICATION_PERMISSION -> {}
+                    PageId.MICROPHONE_PERMISSION -> {}
+                    PageId.SCREEN_TIME_PERMISSION -> {}
+                    PageId.BACKGROUND_LOCATION_PERMISSION -> {}
+                    PageId.BATTERY_OPTIMIZATION -> {}
                     PageId.LOADING_DATA -> {
                         val canStart = dataReady && seedingStarted && !hasNavigatedToTour
                         Button(
@@ -276,7 +330,7 @@ fun OnboardingScreen(
                     }
                     PageId.SETUP_LANDING -> {
                         Button(
-                            onClick = { proceedWithTour { onStartSetup() } },
+                            onClick = { currentIdx = pages.indexOf(PageId.LOCATION_PERMISSION) },
                             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                             shape = RoundedCornerShape(12.dp)
                         ) {

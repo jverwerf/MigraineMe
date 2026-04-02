@@ -1393,7 +1393,7 @@ class InsightsViewModel : ViewModel() {
             val allSym = migs.flatMap { row ->
                 row.type?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() && it != "Migraine" } ?: emptyList()
             }
-            _symptomSpider.value = buildSpider("Symptoms", allSym, sc)
+            _symptomSpider.value = buildFlatSpider("Symptoms", allSym)
 
             val painCharLabels = allSym.filter { sc[it.lowercase()] == "pain_character" }
             val accompLabels = allSym.filter { sc[it.lowercase()] == "accompanying" }

@@ -334,17 +334,24 @@ internal fun colorForLogType(logType: String): Color = when (logType) {
 
 @Composable
 private fun SymptomsBreakdownContent(vm: InsightsViewModel) {
+    val symptomSpider by vm.symptomSpider.collectAsState()
     val painCharSpider by vm.painCharSpider.collectAsState()
     val accompSpider by vm.accompSpider.collectAsState()
     val painLocSpider by vm.painLocationSpider.collectAsState()
     val severityCounts by vm.severityCounts.collectAsState()
     val durationStats by vm.durationStats.collectAsState()
 
+    val symptomColor = AppTheme.AccentPink
     val painCharColor = Color(0xFFEF5350)
     val accompColor = Color(0xFFBA68C8)
     val painLocColor = Color(0xFFFF8A65)
     val severityColor = Color(0xFF4FC3F7)
     val durationColor = Color(0xFF81C784)
+
+    // Overall Symptoms spider (matches iOS — shown first)
+    if (symptomSpider != null && symptomSpider!!.axes.isNotEmpty()) {
+        SpiderSection(title = "Symptoms Overview", spider = symptomSpider!!, color = symptomColor)
+    }
 
     // Pain Character
     if (painCharSpider != null && painCharSpider!!.axes.isNotEmpty()) {
