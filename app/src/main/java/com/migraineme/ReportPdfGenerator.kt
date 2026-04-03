@@ -132,6 +132,7 @@ class ReportPdfGenerator(private val context: Context) {
         val severityCounts: List<Pair<Int, Int>> = emptyList(),
         val totalMigraineCount: Int = 0,
         val overallAvgSeverity: Float = 5f,
+        val sources: Set<String> = emptySet(),
     )
 
     // ======= Public =======
@@ -326,6 +327,28 @@ class ReportPdfGenerator(private val context: Context) {
         y += h + 6f
     }
 
+    /** Draw source attribution badges row (e.g. "Sources: [Garmin] [WHOOP]") */
+    private fun drawSourceBadges(sources: Set<String>) {
+        if (sources.isEmpty()) return
+        val c = cv ?: return
+        need(22f)
+        val labelP = tp(SUBTLE, 7f)
+        c.drawText("Sources:", M, y + 10f, labelP)
+        var x = M + labelP.measureText("Sources:") + 8f
+        for (src in sources.sorted()) {
+            val label = sourceDisplayLabel(src)
+            val badgeColor = cToA(sourceColor(src))
+            val textP = tp(Color.WHITE, 7f, b = true)
+            val tw = textP.measureText(label)
+            val bw = tw + 12f
+            if (x + bw > PW - M) { y += 16f; x = M; need(22f) }
+            c.drawRoundRect(RectF(x, y + 1f, x + bw, y + 14f), 7f, 7f, fp(badgeColor))
+            c.drawText(label, x + 6f, y + 11f, textP)
+            x += bw + 6f
+        }
+        y += 20f
+    }
+
     private fun tp(col: Int, sz: Float, b: Boolean = false, a: Paint.Align = Paint.Align.LEFT) = Paint().apply {
         color = col; textSize = sz; isAntiAlias = true; textAlign = a
         if (sz <= 10f) letterSpacing = 0.02f
@@ -386,7 +409,9 @@ class ReportPdfGenerator(private val context: Context) {
             val to = d.filteredMigraines.first().start.atZone(ZoneId.systemDefault()).format(fmt)
             c.drawText("$fr  —  $to", PW / 2f, y, tp(SUBTLE, 11f, a = Paint.Align.CENTER))
         }
-        y += 50f
+        y += 30f
+        drawSourceBadges(d.sources)
+        y += 20f
     }
 
     // ======= Summary stats =======
@@ -1259,6 +1284,7 @@ class ReportPdfGenerator(private val context: Context) {
     // ======= Metrics =======
     private fun drawMetrics(d: ReportData) {
         heading("Health Metrics", Color.parseColor("#4DD0E1"))
+        drawSourceBadges(d.sources)
         val zone = ZoneId.systemDefault()
 
         // Compute date range from filtered migraines (with padding for window)
@@ -1388,6 +1414,7 @@ class ReportPdfGenerator(private val context: Context) {
     private fun drawTimelines(d: ReportData) {
         Log.d(TAG, "drawTimelines: ${d.timelineCaptures.size} captures")
         heading("Migraine Timelines", ACCENT)
+        drawSourceBadges(d.sources)
         val fmt = DateTimeFormatter.ofPattern("dd MMM yyyy  HH:mm")
         val contentWidth = PW - 2 * M
 

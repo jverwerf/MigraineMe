@@ -318,7 +318,8 @@ fun InsightsReportScreen(
                 autoSelectedKeys = allAutoSelectedKeys,
                 onToggleMetric = { key ->
                     vm.toggleMetric(key, key in enabledKeys)
-                }
+                },
+                metricSources = vm.metricSources.collectAsState().value
             )
 
             // ========== Spiders (computed regardless, needed for PDF) ==========
@@ -500,7 +501,8 @@ fun InsightsReportScreen(
                                 painLocationCounts = filteredImpact.painLocationCounts,
                                 severityCounts = filteredImpact.severityCounts,
                                 totalMigraineCount = filteredImpact.totalMigraineCount,
-                                overallAvgSeverity = filteredImpact.overallAvgSeverity)
+                                overallAvgSeverity = filteredImpact.overallAvgSeverity,
+                                sources = vm.metricSources.value)
                             val generator = ReportPdfGenerator(ctx)
                             android.util.Log.d("ReportPDF", "Calling generator.generate()")
                             val file = generator.generate(reportData)
@@ -981,7 +983,8 @@ private fun FilterCard(
     availableMetrics: List<MetricDef> = emptyList(),
     enabledKeys: Set<String> = emptySet(),
     autoSelectedKeys: Set<String> = emptySet(),
-    onToggleMetric: (String) -> Unit = {}
+    onToggleMetric: (String) -> Unit = {},
+    metricSources: Set<String> = emptySet()
 ) {
     var expanded by remember { mutableStateOf(true) }
     val hasFilters = activeFilters.isNotEmpty() || (timeFrame != InsightsViewModel.TimeFrame.ALL && timeFrame != InsightsViewModel.TimeFrame.NONE)
@@ -1207,12 +1210,18 @@ private fun FilterCard(
                     }
                 }
 
+                // Source badges
+                if (metricSources.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    SourceBadgeRow(metricSources.sorted())
+                }
+
                 } // end if timeFrame != NONE
             }
         }
     }
 
-    //  Date picker dialogs 
+    //  Date picker dialogs
     if (showFromPicker) {
         val state = rememberDatePickerState(
             initialSelectedDateMillis = customFrom.atStartOfDay(java.time.ZoneOffset.UTC)

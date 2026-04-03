@@ -252,6 +252,13 @@ fun InsightsDetailScreen(
                     wStart, wEnd, sel?.start,
                     Modifier.fillMaxWidth().height(360.dp))
 
+                // Source badges
+                val metricSources by vm.metricSources.collectAsState()
+                if (metricSources.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    SourceBadgeRow(metricSources.sorted())
+                }
+
                 Text("Window around migraine", color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())

@@ -57,6 +57,13 @@ fun InsightsBreakdownScreen(
                 }
             }
 
+            // Source badges
+            val metricSources by vm.metricSources.collectAsState()
+            if (metricSources.isNotEmpty()) {
+                SourceBadgeRow(metricSources.sorted())
+                Spacer(Modifier.height(4.dp))
+            }
+
             Spacer(Modifier.height(8.dp))
 
             if (spiderData == null || spiderData.breakdown.isEmpty()) {

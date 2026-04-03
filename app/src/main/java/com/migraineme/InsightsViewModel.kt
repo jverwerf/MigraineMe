@@ -458,6 +458,9 @@ class InsightsViewModel : ViewModel() {
     private val _allDailyMetrics = MutableStateFlow<Map<String, List<DailyValue>>>(emptyMap())
     val allDailyMetrics: StateFlow<Map<String, List<DailyValue>>> = _allDailyMetrics
 
+    private val _metricSources = MutableStateFlow<Set<String>>(emptySet())
+    val metricSources: StateFlow<Set<String>> = _metricSources
+
     // ======= Shared UI state (used by both InsightsScreen and InsightsDetailScreen) =======
 
     private val _selectedMigraineIndex = MutableStateFlow(0)
@@ -1061,6 +1064,41 @@ class InsightsViewModel : ViewModel() {
         map["mindfulness"] = fetchAndParse(client, base, key, token, userId, "mindfulness_daily", "duration_minutes", cutoff)
 
         _allDailyMetrics.value = map.filterValues { it.isNotEmpty() }
+
+        // Collect distinct sources from tables that have a source column
+        val sourceTables = listOf(
+            "recovery_score_daily", "hrv_daily", "resting_hr_daily", "spo2_daily",
+            "skin_temp_daily", "respiratory_rate_daily", "time_in_high_hr_zones_daily",
+            "steps_daily", "weight_daily", "body_fat_daily", "blood_pressure_daily",
+            "blood_glucose_daily", "sleep_duration_daily", "sleep_score_daily",
+            "sleep_efficiency_daily", "sleep_disturbances_daily", "sleep_stages_daily",
+            "strain_daily", "screen_time_daily", "fell_asleep_time_daily",
+            "woke_up_time_daily", "hydration_daily", "mindfulness_daily",
+            "ambient_noise_index_daily", "phone_brightness_daily", "phone_volume_daily",
+            "phone_unlock_daily", "phone_dark_mode_daily", "screen_time_late_night",
+            "nutrition_daily"
+        )
+        val sources = mutableSetOf<String>()
+        for (table in sourceTables) {
+            try {
+                val url = "$base/rest/v1/$table?user_id=eq.$userId&date=gte.$cutoff&select=source&limit=1"
+                val req = Request.Builder().url(url).get()
+                    .addHeader("apikey", key)
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+                val resp = client.newCall(req).execute()
+                val body = resp.body?.string()
+                resp.close()
+                if (!body.isNullOrBlank()) {
+                    val arr = JSONArray(body)
+                    if (arr.length() > 0) {
+                        val src = arr.getJSONObject(0).optString("source", "")
+                        if (src.isNotBlank()) sources.add(src)
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+        _metricSources.value = sources
     }
 
     /** Aggregate ALL nutrient columns from nutrition_records by date. */
