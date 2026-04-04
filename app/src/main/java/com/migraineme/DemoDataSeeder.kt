@@ -695,10 +695,12 @@ object DemoDataSeeder {
 
     suspend fun clearDemoData(context: Context, logVm: LogViewModel? = null) {
         val ctx = context.applicationContext
-        val token = SessionStore.getValidAccessToken(ctx) ?: return
+        val token = SessionStore.getValidAccessToken(ctx)
+        if (token == null) { Log.e(TAG, "═══ clearDemoData SKIPPED — no valid token ═══"); return }
         val base = BuildConfig.SUPABASE_URL.trimEnd('/'); val key = BuildConfig.SUPABASE_ANON_KEY
         val userId = SessionStore.readUserId(ctx) ?: JwtUtils.extractUserIdFromAccessToken(token)
-        Log.d(TAG, "═══ clearDemoData START ═══")
+        if (userId.isNullOrBlank()) { Log.e(TAG, "═══ clearDemoData SKIPPED — no userId ═══"); return }
+        Log.d(TAG, "═══ clearDemoData START (userId=$userId) ═══")
 
         // All tables the seeder writes to — delete everything for this user
         val allTables = listOf(

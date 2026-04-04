@@ -257,9 +257,12 @@ class RecalibrationViewModel : ViewModel() {
         suspend fun hasPendingProposals(context: Context): Boolean {
             val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
                 ?: return false
+            val userId = SessionStore.readUserId(context.applicationContext)
+                ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
+                ?: return false
 
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/recalibration_proposals" +
-                    "?status=eq.pending&limit=1&select=id"
+                    "?user_id=eq.$userId&status=eq.pending&limit=1&select=id"
 
             val request = Request.Builder().url(url).get()
                 .header("Authorization", "Bearer $accessToken")

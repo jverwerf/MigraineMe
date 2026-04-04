@@ -1615,8 +1615,11 @@ class InsightsViewModel : ViewModel() {
 
     private suspend fun loadGaugeProposals(context: Context): List<GaugeProposal> {
         val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return emptyList()
+        val userId = SessionStore.readUserId(context.applicationContext)
+            ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
+            ?: return emptyList()
         val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/recalibration_proposals" +
-            "?status=eq.pending&type=in.(gauge_threshold,gauge_decay)" +
+            "?user_id=eq.$userId&status=eq.pending&type=in.(gauge_threshold,gauge_decay)" +
             "&select=id,type,label,from_value,to_value,reasoning" +
             "&order=created_at.desc"
         val client = okhttp3.OkHttpClient()
