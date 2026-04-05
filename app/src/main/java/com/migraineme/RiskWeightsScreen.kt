@@ -1,11 +1,8 @@
 package com.migraineme
 
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -26,6 +24,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -101,7 +100,7 @@ fun RiskWeightsScreen(
             withContext(Dispatchers.IO) {
                 try {
                     var allOk = true
-                    for ((zone, minVal) in listOf("NONE" to thresholdNone, "LOW" to thresholdLow, "MILD" to thresholdMild, "HIGH" to thresholdHigh)) {
+                    for ((zone, minVal) in listOf("LOW" to thresholdLow, "MILD" to thresholdMild, "HIGH" to thresholdHigh)) {
                         if (!edge.upsertRiskGaugeThreshold(context, zone, minVal)) allOk = false
                     }
                     for (sev in listOf("HIGH", "MILD", "LOW")) {
@@ -144,7 +143,14 @@ fun RiskWeightsScreen(
                     Text("Minimum score to enter each risk zone. Tap to edit.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
 
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        GaugeThresholdCircle("None", thresholdNone, Color(0xFF666666)) { thresholdNone = it }
+                        // NONE is always 0 — not editable
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(Modifier.size(52.dp).background(Color(0xFF666666).copy(alpha = 0.15f), CircleShape).border(2.dp, Color(0xFF666666).copy(alpha = 0.4f), CircleShape), contentAlignment = Alignment.Center) {
+                                Text("0", color = Color(0xFF666666), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text("None", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        }
                         GaugeThresholdCircle("Low", thresholdLow, Color(0xFF81C784)) { thresholdLow = it }
                         GaugeThresholdCircle("Mild", thresholdMild, Color(0xFFFFB74D)) { thresholdMild = it }
                         GaugeThresholdCircle("High", thresholdHigh, Color(0xFFEF5350)) { thresholdHigh = it }
@@ -215,16 +221,19 @@ private fun GaugeThresholdCircle(label: String, value: Double, color: Color, onC
         if (editing) {
             OutlinedTextField(
                 value = text,
-                onValueChange = { new -> if (new.isEmpty() || new.all { it.isDigit() || it == '.' }) text = new },
+                onValueChange = { new ->
+                    if (new.isEmpty() || new.all { it.isDigit() || it == '.' }) {
+                        text = new
+                        new.toDoubleOrNull()?.let { onChange(it) }
+                    }
+                },
                 modifier = Modifier.width(56.dp).height(52.dp),
                 textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = color, textAlign = TextAlign.Center),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = color, unfocusedBorderColor = color.copy(alpha = 0.4f)),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { editing = false }),
             )
-            TextButton(onClick = { text.toDoubleOrNull()?.let { onChange(it) }; editing = false }, modifier = Modifier.height(24.dp), contentPadding = PaddingValues(0.dp)) {
-                Text("Done", color = color, style = MaterialTheme.typography.labelSmall)
-            }
         } else {
             Box(
                 Modifier.size(52.dp).background(color.copy(alpha = 0.15f), CircleShape).border(2.dp, color.copy(alpha = 0.4f), CircleShape).clickable { editing = true },
@@ -273,11 +282,17 @@ private fun DecayCurveCard(severity: String, color: Color, values: List<Double>,
                         if (isEditing) {
                             OutlinedTextField(
                                 value = editText,
-                                onValueChange = { new -> if (new.isEmpty() || new.all { it.isDigit() || it == '.' }) editText = new },
+                                onValueChange = { new ->
+                                    if (new.isEmpty() || new.all { it.isDigit() || it == '.' }) {
+                                        editText = new
+                                        new.toDoubleOrNull()?.let { onValueChange(i, it) }
+                                    }
+                                },
                                 modifier = Modifier.width(40.dp).height(28.dp),
                                 textStyle = MaterialTheme.typography.labelSmall.copy(color = color, textAlign = TextAlign.Center),
                                 singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { editingIndex = -1 }),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = color, unfocusedBorderColor = color.copy(alpha = 0.3f)),
                             )
                         } else {
@@ -305,20 +320,6 @@ private fun DecayCurveCard(severity: String, color: Color, values: List<Double>,
                 }
             }
 
-            // Confirm button when editing
-            AnimatedVisibility(visible = editingIndex >= 0, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.Center) {
-                    TextButton(onClick = {
-                        editText.toDoubleOrNull()?.let { onValueChange(editingIndex, it) }
-                        editingIndex = -1
-                    }) {
-                        Text("Apply", color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    }
-                    TextButton(onClick = { editingIndex = -1 }) {
-                        Text("Cancel", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-                    }
-                }
-            }
         }
     }
 }
