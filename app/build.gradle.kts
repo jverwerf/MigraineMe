@@ -28,7 +28,7 @@ android {
         applicationId = "com.migraineme"
         minSdk = 26
         targetSdk = 35
-        versionCode = 22
+        versionCode = 23
         versionName = "1.0"
 
         // ── All keys loaded from local.properties ──
@@ -54,6 +54,18 @@ android {
             "\"${localProp("GARMIN_CLIENT_ID")}\"")
     }
 
+    signingConfigs {
+        create("release") {
+            val storeFilePath = localProp("RELEASE_STORE_FILE")
+            if (storeFilePath.isNotBlank()) {
+                storeFile = file(storeFilePath)
+                storePassword = localProp("RELEASE_STORE_PASSWORD")
+                keyAlias = localProp("RELEASE_KEY_ALIAS")
+                keyPassword = localProp("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -61,7 +73,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseStore = localProp("RELEASE_STORE_FILE")
+            signingConfig = if (releaseStore.isNotBlank()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
         debug {
             isMinifyEnabled = false
