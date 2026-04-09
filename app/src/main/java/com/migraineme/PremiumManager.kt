@@ -340,6 +340,30 @@ object PremiumManager {
     // Convenience
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Clears the onboarding trial locally and from Supabase (e.g. when the user skips onboarding).
+     */
+    suspend fun clearOnboardingTrial(context: Context) {
+        withContext(Dispatchers.IO) {
+            _state.update { PremiumState(isLoaded = true) }
+            val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext
+            try {
+                val url = "${BuildConfig.SUPABASE_URL}/rest/v1/premium_status"
+                val request = Request.Builder()
+                    .url(url)
+                    .delete()
+                    .header("Authorization", "Bearer $accessToken")
+                    .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    .build()
+                httpClient.newCall(request).execute().use { response ->
+                    Log.d(TAG, "clearOnboardingTrial: ${response.code}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "clearOnboardingTrial failed: ${e.message}", e)
+            }
+        }
+    }
+
     val isPremium: Boolean
         get() = _state.value.isPremium
 

@@ -514,6 +514,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             if (event == Lifecycle.Event.ON_RESUME) {
                 scope.launch {
                     authVm.syncFromSessionStore(appCtx)
+                    PremiumManager.loadState(appCtx)
                 }
                 // Run location sync on app resume
                 LocationDailySyncWorker.runOnceNow(appCtx)

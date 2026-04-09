@@ -144,6 +144,7 @@ fun OnboardingScreen(
     fun skipOnboarding(then: () -> Unit) {
         scope.launch(Dispatchers.IO) {
             DemoDataSeeder.clearDemoData(appCtx, logVm)
+            PremiumManager.clearOnboardingTrial(appCtx)
             OnboardingPrefs.setCompletedInSupabase(appCtx)
             kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
         }
