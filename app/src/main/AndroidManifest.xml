@@ -43,7 +43,7 @@
     <!-- Health Connect - Body Measurements -->
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
     <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
-    <uses-permission android:name="android.permission.health.READ_HEIGHT" />
+
 
     <!-- Health Connect - Hydration & Wellness -->
     <uses-permission android:name="android.permission.health.READ_HYDRATION" />

@@ -146,6 +146,6 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // RevenueCat
-    implementation("com.revenuecat.purchases:purchases:7.+")
-    implementation("com.revenuecat.purchases:purchases-ui:7.+")
+    implementation("com.revenuecat.purchases:purchases:8.25.0")
+    implementation("com.revenuecat.purchases:purchases-ui:8.25.0")
 }
