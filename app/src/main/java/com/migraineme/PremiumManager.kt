@@ -346,9 +346,13 @@ object PremiumManager {
     suspend fun clearOnboardingTrial(context: Context) {
         withContext(Dispatchers.IO) {
             _state.update { PremiumState(isLoaded = true) }
-            val accessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return@withContext
+            val appCtx = context.applicationContext
+            val accessToken = SessionStore.getValidAccessToken(appCtx) ?: return@withContext
+            val userId = SessionStore.readUserId(appCtx)
+                ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
+                ?: return@withContext
             try {
-                val url = "${BuildConfig.SUPABASE_URL}/rest/v1/premium_status"
+                val url = "${BuildConfig.SUPABASE_URL}/rest/v1/premium_status?user_id=eq.$userId"
                 val request = Request.Builder()
                     .url(url)
                     .delete()
