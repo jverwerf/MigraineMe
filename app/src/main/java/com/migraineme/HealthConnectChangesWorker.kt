@@ -17,7 +17,6 @@ import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
-import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.RespiratoryRateRecord
@@ -76,7 +75,6 @@ class HealthConnectChangesWorker(
             ExerciseSessionRecord::class to HealthConnectRecordTypes.EXERCISE,
             WeightRecord::class to HealthConnectRecordTypes.WEIGHT,
             BodyFatRecord::class to HealthConnectRecordTypes.BODY_FAT,
-            HydrationRecord::class to HealthConnectRecordTypes.HYDRATION,
             BloodPressureRecord::class to HealthConnectRecordTypes.BLOOD_PRESSURE,
             BloodGlucoseRecord::class to HealthConnectRecordTypes.BLOOD_GLUCOSE,
             OxygenSaturationRecord::class to HealthConnectRecordTypes.SPO2,
@@ -96,7 +94,6 @@ class HealthConnectChangesWorker(
             HealthConnectRecordTypes.EXERCISE to "time_in_high_hr_zones_daily",
             HealthConnectRecordTypes.WEIGHT to "weight_daily",
             HealthConnectRecordTypes.BODY_FAT to "body_fat_daily",
-            HealthConnectRecordTypes.HYDRATION to "hydration_daily",
             HealthConnectRecordTypes.BLOOD_PRESSURE to "blood_pressure_daily",
             HealthConnectRecordTypes.BLOOD_GLUCOSE to "blood_glucose_daily",
             HealthConnectRecordTypes.SPO2 to "spo2_daily",
@@ -438,12 +435,6 @@ class HealthConnectChangesWorker(
                 date to payload
             }
             
-            is HydrationRecord -> {
-                val date = record.endTime.atZone(ZoneId.systemDefault()).toLocalDate().toString()
-                val payload = """{"value_ml":${record.volume.inMilliliters}}"""
-                date to payload
-            }
-            
             is BloodPressureRecord -> {
                 val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
                 val payload = """{"systolic_mmhg":${record.systolic.inMillimetersOfMercury},"diastolic_mmhg":${record.diastolic.inMillimetersOfMercury}}"""
@@ -488,7 +479,6 @@ class HealthConnectChangesWorker(
             HealthConnectRecordTypes.EXERCISE -> state.exerciseToken
             HealthConnectRecordTypes.WEIGHT -> state.weightToken
             HealthConnectRecordTypes.BODY_FAT -> state.bodyFatToken
-            HealthConnectRecordTypes.HYDRATION -> state.hydrationToken
             HealthConnectRecordTypes.BLOOD_PRESSURE -> state.bloodPressureToken
             HealthConnectRecordTypes.BLOOD_GLUCOSE -> state.bloodGlucoseToken
             HealthConnectRecordTypes.SPO2 -> state.spo2Token
@@ -507,7 +497,6 @@ class HealthConnectChangesWorker(
             HealthConnectRecordTypes.EXERCISE -> state.copy(exerciseToken = token)
             HealthConnectRecordTypes.WEIGHT -> state.copy(weightToken = token)
             HealthConnectRecordTypes.BODY_FAT -> state.copy(bodyFatToken = token)
-            HealthConnectRecordTypes.HYDRATION -> state.copy(hydrationToken = token)
             HealthConnectRecordTypes.BLOOD_PRESSURE -> state.copy(bloodPressureToken = token)
             HealthConnectRecordTypes.BLOOD_GLUCOSE -> state.copy(bloodGlucoseToken = token)
             HealthConnectRecordTypes.SPO2 -> state.copy(spo2Token = token)

@@ -42,7 +42,6 @@ import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
-import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.MenstruationPeriodRecord
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
@@ -138,7 +137,6 @@ fun ThirdPartyConnectionsScreen(
     val spo2Permission = HealthPermission.getReadPermission(OxygenSaturationRecord::class)
     val exercisePermission = HealthPermission.getReadPermission(ExerciseSessionRecord::class)
     val bodyFatPermission = HealthPermission.getReadPermission(BodyFatRecord::class)
-    val hydrationPermission = HealthPermission.getReadPermission(HydrationRecord::class)
     val bloodPressurePermission = HealthPermission.getReadPermission(BloodPressureRecord::class)
     val bloodGlucosePermission = HealthPermission.getReadPermission(BloodGlucoseRecord::class)
     val respiratoryRatePermission = HealthPermission.getReadPermission(RespiratoryRateRecord::class)
@@ -147,7 +145,7 @@ fun ThirdPartyConnectionsScreen(
     val allHealthConnectPermissions = setOf(
         nutritionPermission, menstruationPermission, sleepPermission, hrvPermission,
         stepsPermission, restingHrPermission, weightPermission, spo2Permission,
-        exercisePermission, bodyFatPermission, hydrationPermission,
+        exercisePermission, bodyFatPermission,
         bloodPressurePermission, bloodGlucosePermission, respiratoryRatePermission, bodyTempPermission
     )
 

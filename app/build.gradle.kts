@@ -158,6 +158,9 @@ dependencies {
     // Coil — async image loading for Compose
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // Google Play Billing Library (explicit version — required by Play policy, ≥ 7.0.0)
+    implementation("com.android.billingclient:billing:8.0.0")
+
     // RevenueCat
     implementation("com.revenuecat.purchases:purchases:8.25.0")
     implementation("com.revenuecat.purchases:purchases-ui:8.25.0")
