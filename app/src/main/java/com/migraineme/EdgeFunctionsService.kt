@@ -8,6 +8,7 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -442,6 +443,58 @@ class EdgeFunctionsService {
         } catch (e: Exception) {
             Log.e("EdgeFunctionsService", "getMetricSettings error: ${e.message}", e)
             emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Garmin device name (brand-guideline display on Monitor badges)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun getGarminDeviceName(context: Context): String? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+        val userId = SessionStore.readUserId(appCtx) ?: return null
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/garmin_tokens?user_id=eq.$userId&select=device_name"
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+            if (res.status.value !in 200..299) return null
+            val txt = res.bodyAsText()
+            val regex = Regex("\"device_name\"\\s*:\\s*\"([^\"]*)\"")
+            regex.find(txt)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getGarminDeviceName error", e)
+            null
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun saveGarminDeviceName(context: Context, deviceName: String): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/garmin_tokens?user_id=eq.$userId"
+            val res = client.patch(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "return=minimal")
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("device_name" to deviceName))
+            }
+            res.status.value in 200..299
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "saveGarminDeviceName error", e)
+            false
         } finally {
             client.close()
         }

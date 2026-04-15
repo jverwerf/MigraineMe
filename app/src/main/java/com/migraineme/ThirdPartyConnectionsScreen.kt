@@ -12,6 +12,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -101,6 +103,8 @@ fun ThirdPartyConnectionsScreen(
     val hasGarmin = remember { mutableStateOf(garminTokenStore.load() != null) }
     val garminErrorDialog = remember { mutableStateOf<String?>(null) }
     val showGarminDisconnectDialog = remember { mutableStateOf(false) }
+    val showGarminDevicePicker = remember { mutableStateOf(false) }
+    val currentGarminDevice = remember { mutableStateOf<String?>(null) }
 
     // Health Connect state
     val healthConnectChecking = remember { mutableStateOf(true) }
@@ -503,7 +507,10 @@ fun ThirdPartyConnectionsScreen(
                     // Pull Garmin data before backfill-all runs triggers/risk
                     runCatching { edge.backfillGarmin(context.applicationContext) }
                     edge.enqueueLoginBackfill(context.applicationContext)
+                    currentGarminDevice.value =
+                        runCatching { edge.getGarminDeviceName(context.applicationContext) }.getOrNull()
                 }
+                showGarminDevicePicker.value = true
             } else {
                 hasGarmin.value = false
                 garminErrorDialog.value = prefs.getString("token_error", "Garmin authentication failed")
@@ -576,6 +583,14 @@ fun ThirdPartyConnectionsScreen(
             kotlinx.coroutines.delay(2000)
             garminLastProcessedUri.value = null
             tryCompleteGarminIfCallbackPresent()
+        }
+        // If Garmin is connected but we don't have a device_name stored yet, prompt.
+        if (hasGarmin.value) {
+            val stored = withContext(Dispatchers.IO) {
+                runCatching { EdgeFunctionsService().getGarminDeviceName(context.applicationContext) }.getOrNull()
+            }
+            currentGarminDevice.value = stored
+            if (stored.isNullOrBlank()) showGarminDevicePicker.value = true
         }
     }
 
@@ -911,6 +926,24 @@ fun ThirdPartyConnectionsScreen(
                 }) { Text("Disconnect") }
             },
             dismissButton = { TextButton(onClick = { showGarminDisconnectDialog.value = false }) { Text("Cancel") } }
+        )
+    }
+
+    if (showGarminDevicePicker.value) {
+        GarminDevicePickerDialog(
+            current = currentGarminDevice.value,
+            onPick = { name ->
+                scope.launch(Dispatchers.IO) {
+                    val ok = runCatching {
+                        EdgeFunctionsService().saveGarminDeviceName(context.applicationContext, name)
+                    }.getOrDefault(false)
+                    withContext(Dispatchers.Main) {
+                        if (ok) currentGarminDevice.value = name
+                        showGarminDevicePicker.value = false
+                    }
+                }
+            },
+            onDismiss = { showGarminDevicePicker.value = false }
         )
     }
 
@@ -1337,5 +1370,188 @@ private fun ConnectionRow(
     }
 }
 
+// ── Garmin device list (brand-guideline compliance display) ──
+object GarminDevices {
+    val sections: List<Pair<String, List<String>>> = listOf(
+        "fenix" to listOf(
+            "fenix 8 Pro", "fenix 8 Solar", "fenix 8",
+            "fenix 7X Pro", "fenix 7 Pro", "fenix 7S Pro",
+            "fenix 7X", "fenix 7", "fenix 7S",
+            "fenix 6X Pro", "fenix 6 Pro", "fenix 6S Pro",
+            "fenix 6X", "fenix 6", "fenix 6S",
+            "fenix 5X Plus", "fenix 5 Plus", "fenix 5S Plus",
+            "fenix 5X", "fenix 5", "fenix 5S",
+            "fenix 3 HR", "fenix 3",
+        ),
+        "epix" to listOf(
+            "epix Pro (Gen 2)", "epix (Gen 2)", "epix",
+        ),
+        "Forerunner" to listOf(
+            "Forerunner 970", "Forerunner 965", "Forerunner 955", "Forerunner 945 LTE", "Forerunner 945",
+            "Forerunner 935", "Forerunner 745", "Forerunner 735XT",
+            "Forerunner 570", "Forerunner 265", "Forerunner 255", "Forerunner 245", "Forerunner 235", "Forerunner 230",
+            "Forerunner 165", "Forerunner 158", "Forerunner 55", "Forerunner 45", "Forerunner 35", "Forerunner 30",
+        ),
+        "Venu" to listOf(
+            "Venu 3S", "Venu 3", "Venu 2 Plus", "Venu 2S", "Venu 2",
+            "Venu Sq 2 Music", "Venu Sq 2", "Venu Sq Music", "Venu Sq", "Venu",
+        ),
+        "vivoactive" to listOf(
+            "vivoactive 6", "vivoactive 5", "vivoactive 4S", "vivoactive 4",
+            "vivoactive 3 Music", "vivoactive 3", "vivoactive HR", "vivoactive",
+        ),
+        "vivomove" to listOf(
+            "vivomove Trend", "vivomove Sport", "vivomove Style", "vivomove Luxe",
+            "vivomove 3S", "vivomove 3", "vivomove HR", "vivomove",
+        ),
+        "vivosmart" to listOf(
+            "vivosmart 5", "vivosmart 4", "vivosmart 3", "vivosmart HR+", "vivosmart HR", "vivosmart",
+        ),
+        "vivofit" to listOf(
+            "vivofit 4", "vivofit 3", "vivofit jr. 3", "vivofit jr. 2", "vivofit jr.", "vivofit",
+        ),
+        "Instinct" to listOf(
+            "Instinct 3 Solar", "Instinct 3",
+            "Instinct 2X Solar", "Instinct 2S Solar", "Instinct 2 Solar", "Instinct 2S", "Instinct 2",
+            "Instinct Crossover Solar", "Instinct Crossover",
+            "Instinct Solar", "Instinct Tactical", "Instinct Esports", "Instinct",
+        ),
+        "MARQ" to listOf(
+            "MARQ Adventurer (Gen 2)", "MARQ Athlete (Gen 2)", "MARQ Aviator (Gen 2)",
+            "MARQ Captain (Gen 2)", "MARQ Commander (Gen 2)", "MARQ Driver (Gen 2)", "MARQ Golfer (Gen 2)",
+            "MARQ Carbon", "MARQ Adventurer", "MARQ Athlete", "MARQ Aviator",
+            "MARQ Captain", "MARQ Commander", "MARQ Driver", "MARQ Expedition", "MARQ Golfer",
+        ),
+        "Descent" to listOf(
+            "Descent Mk3i", "Descent Mk3", "Descent Mk2i", "Descent Mk2", "Descent Mk2S",
+            "Descent G1 Solar", "Descent G1",
+        ),
+        "tactix" to listOf(
+            "tactix 7 AMOLED", "tactix 7 Pro", "tactix 7", "tactix Delta Solar", "tactix Delta",
+            "tactix Charlie", "tactix Bravo",
+        ),
+        "Enduro" to listOf(
+            "Enduro 3", "Enduro 2", "Enduro",
+        ),
+        "D2 (Aviator)" to listOf(
+            "D2 Mach 1 Pro", "D2 Mach 1", "D2 Air X10", "D2 Delta PX", "D2 Delta S", "D2 Delta", "D2 Charlie", "D2 Bravo",
+        ),
+        "Approach (Golf)" to listOf(
+            "Approach S70 47mm", "Approach S70 42mm", "Approach S62", "Approach S60",
+            "Approach S42", "Approach S40", "Approach S20", "Approach S12",
+        ),
+        "Lily" to listOf(
+            "Lily 2 Classic", "Lily 2 Sport", "Lily 2 Active", "Lily 2", "Lily Sport", "Lily Classic", "Lily",
+        ),
+        "Other" to listOf(
+            "Swim 2", "Swim", "Bounce",
+            "Legacy Hero Captain Marvel", "Legacy Hero First Avenger",
+            "Legacy Saga Rey", "Legacy Saga Darth Vader",
+            "Other Garmin",
+        ),
+    )
 
+    val flat: List<String> = sections.flatMap { it.second }
+}
+
+@Composable
+fun GarminDevicePickerDialog(
+    current: String?,
+    onPick: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    var selected by remember { mutableStateOf(current) }
+
+    val filtered = remember(query) {
+        if (query.isBlank()) GarminDevices.sections
+        else GarminDevices.sections.mapNotNull { (title, models) ->
+            val hits = models.filter { it.contains(query, ignoreCase = true) }
+            if (hits.isEmpty()) null else title to hits
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = AppTheme.BaseCardContainer,
+        title = {
+            Column {
+                Text(
+                    "Which Garmin device?",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Shown on your Monitor badges per Garmin's brand guidelines.",
+                    color = AppTheme.SubtleTextColor,
+                    fontSize = 12.sp
+                )
+            }
+        },
+        text = {
+            Column(Modifier.heightIn(max = 480.dp)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    placeholder = { Text("Search models", color = AppTheme.SubtleTextColor) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = AppTheme.AccentPurple,
+                        focusedBorderColor = AppTheme.AccentPurple,
+                        unfocusedBorderColor = AppTheme.SubtleTextColor
+                    )
+                )
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxWidth()) {
+                    filtered.forEach { (section, models) ->
+                        item(key = "h_$section") {
+                            Text(
+                                section,
+                                color = AppTheme.SubtleTextColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(vertical = 6.dp)
+                            )
+                        }
+                        items(models.size, key = { "${section}_${models[it]}" }) { idx ->
+                            val model = models[idx]
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { selected = model }
+                                    .padding(vertical = 8.dp, horizontal = 4.dp)
+                            ) {
+                                Text(
+                                    model,
+                                    color = Color.White,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (selected == model) {
+                                    Text("✓", color = AppTheme.AccentPurple, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { selected?.let { onPick(it) } },
+                enabled = selected != null
+            ) {
+                Text("Confirm", color = if (selected != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Skip", color = AppTheme.SubtleTextColor)
+            }
+        }
+    )
+}
 

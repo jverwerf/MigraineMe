@@ -105,7 +105,6 @@ serve(async (req)=>{
       note: "empty_or_invalid_body"
     });
   }
-  // Log all incoming keys for debugging
   const incomingKeys = Object.keys(body);
   console.log("[garmin-webhook] Received keys:", incomingKeys.join(", "));
   const results = [];
@@ -141,6 +140,25 @@ serve(async (req)=>{
     if (data && !data.device_name) {
       await supabase.from("garmin_tokens").update({ device_name: deviceName }).eq("garmin_user_id", garminUserId);
     }
+  }
+  // ════════════════════════════════════════════════════════════════════
+  // Helper: resolve device name — prefers push payload, falls back to
+  // stored garmin_tokens.device_name (Garmin only puts deviceName on
+  // Activities pushes, not dailies/stress/sleep/pulseox/bodycomps).
+  // ════════════════════════════════════════════════════════════════════
+  const deviceNameCache = new Map();
+  async function resolveDevice(summary, userId) {
+    const pushed = summary?.deviceName;
+    if (pushed) {
+      deviceNameCache.set(userId, pushed);
+      return pushed;
+    }
+    if (!userId) return null;
+    if (deviceNameCache.has(userId)) return deviceNameCache.get(userId) ?? null;
+    const { data } = await supabase.from("garmin_tokens").select("device_name").eq("user_id", userId).limit(1).maybeSingle();
+    const stored = data?.device_name ?? null;
+    deviceNameCache.set(userId, stored);
+    return stored;
   }
   // ════════════════════════════════════════════════════════════════════
   // Helper: upsert a daily metric row
@@ -216,7 +234,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_count: val,
-              source: "garmin", source_device: d?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(d, userId)
             });
           }
         }
@@ -228,7 +246,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_bpm: val,
-              source: "garmin", source_device: d?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(d, userId)
             });
           }
         }
@@ -239,7 +257,8 @@ serve(async (req)=>{
             await upsertDailyRow("stress_index_daily", {
               user_id: userId,
               date: localDate,
-              value: val
+              value: val,
+              source_device: await resolveDevice(d, userId)
             }, "user_id,date");
           }
         }
@@ -253,7 +272,7 @@ serve(async (req)=>{
                 user_id: userId,
                 date: localDate,
                 value_kilojoule: kj,
-                source: "garmin", source_device: d?.deviceName ?? null
+                source: "garmin", source_device: await resolveDevice(d, userId)
               });
             }
           }
@@ -305,7 +324,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_hours: val,
-              source: "garmin", source_device: s?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(s, userId)
             });
           }
         }
@@ -318,7 +337,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_pct: val,
-              source: "garmin", source_device: s?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(s, userId)
             });
           }
         }
@@ -333,7 +352,7 @@ serve(async (req)=>{
                 user_id: userId,
                 date: localDate,
                 value_pct: eff,
-                source: "garmin", source_device: s?.deviceName ?? null
+                source: "garmin", source_device: await resolveDevice(s, userId)
               });
             }
           }
@@ -348,7 +367,7 @@ serve(async (req)=>{
             await upsertDailyRow("sleep_stages_daily", {
               user_id: userId,
               date: localDate,
-              source: "garmin", source_device: s?.deviceName ?? null,
+              source: "garmin", source_device: await resolveDevice(s, userId),
               value_sws_hm: deep,
               value_rem_hm: rem,
               value_light_hm: light
@@ -368,7 +387,7 @@ serve(async (req)=>{
                 user_id: userId,
                 date: localDate,
                 value_count: approxCount,
-                source: "garmin", source_device: s?.deviceName ?? null
+                source: "garmin", source_device: await resolveDevice(s, userId)
               });
             }
           }
@@ -382,7 +401,7 @@ serve(async (req)=>{
                 user_id: userId,
                 date: localDate,
                 value_at: val,
-                source: "garmin", source_device: s?.deviceName ?? null
+                source: "garmin", source_device: await resolveDevice(s, userId)
               });
             }
           }
@@ -398,7 +417,7 @@ serve(async (req)=>{
                 user_id: userId,
                 date: localDate,
                 value_at: val,
-                source: "garmin", source_device: s?.deviceName ?? null
+                source: "garmin", source_device: await resolveDevice(s, userId)
               });
             }
           }
@@ -411,7 +430,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_bpm: Math.round(val * 10) / 10,
-              source: "garmin", source_device: s?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(s, userId)
             });
           }
         }
@@ -423,7 +442,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_pct: Math.round(val * 10) / 10,
-              source: "garmin", source_device: s?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(s, userId)
             });
           }
         }
@@ -469,7 +488,8 @@ serve(async (req)=>{
                 await upsertDailyRow("stress_index_daily", {
                   user_id: userId,
                   date: localDate,
-                  value: avg
+                  value: avg,
+                  source_device: await resolveDevice(sd, userId)
                 }, "user_id,date");
               }
             }
@@ -493,7 +513,7 @@ serve(async (req)=>{
                   user_id: userId,
                   date: localDate,
                   value_pct: recharge,
-                  source: "garmin", source_device: sd?.deviceName ?? null
+                  source: "garmin", source_device: await resolveDevice(sd, userId)
                 });
               }
             }
@@ -535,7 +555,7 @@ serve(async (req)=>{
                   user_id: userId,
                   date: localDate,
                   value_pct: avg,
-                  source: "garmin", source_device: po?.deviceName ?? null
+                  source: "garmin", source_device: await resolveDevice(po, userId)
                 });
               }
             }
@@ -577,7 +597,7 @@ serve(async (req)=>{
                   user_id: userId,
                   date: localDate,
                   value_bpm: avg,
-                  source: "garmin", source_device: po?.deviceName ?? null
+                  source: "garmin", source_device: await resolveDevice(po, userId)
                 });
               }
             }
@@ -616,7 +636,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_rmssd_ms: Math.round(val),
-              source: "garmin", source_device: po?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(po, userId)
             });
           }
         }
@@ -653,7 +673,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_celsius: Math.round(val * 100) / 100,
-              source: "garmin", source_device: po?.deviceName ?? null
+              source: "garmin", source_device: await resolveDevice(po, userId)
             });
           }
         }
@@ -705,7 +725,7 @@ serve(async (req)=>{
                 user_id: userId,
                 date: localDate,
                 value_kg: kg,
-                source: "garmin", source_device: bc?.deviceName ?? null
+                source: "garmin", source_device: await resolveDevice(bc, userId)
               });
             }
           }
@@ -719,7 +739,7 @@ serve(async (req)=>{
                 user_id: userId,
                 date: localDate,
                 value_pct: Math.round(fatPct * 100) / 100,
-                source: "garmin", source_device: bc?.deviceName ?? null
+                source: "garmin", source_device: await resolveDevice(bc, userId)
               });
             }
           }
@@ -816,10 +836,31 @@ serve(async (req)=>{
     }
   }
   // ════════════════════════════════════════════════════════════════════
+  // Process: ACTIVITIES (Activity API)
+  // Only used to capture deviceName → garmin_tokens.device_name.
+  // Garmin's Health API does NOT include deviceName on dailies/sleep/etc,
+  // so this is the only path device model ever reaches us.
+  // ════════════════════════════════════════════════════════════════════
+  for (const key of ["activities", "manuallyUpdatedActivities", "activityDetails"]){
+    const arr = body[key];
+    if (!Array.isArray(arr)) continue;
+    for (const a of arr){
+      try {
+        await trySaveDeviceName(a);
+        const userId = await resolveUserIdFromUAT(a);
+        if (userId && a?.deviceName) {
+          deviceNameCache.set(userId, a.deviceName);
+        }
+        results.push({ type: key, status: "device_captured", device: a?.deviceName ?? null });
+      } catch (err) {
+        results.push({ type: key, status: "error", msg: err.message });
+      }
+    }
+  }
+  // ════════════════════════════════════════════════════════════════════
   // Acknowledge ALL other summary types Garmin might push.
   // We don't use these, but must return 200 for them.
-  // Known additional types: epochs, moveIQ, activityFiles, activities,
-  // manuallyUpdatedActivities, activityDetails, thirdPartyDailies
+  // Known additional types: epochs, moveIQ, activityFiles, thirdPartyDailies
   // ════════════════════════════════════════════════════════════════════
   const handledKeys = new Set([
     "dailies",
@@ -833,7 +874,10 @@ serve(async (req)=>{
     "bodyComps",
     "bloodPressures",
     "healthSnapshot",
-    "deregistrations"
+    "deregistrations",
+    "activities",
+    "manuallyUpdatedActivities",
+    "activityDetails"
   ]);
   for (const key of incomingKeys){
     if (!handledKeys.has(key)) {
