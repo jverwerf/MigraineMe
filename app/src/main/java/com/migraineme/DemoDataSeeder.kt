@@ -693,7 +693,11 @@ object DemoDataSeeder {
 
     // ── Clear ALL ───────────────────────────────────────────────────────
 
-    suspend fun clearDemoData(context: Context, logVm: LogViewModel? = null) {
+    suspend fun clearDemoData(
+        context: Context,
+        logVm: LogViewModel? = null,
+        insightsVm: InsightsViewModel? = null
+    ) {
         val ctx = context.applicationContext
         val token = SessionStore.getValidAccessToken(ctx)
         if (token == null) { Log.e(TAG, "═══ clearDemoData SKIPPED — no valid token ═══"); return }
@@ -743,6 +747,10 @@ object DemoDataSeeder {
                 Log.d(TAG, "═══ clearDemoData COMPLETE ═══")
                 markCleared(ctx); _dataReady.value = false; _progress.value = SeedProgress()
                 logVm?.clearDraft()
+                // Refresh VMs so stale cached data (journal badge, weekly summary, gauge
+                // accuracy) doesn't linger in-memory until the app process is killed.
+                logVm?.loadJournal(token)
+                insightsVm?.load(ctx, token)
             } finally { client.close() }
         }
     }

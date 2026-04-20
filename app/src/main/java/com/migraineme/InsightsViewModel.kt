@@ -1882,7 +1882,10 @@ class InsightsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val migs = _migraines.value
-                if (migs.isEmpty()) return@launch
+                if (migs.isEmpty()) {
+                    _weeklySummary.value = null
+                    return@launch
+                }
 
                 val today = LocalDate.now()
                 val thisWeekStart = today.minusDays(6)
@@ -1929,7 +1932,10 @@ class InsightsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val migs = _migraines.value
-                if (migs.size < 3) return@launch
+                if (migs.size < 3) {
+                    _dayOfWeekPattern.value = emptyList()
+                    return@launch
+                }
 
                 val zone = ZoneId.systemDefault()
                 val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")

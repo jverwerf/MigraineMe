@@ -221,6 +221,8 @@ fun CoachOverlay(
     navigateTo: (String) -> Unit,
     onTourFinished: () -> Unit = {},
     onSetupFinished: () -> Unit = {},
+    logVm: LogViewModel? = null,
+    insightsVm: InsightsViewModel? = null,
 ) {
     val tourState by TourManager.state.collectAsState()
     val steps = when (tourState.phase) {
@@ -236,7 +238,7 @@ fun CoachOverlay(
         TourManager.endPhase()
         if (wasTour) {
             CoroutineScope(Dispatchers.IO).launch {
-                DemoDataSeeder.clearDemoData(ctx)
+                DemoDataSeeder.clearDemoData(ctx, logVm, insightsVm)
                 kotlinx.coroutines.withContext(Dispatchers.Main) { onTourFinished() }
             }
         } else {

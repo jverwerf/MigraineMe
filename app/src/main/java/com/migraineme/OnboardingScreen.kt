@@ -83,6 +83,7 @@ private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, 
 fun OnboardingScreen(
     startAtSetup: Boolean = false,
     logVm: LogViewModel? = null,
+    insightsVm: InsightsViewModel? = null,
     onComplete: () -> Unit,
     onStartTour: () -> Unit = {},
     onStartSetup: () -> Unit = {},
@@ -143,7 +144,7 @@ fun OnboardingScreen(
     // ── Skip exit: clear demo data + mark complete in Supabase + navigate ──
     fun skipOnboarding(then: () -> Unit) {
         scope.launch(Dispatchers.IO) {
-            DemoDataSeeder.clearDemoData(appCtx, logVm)
+            DemoDataSeeder.clearDemoData(appCtx, logVm, insightsVm)
             PremiumManager.clearOnboardingTrial(appCtx)
             OnboardingPrefs.setCompletedInSupabase(appCtx)
             kotlinx.coroutines.withContext(Dispatchers.Main) { then() }

@@ -451,6 +451,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val symptomVm: SymptomViewModel = viewModel()
     val homeVm: HomeViewModel = viewModel()
     val communityVm: CommunityViewModel = viewModel()
+    val insightsVm: InsightsViewModel = viewModel()
 
     val authState by authVm.state.collectAsState()
     val token = authState.accessToken
@@ -2028,6 +2029,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         OnboardingScreen(
                             startAtSetup = false,
                             logVm = logVm,
+                            insightsVm = insightsVm,
                             onComplete = {
                                 nav.navigate(Routes.HOME) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
@@ -2062,6 +2064,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         OnboardingScreen(
                             startAtSetup = true,
                             logVm = logVm,
+                            insightsVm = insightsVm,
                             onComplete = {
                                 nav.navigate(Routes.AI_SETUP) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
@@ -2320,7 +2323,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                 launchSingleTop = true
                             }
-                        }
+                        },
+                        logVm = logVm,
+                        insightsVm = insightsVm,
                     )
                 } // end Box wrapper
             }
