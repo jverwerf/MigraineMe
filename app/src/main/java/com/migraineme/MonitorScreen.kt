@@ -156,7 +156,11 @@ fun MonitorScreen(
     var migraineDates by remember { mutableStateOf<Set<String>>(emptySet()) }
     var riskHistoryLoading by remember { mutableStateOf(true) }
     var riskLive by remember { mutableStateOf<SupabaseDbService.RiskScoreLiveRow?>(null) }
-    val effectiveFavs = remember { getEffectiveFavOfFavs(ctx) }
+    // Respect Data Settings: favs whose underlying metric is disabled are auto-replaced
+    // with the next available pool entry so the Risk card keeps 3 slots when possible.
+    val effectiveFavs = remember(enabledMetrics) {
+        getEffectiveFavOfFavsRespectingSettings(ctx, enabledMetrics)
+    }
     // Resolver for fav-of-fav values
     fun resolveFavValue(key: String): String {
         val parts = key.split(":", limit = 2)
@@ -1014,6 +1018,58 @@ internal fun filterMentalDisplayMetrics(
 ): List<String> {
     if (enabledMetrics.isEmpty()) return displayMetrics
     return displayMetrics.filter { MentalCardConfig.metricToTable(it) in enabledMetrics }
+}
+
+// Resolve a "category:metric" fav-of-fav key to the metric_settings table key.
+// Returns null when the entry isn't gated by metric_settings (e.g. nutrition) or
+// can't be mapped — callers should treat null as "always allowed".
+private fun favEntryToTable(key: String): String? {
+    val parts = key.split(":", limit = 2)
+    if (parts.size != 2) return null
+    val (cat, metric) = parts
+    return when (cat) {
+        "weather" -> when (metric) {
+            WeatherCardConfig.METRIC_TEMPERATURE -> "temperature_daily"
+            WeatherCardConfig.METRIC_PRESSURE -> "pressure_daily"
+            WeatherCardConfig.METRIC_HUMIDITY -> "humidity_daily"
+            WeatherCardConfig.METRIC_WIND_SPEED -> "wind_daily"
+            WeatherCardConfig.METRIC_UV_INDEX -> "uv_daily"
+            WeatherCardConfig.METRIC_ALTITUDE,
+            WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> "user_location_daily"
+            else -> null
+        }
+        "sleep" -> sleepMetricToTable(metric).ifBlank { null }
+        "physical" -> PhysicalCardConfig.metricToTable(metric).ifBlank { null }
+        "mental" -> MentalCardConfig.metricToTable(metric).ifBlank { null }
+        else -> null
+    }
+}
+
+internal fun filterFavsByEnabled(
+    favs: List<FavPoolEntry>,
+    enabledMetrics: Set<String>
+): List<FavPoolEntry> {
+    if (enabledMetrics.isEmpty()) return favs
+    return favs.filter { entry ->
+        val table = favEntryToTable(entry.key) ?: return@filter true
+        table in enabledMetrics
+    }
+}
+
+// Same contract as getEffectiveFavOfFavs but drops entries whose underlying metric
+// has been disabled in Data Settings, auto-promoting the next available pool entry
+// so the Risk card always fills 3 slots when it can.
+internal fun getEffectiveFavOfFavsRespectingSettings(
+    context: android.content.Context,
+    enabledMetrics: Set<String>
+): List<FavPoolEntry> {
+    val filteredPool = filterFavsByEnabled(buildFavoritesPool(context), enabledMetrics)
+    val saved = RiskCardConfigStore.load(context).favOfFavs
+    val validSaved = saved.mapNotNull { key -> filteredPool.find { it.key == key } }
+    if (validSaved.size >= 3) return validSaved.take(3)
+    val selectedKeys = validSaved.map { it.key }.toSet()
+    val remaining = filteredPool.filter { it.key !in selectedKeys }
+    return (validSaved + remaining).take(3)
 }
 
 private fun weatherCodeToCondition(code: Int): String {
