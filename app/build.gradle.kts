@@ -28,7 +28,7 @@ android {
         applicationId = "com.migraineme"
         minSdk = 26
         targetSdk = 35
-        versionCode = 25
+        versionCode = 33
         versionName = "1.0"
 
         // ── All keys loaded from local.properties ──
@@ -129,7 +129,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
 
     // Provides com.google.common.util.concurrent.ListenableFuture (no duplicates)
     implementation("com.google.guava:guava:33.0.0-android")
@@ -158,10 +158,8 @@ dependencies {
     // Coil — async image loading for Compose
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // Google Play Billing Library (explicit version — required by Play policy, ≥ 7.0.0)
-    implementation("com.android.billingclient:billing:8.0.0")
-
-    // RevenueCat
+    // RevenueCat (pulls Google Play Billing Library transitively — don't add an explicit
+    // billing dep, it causes a classpath clash that makes getOfferings() hang)
     implementation("com.revenuecat.purchases:purchases:8.25.0")
     implementation("com.revenuecat.purchases:purchases-ui:8.25.0")
 }
