@@ -277,6 +277,24 @@ serve(async (req)=>{
             }
           }
         }
+        // time_in_high_hr_zones_daily — Garmin's vigorous-intensity seconds
+        // (whole-day auto-computed ≈ HR zone 4+, covers workouts + ambient).
+        if (await isGarminEnabled(userId, "time_in_high_hr_zones_daily")) {
+          const vigSec = numOrNull(d.vigorousIntensityDurationInSeconds);
+          if (vigSec != null && vigSec > 0) {
+            const minutes = Math.round(vigSec / 60 * 10) / 10;
+            if (await tryMarkMetricRan(userId, "time_in_high_hr_zones_daily", localDate)) {
+              await supabase.from("time_in_high_hr_zones_daily").upsert({
+                user_id: userId,
+                date: localDate,
+                value_minutes: minutes,
+                source: "garmin",
+                source_measure_id: `garmin_daily_${localDate}`,
+                activity_type: "daily_total"
+              }, { onConflict: "user_id,source,source_measure_id" });
+            }
+          }
+        }
         results.push({
           type: "dailies",
           userId,
@@ -331,7 +349,7 @@ serve(async (req)=>{
         // sleep_score_daily
         if (await isGarminEnabled(userId, "sleep_score_daily")) {
           const scoreObj = s.sleepScores;
-          const val = intOrNull(scoreObj?.overall?.value ?? scoreObj?.overall ?? s.overallScore);
+          const val = intOrNull(s.overallSleepScore?.value ?? scoreObj?.overall?.value);
           if (val != null && await tryMarkMetricRan(userId, "sleep_score_daily", localDate)) {
             await upsertDailyRow("sleep_score_daily", {
               user_id: userId,
@@ -422,30 +440,8 @@ serve(async (req)=>{
             }
           }
         }
-        // respiratory_rate_daily (from sleep averageRespiration)
-        if (await isGarminEnabled(userId, "respiratory_rate_daily")) {
-          const val = numOrNull(s.averageRespiration);
-          if (val != null && await tryMarkMetricRan(userId, "respiratory_rate_daily", localDate)) {
-            await upsertDailyRow("respiratory_rate_daily", {
-              user_id: userId,
-              date: localDate,
-              value_bpm: Math.round(val * 10) / 10,
-              source: "garmin", source_device: await resolveDevice(s, userId)
-            });
-          }
-        }
-        // spo2_daily (from sleep averageSpO2Value)
-        if (await isGarminEnabled(userId, "spo2_daily")) {
-          const val = numOrNull(s.averageSpO2Value ?? s.averageSpO2);
-          if (val != null && val > 0 && await tryMarkMetricRan(userId, "spo2_daily", localDate)) {
-            await upsertDailyRow("spo2_daily", {
-              user_id: userId,
-              date: localDate,
-              value_pct: Math.round(val * 10) / 10,
-              source: "garmin", source_device: await resolveDevice(s, userId)
-            });
-          }
-        }
+        // Note: respiratory_rate_daily and spo2_daily are populated from the
+        // dedicated allDayRespiration and pulseOx summary types, not from sleep.
         results.push({
           type: "sleeps",
           userId,
@@ -550,7 +546,7 @@ serve(async (req)=>{
             const values = Object.values(offsets).map(Number).filter((v)=>v > 0 && v <= 100);
             if (values.length > 0) {
               const avg = Math.round(values.reduce((a, b)=>a + b, 0) / values.length * 10) / 10;
-              if (await tryMarkMetricRan(userId, "spo2_daily_pulseox", localDate)) {
+              if (await tryMarkMetricRan(userId, "spo2_daily", localDate)) {
                 await upsertDailyRow("spo2_daily", {
                   user_id: userId,
                   date: localDate,
@@ -592,12 +588,12 @@ serve(async (req)=>{
             const values = Object.values(offsets).map(Number).filter((v)=>v > 0 && v < 60);
             if (values.length > 0) {
               const avg = Math.round(values.reduce((a, b)=>a + b, 0) / values.length * 10) / 10;
-              if (await tryMarkMetricRan(userId, "respiratory_rate_daily_resp", localDate)) {
+              if (await tryMarkMetricRan(userId, "respiratory_rate_daily", localDate)) {
                 await upsertDailyRow("respiratory_rate_daily", {
                   user_id: userId,
                   date: localDate,
                   value_bpm: avg,
-                  source: "garmin", source_device: await resolveDevice(po, userId)
+                  source: "garmin", source_device: await resolveDevice(r, userId)
                 });
               }
             }
@@ -636,7 +632,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_rmssd_ms: Math.round(val),
-              source: "garmin", source_device: await resolveDevice(po, userId)
+              source: "garmin", source_device: await resolveDevice(h, userId)
             });
           }
         }
@@ -673,7 +669,7 @@ serve(async (req)=>{
               user_id: userId,
               date: localDate,
               value_celsius: Math.round(val * 100) / 100,
-              source: "garmin", source_device: await resolveDevice(po, userId)
+              source: "garmin", source_device: await resolveDevice(st, userId)
             });
           }
         }
