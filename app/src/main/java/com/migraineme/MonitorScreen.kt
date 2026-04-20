@@ -147,6 +147,10 @@ fun MonitorScreen(
     var menstruationEnabled by remember { mutableStateOf(false) }
     var menstruationLoading by remember { mutableStateOf(true) }
 
+    // Set of metrics the user has enabled in Data Settings. Metrics not in this
+    // set must not appear on Monitor graphs.
+    var enabledMetrics by remember { mutableStateOf<Set<String>>(emptySet()) }
+
     // Risk history data
     var riskHistory by remember { mutableStateOf<List<SupabaseDbService.RiskScoreDailyRow>>(emptyList()) }
     var migraineDates by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -191,6 +195,16 @@ fun MonitorScreen(
             return@LaunchedEffect
         }
         
+        // Load enabled metric settings up-front — all category loaders depend on this
+        withContext(Dispatchers.IO) {
+            enabledMetrics = try {
+                val edge = EdgeFunctionsService()
+                edge.getMetricSettings(ctx).filter { it.enabled }.map { it.metric }.toSet()
+            } catch (_: Exception) {
+                emptySet()
+            }
+        }
+
         // Load risk history + migraines
         withContext(Dispatchers.IO) {
             try {
@@ -208,10 +222,14 @@ fun MonitorScreen(
         
         // Load nutrition items (same as MonitorNutritionScreen — supports all 34 nutrients)
         withContext(Dispatchers.IO) {
-            nutritionItems = try {
-                USDAFoodSearchService(ctx).getTodayNutritionItems()
-            } catch (_: Exception) {
+            nutritionItems = if ("nutrition" !in enabledMetrics) {
                 emptyList()
+            } else {
+                try {
+                    USDAFoodSearchService(ctx).getTodayNutritionItems()
+                } catch (_: Exception) {
+                    emptyList()
+                }
             }
             nutritionLoading = false
         }
@@ -219,53 +237,48 @@ fun MonitorScreen(
         // Load weather summary
         withContext(Dispatchers.IO) {
             weatherSummary = try {
-                loadWeatherSummary(ctx, token, today)
+                loadWeatherSummary(ctx, token, today, enabledMetrics)
             } catch (_: Exception) {
                 null
             }
             weatherLoading = false
         }
-        
+
         // Load physical health summary
         withContext(Dispatchers.IO) {
             physicalSummary = try {
-                loadPhysicalSummary(ctx, token, today)
+                loadPhysicalSummary(ctx, token, today, enabledMetrics)
             } catch (_: Exception) {
                 null
             }
             physicalLoading = false
         }
-        
+
         // Load mental health summary
         withContext(Dispatchers.IO) {
             mentalSummary = try {
-                loadMentalSummary(ctx, token, today)
+                loadMentalSummary(ctx, token, today, enabledMetrics)
             } catch (_: Exception) {
                 null
             }
             mentalLoading = false
         }
-        
+
         // Load sleep summary
         withContext(Dispatchers.IO) {
             sleepSummary = try {
-                loadSleepSummary(ctx, token, today)
+                loadSleepSummary(ctx, token, today, enabledMetrics)
             } catch (_: Exception) {
                 null
             }
             sleepLoading = false
         }
-        
+
         // Load menstruation settings AND check if enabled
         withContext(Dispatchers.IO) {
             try {
-                // Check if menstruation metric is enabled
-                val edge = EdgeFunctionsService()
-                val metricSettings = edge.getMetricSettings(ctx)
-                menstruationEnabled = metricSettings.any { 
-                    it.metric == "menstruation" && it.enabled 
-                }
-                
+                menstruationEnabled = "menstruation" in enabledMetrics
+
                 // Only load settings if enabled
                 if (menstruationEnabled) {
                     menstruationSettings = SupabaseMenstruationService(ctx).getSettings(token)
@@ -341,7 +354,7 @@ fun MonitorScreen(
                             EnvironmentCard(
                                 weatherLoading = weatherLoading,
                                 weatherSummary = weatherSummary,
-                                displayMetrics = weatherDisplayMetrics.take(3),
+                                displayMetrics = filterWeatherDisplayMetrics(weatherDisplayMetrics, enabledMetrics).take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_ENVIRONMENT) }
                             )
                         }
@@ -349,7 +362,7 @@ fun MonitorScreen(
                             PhysicalHealthCard(
                                 physicalLoading = physicalLoading,
                                 physicalSummary = physicalSummary,
-                                displayMetrics = physicalDisplayMetrics.take(3),
+                                displayMetrics = filterPhysicalDisplayMetrics(physicalDisplayMetrics, enabledMetrics).take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_PHYSICAL) }
                             )
                         }
@@ -357,7 +370,7 @@ fun MonitorScreen(
                             SleepCard(
                                 sleepLoading = sleepLoading,
                                 sleepSummary = sleepSummary,
-                                displayMetrics = sleepDisplayMetrics.take(3),
+                                displayMetrics = filterSleepDisplayMetrics(sleepDisplayMetrics, enabledMetrics).take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_SLEEP) }
                             )
                         }
@@ -365,7 +378,7 @@ fun MonitorScreen(
                             MentalHealthCard(
                                 mentalLoading = mentalLoading,
                                 mentalSummary = mentalSummary,
-                                displayMetrics = mentalDisplayMetrics.take(3),
+                                displayMetrics = filterMentalDisplayMetrics(mentalDisplayMetrics, enabledMetrics).take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_MENTAL) }
                             )
                         }
@@ -864,11 +877,22 @@ internal data class SleepSummary(
 
 // Data loading functions
 
-internal suspend fun loadWeatherSummary(ctx: android.content.Context, token: String, date: String): WeatherSummary? {
+internal suspend fun loadWeatherSummary(
+    ctx: android.content.Context,
+    token: String,
+    date: String,
+    enabledMetrics: Set<String> = emptySet()
+): WeatherSummary? {
     return withContext(Dispatchers.IO) {
+        // If the user has disabled all environment metrics, don't even load.
+        val anyWeatherEnabled = WEATHER_METRIC_KEYS.any { it in enabledMetrics }
+                || "user_location_daily" in enabledMetrics
+                || "thunderstorm_daily" in enabledMetrics
+        if (enabledMetrics.isNotEmpty() && !anyWeatherEnabled) return@withContext null
+
         try {
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/user_weather_daily?user_id=eq.${SessionStore.readUserId(ctx)}&date=eq.$date&select=*"
-            
+
             val client = OkHttpClient()
             val request = Request.Builder()
                 .url(url)
@@ -876,17 +900,17 @@ internal suspend fun loadWeatherSummary(ctx: android.content.Context, token: Str
                 .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 .addHeader("Authorization", "Bearer $token")
                 .build()
-            
+
             val response = client.newCall(request).execute()
             val body = response.body?.string() ?: return@withContext null
-            
+
             if (!response.isSuccessful) return@withContext null
-            
+
             val arr = org.json.JSONArray(body)
             if (arr.length() == 0) return@withContext null
-            
+
             val obj = arr.getJSONObject(0)
-            
+
             val weatherCode = obj.optInt("weather_code", 0)
             val condition = weatherCodeToCondition(weatherCode)
 
@@ -909,7 +933,7 @@ internal suspend fun loadWeatherSummary(ctx: android.content.Context, token: Str
                     }
                 }
             } catch (_: Exception) { }
-            
+
             WeatherSummary(
                 temperature = obj.optDouble("temp_c_mean", 0.0).toInt(),
                 condition = condition,
@@ -925,6 +949,71 @@ internal suspend fun loadWeatherSummary(ctx: android.content.Context, token: Str
             null
         }
     }
+}
+
+private val WEATHER_METRIC_KEYS = setOf(
+    "temperature_daily",
+    "pressure_daily",
+    "humidity_daily",
+    "wind_daily",
+    "uv_daily"
+)
+
+internal fun filterWeatherDisplayMetrics(
+    displayMetrics: List<String>,
+    enabledMetrics: Set<String>
+): List<String> {
+    if (enabledMetrics.isEmpty()) return displayMetrics
+    return displayMetrics.filter { metric ->
+        when (metric) {
+            WeatherCardConfig.METRIC_TEMPERATURE -> "temperature_daily" in enabledMetrics
+            WeatherCardConfig.METRIC_PRESSURE -> "pressure_daily" in enabledMetrics
+            WeatherCardConfig.METRIC_HUMIDITY -> "humidity_daily" in enabledMetrics
+            WeatherCardConfig.METRIC_WIND_SPEED -> "wind_daily" in enabledMetrics
+            WeatherCardConfig.METRIC_UV_INDEX -> "uv_daily" in enabledMetrics
+            WeatherCardConfig.METRIC_ALTITUDE,
+            WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> "user_location_daily" in enabledMetrics
+            else -> true
+        }
+    }
+}
+
+// Map a Sleep card display metric key to its metric_settings table key.
+private fun sleepMetricToTable(metric: String): String = when (metric) {
+    SleepCardConfig.METRIC_DURATION -> "sleep_duration_daily"
+    SleepCardConfig.METRIC_SCORE -> "sleep_score_daily"
+    SleepCardConfig.METRIC_EFFICIENCY -> "sleep_efficiency_daily"
+    SleepCardConfig.METRIC_DISTURBANCES -> "sleep_disturbances_daily"
+    SleepCardConfig.METRIC_STAGES_DEEP,
+    SleepCardConfig.METRIC_STAGES_REM,
+    SleepCardConfig.METRIC_STAGES_LIGHT -> "sleep_stages_daily"
+    SleepCardConfig.METRIC_FELL_ASLEEP -> "fell_asleep_time_daily"
+    SleepCardConfig.METRIC_WOKE_UP -> "woke_up_time_daily"
+    else -> ""
+}
+
+internal fun filterSleepDisplayMetrics(
+    displayMetrics: List<String>,
+    enabledMetrics: Set<String>
+): List<String> {
+    if (enabledMetrics.isEmpty()) return displayMetrics
+    return displayMetrics.filter { sleepMetricToTable(it) in enabledMetrics }
+}
+
+internal fun filterPhysicalDisplayMetrics(
+    displayMetrics: List<String>,
+    enabledMetrics: Set<String>
+): List<String> {
+    if (enabledMetrics.isEmpty()) return displayMetrics
+    return displayMetrics.filter { PhysicalCardConfig.metricToTable(it) in enabledMetrics }
+}
+
+internal fun filterMentalDisplayMetrics(
+    displayMetrics: List<String>,
+    enabledMetrics: Set<String>
+): List<String> {
+    if (enabledMetrics.isEmpty()) return displayMetrics
+    return displayMetrics.filter { MentalCardConfig.metricToTable(it) in enabledMetrics }
 }
 
 private fun weatherCodeToCondition(code: Int): String {
@@ -948,11 +1037,17 @@ private fun weatherCodeToCondition(code: Int): String {
     }
 }
 
-internal suspend fun loadPhysicalSummary(ctx: android.content.Context, token: String, date: String): PhysicalSummary? {
+internal suspend fun loadPhysicalSummary(
+    ctx: android.content.Context,
+    token: String,
+    date: String,
+    enabledMetrics: Set<String> = emptySet()
+): PhysicalSummary? {
     val userId = SessionStore.readUserId(ctx) ?: return null
     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
     val key = BuildConfig.SUPABASE_ANON_KEY
     val client = OkHttpClient()
+    fun enabled(metric: String): Boolean = enabledMetrics.isEmpty() || metric in enabledMetrics
 
     fun fetchDouble(table: String, column: String): Double? {
         return try {
@@ -988,39 +1083,41 @@ internal suspend fun loadPhysicalSummary(ctx: android.content.Context, token: St
         } catch (_: Exception) { null }
     }
 
-    val recovery = fetchDouble("recovery_score_daily", "value_pct")
-    val hrv = fetchDouble("hrv_daily", "value_rmssd_ms")
-    val rhr = fetchDouble("resting_hr_daily", "value_bpm")
-    val spo2 = fetchDouble("spo2_daily", "value_pct")
-    val skinTemp = fetchDouble("skin_temp_daily", "value_celsius")
-    val respiratoryRate = fetchDouble("respiratory_rate_daily", "value_bpm")
-    val stress = fetchDouble("stress_index_daily", "value")
-    val highHrZones = fetchDouble("time_in_high_hr_zones_daily", "value_minutes")
-    val steps = fetchInt("steps_daily", "value_count")
-    val weight = fetchDouble("weight_daily", "value_kg")
-    val bodyFat = fetchDouble("body_fat_daily", "value_pct")
-    val bloodGlucose = fetchDouble("blood_glucose_daily", "value_mgdl")
+    val recovery = if (enabled("recovery_score_daily")) fetchDouble("recovery_score_daily", "value_pct") else null
+    val hrv = if (enabled("hrv_daily")) fetchDouble("hrv_daily", "value_rmssd_ms") else null
+    val rhr = if (enabled("resting_hr_daily")) fetchDouble("resting_hr_daily", "value_bpm") else null
+    val spo2 = if (enabled("spo2_daily")) fetchDouble("spo2_daily", "value_pct") else null
+    val skinTemp = if (enabled("skin_temp_daily")) fetchDouble("skin_temp_daily", "value_celsius") else null
+    val respiratoryRate = if (enabled("respiratory_rate_daily")) fetchDouble("respiratory_rate_daily", "value_bpm") else null
+    val stress = if (enabled("stress_index_daily")) fetchDouble("stress_index_daily", "value") else null
+    val highHrZones = if (enabled("time_in_high_hr_zones_daily")) fetchDouble("time_in_high_hr_zones_daily", "value_minutes") else null
+    val steps = if (enabled("steps_daily")) fetchInt("steps_daily", "value_count") else null
+    val weight = if (enabled("weight_daily")) fetchDouble("weight_daily", "value_kg") else null
+    val bodyFat = if (enabled("body_fat_daily")) fetchDouble("body_fat_daily", "value_pct") else null
+    val bloodGlucose = if (enabled("blood_glucose_daily")) fetchDouble("blood_glucose_daily", "value_mgdl") else null
 
     // Blood pressure needs two columns
     var bpSys: Int? = null
     var bpDia: Int? = null
-    try {
-        val url = "$base/rest/v1/blood_pressure_daily?user_id=eq.$userId&date=eq.$date&select=value_systolic,value_diastolic&limit=1"
-        val req = Request.Builder().url(url).get()
-            .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
-        val resp = client.newCall(req).execute()
-        val body = resp.body?.string()
-        if (resp.isSuccessful && !body.isNullOrBlank()) {
-            val arr = org.json.JSONArray(body)
-            if (arr.length() > 0) {
-                val obj = arr.getJSONObject(0)
-                val s = obj.optDouble("value_systolic")
-                val d = obj.optDouble("value_diastolic")
-                if (!s.isNaN()) bpSys = s.toInt()
-                if (!d.isNaN()) bpDia = d.toInt()
+    if (enabled("blood_pressure_daily")) {
+        try {
+            val url = "$base/rest/v1/blood_pressure_daily?user_id=eq.$userId&date=eq.$date&select=value_systolic,value_diastolic&limit=1"
+            val req = Request.Builder().url(url).get()
+                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
+            val resp = client.newCall(req).execute()
+            val body = resp.body?.string()
+            if (resp.isSuccessful && !body.isNullOrBlank()) {
+                val arr = org.json.JSONArray(body)
+                if (arr.length() > 0) {
+                    val obj = arr.getJSONObject(0)
+                    val s = obj.optDouble("value_systolic")
+                    val d = obj.optDouble("value_diastolic")
+                    if (!s.isNaN()) bpSys = s.toInt()
+                    if (!d.isNaN()) bpDia = d.toInt()
+                }
             }
-        }
-    } catch (_: Exception) {}
+        } catch (_: Exception) {}
+    }
 
     // If nothing at all, return null
     if (recovery == null && hrv == null && rhr == null && spo2 == null && skinTemp == null &&
@@ -1047,93 +1144,97 @@ internal suspend fun loadPhysicalSummary(ctx: android.content.Context, token: St
     )
 }
 
-internal suspend fun loadSleepSummary(ctx: android.content.Context, token: String, date: String): SleepSummary? {
+internal suspend fun loadSleepSummary(
+    ctx: android.content.Context,
+    token: String,
+    date: String,
+    enabledMetrics: Set<String> = emptySet()
+): SleepSummary? {
     val db = SupabaseMetricsService(ctx)
-    
+    fun enabled(metric: String): Boolean = enabledMetrics.isEmpty() || metric in enabledMetrics
+
     // Fetch sleep metrics for today
-    val durationList = try {
-        db.fetchSleepDurationDaily(token, 1)
-    } catch (_: Exception) {
-        emptyList()
+    val durationList = if (!enabled("sleep_duration_daily")) emptyList() else {
+        try { db.fetchSleepDurationDaily(token, 1) } catch (_: Exception) { emptyList() }
     }
-    
-    val scoreList = try {
-        db.fetchSleepScoreDaily(token, 1)
-    } catch (_: Exception) {
-        emptyList()
+
+    val scoreList = if (!enabled("sleep_score_daily")) emptyList() else {
+        try { db.fetchSleepScoreDaily(token, 1) } catch (_: Exception) { emptyList() }
     }
-    
-    val efficiencyList = try {
-        db.fetchSleepEfficiencyDaily(token, 1)
-    } catch (_: Exception) {
-        emptyList()
+
+    val efficiencyList = if (!enabled("sleep_efficiency_daily")) emptyList() else {
+        try { db.fetchSleepEfficiencyDaily(token, 1) } catch (_: Exception) { emptyList() }
     }
-    
+
     // Check if we have data for today
     val todayDuration = durationList.find { it.date == date }
     val todayScore = scoreList.find { it.date == date }
     val todayEfficiency = efficiencyList.find { it.date == date }
-    
+
     if (todayDuration == null && todayScore == null && todayEfficiency == null) {
         return null
     }
-    
+
     // Fetch fell asleep / woke up / source via raw query
     val userId = SessionStore.readUserId(ctx)
     var fellAsleepDisplay: String? = null
     var wokeUpDisplay: String? = null
     var sourceLabel = ""
-    
+
     if (userId != null) {
         val client = okhttp3.OkHttpClient()
-        
+
         // Fell asleep
-        try {
-            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/fell_asleep_time_daily?" +
-                    "user_id=eq.$userId&date=eq.$date&select=value_at&limit=1"
-            val request = okhttp3.Request.Builder().url(url).get()
-                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                .addHeader("Authorization", "Bearer $token").build()
-            val response = client.newCall(request).execute()
-            val body = response.body?.string()
-            if (response.isSuccessful && !body.isNullOrBlank()) {
-                val arr = org.json.JSONArray(body)
-                if (arr.length() > 0) {
-                    val valueAt = arr.getJSONObject(0).optString("value_at", "")
-                    if (valueAt.isNotBlank()) {
-                        fellAsleepDisplay = try {
-                            val zdt = java.time.ZonedDateTime.parse(valueAt)
-                            val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
-                            local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
-                        } catch (_: Exception) { valueAt.take(5) }
+        if (enabled("fell_asleep_time_daily")) {
+            try {
+                val url = "${BuildConfig.SUPABASE_URL}/rest/v1/fell_asleep_time_daily?" +
+                        "user_id=eq.$userId&date=eq.$date&select=value_at&limit=1"
+                val request = okhttp3.Request.Builder().url(url).get()
+                    .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    .addHeader("Authorization", "Bearer $token").build()
+                val response = client.newCall(request).execute()
+                val body = response.body?.string()
+                if (response.isSuccessful && !body.isNullOrBlank()) {
+                    val arr = org.json.JSONArray(body)
+                    if (arr.length() > 0) {
+                        val valueAt = arr.getJSONObject(0).optString("value_at", "")
+                        if (valueAt.isNotBlank()) {
+                            fellAsleepDisplay = try {
+                                val zdt = java.time.ZonedDateTime.parse(valueAt)
+                                val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
+                                local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+                            } catch (_: Exception) { valueAt.take(5) }
+                        }
                     }
                 }
-            }
-        } catch (_: Exception) {}
-        
+            } catch (_: Exception) {}
+        }
+
         // Woke up
-        try {
-            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/woke_up_time_daily?" +
-                    "user_id=eq.$userId&date=eq.$date&select=value_at&limit=1"
-            val request = okhttp3.Request.Builder().url(url).get()
-                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                .addHeader("Authorization", "Bearer $token").build()
-            val response = client.newCall(request).execute()
-            val body = response.body?.string()
-            if (response.isSuccessful && !body.isNullOrBlank()) {
-                val arr = org.json.JSONArray(body)
-                if (arr.length() > 0) {
-                    val valueAt = arr.getJSONObject(0).optString("value_at", "")
-                    if (valueAt.isNotBlank()) {
-                        wokeUpDisplay = try {
-                            val zdt = java.time.ZonedDateTime.parse(valueAt)
-                            val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
-                            local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
-                        } catch (_: Exception) { valueAt.take(5) }
+        if (enabled("woke_up_time_daily")) {
+            try {
+                val url = "${BuildConfig.SUPABASE_URL}/rest/v1/woke_up_time_daily?" +
+                        "user_id=eq.$userId&date=eq.$date&select=value_at&limit=1"
+                val request = okhttp3.Request.Builder().url(url).get()
+                    .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    .addHeader("Authorization", "Bearer $token").build()
+                val response = client.newCall(request).execute()
+                val body = response.body?.string()
+                if (response.isSuccessful && !body.isNullOrBlank()) {
+                    val arr = org.json.JSONArray(body)
+                    if (arr.length() > 0) {
+                        val valueAt = arr.getJSONObject(0).optString("value_at", "")
+                        if (valueAt.isNotBlank()) {
+                            wokeUpDisplay = try {
+                                val zdt = java.time.ZonedDateTime.parse(valueAt)
+                                val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
+                                local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+                            } catch (_: Exception) { valueAt.take(5) }
+                        }
                     }
                 }
-            }
-        } catch (_: Exception) {}
+            } catch (_: Exception) {}
+        }
         
         // Source
         try {
@@ -1155,13 +1256,17 @@ internal suspend fun loadSleepSummary(ctx: android.content.Context, token: Strin
     }
     
     // Fetch disturbances and stages (wearable-only, may be null)
-    val todayDisturbances = try {
-        db.fetchSleepDisturbancesDaily(token, 1).find { it.date == date }
-    } catch (_: Exception) { null }
-    
-    val todayStages = try {
-        db.fetchSleepStagesDaily(token, 1).find { it.date == date }
-    } catch (_: Exception) { null }
+    val todayDisturbances = if (!enabled("sleep_disturbances_daily")) null else {
+        try {
+            db.fetchSleepDisturbancesDaily(token, 1).find { it.date == date }
+        } catch (_: Exception) { null }
+    }
+
+    val todayStages = if (!enabled("sleep_stages_daily")) null else {
+        try {
+            db.fetchSleepStagesDaily(token, 1).find { it.date == date }
+        } catch (_: Exception) { null }
+    }
     
     return SleepSummary(
         durationHours = todayDuration?.value_hours ?: 0.0,
@@ -1202,11 +1307,17 @@ internal data class MentalSummary(
     }
 }
 
-internal suspend fun loadMentalSummary(ctx: android.content.Context, token: String, date: String): MentalSummary? {
+internal suspend fun loadMentalSummary(
+    ctx: android.content.Context,
+    token: String,
+    date: String,
+    enabledMetrics: Set<String> = emptySet()
+): MentalSummary? {
     val userId = SessionStore.readUserId(ctx) ?: return null
     val client = OkHttpClient()
     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
     val key = BuildConfig.SUPABASE_ANON_KEY
+    fun enabled(metric: String): Boolean = enabledMetrics.isEmpty() || metric in enabledMetrics
 
     fun fetchDouble(table: String, column: String): Double? {
         return try {
@@ -1299,22 +1410,29 @@ internal suspend fun loadMentalSummary(ctx: android.content.Context, token: Stri
         } catch (_: Exception) { null }
     }
 
-    val stress = fetchDouble("stress_index_daily", "value")
-    val screenTime = fetchDouble("screen_time_daily", "total_hours")
-        ?: fetchDouble("screen_time_live", "value_hours")
-    val lateScreen = fetchDouble("screen_time_late_night", "value_hours")
-    val noise = fetchDouble("ambient_noise_index_daily", "day_mean_lmean")
-        ?: fetchSamplesAvg("ambient_noise_samples", "l_mean", "start_ts")
+    val stress = if (enabled("stress_index_daily")) fetchDouble("stress_index_daily", "value") else null
+    val screenTime = if (enabled("screen_time_daily")) {
+        fetchDouble("screen_time_daily", "total_hours") ?: fetchDouble("screen_time_live", "value_hours")
+    } else null
+    val lateScreen = if (enabled("screen_time_late_night")) fetchDouble("screen_time_late_night", "value_hours") else null
+    val noise = if (enabled("ambient_noise_index_daily") || enabled("ambient_noise_samples")) {
+        fetchDouble("ambient_noise_index_daily", "day_mean_lmean")
+            ?: fetchSamplesAvg("ambient_noise_samples", "l_mean", "start_ts")
+    } else null
 
     // Phone behavior: try daily table first, fall back to live samples
-    val brightness = fetchDouble("phone_brightness_daily", "value_mean")
-        ?: fetchSamplesAvg("phone_brightness_samples", "value")
-    val volume = fetchDouble("phone_volume_daily", "value_mean_pct")
-        ?: fetchSamplesAvg("phone_volume_samples", "value_pct")
-    val darkMode = fetchDouble("phone_dark_mode_daily", "value_hours")
-        ?: fetchDarkModeSamplesHours()
-    val unlocks = fetchInt("phone_unlock_daily", "value_count")
-        ?: fetchSamplesMax("phone_unlock_samples", "value_count")
+    val brightness = if (enabled("phone_brightness_daily")) {
+        fetchDouble("phone_brightness_daily", "value_mean") ?: fetchSamplesAvg("phone_brightness_samples", "value")
+    } else null
+    val volume = if (enabled("phone_volume_daily")) {
+        fetchDouble("phone_volume_daily", "value_mean_pct") ?: fetchSamplesAvg("phone_volume_samples", "value_pct")
+    } else null
+    val darkMode = if (enabled("phone_dark_mode_daily")) {
+        fetchDouble("phone_dark_mode_daily", "value_hours") ?: fetchDarkModeSamplesHours()
+    } else null
+    val unlocks = if (enabled("phone_unlock_daily")) {
+        fetchInt("phone_unlock_daily", "value_count") ?: fetchSamplesMax("phone_unlock_samples", "value_count")
+    } else null
 
     if (stress == null && screenTime == null && lateScreen == null && noise == null &&
         brightness == null && volume == null && darkMode == null && unlocks == null) {
