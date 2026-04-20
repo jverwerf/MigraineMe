@@ -96,7 +96,10 @@ object PremiumManager {
                 return@withContext
             }
 
-            val trialState = loadTrialFromSupabase(accessToken)
+            val userId = SessionStore.readUserId(appCtx)
+                ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
+                ?: run { _state.update { PremiumState(isLoaded = true) }; return@withContext }
+            val trialState = loadTrialFromSupabase(accessToken, userId)
             val rcState = loadFromRevenueCat()
 
             val tier = when {
@@ -132,9 +135,9 @@ object PremiumManager {
         val isDbSubscribed: Boolean = false
     )
 
-    private fun loadTrialFromSupabase(accessToken: String): TrialInfo {
+    private fun loadTrialFromSupabase(accessToken: String, userId: String): TrialInfo {
         return try {
-            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/premium_status?select=trial_end,rc_subscription_status&limit=1"
+            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/premium_status?user_id=eq.$userId&select=trial_end,rc_subscription_status&limit=1"
             val request = Request.Builder()
                 .url(url)
                 .get()
