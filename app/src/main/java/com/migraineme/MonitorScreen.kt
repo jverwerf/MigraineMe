@@ -133,6 +133,7 @@ fun MonitorScreen(
     // Physical health data
     var physicalSummary by remember { mutableStateOf<PhysicalSummary?>(null) }
     var physicalLoading by remember { mutableStateOf(true) }
+    var physicalSources by remember { mutableStateOf<List<String>>(emptyList()) }
     
     // Mental health data
     var mentalSummary by remember { mutableStateOf<MentalSummary?>(null) }
@@ -255,6 +256,11 @@ fun MonitorScreen(
             } catch (_: Exception) {
                 null
             }
+            physicalSources = try {
+                fetchSourcesForDate(ctx, token, today, listOf("hrv_daily", "resting_hr_daily", "recovery_score_daily", "steps_daily"))
+            } catch (_: Exception) {
+                emptyList()
+            }
             physicalLoading = false
         }
 
@@ -367,6 +373,7 @@ fun MonitorScreen(
                                 physicalLoading = physicalLoading,
                                 physicalSummary = physicalSummary,
                                 displayMetrics = filterPhysicalDisplayMetrics(physicalDisplayMetrics, enabledMetrics).take(3),
+                                sources = physicalSources,
                                 onClick = { navController.navigate(Routes.MONITOR_PHYSICAL) }
                             )
                         }
@@ -520,6 +527,7 @@ private fun PhysicalHealthCard(
     physicalLoading: Boolean,
     physicalSummary: PhysicalSummary?,
     displayMetrics: List<String>,
+    sources: List<String>,
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
@@ -561,6 +569,10 @@ private fun PhysicalHealthCard(
                     }
                     PhysicalMetric(label, value, color)
                 }
+            }
+            if (sources.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                SourceBadgeRow(sources)
             }
         }
     }
