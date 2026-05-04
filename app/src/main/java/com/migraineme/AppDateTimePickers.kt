@@ -72,7 +72,6 @@ fun DateTimePickerField(
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var pickedDate by remember { mutableStateOf<LocalDate?>(null) }
-    var display by remember { mutableStateOf(label) }
 
     val datePickerState = rememberDatePickerState()
     val timePickerState = rememberTimePickerState(
@@ -88,7 +87,7 @@ fun DateTimePickerField(
         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.BodyTextColor),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
     ) {
-        Text(display, color = AppTheme.BodyTextColor)
+        Text(label, color = AppTheme.BodyTextColor)
     }
 
     // Date picker dialog
@@ -138,7 +137,6 @@ fun DateTimePickerField(
                             timePickerState.hour,
                             timePickerState.minute
                         )
-                        display = iso
                         onDateTimeSelected(iso)
                         showTimePicker = false
                     }
