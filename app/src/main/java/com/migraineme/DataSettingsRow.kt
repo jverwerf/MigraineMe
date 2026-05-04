@@ -537,7 +537,7 @@ private fun polarConversionNote(table: String): String? = when (table) {
         "Polar reports total interruption duration. Converted to an approximate disturbance count: 1 per 5 interruption minutes."
 
     "recovery_score_daily" ->
-        "Polar's Nightly Recharge ANS charge score is used as recovery. Scale varies; normalized to 0–100 where possible."
+        "Polar's Nightly Recharge status (1–5 stars) is converted to a percentage: status × 20. So 5★ → 100%, 4★ → 80%, etc."
 
     "strain_daily" ->
         "Active calories from Polar's daily activity are converted to kilojoules (×4.184)."
