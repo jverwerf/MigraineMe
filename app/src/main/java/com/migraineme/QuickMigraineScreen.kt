@@ -89,7 +89,7 @@ fun QuickMigraineScreen(
 
     // Split frequent by category
     val freqPainIds = favorites.filter { it.symptom?.category == "pain_character" }.mapNotNull { it.symptom?.label }.toSet()
-    val freqAccompIds = favorites.filter { it.symptom?.category == "accompanying" }.mapNotNull { it.symptom?.label }.toSet()
+    val freqAccompIds = favorites.filter { it.symptom?.category != null && it.symptom?.category != "pain_character" }.mapNotNull { it.symptom?.label }.toSet()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
