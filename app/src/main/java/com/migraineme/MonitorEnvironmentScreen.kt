@@ -171,11 +171,6 @@ fun MonitorEnvironmentScreen(
                     )
                 }
             }
-            DismissableInfoCard(
-                key = "monitor_environment",
-                text = "Barometric pressure changes, humidity, and temperature fluctuations are common migraine triggers. We track these automatically based on your location."
-            )
-
             // Show disabled message if ALL environment tracking is off
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
                 BaseCard {

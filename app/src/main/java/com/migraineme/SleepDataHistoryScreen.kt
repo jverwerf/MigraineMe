@@ -338,20 +338,6 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                 }
             }
 
-            HeroCard {
-                Text(
-                    "Sleep Data",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "View and edit sleep entries",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
             // Date navigation
             BaseCard {
                 Row(
@@ -425,7 +411,12 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                         }
                     }
 
-                    val selectedMetrics = sleepConfig.sleepDisplayMetrics.take(3)
+                    // Pull top 3 from the MetricDisplayStore the customize screen writes to,
+                    // falling back to the legacy SleepCardConfigStore.
+                    val displayKeys = MetricDisplayStore.getDisplayMetrics(context, "sleep")
+                        .map { MetricRegistry.toLegacyKey(it) }
+                        .ifEmpty { sleepConfig.sleepDisplayMetrics }
+                    val selectedMetrics = displayKeys.take(3)
                     val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
 
                     // Top 3 selected metrics

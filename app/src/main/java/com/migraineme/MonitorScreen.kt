@@ -142,6 +142,11 @@ fun MonitorScreen(
     // Sleep data
     var sleepSummary by remember { mutableStateOf<SleepSummary?>(null) }
     var sleepLoading by remember { mutableStateOf(true) }
+
+    // True when at least one health data source (Health Connect or any wearable
+    // OAuth token) is set up. Used to suppress the "connect a wearable" empty-
+    // state nag on the Sleep / Physical cards once a source is already configured.
+    var hasHealthSource by remember { mutableStateOf(false) }
     
     // Menstruation data
     var menstruationSettings by remember { mutableStateOf<MenstruationSettings?>(null) }
@@ -208,6 +213,16 @@ fun MonitorScreen(
             } catch (_: Exception) {
                 emptySet()
             }
+
+            // Detect whether any health source is configured so the empty-state
+            // hint on Sleep / Physical cards can drop the "connect a wearable" nag.
+            val hcConnected = ctx.getSharedPreferences("health_connect", android.content.Context.MODE_PRIVATE)
+                .getBoolean("is_connected", false)
+            val anyWearable = try { WhoopTokenStore(ctx).load() != null } catch (_: Exception) { false } ||
+                              try { OuraTokenStore(ctx).load() != null } catch (_: Exception) { false } ||
+                              try { PolarTokenStore(ctx).load() != null } catch (_: Exception) { false } ||
+                              try { GarminTokenStore(ctx).load() != null } catch (_: Exception) { false }
+            hasHealthSource = hcConnected || anyWearable
         }
 
         // Load risk history + migraines
@@ -374,6 +389,7 @@ fun MonitorScreen(
                                 physicalSummary = physicalSummary,
                                 displayMetrics = filterPhysicalDisplayMetrics(physicalDisplayMetrics, enabledMetrics).take(3),
                                 sources = physicalSources,
+                                hasHealthSource = hasHealthSource,
                                 onClick = { navController.navigate(Routes.MONITOR_PHYSICAL) }
                             )
                         }
@@ -382,6 +398,7 @@ fun MonitorScreen(
                                 sleepLoading = sleepLoading,
                                 sleepSummary = sleepSummary,
                                 displayMetrics = filterSleepDisplayMetrics(sleepDisplayMetrics, enabledMetrics).take(3),
+                                hasHealthSource = hasHealthSource,
                                 onClick = { navController.navigate(Routes.MONITOR_SLEEP) }
                             )
                         }
@@ -528,6 +545,7 @@ private fun PhysicalHealthCard(
     physicalSummary: PhysicalSummary?,
     displayMetrics: List<String>,
     sources: List<String>,
+    hasHealthSource: Boolean,
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
@@ -539,8 +557,13 @@ private fun PhysicalHealthCard(
         if (physicalLoading) {
             Text("Loading...", color = AppTheme.SubtleTextColor)
         } else if (physicalSummary == null) {
-            Text("No physical health data", color = AppTheme.SubtleTextColor)
-            Text("Connect a wearable to see data", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            Text(
+                if (hasHealthSource) "No recent data" else "No physical health data",
+                color = AppTheme.SubtleTextColor
+            )
+            if (!hasHealthSource) {
+                Text("Connect a wearable to see data", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            }
         } else {
             val physical = physicalSummary
             val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
@@ -583,6 +606,7 @@ private fun SleepCard(
     sleepLoading: Boolean,
     sleepSummary: SleepSummary?,
     displayMetrics: List<String>,
+    hasHealthSource: Boolean,
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
@@ -594,8 +618,13 @@ private fun SleepCard(
         if (sleepLoading) {
             Text("Loading...", color = AppTheme.SubtleTextColor)
         } else if (sleepSummary == null) {
-            Text("No sleep data", color = AppTheme.SubtleTextColor)
-            Text("Enable phone sleep or connect a wearable", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            Text(
+                if (hasHealthSource) "No recent sleep data" else "No sleep data",
+                color = AppTheme.SubtleTextColor
+            )
+            if (!hasHealthSource) {
+                Text("Enable phone sleep or connect a wearable", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            }
         } else {
             val sleep = sleepSummary
             Row(

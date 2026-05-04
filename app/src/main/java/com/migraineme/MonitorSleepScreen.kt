@@ -141,11 +141,6 @@ fun MonitorSleepScreen(
                 }
             }
 
-            DismissableInfoCard(
-                key = "monitor_sleep",
-                text = "Poor sleep quality and irregular sleep patterns are among the most common migraine triggers. Tracking your sleep helps identify patterns and predict migraine risk."
-            )
-
             // Show disabled message if ALL sleep tracking is off
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
                 BaseCard {

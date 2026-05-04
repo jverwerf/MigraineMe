@@ -128,12 +128,6 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
             }
         }
 
-        HeroCard {
-            Text("Risk Data", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.height(4.dp))
-            Text("View your daily risk scores and triggers", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-        }
-
         // Date navigation
         BaseCard {
             Row(

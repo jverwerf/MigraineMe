@@ -152,18 +152,17 @@ class ScreenTimeSyncWorker(
             } // end screenTimeEnabled
 
             // ========== 3. FINALIZE LATE-NIGHT SCREEN TIME ==========
-            // A late-night window for date D = 22:00 on D → 06:00 on D+1.
-            // It is complete once we are past 06:00 on D+1, i.e. today >= D+2,
-            // meaning we can finalize D = today - 2 (yesterday's evening is not yet complete).
+            // Stored under the MORNING date M. Window for M = 22:00 on M-1 → 06:00 on M.
+            // Complete once today >= M (we are past 06:00 on M). So latest completable M = today.
+            // Reading "today" on the Monitor returns last night's late-screen value.
             if (lateNightEnabled) {
             runCatching {
                 val latestLateNightStr = svc.latestScreenTimeLateNightDate(access, source = "android")
                 val latestLateNight = latestLateNightStr?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
 
-                // The most recent completable night is day-before-yesterday
-                val latestCompletable = today.minusDays(2)
+                val latestCompletable = today
 
-                val nightsToFinalize = if (latestLateNight == null) {
+                val morningsToFinalize = if (latestLateNight == null) {
                     listOf(latestCompletable)
                 } else {
                     val daysSince = ChronoUnit.DAYS.between(latestLateNight, latestCompletable)
@@ -177,13 +176,13 @@ class ScreenTimeSyncWorker(
                 var lnOk = 0
                 var lnFail = 0
 
-                nightsToFinalize.forEach { date ->
+                morningsToFinalize.forEach { morning ->
                     runCatching {
-                        val dateStr = date.toString()
-                        val lateNight = ScreenTimeCollector.getLateNightScreenTime(applicationContext, dateStr)
+                        val eveningDate = morning.minusDays(1)
+                        val lateNight = ScreenTimeCollector.getLateNightScreenTime(applicationContext, eveningDate.toString())
 
                         if (lateNight == null) {
-                            Log.w(TAG, "No late-night screen time data for $dateStr")
+                            Log.w(TAG, "No late-night screen time data for evening $eveningDate (morning $morning)")
                             lnFail++
                             return@forEach
                         }
@@ -191,23 +190,23 @@ class ScreenTimeSyncWorker(
                         val totalHours = lateNight.totalSeconds / 3600.0
                         svc.upsertScreenTimeLateNight(
                             accessToken = access,
-                            date = dateStr,
+                            date = morning.toString(),
                             totalHours = totalHours,
                             appCount = lateNight.appCount,
                             source = "android",
                             timezone = timezone
                         )
 
-                        Log.d(TAG, "Finalized late-night screen time for $dateStr: ${String.format("%.2f", totalHours)}h")
+                        Log.d(TAG, "Finalized late-night for morning $morning (evening $eveningDate): ${String.format("%.2f", totalHours)}h")
                         lnOk++
                     }.onFailure { e ->
                         lnFail++
-                        Log.e(TAG, "Failed to finalize late-night for $date", e)
+                        Log.e(TAG, "Failed to finalize late-night for $morning", e)
                     }
                 }
 
-                if (nightsToFinalize.isNotEmpty()) {
-                    Log.d(TAG, "Finalized late-night: $lnOk of ${nightsToFinalize.size} (fail=$lnFail)")
+                if (morningsToFinalize.isNotEmpty()) {
+                    Log.d(TAG, "Finalized late-night: $lnOk of ${morningsToFinalize.size} (fail=$lnFail)")
                 }
             }.onFailure { e ->
                 Log.e(TAG, "Failed late-night screen time finalization", e)

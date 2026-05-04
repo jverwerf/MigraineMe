@@ -145,11 +145,6 @@ fun MonitorPhysicalScreen(
                 }
             }
 
-            DismissableInfoCard(
-                key = "monitor_physical",
-                text = "Poor recovery, low HRV, and elevated resting heart rate are strongly correlated with migraine onset. Tracking these metrics helps identify patterns and predict migraine risk."
-            )
-
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
                 BaseCard {
                     Text("Physical health tracking is disabled", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))

@@ -832,6 +832,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.MONITOR_RISK -> "Risk"
                                     Routes.RISK_CONFIG -> "Risk Card Settings"
                                     Routes.RISK_DATA_HISTORY -> "Risk Data"
+                                    Routes.MENTAL_DATA_HISTORY -> "Mental Health Data"
+                                    Routes.PHYSICAL_DATA_HISTORY -> "Physical Health Data"
                                     Routes.COMMUNITY -> "Community"
                                     Routes.JOURNAL -> "Journal"
                                     Routes.LOGIN -> "Sign in"

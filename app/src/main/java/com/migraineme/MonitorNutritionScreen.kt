@@ -321,11 +321,6 @@ fun MonitorNutritionScreen(
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
             }
-            DismissableInfoCard(
-                key = "monitor_nutrition",
-                text = "Certain foods and nutrients can trigger migraines. Tracking caffeine, sugar, tyramine, and sodium helps identify patterns."
-            )
-            
             // Search
             BaseCard {
                 Text("Add Food", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))

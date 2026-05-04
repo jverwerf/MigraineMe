@@ -142,11 +142,6 @@ fun MonitorMentalScreen(
                 }
             }
 
-            DismissableInfoCard(
-                key = "monitor_mental",
-                text = "Screen time, phone usage patterns, and environmental noise are linked to stress and migraine triggers. Tracking these passively helps identify behavioral patterns."
-            )
-
             // Show disabled message if ALL mental tracking is off
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
                 BaseCard {
