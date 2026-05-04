@@ -340,7 +340,6 @@ internal fun physicalMetricDisplayValue(p: PhysicalSummary, metric: String): Str
     PhysicalCardConfig.METRIC_SPO2 -> p.spo2?.let { "${it.toInt()}%" } ?: "\u2014"
     PhysicalCardConfig.METRIC_SKIN_TEMP -> p.skinTemp?.let { "%.1f\u00B0".format(it) } ?: "\u2014"
     PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> p.respiratoryRate?.let { "%.1f".format(it) } ?: "\u2014"
-    PhysicalCardConfig.METRIC_STRESS -> p.stress?.let { "${it.toInt()}" } ?: "\u2014"
     PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> p.highHrZones?.let { "%.0f min".format(it) } ?: "\u2014"
     PhysicalCardConfig.METRIC_STEPS -> p.steps?.toString() ?: "\u2014"
     PhysicalCardConfig.METRIC_WEIGHT -> p.weight?.let { "%.1f kg".format(it) } ?: "\u2014"

@@ -581,7 +581,6 @@ private fun PhysicalHealthCard(
                         PhysicalCardConfig.METRIC_SPO2 -> physical.spo2?.let { "${it.toInt()}%" } ?: "—"
                         PhysicalCardConfig.METRIC_SKIN_TEMP -> physical.skinTemp?.let { String.format("%.1f°C", it) } ?: "—"
                         PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> physical.respiratoryRate?.let { String.format("%.1f", it) } ?: "—"
-                        PhysicalCardConfig.METRIC_STRESS -> physical.stress?.let { String.format("%.0f", it) } ?: "—"
                         PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> physical.highHrZones?.let { "${it.toInt()} min" } ?: "—"
                         PhysicalCardConfig.METRIC_STEPS -> physical.steps?.let { "%,d".format(it) } ?: "—"
                         PhysicalCardConfig.METRIC_WEIGHT -> physical.weight?.let { String.format("%.1f kg", it) } ?: "—"

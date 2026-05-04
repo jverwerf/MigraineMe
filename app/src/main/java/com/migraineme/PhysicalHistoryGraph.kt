@@ -412,7 +412,6 @@ private fun getPhysicalDayValue(day: PhysicalGraphDay, metric: String): Float? {
         PhysicalCardConfig.METRIC_SPO2 -> day.spo2?.toFloat()
         PhysicalCardConfig.METRIC_SKIN_TEMP -> day.skinTemp?.toFloat()
         PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> day.respiratoryRate?.toFloat()
-        PhysicalCardConfig.METRIC_STRESS -> day.stress?.toFloat()
         PhysicalCardConfig.METRIC_STRAIN -> day.strain?.toFloat()
         PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> day.highHrZones?.toFloat()
         PhysicalCardConfig.METRIC_STEPS -> day.steps?.toFloat()

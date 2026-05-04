@@ -168,7 +168,6 @@ fun PhysicalDataHistoryScreen(
                     "spo2_daily" to PhysicalCardConfig.METRIC_SPO2,
                     "skin_temp_daily" to PhysicalCardConfig.METRIC_SKIN_TEMP,
                     "respiratory_rate_daily" to PhysicalCardConfig.METRIC_RESPIRATORY_RATE,
-                    "stress_index_daily" to PhysicalCardConfig.METRIC_STRESS,
                     "time_in_high_hr_zones_daily" to PhysicalCardConfig.METRIC_HIGH_HR_ZONES,
                     "steps_daily" to PhysicalCardConfig.METRIC_STEPS,
                     "weight_daily" to PhysicalCardConfig.METRIC_WEIGHT,
