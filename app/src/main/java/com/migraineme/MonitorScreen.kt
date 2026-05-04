@@ -1029,7 +1029,20 @@ internal fun filterMentalDisplayMetrics(
     enabledMetrics: Set<String>
 ): List<String> {
     if (enabledMetrics.isEmpty()) return displayMetrics
-    return displayMetrics.filter { MentalCardConfig.metricToTable(it) in enabledMetrics }
+    return displayMetrics.filter { metric ->
+        mentalMetricSettingsKeys(metric).any { it in enabledMetrics }
+    }
+}
+
+// Settings keys that can satisfy a mental display metric. Noise toggles store
+// "ambient_noise_samples" while the daily aggregate lives in "ambient_noise_index_daily" —
+// either being enabled means we have data to show.
+private fun mentalMetricSettingsKeys(metric: String): List<String> = when (metric) {
+    MentalCardConfig.METRIC_NOISE,
+    MentalCardConfig.METRIC_NOISE_HIGH,
+    MentalCardConfig.METRIC_NOISE_AVG,
+    MentalCardConfig.METRIC_NOISE_LOW -> listOf("ambient_noise_index_daily", "ambient_noise_samples")
+    else -> listOf(MentalCardConfig.metricToTable(metric))
 }
 
 // Resolve a "category:metric" fav-of-fav key to the metric_settings table key.
@@ -1063,6 +1076,10 @@ internal fun filterFavsByEnabled(
 ): List<FavPoolEntry> {
     if (enabledMetrics.isEmpty()) return favs
     return favs.filter { entry ->
+        val parts = entry.key.split(":", limit = 2)
+        if (parts.size == 2 && parts[0] == "mental") {
+            return@filter mentalMetricSettingsKeys(parts[1]).any { it in enabledMetrics }
+        }
         val table = favEntryToTable(entry.key) ?: return@filter true
         table in enabledMetrics
     }
