@@ -2033,7 +2033,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             logVm = logVm,
                             insightsVm = insightsVm,
                             onComplete = {
-                                nav.navigate(Routes.HOME) {
+                                // Skip path: show free-trial gift before going home.
+                                nav.navigate("subscribe") {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
                                 }
@@ -2255,16 +2256,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         }
                     }
 
-                    // ── Subscribe / Paywall ──
+                    // ── Free trial gift (replaces post-onboarding paywall) ──
                     composable("subscribe") {
-                        OnboardingPaywallScreen(
-                            onDismiss = {
-                                nav.navigate(Routes.HOME) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
-                                }
-                            },
-                            onSubscribed = {
+                        FreeTrialGiftScreen(
+                            onContinue = {
                                 nav.navigate(Routes.HOME) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true

@@ -139,13 +139,24 @@ fun OnboardingScreen(
     var seedingStarted by rememberSaveable { mutableStateOf(false) }
     var hasNavigatedToTour by rememberSaveable { mutableStateOf(false) }
     var howItWorksRevealed by rememberSaveable { mutableStateOf(false) }
+    var trialStarted by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    // ── Grant the 14-day onboarding trial once when entering onboarding ──
+    LaunchedEffect(Unit) {
+        if (!trialStarted && !startAtSetup) {
+            trialStarted = true
+            scope.launch(Dispatchers.IO) {
+                PremiumManager.startOnboardingTrial(appCtx)
+            }
+        }
+    }
+
     // ── Skip exit: clear demo data + mark complete in Supabase + navigate ──
+    // Trial is intentionally NOT cleared — the user keeps their 14 days.
     fun skipOnboarding(then: () -> Unit) {
         scope.launch(Dispatchers.IO) {
             DemoDataSeeder.clearDemoData(appCtx, logVm, insightsVm)
-            PremiumManager.clearOnboardingTrial(appCtx)
             OnboardingPrefs.setCompletedInSupabase(appCtx)
             kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
         }

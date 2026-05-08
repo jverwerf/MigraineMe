@@ -20,8 +20,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.CountDownLatch
@@ -337,6 +339,57 @@ object PremiumManager {
                 onError(error.message)
             }
         })
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Onboarding Trial (14 days)
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Starts a 14-day onboarding trial so new users can experience all
+     * premium features for free. Writes trial_end to the Supabase
+     * premium_status table and updates local state so PremiumGate unblurs.
+     */
+    suspend fun startOnboardingTrial(context: Context) {
+        withContext(Dispatchers.IO) {
+            val appCtx = context.applicationContext
+            val accessToken = SessionStore.getValidAccessToken(appCtx) ?: return@withContext
+            val userId = SessionStore.readUserId(appCtx)
+                ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
+                ?: return@withContext
+
+            val now = Instant.now()
+            val trialEnd = now.plus(14, ChronoUnit.DAYS)
+            val trialEndStr = trialEnd.toString()
+
+            // Optimistic local update so UI reflects trial immediately
+            _state.update {
+                it.copy(
+                    tier = PremiumTier.TRIAL,
+                    trialDaysRemaining = 14,
+                    trialEndDate = trialEndStr,
+                    isLoaded = true
+                )
+            }
+
+            try {
+                val jsonBody = """{"user_id":"$userId","trial_end":"$trialEndStr"}"""
+                val url = "${BuildConfig.SUPABASE_URL}/rest/v1/premium_status?on_conflict=user_id"
+                val request = Request.Builder()
+                    .url(url)
+                    .post(jsonBody.toRequestBody("application/json".toMediaType()))
+                    .header("Authorization", "Bearer $accessToken")
+                    .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    .header("Prefer", "resolution=merge-duplicates,return=minimal")
+                    .header("Content-Type", "application/json")
+                    .build()
+                httpClient.newCall(request).execute().use { response ->
+                    Log.d(TAG, "startOnboardingTrial: ${response.code}, trialEnd=$trialEndStr")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "startOnboardingTrial failed: ${e.message}", e)
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
