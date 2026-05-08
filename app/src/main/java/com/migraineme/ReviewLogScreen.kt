@@ -187,7 +187,10 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                         }
                     }
                     vm.clearDraft()
-                    navController.popBackStack(Routes.HOME, inclusive = false)
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                        launchSingleTop = true
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
