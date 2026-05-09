@@ -1964,7 +1964,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
                             onNavigateToCompanions = { nav.navigate("companions_manage") },
-                            onNavigateToOnboarding = { nav.navigate(Routes.ONBOARDING) { launchSingleTop = true } },
                             onLoggedOut = {
                                 nav.navigate(Routes.LOGIN) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }

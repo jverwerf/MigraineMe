@@ -60,7 +60,6 @@ fun ProfileScreen(
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
     onNavigateToCompanions: () -> Unit = {},
-    onNavigateToOnboarding: () -> Unit = {},
     onLoggedOut: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()

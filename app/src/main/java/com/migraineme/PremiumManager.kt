@@ -104,18 +104,27 @@ object PremiumManager {
             val trialState = loadTrialFromSupabase(accessToken, userId)
             val rcState = loadFromRevenueCat()
 
+            val current = _state.value
+            val localTrialActive = current.tier == PremiumTier.TRIAL &&
+                current.trialEndDate?.let {
+                    runCatching { Instant.parse(it).isAfter(Instant.now()) }.getOrDefault(false)
+                } == true
+
             val tier = when {
                 rcState.isSubscribed -> PremiumTier.PREMIUM
                 trialState.isDbSubscribed -> PremiumTier.PREMIUM
                 trialState.isTrialActive -> PremiumTier.TRIAL
+                // Preserve a freshly-started local trial when the Supabase row
+                // hasn't propagated yet (race after onboarding skip).
+                localTrialActive -> PremiumTier.TRIAL
                 else -> PremiumTier.FREE
             }
 
             _state.update {
                 PremiumState(
                     tier = tier,
-                    trialDaysRemaining = trialState.daysRemaining,
-                    trialEndDate = trialState.trialEnd,
+                    trialDaysRemaining = if (trialState.isTrialActive) trialState.daysRemaining else if (tier == PremiumTier.TRIAL) current.trialDaysRemaining else 0,
+                    trialEndDate = trialState.trialEnd ?: if (tier == PremiumTier.TRIAL) current.trialEndDate else null,
                     isLoaded = true,
                     subscriptionExpiryDate = rcState.expiryDate,
                     planType = rcState.planType
