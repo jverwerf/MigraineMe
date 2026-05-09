@@ -174,7 +174,9 @@ object PremiumManager {
 
                 val trialEnd = Instant.parse(trialEndStr)
                 val now = Instant.now()
-                val daysRemaining = ChronoUnit.DAYS.between(now, trialEnd).toInt()
+                // Ceil partial days so a fresh 14-day trial doesn't immediately read "13".
+                val secondsLeft = ChronoUnit.SECONDS.between(now, trialEnd).coerceAtLeast(0)
+                val daysRemaining = ((secondsLeft + 86399) / 86400).toInt()
 
                 TrialInfo(
                     isTrialActive = now.isBefore(trialEnd),
