@@ -194,6 +194,7 @@ fun AiSetupScreen(
     // ═══════════════════════════════════════════════════════════════
     fun applyPreFill(pf: OnboardingPreFill) {
         val filled = mutableSetOf<String>()
+        // Page 1
         pf.gender?.let { gender = it; filled.add("gender") }
         pf.ageRange?.let { ageRange = it; filled.add("ageRange") }
         pf.frequency?.let { frequency = it; filled.add("frequency") }
@@ -204,14 +205,54 @@ fun AiSetupScreen(
         pf.triggerDelay?.let { triggerDelay = it; filled.add("triggerDelay") }
         pf.dailyRoutine?.let { dailyRoutine = it; filled.add("dailyRoutine") }
         pf.seasonalPattern?.let { seasonalPattern = it; filled.add("seasonalPattern") }
+        // Page 2
         pf.sleepHours?.let { sleepHours = it; filled.add("sleepHours") }
         pf.sleepQuality?.let { sleepQuality = it; filled.add("sleepQuality") }
+        pf.poorQualityTriggers?.let { poorQualityTriggers = it; filled.add("poorQualityTriggers") }
+        pf.tooLittleSleepTriggers?.let { tooLittleSleepTriggers = it; filled.add("tooLittleSleepTriggers") }
+        pf.oversleepTriggers?.let { oversleepTriggers = it; filled.add("oversleepTriggers") }
+        if (pf.sleepIssues.isNotEmpty()) { sleepIssues = sleepIssues + pf.sleepIssues; filled.add("sleepIssues") }
+        // Page 3
         pf.stressLevel?.let { stressLevel = it; filled.add("stressLevel") }
+        pf.stressChangeTriggers?.let { stressChangeTriggers = it; filled.add("stressChangeTriggers") }
+        if (pf.emotionalPatterns.isNotEmpty()) { emotionalPatterns = emotionalPatterns + pf.emotionalPatterns; filled.add("emotionalPatterns") }
         pf.screenTimeDaily?.let { screenTimeDaily = it; filled.add("screenTimeDaily") }
+        pf.screenTimeTriggers?.let { screenTimeTriggers = it; filled.add("screenTimeTriggers") }
+        pf.lateScreenTriggers?.let { lateScreenTriggers = it; filled.add("lateScreenTriggers") }
+        // Page 4
         pf.caffeineIntake?.let { caffeineIntake = it; filled.add("caffeineIntake") }
+        pf.caffeineDirection?.let { caffeineDirection = it; filled.add("caffeineDirection") }
+        pf.caffeineCertainty?.let { caffeineCertainty = it; filled.add("caffeineCertainty") }
         pf.alcoholFrequency?.let { alcoholFrequency = it; filled.add("alcoholFrequency") }
+        pf.alcoholTriggers?.let { alcoholTriggers = it; filled.add("alcoholTriggers") }
+        if (pf.specificDrinks.isNotEmpty()) { specificDrinks = specificDrinks + pf.specificDrinks; filled.add("specificDrinks") }
+        if (pf.tyramineFoods.isNotEmpty()) { tyramineFoods = tyramineFoods + pf.tyramineFoods; filled.add("tyramineFoods") }
+        pf.glutenSensitivity?.let { glutenSensitivity = it; filled.add("glutenSensitivity") }
+        pf.glutenTriggers?.let { glutenTriggers = it; filled.add("glutenTriggers") }
+        if (pf.eatingPatterns.isNotEmpty()) { eatingPatterns = eatingPatterns + pf.eatingPatterns; filled.add("eatingPatterns") }
+        pf.waterIntake?.let { waterIntake = it; filled.add("waterIntake") }
+        pf.tracksNutrition?.let { tracksNutrition = it; filled.add("tracksNutrition") }
+        // Page 5
+        pf.weatherTriggers?.let { weatherTriggers = it; filled.add("weatherTriggers") }
+        if (pf.specificWeather.isNotEmpty()) { specificWeather = specificWeather + pf.specificWeather; filled.add("specificWeather") }
+        if (pf.environmentSensitivities.isNotEmpty()) { environmentSensitivities = environmentSensitivities + pf.environmentSensitivities; filled.add("environmentSensitivities") }
+        if (pf.physicalFactors.isNotEmpty()) { physicalFactors = physicalFactors + pf.physicalFactors; filled.add("physicalFactors") }
+        // Page 6
         pf.exerciseFrequency?.let { exerciseFrequency = it; filled.add("exerciseFrequency") }
+        pf.exerciseTriggers?.let { exerciseTriggers = it; filled.add("exerciseTriggers") }
+        if (pf.exercisePattern.isNotEmpty()) { exercisePattern = exercisePattern + pf.exercisePattern; filled.add("exercisePattern") }
         pf.tracksCycle?.let { tracksCycle = it; filled.add("tracksCycle") }
+        if (pf.cyclePatterns.isNotEmpty()) { cyclePatterns = cyclePatterns + pf.cyclePatterns; filled.add("cyclePatterns") }
+        pf.cycleLength?.let { cycleLength = it; filled.add("cycleLength") }
+        if (pf.cycleMigraineTiming.isNotEmpty()) { cycleMigraineTiming = cycleMigraineTiming + pf.cycleMigraineTiming; filled.add("cycleMigraineTiming") }
+        pf.lastPeriodDate?.let { lastPeriodDate = it; filled.add("lastPeriodDate") }
+        pf.usesContraception?.let { usesContraception = it; filled.add("usesContraception") }
+        pf.contraceptionEffect?.let { contraceptionEffect = it; filled.add("contraceptionEffect") }
+        // Page 7
+        if (pf.physicalProdromes.isNotEmpty()) { physicalProdromes = physicalProdromes + pf.physicalProdromes; filled.add("physicalProdromes") }
+        if (pf.moodProdromes.isNotEmpty()) { moodProdromes = moodProdromes + pf.moodProdromes; filled.add("moodProdromes") }
+        if (pf.sensoryProdromes.isNotEmpty()) { sensoryProdromes = sensoryProdromes + pf.sensoryProdromes; filled.add("sensoryProdromes") }
+        // Pool labels
         if (pf.matchedTriggers.isNotEmpty()) { selectedTriggers = selectedTriggers + pf.matchedTriggers; filled.add("triggers") }
         if (pf.matchedProdromes.isNotEmpty()) { selectedProdromes = selectedProdromes + pf.matchedProdromes; filled.add("prodromes") }
         if (pf.matchedSymptoms.isNotEmpty()) { selectedSymptoms = selectedSymptoms + pf.matchedSymptoms; filled.add("symptoms") }

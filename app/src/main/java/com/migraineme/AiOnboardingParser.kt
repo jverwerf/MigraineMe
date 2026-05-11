@@ -17,10 +17,10 @@ private const val TAG = "AiOnboardingParser"
 
 /**
  * Pre-fill result from story parsing.
- * Only non-null fields should be applied — null means "not mentioned".
+ * Only non-null / non-empty fields should be applied — null/empty means "not mentioned".
  */
 data class OnboardingPreFill(
-    // Page 1
+    // Page 1 — Migraine basics
     val gender: String? = null,
     val ageRange: String? = null,
     val frequency: String? = null,
@@ -31,19 +31,53 @@ data class OnboardingPreFill(
     val triggerDelay: String? = null,
     val dailyRoutine: String? = null,
     val seasonalPattern: String? = null,
-    // Page 2
+    // Page 2 — Sleep
     val sleepHours: String? = null,
     val sleepQuality: String? = null,
-    // Page 3
+    val poorQualityTriggers: DeterministicMapper.Certainty? = null,
+    val tooLittleSleepTriggers: DeterministicMapper.Certainty? = null,
+    val oversleepTriggers: DeterministicMapper.Certainty? = null,
+    val sleepIssues: Set<String> = emptySet(),
+    // Page 3 — Stress & screen
     val stressLevel: String? = null,
+    val stressChangeTriggers: DeterministicMapper.Certainty? = null,
+    val emotionalPatterns: Map<String, DeterministicMapper.Certainty> = emptyMap(),
     val screenTimeDaily: String? = null,
-    // Page 4
+    val screenTimeTriggers: DeterministicMapper.Certainty? = null,
+    val lateScreenTriggers: DeterministicMapper.Certainty? = null,
+    // Page 4 — Diet & substances
     val caffeineIntake: String? = null,
+    val caffeineDirection: String? = null,
+    val caffeineCertainty: DeterministicMapper.Certainty? = null,
     val alcoholFrequency: String? = null,
-    // Page 5 — no simple pre-fills (certainty items)
-    // Page 6
+    val alcoholTriggers: DeterministicMapper.Certainty? = null,
+    val specificDrinks: Set<String> = emptySet(),
+    val tyramineFoods: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val glutenSensitivity: String? = null,
+    val glutenTriggers: DeterministicMapper.Certainty? = null,
+    val eatingPatterns: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val waterIntake: String? = null,
+    val tracksNutrition: String? = null,
+    // Page 5 — Weather, environment, physical
+    val weatherTriggers: DeterministicMapper.Certainty? = null,
+    val specificWeather: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val environmentSensitivities: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val physicalFactors: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    // Page 6 — Exercise & hormones
     val exerciseFrequency: String? = null,
+    val exerciseTriggers: DeterministicMapper.Certainty? = null,
+    val exercisePattern: Set<String> = emptySet(),
     val tracksCycle: String? = null,
+    val cyclePatterns: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val cycleLength: String? = null,
+    val cycleMigraineTiming: Set<String> = emptySet(),
+    val lastPeriodDate: String? = null,
+    val usesContraception: String? = null,
+    val contraceptionEffect: String? = null,
+    // Page 7 — Prodromes
+    val physicalProdromes: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val moodProdromes: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val sensoryProdromes: Map<String, DeterministicMapper.Certainty> = emptyMap(),
     // Pool matches — labels from the DB pools
     val matchedTriggers: Set<String> = emptySet(),
     val matchedProdromes: Set<String> = emptySet(),
@@ -55,6 +89,31 @@ data class OnboardingPreFill(
 )
 
 object AiOnboardingParser {
+
+    // ── Allowed values for AI-inferred fields ────────────────────────────────
+    // Used to discard hallucinated values silently. Must match AiSetupQuestions.kt option strings byte-for-byte.
+    private val SLEEP_ISSUES_VALUES = setOf("Irregular schedule", "Sleep apnea", "Jet lag", "None of these")
+    private val EMOTIONAL_PATTERNS_KEYS = setOf("Spike in stress", "Anxiety", "Anger", "Let-down", "Feeling low")
+    private val CAFFEINE_DIRECTION_VALUES = setOf("Too much triggers it", "Missing caffeine triggers it", "Both ways", "Not sure", "No")
+    private val SPECIFIC_DRINKS_VALUES = setOf("Red wine", "Beer", "White wine", "Spirits", "Any alcohol")
+    private val TYRAMINE_FOODS_KEYS = setOf("Aged cheese", "Chocolate", "Cured meats", "Fermented foods")
+    private val GLUTEN_SENSITIVITY_VALUES = setOf("Yes, diagnosed", "I suspect so", "No", "Not sure")
+    private val EATING_PATTERNS_KEYS = setOf("Skipping meals", "Sugar", "Salty food", "Overeating", "Dehydration")
+    private val WATER_INTAKE_VALUES = setOf("< 1L", "1-2L", "2-3L", "3L+")
+    private val TRACKS_NUTRITION_VALUES = setOf("Yes, regularly", "Sometimes", "No")
+    private val SPECIFIC_WEATHER_KEYS = setOf("Pressure changes", "Hot weather", "Cold weather", "Humidity", "Dry air", "Wind", "Sunshine", "Thunderstorms", "Not sure which")
+    private val ENVIRONMENT_SENSITIVITIES_KEYS = setOf("Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Altitude")
+    private val PHYSICAL_FACTORS_KEYS = setOf("Allergies", "Being ill", "Low blood sugar", "Medication change", "Motion sickness", "Tobacco", "Sexual activity")
+    private val EXERCISE_PATTERN_VALUES = setOf("During or after intense exercise", "When I haven't exercised")
+    private val CYCLE_PATTERNS_KEYS = setOf("Around my period", "Around ovulation")
+    private val CYCLE_LENGTH_VALUES = setOf("< 25 days", "25-28 days", "28-32 days", "32-35 days", "> 35 days", "Irregular")
+    private val CYCLE_TIMING_VALUES = setOf("1-2 days before", "3-5 days before", "During my period", "1-2 days after")
+    private val USES_CONTRACEPTION_VALUES = setOf("Yes", "No")
+    // Note: em-dash (—), not hyphen — must match AiSetupQuestions.kt:479 exactly.
+    private val CONTRACEPTION_EFFECT_VALUES = setOf("Worse — every time", "Worse — sometimes", "No change", "Actually helps")
+    private val PHYSICAL_PRODROMES_KEYS = setOf("Neck stiffness", "Yawning", "Urination", "Stuffy nose", "Watery eyes", "Muscle tension")
+    private val MOOD_PRODROMES_KEYS = setOf("Concentrating", "Words", "Irritability", "Mood swings", "Feeling low", "Unusually happy", "Food cravings", "Loss of appetite")
+    private val SENSORY_PRODROMES_KEYS = setOf("Light", "Sound", "Smell", "Tingling", "Numbness")
 
     /**
      * Deterministic pre-parse: match pool labels against the story text.
@@ -273,10 +332,37 @@ object AiOnboardingParser {
         val obj = JSONObject(json)
 
         fun optStr(key: String): String? = obj.optString(key, "").let { if (it == "null" || it.isBlank()) null else it }
+        fun optStrIn(key: String, allowed: Set<String>): String? = optStr(key)?.takeIf { it in allowed }
+        fun optCert(key: String): DeterministicMapper.Certainty? {
+            val s = optStr(key) ?: return null
+            return runCatching { DeterministicMapper.Certainty.valueOf(s) }.getOrNull()
+        }
+        fun optStrSet(key: String, allowed: Set<String>): Set<String> {
+            val arr = obj.optJSONArray(key) ?: return emptySet()
+            val out = mutableSetOf<String>()
+            for (i in 0 until arr.length()) {
+                val s = arr.optString(i, "").trim()
+                if (s in allowed) out.add(s)
+            }
+            return out
+        }
+        fun optCertMap(key: String, allowedKeys: Set<String>): Map<String, DeterministicMapper.Certainty> {
+            val inner = obj.optJSONObject(key) ?: return emptyMap()
+            val out = mutableMapOf<String, DeterministicMapper.Certainty>()
+            val it = inner.keys()
+            while (it.hasNext()) {
+                val k = it.next()
+                if (k !in allowedKeys) continue
+                val cert = runCatching {
+                    DeterministicMapper.Certainty.valueOf(inner.optString(k, "").trim())
+                }.getOrNull() ?: continue
+                out[k] = cert
+            }
+            return out
+        }
 
         fun matchArray(key: String, validLabels: List<String>): Set<String> {
             val arr = obj.optJSONArray(key) ?: return emptySet()
-            val validSet = validLabels.map { it.lowercase() }.toSet()
             val labelMap = validLabels.associateBy { it.lowercase() }
             val result = mutableSetOf<String>()
             for (i in 0 until arr.length()) {
@@ -288,6 +374,7 @@ object AiOnboardingParser {
         }
 
         return OnboardingPreFill(
+            // Page 1
             gender = optStr("gender"),
             ageRange = optStr("age_range"),
             frequency = optStr("frequency"),
@@ -298,14 +385,54 @@ object AiOnboardingParser {
             triggerDelay = optStr("trigger_delay"),
             dailyRoutine = optStr("daily_routine"),
             seasonalPattern = optStr("seasonal_pattern"),
+            // Page 2
             sleepHours = optStr("sleep_hours"),
             sleepQuality = optStr("sleep_quality"),
+            poorQualityTriggers = optCert("poor_quality_triggers"),
+            tooLittleSleepTriggers = optCert("too_little_sleep_triggers"),
+            oversleepTriggers = optCert("oversleep_triggers"),
+            sleepIssues = optStrSet("sleep_issues", SLEEP_ISSUES_VALUES),
+            // Page 3
             stressLevel = optStr("stress_level"),
+            stressChangeTriggers = optCert("stress_change_triggers"),
+            emotionalPatterns = optCertMap("emotional_patterns", EMOTIONAL_PATTERNS_KEYS),
             screenTimeDaily = optStr("screen_time_daily"),
+            screenTimeTriggers = optCert("screen_time_triggers"),
+            lateScreenTriggers = optCert("late_screen_triggers"),
+            // Page 4
             caffeineIntake = optStr("caffeine_intake"),
+            caffeineDirection = optStrIn("caffeine_direction", CAFFEINE_DIRECTION_VALUES),
+            caffeineCertainty = optCert("caffeine_certainty"),
             alcoholFrequency = optStr("alcohol_frequency"),
+            alcoholTriggers = optCert("alcohol_triggers"),
+            specificDrinks = optStrSet("specific_drinks", SPECIFIC_DRINKS_VALUES),
+            tyramineFoods = optCertMap("tyramine_foods", TYRAMINE_FOODS_KEYS),
+            glutenSensitivity = optStrIn("gluten_sensitivity", GLUTEN_SENSITIVITY_VALUES),
+            glutenTriggers = optCert("gluten_triggers"),
+            eatingPatterns = optCertMap("eating_patterns", EATING_PATTERNS_KEYS),
+            waterIntake = optStrIn("water_intake", WATER_INTAKE_VALUES),
+            tracksNutrition = optStrIn("tracks_nutrition", TRACKS_NUTRITION_VALUES),
+            // Page 5
+            weatherTriggers = optCert("weather_triggers"),
+            specificWeather = optCertMap("specific_weather", SPECIFIC_WEATHER_KEYS),
+            environmentSensitivities = optCertMap("environment_sensitivities", ENVIRONMENT_SENSITIVITIES_KEYS),
+            physicalFactors = optCertMap("physical_factors", PHYSICAL_FACTORS_KEYS),
+            // Page 6
             exerciseFrequency = optStr("exercise_frequency"),
+            exerciseTriggers = optCert("exercise_triggers"),
+            exercisePattern = optStrSet("exercise_pattern", EXERCISE_PATTERN_VALUES),
             tracksCycle = optStr("tracks_cycle"),
+            cyclePatterns = optCertMap("cycle_patterns", CYCLE_PATTERNS_KEYS),
+            cycleLength = optStrIn("cycle_length", CYCLE_LENGTH_VALUES),
+            cycleMigraineTiming = optStrSet("cycle_migraine_timing", CYCLE_TIMING_VALUES),
+            lastPeriodDate = optStr("last_period_date")?.takeIf { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) },
+            usesContraception = optStrIn("uses_contraception", USES_CONTRACEPTION_VALUES),
+            contraceptionEffect = optStrIn("contraception_effect", CONTRACEPTION_EFFECT_VALUES),
+            // Page 7
+            physicalProdromes = optCertMap("physical_prodromes", PHYSICAL_PRODROMES_KEYS),
+            moodProdromes = optCertMap("mood_prodromes", MOOD_PRODROMES_KEYS),
+            sensoryProdromes = optCertMap("sensory_prodromes", SENSORY_PRODROMES_KEYS),
+            // Pool labels
             matchedTriggers = matchArray("triggers", triggerLabels),
             matchedProdromes = matchArray("prodromes", prodromeLabels),
             matchedSymptoms = matchArray("symptoms", symptomLabels),
@@ -317,12 +444,13 @@ object AiOnboardingParser {
     }
 
     /**
-     * Merge deterministic + GPT results. GPT wins for questionnaire fields,
-     * pool matches are unioned.
+     * Merge deterministic + GPT results. GPT wins for scalar fields,
+     * sets/maps are unioned (GPT values override deterministic for shared map keys).
      */
     fun merge(deter: OnboardingPreFill, gpt: OnboardingPreFill?): OnboardingPreFill {
         if (gpt == null) return deter
         return OnboardingPreFill(
+            // Page 1
             gender = gpt.gender ?: deter.gender,
             ageRange = gpt.ageRange ?: deter.ageRange,
             frequency = gpt.frequency ?: deter.frequency,
@@ -333,14 +461,54 @@ object AiOnboardingParser {
             triggerDelay = gpt.triggerDelay ?: deter.triggerDelay,
             dailyRoutine = gpt.dailyRoutine ?: deter.dailyRoutine,
             seasonalPattern = gpt.seasonalPattern ?: deter.seasonalPattern,
+            // Page 2
             sleepHours = gpt.sleepHours ?: deter.sleepHours,
             sleepQuality = gpt.sleepQuality ?: deter.sleepQuality,
+            poorQualityTriggers = gpt.poorQualityTriggers ?: deter.poorQualityTriggers,
+            tooLittleSleepTriggers = gpt.tooLittleSleepTriggers ?: deter.tooLittleSleepTriggers,
+            oversleepTriggers = gpt.oversleepTriggers ?: deter.oversleepTriggers,
+            sleepIssues = deter.sleepIssues + gpt.sleepIssues,
+            // Page 3
             stressLevel = gpt.stressLevel ?: deter.stressLevel,
+            stressChangeTriggers = gpt.stressChangeTriggers ?: deter.stressChangeTriggers,
+            emotionalPatterns = deter.emotionalPatterns + gpt.emotionalPatterns,
             screenTimeDaily = gpt.screenTimeDaily ?: deter.screenTimeDaily,
+            screenTimeTriggers = gpt.screenTimeTriggers ?: deter.screenTimeTriggers,
+            lateScreenTriggers = gpt.lateScreenTriggers ?: deter.lateScreenTriggers,
+            // Page 4
             caffeineIntake = gpt.caffeineIntake ?: deter.caffeineIntake,
+            caffeineDirection = gpt.caffeineDirection ?: deter.caffeineDirection,
+            caffeineCertainty = gpt.caffeineCertainty ?: deter.caffeineCertainty,
             alcoholFrequency = gpt.alcoholFrequency ?: deter.alcoholFrequency,
+            alcoholTriggers = gpt.alcoholTriggers ?: deter.alcoholTriggers,
+            specificDrinks = deter.specificDrinks + gpt.specificDrinks,
+            tyramineFoods = deter.tyramineFoods + gpt.tyramineFoods,
+            glutenSensitivity = gpt.glutenSensitivity ?: deter.glutenSensitivity,
+            glutenTriggers = gpt.glutenTriggers ?: deter.glutenTriggers,
+            eatingPatterns = deter.eatingPatterns + gpt.eatingPatterns,
+            waterIntake = gpt.waterIntake ?: deter.waterIntake,
+            tracksNutrition = gpt.tracksNutrition ?: deter.tracksNutrition,
+            // Page 5
+            weatherTriggers = gpt.weatherTriggers ?: deter.weatherTriggers,
+            specificWeather = deter.specificWeather + gpt.specificWeather,
+            environmentSensitivities = deter.environmentSensitivities + gpt.environmentSensitivities,
+            physicalFactors = deter.physicalFactors + gpt.physicalFactors,
+            // Page 6
             exerciseFrequency = gpt.exerciseFrequency ?: deter.exerciseFrequency,
+            exerciseTriggers = gpt.exerciseTriggers ?: deter.exerciseTriggers,
+            exercisePattern = deter.exercisePattern + gpt.exercisePattern,
             tracksCycle = gpt.tracksCycle ?: deter.tracksCycle,
+            cyclePatterns = deter.cyclePatterns + gpt.cyclePatterns,
+            cycleLength = gpt.cycleLength ?: deter.cycleLength,
+            cycleMigraineTiming = deter.cycleMigraineTiming + gpt.cycleMigraineTiming,
+            lastPeriodDate = gpt.lastPeriodDate ?: deter.lastPeriodDate,
+            usesContraception = gpt.usesContraception ?: deter.usesContraception,
+            contraceptionEffect = gpt.contraceptionEffect ?: deter.contraceptionEffect,
+            // Page 7
+            physicalProdromes = deter.physicalProdromes + gpt.physicalProdromes,
+            moodProdromes = deter.moodProdromes + gpt.moodProdromes,
+            sensoryProdromes = deter.sensoryProdromes + gpt.sensoryProdromes,
+            // Pool labels
             matchedTriggers = deter.matchedTriggers + gpt.matchedTriggers,
             matchedProdromes = deter.matchedProdromes + gpt.matchedProdromes,
             matchedSymptoms = deter.matchedSymptoms + gpt.matchedSymptoms,
