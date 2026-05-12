@@ -206,6 +206,23 @@ class InsightsViewModel : ViewModel() {
     private val _insightHistory = MutableStateFlow<List<DailyInsightRow>>(emptyList())
     val insightHistory: StateFlow<List<DailyInsightRow>> = _insightHistory
 
+    // ======= Cross-type AI Recommendations (from ai_recommendations JSONB column) =======
+
+    data class AiRecommendations(
+        val triggers:   Map<String, String> = emptyMap(),
+        val prodromes:  Map<String, String> = emptyMap(),
+        val medicines:  Map<String, String> = emptyMap(),
+        val reliefs:    Map<String, String> = emptyMap(),
+        val activities: Map<String, String> = emptyMap(),
+    ) {
+        val isEmpty: Boolean get() =
+            triggers.isEmpty() && prodromes.isEmpty() && medicines.isEmpty() &&
+            reliefs.isEmpty() && activities.isEmpty()
+    }
+
+    private val _aiRecommendations = MutableStateFlow(AiRecommendations())
+    val aiRecommendations: StateFlow<AiRecommendations> = _aiRecommendations
+
     // ======= Weekly summary (derived from migraines) =======
 
     data class WeeklySummary(
@@ -893,6 +910,7 @@ class InsightsViewModel : ViewModel() {
                 // Correlation stats + gauge accuracy + insight history (fire in parallel, non-blocking)
                 loadCorrelationData(context)
                 loadInsightHistory(context)
+                loadAiRecommendations(context)
                 computeWeeklySummary()
                 computeDayOfWeekPattern()
             } catch (_: Exception) {
@@ -1872,6 +1890,60 @@ class InsightsViewModel : ViewModel() {
             } catch (e: Exception) {
                 android.util.Log.w("InsightsVM", "loadInsightHistory failed: ${e.message}")
                 _insightHistory.value = emptyList()
+            }
+        }
+    }
+
+    // ======= Cross-type AI recommendations loader =======
+
+    private fun loadAiRecommendations(context: Context) {
+        viewModelScope.launch {
+            try {
+                val token = SessionStore.getValidAccessToken(context) ?: return@launch
+                val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+                val key = BuildConfig.SUPABASE_ANON_KEY
+                val client = OkHttpClient()
+                val parsed = withContext(Dispatchers.IO) {
+                    val url = "$base/rest/v1/daily_insights" +
+                        "?select=ai_recommendations" +
+                        "&ai_recommendations=not.is.null" +
+                        "&order=date.desc&limit=1"
+                    val req = Request.Builder().url(url)
+                        .addHeader("apikey", key)
+                        .addHeader("Authorization", "Bearer $token")
+                        .addHeader("Accept", "application/json")
+                        .build()
+                    val res = client.newCall(req).execute()
+                    val body = res.body?.string() ?: "[]"
+                    val arr = JSONArray(body)
+                    if (arr.length() == 0) return@withContext AiRecommendations()
+                    val obj = arr.getJSONObject(0).optJSONObject("ai_recommendations")
+                        ?: return@withContext AiRecommendations()
+
+                    fun toMap(key: String): Map<String, String> {
+                        val inner = obj.optJSONObject(key) ?: return emptyMap()
+                        val out = mutableMapOf<String, String>()
+                        val it = inner.keys()
+                        while (it.hasNext()) {
+                            val k = it.next()
+                            val v = inner.optString(k, "")
+                            if (v.isNotBlank()) out[k] = v
+                        }
+                        return out
+                    }
+
+                    AiRecommendations(
+                        triggers   = toMap("triggers"),
+                        prodromes  = toMap("prodromes"),
+                        medicines  = toMap("medicines"),
+                        reliefs    = toMap("reliefs"),
+                        activities = toMap("activities"),
+                    )
+                }
+                _aiRecommendations.value = parsed
+            } catch (e: Exception) {
+                android.util.Log.w("InsightsVM", "loadAiRecommendations failed: ${e.message}")
+                _aiRecommendations.value = AiRecommendations()
             }
         }
     }

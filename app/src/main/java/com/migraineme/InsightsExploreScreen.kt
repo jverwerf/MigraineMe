@@ -9,6 +9,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.DirectionsRun
+import androidx.compose.material.icons.outlined.EnergySavingsLeaf
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +49,7 @@ fun InsightsExploreScreen(
     val missedActivitySpider by vm.missedActivitySpider.collectAsState()
     val medEff by vm.medicineEffectiveness.collectAsState()
     val relEff by vm.reliefEffectiveness.collectAsState()
+    val aiRecs by vm.aiRecommendations.collectAsState()
 
     val sorted = remember(migraines) { migraines.sortedByDescending { it.start } }
     val selIdx by vm.selectedMigraineIndex.collectAsState()
@@ -296,5 +303,120 @@ private fun CompactChip(n: Int, label: String, color: Color) {
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.width(2.dp))
         Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+// ─── Recommendations Card (cross-type AI recommendations) ────────────────────
+
+data class RecommendationsSection(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val color: Color, val items: List<Pair<String, String>>)
+
+fun buildRecommendationSections(recs: InsightsViewModel.AiRecommendations): List<RecommendationsSection> {
+    fun toPairs(m: Map<String, String>) = m.toSortedMap().toList()
+    return listOf(
+        RecommendationsSection("Triggers",   Icons.Outlined.Bolt,             Color(0xFFFFB74D), toPairs(recs.triggers)),
+        RecommendationsSection("Prodromes",  Icons.Outlined.Visibility,       Color(0xFFCE93D8), toPairs(recs.prodromes)),
+        RecommendationsSection("Medicines",  Icons.Outlined.MedicalServices,  Color(0xFF4FC3F7), toPairs(recs.medicines)),
+        RecommendationsSection("Reliefs",    Icons.Outlined.EnergySavingsLeaf,Color(0xFF81C784), toPairs(recs.reliefs)),
+        RecommendationsSection("Activities", Icons.Outlined.DirectionsRun,    Color(0xFFFF8A65), toPairs(recs.activities)),
+    ).filter { it.items.isNotEmpty() }
+}
+
+@Composable
+fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, onClick: () -> Unit = {}) {
+    val sections = buildRecommendationSections(recs)
+
+    BaseCard(modifier = Modifier.clickable { onClick() }) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Lightbulb, contentDescription = null,
+                tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Recommendations", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text("Built from your Insights patterns", color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall)
+            }
+            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(Modifier.height(10.dp))
+
+        sections.forEachIndexed { i, section ->
+            if (i > 0) Spacer(Modifier.height(12.dp))
+            val preview = section.items.take(2)
+            val extra = (section.items.size - preview.size).coerceAtLeast(0)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(section.icon, contentDescription = null,
+                    tint = section.color, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(section.title, color = section.color,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.weight(1f))
+                if (extra > 0) {
+                    Text("+$extra more", color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            preview.forEach { (name, text) ->
+                Column(
+                    Modifier.fillMaxWidth()
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.04f))
+                        .padding(10.dp)
+                ) {
+                    Text(name, color = Color.White,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(3.dp))
+                    Text(text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsViewModel) {
+    val recs by vm.aiRecommendations.collectAsState()
+    val sections = buildRecommendationSections(recs)
+    val scrollState = rememberScrollState()
+
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
+                }
+                Text("Recommendations", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            }
+
+            sections.forEach { section ->
+                BaseCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(section.icon, contentDescription = null,
+                            tint = section.color, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(section.title, color = section.color,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    section.items.forEach { (name, text) ->
+                        Column(
+                            Modifier.fillMaxWidth()
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                                .background(Color.White.copy(alpha = 0.04f))
+                                .padding(12.dp)
+                        ) {
+                            Text(name, color = Color.White,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Spacer(Modifier.height(3.dp))
+                            Text(text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+            }
+        }
     }
 }

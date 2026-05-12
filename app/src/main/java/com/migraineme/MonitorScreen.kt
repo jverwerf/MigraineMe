@@ -143,6 +143,10 @@ fun MonitorScreen(
     var sleepSummary by remember { mutableStateOf<SleepSummary?>(null) }
     var sleepLoading by remember { mutableStateOf(true) }
 
+    // Medicines summary (aggregated client-side)
+    var medicineSummary by remember { mutableStateOf<MedicineSummary?>(null) }
+    var medicineLoading by remember { mutableStateOf(true) }
+
     // True when at least one health data source (Health Connect or any wearable
     // OAuth token) is set up. Used to suppress the "connect a wearable" empty-
     // state nag on the Sleep / Physical cards once a source is already configured.
@@ -299,6 +303,12 @@ fun MonitorScreen(
             sleepLoading = false
         }
 
+        // Load medicines summary (aggregated client-side from the medicines table)
+        withContext(Dispatchers.IO) {
+            medicineSummary = try { loadMedicineSummary(ctx) } catch (_: Exception) { null }
+            medicineLoading = false
+        }
+
         // Load menstruation settings AND check if enabled
         withContext(Dispatchers.IO) {
             try {
@@ -381,6 +391,13 @@ fun MonitorScreen(
                                 weatherSummary = weatherSummary,
                                 displayMetrics = filterWeatherDisplayMetrics(weatherDisplayMetrics, enabledMetrics).take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_ENVIRONMENT) }
+                            )
+                        }
+                        MonitorCardConfig.CARD_MEDICINES -> {
+                            MonitorMedicineCard(
+                                summary = medicineSummary ?: MedicineSummary(),
+                                isLoading = medicineLoading,
+                                onClick = { navController.navigate(Routes.MONITOR_MEDICINES) }
                             )
                         }
                         MonitorCardConfig.CARD_PHYSICAL -> {

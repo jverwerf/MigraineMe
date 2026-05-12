@@ -123,6 +123,7 @@ object Routes {
     const val FORUM_POST_DETAIL = "community/forum"
     const val INSIGHTS = "insights"
     const val INSIGHTS_DETAIL = "insights_detail"
+    const val INSIGHTS_RECOMMENDATIONS = "insights_recommendations"
     const val INSIGHTS_TIMELINE = "insights_timeline"
     const val INSIGHTS_REPORT = "insights_report"
     const val INSIGHTS_BREAKDOWN = "insights_breakdown"
@@ -148,6 +149,9 @@ object Routes {
     const val QUICK_LOG_MIGRAINE = "quick_log_migraine"
     
     const val MONITOR_NUTRITION = "monitor_nutrition"
+    const val MONITOR_MEDICINES = "monitor_medicines"
+    const val MEDICINE_CONFIG = "medicine_config"
+    const val MEDICINE_DATA_HISTORY = "medicine_data_history"
     const val NUTRITION_CONFIG = "nutrition_config"
     const val NUTRITION_HISTORY = "nutrition_history"
     const val WEATHER_CONFIG = "weather_config"
@@ -950,6 +954,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     
                     // Monitor detail screens (placeholders for now)
                     composable(Routes.MONITOR_NUTRITION) { MonitorNutritionScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.MONITOR_MEDICINES) { MonitorMedicineScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.MEDICINE_CONFIG) { MonitorMedicineConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.MEDICINE_DATA_HISTORY) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { MedicineDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                    }
                     composable(Routes.NUTRITION_CONFIG) { NutritionConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.NUTRITION_HISTORY) {
                         val pState by PremiumManager.state.collectAsState()
@@ -1052,6 +1064,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                         val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                         InsightsExploreScreen(navController = nav, vm = insightsVm)
+                    }
+                    composable(Routes.INSIGHTS_RECOMMENDATIONS) {
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        RecommendationsDetailScreen(navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_TIMELINE) {
                         val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner

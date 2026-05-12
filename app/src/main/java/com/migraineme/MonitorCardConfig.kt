@@ -21,9 +21,10 @@ data class MonitorCardConfig(
         const val CARD_SLEEP = "sleep"
         const val CARD_MENTAL = "mental"
         const val CARD_ENVIRONMENT = "environment"
+        const val CARD_MEDICINES = "medicines"
         const val CARD_MENSTRUATION = "menstruation"
         const val CARD_RISK = "risk"
-        
+
         val DEFAULT_ORDER = listOf(
             CARD_RISK,
             CARD_NUTRITION,
@@ -31,9 +32,10 @@ data class MonitorCardConfig(
             CARD_PHYSICAL,
             CARD_SLEEP,
             CARD_MENTAL,
+            CARD_MEDICINES,
             CARD_MENSTRUATION
         )
-        
+
         val CARD_LABELS = mapOf(
             CARD_RISK to "Risk",
             CARD_NUTRITION to "Nutrition",
@@ -41,6 +43,7 @@ data class MonitorCardConfig(
             CARD_SLEEP to "Sleep",
             CARD_MENTAL to "Mental Health",
             CARD_ENVIRONMENT to "Environment",
+            CARD_MEDICINES to "Medicines",
             CARD_MENSTRUATION to "Menstruation"
         )
         

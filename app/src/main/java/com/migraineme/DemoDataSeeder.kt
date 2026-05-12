@@ -445,16 +445,61 @@ object DemoDataSeeder {
                     } catch (_: Exception) {}
                 }
 
-                // Medication for most migraines
+                // Medicine (80% chance) — varied with amounts, categories, side effects.
+                // This shape feeds the new Monitor Medicines card and the AI recommendations input.
                 if (Random.nextFloat() < 0.8f) {
-                    try { db.insertMedicine(token, m.id, null, null,
-                        "${day}T${h.toString().padStart(2,'0')}:30:00Z", "[demo] Ibuprofen 400mg") } catch (_: Exception) {}
+                    data class MedOpt(val name: String, val amount: String, val category: String,
+                                      val relief: String, val se: String, val seNotes: String?)
+                    val medOptions = listOf(
+                        MedOpt("Ibuprofen",    "400mg", "NSAID",     "MILD", "SOFT",     "mild stomach upset"),
+                        MedOpt("Ibuprofen",    "400mg", "NSAID",     "LOW",  "MODERATE", "stomach pain, nausea"),
+                        MedOpt("Ibuprofen",    "400mg", "NSAID",     "HIGH", "NONE",     null),
+                        MedOpt("Sumatriptan",  "50mg",  "Triptan",   "HIGH", "MODERATE", "tingling, drowsiness"),
+                        MedOpt("Sumatriptan",  "50mg",  "Triptan",   "HIGH", "SOFT",     "drowsiness"),
+                        MedOpt("Acetaminophen","500mg","Analgesic",  "MILD", "NONE",     null),
+                        MedOpt("Acetaminophen","500mg","Analgesic",  "LOW",  "NONE",     null),
+                    )
+                    val pick = medOptions.random()
+                    try {
+                        insertRow(client, "$base/rest/v1/medicines", token, key,
+                            buildJsonObject {
+                                put("user_id", userId); put("migraine_id", m.id)
+                                put("name", pick.name); put("amount", pick.amount)
+                                put("category", pick.category)
+                                put("relief_scale", pick.relief)
+                                put("side_effect_scale", pick.se)
+                                if (pick.seNotes != null) put("side_effect_notes", pick.seNotes)
+                                put("start_at", "${day}T${h.toString().padStart(2,'0')}:30:00Z")
+                                put("source", "demo")
+                            })
+                    } catch (_: Exception) {}
                 }
 
-                // Relief for some
+                // Relief (60% chance) — varied with relief scale + side effects on some
                 if (Random.nextFloat() < 0.6f) {
-                    try { db.insertRelief(token, m.id, null,
-                        "${day}T${(h+1).toString().padStart(2,'0')}:00:00Z", "[demo] Dark room + cold compress") } catch (_: Exception) {}
+                    data class RelOpt(val type: String, val relief: String, val se: String, val seNotes: String?)
+                    val relOptions = listOf(
+                        RelOpt("Dark room", "HIGH", "NONE",     null),
+                        RelOpt("Dark room", "HIGH", "NONE",     null),
+                        RelOpt("Cold pack", "LOW",  "NONE",     null),
+                        RelOpt("Cold pack", "MILD", "NONE",     null),
+                        RelOpt("Caffeine",  "MILD", "SOFT",     "jittery"),
+                        RelOpt("Caffeine",  "MILD", "MODERATE", "palpitations, insomnia"),
+                        RelOpt("Sleep",     "HIGH", "NONE",     null),
+                    )
+                    val pick = relOptions.random()
+                    try {
+                        insertRow(client, "$base/rest/v1/reliefs", token, key,
+                            buildJsonObject {
+                                put("user_id", userId); put("migraine_id", m.id)
+                                put("type", pick.type)
+                                put("relief_scale", pick.relief)
+                                put("side_effect_scale", pick.se)
+                                if (pick.seNotes != null) put("side_effect_notes", pick.seNotes)
+                                put("start_at", "${day}T${(h+1).toString().padStart(2,'0')}:00:00Z")
+                                put("source", "demo")
+                            })
+                    } catch (_: Exception) {}
                 }
 
                 // Activity linked to migraine (for "What Were You Doing" on Insights)
@@ -677,6 +722,44 @@ object DemoDataSeeder {
             }
             Log.d(TAG, "✓ Seeded ${correlations.size} correlation stats + 2 recalibration proposals")
 
+            // Daily insight + cross-type AI recommendations (today) — same shape the
+            // ai-daily-insight-worker writes, so the Recommendations card shows immediately.
+            val todayStr = LocalDate.now(ZoneId.systemDefault()).toString()
+            val recs = buildJsonObject {
+                put("triggers", buildJsonObject {
+                    put("Sleep duration low", "Short sleep pairs with low pressure in your dangerous-combination findings, which is why a bad night before a stormy day tips you over. A non-negotiable bed-by time when the forecast shows pressure dropping targets that specific combination.")
+                    put("Stress high",        "Stress shows up frequently before your migraines, often the day before alongside high screen time. A 5-minute wind-down on high-stress evenings, plus a hard screen cutoff at 22:00, addresses both at once.")
+                })
+                put("prodromes", buildJsonObject {
+                    put("Yawning",        "Yawning has been a consistent prodrome for you, signalling early dopaminergic shift. Treat it as your personal cue: electrolyte hydration and a 30-minute quiet break in that window may abort or shorten the next migraine.")
+                    put("Neck stiffness", "Neck stiffness preceding your migraines suggests muscle tension building up. Gentle stretches and warm compress at first sign may reduce the headache severity that's coming.")
+                })
+                put("medicines", buildJsonObject {
+                    put("Ibuprofen",     "You've reported stomach side effects on Ibuprofen and your data shows declining relief over the last 30 days. Worth a doctor check-in about Naproxen or adding an H2 blocker to mitigate.")
+                    put("Sumatriptan",   "Sumatriptan gives you strong relief but with drowsiness and tingling. Rizatriptan or Eletriptan are same-class with cleaner SE profiles and may suit you better — worth discussing.")
+                    put("Acetaminophen", "Acetaminophen has been giving you only mild relief. Combining it with Ibuprofen can be safely stacked for stronger acute relief; or discuss alternatives with your doctor.")
+                })
+                put("reliefs", buildJsonObject {
+                    put("Dark room", "Dark room has been your most reliable non-drug relief. Pre-emptively darkening your space when you spot prodrome signs may shorten or abort the next migraine.")
+                    put("Caffeine",  "Caffeine has shown mild relief but introduces jitters and palpitations for you. Worth limiting to morning-only and pairing with water to reduce side effects.")
+                })
+                put("activities", buildJsonObject {
+                    put("Running", "Your migraines often follow evening running sessions, likely from delayed dehydration and a late cortisol spike. Moving intense sessions earlier and adding electrolytes mid-session targets both.")
+                })
+            }
+            try {
+                upsertRow(client, "$base/rest/v1/daily_insights", token, key, "user_id,date",
+                    buildJsonObject {
+                        put("user_id", userId)
+                        put("date", todayStr)
+                        put("insight", "Sleep is your strongest pattern — short nights pair with low pressure to compound risk. Have Ibuprofen ready and aim for a 22:00 bedtime tonight.")
+                        put("risk_zone", "MILD")
+                        put("context_snapshot", "[demo seed]")
+                        put("ai_recommendations", recs)
+                    })
+                Log.d(TAG, "✓ Seeded daily_insights with ai_recommendations for today")
+            } catch (e: Exception) { Log.w(TAG, "daily_insights seed failed: ${e.message}") }
+
             // Gauge accuracy (shown on Insights → Accuracy card)
             upsertRow(client, "$base/rest/v1/gauge_accuracy", token, key, "user_id",
                 buildJsonObject {
@@ -722,7 +805,7 @@ object DemoDataSeeder {
             // Migraines & linked items
             "triggers","medicines","reliefs","migraines","locations","prodromes",
             // AI & analytics
-            "correlation_stats","recalibration_proposals","gauge_accuracy",
+            "correlation_stats","recalibration_proposals","gauge_accuracy","daily_insights",
             // Risk
             "risk_score_daily"
         )

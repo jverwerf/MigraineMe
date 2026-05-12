@@ -391,6 +391,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                     }
                 }
+                // ── 3b. AI RECOMMENDATIONS (top-level card, all 5 types) ──
+                val aiRecs by vm.aiRecommendations.collectAsState()
+                if (!aiRecs.isEmpty) {
+                    RecommendationsCard(aiRecs) {
+                        navController.navigate(Routes.INSIGHTS_RECOMMENDATIONS)
+                    }
+                }
+
 
                 // ── 4. ACCURACY ──
                 PremiumGate(

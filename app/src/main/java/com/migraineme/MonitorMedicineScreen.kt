@@ -1,0 +1,860 @@
+package com.migraineme
+
+import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONObject
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+// ════════════════════════════════════════════════════════════════════════════
+// DATA + LOADER
+// ════════════════════════════════════════════════════════════════════════════
+
+data class DailyAmount(val date: String, val value: Double, val unit: String)
+
+data class MedicineSummary(
+    val all: List<MedicineSummaryEntry> = emptyList(),
+    val categories: List<MedicineCategorySummary> = emptyList(),
+    val dailyByMedicine: Map<String, List<DailyAmount>> = emptyMap(),
+    val dailyByCategory: Map<String, List<DailyAmount>> = emptyMap(),
+)
+
+/**
+ * Fetches medicine logs for the last 30 days from Supabase and aggregates:
+ *  - per-medicine and per-category today/week/month AMOUNT sums
+ *  - per-medicine and per-category 14-day daily series (dominant unit per item)
+ */
+suspend fun loadMedicineSummary(context: Context): MedicineSummary = withContext(Dispatchers.IO) {
+    val token = SessionStore.getValidAccessToken(context) ?: return@withContext MedicineSummary()
+    val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+    val key = BuildConfig.SUPABASE_ANON_KEY
+
+    val zone = ZoneId.systemDefault()
+    val today = LocalDate.now(zone)
+    val monthAgo = today.minusDays(30)
+    val monthAgoIso = monthAgo.atStartOfDay(zone).toOffsetDateTime().toString()
+
+    val url = "$base/rest/v1/medicines" +
+        "?select=name,category,amount,start_at" +
+        "&start_at=gte.${java.net.URLEncoder.encode(monthAgoIso, "UTF-8")}" +
+        "&order=start_at.desc&limit=2000"
+
+    val client = OkHttpClient()
+    val req = Request.Builder().url(url)
+        .addHeader("apikey", key)
+        .addHeader("Authorization", "Bearer $token")
+        .addHeader("Accept", "application/json").build()
+    val arr = try {
+        val res = client.newCall(req).execute()
+        JSONArray(res.body?.string() ?: "[]")
+    } catch (_: Exception) { JSONArray() }
+
+    val fmt = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+    val sevenAgo = today.minusDays(7)
+    val fourteenAgo = today.minusDays(13)
+
+    data class Bucket(
+        var category: String? = null,
+        var logsToday: Int = 0, var logsWeek: Int = 0, var logsMonth: Int = 0,
+        val amtToday: MutableList<Pair<Double, String>> = mutableListOf(),
+        val amtWeek: MutableList<Pair<Double, String>> = mutableListOf(),
+        val amtMonth: MutableList<Pair<Double, String>> = mutableListOf(),
+        var unpToday: Int = 0, var unpWeek: Int = 0, var unpMonth: Int = 0,
+    )
+
+    val perName = mutableMapOf<String, Bucket>()
+    val perCat = mutableMapOf<String, Bucket>()
+    val perNameDailyUnit = mutableMapOf<String, MutableMap<String, MutableMap<String, Double>>>()
+    val perCatDailyUnit  = mutableMapOf<String, MutableMap<String, MutableMap<String, Double>>>()
+
+    for (i in 0 until arr.length()) {
+        val o = arr.optJSONObject(i) ?: continue
+        val name = o.optString("name").takeIf { it.isNotBlank() } ?: continue
+        val cat = o.optString("category").takeIf { it.isNotBlank() }
+        val amt = o.optString("amount").takeIf { it.isNotBlank() }
+        val startStr = o.optString("start_at").takeIf { it.isNotBlank() } ?: continue
+        val parsed = parseMedicineAmount(amt)
+        val instant = try { OffsetDateTime.parse(startStr, fmt) } catch (_: Exception) { continue }
+        val date = instant.atZoneSameInstant(zone).toLocalDate()
+        val dayKey = date.toString()
+
+        val nb = perName.getOrPut(name) { Bucket() }
+        if (nb.category == null) nb.category = cat
+        nb.logsMonth += 1
+        if (parsed != null) nb.amtMonth.add(parsed) else if (amt != null) nb.unpMonth += 1
+        if (!date.isBefore(sevenAgo)) {
+            nb.logsWeek += 1
+            if (parsed != null) nb.amtWeek.add(parsed) else if (amt != null) nb.unpWeek += 1
+        }
+        if (date == today) {
+            nb.logsToday += 1
+            if (parsed != null) nb.amtToday.add(parsed) else if (amt != null) nb.unpToday += 1
+        }
+        if (cat != null) {
+            val cb = perCat.getOrPut(cat) { Bucket() }
+            cb.logsMonth += 1
+            if (parsed != null) cb.amtMonth.add(parsed) else if (amt != null) cb.unpMonth += 1
+            if (!date.isBefore(sevenAgo)) {
+                cb.logsWeek += 1
+                if (parsed != null) cb.amtWeek.add(parsed) else if (amt != null) cb.unpWeek += 1
+            }
+            if (date == today) {
+                cb.logsToday += 1
+                if (parsed != null) cb.amtToday.add(parsed) else if (amt != null) cb.unpToday += 1
+            }
+        }
+        if (parsed != null && !date.isBefore(fourteenAgo)) {
+            perNameDailyUnit
+                .getOrPut(name) { mutableMapOf() }
+                .getOrPut(dayKey) { mutableMapOf() }
+                .merge(parsed.second, parsed.first) { a, b -> a + b }
+            if (cat != null) {
+                perCatDailyUnit
+                    .getOrPut(cat) { mutableMapOf() }
+                    .getOrPut(dayKey) { mutableMapOf() }
+                    .merge(parsed.second, parsed.first) { a, b -> a + b }
+            }
+        }
+    }
+
+    val allEntries = perName.entries.map { (n, b) ->
+        MedicineSummaryEntry(
+            name = n, category = b.category,
+            amountToday = formatAmountSum(b.amtToday, b.unpToday),
+            amountWeek  = formatAmountSum(b.amtWeek,  b.unpWeek),
+            amountMonth = formatAmountSum(b.amtMonth, b.unpMonth),
+            logsToday = b.logsToday, logsWeek = b.logsWeek, logsMonth = b.logsMonth,
+        )
+    }.sortedWith(compareByDescending<MedicineSummaryEntry> { it.logsMonth }
+        .thenByDescending { it.logsWeek }
+        .thenByDescending { it.logsToday })
+
+    val allCats = perCat.entries.map { (c, b) ->
+        MedicineCategorySummary(
+            category = c,
+            amountToday = formatAmountSum(b.amtToday, b.unpToday),
+            amountWeek  = formatAmountSum(b.amtWeek,  b.unpWeek),
+            amountMonth = formatAmountSum(b.amtMonth, b.unpMonth),
+            logsToday = b.logsToday, logsWeek = b.logsWeek, logsMonth = b.logsMonth,
+        )
+    }.sortedWith(compareByDescending<MedicineCategorySummary> { it.logsMonth }
+        .thenByDescending { it.logsWeek }
+        .thenByDescending { it.logsToday })
+
+    fun buildSeries(src: Map<String, Map<String, Map<String, Double>>>): Map<String, List<DailyAmount>> {
+        val out = mutableMapOf<String, List<DailyAmount>>()
+        for ((name, byDayUnit) in src) {
+            val unitTotals = mutableMapOf<String, Double>()
+            for ((_, units) in byDayUnit) for ((u, v) in units) unitTotals.merge(u, v) { a, b -> a + b }
+            val dominantUnit = unitTotals.maxByOrNull { it.value }?.key ?: "mg"
+            val pts = mutableListOf<DailyAmount>()
+            for (i in 13 downTo 0) {
+                val d = today.minusDays(i.toLong())
+                val s = d.toString()
+                val v = byDayUnit[s]?.get(dominantUnit) ?: 0.0
+                pts.add(DailyAmount(s, v, dominantUnit))
+            }
+            out[name] = pts
+        }
+        return out
+    }
+
+    MedicineSummary(
+        all = allEntries,
+        categories = allCats,
+        dailyByMedicine = buildSeries(perNameDailyUnit),
+        dailyByCategory = buildSeries(perCatDailyUnit),
+    )
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MAIN MONITOR CARD — used in MonitorScreen.kt's card switch
+// ════════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: () -> Unit) {
+    val ctx = LocalContext.current
+    val accent = Color(0xFF4FC3F7)
+
+    BaseCard(modifier = Modifier.clickable { onClick() }) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.MedicalServices, contentDescription = null,
+                tint = accent, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Medicines", color = Color.White,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.weight(1f))
+            Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+        }
+        Spacer(Modifier.height(8.dp))
+
+        when {
+            isLoading -> Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+            summary.all.isEmpty() -> Text("No medicines logged in the last 30 days",
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+            else -> {
+                val favs = MedicineCardConfig.loadFavourites(ctx)
+                val slots = resolveMedicineCardSlots(favourites = favs, allEntries = summary.all)
+                MedicineDWMLegend()
+                slots.forEach { s ->
+                    MedicineDWMRow(name = s.name, category = s.category,
+                        today = s.amountToday, week = s.amountWeek, month = s.amountMonth)
+                }
+                if (summary.categories.isNotEmpty()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("By category", color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                    summary.categories.take(4).forEach { c ->
+                        MedicineDWMRow(name = c.category, category = null,
+                            today = c.amountToday, week = c.amountWeek, month = c.amountMonth)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// DETAIL SUB-SCREEN
+// ════════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = viewModel()) {
+    val ctx = LocalContext.current.applicationContext
+    val scrollState = rememberScrollState()
+    var summary by remember { mutableStateOf<MedicineSummary?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    val chartSelected = remember { mutableStateListOf<String>() }
+    var chartInit by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        summary = loadMedicineSummary(ctx)
+        isLoading = false
+        if (!chartInit && summary != null) {
+            val favs = MedicineCardConfig.loadFavourites(ctx)
+            val cats = MedicineCardConfig.run { ctx.getSharedPreferences("monitor_prefs", Context.MODE_PRIVATE)
+                .getString("medicine_card_config_categories", null)?.split("\n")?.filter { it.isNotBlank() } ?: emptyList() }
+            val seed = favs + cats
+            chartSelected.addAll(if (seed.isNotEmpty()) seed else summary!!.all.take(3).map { it.name })
+            chartInit = true
+        }
+    }
+
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
+                }
+            }
+
+            // 1. Customize hero card
+            BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.MEDICINE_CONFIG) }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Tune, contentDescription = null,
+                        tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Customize Medicines", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Pick which medicines appear as favourites on the card",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                }
+            }
+
+            val s = summary
+            when {
+                isLoading -> Box(Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
+                }
+                s == null || s.all.isEmpty() -> {
+                    BaseCard {
+                        Text("No medicines logged in the last 30 days",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                        Text("Log medicines on the Log screen to see them here",
+                            color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+                else -> {
+                    // 2. Combined breakdown (per medicine + per category in one card)
+                    BaseCard {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Breakdown", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.weight(1f))
+                            val pState by PremiumManager.state.collectAsState()
+                            if (pState.isPremium) {
+                                Text("History →", color = AppTheme.AccentPurple,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.clickable { navController.navigate(Routes.MEDICINE_DATA_HISTORY) })
+                            } else {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Outlined.Lock, contentDescription = null,
+                                        tint = AppTheme.AccentPurple, modifier = Modifier.size(12.dp))
+                                    Spacer(Modifier.width(2.dp))
+                                    Text("History", color = AppTheme.AccentPurple,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            MedicineDWMLegend()
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text("By medicine", color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                        s.all.forEach { m ->
+                            MedicineDWMRow(name = m.name, category = m.category,
+                                today = m.amountToday, week = m.amountWeek, month = m.amountMonth)
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        if (s.categories.isNotEmpty()) {
+                            Spacer(Modifier.height(6.dp))
+                            Text("By category", color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                            s.categories.forEach { c ->
+                                MedicineDWMRow(name = c.category, category = null,
+                                    today = c.amountToday, week = c.amountWeek, month = c.amountMonth)
+                                Spacer(Modifier.height(4.dp))
+                            }
+                        }
+                    }
+
+                    // 3. 14-day stacked histogram with chip selector
+                    BaseCard {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Last 14 days", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.weight(1f))
+                            Text("Daily amount, stacked", color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        if (s.all.isNotEmpty()) {
+                            Text("Medicines", color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall)
+                            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                s.all.forEach { m -> ChartChip(m.name, Color(0xFF4FC3F7), chartSelected) }
+                            }
+                        }
+                        if (s.categories.isNotEmpty()) {
+                            Spacer(Modifier.height(4.dp))
+                            Text("Categories", color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall)
+                            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                s.categories.forEach { c -> ChartChip(c.category, Color(0xFF81C784), chartSelected) }
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        val merged = s.dailyByMedicine + s.dailyByCategory
+                        MedicineStackedBarGraph(chartSelected.toList(), merged, Modifier.fillMaxWidth().height(160.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SHARED ROW + LEGEND (used by main card + sub-screen)
+// ════════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun MedicineDWMLegend() {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.04f))
+                .padding(horizontal = 8.dp, vertical = 2.dp)
+        ) {
+            Text("D", color = Color(0xFFFFB74D),
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+            Text("W", color = Color(0xFF4FC3F7),
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+            Text("M", color = Color(0xFF81C784),
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+        }
+    }
+}
+
+@Composable
+fun MedicineDWMRow(name: String, category: String?, today: String, week: String, month: String) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(name, color = Color.White,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1, modifier = Modifier.weight(1f, fill = false))
+        if (!category.isNullOrBlank()) {
+            Spacer(Modifier.width(4.dp))
+            Text(category, color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.06f))
+                    .padding(horizontal = 5.dp, vertical = 1.dp))
+        }
+        Spacer(Modifier.weight(1f))
+        Text(today, color = Color(0xFFFFB74D),
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.width(8.dp))
+        Text(week, color = Color(0xFF4FC3F7),
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.width(8.dp))
+        Text(month, color = Color(0xFF81C784),
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+    }
+}
+
+@Composable
+private fun ChartChip(label: String, color: Color, selected: SnapshotStateList<String>) {
+    val isSel = label in selected
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(if (isSel) color.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.06f))
+            .clickable { if (isSel) selected.remove(label) else selected.add(label) }
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    ) {
+        if (isSel) {
+            Text("✓ ", color = Color.White, style = MaterialTheme.typography.labelSmall)
+        }
+        Text(label,
+            color = if (isSel) Color.White else AppTheme.BodyTextColor,
+            style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// STACKED BAR GRAPH
+// ════════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun MedicineStackedBarGraph(
+    selected: List<String>,
+    seriesPerItem: Map<String, List<DailyAmount>>,
+    modifier: Modifier = Modifier,
+) {
+    val palette = listOf(
+        Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784),
+        Color(0xFFBA68C8), Color(0xFFFF8A65), Color(0xFF7986CB),
+    )
+    val resolved = selected.mapIndexedNotNull { i, name ->
+        val pts = seriesPerItem[name] ?: return@mapIndexedNotNull null
+        if (pts.isEmpty()) return@mapIndexedNotNull null
+        Triple(name, palette[i % palette.size], pts)
+    }
+    if (resolved.isEmpty()) {
+        Box(modifier, contentAlignment = Alignment.Center) {
+            Text("Pick a medicine or category to chart",
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        }
+        return
+    }
+    val days = resolved.first().third.map { it.date }
+    val maxStacked = days.indices.maxOf { i ->
+        resolved.sumOf { it.third.getOrNull(i)?.value ?: 0.0 }
+    }.coerceAtLeast(1.0)
+
+    Column(modifier) {
+        // Legend
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            resolved.forEach { (name, color, pts) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(color))
+                    Spacer(Modifier.width(4.dp))
+                    Text(name, color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall)
+                    pts.firstOrNull()?.unit?.let {
+                        Text(" ($it)", color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.weight(1f).fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            days.forEachIndexed { idx, d ->
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.BottomCenter) {
+                        Column(
+                            Modifier.fillMaxWidth().fillMaxHeight(),
+                            verticalArrangement = Arrangement.Bottom
+                        ) {
+                            // Stack from bottom up (last in list is bottom)
+                            resolved.asReversed().forEach { (_, color, pts) ->
+                                val v = pts.getOrNull(idx)?.value ?: 0.0
+                                if (v > 0) {
+                                    val frac = (v / maxStacked).toFloat().coerceIn(0f, 1f)
+                                    Box(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .weight(frac, fill = false)
+                                            .height((frac * 120).dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(color.copy(alpha = 0.85f))
+                                    )
+                                    Spacer(Modifier.height(1.dp))
+                                }
+                            }
+                        }
+                    }
+                    Text(dayLabel(d), color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+}
+
+private fun dayLabel(iso: String): String = try {
+    LocalDate.parse(iso).dayOfMonth.toString()
+} catch (_: Exception) { "" }
+
+// ════════════════════════════════════════════════════════════════════════════
+// CUSTOMIZE SCREEN
+// ════════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun MonitorMedicineConfigScreen(onBack: () -> Unit) {
+    val ctx = LocalContext.current.applicationContext
+    val scrollState = rememberScrollState()
+    var pool by remember { mutableStateOf<List<UserMedicineRow>>(emptyList()) }
+    var categories by remember { mutableStateOf<List<String>>(emptyList()) }
+    val selectedMeds = remember { mutableStateListOf<String>().apply { addAll(MedicineCardConfig.loadFavourites(ctx)) } }
+    val selectedCats = remember {
+        val saved = ctx.getSharedPreferences("monitor_prefs", Context.MODE_PRIVATE)
+            .getString("medicine_card_config_categories", null)?.split("\n")?.filter { it.isNotBlank() } ?: emptyList()
+        mutableStateListOf<String>().apply { addAll(saved) }
+    }
+
+    LaunchedEffect(Unit) {
+        pool = withContext(Dispatchers.IO) { loadUserMedicinesPool(ctx) }
+        categories = pool.mapNotNull { it.category }.distinct().sorted()
+    }
+
+    fun persistMeds() {
+        MedicineCardConfig.saveFavourites(ctx, selectedMeds.toList())
+    }
+    fun persistCats() {
+        ctx.getSharedPreferences("monitor_prefs", Context.MODE_PRIVATE).edit()
+            .putString("medicine_card_config_categories", selectedCats.joinToString("\n")).apply()
+    }
+
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
+                }
+                Text("Customize Medicines", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            }
+            BaseCard {
+                Text("Pick medicines and categories to prioritize on the Monitor card and chart.",
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+            }
+            if (pool.isNotEmpty()) {
+                BaseCard {
+                    Text("Medicines", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(6.dp))
+                    pool.forEach { m ->
+                        val isSel = m.label in selectedMeds
+                        Row(Modifier.fillMaxWidth()
+                            .clickable {
+                                if (isSel) selectedMeds.remove(m.label) else selectedMeds.add(m.label)
+                                persistMeds()
+                            }
+                            .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(18.dp).clip(CircleShape)
+                                .background(if (isSel) Color(0xFF4FC3F7) else Color.White.copy(alpha = 0.08f)))
+                            Spacer(Modifier.width(10.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(m.label, color = Color.White,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                                m.category?.let {
+                                    Text(it, color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (categories.isNotEmpty()) {
+                BaseCard {
+                    Text("Categories", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(6.dp))
+                    categories.forEach { c ->
+                        val isSel = c in selectedCats
+                        Row(Modifier.fillMaxWidth()
+                            .clickable {
+                                if (isSel) selectedCats.remove(c) else selectedCats.add(c)
+                                persistCats()
+                            }
+                            .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(18.dp).clip(CircleShape)
+                                .background(if (isSel) Color(0xFF81C784) else Color.White.copy(alpha = 0.08f)))
+                            Spacer(Modifier.width(10.dp))
+                            Text(c, color = Color.White,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private suspend fun loadUserMedicinesPool(context: Context): List<UserMedicineRow> = withContext(Dispatchers.IO) {
+    val token = SessionStore.getValidAccessToken(context) ?: return@withContext emptyList()
+    val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+    val key = BuildConfig.SUPABASE_ANON_KEY
+    val url = "$base/rest/v1/user_medicines?select=id,label,category&order=label.asc&limit=500"
+    val req = Request.Builder().url(url)
+        .addHeader("apikey", key)
+        .addHeader("Authorization", "Bearer $token")
+        .addHeader("Accept", "application/json").build()
+    val arr = try { JSONArray(OkHttpClient().newCall(req).execute().body?.string() ?: "[]") } catch (_: Exception) { JSONArray() }
+    val out = mutableListOf<UserMedicineRow>()
+    for (i in 0 until arr.length()) {
+        val o = arr.optJSONObject(i) ?: continue
+        out.add(UserMedicineRow(
+            id = o.optString("id"),
+            label = o.optString("label"),
+            category = o.optString("category").takeIf { it.isNotBlank() }
+        ))
+    }
+    out
+}
+
+data class UserMedicineRow(val id: String, val label: String, val category: String?)
+
+// ════════════════════════════════════════════════════════════════════════════
+// PER-DATE DATA HISTORY SCREEN
+// ════════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun MedicineDataHistoryScreen(onBack: () -> Unit) {
+    val ctx = LocalContext.current.applicationContext
+    val scrollState = rememberScrollState()
+    var selectedDate by remember { mutableStateOf(LocalDate.now(ZoneId.systemDefault())) }
+    var entries by remember { mutableStateOf<List<MedicineLogRow>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(selectedDate) {
+        isLoading = true
+        entries = withContext(Dispatchers.IO) { loadMedicinesForDate(ctx, selectedDate) }
+        isLoading = false
+    }
+
+    val categoryTotals = remember(entries) {
+        val byCat = mutableMapOf<String, MutableList<Pair<Double, String>>>()
+        val byCatUnp = mutableMapOf<String, Int>()
+        for (e in entries) {
+            val c = e.category ?: continue
+            val p = parseMedicineAmount(e.amount)
+            if (p != null) byCat.getOrPut(c) { mutableListOf() }.add(p)
+            else if (!e.amount.isNullOrBlank()) byCatUnp.merge(c, 1) { a, b -> a + b }
+        }
+        (byCat.keys + byCatUnp.keys).toSet().sorted().map { cat ->
+            cat to formatAmountSum(byCat[cat] ?: emptyList(), byCatUnp[cat] ?: 0)
+        }
+    }
+
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
+                }
+                Text("Medicines History", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            }
+
+            BaseCard {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { selectedDate = selectedDate.minusDays(1) }) {
+                        Icon(Icons.Outlined.ChevronLeft, "Previous day", tint = AppTheme.AccentPurple)
+                    }
+                    Text(selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy")),
+                        color = AppTheme.TitleColor, modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleSmall)
+                    IconButton(onClick = {
+                        if (selectedDate < LocalDate.now(ZoneId.systemDefault())) selectedDate = selectedDate.plusDays(1)
+                    }) {
+                        Icon(Icons.Outlined.ChevronRight, "Next day", tint = AppTheme.AccentPurple)
+                    }
+                }
+            }
+
+            if (categoryTotals.isNotEmpty()) {
+                BaseCard {
+                    Text("By category", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(4.dp))
+                    categoryTotals.forEach { (cat, total) ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text(cat, color = Color.White, style = MaterialTheme.typography.labelMedium)
+                            Spacer(Modifier.weight(1f))
+                            Text(total, color = Color(0xFF81C784),
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        }
+                    }
+                }
+            }
+
+            BaseCard {
+                Text("Medicines Taken", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.height(6.dp))
+                when {
+                    isLoading -> Box(Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp,
+                            color = AppTheme.AccentPurple)
+                    }
+                    entries.isEmpty() -> Text("No medicines logged on this date",
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    else -> entries.forEach { e ->
+                        Column(Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White.copy(alpha = 0.04f))
+                            .padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(e.name ?: "Unknown", color = Color.White,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                                e.category?.let {
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(it, color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.clip(CircleShape)
+                                            .background(Color.White.copy(alpha = 0.06f))
+                                            .padding(horizontal = 5.dp, vertical = 1.dp))
+                                }
+                                Spacer(Modifier.weight(1f))
+                                Text(e.timeOfDay, color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                e.amount?.takeIf { it.isNotBlank() }?.let {
+                                    Text(it, color = Color(0xFFFFB74D),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                                    Spacer(Modifier.width(8.dp))
+                                }
+                                e.reliefScale?.takeIf { it != "NONE" }?.let {
+                                    Text("relief: ${it.lowercase().replaceFirstChar { c -> c.uppercase() }}",
+                                        color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall)
+                                    Spacer(Modifier.width(8.dp))
+                                }
+                                e.sideEffectScale?.takeIf { it != "NONE" }?.let {
+                                    Text("SE: ${it.lowercase().replaceFirstChar { c -> c.uppercase() }}",
+                                        color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            e.sideEffectNotes?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        Spacer(Modifier.height(6.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+data class MedicineLogRow(
+    val id: String, val name: String?, val category: String?, val amount: String?,
+    val reliefScale: String?, val sideEffectScale: String?, val sideEffectNotes: String?,
+    val timeOfDay: String,
+)
+
+private suspend fun loadMedicinesForDate(context: Context, date: LocalDate): List<MedicineLogRow> = withContext(Dispatchers.IO) {
+    val token = SessionStore.getValidAccessToken(context) ?: return@withContext emptyList()
+    val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+    val key = BuildConfig.SUPABASE_ANON_KEY
+    val zone = ZoneId.systemDefault()
+    val start = date.atStartOfDay(zone).toOffsetDateTime().toString()
+    val end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime().toString()
+    val url = "$base/rest/v1/medicines" +
+        "?select=id,name,category,amount,relief_scale,side_effect_scale,side_effect_notes,start_at" +
+        "&start_at=gte.${java.net.URLEncoder.encode(start, "UTF-8")}" +
+        "&start_at=lt.${java.net.URLEncoder.encode(end, "UTF-8")}" +
+        "&order=start_at.asc&limit=500"
+    val req = Request.Builder().url(url)
+        .addHeader("apikey", key)
+        .addHeader("Authorization", "Bearer $token")
+        .addHeader("Accept", "application/json").build()
+    val arr = try { JSONArray(OkHttpClient().newCall(req).execute().body?.string() ?: "[]") } catch (_: Exception) { JSONArray() }
+    val out = mutableListOf<MedicineLogRow>()
+    val timeFmt = DateTimeFormatter.ofPattern("HH:mm")
+    for (i in 0 until arr.length()) {
+        val o = arr.optJSONObject(i) ?: continue
+        val startStr = o.optString("start_at")
+        val timeOfDay = try {
+            OffsetDateTime.parse(startStr).atZoneSameInstant(zone).toLocalTime().format(timeFmt)
+        } catch (_: Exception) { "" }
+        out.add(MedicineLogRow(
+            id = o.optString("id"),
+            name = o.optString("name").takeIf { it.isNotBlank() },
+            category = o.optString("category").takeIf { it.isNotBlank() },
+            amount = o.optString("amount").takeIf { it.isNotBlank() },
+            reliefScale = o.optString("relief_scale").takeIf { it.isNotBlank() },
+            sideEffectScale = o.optString("side_effect_scale").takeIf { it.isNotBlank() },
+            sideEffectNotes = o.optString("side_effect_notes").takeIf { it.isNotBlank() },
+            timeOfDay = timeOfDay,
+        ))
+    }
+    out
+}
