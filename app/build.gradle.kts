@@ -28,8 +28,8 @@ android {
         applicationId = "com.migraineme"
         minSdk = 26
         targetSdk = 35
-        versionCode = 36
-        versionName = "1.2.3"
+        versionCode = 37
+        versionName = "1.3.0"
 
         // ── All keys loaded from local.properties ──
         buildConfigField("String", "SUPABASE_URL",
