@@ -75,6 +75,26 @@ object OnboardingPrefs {
             okhttp3.OkHttpClient().newCall(request).execute().close()
         } catch (_: Exception) {}
     }
+
+    // DEBUG: mirrors iOS resetOnboarding — flips onboarding_completed back to false.
+    suspend fun resetInSupabase(context: Context) {
+        try {
+            val token = SessionStore.getValidAccessToken(context) ?: return
+            val userId = SessionStore.readUserId(context) ?: JwtUtils.extractUserIdFromAccessToken(token) ?: return
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/profiles?user_id=eq.$userId"
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .patch(
+                    """{"onboarding_completed": false}""".toRequestBody("application/json".toMediaType())
+                )
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=minimal")
+                .build()
+            okhttp3.OkHttpClient().newCall(request).execute().close()
+        } catch (_: Exception) {}
+    }
 }
 
 private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, SCREEN_TIME_PERMISSION, BACKGROUND_LOCATION_PERMISSION, BATTERY_OPTIMIZATION }

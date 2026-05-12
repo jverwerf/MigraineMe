@@ -86,6 +86,9 @@ fun ProfileScreen(
     var deleteBusy by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
 
+    // DEBUG: Rerun onboarding state (mirrors iOS rerunOnboardingSection).
+    var isResettingOnboarding by remember { mutableStateOf(false) }
+
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
     var aiProfileLoading by remember { mutableStateOf(false) }
@@ -469,6 +472,41 @@ fun ProfileScreen(
                         Text("Change Password", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                         Text("Send a password reset link to your email", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
+                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+
+        // ── DEBUG: Rerun Onboarding (matches iOS rerunOnboardingSection) ──
+        BaseCard {
+            Row(
+                Modifier.fillMaxWidth().clickable(enabled = !isResettingOnboarding) {
+                    val token = auth.accessToken
+                    if (token.isNullOrBlank()) return@clickable
+                    isResettingOnboarding = true
+                    scope.launch {
+                        try {
+                            withContext(Dispatchers.IO) { OnboardingPrefs.resetInSupabase(context) }
+                            SessionStore.clear(context.applicationContext)
+                            PremiumManager.reset()
+                            authVm.signOut()
+                            onLoggedOut()
+                        } finally {
+                            isResettingOnboarding = false
+                        }
+                    }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(Icons.Outlined.Refresh, null, tint = Color(0xFFFFB74D), modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Resets onboarding flag and signs you out (debug)", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                if (isResettingOnboarding) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
+                } else {
                     Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                 }
             }

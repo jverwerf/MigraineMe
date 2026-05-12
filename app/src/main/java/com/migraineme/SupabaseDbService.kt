@@ -665,7 +665,8 @@ class SupabaseDbService(
         val response = client.post("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
-            parameter("on_conflict", "label")
+            // DB unique constraint is on (user_id, label) — label-only fails with 42P10.
+            parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
             contentType(ContentType.Application.Json); setBody(UserTriggerInsert(label, category, predictionValue))
         }

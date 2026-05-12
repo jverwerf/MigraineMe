@@ -40,28 +40,43 @@ object PredictedMenstruationHelper {
                 LocalDate.now().plusDays(settings.avgCycleLength.toLong())
             }
 
-            // Delete existing predicted triggers
-            val existingPredicted = allTriggers.filter { trigger ->
-                trigger.type == "menstruation_predicted" && trigger.source == "system"
-            }
-            for (old in existingPredicted) {
+            // Split existing predicted rows into "already on target date" vs "wrong date".
+            // The DB trigger `trigger_update_menstruation_prediction` may have already
+            // created a predicted row with a non-system source — filtering by source
+            // misses it and the subsequent insert collides on (user_id, start_at, type).
+            val targetDayPrefix = predictedDate.toString()
+            val allPredicted = allTriggers.filter { it.type == "menstruation_predicted" }
+            val onTarget = allPredicted.any { it.startAt.startsWith(targetDayPrefix) }
+            val wrongDate = allPredicted.filter { !it.startAt.startsWith(targetDayPrefix) }
+
+            for (old in wrongDate) {
                 try {
                     db.deleteTrigger(accessToken, old.id)
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed to delete old predicted trigger ${old.id}: ${e.message}")
+                    Log.w(TAG, "Failed to delete stale predicted trigger ${old.id}: ${e.message}")
                 }
             }
 
-            // Create single predicted trigger on the predicted date
-            db.insertTrigger(
-                accessToken = accessToken,
-                migraineId = null,
-                type = "menstruation_predicted",
-                startAt = "${predictedDate}T09:00:00Z",
-                notes = "Predicted menstruation"
-            )
-
-            Log.d(TAG, "Created predicted trigger for $predictedDate")
+            if (onTarget) {
+                Log.d(TAG, "Predicted trigger already present for $predictedDate, skipping insert")
+            } else {
+                try {
+                    db.insertTrigger(
+                        accessToken = accessToken,
+                        migraineId = null,
+                        type = "menstruation_predicted",
+                        startAt = "${predictedDate}T09:00:00Z",
+                        notes = "Predicted menstruation"
+                    )
+                    Log.d(TAG, "Created predicted trigger for $predictedDate")
+                } catch (e: Exception) {
+                    // 23505 = the DB trigger raced us and inserted between the read and the
+                    // insert. Safe to ignore — there's a row at the right date now.
+                    if (e.message?.contains("23505") == true) {
+                        Log.d(TAG, "Predicted trigger inserted concurrently for $predictedDate")
+                    } else throw e
+                }
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to ensure predicted trigger exists", e)
         }

@@ -2117,12 +2117,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onSkip = {
                                 scope.launch(Dispatchers.IO) {
                                     try { EdgeFunctionsService().enqueueLoginBackfill(appCtx) } catch (_: Exception) {}
-                                    kotlinx.coroutines.withContext(Dispatchers.Main) {
-                                        nav.navigate("backfill_loading") {
-                                            popUpTo(Routes.AI_SETUP) { inclusive = true }
-                                            launchSingleTop = true
-                                        }
-                                    }
+                                }
+                                nav.navigate("subscribe") {
+                                    popUpTo(Routes.AI_SETUP) { inclusive = true }
+                                    launchSingleTop = true
                                 }
                             }
                         )

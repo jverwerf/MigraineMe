@@ -69,6 +69,8 @@ object MenstruationTrackingHelper {
             MenstruationSyncScheduler.schedule(context.applicationContext)
 
             val edge = EdgeFunctionsService()
+            edge.seedDefaultRiskDecayWeights(context.applicationContext)
+            edge.seedDefaultMenstruationDecayWeights(context.applicationContext)
             edge.upsertMetricSetting(
                 context = context.applicationContext,
                 metric = "menstruation",
@@ -96,15 +98,26 @@ object MenstruationTrackingHelper {
             ensurePredictedTriggerPoolEntry(context.applicationContext, accessToken)
             PredictedMenstruationHelper.ensureExists(context.applicationContext)
 
+            // recalc-risk-scores edge fn early-returns "no_decay_config" if either
+            // risk_decay_weights or menstruation_decay_weights is missing for the user.
+            // MetricsSyncManager seeds risk_decay_weights at login but it can fail
+            // silently — re-seed both here (idempotent upserts) so the recalc has
+            // everything it needs the first time the user touches menstruation.
+            val edge = EdgeFunctionsService()
+            edge.seedDefaultRiskDecayWeights(context.applicationContext)
+            edge.seedDefaultMenstruationDecayWeights(context.applicationContext)
+
             true
         }.onFailure { Log.e(TAG, "updateSettingsOnly failed: ${it.message}", it) }
             .getOrDefault(false)
     }
 
     /**
-     * Ensure a user_triggers pool entry exists for "menstruation_predicted"
-     * so the edge function can look up its severity for gauge scoring.
-     * Copies severity from the existing "Menstruation" entry, defaults to MILD.
+     * Ensure user_triggers pool entries exist for both "Menstruation" (manual
+     * triggers) and "menstruation_predicted" (system-generated predicted
+     * triggers) so the recalc edge function can look up severities for gauge
+     * scoring. Without the plain "Menstruation" entry, triggerSevMap returns
+     * NONE for the type and the manual menstruation contributes 0.
      */
     private suspend fun ensurePredictedTriggerPoolEntry(
         appContext: Context,
@@ -119,6 +132,16 @@ object MenstruationTrackingHelper {
             }
             val severity = menstruationEntry?.predictionValue?.takeIf { it != "NONE" } ?: "MILD"
 
+            if (menstruationEntry == null) {
+                db.upsertTriggerToPool(
+                    accessToken = accessToken,
+                    label = "Menstruation",
+                    category = "Menstrual Cycle",
+                    predictionValue = severity
+                )
+                Log.d(TAG, "Created Menstruation pool entry with severity=$severity")
+            }
+
             db.upsertTriggerToPool(
                 accessToken = accessToken,
                 label = "menstruation_predicted",
@@ -128,7 +151,7 @@ object MenstruationTrackingHelper {
 
             Log.d(TAG, "Ensured menstruation_predicted pool entry with severity=$severity")
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to ensure menstruation_predicted pool entry: ${e.message}")
+            Log.w(TAG, "Failed to ensure menstruation pool entries: ${e.message}")
         }
     }
 

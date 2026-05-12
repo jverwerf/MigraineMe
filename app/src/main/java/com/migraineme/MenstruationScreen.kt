@@ -154,12 +154,14 @@ fun MenstruationScreen() {
 
             val ok = withContext(Dispatchers.IO) {
                 // Just update settings - the toggle in DataSettings handles enable/disable
-                MenstruationTrackingHelper.updateSettingsOnly(
+                val saved = MenstruationTrackingHelper.updateSettingsOnly(
                     context = context.applicationContext,
                     lastDate = parsedLast,
                     avgCycle = parsedAvg,
                     autoUpdate = autoUpdateAvg
                 )
+                if (saved) EdgeFunctionsService().triggerRecalcRiskScores(context.applicationContext)
+                saved
             }
 
             withContext(Dispatchers.Main) {
@@ -211,6 +213,7 @@ fun MenstruationScreen() {
                         startAt = "${date}T09:00:00Z",
                         notes = "Logged from app"
                     )
+                    EdgeFunctionsService().triggerRecalcRiskScores(context.applicationContext)
                     true
                 } catch (e: Exception) {
                     android.util.Log.e("MenstruationScreen", "Failed to log period: ${e.message}", e)

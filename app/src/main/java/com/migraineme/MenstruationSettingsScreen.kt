@@ -107,7 +107,9 @@ fun MenstruationSettingsScreen(
             val (parsedLast, parsedAvg, err) = validateMenstrInputs(lastDateText, avgCycleText)
             if (err != null) { saving = false; Toast.makeText(context, err, Toast.LENGTH_LONG).show(); return@launch }
             val ok = withContext(Dispatchers.IO) {
-                MenstruationTrackingHelper.updateSettingsOnly(context.applicationContext, parsedLast, parsedAvg, autoUpdateAvg)
+                val saved = MenstruationTrackingHelper.updateSettingsOnly(context.applicationContext, parsedLast, parsedAvg, autoUpdateAvg)
+                if (saved) EdgeFunctionsService().triggerRecalcRiskScores(context.applicationContext)
+                saved
             }
             saving = false
             if (ok) {
@@ -247,6 +249,7 @@ fun MenstruationSettingsScreen(
                                             settings = MenstruationSettings(startDate, currentSettings?.avgCycleLength ?: 28, currentSettings?.autoUpdateAverage ?: true)
                                             lastDateText = startDate.toString()
                                         }
+                                        EdgeFunctionsService().triggerRecalcRiskScores(context.applicationContext)
                                     } catch (_: Exception) {}
                                 }
                                 addingPeriod = false
