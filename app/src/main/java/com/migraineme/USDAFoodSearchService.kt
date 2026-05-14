@@ -430,6 +430,100 @@ class USDAFoodSearchService(private val context: Context) {
     }
 
     /**
+     * Add a scanned Open Food Facts product to nutrition_records.
+     * Scales the per-100g nutrients by gramsConsumed/100 and runs the same
+     * tyramine/alcohol/gluten classifier USDA entries use.
+     */
+    suspend fun addFoodFromOFF(
+        product: OFFProduct,
+        gramsConsumed: Double,
+        mealType: String
+    ): Pair<Boolean, String?> = withContext(Dispatchers.IO) {
+        try {
+            val token = SessionStore.readAccessToken(context) ?: run {
+                Log.e(TAG, "No access token")
+                return@withContext Pair(false, "Not logged in")
+            }
+            val userId = SessionStore.readUserId(context) ?: run {
+                Log.e(TAG, "No user ID")
+                return@withContext Pair(false, "No user ID")
+            }
+
+            val grams = gramsConsumed.takeIf { it > 0 } ?: 100.0
+            val scale = grams / 100.0
+
+            val displayName = listOfNotNull(product.brand, product.name)
+                .joinToString(" ")
+                .ifBlank { product.name }
+
+            val today = java.time.LocalDate.now().toString()
+            val nutritionRecord = buildString {
+                append("{")
+                append("\"id\":\"${UUID.randomUUID()}\",")
+                append("\"user_id\":\"$userId\",")
+                append("\"date\":\"$today\",")
+                append("\"timestamp\":\"${Instant.now()}\",")
+                append("\"food_name\":\"${displayName.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ")}\",")
+                append("\"meal_type\":\"$mealType\",")
+                append("\"source\":\"barcode_off\",")
+
+                // All 35 nutrient columns — write whatever OFF gave us, scaled.
+                val columns = listOf(
+                    "calories", "protein", "total_carbohydrate", "total_fat",
+                    "dietary_fiber", "sugar", "saturated_fat", "monounsaturated_fat",
+                    "polyunsaturated_fat", "trans_fat", "cholesterol",
+                    "calcium", "iron", "magnesium", "phosphorus", "potassium",
+                    "sodium", "zinc", "copper", "manganese", "selenium",
+                    "vitamin_a", "vitamin_c", "vitamin_d", "vitamin_e", "vitamin_k",
+                    "thiamin", "riboflavin", "niacin", "vitamin_b6", "folate",
+                    "vitamin_b12", "pantothenic_acid", "biotin", "caffeine"
+                )
+                columns.forEach { col ->
+                    val v = product.nutrientsPer100g[col]
+                    if (v != null && v > 0) append("\"$col\":${v * scale},")
+                }
+
+                // Food risk classification on the display name
+                try {
+                    val risks = FoodRiskClassifierService().classify(token, displayName)
+                    if (risks.tyramine != "none") append("\"tyramine_exposure\":\"${risks.tyramine}\",")
+                    if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
+                    if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
+                } catch (_: Exception) {}
+
+                if (endsWith(",")) deleteCharAt(length - 1)
+                append("}")
+            }
+
+            Log.d(TAG, "Inserting OFF nutrition record (${grams}g): $nutritionRecord")
+
+            val supabaseUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records"
+            val insertRequest = Request.Builder()
+                .url(supabaseUrl)
+                .post(nutritionRecord.toRequestBody("application/json".toMediaType()))
+                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=minimal")
+                .build()
+
+            httpClient.newCall(insertRequest).execute().use { response ->
+                val responseBody = response.body?.string()
+                if (response.isSuccessful) {
+                    Log.d(TAG, "✅ OFF food added: $displayName (${grams}g)")
+                    return@withContext Pair(true, null)
+                } else {
+                    Log.e(TAG, "Failed to insert OFF food: ${response.code} - $responseBody")
+                    return@withContext Pair(false, "Error ${response.code}: $responseBody")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to add OFF food: ${e.message}", e)
+            Pair(false, e.message ?: "Unknown error")
+        }
+    }
+
+    /**
      * Get full nutrient details for a food and add to nutrition_records
      */
     suspend fun addFoodToNutrition(
@@ -659,7 +753,7 @@ class USDAFoodSearchService(private val context: Context) {
             val userId = SessionStore.readUserId(context) ?: return@withContext false
 
             val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                "id=eq.$id&user_id=eq.$userId&source=eq.manual_usda"
+                "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off)"
 
             val request = Request.Builder()
                 .url(url)
@@ -702,7 +796,7 @@ class USDAFoodSearchService(private val context: Context) {
                 val updateJson = """{"meal_type":"$mealType"}"""
 
                 val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                    "id=eq.$id&user_id=eq.$userId&source=eq.manual_usda"
+                    "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off)"
 
                 val request = Request.Builder()
                     .url(url)
@@ -769,7 +863,7 @@ class USDAFoodSearchService(private val context: Context) {
                 }
 
                 val url = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                    "id=eq.$id&user_id=eq.$userId&source=eq.manual_usda"
+                    "id=eq.$id&user_id=eq.$userId&source=in.(manual_usda,barcode_off)"
 
                 val request = Request.Builder()
                     .url(url)

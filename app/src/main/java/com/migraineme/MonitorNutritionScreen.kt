@@ -1,7 +1,9 @@
 package com.migraineme
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.outlined.Lock
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
@@ -42,6 +46,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -49,7 +54,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun MonitorNutritionScreen(
@@ -63,7 +72,8 @@ fun MonitorNutritionScreen(
     val authState by authVm.state.collectAsState()
     
     val searchService = remember { USDAFoodSearchService(context) }
-    
+    val offService = remember { OpenFoodFactsService() }
+
     // Display metrics from shared MetricRegistry
     val displayKeys = remember { MetricDisplayStore.getDisplayMetrics(context, "nutrition") }
     
@@ -94,6 +104,16 @@ fun MonitorNutritionScreen(
     // Edit dialog state
     var editingItem by remember { mutableStateOf<NutritionLogItem?>(null) }
     var editMealType by remember { mutableStateOf("lunch") }
+
+    // Barcode scan state
+    var scannedProduct by remember { mutableStateOf<OFFProduct?>(null) }
+    var scanGrams by remember { mutableStateOf(100.0) }
+    var scanMealType by remember { mutableStateOf("lunch") }
+    var isLookingUpBarcode by remember { mutableStateOf(false) }
+    var barcodeNotFound by remember { mutableStateOf<String?>(null) }
+    var isAddingScan by remember { mutableStateOf(false) }
+    var scanRisks by remember { mutableStateOf<FoodRiskResult?>(null) }
+    var isClassifyingScanRisks by remember { mutableStateOf(false) }
     
     // Load today's items
     LaunchedEffect(Unit) {
@@ -173,6 +193,61 @@ fun MonitorNutritionScreen(
         }
     }
     
+    fun startBarcodeScan() {
+        scope.launch {
+            try {
+                val options = GmsBarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(
+                        Barcode.FORMAT_EAN_13,
+                        Barcode.FORMAT_EAN_8,
+                        Barcode.FORMAT_UPC_A,
+                        Barcode.FORMAT_UPC_E,
+                        Barcode.FORMAT_CODE_128,
+                        Barcode.FORMAT_CODE_39
+                    )
+                    .build()
+                val scanner = GmsBarcodeScanning.getClient(context, options)
+                val result = scanner.startScan().await()
+                val raw = result.rawValue ?: return@launch
+
+                isLookingUpBarcode = true
+                val product = offService.fetchProduct(raw)
+                isLookingUpBarcode = false
+
+                if (product == null) {
+                    barcodeNotFound = raw
+                    return@launch
+                }
+
+                scannedProduct = product
+                scanGrams = product.servingQuantityGrams ?: 100.0
+                scanRisks = null
+                isClassifyingScanRisks = true
+
+                val token = authState.accessToken
+                if (token != null) {
+                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        val displayName = listOfNotNull(product.brand, product.name).joinToString(" ").ifBlank { product.name }
+                        val classified = try {
+                            FoodRiskClassifierService().classify(token, displayName)
+                        } catch (_: Exception) { FoodRiskResult() }
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            scanRisks = classified
+                            isClassifyingScanRisks = false
+                        }
+                    }
+                } else {
+                    isClassifyingScanRisks = false
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                isLookingUpBarcode = false
+                android.util.Log.e("NutritionScreen", "Barcode scan failed: ${e.message}", e)
+            }
+        }
+    }
+
     fun selectFood(food: USDAFoodSearchResult) {
         selectedFood = food
         selectedFoodDetails = null
@@ -272,6 +347,61 @@ fun MonitorNutritionScreen(
         )
     }
     
+    if (scannedProduct != null) {
+        BarcodeAddFoodDialog(
+            product = scannedProduct!!,
+            grams = scanGrams,
+            onGramsChange = { scanGrams = it },
+            mealType = scanMealType,
+            onMealTypeChange = { scanMealType = it },
+            isAdding = isAddingScan,
+            monitorMetrics = displayKeys.map { MetricRegistry.nutritionLegacyKey(it) },
+            tyramineRisk = scanRisks?.tyramine,
+            alcoholRisk = scanRisks?.alcohol,
+            glutenRisk = scanRisks?.gluten,
+            isClassifyingRisks = isClassifyingScanRisks,
+            onDismiss = { scannedProduct = null; scanRisks = null },
+            onConfirm = {
+                scope.launch {
+                    isAddingScan = true
+                    val (success, errorMsg) = searchService.addFoodFromOFF(
+                        product = scannedProduct!!,
+                        gramsConsumed = scanGrams,
+                        mealType = scanMealType
+                    )
+                    isAddingScan = false
+                    if (success) {
+                        addSuccess = scannedProduct!!.name
+                        scannedProduct = null
+                        scanRisks = null
+                        reloadTodayItems()
+                    } else {
+                        addError = errorMsg ?: "Failed to add scanned food"
+                    }
+                }
+            }
+        )
+    }
+
+    if (barcodeNotFound != null) {
+        AlertDialog(
+            onDismissRequest = { barcodeNotFound = null },
+            title = { Text("Product not found", color = AppTheme.TitleColor) },
+            text = {
+                Text(
+                    "Barcode ${barcodeNotFound} is not in the Open Food Facts database. Try searching by name instead.",
+                    color = AppTheme.BodyTextColor
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { barcodeNotFound = null }) {
+                    Text("OK", color = AppTheme.AccentPurple)
+                }
+            },
+            containerColor = Color(0xFF1E0A2E)
+        )
+    }
+
     if (editingItem != null) {
         EditFoodDialog(
             item = editingItem!!,
@@ -325,30 +455,56 @@ fun MonitorNutritionScreen(
             BaseCard {
                 Text("Add Food", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
-                Text("Search USDA database to log food", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text("Search USDA database or scan a barcode", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(12.dp))
-                
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it; if (it.isBlank()) { searchResults = emptyList(); searchError = null } },
-                    placeholder = { Text("Search foods") },
-                    leadingIcon = { Icon(Icons.Default.Search, null, tint = AppTheme.SubtleTextColor) },
-                    trailingIcon = { if (isSearching) CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { performSearch() }),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AppTheme.AccentPurple,
-                        unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
-                        focusedTextColor = AppTheme.TitleColor,
-                        unfocusedTextColor = AppTheme.TitleColor,
-                        cursorColor = AppTheme.AccentPurple,
-                        focusedPlaceholderColor = AppTheme.SubtleTextColor,
-                        unfocusedPlaceholderColor = AppTheme.SubtleTextColor
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it; if (it.isBlank()) { searchResults = emptyList(); searchError = null } },
+                        placeholder = { Text("Search foods") },
+                        leadingIcon = { Icon(Icons.Default.Search, null, tint = AppTheme.SubtleTextColor) },
+                        trailingIcon = { if (isSearching) CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { performSearch() }),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
+                            focusedTextColor = AppTheme.TitleColor,
+                            unfocusedTextColor = AppTheme.TitleColor,
+                            cursorColor = AppTheme.AccentPurple,
+                            focusedPlaceholderColor = AppTheme.SubtleTextColor,
+                            unfocusedPlaceholderColor = AppTheme.SubtleTextColor
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(AppTheme.AccentPurple.copy(alpha = 0.18f))
+                            .clickable(enabled = !isLookingUpBarcode) { startBarcodeScan() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isLookingUpBarcode) {
+                            CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
+                        } else {
+                            Icon(
+                                Icons.Outlined.QrCodeScanner,
+                                contentDescription = "Scan barcode",
+                                tint = AppTheme.AccentPurple,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
                 searchError?.let {
                     Spacer(Modifier.height(8.dp))
                     Text(it, color = Color(0xFFE57373), style = MaterialTheme.typography.bodySmall)
@@ -418,8 +574,8 @@ fun MonitorNutritionScreen(
                         todayItems.forEach { item ->
                             TodayLogItem(
                                 item = item,
-                                onEdit = if (item.source == "manual_usda") {{ editingItem = item; editMealType = item.mealType }} else null,
-                                onDelete = if (item.source == "manual_usda") {{ scope.launch { searchService.deleteNutritionItem(item.id); reloadTodayItems() } }} else null
+                                onEdit = if (item.source == "manual_usda" || item.source == "barcode_off") {{ editingItem = item; editMealType = item.mealType }} else null,
+                                onDelete = if (item.source == "manual_usda" || item.source == "barcode_off") {{ scope.launch { searchService.deleteNutritionItem(item.id); reloadTodayItems() } }} else null
                             )
                         }
 
