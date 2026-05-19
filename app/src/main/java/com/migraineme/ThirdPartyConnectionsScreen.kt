@@ -1136,24 +1136,27 @@ fun ThirdPartyConnectionsScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Garmin Row
-            ConnectionRowLogoOnly(
-                logoResId = garminLogoResId,
-                fallbackLetter = "G",
-                isConnected = hasGarmin.value,
-                onClick = {
-                    if (!hasGarmin.value) {
-                        if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
-                            context.getSharedPreferences("garmin_oauth", Context.MODE_PRIVATE)
-                                .edit().putBoolean("return_to_setup", true).apply()
+            // Garmin Row (OAuth health-data connect + watch-app pairing inline)
+            Column {
+                ConnectionRowLogoOnly(
+                    logoResId = garminLogoResId,
+                    fallbackLetter = "G",
+                    isConnected = hasGarmin.value,
+                    onClick = {
+                        if (!hasGarmin.value) {
+                            if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                                context.getSharedPreferences("garmin_oauth", Context.MODE_PRIVATE)
+                                    .edit().putBoolean("return_to_setup", true).apply()
+                            }
+                            activity?.let { GarminAuthService().startAuth(it) }
                         }
-                        activity?.let { GarminAuthService().startAuth(it) }
+                    },
+                    onLongClick = {
+                        if (hasGarmin.value) showGarminDisconnectDialog.value = true
                     }
-                },
-                onLongClick = {
-                    if (hasGarmin.value) showGarminDisconnectDialog.value = true
-                }
-            )
+                )
+                WatchPairingInline()
+            }
             } // end wearables_group spotlight
 
             Spacer(Modifier.height(32.dp))

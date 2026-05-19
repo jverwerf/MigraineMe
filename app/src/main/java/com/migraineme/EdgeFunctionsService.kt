@@ -2083,4 +2083,34 @@ class EdgeFunctionsService {
             client.close()
         }
     }
+
+    @Serializable
+    data class WatchPairCodeResponse(
+        val code: String,
+        @SerialName("expires_at") val expiresAt: String
+    )
+
+    suspend fun createWatchPairCode(context: Context): WatchPairCodeResponse? {
+        val supaAccessToken = SessionStore.getValidAccessToken(context.applicationContext) ?: return null
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/create-watch-pair-code"
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("{}")
+            }
+            if (res.status.value !in 200..299) {
+                Log.e("EdgeFunctionsService", "createWatchPairCode failed: ${res.status.value}")
+                return null
+            }
+            res.body<WatchPairCodeResponse>()
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "createWatchPairCode exception", t)
+            null
+        } finally {
+            client.close()
+        }
+    }
 }
