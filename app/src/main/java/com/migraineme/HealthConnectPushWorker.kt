@@ -69,8 +69,8 @@ class HealthConnectPushWorker(
 
             while (hasMore) {
                 // Only fetch PENDING items (not failed or permanent_failure)
-                val batch = dao.getPendingOutboxBatch(BATCH_SIZE)
-                if (batch.isEmpty()) {
+                val rawBatch = dao.getPendingOutboxBatch(BATCH_SIZE)
+                if (rawBatch.isEmpty()) {
                     hasMore = false
                     continue
                 }
@@ -79,6 +79,12 @@ class HealthConnectPushWorker(
                 val retryableFailureIds = mutableListOf<Long>()
                 val permanentFailureIds = mutableListOf<Long>()
                 val errorMessages = mutableMapOf<Long, String>()
+
+                // Aggregate SLEEP items by date so duration/start/end/stages reflect
+                // the sum of all sessions ending on that date, not just the last one
+                // processed. Sessions other than the representative are marked success
+                // (their data has been folded into the representative's payload).
+                val batch = aggregateSleepByDate(rawBatch, successIds)
 
                 for (item in batch) {
                     try {
@@ -181,6 +187,70 @@ class HealthConnectPushWorker(
             } else {
                 Result.retry()
             }
+        }
+    }
+
+    /**
+     * Fold all SLEEP upsert items in `batch` that share a date into one representative
+     * item whose payload sums duration, sums stage minutes, takes the earliest start time
+     * and the latest end time. Non-representative sleep items are added to `successIds`
+     * (their data is already counted in the representative).
+     *
+     * Without this, a date with multiple sessions (night + nap) would get one row per
+     * session, and only the last upsert would survive because the row is keyed by
+     * (user, date, source).
+     */
+    private fun aggregateSleepByDate(
+        batch: List<HealthConnectOutboxEntity>,
+        successIds: MutableList<Long>
+    ): List<HealthConnectOutboxEntity> {
+        val sleepUpserts = batch.filter {
+            it.recordType == HealthConnectRecordTypes.SLEEP && it.operation == "UPSERT"
+        }
+        if (sleepUpserts.size < 2) return batch
+
+        val groups = sleepUpserts.groupBy { it.date }
+        val replacementsById = mutableMapOf<Long, HealthConnectOutboxEntity>()
+        val droppedIds = mutableSetOf<Long>()
+
+        for ((_, items) in groups) {
+            if (items.size < 2) continue
+
+            var totalDuration = 0L
+            var totalRem = 0L
+            var totalDeep = 0L
+            var totalLight = 0L
+            var totalAwake = 0L
+            var earliestStart: String? = null
+            var latestEnd: String? = null
+
+            for (item in items) {
+                val p = try { json.decodeFromString<JsonObject>(item.payload) } catch (_: Exception) { null }
+                if (p == null) continue
+                totalDuration += p["duration_minutes"]?.jsonPrimitive?.long ?: 0
+                totalRem += p["rem_minutes"]?.jsonPrimitive?.long ?: 0
+                totalDeep += p["deep_minutes"]?.jsonPrimitive?.long ?: 0
+                totalLight += p["light_minutes"]?.jsonPrimitive?.long ?: 0
+                totalAwake += p["awake_minutes"]?.jsonPrimitive?.long ?: 0
+                val s = p["start_time"]?.jsonPrimitive?.content ?: ""
+                val e = p["end_time"]?.jsonPrimitive?.content ?: ""
+                if (s.isNotEmpty() && (earliestStart == null || s < earliestStart!!)) earliestStart = s
+                if (e.isNotEmpty() && (latestEnd == null || e > latestEnd!!)) latestEnd = e
+            }
+
+            val rep = items.first()
+            val mergedPayload = """{"duration_minutes":$totalDuration,"start_time":"${earliestStart ?: ""}","end_time":"${latestEnd ?: ""}","rem_minutes":$totalRem,"deep_minutes":$totalDeep,"light_minutes":$totalLight,"awake_minutes":$totalAwake}"""
+            replacementsById[rep.id] = rep.copy(payload = mergedPayload)
+            for (item in items.drop(1)) {
+                droppedIds.add(item.id)
+                successIds.add(item.id)
+            }
+        }
+
+        if (droppedIds.isEmpty() && replacementsById.isEmpty()) return batch
+        return batch.mapNotNull { item ->
+            if (item.id in droppedIds) null
+            else replacementsById[item.id] ?: item
         }
     }
 
