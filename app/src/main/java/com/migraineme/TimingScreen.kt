@@ -73,7 +73,7 @@ fun TimingScreen(
                     Spacer(Modifier.width(4.dp))
                     Text("Log", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
-                Text("Timing", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
                 }

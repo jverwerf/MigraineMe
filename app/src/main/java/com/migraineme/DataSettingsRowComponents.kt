@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -595,6 +596,72 @@ fun NotificationsCard(
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
+    }
+}
+
+@Composable
+fun CalendarCard(
+    metricSettings: Map<String, EdgeFunctionsService.MetricSettingResponse>,
+    onRequestCalendarPermission: () -> Unit,
+    onToggleData: (enabled: Boolean) -> Unit,
+    refreshTick: Int,
+) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+
+    val permissionGranted = remember(refreshTick) {
+        DataSettingsPermissionHelper.hasCalendarPermission(appContext)
+    }
+    val dataEnabled = metricSettings["calendar_events"]?.enabled == true
+
+    val toggleColWidth = 56.dp
+
+    BaseCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(
+                Icons.Outlined.DateRange, null,
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                "Calendar",
+                color = Color.White,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+            )
+        }
+
+        HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+
+        // Data toggle row
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                Text("Calendar events", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Map your events to activities, reliefs, and triggers",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Column(modifier = Modifier.width(toggleColWidth), horizontalAlignment = Alignment.End) {
+                Switch(
+                    checked = dataEnabled && permissionGranted,
+                    enabled = permissionGranted,
+                    modifier = Modifier.scale(0.8f),
+                    onCheckedChange = { newValue -> onToggleData(newValue) },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                )
+            }
+        }
+
+        // Permission sub-row
+        PermissionSubRow(
+            label = "Calendar permission",
+            isGranted = permissionGranted,
+            alpha = 1.0f,
+            providerColWidth = 0.dp,
+            toggleColWidth = toggleColWidth,
+            onRequestPermission = onRequestCalendarPermission
+        )
     }
 }
 

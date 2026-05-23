@@ -52,7 +52,8 @@ object DataSettingsToggleHandler {
         MICROPHONE,
         BATTERY_OPTIMIZATION,
         HEALTH_CONNECT_NUTRITION,
-        HEALTH_CONNECT_MENSTRUATION
+        HEALTH_CONNECT_MENSTRUATION,
+        CALENDAR
     }
 
     /**

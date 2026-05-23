@@ -47,7 +47,19 @@ fun MissedActivitiesScreen(
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(authState.accessToken) { authState.accessToken?.let { vm.loadAll(it) } }
+    LaunchedEffect(authState.accessToken) {
+        authState.accessToken?.let {
+            vm.loadAll(it)
+            val refDate = draft.migraine?.beganAtIso?.take(10)
+            vm.loadUpcoming(it, referenceDate = refDate)
+        }
+    }
+
+    // Auto-suggest: any activity logged today through today+7 is something
+    // the user likely won't make while sick. Tracked below after the
+    // rebuildDraftWithMissed helper is defined.
+    val upcoming by vm.upcoming.collectAsState()
+    var hasAutoSuggested by remember { mutableStateOf(false) }
 
     fun rebuildDraftWithMissed(missed: List<MissedActivityDraft>) {
         val d = draft
@@ -72,6 +84,20 @@ fun MissedActivitiesScreen(
         }
     }
 
+    LaunchedEffect(upcoming) {
+        if (!hasAutoSuggested && upcoming.isNotEmpty()) {
+            val currentLabels = draft.missedActivities.map { it.type }.toSet()
+            val toAdd = upcoming.filter { it !in currentLabels }
+            if (toAdd.isNotEmpty()) {
+                val starts = vm.upcomingStartAts.value
+                rebuildDraftWithMissed(draft.missedActivities + toAdd.map { label ->
+                    MissedActivityDraft(type = label, startAtIso = starts[label])
+                })
+            }
+            hasAutoSuggested = true
+        }
+    }
+
     val frequentLabels = remember(frequent) { frequent.mapNotNull { it.missedActivity?.label }.toSet() }
     val selectedLabels = remember(draft.missedActivities) { draft.missedActivities.map { it.type }.toSet() }
     val grouped = remember(pool) { pool.groupBy { it.category ?: "Other" }.toSortedMap() }
@@ -85,7 +111,7 @@ fun MissedActivitiesScreen(
                     Spacer(Modifier.width(4.dp))
                     Text("Activity", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
-                Text("Missed", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp)) }
             }
 

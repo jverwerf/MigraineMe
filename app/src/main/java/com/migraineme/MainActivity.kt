@@ -168,6 +168,7 @@ object Routes {
     const val FULL_GRAPH_SLEEP = "full_graph_sleep"
     const val FULL_GRAPH_WEATHER = "full_graph_weather"
     const val FULL_GRAPH_NUTRITION = "full_graph_nutrition"
+    const val FULL_GRAPH_MEDICINES = "full_graph_medicines"
     const val MONITOR_MENTAL = "monitor_mental"
         const val MONITOR_RISK = "monitor_risk"
         const val RISK_CONFIG = "risk_config"
@@ -214,6 +215,7 @@ object Routes {
     const val MANAGE_ACTIVITIES = "manage_activities"
     const val MISSED_ACTIVITIES = "missed_activities"
     const val MANAGE_MISSED_ACTIVITIES = "manage_missed_activities"
+    const val MANAGE_CALENDAR_SKIPS = "manage_calendar_skips"
     const val POSTDROMES = "postdromes"
     const val TIMING = "timing"
     const val PAINT_PICTURE = "paint_picture"
@@ -527,7 +529,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 }
                 // Run location sync on app resume
                 LocationDailySyncWorker.runOnceNow(appCtx)
-                
+
+                // Schedule the daily 7am calendar sync (no-op if already scheduled).
+                CalendarDailySyncWorker.schedule(appCtx)
+
                 // Run Health Connect sync on app resume
                 // This is the primary sync method - always works when app is open
                 // FCM-triggered syncs are secondary (only work when app is in foreground)
@@ -706,6 +711,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.MANAGE_PRODROMES ||
             current == Routes.LOCATIONS ||
             current == Routes.ACTIVITIES ||
+            current == Routes.POSTDROMES ||
+            current == Routes.PRODROMES_LOG ||
             current == Routes.MANAGE_LOCATIONS ||
             current == Routes.MANAGE_ACTIVITIES ||
             current == Routes.MISSED_ACTIVITIES ||
@@ -727,6 +734,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.FULL_GRAPH_SLEEP ||
             current == Routes.FULL_GRAPH_WEATHER ||
             current == Routes.FULL_GRAPH_NUTRITION ||
+            current == Routes.FULL_GRAPH_MEDICINES ||
             current == Routes.MONITOR_MENTAL ||
             current == Routes.MONITOR_RISK ||
             current == Routes.RISK_CONFIG ||
@@ -756,6 +764,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             Routes.LOG_MIGRAINE, Routes.TIMING, Routes.PAINT_PICTURE, Routes.PAIN_LOCATION,
             Routes.TRIGGERS, Routes.MEDICINES,
             Routes.RELIEFS, Routes.LOCATIONS, Routes.ACTIVITIES, Routes.MISSED_ACTIVITIES,
+            Routes.POSTDROMES, Routes.PRODROMES_LOG,
             Routes.NOTES, Routes.REVIEW,
             Routes.MANAGE_SYMPTOMS,
             Routes.MANAGE_TRIGGERS, Routes.MANAGE_MEDICINES, Routes.MANAGE_RELIEFS, Routes.MANAGE_PRODROMES,
@@ -835,6 +844,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.FULL_GRAPH_SLEEP -> "Sleep History"
                                     Routes.FULL_GRAPH_WEATHER -> "Environment History"
                                     Routes.FULL_GRAPH_NUTRITION -> "Nutrition History"
+                                    Routes.FULL_GRAPH_MEDICINES -> "Medicines History"
                                     Routes.MONITOR_PHYSICAL -> "Physical Health"
                                     Routes.MONITOR_SLEEP -> "Sleep"
                                     Routes.MONITOR_MENTAL -> "Mental Health"
@@ -1022,6 +1032,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         if (!pState.isLoading && !pState.isPremium) {
                             LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
                         } else { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
+                    }
+                    composable(Routes.FULL_GRAPH_MEDICINES) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { FullScreenGraphScreen(graphType = "medicines", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.MONITOR_MENTAL) { MonitorMentalScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_RISK) { MonitorRiskScreen(navController = nav, authVm = authVm) }
@@ -2021,6 +2037,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.THIRD_PARTY_CONNECTIONS) {
                         ThirdPartyConnectionsScreen(onBack = { nav.popBackStack() })
+                    }
+
+                    composable(Routes.MANAGE_CALENDAR_SKIPS) {
+                        ManageCalendarSkipsScreen(navController = nav)
                     }
 
                     composable(Routes.DATA) {

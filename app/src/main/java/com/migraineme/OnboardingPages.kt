@@ -35,7 +35,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun OnboardingCenteredPage(content: @Composable ColumnScope.() -> Unit) {
@@ -391,6 +395,93 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text("Allow Microphone Access", fontWeight = FontWeight.SemiBold) }
+            }
+            TextButton(onClick = onSkip) {
+                Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+// MARK: - Calendar Permission Page
+
+@Composable
+fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
+    val context = LocalContext.current
+    val hasCal = remember {
+        mutableStateOf(
+            context.checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasCal.value = granted
+        if (granted) {
+            // Combined permission + data: opt into calendar_events in the same step.
+            CoroutineScope(Dispatchers.IO).launch {
+                EdgeFunctionsService().upsertMetricSetting(context, "calendar_events", true)
+                withContext(Dispatchers.Main) { onGrant() }
+            }
+        }
+    }
+    LaunchedEffect(hasCal.value) { if (hasCal.value) { kotlinx.coroutines.delay(500); onGrant() } }
+
+    Column(
+        Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.weight(1f))
+
+        Box(contentAlignment = Alignment.Center) {
+            Box(Modifier.size(100.dp).background(
+                Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
+                CircleShape
+            ))
+            Icon(Icons.Outlined.DateRange, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(40.dp))
+        }
+
+        Spacer(Modifier.height(24.dp))
+        Text("Enable Calendar", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        Spacer(Modifier.height(12.dp))
+        Text(
+            "MigraineMe reads your calendar to suggest activities, reliefs, and stress triggers from your events — read-only.",
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+        )
+
+        Spacer(Modifier.height(24.dp))
+        Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            FeatureBullet(Icons.Outlined.FitnessCenter, "Auto-detect workouts and yoga")
+            FeatureBullet(Icons.Outlined.Warning, "Spot stress-heavy meeting days")
+            FeatureBullet(Icons.Outlined.CheckCircle, "One tap to confirm or skip")
+            FeatureBullet(Icons.Outlined.Lock, "Read-only, never written back")
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (hasCal.value) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(20.dp))
+                    Text("Calendar enabled", color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
+                }
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = onGrant,
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
+            } else {
+                Button(
+                    onClick = { launcher.launch(android.Manifest.permission.READ_CALENDAR) },
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) { Text("Allow Calendar Access", fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
                 Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)

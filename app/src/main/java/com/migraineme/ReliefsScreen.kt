@@ -160,7 +160,7 @@ fun ReliefsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
-                Text("Reliefs", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
                     IconButton(onClick = onClose) {
                         Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))

@@ -755,11 +755,20 @@ data class CheckInReliefItem(
     val inferred: Boolean = false
 )
 
+data class CheckInActivityItem(
+    val label: String,
+    val startAtIso: String? = null,
+    val endAtIso: String? = null,
+    val note: String? = null,
+    val inferred: Boolean = false
+)
+
 data class CheckInParseResult(
     val triggers: List<CheckInTriggerItem> = emptyList(),
     val prodromes: List<CheckInProdromeItem> = emptyList(),
     val medicines: List<CheckInMedicineItem> = emptyList(),
-    val reliefs: List<CheckInReliefItem> = emptyList()
+    val reliefs: List<CheckInReliefItem> = emptyList(),
+    val activities: List<CheckInActivityItem> = emptyList()
 )
 
 // ═════════════════════════════════════════════════════════════════════
@@ -771,7 +780,8 @@ internal fun deterministicParseCheckIn(
     triggerPool: List<String>,
     prodromePool: List<String>,
     medicinePool: List<String>,
-    reliefPool: List<String>
+    reliefPool: List<String>,
+    activityPool: List<String> = emptyList()
 ): CheckInParseResult {
     val lower = text.lowercase().trim()
 
@@ -779,6 +789,7 @@ internal fun deterministicParseCheckIn(
     val prodromes = mutableListOf<CheckInProdromeItem>()
     val medicines = mutableListOf<CheckInMedicineItem>()
     val reliefs = mutableListOf<CheckInReliefItem>()
+    val activities = mutableListOf<CheckInActivityItem>()
 
     // Match triggers
     triggerPool.forEach { label ->
@@ -821,7 +832,15 @@ internal fun deterministicParseCheckIn(
         }
     }
 
-    return CheckInParseResult(triggers, prodromes, medicines, reliefs)
+    // Match activities (voice can describe what the user did during the day)
+    activityPool.forEach { label ->
+        if (hitExpanded(lower, label)) {
+            val time = inferItemTime(lower, label)
+            activities.add(CheckInActivityItem(label, startAtIso = time, inferred = false))
+        }
+    }
+
+    return CheckInParseResult(triggers, prodromes, medicines, reliefs, activities)
 }
 
 // ── Infer time for a specific item from surrounding context ──────
@@ -1147,7 +1166,18 @@ internal fun mergeCheckInResults(
         )}
     )
 
-    return CheckInParseResult(triggers, prodromes, medicines, reliefItems)
+    val activityItems = mergeByLabel(
+        deterministic.activities, gpt.activities,
+        { it.label }, { it.inferred },
+        { det, g -> det.copy(
+            startAtIso = det.startAtIso ?: g.startAtIso,
+            endAtIso = det.endAtIso ?: g.endAtIso,
+            note = det.note ?: g.note,
+            inferred = det.inferred && g.inferred
+        )}
+    )
+
+    return CheckInParseResult(triggers, prodromes, medicines, reliefItems, activityItems)
 }
 
 private fun <T> pickBest(a: AiParsedField<T>?, b: AiParsedField<T>?): AiParsedField<T>? {

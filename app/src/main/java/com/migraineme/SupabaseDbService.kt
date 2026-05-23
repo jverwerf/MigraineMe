@@ -1638,6 +1638,41 @@ class SupabaseDbService(
         return response.body()
     }
 
+    /** Insert into the correct public.activities table (not the legacy
+     *  HR-zones table). Used by the evening check-in's Activities page. */
+    suspend fun insertActivityV2(
+        accessToken: String,
+        migraineId: String?,
+        type: String?,
+        startAt: String?,
+        endAt: String? = null,
+        notes: String?
+    ): Boolean {
+        val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
+        val durationMinutes: Int? = endAt?.let {
+            try {
+                val ms = Instant.parse(it).toEpochMilli() - Instant.parse(safeStart).toEpochMilli()
+                (ms / 60_000L).toInt().coerceAtLeast(0)
+            } catch (_: Exception) { null }
+        }
+        val body = kotlinx.serialization.json.buildJsonObject {
+            type?.let { put("type", it) }
+            put("start_at", safeStart)
+            endAt?.let { put("end_at", it) }
+            durationMinutes?.let { put("duration_minutes", it) }
+            notes?.let { put("notes", it) }
+            migraineId?.let { put("migraine_id", it) }
+        }
+        val res = client.post("$supabaseUrl/rest/v1/activities") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            header("Prefer", "return=minimal")
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }
+        return res.status.isSuccess()
+    }
+
     /** Lightweight row for recent activity queries. */
     @Serializable data class RecentActivityRow(
         val id: String,
@@ -1647,6 +1682,34 @@ class SupabaseDbService(
     )
 
     /** Fetch activities logged in the last [daysBack] days from time_in_high_hr_zones_daily. */
+    @Serializable data class UpcomingActivityRow(
+        val type: String? = null,
+        @SerialName("start_at") val startAt: String? = null,
+    )
+
+    /** Activities scheduled today through today+daysAhead. Used by the
+     *  migraine wizard's MissedActivities page to auto-suggest activities
+     *  the user is likely to miss while sick. Queries the consolidated
+     *  public.activities table (NOT the legacy HR-zones table that
+     *  getRecentActivities currently targets). */
+    suspend fun getUpcomingActivities(accessToken: String, daysAhead: Int = 7, referenceDate: String? = null): List<UpcomingActivityRow> {
+        val refDate = referenceDate?.let {
+            try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
+        } ?: java.time.LocalDate.now()
+        val fromIso = refDate.atStartOfDay().atZone(java.time.ZoneOffset.UTC).toInstant().toString()
+        val toIso = refDate.plusDays((daysAhead + 1).toLong()).atStartOfDay().atZone(java.time.ZoneOffset.UTC).toInstant().toString()
+        val response = client.get("$supabaseUrl/rest/v1/activities") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "type,start_at")
+            parameter("start_at", "gte.$fromIso")
+            parameter("start_at", "lt.$toIso")
+            parameter("order", "start_at.asc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
     suspend fun getRecentActivities(accessToken: String, daysBack: Int = 3, referenceDate: String? = null): List<RecentActivityRow> {
         val refDate = referenceDate?.let {
             try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }

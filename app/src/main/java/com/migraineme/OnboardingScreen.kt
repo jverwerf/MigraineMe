@@ -97,7 +97,7 @@ object OnboardingPrefs {
     }
 }
 
-private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, SCREEN_TIME_PERMISSION, BACKGROUND_LOCATION_PERMISSION, BATTERY_OPTIMIZATION }
+private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BACKGROUND_LOCATION_PERMISSION, BATTERY_OPTIMIZATION }
 
 @Composable
 fun OnboardingScreen(
@@ -127,6 +127,8 @@ fun OnboardingScreen(
                 else true
             PageId.MICROPHONE_PERMISSION ->
                 appCtx.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            PageId.CALENDAR_PERMISSION ->
+                appCtx.checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED
             PageId.SCREEN_TIME_PERMISSION -> {
                 val appOps = appCtx.getSystemService(android.content.Context.APP_OPS_SERVICE) as android.app.AppOpsManager
                 appOps.unsafeCheckOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), appCtx.packageName) == android.app.AppOpsManager.MODE_ALLOWED
@@ -265,6 +267,7 @@ fun OnboardingScreen(
                             PageId.LOCATION_PERMISSION -> LocationPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.NOTIFICATION_PERMISSION -> NotificationPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.MICROPHONE_PERMISSION -> MicrophonePermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
+                            PageId.CALENDAR_PERMISSION -> CalendarPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.SCREEN_TIME_PERMISSION -> ScreenTimePermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.BACKGROUND_LOCATION_PERMISSION -> BackgroundLocationPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.BATTERY_OPTIMIZATION -> BatteryOptimizationPage(onGrant = { onStartSetup() }, onSkip = { onStartSetup() })
@@ -275,7 +278,7 @@ fun OnboardingScreen(
             }
 
             // ── Bottom buttons ──
-            if (currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BACKGROUND_LOCATION_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
+            if (currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BACKGROUND_LOCATION_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
                 // Permission pages handle their own buttons
             } else if (currentPage == PageId.WELCOME || currentPage == PageId.HOW_IT_WORKS) {
                 Column(
@@ -338,6 +341,7 @@ fun OnboardingScreen(
                     PageId.LOCATION_PERMISSION -> {}
                     PageId.NOTIFICATION_PERMISSION -> {}
                     PageId.MICROPHONE_PERMISSION -> {}
+                    PageId.CALENDAR_PERMISSION -> {}
                     PageId.SCREEN_TIME_PERMISSION -> {}
                     PageId.BACKGROUND_LOCATION_PERMISSION -> {}
                     PageId.BATTERY_OPTIMIZATION -> {}

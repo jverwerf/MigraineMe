@@ -103,9 +103,15 @@ fun SideEffectChips(
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
             value = sideEffectNotes,
-            onValueChange = onNotesChange,
+            onValueChange = { if (it.length <= 400) onNotesChange(it) else onNotesChange(it.take(400)) },
             label = { Text("Notes", color = AppTheme.SubtleTextColor) },
             placeholder = { Text("e.g. drowsiness, nausea, brain fog…", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+            supportingText = {
+                Text(
+                    "${sideEffectNotes.length}/400",
+                    color = if (sideEffectNotes.length >= 400) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.White,

@@ -11,3 +11,6 @@ captures/
 # macOS AppleDouble metadata (created on exFAT)
 ._*
 .DS_Store
+
+# macOS exFAT metadata
+**/._*

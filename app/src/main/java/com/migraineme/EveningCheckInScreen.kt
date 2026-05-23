@@ -43,7 +43,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-private enum class CheckInPage { NOTE, TRIGGERS, PRODROMES, MEDICINES, RELIEFS, REVIEW }
+private enum class CheckInPage { NOTE, CALENDAR, TRIGGERS, PRODROMES, MEDICINES, RELIEFS, ACTIVITIES, REVIEW }
 
 private data class SelectableItem(
     val label: String,
@@ -73,6 +73,7 @@ fun EveningCheckInScreen(
     prodromeVm: ProdromeViewModel = viewModel(),
     medicineVm: MedicineViewModel = viewModel(),
     reliefVm: ReliefViewModel = viewModel(),
+    activityVm: ActivityViewModel = viewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val authState by authVm.state.collectAsState()
@@ -83,6 +84,7 @@ fun EveningCheckInScreen(
             prodromeVm.loadAll(token)
             medicineVm.loadAll(token)
             reliefVm.loadAll(token)
+            activityVm.loadAll(token)
         }
     }
 
@@ -117,6 +119,7 @@ fun EveningCheckInScreen(
     val selectedProdromes = remember { mutableStateListOf<CheckInProdromeItem>() }
     val selectedMedicines = remember { mutableStateListOf<CheckInMedicineItem>() }
     val selectedReliefs = remember { mutableStateListOf<CheckInReliefItem>() }
+    val selectedActivities = remember { mutableStateListOf<CheckInActivityItem>() }
 
     var noteText by remember { mutableStateOf("") }
     var aiParseResult by remember { mutableStateOf<CheckInParseResult?>(null) }
@@ -127,11 +130,49 @@ fun EveningCheckInScreen(
     var saving by remember { mutableStateOf(false) }
     var saved by remember { mutableStateOf(false) }
 
+    // Shared calendar mappings — loaded once, mutated by both the Calendar
+    // page (undo button) and the Triggers/Reliefs pages (tap-to-deselect).
+    val calendarMappings = remember { mutableStateListOf<CalendarService.Mapping>() }
+    val activityCtx = androidx.compose.ui.platform.LocalContext.current
+    val activityScope = androidx.compose.runtime.rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        if (CalendarService.hasReadPermission(activityCtx)) {
+            val all = CalendarService.syncWindow(activityCtx)
+            calendarMappings.clear()
+            calendarMappings.addAll(CalendarService.reviewQueue(all))
+        }
+    }
+
+    fun calendarLabelsForType(type: String): List<String> {
+        val today = java.time.LocalDate.now().toString()
+        return calendarMappings.mapNotNull { m ->
+            val label = m.targetLabel ?: return@mapNotNull null
+            if (m.targetType != type) return@mapNotNull null
+            val startDate = m.startAt?.take(10) ?: return@mapNotNull null
+            if (startDate != today) return@mapNotNull null
+            label
+        }
+    }
+
+    fun calendarMappingFor(label: String, type: String): CalendarService.Mapping? {
+        val today = java.time.LocalDate.now().toString()
+        return calendarMappings.firstOrNull { m ->
+            m.targetType == type && m.targetLabel == label &&
+                (m.startAt?.take(10) == today)
+        }
+    }
+
     // Helper: check if a label is selected in any list
     fun isTriggerSelected(label: String) = selectedTriggers.any { it.label == label }
     fun isProdromeSelected(label: String) = selectedProdromes.any { it.label == label }
     fun isMedicineSelected(label: String) = selectedMedicines.any { it.label == label }
     fun isReliefSelected(label: String) = selectedReliefs.any { it.label == label }
+    fun isActivitySelected(label: String) = selectedActivities.any { it.label == label }
+
+    val activityPool by activityVm.pool.collectAsState()
+    val activityItems = remember(activityPool) {
+        activityPool.map { SelectableItem(it.label, it.iconKey, false) }
+    }
 
     fun runAiParse() {
         if (noteText.isBlank()) { aiParsed = true; return }
@@ -145,7 +186,8 @@ fun EveningCheckInScreen(
                         triggerPool.map { it.label },
                         prodromePool.map { it.label },
                         medicinePool.map { it.label },
-                        reliefPool.map { it.label }
+                        reliefPool.map { it.label },
+                        activityPool.map { it.label }
                     )
                 }
 
@@ -186,6 +228,9 @@ fun EveningCheckInScreen(
                 merged.reliefs.forEach { r ->
                     if (!isReliefSelected(r.label)) selectedReliefs.add(r)
                 }
+                merged.activities.forEach { a ->
+                    if (!isActivitySelected(a.label)) selectedActivities.add(a)
+                }
 
             } catch (e: Exception) {
                 Log.e("EveningCheckIn", "AI parse failed, falling back to deterministic", e)
@@ -194,13 +239,15 @@ fun EveningCheckInScreen(
                     triggerPool.map { it.label },
                     prodromePool.map { it.label },
                     medicinePool.map { it.label },
-                    reliefPool.map { it.label }
+                    reliefPool.map { it.label },
+                    activityPool.map { it.label }
                 )
                 aiParseResult = deterResult
                 deterResult.triggers.forEach { t -> if (!isTriggerSelected(t.label)) selectedTriggers.add(t) }
                 deterResult.prodromes.forEach { p -> if (!isProdromeSelected(p.label)) selectedProdromes.add(p) }
                 deterResult.medicines.forEach { m -> if (!isMedicineSelected(m.label)) selectedMedicines.add(m) }
                 deterResult.reliefs.forEach { r -> if (!isReliefSelected(r.label)) selectedReliefs.add(r) }
+                deterResult.activities.forEach { a -> if (!isActivitySelected(a.label)) selectedActivities.add(a) }
             }
             aiParsed = true; aiLoading = false
         }
@@ -245,6 +292,15 @@ fun EveningCheckInScreen(
                             )
                         }
                     }
+                    selectedActivities.forEach { a ->
+                        runCatching {
+                            db.insertActivityV2(
+                                token, null, a.label, a.startAtIso ?: now,
+                                endAt = a.endAtIso,
+                                notes = a.note ?: "evening check-in"
+                            )
+                        }
+                    }
                 }
                 saved = true
                 kotlinx.coroutines.delay(1200)
@@ -257,19 +313,30 @@ fun EveningCheckInScreen(
     val pages = CheckInPage.entries
     val pageIndex = pages.indexOf(currentPage)
 
-    // Auto-advance from NOTE to TRIGGERS once parsing completes
+    val context = androidx.compose.ui.platform.LocalContext.current
+    fun nextPageSkippingCalendar(delta: Int): CheckInPage? {
+        val candidate = pages.getOrNull(pageIndex + delta) ?: return null
+        if (candidate == CheckInPage.CALENDAR &&
+            !CalendarService.hasReadPermission(context)
+        ) {
+            return pages.getOrNull(pageIndex + delta + (if (delta > 0) 1 else -1))
+        }
+        return candidate
+    }
+
+    // Auto-advance from NOTE to the next page (calendar if granted, else triggers)
     var pendingAdvance by remember { mutableStateOf(false) }
     LaunchedEffect(aiParsed, pendingAdvance) {
         if (aiParsed && pendingAdvance && currentPage == CheckInPage.NOTE) {
             pendingAdvance = false
-            currentPage = CheckInPage.TRIGGERS
+            nextPageSkippingCalendar(1)?.let { currentPage = it }
         }
     }
 
     fun goNext() {
         if (currentPage == CheckInPage.NOTE) {
             if (noteText.isBlank()) {
-                currentPage = CheckInPage.TRIGGERS
+                nextPageSkippingCalendar(1)?.let { currentPage = it }
                 return
             }
             if (!aiParsed) {
@@ -278,10 +345,10 @@ fun EveningCheckInScreen(
                 return
             }
         }
-        pages.getOrNull(pageIndex + 1)?.let { currentPage = it }
+        nextPageSkippingCalendar(1)?.let { currentPage = it }
     }
 
-    fun goBack() { pages.getOrNull(pageIndex - 1)?.let { currentPage = it } }
+    fun goBack() { nextPageSkippingCalendar(-1)?.let { currentPage = it } }
 
     // ── UI ──
 
@@ -330,8 +397,14 @@ fun EveningCheckInScreen(
                         }
                     }
                 ) { runAiParse() }
-                CheckInPage.TRIGGERS -> FavouritesPage("Any triggers today?", if (aiTriggerLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything that happened", triggerItems, selectedTriggers.map { it.label }, Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
-                    if (isTriggerSelected(l)) selectedTriggers.removeAll { it.label == l } else selectedTriggers.add(CheckInTriggerItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
+                CheckInPage.TRIGGERS -> FavouritesPage("Any triggers today?", if (aiTriggerLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything that happened", triggerItems, selectedTriggers.map { it.label } + calendarLabelsForType("trigger"), Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
+                    val calMapping = calendarMappingFor(l, "trigger")
+                    if (calMapping != null) {
+                        activityScope.launch {
+                            CalendarService.skip(activityCtx, calMapping)
+                            calendarMappings.removeAll { it.eventId == calMapping.eventId }
+                        }
+                    } else if (isTriggerSelected(l)) selectedTriggers.removeAll { it.label == l } else selectedTriggers.add(CheckInTriggerItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
                 }
                 CheckInPage.PRODROMES -> FavouritesPage("Any warning signs?", if (aiProdromeLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Body signals you noticed", prodromeItems, selectedProdromes.map { it.label }, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }, aiProdromeLabels) { l ->
                     if (isProdromeSelected(l)) selectedProdromes.removeAll { it.label == l } else selectedProdromes.add(CheckInProdromeItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
@@ -339,16 +412,47 @@ fun EveningCheckInScreen(
                 CheckInPage.MEDICINES -> FavouritesPage("Take any medicine?", if (aiMedicineLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What did you take today", medicineItems, selectedMedicines.map { it.label }, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }, aiMedicineLabels) { l ->
                     if (isMedicineSelected(l)) selectedMedicines.removeAll { it.label == l } else selectedMedicines.add(CheckInMedicineItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
                 }
-                CheckInPage.RELIEFS -> FavouritesPage("Use any relief methods?", if (aiReliefLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What helped today", reliefItems, selectedReliefs.map { it.label }, Color(0xFF81C784), { ReliefIcons.forKey(it) }, aiReliefLabels) { l ->
-                    if (isReliefSelected(l)) selectedReliefs.removeAll { it.label == l } else selectedReliefs.add(CheckInReliefItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
+                CheckInPage.RELIEFS -> FavouritesPage("Use any relief methods?", if (aiReliefLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What helped today", reliefItems, selectedReliefs.map { it.label } + calendarLabelsForType("relief"), Color(0xFF81C784), { ReliefIcons.forKey(it) }, aiReliefLabels) { l ->
+                    val calMapping = calendarMappingFor(l, "relief")
+                    if (calMapping != null) {
+                        activityScope.launch {
+                            CalendarService.skip(activityCtx, calMapping)
+                            calendarMappings.removeAll { it.eventId == calMapping.eventId }
+                        }
+                    } else if (isReliefSelected(l)) selectedReliefs.removeAll { it.label == l } else selectedReliefs.add(CheckInReliefItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
                 }
+                CheckInPage.ACTIVITIES -> {
+                    val aiActivityLabels = remember(aiParseResult) { aiParseResult?.activities?.map { it.label }?.toSet() ?: emptySet() }
+                    FavouritesPage("What did you do today?", if (aiActivityLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything you did", activityItems, selectedActivities.map { it.label } + calendarLabelsForType("activity"), Color(0xFFFF8A65), { ActivityIcons.forKey(it) }, aiActivityLabels) { l ->
+                        val calMapping = calendarMappingFor(l, "activity")
+                        if (calMapping != null) {
+                            activityScope.launch {
+                                CalendarService.skip(activityCtx, calMapping)
+                                calendarMappings.removeAll { it.eventId == calMapping.eventId }
+                            }
+                        } else if (isActivitySelected(l)) selectedActivities.removeAll { it.label == l } else selectedActivities.add(CheckInActivityItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
+                    }
+                }
+                CheckInPage.CALENDAR -> CalendarCheckInPage(
+                    activityVm = activityVm,
+                    reliefVm = reliefVm,
+                    triggerVm = triggerVm,
+                )
                 CheckInPage.REVIEW -> ReviewPage(
-                    selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs,
+                    selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs, selectedActivities,
+                    calendarMappings.toList(),
                     aiParseResult, saving, saved,
                     rmTrigger = { label -> selectedTriggers.removeAll { it.label == label } },
                     rmProdrome = { label -> selectedProdromes.removeAll { it.label == label } },
                     rmMedicine = { label -> selectedMedicines.removeAll { it.label == label } },
                     rmRelief = { label -> selectedReliefs.removeAll { it.label == label } },
+                    rmActivity = { label -> selectedActivities.removeAll { it.label == label } },
+                    rmCalendar = { mapping ->
+                        activityScope.launch {
+                            CalendarService.skip(activityCtx, mapping)
+                            calendarMappings.removeAll { it.eventId == mapping.eventId }
+                        }
+                    },
                     onUpdateMedicine = { updated ->
                         val idx = selectedMedicines.indexOfFirst { it.label == updated.label }
                         if (idx >= 0) selectedMedicines[idx] = updated
@@ -631,20 +735,26 @@ private fun ReviewPage(
     prodromes: List<CheckInProdromeItem>,
     medicines: List<CheckInMedicineItem>,
     reliefs: List<CheckInReliefItem>,
+    activities: List<CheckInActivityItem>,
+    calendarMappings: List<CalendarService.Mapping>,
     aiResult: CheckInParseResult?,
     saving: Boolean, saved: Boolean,
     rmTrigger: (String) -> Unit,
     rmProdrome: (String) -> Unit,
     rmMedicine: (String) -> Unit,
     rmRelief: (String) -> Unit,
+    rmActivity: (String) -> Unit,
+    rmCalendar: (CalendarService.Mapping) -> Unit,
     onUpdateMedicine: (CheckInMedicineItem) -> Unit,
     onUpdateRelief: (CheckInReliefItem) -> Unit,
     onSave: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val total = triggers.size + prodromes.size + medicines.size + reliefs.size
+    val today = java.time.LocalDate.now().toString()
+    val todayCalendar = calendarMappings.filter { (it.startAt?.take(10) ?: "") == today && it.targetType != "skip" && it.targetType != null }
+    val total = triggers.size + prodromes.size + medicines.size + reliefs.size + activities.size + todayCalendar.size
     val aiLabels = aiResult?.let {
-        (it.triggers.map { t -> t.label } + it.prodromes.map { p -> p.label } + it.medicines.map { m -> m.label } + it.reliefs.map { r -> r.label }).toSet()
+        (it.triggers.map { t -> t.label } + it.prodromes.map { p -> p.label } + it.medicines.map { m -> m.label } + it.reliefs.map { r -> r.label } + it.activities.map { a -> a.label }).toSet()
     } ?: emptySet()
 
     var expandedKey by remember { mutableStateOf<String?>(null) }
@@ -749,6 +859,35 @@ private fun ReviewPage(
                         onClick = { expandedKey = key }
                     )
                 }
+            }
+        }
+        if (activities.isNotEmpty()) {
+            ReviewSectionHeader("Activities", Color(0xFFFF8A65), activities.size)
+            activities.forEach { a ->
+                ReviewItemRow(a.label, Color(0xFFFF8A65), a.label in aiLabels, a.inferred,
+                    subtitle = formatTimeSubtitle(a.startAtIso),
+                    onRemove = { rmActivity(a.label) },
+                    onClick = {}
+                )
+            }
+        }
+        if (todayCalendar.isNotEmpty()) {
+            ReviewSectionHeader("From calendar", Color(0xFF64B5F6), todayCalendar.size)
+            todayCalendar.forEach { m ->
+                val type = m.targetType ?: "activity"
+                val color = when (type) {
+                    "activity" -> Color(0xFFFF8A65)
+                    "relief" -> Color(0xFF81C784)
+                    "trigger" -> Color(0xFFFFB74D)
+                    else -> Color(0xFF64B5F6)
+                }
+                ReviewItemRow(
+                    "${m.targetLabel ?: "(unknown)"} · ${type}",
+                    color, false, false,
+                    subtitle = m.title?.let { "from \"$it\"" },
+                    onRemove = { rmCalendar(m) },
+                    onClick = {}
+                )
             }
         }
 

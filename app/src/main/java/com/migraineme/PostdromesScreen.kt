@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,13 +86,16 @@ fun PostdromesScreen(
                     Spacer(Modifier.width(4.dp))
                     Text("Back", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
-                Text("Log Migraine", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
             HeroCard {
+                Box(Modifier.size(40.dp).drawBehind {
+                    HubIcons.run { drawMigraineStarburst(accent) }
+                })
                 Text("Postdrome", color = Color.White,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center)

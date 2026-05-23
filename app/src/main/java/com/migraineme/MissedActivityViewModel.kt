@@ -16,6 +16,33 @@ class MissedActivityViewModel : ViewModel() {
     private val _frequent = MutableStateFlow<List<SupabaseDbService.MissedActivityPrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.MissedActivityPrefRow>> = _frequent
 
+    /** Activities scheduled today through today+7 — used by the migraine
+     *  wizard's MissedActivitiesStep to auto-suggest as missed. */
+    private val _upcoming = MutableStateFlow<List<String>>(emptyList())
+    val upcoming: StateFlow<List<String>> = _upcoming
+    private val _upcomingStartAts = MutableStateFlow<Map<String, String>>(emptyMap())
+    val upcomingStartAts: StateFlow<Map<String, String>> = _upcomingStartAts
+
+    fun loadUpcoming(accessToken: String, referenceDate: String? = null) {
+        viewModelScope.launch {
+            try {
+                val rows = db.getUpcomingActivities(accessToken, daysAhead = 7, referenceDate = referenceDate)
+                val seen = linkedMapOf<String, String>()
+                for (r in rows) {
+                    val t = r.type ?: continue
+                    val s = r.startAt ?: continue
+                    if (!seen.containsKey(t)) seen[t] = s
+                }
+                _upcoming.value = seen.keys.toList()
+                _upcomingStartAts.value = seen
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _upcoming.value = emptyList()
+                _upcomingStartAts.value = emptyMap()
+            }
+        }
+    }
+
     fun loadAll(accessToken: String) {
         viewModelScope.launch {
             runCatching {

@@ -85,6 +85,25 @@ fun DataSettingsScreen(
         ActivityResultContracts.RequestPermission()
     ) { refreshTick++ }
 
+    val calendarPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            scope.launch {
+                DataSettingsToggleHandler.toggleMetric(
+                    context = appContext,
+                    metric = "calendar_events",
+                    enabled = true,
+                    preferredSource = null,
+                    metricSettingsMap = metricSettings
+                )
+                refreshTick++
+            }
+        } else {
+            refreshTick++
+        }
+    }
+
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { refreshTick++ }
@@ -321,6 +340,7 @@ fun DataSettingsScreen(
                                         appContext = appContext,
                                         micPermissionLauncher = micPermissionLauncher,
                                         locationPermissionLauncher = locationPermissionLauncher,
+                                        calendarPermissionLauncher = calendarPermissionLauncher,
                                         onShowScreenTimeDialog = { showScreenTimePermissionDialog = true },
                                         onShowBatteryDialog = { showBatteryOptDialog = true }
                                     )
@@ -390,6 +410,31 @@ fun DataSettingsScreen(
             )
 
             Spacer(Modifier.height(16.dp))
+
+            // ═══════════════════════════════════════════════════════════
+            // CALENDAR — BaseCard (data toggle + permission sub-row)
+            // ═══════════════════════════════════════════════════════════
+            CalendarCard(
+                metricSettings = metricSettings,
+                onRequestCalendarPermission = {
+                    calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
+                },
+                onToggleData = { enabled ->
+                    scope.launch {
+                        DataSettingsToggleHandler.toggleMetric(
+                            context = appContext,
+                            metric = "calendar_events",
+                            enabled = enabled,
+                            preferredSource = null,
+                            metricSettingsMap = metricSettings
+                        )
+                        refreshTick++
+                    }
+                },
+                refreshTick = refreshTick,
+            )
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 
@@ -456,6 +501,7 @@ private fun handleToggleResult(
     appContext: android.content.Context,
     micPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
     locationPermissionLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>>,
+    calendarPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
     onShowScreenTimeDialog: () -> Unit,
     onShowBatteryDialog: () -> Unit
 ) {
@@ -472,6 +518,9 @@ private fun handleToggleResult(
                 }
                 DataSettingsToggleHandler.PermissionType.MICROPHONE -> {
                     requestMicPermission(activity, appContext, micPermissionLauncher)
+                }
+                DataSettingsToggleHandler.PermissionType.CALENDAR -> {
+                    calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
                 }
                 DataSettingsToggleHandler.PermissionType.BATTERY_OPTIMIZATION -> onShowBatteryDialog()
                 else -> { /* Handle other permission types */ }

@@ -359,7 +359,7 @@ class SupabaseHealthConnectService(context: Context) {
         endTime: String? = null
     ): Boolean {
         val activityName = exerciseTypeToName(exerciseType)
-        return upsertSessionCompat(
+        val ok = upsertSessionCompat(
             accessToken,
             "time_in_high_hr_zones_daily",
             ExerciseRow(
@@ -372,7 +372,31 @@ class SupabaseHealthConnectService(context: Context) {
                 end_at = endTime
             )
         )
+
+        upsertSessionCompat(
+            accessToken,
+            "activities",
+            ActivityRow(
+                type = activityName,
+                source = SOURCE,
+                source_measure_id = sourceId,
+                start_at = startTime,
+                end_at = endTime,
+                duration_minutes = durationMinutes
+            )
+        )
+        return ok
     }
+
+    @Serializable
+    private data class ActivityRow(
+        val type: String,
+        val source: String = SOURCE,
+        val source_measure_id: String,
+        val start_at: String? = null,
+        val end_at: String? = null,
+        val duration_minutes: Int
+    )
 
     private fun exerciseTypeToName(type: Int): String {
         return when (type) {

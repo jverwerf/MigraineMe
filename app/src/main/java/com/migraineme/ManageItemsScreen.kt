@@ -123,6 +123,14 @@ fun ManageItemsScreen(navController: NavController) {
                 onClick = { navController.navigate(Routes.MANAGE_MISSED_ACTIVITIES) }
             )
 
+            ManageItemRow(
+                title = "Calendar opt-outs",
+                subtitle = "Titles you've undone from calendar",
+                iconColor = Color(0xFF64B5F6),
+                drawIcon = { color -> drawCircle(color, radius = size.minDimension / 3f) },
+                onClick = { navController.navigate(Routes.MANAGE_CALENDAR_SKIPS) }
+            )
+
             Spacer(Modifier.height(32.dp))
         }
     }

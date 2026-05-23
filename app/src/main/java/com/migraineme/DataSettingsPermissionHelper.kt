@@ -53,6 +53,16 @@ object DataSettingsPermissionHelper {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Calendar Permission
+    // ─────────────────────────────────────────────────────────────────────────
+
+    fun hasCalendarPermission(context: Context): Boolean =
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_CALENDAR
+        ) == PackageManager.PERMISSION_GRANTED
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Microphone Permission
     // ─────────────────────────────────────────────────────────────────────────
 

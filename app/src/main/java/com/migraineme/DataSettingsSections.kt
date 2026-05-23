@@ -88,5 +88,8 @@ object DataSettingsSections {
                 phoneRow("menstruation", "Menstruation")
             )
         )
+        // Calendar is rendered as a standalone card in DataSettingsScreen so
+        // it can show a separate "Calendar permission" sub-row, matching the
+        // Notifications card. See CalendarCard composable.
     )
 }

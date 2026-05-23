@@ -11,6 +11,9 @@
     <!-- In-app billing -->
     <uses-permission android:name="com.android.vending.BILLING" />
 
+    <!-- Calendar (read-only) — for the evening check-in calendar mapper -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+
     <!-- Ambient noise sampling -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 

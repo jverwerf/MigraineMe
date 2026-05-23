@@ -223,6 +223,7 @@ fun FullScreenGraphScreen(
             "risk" -> RiskHistoryGraph(days = activeDays, endDate = endDate, highlightContributors = highlightContributors)
             "physical" -> PhysicalHistoryGraph(days = activeDays, endDate = endDate)
             "mental" -> MentalHistoryGraph(days = activeDays, endDate = endDate)
+            "medicines" -> MedicineHistoryGraph(days = activeDays, endDate = endDate)
         }
 
         Spacer(Modifier.height(16.dp))

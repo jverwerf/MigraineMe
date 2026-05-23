@@ -26,9 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -226,6 +228,129 @@ suspend fun loadMedicineSummary(context: Context): MedicineSummary = withContext
     )
 }
 
+/**
+ * Range-aware medicine loader for the full-screen graph. Returns daily totals
+ * (and a flat list of distinct medicine + category names) for the requested
+ * inclusive window [endDate - (days-1), endDate].
+ */
+data class MedicineGraphData(
+    val medicineNames: List<String>,
+    val categoryNames: List<String>,
+    val dailyByMedicine: Map<String, List<DailyAmount>>,
+    val dailyByCategory: Map<String, List<DailyAmount>>,
+)
+
+suspend fun loadMedicineGraphData(
+    context: Context,
+    days: Int,
+    endDate: LocalDate,
+): MedicineGraphData = withContext(Dispatchers.IO) {
+    val token = SessionStore.getValidAccessToken(context) ?: return@withContext MedicineGraphData(emptyList(), emptyList(), emptyMap(), emptyMap())
+    val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+    val key = BuildConfig.SUPABASE_ANON_KEY
+
+    val zone = ZoneId.systemDefault()
+    val startDate = endDate.minusDays((days - 1).toLong())
+    val startIso = startDate.atStartOfDay(zone).toOffsetDateTime().toString()
+    val endIso = endDate.plusDays(1).atStartOfDay(zone).toOffsetDateTime().toString()
+
+    val url = "$base/rest/v1/medicines" +
+        "?select=name,category,amount,start_at" +
+        "&start_at=gte.${java.net.URLEncoder.encode(startIso, "UTF-8")}" +
+        "&start_at=lt.${java.net.URLEncoder.encode(endIso, "UTF-8")}" +
+        "&order=start_at.desc&limit=4000"
+
+    val client = OkHttpClient()
+    val req = Request.Builder().url(url)
+        .addHeader("apikey", key)
+        .addHeader("Authorization", "Bearer $token")
+        .addHeader("Accept", "application/json").build()
+    val arr = try {
+        val res = client.newCall(req).execute()
+        JSONArray(res.body?.string() ?: "[]")
+    } catch (_: Exception) { JSONArray() }
+
+    val poolUrl = "$base/rest/v1/user_medicines?select=label,category"
+    val poolReq = Request.Builder().url(poolUrl)
+        .addHeader("apikey", key)
+        .addHeader("Authorization", "Bearer $token")
+        .addHeader("Accept", "application/json").build()
+    val poolCategoryMap: Map<String, String> = try {
+        val res = client.newCall(poolReq).execute()
+        val pArr = JSONArray(res.body?.string() ?: "[]")
+        buildMap {
+            for (i in 0 until pArr.length()) {
+                val po = pArr.optJSONObject(i) ?: continue
+                val label = po.optString("label").takeIf { it.isNotBlank() } ?: continue
+                val pcat = po.optString("category").takeIf { it.isNotBlank() && it != "null" } ?: continue
+                put(label.lowercase(), pcat)
+            }
+        }
+    } catch (_: Exception) { emptyMap() }
+
+    val fmt = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+    val perNameDailyUnit = mutableMapOf<String, MutableMap<String, MutableMap<String, Double>>>()
+    val perCatDailyUnit = mutableMapOf<String, MutableMap<String, MutableMap<String, Double>>>()
+    val nameToCat = mutableMapOf<String, String>()
+    val catCounts = mutableMapOf<String, Int>()
+    val nameCounts = mutableMapOf<String, Int>()
+
+    for (i in 0 until arr.length()) {
+        val o = arr.optJSONObject(i) ?: continue
+        val name = o.optString("name").takeIf { it.isNotBlank() } ?: continue
+        val rawCat = o.optString("category").takeIf { it.isNotBlank() && it != "null" }
+        val cat = rawCat ?: poolCategoryMap[name.lowercase()] ?: "Other"
+        val amt = o.optString("amount").takeIf { it.isNotBlank() }
+        val startStr = o.optString("start_at").takeIf { it.isNotBlank() } ?: continue
+        val parsed = parseMedicineAmount(amt) ?: continue
+        val instant = try { OffsetDateTime.parse(startStr, fmt) } catch (_: Exception) { continue }
+        val date = instant.atZoneSameInstant(zone).toLocalDate()
+        if (date.isBefore(startDate) || date.isAfter(endDate)) continue
+        val dayKey = date.toString()
+
+        nameToCat[name] = cat
+        nameCounts.merge(name, 1) { a, b -> a + b }
+        catCounts.merge(cat, 1) { a, b -> a + b }
+
+        perNameDailyUnit
+            .getOrPut(name) { mutableMapOf() }
+            .getOrPut(dayKey) { mutableMapOf() }
+            .merge(parsed.second, parsed.first) { a, b -> a + b }
+        perCatDailyUnit
+            .getOrPut(cat) { mutableMapOf() }
+            .getOrPut(dayKey) { mutableMapOf() }
+            .merge(parsed.second, parsed.first) { a, b -> a + b }
+    }
+
+    fun buildSeries(src: Map<String, Map<String, Map<String, Double>>>): Map<String, List<DailyAmount>> {
+        val out = mutableMapOf<String, List<DailyAmount>>()
+        for ((name, byDayUnit) in src) {
+            val unitTotals = mutableMapOf<String, Double>()
+            for ((_, units) in byDayUnit) for ((u, v) in units) unitTotals.merge(u, v) { a, b -> a + b }
+            val dominantUnit = unitTotals.maxByOrNull { it.value }?.key ?: "mg"
+            val pts = mutableListOf<DailyAmount>()
+            for (i in (days - 1) downTo 0) {
+                val d = endDate.minusDays(i.toLong())
+                val s = d.toString()
+                val v = byDayUnit[s]?.get(dominantUnit) ?: 0.0
+                pts.add(DailyAmount(s, v, dominantUnit))
+            }
+            out[name] = pts
+        }
+        return out
+    }
+
+    val medicineNames = nameCounts.entries.sortedByDescending { it.value }.map { it.key }
+    val categoryNames = catCounts.entries.sortedByDescending { it.value }.map { it.key }
+
+    MedicineGraphData(
+        medicineNames = medicineNames,
+        categoryNames = categoryNames,
+        dailyByMedicine = buildSeries(perNameDailyUnit),
+        dailyByCategory = buildSeries(perCatDailyUnit),
+    )
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN MONITOR CARD — used in MonitorScreen.kt's card switch
 // ════════════════════════════════════════════════════════════════════════════
@@ -243,7 +368,7 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
             Text("Medicines", color = Color.White,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.weight(1f))
-            Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
         }
         Spacer(Modifier.height(8.dp))
 
@@ -254,21 +379,10 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
             else -> {
                 val favs = MedicineCardConfig.loadFavourites(ctx)
                 val slots = resolveMedicineCardSlots(favourites = favs, allEntries = summary.all)
-                MedicineDWMHeaderRow()
-                slots.forEach { s ->
-                    MedicineDWMRow(name = s.name, category = s.category,
-                        today = s.amountToday, week = s.amountWeek, month = s.amountMonth)
-                }
-                if (summary.categories.isNotEmpty()) {
-                    Spacer(Modifier.height(4.dp))
-                    Text("By category", color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-                    MedicineDWMHeaderRow()
-                    summary.categories.take(4).forEach { c ->
-                        MedicineDWMRow(name = c.category, category = null,
-                            today = c.amountToday, week = c.amountWeek, month = c.amountMonth)
-                    }
-                }
+                MedicineDwmGrid(
+                    medicines = slots,
+                    categories = summary.categories.take(4),
+                )
             }
         }
     }
@@ -361,34 +475,20 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
                             }
                         }
                         Spacer(Modifier.height(8.dp))
-                        Text("By medicine", color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-                        MedicineDWMHeaderRow()
-                        s.all.forEach { m ->
-                            MedicineDWMRow(name = m.name, category = m.category,
-                                today = m.amountToday, week = m.amountWeek, month = m.amountMonth)
-                            Spacer(Modifier.height(4.dp))
-                        }
-                        if (s.categories.isNotEmpty()) {
-                            Spacer(Modifier.height(6.dp))
-                            Text("By category", color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-                            MedicineDWMHeaderRow()
-                            s.categories.forEach { c ->
-                                MedicineDWMRow(name = c.category, category = null,
-                                    today = c.amountToday, week = c.amountWeek, month = c.amountMonth)
-                                Spacer(Modifier.height(4.dp))
-                            }
-                        }
+                        MedicineDwmGrid(
+                            medicines = s.all,
+                            categories = s.categories,
+                            medicineLabel = "By medicine",
+                        )
                     }
 
                     // 3. 14-day stacked histogram with chip selector (chips below graph)
-                    BaseCard {
+                    BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.FULL_GRAPH_MEDICINES) }) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Last 14 days", color = AppTheme.TitleColor,
+                            Text("14-Day Medicines History", color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                                 modifier = Modifier.weight(1f))
-                            Text("Daily amount, stacked", color = AppTheme.SubtleTextColor,
+                            Text("History →", color = AppTheme.AccentPurple,
                                 style = MaterialTheme.typography.labelSmall)
                         }
                         Spacer(Modifier.height(8.dp))
@@ -445,6 +545,158 @@ fun MedicineDWMLegend() {
 // Fixed column widths so D/W/M values + headers line up regardless of whether
 // a category pill is present on a given row.
 private val MEDICINE_VALUE_COL_WIDTH = 56.dp
+
+/**
+ * Aligned grid: shared column widths across the medicines header+rows and the
+ * categories header+rows. Uses a custom Layout so every value column has the same
+ * width = max(width of every value+header in that column), and every header letter
+ * (D/W/M) sits directly above the right edge of its column values.
+ */
+@Composable
+private fun MedicineDwmGrid(
+    medicines: List<MedicineSummaryEntry>,
+    categories: List<MedicineCategorySummary>,
+    medicineLabel: String? = null,
+) {
+    val colorD = Color(0xFFFFB74D)
+    val colorW = Color(0xFF4FC3F7)
+    val colorM = Color(0xFF81C784)
+    val colors = listOf(colorD, colorW, colorM)
+    val headerStyle = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+    val valueStyle = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+    val nameStyle = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+    val sectionStyle = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+    val colGap = 10.dp
+
+    data class Row3(val name: String?, val category: String?, val values: List<String>, val isHeader: Boolean)
+    val rows: List<Pair<String?, Row3>> = buildList {
+        if (medicineLabel != null) add(medicineLabel to Row3(null, null, listOf("D", "W", "M"), true))
+        else add(null to Row3(null, null, listOf("D", "W", "M"), true))
+        medicines.forEach { m ->
+            add(null to Row3(m.name, m.category, listOf(m.amountToday, m.amountWeek, m.amountMonth), false))
+        }
+        if (categories.isNotEmpty()) {
+            add("By category" to Row3(null, null, listOf("D", "W", "M"), true))
+            categories.forEach { c ->
+                add(null to Row3(c.category, null, listOf(c.amountToday, c.amountWeek, c.amountMonth), false))
+            }
+        }
+    }
+
+    // Custom Layout: compose every cell, then for each row use a fixed column width
+    // equal to the max measured width of that column across all rows.
+    Layout(
+        content = {
+            rows.forEach { (section, row) ->
+                // section label cell (one per row; empty if none)
+                if (section != null) {
+                    Text(section, color = AppTheme.SubtleTextColor, style = sectionStyle,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
+                } else {
+                    Spacer(Modifier.height(0.dp))
+                }
+                // name + optional category pill, packaged as one box
+                androidx.compose.foundation.layout.Box {
+                    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (row.name != null) {
+                            Text(row.name, color = Color.White, style = nameStyle, maxLines = 1)
+                            if (!row.category.isNullOrBlank()) {
+                                Spacer(Modifier.width(4.dp))
+                                Text(row.category, color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.06f))
+                                        .padding(horizontal = 5.dp, vertical = 1.dp))
+                            }
+                        }
+                    }
+                }
+                // 3 value cells (D, W, M)
+                val style = if (row.isHeader) headerStyle else valueStyle
+                row.values.forEachIndexed { i, v ->
+                    Text(v, color = colors[i], style = style, maxLines = 1)
+                }
+            }
+        }
+    ) { measurables, constraints ->
+        val cellsPerRow = 5 // section, name, val0, val1, val2
+        val rowCount = rows.size
+        val gapPx = colGap.roundToPx()
+        val rowVSpacing = 2.dp.roundToPx()
+
+        // Measure value cells (cols 2,3,4) at unconstrained width to find natural widths
+        val unbounded = Constraints()
+        val valueMeasures = Array(rowCount) { r ->
+            (0 until 3).map { c ->
+                measurables[r * cellsPerRow + 2 + c].measure(unbounded)
+            }
+        }
+        // Per-column max width
+        val colWidths = IntArray(3)
+        for (r in 0 until rowCount) {
+            for (c in 0 until 3) {
+                if (valueMeasures[r][c].width > colWidths[c]) colWidths[c] = valueMeasures[r][c].width
+            }
+        }
+        val trailingBlock = colWidths.sum() + gapPx * 2
+
+        // Measure section labels (full width)
+        val sectionMeasures = Array(rowCount) { r ->
+            measurables[r * cellsPerRow].measure(Constraints(maxWidth = constraints.maxWidth))
+        }
+        // Measure name+pill: at most (parentWidth - trailingBlock)
+        val nameMaxWidth = (constraints.maxWidth - trailingBlock).coerceAtLeast(0)
+        val nameMeasures = Array(rowCount) { r ->
+            measurables[r * cellsPerRow + 1].measure(
+                Constraints(maxWidth = nameMaxWidth)
+            )
+        }
+
+        // Compute total height
+        var totalH = 0
+        val rowHeights = IntArray(rowCount)
+        for (r in 0 until rowCount) {
+            val sectH = sectionMeasures[r].height
+            val rowH = maxOf(
+                nameMeasures[r].height,
+                valueMeasures[r].maxOf { it.height }
+            )
+            rowHeights[r] = sectH + rowH + rowVSpacing
+            totalH += rowHeights[r]
+        }
+
+        layout(constraints.maxWidth, totalH) {
+            var y = 0
+            for (r in 0 until rowCount) {
+                // section label at full left
+                if (sectionMeasures[r].height > 0) {
+                    sectionMeasures[r].place(0, y)
+                    y += sectionMeasures[r].height
+                }
+                val rowH = maxOf(
+                    nameMeasures[r].height,
+                    valueMeasures[r].maxOf { it.height }
+                )
+                // name at left, vertically centered in row
+                val nameY = y + (rowH - nameMeasures[r].height) / 2
+                nameMeasures[r].place(0, nameY)
+                // value cells right-aligned within their fixed column widths
+                var xRight = constraints.maxWidth
+                for (c in 2 downTo 0) {
+                    val cellMeasure = valueMeasures[r][c]
+                    val colW = colWidths[c]
+                    val cellX = xRight - colW + (colW - cellMeasure.width) // right-align in column
+                    val cellY = y + (rowH - cellMeasure.height) / 2
+                    cellMeasure.place(cellX, cellY)
+                    xRight -= colW
+                    if (c > 0) xRight -= gapPx
+                }
+                y += rowH + rowVSpacing
+            }
+        }
+    }
+}
 
 @Composable
 fun MedicineDWMHeaderRow() {
@@ -578,7 +830,7 @@ fun MedicineStackedBarGraph(
         Row(Modifier.weight(1f).fillMaxWidth(),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            days.forEachIndexed { idx, d ->
+            days.forEachIndexed { idx, _ ->
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.weight(1f).fillMaxWidth(),
                         contentAlignment = Alignment.BottomCenter) {
@@ -604,13 +856,25 @@ fun MedicineStackedBarGraph(
                             }
                         }
                     }
-                    Text(dayLabel(d), color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
+        // X-axis: only first + last date labels (MMM d), matching the other
+        // history graphs (Physical, Sleep, etc).
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(monthDayLabel(days.first()), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+            Text(monthDayLabel(days.last()), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+        }
     }
 }
+
+private fun monthDayLabel(iso: String): String = try {
+    val d = LocalDate.parse(iso)
+    "${d.month.name.lowercase().replaceFirstChar { it.titlecase() }.take(3)} ${d.dayOfMonth}"
+} catch (_: Exception) { "" }
 
 private fun dayLabel(iso: String): String = try {
     LocalDate.parse(iso).dayOfMonth.toString()
@@ -946,4 +1210,85 @@ private suspend fun loadMedicinesForDate(context: Context, date: LocalDate): Lis
         ))
     }
     out
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MEDICINE HISTORY GRAPH — used inside FullScreenGraphScreen with range picker
+// ════════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun MedicineHistoryGraph(
+    days: Int = 14,
+    endDate: LocalDate = LocalDate.now(),
+) {
+    val ctx = LocalContext.current
+    var data by remember { mutableStateOf<MedicineGraphData?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    val chartSelected = remember { mutableStateListOf<String>() }
+    var lastInitKey by remember { mutableStateOf("") }
+
+    LaunchedEffect(days, endDate) {
+        isLoading = true
+        data = loadMedicineGraphData(ctx, days, endDate)
+        isLoading = false
+        // Initialize chip selection once, seeding from user favourites/categories
+        val initKey = "init"
+        if (lastInitKey != initKey) {
+            val favs = MedicineCardConfig.loadFavourites(ctx)
+            val cats = ctx.getSharedPreferences("monitor_prefs", Context.MODE_PRIVATE)
+                .getString("medicine_card_config_categories", null)
+                ?.split("\n")?.filter { it.isNotBlank() } ?: emptyList()
+            val seed = (favs + cats).filter { it in (data?.medicineNames ?: emptyList()) || it in (data?.categoryNames ?: emptyList()) }
+            chartSelected.clear()
+            chartSelected.addAll(if (seed.isNotEmpty()) seed else (data?.medicineNames ?: emptyList()).take(3))
+            lastInitKey = initKey
+        }
+    }
+
+    BaseCard {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("$days-Day Medicines History", color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.weight(1f))
+            Text("Daily amount, stacked", color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall)
+        }
+        Spacer(Modifier.height(8.dp))
+
+        if (isLoading) {
+            Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
+            }
+            return@BaseCard
+        }
+        val d = data
+        if (d == null || (d.medicineNames.isEmpty() && d.categoryNames.isEmpty())) {
+            Text("No medicines logged in this range",
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 30.dp), textAlign = TextAlign.Center)
+            return@BaseCard
+        }
+
+        val merged = d.dailyByMedicine + d.dailyByCategory
+        MedicineStackedBarGraph(chartSelected.toList(), merged, Modifier.fillMaxWidth().height(180.dp))
+
+        Spacer(Modifier.height(10.dp))
+        if (d.medicineNames.isNotEmpty()) {
+            Text("Medicines", color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                d.medicineNames.forEach { n -> ChartChip(n, Color(0xFF4FC3F7), chartSelected) }
+            }
+        }
+        if (d.categoryNames.isNotEmpty()) {
+            Spacer(Modifier.height(6.dp))
+            Text("Categories", color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                d.categoryNames.forEach { c -> ChartChip(c, Color(0xFF81C784), chartSelected) }
+            }
+        }
+    }
 }
