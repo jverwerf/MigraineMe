@@ -63,6 +63,7 @@ fun ManageSymptomsScreen(
     val authState by authVm.state.collectAsState()
     val painCharacter by vm.painCharacter.collectAsState()
     val accompanying by vm.accompanying.collectAsState()
+    val postdrome by vm.postdrome.collectAsState()
     val favorites by vm.favorites.collectAsState()
     val favoriteIds by vm.favoriteIds.collectAsState()
     val scrollState = rememberScrollState()
@@ -301,6 +302,35 @@ fun ManageSymptomsScreen(
                                 onDelete = { deleteTarget = symptom; showDeleteDialog = true }
                             )
                         }
+                    }
+                }
+            }
+
+            // Postdrome section
+            BaseCard {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Postdrome (after attack)", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    IconButton(onClick = { addCategory = "Postdrome"; addSubCategory = "Postdrome"; showAddDialog = true }) {
+                        Icon(Icons.Outlined.Add, contentDescription = "Add", tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    }
+                }
+                if (postdrome.isEmpty()) {
+                    Text("No postdrome symptoms yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                } else {
+                    postdrome.forEach { symptom ->
+                        val isFav = symptom.id in favoriteIds
+                        val prefId = favorites.find { it.symptomId == symptom.id }?.id
+                        SymptomRow(
+                            label = symptom.label,
+                            iconKey = symptom.iconKey,
+                            isFavorite = isFav,
+                            onToggleFavorite = {
+                                val token = authState.accessToken ?: return@SymptomRow
+                                if (isFav && prefId != null) vm.removeFromFavorites(token, prefId)
+                                else vm.addToFavorites(token, symptom.id)
+                            },
+                            onDelete = { deleteTarget = symptom; showDeleteDialog = true }
+                        )
                     }
                 }
             }

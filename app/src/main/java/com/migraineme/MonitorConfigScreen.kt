@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -213,6 +214,7 @@ private fun getCardIcon(cardId: String): ImageVector {
         MonitorCardConfig.CARD_ENVIRONMENT -> Icons.Outlined.Cloud
         MonitorCardConfig.CARD_MENSTRUATION -> Icons.Outlined.FavoriteBorder
         MonitorCardConfig.CARD_RISK -> Icons.Outlined.TrendingUp
+        MonitorCardConfig.CARD_MIGRAINES -> Icons.Outlined.WbSunny
         else -> Icons.Outlined.Cloud
     }
 }
@@ -226,6 +228,7 @@ private fun getCardIconTint(cardId: String): Color {
         MonitorCardConfig.CARD_ENVIRONMENT -> Color(0xFF4FC3F7)
         MonitorCardConfig.CARD_MENSTRUATION -> Color(0xFFE57373)
         MonitorCardConfig.CARD_RISK -> Color(0xFFEF5350)
+        MonitorCardConfig.CARD_MIGRAINES -> AppTheme.AccentPink
         else -> Color(0xFF4FC3F7)
     }
 }

@@ -83,7 +83,8 @@ class NutritionOutboxPushWorker(
                     val finalNutrition = enriched.copy(
                         tyramineExposure = risks.tyramine,
                         alcoholExposure = risks.alcohol,
-                        glutenExposure = risks.gluten
+                        glutenExposure = risks.gluten,
+                        histamineExposure = risks.histamine
                     )
 
                     service.uploadNutritionRecord(accessToken, finalNutrition, item.healthConnectId)
@@ -184,6 +185,7 @@ class NutritionOutboxPushWorker(
             tyramineExposure = null, // Set by FoodRiskClassifierService after enrichment
             alcoholExposure = null,
             glutenExposure = null,
+            histamineExposure = null,
 
             source = "health_connect",
             enriched = false // Will be set to true after enrichment

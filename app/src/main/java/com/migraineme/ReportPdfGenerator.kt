@@ -133,6 +133,10 @@ class ReportPdfGenerator(private val context: Context) {
         val totalMigraineCount: Int = 0,
         val overallAvgSeverity: Float = 5f,
         val sources: Set<String> = emptySet(),
+        // Symptom analytics (Phase 2a/b/c)
+        val symptomStats: List<EdgeFunctionsService.SymptomStat> = emptyList(),
+        val symptomOutcomes: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
+        val symptomSegments: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     )
 
     // ======= Public =======
@@ -168,15 +172,23 @@ class ReportPdfGenerator(private val context: Context) {
             val treatmentInteractions = data.correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
             val interactions = significant.filter { it.factorType == "interaction" }
             val singles = significant.filter { it.factorType != "interaction" && it.factorType != "treatment" && it.factorType != "treatment_interaction" }
-            if (interactions.isNotEmpty() || singles.isNotEmpty()) {
+            if (interactions.isNotEmpty() || singles.isNotEmpty() || data.symptomOutcomes.isNotEmpty()) {
                 Log.d(TAG, "generate: drawCorrelations (${significant.size} significant)")
                 newPage(); drawCorrelations(singles, interactions)
+                if (data.symptomOutcomes.isNotEmpty()) {
+                    Log.d(TAG, "generate: drawTriggerSymptomProfiles (${data.symptomOutcomes.size} rows)")
+                    drawTriggerSymptomProfiles(data.symptomOutcomes)
+                }
             }
 
             // 7. What Worked (treatments)
-            if (treatments.isNotEmpty() || treatmentInteractions.isNotEmpty()) {
+            if (treatments.isNotEmpty() || treatmentInteractions.isNotEmpty() || data.symptomSegments.isNotEmpty()) {
                 Log.d(TAG, "generate: drawTreatmentCorrelations (${treatments.size} treatments, ${treatmentInteractions.size} combos)")
                 newPage(); drawTreatmentCorrelations(treatments, treatmentInteractions)
+                if (data.symptomSegments.isNotEmpty()) {
+                    Log.d(TAG, "generate: drawTreatmentSymptomSegments (${data.symptomSegments.size} rows)")
+                    drawTreatmentSymptomSegments(data.symptomSegments)
+                }
             }
 
             // 8. What Were You Doing
@@ -185,8 +197,8 @@ class ReportPdfGenerator(private val context: Context) {
                 newPage(); drawContext(data)
             }
 
-            // 9. How Did It Impact You (severity + pain locations + missed activities)
-            if (data.severityCounts.isNotEmpty() || data.painLocationCounts.isNotEmpty() || data.impactItems.isNotEmpty()) {
+            // 9. How Did It Impact You (severity + pain locations + missed activities + symptoms)
+            if (data.severityCounts.isNotEmpty() || data.painLocationCounts.isNotEmpty() || data.impactItems.isNotEmpty() || data.symptomStats.isNotEmpty()) {
                 Log.d(TAG, "generate: drawImpact")
                 newPage(); drawImpact(data)
             }
@@ -957,6 +969,111 @@ class ReportPdfGenerator(private val context: Context) {
                     cv2.drawText("missed during ${item.pctOfMigraines.toInt()}% of migraines", l + 4f, t + 14f, tp(SUBTLE, 7f))
                 }
             }
+        }
+
+        // ── Your Symptoms (Phase 2a) ──
+        if (data.symptomStats.isNotEmpty()) {
+            y += 10f
+            need(30f)
+            val purple = Color.rgb(0xCE, 0x93, 0xD8)
+            val cs = cv ?: return
+            cs.drawText("Your Symptoms", M + 12f, y + 12f, tp(purple, 10f, true))
+            y += 22f
+            for (s in data.symptomStats.take(12)) {
+                need(30f)
+                val pct = (s.pctOfAttacks * 100f).toInt()
+                val sevText = s.avgSeverity?.let { "sev ${String.format("%.1f", it)}" } ?: ""
+                val durText = s.avgDurationHours?.let { String.format("%.1fh", it) } ?: ""
+                card(24f) { cv2, l, t, r, _ ->
+                    cv2.drawText(s.symptomLabel, l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
+                    cv2.drawText("$pct% · ${s.totalCount} attacks", r - 4f, t + 2f, tp(purple, 8.5f, true, Paint.Align.RIGHT))
+                    val meta = listOf(sevText, durText).filter { it.isNotEmpty() }.joinToString(" · ")
+                    if (meta.isNotEmpty()) {
+                        cv2.drawText(meta, l + 4f, t + 14f, tp(SUBTLE, 7f))
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Trigger × Symptom (Phase 2b) ──
+    private fun drawTriggerSymptomProfiles(rows: List<EdgeFunctionsService.CorrelationStat>) {
+        if (rows.isEmpty()) return
+        val purple = Color.rgb(0xFF, 0xB7, 0x4D)
+        need(28f)
+        val c = cv ?: return
+        c.drawText("What These Triggers Do to You", M + 12f, y + 12f, tp(purple, 10f, true))
+        y += 22f
+        c.drawText("The symptoms that tend to follow each trigger", M + 12f, y + 4f, tp(SUBTLE, 7.5f))
+        y += 14f
+        val grouped = rows.groupBy { it.factorName }
+            .map { (name, list) -> name to list.sortedByDescending { it.liftRatio } }
+            .sortedByDescending { it.second.firstOrNull()?.liftRatio ?: 0f }
+        for ((trigger, list) in grouped.take(8)) {
+            need(20f)
+            val c2 = cv ?: return
+            c2.drawText(trigger, M + 12f, y + 4f, tp(Color.WHITE, 9f, true))
+            y += 14f
+            for (stat in list.take(4)) {
+                need(16f)
+                val c3 = cv ?: return
+                val condPct = (stat.lagDetails?.get("conditional_pct") as? kotlinx.serialization.json.JsonPrimitive)?.content?.toFloatOrNull()?.toInt()
+                    ?: stat.pctMigraineWindows.toInt()
+                val baselinePct = (stat.lagDetails?.get("baseline_pct") as? kotlinx.serialization.json.JsonPrimitive)?.content?.toFloatOrNull()?.toInt()
+                    ?: stat.pctControlWindows.toInt()
+                c3.drawText("→ ${stat.symptomOutcome ?: ""}", M + 24f, y + 4f, tp(BODY, 8.5f))
+                c3.drawText("${String.format("%.1f", stat.liftRatio)}x", PW - M - 80f, y + 4f, tp(purple, 8f, true, Paint.Align.RIGHT))
+                c3.drawText("$condPct% vs $baselinePct%", PW - M - 12f, y + 4f, tp(SUBTLE, 7.5f, false, Paint.Align.RIGHT))
+                y += 14f
+            }
+            y += 4f
+        }
+    }
+
+    // ── Treatment × Symptom (Phase 2c) ──
+    private fun drawTreatmentSymptomSegments(rows: List<EdgeFunctionsService.CorrelationStat>) {
+        if (rows.isEmpty()) return
+        val blue = Color.rgb(0x4F, 0xC3, 0xF7)
+        need(28f)
+        val c = cv ?: return
+        c.drawText("Works Best When...", M + 12f, y + 12f, tp(blue, 10f, true))
+        y += 22f
+        c.drawText("How relief changes depending on which symptoms are present", M + 12f, y + 4f, tp(SUBTLE, 7.5f))
+        y += 14f
+
+        fun reliefLabel(v: Float) = when {
+            v < 0.5f -> "no relief"
+            v < 1.5f -> "low"
+            v < 2.5f -> "mild"
+            else -> "high"
+        }
+
+        val grouped = rows.groupBy { it.factorName }
+            .map { (name, list) -> name to list.sortedByDescending { kotlin.math.abs(it.liftRatio - 1f) } }
+            .sortedByDescending { kotlin.math.abs((it.second.firstOrNull()?.liftRatio ?: 1f) - 1f) }
+
+        for ((treatment, list) in grouped.take(8)) {
+            need(20f)
+            val c2 = cv ?: return
+            c2.drawText(treatment, M + 12f, y + 4f, tp(Color.WHITE, 9f, true))
+            y += 14f
+            for (stat in list.take(4)) {
+                need(18f)
+                val c3 = cv ?: return
+                val withRelief = (stat.lagDetails?.get("avg_relief_with") as? kotlinx.serialization.json.JsonPrimitive)?.content?.toFloatOrNull()
+                    ?: stat.pctMigraineWindows
+                val withoutRelief = (stat.lagDetails?.get("avg_relief_without") as? kotlinx.serialization.json.JsonPrimitive)?.content?.toFloatOrNull()
+                    ?: stat.pctControlWindows
+                val direction = if (stat.liftRatio > 1.1f) "better" else if (stat.liftRatio < 0.9f) "worse" else "similar"
+                val dirColor = if (stat.liftRatio > 1.1f) SM else if (stat.liftRatio < 0.9f) SS else SUBTLE
+                c3.drawText(stat.symptomSegment ?: "", M + 24f, y + 4f, tp(BODY, 8.5f))
+                c3.drawText(direction, PW - M - 12f, y + 4f, tp(dirColor, 8f, true, Paint.Align.RIGHT))
+                y += 12f
+                c3.drawText("With ${stat.symptomSegment ?: ""}: ${reliefLabel(withRelief)} · Without: ${reliefLabel(withoutRelief)}",
+                    M + 24f, y + 4f, tp(SUBTLE, 7f))
+                y += 12f
+            }
+            y += 4f
         }
     }
 

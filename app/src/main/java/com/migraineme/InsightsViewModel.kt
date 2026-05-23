@@ -175,6 +175,16 @@ class InsightsViewModel : ViewModel() {
     private val _correlationStats = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
     val correlationStats: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _correlationStats
 
+    // ── Symptom analytics outputs ──
+    private val _symptomStats = MutableStateFlow<List<EdgeFunctionsService.SymptomStat>>(emptyList())
+    val symptomStats: StateFlow<List<EdgeFunctionsService.SymptomStat>> = _symptomStats
+
+    private val _symptomOutcomes = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
+    val symptomOutcomes: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _symptomOutcomes
+
+    private val _symptomSegments = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
+    val symptomSegments: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _symptomSegments
+
     private val _gaugeAccuracy = MutableStateFlow<EdgeFunctionsService.GaugeAccuracy?>(null)
     val gaugeAccuracy: StateFlow<EdgeFunctionsService.GaugeAccuracy?> = _gaugeAccuracy
 
@@ -208,12 +218,19 @@ class InsightsViewModel : ViewModel() {
 
     // ======= Cross-type AI Recommendations (from ai_recommendations JSONB column) =======
 
+    /// `text` is shown to the patient; `evidence` is a stable qualitative
+    /// summary of the pattern the recommendation is built on. We hash
+    /// `evidence` to key per-item dismissals so the same recommendation
+    /// stays hidden across regenerations, but a recommendation built on a
+    /// new pattern (different evidence) resurfaces.
+    data class AiRecommendationItem(val text: String, val evidence: String)
+
     data class AiRecommendations(
-        val triggers:   Map<String, String> = emptyMap(),
-        val prodromes:  Map<String, String> = emptyMap(),
-        val medicines:  Map<String, String> = emptyMap(),
-        val reliefs:    Map<String, String> = emptyMap(),
-        val activities: Map<String, String> = emptyMap(),
+        val triggers:   Map<String, AiRecommendationItem> = emptyMap(),
+        val prodromes:  Map<String, AiRecommendationItem> = emptyMap(),
+        val medicines:  Map<String, AiRecommendationItem> = emptyMap(),
+        val reliefs:    Map<String, AiRecommendationItem> = emptyMap(),
+        val activities: Map<String, AiRecommendationItem> = emptyMap(),
     ) {
         val isEmpty: Boolean get() =
             triggers.isEmpty() && prodromes.isEmpty() && medicines.isEmpty() &&
@@ -222,6 +239,46 @@ class InsightsViewModel : ViewModel() {
 
     private val _aiRecommendations = MutableStateFlow(AiRecommendations())
     val aiRecommendations: StateFlow<AiRecommendations> = _aiRecommendations
+
+    private val _dismissedRecommendationKeys = MutableStateFlow<Set<String>>(emptySet())
+    val dismissedRecommendationKeys: StateFlow<Set<String>> = _dismissedRecommendationKeys
+
+    fun dismissRecommendation(context: Context, category: String, name: String, evidence: String) {
+        val hash = sha256Hex(evidence)
+        val key = "$category|$name|$hash"
+        // Update local state immediately so the UI hides the row right away.
+        _dismissedRecommendationKeys.value = _dismissedRecommendationKeys.value + key
+        viewModelScope.launch {
+            try {
+                val token = SessionStore.getValidAccessToken(context) ?: return@launch
+                val userId = SessionStore.readUserId(context) ?: return@launch
+                val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+                val key2 = BuildConfig.SUPABASE_ANON_KEY
+                val body = org.json.JSONObject().apply {
+                    put("user_id", userId)
+                    put("category", category)
+                    put("name", name)
+                    put("evidence_hash", hash)
+                }.toString().toRequestBody("application/json".toMediaType())
+                val req = Request.Builder()
+                    .url("$base/rest/v1/dismissed_recommendations?on_conflict=user_id,category,name,evidence_hash")
+                    .addHeader("apikey", key2)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Prefer", "resolution=merge-duplicates,return=minimal")
+                    .post(body)
+                    .build()
+                withContext(Dispatchers.IO) { OkHttpClient().newCall(req).execute().close() }
+            } catch (e: Exception) {
+                android.util.Log.w("InsightsVM", "dismissRecommendation failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun sha256Hex(input: String): String {
+        val bytes = java.security.MessageDigest.getInstance("SHA-256").digest(input.toByteArray(Charsets.UTF_8))
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
 
     // ======= Weekly summary (derived from migraines) =======
 
@@ -1130,7 +1187,7 @@ class InsightsViewModel : ViewModel() {
                 "potassium,calcium,iron,magnesium,zinc,selenium,phosphorus,copper,manganese," +
                 "vitamin_a,vitamin_c,vitamin_d,vitamin_e,vitamin_k,vitamin_b6,vitamin_b12," +
                 "thiamin,riboflavin,niacin,folate,biotin,pantothenic_acid," +
-                "tyramine_exposure,alcohol_exposure,gluten_exposure"
+                "tyramine_exposure,alcohol_exposure,gluten_exposure,histamine_exposure"
             val url = "$base/rest/v1/nutrition_records?user_id=eq.$userId&timestamp=gte.${cutoff}T00:00:00Z&select=$cols&order=timestamp.desc&limit=5000"
             val req = Request.Builder().url(url).get()
                 .addHeader("apikey", key)
@@ -1190,7 +1247,8 @@ class InsightsViewModel : ViewModel() {
             val riskKeys = listOf(
                 "tyramine" to "tyramine_exposure",
                 "alcohol" to "alcohol_exposure",
-                "gluten" to "gluten_exposure"
+                "gluten" to "gluten_exposure",
+                "histamine" to "histamine_exposure"
             )
             fun riskToNum(s: String?): Double? = when (s?.lowercase()) {
                 "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; "none" -> 0.0; else -> null
@@ -1618,11 +1676,19 @@ class InsightsViewModel : ViewModel() {
                 // Load pending gauge recalibration proposals
                 val proposals = withContext(Dispatchers.IO) { loadGaugeProposals(context) }
                 _gaugeProposals.value = proposals
+
+                // Symptom analytics (Phase 2a/2b/2c)
+                _symptomStats.value     = withContext(Dispatchers.IO) { edge.getSymptomStats(context) }
+                _symptomOutcomes.value  = withContext(Dispatchers.IO) { edge.getSymptomOutcomes(context) }
+                _symptomSegments.value  = withContext(Dispatchers.IO) { edge.getSymptomSegments(context) }
             } catch (e: Exception) {
                 android.util.Log.w("InsightsVM", "loadCorrelationData failed: ${e.message}")
                 _correlationStats.value = emptyList()
                 _gaugeAccuracy.value = null
                 _gaugeProposals.value = emptyList()
+                _symptomStats.value = emptyList()
+                _symptomOutcomes.value = emptyList()
+                _symptomSegments.value = emptyList()
             } finally {
                 _correlationsLoading.value = false
             }
@@ -1903,44 +1969,66 @@ class InsightsViewModel : ViewModel() {
                 val base = BuildConfig.SUPABASE_URL.trimEnd('/')
                 val key = BuildConfig.SUPABASE_ANON_KEY
                 val client = OkHttpClient()
-                val parsed = withContext(Dispatchers.IO) {
-                    val url = "$base/rest/v1/daily_insights" +
+                val (parsed, dismissedKeys) = withContext(Dispatchers.IO) {
+                    val recsUrl = "$base/rest/v1/daily_insights" +
                         "?select=ai_recommendations" +
                         "&ai_recommendations=not.is.null" +
                         "&order=date.desc&limit=1"
-                    val req = Request.Builder().url(url)
+                    val recsReq = Request.Builder().url(recsUrl)
                         .addHeader("apikey", key)
                         .addHeader("Authorization", "Bearer $token")
                         .addHeader("Accept", "application/json")
                         .build()
-                    val res = client.newCall(req).execute()
-                    val body = res.body?.string() ?: "[]"
-                    val arr = JSONArray(body)
-                    if (arr.length() == 0) return@withContext AiRecommendations()
-                    val obj = arr.getJSONObject(0).optJSONObject("ai_recommendations")
-                        ?: return@withContext AiRecommendations()
+                    val recsBody = client.newCall(recsReq).execute().body?.string() ?: "[]"
+                    val recsArr = JSONArray(recsBody)
+                    val recsObj = if (recsArr.length() == 0) null
+                                  else recsArr.getJSONObject(0).optJSONObject("ai_recommendations")
 
-                    fun toMap(key: String): Map<String, String> {
-                        val inner = obj.optJSONObject(key) ?: return emptyMap()
-                        val out = mutableMapOf<String, String>()
+                    fun toItemMap(k: String): Map<String, AiRecommendationItem> {
+                        val inner = recsObj?.optJSONObject(k) ?: return emptyMap()
+                        val out = mutableMapOf<String, AiRecommendationItem>()
                         val it = inner.keys()
                         while (it.hasNext()) {
-                            val k = it.next()
-                            val v = inner.optString(k, "")
-                            if (v.isNotBlank()) out[k] = v
+                            val name = it.next()
+                            // Tolerate the old flat shape (string) and the new {text, evidence} object.
+                            val nested = inner.optJSONObject(name)
+                            if (nested != null) {
+                                val text = nested.optString("text", "")
+                                val evidence = nested.optString("evidence", "")
+                                if (text.isNotBlank()) out[name] = AiRecommendationItem(text, evidence)
+                            } else {
+                                val v = inner.optString(name, "")
+                                if (v.isNotBlank()) out[name] = AiRecommendationItem(v, "")
+                            }
                         }
                         return out
                     }
 
-                    AiRecommendations(
-                        triggers   = toMap("triggers"),
-                        prodromes  = toMap("prodromes"),
-                        medicines  = toMap("medicines"),
-                        reliefs    = toMap("reliefs"),
-                        activities = toMap("activities"),
+                    val recs = if (recsObj == null) AiRecommendations() else AiRecommendations(
+                        triggers   = toItemMap("triggers"),
+                        prodromes  = toItemMap("prodromes"),
+                        medicines  = toItemMap("medicines"),
+                        reliefs    = toItemMap("reliefs"),
+                        activities = toItemMap("activities"),
                     )
+
+                    val dismissUrl = "$base/rest/v1/dismissed_recommendations?select=category,name,evidence_hash"
+                    val dismissReq = Request.Builder().url(dismissUrl)
+                        .addHeader("apikey", key)
+                        .addHeader("Authorization", "Bearer $token")
+                        .addHeader("Accept", "application/json")
+                        .build()
+                    val dismissBody = client.newCall(dismissReq).execute().body?.string() ?: "[]"
+                    val dismissArr = JSONArray(dismissBody)
+                    val dismissed = mutableSetOf<String>()
+                    for (i in 0 until dismissArr.length()) {
+                        val row = dismissArr.getJSONObject(i)
+                        dismissed.add("${row.optString("category")}|${row.optString("name")}|${row.optString("evidence_hash")}")
+                    }
+                    Pair(recs, dismissed.toSet())
                 }
                 _aiRecommendations.value = parsed
+                _dismissedRecommendationKeys.value = dismissedKeys
             } catch (e: Exception) {
                 android.util.Log.w("InsightsVM", "loadAiRecommendations failed: ${e.message}")
                 _aiRecommendations.value = AiRecommendations()

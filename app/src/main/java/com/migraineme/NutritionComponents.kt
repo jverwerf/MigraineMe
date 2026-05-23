@@ -76,9 +76,13 @@ fun FoodSearchResultItem(
                     val gColor = when (foodRisks.gluten) {
                         "high" -> RiskColors.GlutenHigh; "medium" -> RiskColors.GlutenMedium; "low" -> RiskColors.GlutenLow; else -> null
                     }
+                    val hColor = when (foodRisks.histamine) {
+                        "high" -> RiskColors.HistamineHigh; "medium" -> RiskColors.HistamineMedium; "low" -> RiskColors.HistamineLow; else -> null
+                    }
                     tColor?.let { TyramineRiskBadge(it, foodRisks.tyramine) }
                     aColor?.let { AlcoholRiskBadge(it, foodRisks.alcohol) }
                     gColor?.let { GlutenRiskBadge(it, foodRisks.gluten) }
+                    hColor?.let { HistamineRiskBadge(it, foodRisks.histamine) }
                 } else if (isClassifyingRisks) {
                     Spacer(Modifier.width(6.dp))
                     CircularProgressIndicator(

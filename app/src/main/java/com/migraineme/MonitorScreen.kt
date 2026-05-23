@@ -187,7 +187,7 @@ fun MonitorScreen(
                 if (total <= 0) return "\u2014"
                 val registryKey = MetricRegistry.nutritionRegistryKey(metric)
                 val unit = MetricRegistry.unit(registryKey)
-                val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure")
+                val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure", "histamine_exposure")
                 if (isRisk) {
                     when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" }
                 } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
@@ -376,6 +376,11 @@ fun MonitorScreen(
                     )
                 } else if (cardConfig.isVisible(cardId)) {
                     when (cardId) {
+                        MonitorCardConfig.CARD_MIGRAINES -> {
+                            MigrainesMonitorCard(
+                                onClick = { navController.navigate(Routes.INSIGHTS_DETAIL) }
+                            )
+                        }
                         MonitorCardConfig.CARD_NUTRITION -> {
                             val nutDisplayKeys = remember { MetricDisplayStore.getDisplayMetrics(ctx, "nutrition") }
                             NutritionCard(

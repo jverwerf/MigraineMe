@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Central premium state manager. Merges two sources of truth:
  *
- * 1. Supabase `premium_status` table — owns the 30-day app-level free trial.
+ * 1. Supabase `premium_status` table — owns the 14-day app-level free trial.
  * 2. RevenueCat — owns paid subscription state (monthly/annual).
  *
  * Rule: if EITHER source says premium → user is premium.

@@ -68,6 +68,7 @@ class USDAFoodSearchService(private val context: Context) {
             tyramineExposure = if (!obj.has("tyramine_exposure") || obj.isNull("tyramine_exposure")) null else obj.optString("tyramine_exposure"),
             alcoholExposure = if (!obj.has("alcohol_exposure") || obj.isNull("alcohol_exposure")) null else obj.optString("alcohol_exposure"),
             glutenExposure = if (!obj.has("gluten_exposure") || obj.isNull("gluten_exposure")) null else obj.optString("gluten_exposure"),
+            histamineExposure = if (!obj.has("histamine_exposure") || obj.isNull("histamine_exposure")) null else obj.optString("histamine_exposure"),
             timestamp = obj.getString("timestamp"),
             source = obj.optString("source", "")
         )
@@ -389,6 +390,7 @@ class USDAFoodSearchService(private val context: Context) {
                     if (risks.tyramine != "none") append("\"tyramine_exposure\":\"${risks.tyramine}\",")
                     if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
                     if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
+                    if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
                 } catch (_: Exception) {}
 
                 // Remove trailing comma and close
@@ -489,6 +491,7 @@ class USDAFoodSearchService(private val context: Context) {
                     if (risks.tyramine != "none") append("\"tyramine_exposure\":\"${risks.tyramine}\",")
                     if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
                     if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
+                    if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
                 } catch (_: Exception) {}
 
                 if (endsWith(",")) deleteCharAt(length - 1)
@@ -621,6 +624,7 @@ class USDAFoodSearchService(private val context: Context) {
                     if (risks.tyramine != "none") append("\"tyramine_exposure\":\"${risks.tyramine}\",")
                     if (risks.alcohol != "none") append("\"alcohol_exposure\":\"${risks.alcohol}\",")
                     if (risks.gluten != "none") append("\"gluten_exposure\":\"${risks.gluten}\",")
+                    if (risks.histamine != "none") append("\"histamine_exposure\":\"${risks.histamine}\",")
                 } catch (_: Exception) {}
 
                 // Remove trailing comma and close
@@ -1112,6 +1116,7 @@ data class NutritionLogItem(
     val tyramineExposure: String?,
     val alcoholExposure: String?,
     val glutenExposure: String?,
+    val histamineExposure: String?,
     val timestamp: String,
     val source: String
 )
@@ -1205,6 +1210,9 @@ fun NutritionLogItem.metricValue(metric: String): Double? = when (metric) {
         "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
     }
     MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> when (glutenExposure) {
+        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
+    }
+    MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE -> when (histamineExposure) {
         "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
     }
     else -> null

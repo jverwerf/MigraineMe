@@ -98,6 +98,7 @@ object MetricPalette {
         "nutrition_daily::max_tyramine_exposure" to Color(0xFFEF5350),
         "nutrition_daily::max_alcohol_exposure" to Color(0xFFFF8F00),
         "nutrition_daily::max_gluten_exposure" to Color(0xFF1E88E5),
+        "nutrition_daily::max_histamine_exposure" to Color(0xFFAB47BC),
     )
 
     /**

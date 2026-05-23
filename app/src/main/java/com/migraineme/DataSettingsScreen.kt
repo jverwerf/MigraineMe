@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -71,6 +73,9 @@ fun DataSettingsScreen(
 
     // Refresh trigger
     var refreshTick by remember { mutableIntStateOf(0) }
+
+    // Search query
+    var searchQuery by remember { mutableStateOf("") }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Permission Launchers
@@ -227,9 +232,43 @@ fun DataSettingsScreen(
             }
 
             // ═══════════════════════════════════════════════════════════
+            // SEARCH BAR
+            // ═══════════════════════════════════════════════════════════
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search…", color = AppTheme.SubtleTextColor) },
+                leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = AppTheme.AccentPurple,
+                    focusedBorderColor = AppTheme.AccentPurple.copy(alpha = 0.5f),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
+                )
+            )
+
+            val q = searchQuery.trim()
+            val filteredSections = if (q.isBlank()) sections
+                else sections.mapNotNull { section ->
+                    val matched = section.rows.filter { it.collectedByLabel.contains(q, ignoreCase = true) }
+                    if (matched.isEmpty()) null else section.copy(rows = matched)
+                }
+
+            // ═══════════════════════════════════════════════════════════
             // SECTIONS — one BaseCard per category
             // ═══════════════════════════════════════════════════════════
-            for (section in sections) {
+            for (section in filteredSections) {
                 BaseCard {
                     // Section header
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -2031,6 +2031,7 @@ class SupabaseDbService(
             "nutrition_daily|max_tyramine_exposure" to "nutrition:tyramine_exposure",
             "nutrition_daily|max_alcohol_exposure" to "nutrition:alcohol_exposure",
             "nutrition_daily|max_gluten_exposure" to "nutrition:gluten_exposure",
+            "nutrition_daily|max_histamine_exposure" to "nutrition:histamine_exposure",
         )
     }
 }

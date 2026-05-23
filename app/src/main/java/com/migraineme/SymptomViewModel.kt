@@ -19,6 +19,9 @@ class SymptomViewModel : ViewModel() {
     private val _accompanying = MutableStateFlow<List<SupabaseDbService.UserSymptomRow>>(emptyList())
     val accompanying: StateFlow<List<SupabaseDbService.UserSymptomRow>> = _accompanying
 
+    private val _postdrome = MutableStateFlow<List<SupabaseDbService.UserSymptomRow>>(emptyList())
+    val postdrome: StateFlow<List<SupabaseDbService.UserSymptomRow>> = _postdrome
+
     private val _pool = MutableStateFlow<List<SupabaseDbService.UserSymptomRow>>(emptyList())
     val pool: StateFlow<List<SupabaseDbService.UserSymptomRow>> = _pool
 
@@ -36,7 +39,8 @@ class SymptomViewModel : ViewModel() {
                 val prefs = db.getSymptomPrefs(accessToken)
                 _pool.value = all
                 _painCharacter.value = all.filter { it.category == "pain_character" }
-                _accompanying.value = all.filter { it.category != "pain_character" }
+                _accompanying.value = all.filter { it.category != "pain_character" && it.category != "Postdrome" }
+                _postdrome.value = all.filter { it.category == "Postdrome" }
                 _favorites.value = prefs.filter { it.status == "frequent" }.sortedBy { it.position }
                 _favoriteIds.value = _favorites.value.map { it.symptomId }.toSet()
             } catch (e: Exception) {
@@ -44,6 +48,7 @@ class SymptomViewModel : ViewModel() {
                 _pool.value = emptyList()
                 _painCharacter.value = emptyList()
                 _accompanying.value = emptyList()
+                _postdrome.value = emptyList()
                 _favorites.value = emptyList()
                 _favoriteIds.value = emptySet()
             }

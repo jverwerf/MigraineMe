@@ -90,6 +90,30 @@ fun WheatIcon(color: Color, size: Dp = 13.dp) {
 }
 
 /**
+ * Geometric flask — Erlenmeyer silhouette. Represents histamine.
+ */
+@Composable
+fun FlaskIcon(color: Color, size: Dp = 13.dp) {
+    Canvas(modifier = Modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        // Neck
+        drawRect(color, topLeft = Offset(w * 0.40f, h * 0.10f), size = Size(w * 0.20f, h * 0.30f))
+        // Body (triangle flask)
+        val body = Path().apply {
+            moveTo(w * 0.40f, h * 0.40f)
+            lineTo(w * 0.60f, h * 0.40f)
+            lineTo(w * 0.88f, h * 0.88f)
+            lineTo(w * 0.12f, h * 0.88f)
+            close()
+        }
+        drawPath(body, color)
+        // Rim cap
+        drawRect(color, topLeft = Offset(w * 0.34f, h * 0.06f), size = Size(w * 0.32f, h * 0.08f))
+    }
+}
+
+/**
  * Vertical risk bar — height indicates level.
  */
 @Composable
@@ -140,6 +164,17 @@ fun GlutenRiskBadge(color: Color, level: String) {
     Row(verticalAlignment = Alignment.Bottom) {
         Spacer(Modifier.width(5.dp))
         WheatIcon(color, 13.dp)
+        Spacer(Modifier.width(1.dp))
+        RiskBar(color, level)
+    }
+}
+
+@Composable
+fun HistamineRiskBadge(color: Color, level: String) {
+    if (level == "none") return
+    Row(verticalAlignment = Alignment.Bottom) {
+        Spacer(Modifier.width(5.dp))
+        FlaskIcon(color, 13.dp)
         Spacer(Modifier.width(1.dp))
         RiskBar(color, level)
     }

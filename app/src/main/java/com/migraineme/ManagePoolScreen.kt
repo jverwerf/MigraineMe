@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
@@ -106,6 +107,7 @@ fun ManagePoolScreen(
     val scrollState = rememberScrollState()
     var showAddDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<PoolItem?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     // ── Local change tracking (prediction + threshold) ──
@@ -169,6 +171,31 @@ fun ManagePoolScreen(
                 Text(effectiveConfig.subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
             }
 
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search…", color = AppTheme.SubtleTextColor) },
+                leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = effectiveConfig.iconColor,
+                    focusedBorderColor = effectiveConfig.iconColor.copy(alpha = 0.5f),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
+                )
+            )
+
             // Pool card
             BaseCard {
                 Row(
@@ -182,17 +209,26 @@ fun ManagePoolScreen(
                     }
                 }
 
-                if (effectiveConfig.items.isEmpty()) {
-                    Text("No items yet — tap + to add", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                val visibleItems = if (searchQuery.isBlank()) effectiveConfig.items
+                    else effectiveConfig.items.filter { it.label.contains(searchQuery.trim(), ignoreCase = true) }
+                val isSearching = searchQuery.isNotBlank()
+
+                if (visibleItems.isEmpty()) {
+                    Text(
+                        if (isSearching) "No matches for \"${searchQuery.trim()}\""
+                        else "No items yet — tap + to add",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 } else {
                     // Group items by category, with uncategorized at the end
-                    val grouped = effectiveConfig.items.groupBy { it.category ?: "Other" }
+                    val grouped = visibleItems.groupBy { it.category ?: "Other" }
                     val sortedCategories = grouped.keys.sortedWith(compareBy { if (it == "Other") "zzz" else it })
                     var expandedCategories by remember { mutableStateOf(setOf<String>()) }
                     var expandedGroups by remember { mutableStateOf(setOf<String>()) }
 
                     sortedCategories.forEach { category ->
-                        val isExpanded = category in expandedCategories
+                        val isExpanded = isSearching || category in expandedCategories
                         val categoryItems = grouped[category] ?: emptyList()
                         val itemCount = categoryItems.size
 

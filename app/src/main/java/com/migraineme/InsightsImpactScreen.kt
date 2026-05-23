@@ -31,6 +31,7 @@ fun InsightsImpactScreen(
     val severityCounts by vm.severityCounts.collectAsState()
     val totalMigraineCount by vm.totalMigraineCount.collectAsState()
     val migraineSpans by vm.migraines.collectAsState()
+    val symptomStats by vm.symptomStats.collectAsState()
     val overallAvgSeverity = remember(migraineSpans) {
         val severities = migraineSpans.mapNotNull { it.severity }
         if (severities.isEmpty()) 5f else severities.average().toFloat()
@@ -86,6 +87,56 @@ fun InsightsImpactScreen(
                             modifier = Modifier.weight(1f),
                             barHeight = 60.dp,
                         )
+                    }
+                }
+            }
+
+            // ── Card 1b: Your Symptoms (Phase 2a) ──
+            if (symptomStats.isNotEmpty()) {
+                BaseCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Canvas(Modifier.size(24.dp)) { HubIcons.run { drawRipple(Color(0xFFCE93D8)) } }
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text("Your Symptoms", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text("How often each symptom shows up, and how bad those attacks are",
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    symptomStats.take(10).forEach { s ->
+                        val pct = (s.pctOfAttacks * 100f).toInt()
+                        val sev = s.avgSeverity
+                        val sevColor = if (sev == null) AppTheme.SubtleTextColor
+                            else if (sev >= 7f) Color(0xFFE57373)
+                            else if (sev >= 4f) Color(0xFFFFB74D)
+                            else Color(0xFF81C784)
+                        Column(Modifier.padding(vertical = 4.dp)) {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(s.symptomLabel, color = Color.White,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                    overflow = TextOverflow.Ellipsis, maxLines = 1, modifier = Modifier.weight(1f))
+                                Text("$pct% · ${s.totalCount} attacks",
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (sev != null) {
+                                    Text("Avg severity ", color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall)
+                                    Text(String.format("%.1f", sev), color = sevColor,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    Spacer(Modifier.width(12.dp))
+                                }
+                                val dur = s.avgDurationHours
+                                if (dur != null) {
+                                    Text("Avg duration ", color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall)
+                                    Text(String.format("%.1fh", dur), color = AppTheme.TitleColor,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                }
+                            }
+                        }
                     }
                 }
             }

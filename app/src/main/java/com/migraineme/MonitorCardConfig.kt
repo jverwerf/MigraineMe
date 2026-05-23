@@ -24,15 +24,17 @@ data class MonitorCardConfig(
         const val CARD_MEDICINES = "medicines"
         const val CARD_MENSTRUATION = "menstruation"
         const val CARD_RISK = "risk"
+        const val CARD_MIGRAINES = "migraines"
 
         val DEFAULT_ORDER = listOf(
             CARD_RISK,
+            CARD_MIGRAINES,
+            CARD_MEDICINES,
             CARD_NUTRITION,
             CARD_ENVIRONMENT,
             CARD_PHYSICAL,
             CARD_SLEEP,
             CARD_MENTAL,
-            CARD_MEDICINES,
             CARD_MENSTRUATION
         )
 
@@ -44,7 +46,8 @@ data class MonitorCardConfig(
             CARD_MENTAL to "Mental Health",
             CARD_ENVIRONMENT to "Environment",
             CARD_MEDICINES to "Medicines",
-            CARD_MENSTRUATION to "Menstruation"
+            CARD_MENSTRUATION to "Menstruation",
+            CARD_MIGRAINES to "Migraines"
         )
         
         // Nutrition metric identifiers
@@ -85,6 +88,7 @@ data class MonitorCardConfig(
         const val METRIC_TYRAMINE_EXPOSURE = "tyramine_exposure"
         const val METRIC_ALCOHOL_EXPOSURE = "alcohol_exposure"
         const val METRIC_GLUTEN_EXPOSURE = "gluten_exposure"
+        const val METRIC_HISTAMINE_EXPOSURE = "histamine_exposure"
         
         val DEFAULT_NUTRITION_METRICS = listOf(
             METRIC_CALORIES,
@@ -129,7 +133,8 @@ data class MonitorCardConfig(
             METRIC_ZINC,
             METRIC_TYRAMINE_EXPOSURE,
             METRIC_ALCOHOL_EXPOSURE,
-            METRIC_GLUTEN_EXPOSURE
+            METRIC_GLUTEN_EXPOSURE,
+            METRIC_HISTAMINE_EXPOSURE
         )
         
         val NUTRITION_METRIC_LABELS = mapOf(
@@ -169,7 +174,8 @@ data class MonitorCardConfig(
             METRIC_PANTOTHENIC_ACID to "Pantothenic (B5)",
             METRIC_TYRAMINE_EXPOSURE to "Tyramine",
             METRIC_ALCOHOL_EXPOSURE to "Alcohol",
-            METRIC_GLUTEN_EXPOSURE to "Gluten"
+            METRIC_GLUTEN_EXPOSURE to "Gluten",
+            METRIC_HISTAMINE_EXPOSURE to "Histamine"
         )
         
         val NUTRITION_METRIC_UNITS = mapOf(
@@ -209,11 +215,12 @@ data class MonitorCardConfig(
             METRIC_PANTOTHENIC_ACID to "mg",
             METRIC_TYRAMINE_EXPOSURE to "",
             METRIC_ALCOHOL_EXPOSURE to "",
-            METRIC_GLUTEN_EXPOSURE to ""
+            METRIC_GLUTEN_EXPOSURE to "",
+            METRIC_HISTAMINE_EXPOSURE to ""
         )
 
         /** Set of categorical risk metrics (use MAX not SUM, display as labels) */
-        val RISK_METRICS = setOf(METRIC_TYRAMINE_EXPOSURE, METRIC_ALCOHOL_EXPOSURE, METRIC_GLUTEN_EXPOSURE)
+        val RISK_METRICS = setOf(METRIC_TYRAMINE_EXPOSURE, METRIC_ALCOHOL_EXPOSURE, METRIC_GLUTEN_EXPOSURE, METRIC_HISTAMINE_EXPOSURE)
 
         fun isRiskMetric(metric: String) = metric in RISK_METRICS
     }

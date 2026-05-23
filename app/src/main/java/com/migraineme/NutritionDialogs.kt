@@ -51,6 +51,7 @@ fun AddFoodDialog(
     tyramineRisk: String? = null,
     alcoholRisk: String? = null,
     glutenRisk: String? = null,
+    histamineRisk: String? = null,
     isClassifyingRisks: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
@@ -233,6 +234,7 @@ fun AddFoodDialog(
                         DialogRiskRowWithIcon("Tyramine", tyramineRisk, RiskColors.TyramineHigh, RiskColors.TyramineMedium, RiskColors.TyramineLow) { c, s -> CheeseIcon(c, s) }
                         DialogRiskRowWithIcon("Alcohol", alcoholRisk, RiskColors.AlcoholHigh, RiskColors.AlcoholMedium, RiskColors.AlcoholLow) { c, s -> WineGlassIcon(c, s) }
                         DialogRiskRowWithIcon("Gluten", glutenRisk, RiskColors.GlutenHigh, RiskColors.GlutenMedium, RiskColors.GlutenLow) { c, s -> WheatIcon(c, s) }
+                        DialogRiskRowWithIcon("Histamine", histamineRisk, RiskColors.HistamineHigh, RiskColors.HistamineMedium, RiskColors.HistamineLow) { c, s -> FlaskIcon(c, s) }
                     }
 
                     // All Nutrients divider

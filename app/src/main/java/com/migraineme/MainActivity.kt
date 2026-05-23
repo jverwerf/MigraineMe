@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Link
@@ -189,6 +190,8 @@ object Routes {
     const val LOGIN = "login"
     const val SIGNUP = "signup"
     const val LOGOUT = "logout"
+    const val HELP = "help"
+    const val HELP_ARTICLE = "help_article/{slug}"
 
     const val EDIT_MIGRAINE = "edit_migraine"
     const val EDIT_TRIGGER = "edit_trigger"
@@ -211,6 +214,7 @@ object Routes {
     const val MANAGE_ACTIVITIES = "manage_activities"
     const val MISSED_ACTIVITIES = "missed_activities"
     const val MANAGE_MISSED_ACTIVITIES = "manage_missed_activities"
+    const val POSTDROMES = "postdromes"
     const val TIMING = "timing"
     const val PAINT_PICTURE = "paint_picture"
 
@@ -609,7 +613,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
-        DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout)
+        DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout),
+        DrawerItem("Help", Routes.HELP, Icons.Outlined.HelpOutline)
     )
 
     ModalNavigationDrawer(
@@ -843,6 +848,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.LOGIN -> "Sign in"
                                     Routes.SIGNUP -> "Create account"
                                     Routes.PROFILE -> "Profile"
+                                    Routes.HELP -> "Help"
                                     Routes.DATA -> "Data"
                                     Routes.MENSTRUATION_SETTINGS -> "Menstruation Settings"
                                     Routes.LOGOUT -> "Logout"
@@ -877,6 +883,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     else -> when {
                                         current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true ->
                                             backStack?.arguments?.getString("logType") ?: "Breakdown"
+                                        current?.startsWith("help_article") == true -> "Help"
                                         else -> ""
                                     }
                                 }
@@ -1375,6 +1382,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable(Routes.ACTIVITIES) {
                         val activityVm: ActivityViewModel = viewModel()
                         ActivitiesScreen(navController = nav, vm = activityVm, authVm = authVm, logVm = logVm, onClose = wizardClose)
+                    }
+                    composable(Routes.POSTDROMES) {
+                        val symptomVm: SymptomViewModel = viewModel()
+                        PostdromesScreen(navController = nav, authVm = authVm, vm = logVm, symptomVm = symptomVm, onClose = wizardClose)
                     }
                     composable(Routes.MISSED_ACTIVITIES) {
                         val missedVm: MissedActivityViewModel = viewModel()
@@ -2014,6 +2025,20 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.DATA) {
                         DataSettingsScreen(onBack = { nav.popBackStack() }, onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) })
+                    }
+
+                    composable(Routes.HELP) {
+                        HelpScreen(
+                            onBack = { nav.popBackStack() },
+                            onOpenArticle = { article ->
+                                nav.navigate("help_article/${article.slug}") { launchSingleTop = true }
+                            }
+                        )
+                    }
+
+                    composable("help_article/{slug}") { entry ->
+                        val slug = entry.arguments?.getString("slug").orEmpty()
+                        HelpArticleDetailRoute(slug = slug, onBack = { nav.popBackStack() })
                     }
 
                     composable(Routes.RISK_WEIGHTS) {

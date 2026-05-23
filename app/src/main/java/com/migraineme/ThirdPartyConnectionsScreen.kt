@@ -1136,27 +1136,23 @@ fun ThirdPartyConnectionsScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Garmin Row (OAuth health-data connect + watch-app pairing inline)
-            Column {
-                ConnectionRowLogoOnly(
-                    logoResId = garminLogoResId,
-                    fallbackLetter = "G",
-                    isConnected = hasGarmin.value,
-                    onClick = {
-                        if (!hasGarmin.value) {
-                            if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
-                                context.getSharedPreferences("garmin_oauth", Context.MODE_PRIVATE)
-                                    .edit().putBoolean("return_to_setup", true).apply()
-                            }
-                            activity?.let { GarminAuthService().startAuth(it) }
+            // Garmin: logo on left, two same-width buttons stacked tight on
+            // the right (Connected + Pair code). Mirrors iOS GarminConnectionCard.
+            GarminConnectionCard(
+                logoResId = garminLogoResId,
+                isConnected = hasGarmin.value,
+                onConnect = {
+                    if (!hasGarmin.value) {
+                        if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
+                            context.getSharedPreferences("garmin_oauth", Context.MODE_PRIVATE)
+                                .edit().putBoolean("return_to_setup", true).apply()
                         }
-                    },
-                    onLongClick = {
-                        if (hasGarmin.value) showGarminDisconnectDialog.value = true
+                        activity?.let { GarminAuthService().startAuth(it) }
+                    } else {
+                        showGarminDisconnectDialog.value = true
                     }
-                )
-                WatchPairingInline()
-            }
+                }
+            )
             } // end wearables_group spotlight
 
             Spacer(Modifier.height(32.dp))
@@ -1375,8 +1371,12 @@ private fun ConnectionRow(
 object GarminDevices {
     val sections: List<Pair<String, List<String>>> = listOf(
         "fenix" to listOf(
+            "fenix 8 Pro 47mm", "fenix 8 Solar 51mm", "fenix 8 Solar 47mm",
+            "fenix 8 47mm", "fenix 8 43mm",
             "fenix 8 Pro", "fenix 8 Solar", "fenix 8",
+            "fenix E",
             "fenix 7X Pro", "fenix 7 Pro", "fenix 7S Pro",
+            "fenix 7X Pro No-Wifi", "fenix 7 Pro No-Wifi",
             "fenix 7X", "fenix 7", "fenix 7S",
             "fenix 6X Pro", "fenix 6 Pro", "fenix 6S Pro",
             "fenix 6X", "fenix 6", "fenix 6S",
@@ -1385,15 +1385,21 @@ object GarminDevices {
             "fenix 3 HR", "fenix 3",
         ),
         "epix" to listOf(
+            "epix Pro (Gen 2) 51mm", "epix Pro (Gen 2) 47mm", "epix Pro (Gen 2) 42mm",
             "epix Pro (Gen 2)", "epix (Gen 2)", "epix",
         ),
         "Forerunner" to listOf(
             "Forerunner 970", "Forerunner 965", "Forerunner 955", "Forerunner 945 LTE", "Forerunner 945",
             "Forerunner 935", "Forerunner 745", "Forerunner 735XT",
-            "Forerunner 570", "Forerunner 265", "Forerunner 255", "Forerunner 245", "Forerunner 235", "Forerunner 230",
-            "Forerunner 165", "Forerunner 158", "Forerunner 55", "Forerunner 45", "Forerunner 35", "Forerunner 30",
+            "Forerunner 570 47mm", "Forerunner 570 42mm",
+            "Forerunner 265", "Forerunner 265S", "Forerunner 255", "Forerunner 255S", "Forerunner 255 Music", "Forerunner 255S Music",
+            "Forerunner 245", "Forerunner 235", "Forerunner 230",
+            "Forerunner 170", "Forerunner 170 Music", "Forerunner 165", "Forerunner 165 Music",
+            "Forerunner 158", "Forerunner 70", "Forerunner 55", "Forerunner 45", "Forerunner 35", "Forerunner 30",
         ),
         "Venu" to listOf(
+            "Venu X1", "Venu D",
+            "Venu 4 45mm", "Venu 4 41mm",
             "Venu 3S", "Venu 3", "Venu 2 Plus", "Venu 2S", "Venu 2",
             "Venu Sq 2 Music", "Venu Sq 2", "Venu Sq Music", "Venu Sq", "Venu",
         ),
@@ -1412,20 +1418,26 @@ object GarminDevices {
             "vivofit 4", "vivofit 3", "vivofit jr. 3", "vivofit jr. 2", "vivofit jr.", "vivofit",
         ),
         "Instinct" to listOf(
-            "Instinct 3 Solar", "Instinct 3",
-            "Instinct 2X Solar", "Instinct 2S Solar", "Instinct 2 Solar", "Instinct 2S", "Instinct 2",
-            "Instinct Crossover Solar", "Instinct Crossover",
+            "Instinct E 45mm", "Instinct E 40mm",
+            "Instinct 3 AMOLED 50mm", "Instinct 3 AMOLED 45mm",
+            "Instinct 3 Solar 45mm", "Instinct 3 Solar", "Instinct 3",
+            "Instinct 2X Solar", "Instinct 2S Solar", "Instinct 2 Solar",
+            "Instinct 2X", "Instinct 2S", "Instinct 2",
+            "Instinct Crossover AMOLED", "Instinct Crossover Solar", "Instinct Crossover",
             "Instinct Solar", "Instinct Tactical", "Instinct Esports", "Instinct",
         ),
         "MARQ" to listOf(
+            "MARQ 2 Aviator", "MARQ 2",
             "MARQ Adventurer (Gen 2)", "MARQ Athlete (Gen 2)", "MARQ Aviator (Gen 2)",
             "MARQ Captain (Gen 2)", "MARQ Commander (Gen 2)", "MARQ Driver (Gen 2)", "MARQ Golfer (Gen 2)",
             "MARQ Carbon", "MARQ Adventurer", "MARQ Athlete", "MARQ Aviator",
             "MARQ Captain", "MARQ Commander", "MARQ Driver", "MARQ Expedition", "MARQ Golfer",
         ),
         "Descent" to listOf(
-            "Descent Mk3i", "Descent Mk3", "Descent Mk2i", "Descent Mk2", "Descent Mk2S",
-            "Descent G1 Solar", "Descent G1",
+            "Descent Mk3 51mm", "Descent Mk3 43mm",
+            "Descent Mk3i", "Descent Mk3",
+            "Descent Mk2i", "Descent Mk2", "Descent Mk2S",
+            "Descent G2", "Descent G1 Solar", "Descent G1",
         ),
         "tactix" to listOf(
             "tactix 7 AMOLED", "tactix 7 Pro", "tactix 7", "tactix Delta Solar", "tactix Delta",
@@ -1435,10 +1447,13 @@ object GarminDevices {
             "Enduro 3", "Enduro 2", "Enduro",
         ),
         "D2 (Aviator)" to listOf(
-            "D2 Mach 1 Pro", "D2 Mach 1", "D2 Air X10", "D2 Delta PX", "D2 Delta S", "D2 Delta", "D2 Charlie", "D2 Bravo",
+            "D2 Mach 2 Pro", "D2 Mach 2",
+            "D2 Mach 1 Pro", "D2 Mach 1",
+            "D2 Air X10", "D2 Air", "D2 Delta PX", "D2 Delta S", "D2 Delta", "D2 Charlie", "D2 Bravo",
         ),
         "Approach (Golf)" to listOf(
             "Approach S70 47mm", "Approach S70 42mm", "Approach S62", "Approach S60",
+            "Approach S50",
             "Approach S42", "Approach S40", "Approach S20", "Approach S12",
         ),
         "Lily" to listOf(

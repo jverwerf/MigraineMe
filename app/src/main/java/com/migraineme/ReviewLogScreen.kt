@@ -27,6 +27,12 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
     val authState by authVm.state.collectAsState()
     val draft by vm.draft.collectAsState()
     val scrollState = rememberScrollState()
+    val symptomVm: SymptomViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val postdromePool by symptomVm.postdrome.collectAsState()
+    LaunchedEffect(authState.accessToken) {
+        authState.accessToken?.let { symptomVm.loadAll(it) }
+    }
+    val postdromeLabelSet = postdromePool.map { it.label }.toSet()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -60,13 +66,17 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                 )
             }
 
+            // Split symptoms into during-attack vs postdrome based on pool category
+            val attackSymptoms = draft.migraine?.symptoms?.filter { it !in postdromeLabelSet } ?: emptyList()
+            val postdromeSymptoms = draft.migraine?.symptoms?.filter { it in postdromeLabelSet } ?: emptyList()
+
             // Migraine
             draft.migraine?.let { m ->
                 ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = "Migraine", iconTint = AppTheme.AccentPink) {
-                    if (m.symptoms.isNotEmpty()) {
+                    if (attackSymptoms.isNotEmpty()) {
                         Text("Symptoms", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Text(
-                            m.symptoms.joinToString(" • "),
+                            attackSymptoms.joinToString(" • "),
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -132,6 +142,17 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                     draft.activities.forEach { act ->
                         ReviewRow(act.type, formatIsoDdMmYyHm(act.startAtIso))
                     }
+                }
+            }
+
+            // Postdrome
+            if (postdromeSymptoms.isNotEmpty()) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = "Postdrome (${postdromeSymptoms.size})", iconTint = Color(0xFFCE93D8)) {
+                    Text(
+                        postdromeSymptoms.joinToString(" • "),
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
 

@@ -7,3 +7,7 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+
+# macOS AppleDouble metadata (created on exFAT)
+._*
+.DS_Store

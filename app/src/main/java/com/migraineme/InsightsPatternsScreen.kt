@@ -23,6 +23,7 @@ fun InsightsPatternsScreen(
 ) {
     val correlationStats by vm.correlationStats.collectAsState()
     val correlationsLoading by vm.correlationsLoading.collectAsState()
+    val symptomOutcomes by vm.symptomOutcomes.collectAsState()
 
     val significantCorrelations = remember(correlationStats) {
         correlationStats.filter { it.isSignificant() }
@@ -66,6 +67,11 @@ fun InsightsPatternsScreen(
                 TopPatternsCard(triggerCorrelations, metricCorrelations, interactionCorrelations)
             }
 
+            // Per-trigger symptom profile (Phase 2b)
+            if (symptomOutcomes.isNotEmpty()) {
+                TriggerSymptomProfileCard(symptomOutcomes)
+            }
+
             if (!correlationsLoading && allPatterns.isEmpty() && interactionCorrelations.isEmpty()) {
                 BaseCard {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
@@ -77,6 +83,49 @@ fun InsightsPatternsScreen(
                         Text("Log more migraines and your patterns will appear here.",
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.CorrelationStat>) {
+    val grouped = remember(rows) {
+        rows.groupBy { it.factorName }
+            .map { (name, list) -> name to list.sortedByDescending { it.liftRatio } }
+            .sortedByDescending { it.second.firstOrNull()?.liftRatio ?: 0f }
+    }
+    BaseCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.width(2.dp))
+            Column {
+                Text("What These Triggers Do to You", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("The symptoms that tend to follow each trigger",
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        grouped.take(6).forEach { (trigger, list) ->
+            Column(Modifier.padding(vertical = 4.dp)) {
+                Text(trigger, color = Color.White,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+                list.take(4).forEach { stat ->
+                    val condPct = stat.pctMigraineWindows
+                    val baselinePct = stat.pctControlWindows
+                    Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("→ ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(stat.symptomOutcome ?: "", color = Color.White,
+                            style = MaterialTheme.typography.bodySmall, maxLines = 1,
+                            modifier = Modifier.weight(1f))
+                        Text(String.format("%.1f×", stat.liftRatio),
+                            color = if (stat.liftRatio >= 2f) Color(0xFFE57373) else if (stat.liftRatio >= 1.5f) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        Spacer(Modifier.width(6.dp))
+                        Text("${condPct.toInt()}% vs ${baselinePct.toInt()}%",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

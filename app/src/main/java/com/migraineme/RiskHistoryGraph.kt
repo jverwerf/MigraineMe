@@ -38,9 +38,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -48,8 +51,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.time.LocalDate
 
 private data class RiskGraphDay(val date: String, val values: Map<String, Float>)
@@ -66,6 +74,7 @@ private data class RiskGraphResult(
     val allMax: Map<String, Float>,
     val templates: List<MetricTemplate>,
     val labelToChipKeys: Map<String, Set<String>>, // lowercase label/group → set of chip keys
+    val triggersByDate: Map<String, List<ParsedTrigger>>,
 )
 
 private val RISK_COLOR = Color(0xFFEF5350)
@@ -95,6 +104,7 @@ fun RiskHistoryGraph(
     var allMax by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
     var templates by remember { mutableStateOf<List<MetricTemplate>>(emptyList()) }
     var labelToChipKeys by remember { mutableStateOf<Map<String, Set<String>>>(emptyMap()) }
+    var triggersByDate by remember { mutableStateOf<Map<String, List<ParsedTrigger>>>(emptyMap()) }
     var isLoading by remember { mutableStateOf(true) }
     var selectedMetrics by remember { mutableStateOf<Set<String>>(setOf("risk:score")) }
     var visibleHubTypes by remember { mutableStateOf(setOf(0, 1, 2, 3, 4, 5, 6)) }
@@ -104,6 +114,10 @@ fun RiskHistoryGraph(
     data class IconHitBox(val x: Float, val y: Float, val typeIdx: Int, val date: String)
     var iconHitBoxes by remember { mutableStateOf<List<IconHitBox>>(emptyList()) }
     var tappedIcon by remember { mutableStateOf<IconHitBox?>(null) }
+    // Tooltip for tapped trigger bar segment
+    data class BarHitBox(val x: Float, val y: Float, val w: Float, val h: Float, val date: String, val trigger: ParsedTrigger)
+    var barHitBoxes by remember { mutableStateOf<List<BarHitBox>>(emptyList()) }
+    var tappedBar by remember { mutableStateOf<BarHitBox?>(null) }
 
     LaunchedEffect(days, endDate) {
         isLoading = true
@@ -111,6 +125,7 @@ fun RiskHistoryGraph(
         val result = loadRiskGraphData(context, days, endDate)
         graphDays = result.days; allMin = result.allMin; allMax = result.allMax
         templates = result.templates; labelToChipKeys = result.labelToChipKeys
+        triggersByDate = result.triggersByDate
         // Load hub item names per date
         withContext(Dispatchers.IO) {
                 val token = SessionStore.getValidAccessToken(context) ?: return@withContext
@@ -199,16 +214,9 @@ fun RiskHistoryGraph(
         list.toList()
     }
 
-    // Pre-select chips matching contributor names via label/displayGroup lookup
-    LaunchedEffect(labelToChipKeys, highlightContributors) {
-        if (highlightContributors.isNotEmpty() && labelToChipKeys.isNotEmpty()) {
-            val matched = mutableSetOf("risk:score")
-            for (name in highlightContributors) {
-                labelToChipKeys[name.lowercase()]?.let { matched.addAll(it) }
-            }
-            if (matched.size > 1) selectedMetrics = matched
-        }
-    }
+    // Contributors are rendered as stacked bars under the risk-score line per day —
+    // we deliberately don't auto-pre-select extra metric chips here. Risk Score stays
+    // the only pre-selected chip; the user opts into anything else manually.
 
     val daysWithData = graphDays.filter { it.values.isNotEmpty() }
     val isNormalized = selectedMetrics.size >= 2
@@ -302,16 +310,27 @@ fun RiskHistoryGraph(
                 Canvas(
                     Modifier
                         .fillMaxSize()
-                        .pointerInput(daysWithData, visibleHubTypes) {
+                        .pointerInput(daysWithData, visibleHubTypes, barHitBoxes) {
                             detectTapGestures { tap ->
+                                // Bar segments first — exact rect hit, takes priority over icons
+                                val barHit = barHitBoxes.firstOrNull { b ->
+                                    tap.x >= b.x && tap.x <= b.x + b.w && tap.y >= b.y && tap.y <= b.y + b.h
+                                }
+                                if (barHit != null) {
+                                    tappedBar = if (tappedBar == barHit) null else barHit
+                                    tappedIcon = null
+                                    return@detectTapGestures
+                                }
                                 val hitRadius = 16f
                                 val hit = iconHitBoxes.minByOrNull {
                                     kotlin.math.hypot((it.x - tap.x).toDouble(), (it.y - tap.y).toDouble())
                                 }
                                 if (hit != null && kotlin.math.hypot((hit.x - tap.x).toDouble(), (hit.y - tap.y).toDouble()) < hitRadius * 2) {
                                     tappedIcon = if (tappedIcon == hit) null else hit
+                                    tappedBar = null
                                 } else {
                                     tappedIcon = null
+                                    tappedBar = null
                                 }
                             }
                         }
@@ -353,6 +372,82 @@ fun RiskHistoryGraph(
                         )
                     }
                 }
+
+                // Stacked contributor bars under the risk-score dots (one bar per day).
+                // Each bar's total height equals the day's risk score (matches the line dot Y),
+                // divided into segments per contributor, sized proportional to each contributor's
+                // points and coloured by severity. Drawn before the line so dots stay visible.
+                val newBarHitBoxes = mutableListOf<BarHitBox>()
+                val showBars = !isNormalized && "risk:score" in selectedMetrics && triggersByDate.isNotEmpty()
+                if (showBars) {
+                    val slotForBars = if (n <= 1) w else w / (n - 1).toFloat()
+                    val barW = (slotForBars * 0.55f).coerceIn(10f, 36f)
+                    val labelPaint = android.graphics.Paint().apply {
+                        isAntiAlias = true
+                        textAlign = android.graphics.Paint.Align.CENTER
+                        textSize = 6.sp.toPx()
+                        color = android.graphics.Color.WHITE
+                    }
+                    val baselineY = yZ(0f)
+                    for (i in daysWithData.indices) {
+                        val day = daysWithData[i]
+                        val triggers = triggersByDate[day.date] ?: continue
+                        if (triggers.isEmpty()) continue
+                        val riskVal = day.values["risk:score"] ?: continue
+                        if (riskVal <= 0f) continue
+                        val barTopY = yZ(riskVal)
+                        val totalH = baselineY - barTopY
+                        if (totalH < 2f) continue
+                        val totalScore = triggers.sumOf { it.score.coerceAtLeast(0) }
+                        if (totalScore <= 0) continue
+                        val cx = xFor(i)
+                        val barLeft = cx - barW / 2f
+                        var stackBottom = baselineY
+                        for (t in triggers) {
+                            val s = t.score.coerceAtLeast(0)
+                            if (s == 0) continue
+                            val segH = totalH * (s.toFloat() / totalScore)
+                            val segTop = stackBottom - segH
+                            val fill = when (t.severity.uppercase()) {
+                                "HIGH" -> Color(0xFFEF5350)
+                                "MILD" -> Color(0xFFFFB74D)
+                                else   -> Color(0xFF81C784)
+                            }
+                            drawRect(fill.copy(alpha = 0.55f), Offset(barLeft, segTop), androidx.compose.ui.geometry.Size(barW, segH))
+                            drawRect(fill, Offset(barLeft, segTop), androidx.compose.ui.geometry.Size(barW, segH), style = Stroke(width = 0.8f))
+                            // Vertical trigger name — rotated -90° so it reads bottom-to-top inside
+                            // the segment. Truncates against segment HEIGHT (long axis) instead
+                            // of bar width, so narrow bars can still show legible labels.
+                            if (segH >= 16f && barW >= 8f) {
+                                drawIntoCanvas { canvas ->
+                                    val maxTextLen = segH - 4f
+                                    val truncated = run {
+                                        val txt = t.name
+                                        if (labelPaint.measureText(txt) <= maxTextLen) txt
+                                        else {
+                                            var end = txt.length
+                                            while (end > 1 && labelPaint.measureText(txt.substring(0, end) + "…") > maxTextLen) end--
+                                            if (end <= 1) "" else txt.substring(0, end) + "…"
+                                        }
+                                    }
+                                    if (truncated.isNotEmpty()) {
+                                        val segCenterY = segTop + segH / 2f
+                                        val nc = canvas.nativeCanvas
+                                        nc.save()
+                                        nc.rotate(-90f, cx, segCenterY)
+                                        // After rotation: text drawn at (cx, segCenterY + textSize/3)
+                                        // reads bottom-to-top, centered along the bar's vertical axis.
+                                        nc.drawText(truncated, cx, segCenterY + labelPaint.textSize / 3f, labelPaint)
+                                        nc.restore()
+                                    }
+                                }
+                            }
+                            newBarHitBoxes.add(BarHitBox(barLeft, segTop, barW, segH, day.date, t))
+                            stackBottom = segTop
+                        }
+                    }
+                }
+                barHitBoxes = newBarHitBoxes.toList()
 
                 // Lines per metric
                 for (metricKey in selectedMetrics) {
@@ -510,6 +605,32 @@ fun RiskHistoryGraph(
                         }
                     }
                 }
+
+                // Tooltip for tapped contributor bar segment
+                tappedBar?.let { bar ->
+                    val dateLabel = try { LocalDate.parse(bar.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d")) } catch (_: Exception) { bar.date }
+                    val sevColor = when (bar.trigger.severity.uppercase()) {
+                        "HIGH" -> Color(0xFFEF5350)
+                        "MILD" -> Color(0xFFFFB74D)
+                        else   -> Color(0xFF81C784)
+                    }
+                    val anchorX = bar.x + bar.w / 2f
+                    val anchorY = bar.y
+                    val pxX = with(density) { anchorX.toDp() }
+                    val pxY = with(density) { anchorY.toDp() }
+                    Box(
+                        modifier = Modifier
+                            .offset(x = (pxX - 70.dp).coerceAtLeast(0.dp), y = (pxY - 56.dp).coerceAtLeast(0.dp))
+                            .background(Color(0xDD1E0A2E), shape = RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Column {
+                            Text(dateLabel, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                            Text(bar.trigger.name, color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text("${bar.trigger.severity.uppercase()} · ${bar.trigger.score} pts", color = sevColor, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
             } // end Box
 
             if (n >= 1) {
@@ -530,8 +651,10 @@ fun RiskHistoryGraph(
         Text("Select Metrics" + if (selectedMetrics.size > 1) " (${selectedMetrics.size} selected)" else "", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
         Spacer(Modifier.height(8.dp))
 
-        // Favourites section
-        val favChipKeys = remember { mutableSetOf("risk:score").apply { effectiveFavs.forEach { add(it.key) }; favPool.forEach { add(it.key) } } }
+        // Favourites section — only Risk Score + the user's 3 fav-of-favs in the
+        // top row. Everything else (favPool + templates) goes into the grouped
+        // category sections below.
+        val favChipKeys = remember(effectiveFavs) { mutableSetOf("risk:score").apply { effectiveFavs.forEach { add(it.key) } } }
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             allChips.filter { it.key in favChipKeys }.forEach { chip ->
                 val sel = chip.key in selectedMetrics
@@ -549,16 +672,23 @@ fun RiskHistoryGraph(
         HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
         Spacer(Modifier.height(6.dp))
 
-        // Grouped by category (dynamic from templates)
+        // Grouped by category — merges the hard-coded favorites pool with the
+        // DB-driven templates, then excludes anything already shown in the top
+        // fav-of-favs row, so every metric appears exactly once.
         data class CatGroup(val name: String, val color: Color, val keys: List<String>)
-        val groups = remember(templates) {
+        val groups = remember(templates, favPool, favChipKeys) {
             val catOrder = listOf("Sleep", "Weather", "Physical", "Mental", "Nutrition")
-            templates
-                .groupBy { it.category }
-                .mapNotNull { (cat, tpls) ->
-                    val keys = tpls.map { it.chipKey }.distinct()
-                    if (keys.isNotEmpty()) CatGroup(cat, catColor(cat), keys) else null
-                }
+            val byCat = linkedMapOf<String, MutableList<String>>()
+            val seenPerCat = mutableMapOf<String, MutableSet<String>>()
+            fun add(category: String, key: String) {
+                if (key in favChipKeys) return
+                val seen = seenPerCat.getOrPut(category) { mutableSetOf() }
+                if (seen.add(key)) byCat.getOrPut(category) { mutableListOf() }.add(key)
+            }
+            favPool.forEach { add(it.category, it.key) }
+            templates.forEach { add(it.category, it.chipKey) }
+            byCat.entries
+                .map { (cat, keys) -> CatGroup(cat, catColor(cat), keys) }
                 .sortedBy { catOrder.indexOf(it.name).let { i -> if (i < 0) 99 else i } }
         }
         groups.forEach { group ->
@@ -584,7 +714,7 @@ fun RiskHistoryGraph(
 
 // ═══════════════════════════════════════════════════════════════════
 private suspend fun loadRiskGraphData(ctx: android.content.Context, days: Int, endDate: LocalDate): RiskGraphResult = withContext(Dispatchers.IO) {
-    val empty = RiskGraphResult(emptyList(), emptyMap(), emptyMap(), emptyList(), emptyMap())
+    val empty = RiskGraphResult(emptyList(), emptyMap(), emptyMap(), emptyList(), emptyMap(), emptyMap())
     try {
         val token = SessionStore.getValidAccessToken(ctx) ?: return@withContext empty
         val startDate = endDate.minusDays(days.toLong() - 1)
@@ -595,8 +725,15 @@ private suspend fun loadRiskGraphData(ctx: android.content.Context, days: Int, e
 
         val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
 
-        // 1. Risk score (always present)
-        try { db.getRiskScoreDaily(token, fetchLimit).forEach { put(it.date, "risk:score", it.score.toFloat()) } } catch (_: Exception) {}
+        // 1. Risk score (always present) + per-day top_triggers for stacked bars
+        val triggersByDate = mutableMapOf<String, List<ParsedTrigger>>()
+        try {
+            db.getRiskScoreDaily(token, fetchLimit).forEach { row ->
+                put(row.date, "risk:score", row.score.toFloat())
+                val parsed = parseTopTriggersJsonElement(row.topTriggers)
+                if (parsed.isNotEmpty()) triggersByDate[row.date] = parsed
+            }
+        } catch (_: Exception) {}
 
         // 2. Fetch all metric templates from user_triggers + user_prodromes
         val allTriggers = try { db.getAllTriggerPool(token) } catch (_: Exception) { emptyList() }
@@ -703,8 +840,23 @@ private suspend fun loadRiskGraphData(ctx: android.content.Context, days: Int, e
 
         // Enrich templates with label→chipKey mapping for contributor matching
         // Return templates augmented: we store the full lookup in a wrapper
-        RiskGraphResult(graphDays, mn, mx, templates, labelToChipKeys)
-    } catch (_: Exception) { RiskGraphResult(emptyList(), emptyMap(), emptyMap(), emptyList(), emptyMap()) }
+        RiskGraphResult(graphDays, mn, mx, templates, labelToChipKeys, triggersByDate)
+    } catch (_: Exception) { RiskGraphResult(emptyList(), emptyMap(), emptyMap(), emptyList(), emptyMap(), emptyMap()) }
+}
+
+private fun parseTopTriggersJsonElement(raw: JsonElement?): List<ParsedTrigger> {
+    if (raw == null) return emptyList()
+    return try {
+        raw.jsonArray.mapNotNull { el ->
+            val obj = el.jsonObject
+            ParsedTrigger(
+                name = obj["name"]?.jsonPrimitive?.content ?: return@mapNotNull null,
+                score = obj["score"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0,
+                severity = obj["severity"]?.jsonPrimitive?.content ?: "LOW",
+                daysActive = obj["daysActive"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+            )
+        }
+    } catch (_: Exception) { emptyList() }
 }
 
 private fun catColor(category: String): Color = when (category) {

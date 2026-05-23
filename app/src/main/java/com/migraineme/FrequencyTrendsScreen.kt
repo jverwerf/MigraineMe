@@ -33,20 +33,66 @@ fun FrequencyTrendsScreen(
     onBack: () -> Unit = {},
     vm: InsightsViewModel = viewModel(),
 ) {
+    val scrollState = rememberScrollState()
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
+                }
+                Text("Frequency Trends", color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            }
+            FrequencyTrendsContent(vm = vm)
+        }
+    }
+}
+
+@Composable
+fun FrequencyTrendsContent(vm: InsightsViewModel) {
+    Column(Modifier.fillMaxWidth()) {
+        FrequencyHeroSection(vm = vm)
+        FrequencyChartsSection(vm = vm)
+    }
+}
+
+@Composable
+fun FrequencyHeroSection(vm: InsightsViewModel) {
     val migraines by vm.migraines.collectAsState()
     val weeklySummary by vm.weeklySummary.collectAsState()
+    val zone = ZoneId.systemDefault()
+    val byMonth = remember(migraines) {
+        migraines.groupBy { it.start.atZone(zone).toLocalDate().withDayOfMonth(1) }.toSortedMap()
+    }
+    weeklySummary?.let { ws ->
+        HeroCard {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                val perMonth = if (byMonth.isNotEmpty()) migraines.size.toFloat() / byMonth.size else 0f
+                StatColumn("${ws.thisWeekCount}", "This Week",
+                    sub = "vs ${ws.lastWeekCount} last",
+                    color = Color.White)
+                StatColumn(String.format("%.1f", perMonth), "Per Month",
+                    color = AppTheme.AccentPurple)
+                StatColumn("${ws.totalLogged}", "Total",
+                    sub = "all time",
+                    color = AppTheme.AccentPurple)
+            }
+        }
+    }
+}
+
+@Composable
+fun FrequencyChartsSection(vm: InsightsViewModel) {
+    val migraines by vm.migraines.collectAsState()
     val dayOfWeek by vm.dayOfWeekPattern.collectAsState()
-    val scrollState = rememberScrollState()
     val zone = ZoneId.systemDefault()
 
-    // Group migraines by month
     val byMonth = remember(migraines) {
         migraines.groupBy {
             it.start.atZone(zone).toLocalDate().withDayOfMonth(1)
         }.toSortedMap()
     }
 
-    // Group by week (last 12 weeks)
     val byWeek = remember(migraines) {
         val today = LocalDate.now()
         val weekStart = today.minusWeeks(12)
@@ -55,45 +101,89 @@ fun FrequencyTrendsScreen(
             !d.isBefore(weekStart)
         }.groupBy {
             val d = it.start.atZone(zone).toLocalDate()
-            // Monday-based week start
             d.minusDays(d.dayOfWeek.value.toLong() - 1)
         }.toSortedMap()
     }
 
-    ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-
-            // ── Header ──
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
+    Column(Modifier.fillMaxWidth()) {
+        run {
+            // ── Day-of-week (moved earlier per spec) ──
+            if (dayOfWeek.isNotEmpty()) {
+                BaseCard {
+                    Text("Day of Week", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(8.dp))
+                    val maxPct = dayOfWeek.maxOf { it.pct }.coerceAtLeast(1f)
+                    Row(
+                        Modifier.fillMaxWidth().height(120.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        dayOfWeek.sortedBy { it.dayIndex }.forEach { stat ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text("${stat.count}", color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                Spacer(Modifier.height(2.dp))
+                                val barH = (stat.pct / maxPct * 80f).coerceAtLeast(4f)
+                                val barColor = if (stat.pct > maxPct * 0.8f) Color(0xFFE57373)
+                                    else AppTheme.AccentPurple
+                                Box(
+                                    Modifier
+                                        .width(24.dp)
+                                        .height(barH.dp)
+                                        .padding(horizontal = 2.dp)
+                                ) {
+                                    Canvas(Modifier.fillMaxSize()) {
+                                        drawRoundRect(
+                                            barColor.copy(alpha = 0.8f),
+                                            cornerRadius = CornerRadius(4f),
+                                            size = size,
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Text(stat.dayName.take(3), color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                    val worst = dayOfWeek.maxByOrNull { it.count }
+                    if (worst != null && worst.count > 0) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Most frequent: ${worst.dayName} (${worst.count} migraines, ${String.format("%.0f", worst.pct)}%)",
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth())
+                    }
                 }
-                Text("Frequency Trends", color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             }
 
-            // ── Summary hero card ──
-            weeklySummary?.let { ws ->
-                HeroCard {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        val perMonth = if (byMonth.isNotEmpty()) {
-                            migraines.size.toFloat() / byMonth.size
-                        } else 0f
-
-                        StatColumn("${ws.thisWeekCount}", "This Week",
-                            sub = "vs ${ws.lastWeekCount} last",
-                            color = Color.White)
-
-                        StatColumn(String.format("%.1f", perMonth), "Per Month",
-                            color = AppTheme.AccentPurple)
-
-                        StatColumn("${ws.totalLogged}", "Total",
-                            sub = "all time",
-                            color = AppTheme.AccentPurple)
+            // ── Weekly bar chart (last 12 weeks) ──
+            if (byWeek.size >= 3) {
+                Spacer(Modifier.height(4.dp))
+                BaseCard {
+                    Text("Weekly (last 12 weeks)", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(8.dp))
+                    val today = LocalDate.now()
+                    val allWeeks = (0 until 12).map {
+                        val d = today.minusWeeks(11L - it)
+                        d.minusDays(d.dayOfWeek.value.toLong() - 1)
                     }
+                    val weekCounts = allWeeks.map { wk -> byWeek[wk]?.size ?: 0 }
+                    val maxWk = weekCounts.max().coerceAtLeast(1)
+                    val avgWk = weekCounts.average().toFloat()
+                    WeeklyBarChart(
+                        weeks = allWeeks,
+                        counts = weekCounts,
+                        maxCount = maxWk,
+                        avgCount = avgWk,
+                        modifier = Modifier.fillMaxWidth().height(160.dp),
+                    )
                 }
             }
 
@@ -141,97 +231,6 @@ fun FrequencyTrendsScreen(
                 }
             }
 
-            // ── Weekly bar chart (last 12 weeks) ──
-            if (byWeek.size >= 3) {
-                Spacer(Modifier.height(4.dp))
-                BaseCard {
-                    Text("Weekly (last 12 weeks)", color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(Modifier.height(8.dp))
-
-                    // Fill in missing weeks with 0
-                    val today = LocalDate.now()
-                    val allWeeks = (0 until 12).map {
-                        val d = today.minusWeeks(11L - it)
-                        d.minusDays(d.dayOfWeek.value.toLong() - 1)
-                    }
-                    val weekCounts = allWeeks.map { wk -> byWeek[wk]?.size ?: 0 }
-                    val maxWk = weekCounts.max().coerceAtLeast(1)
-                    val avgWk = weekCounts.average().toFloat()
-
-                    WeeklyBarChart(
-                        weeks = allWeeks,
-                        counts = weekCounts,
-                        maxCount = maxWk,
-                        avgCount = avgWk,
-                        modifier = Modifier.fillMaxWidth().height(160.dp),
-                    )
-                }
-            }
-
-            // ── Day-of-week distribution ──
-            if (dayOfWeek.isNotEmpty()) {
-                Spacer(Modifier.height(4.dp))
-                BaseCard {
-                    Text("Day of Week", color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(Modifier.height(8.dp))
-
-                    val maxPct = dayOfWeek.maxOf { it.pct }.coerceAtLeast(1f)
-
-                    Row(
-                        Modifier.fillMaxWidth().height(120.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.Bottom,
-                    ) {
-                        dayOfWeek.sortedBy { it.dayIndex }.forEach { stat ->
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Text("${stat.count}", color = Color.White,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                                Spacer(Modifier.height(2.dp))
-
-                                val barH = (stat.pct / maxPct * 80f).coerceAtLeast(4f)
-                                val barColor = if (stat.pct > maxPct * 0.8f) Color(0xFFE57373)
-                                    else AppTheme.AccentPurple
-
-                                Box(
-                                    Modifier
-                                        .width(24.dp)
-                                        .height(barH.dp)
-                                        .padding(horizontal = 2.dp)
-                                ) {
-                                    Canvas(Modifier.fillMaxSize()) {
-                                        drawRoundRect(
-                                            barColor.copy(alpha = 0.8f),
-                                            cornerRadius = CornerRadius(4f),
-                                            size = size,
-                                        )
-                                    }
-                                }
-
-                                Spacer(Modifier.height(4.dp))
-                                Text(stat.dayName.take(3), color = AppTheme.SubtleTextColor,
-                                    style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                    }
-
-                    // Highlight worst day
-                    val worst = dayOfWeek.maxByOrNull { it.count }
-                    if (worst != null && worst.count > 0) {
-                        Spacer(Modifier.height(8.dp))
-                        Text("Most frequent: ${worst.dayName} (${worst.count} migraines, ${String.format("%.0f", worst.pct)}%)",
-                            color = AppTheme.BodyTextColor,
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth())
-                    }
-                }
-            }
-
             // ── Severity over time (monthly average) ──
             if (byMonth.size >= 3) {
                 val monthsWithSev = byMonth.entries.mapNotNull { (month, migs) ->
@@ -259,7 +258,7 @@ fun FrequencyTrendsScreen(
 }
 
 @Composable
-private fun StatColumn(value: String, label: String, sub: String? = null, color: Color = Color.White) {
+internal fun StatColumn(value: String, label: String, sub: String? = null, color: Color = Color.White) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))

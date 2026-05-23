@@ -294,7 +294,7 @@ fun ActivitiesScreen(
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) "Cancel" else "Back") }
-                Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.MISSED_ACTIVITIES) },
+                Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.POSTDROMES) },
                     enabled = !quickLogMode || draft.activities.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(if (quickLogMode) "Save" else "Next") }

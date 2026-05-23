@@ -502,7 +502,10 @@ fun InsightsReportScreen(
                                 severityCounts = filteredImpact.severityCounts,
                                 totalMigraineCount = filteredImpact.totalMigraineCount,
                                 overallAvgSeverity = filteredImpact.overallAvgSeverity,
-                                sources = vm.metricSources.value)
+                                sources = vm.metricSources.value,
+                                symptomStats = vm.symptomStats.value,
+                                symptomOutcomes = vm.symptomOutcomes.value,
+                                symptomSegments = vm.symptomSegments.value)
                             val generator = ReportPdfGenerator(ctx)
                             android.util.Log.d("ReportPDF", "Calling generator.generate()")
                             val file = generator.generate(reportData)

@@ -16,6 +16,7 @@ data class FoodRiskResult(
     val tyramine: String = "none",
     val alcohol: String = "none",
     val gluten: String = "none",
+    val histamine: String = "none",
     val cached: Boolean = false
 )
 
@@ -81,10 +82,11 @@ class FoodRiskClassifierService {
                     tyramine = json.optString("tyramine", "none"),
                     alcohol = json.optString("alcohol", "none"),
                     gluten = json.optString("gluten", "none"),
+                    histamine = json.optString("histamine", "none"),
                     cached = json.optBoolean("cached", false)
                 )
 
-                Log.d(TAG, "✅ $foodName → T:${result.tyramine} A:${result.alcohol} G:${result.gluten} (cached=${result.cached})")
+                Log.d(TAG, "✅ $foodName → T:${result.tyramine} A:${result.alcohol} G:${result.gluten} H:${result.histamine} (cached=${result.cached})")
                 result
             }
         } catch (e: Exception) {

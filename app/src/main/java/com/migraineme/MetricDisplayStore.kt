@@ -225,6 +225,7 @@ object MetricDisplayStore {
         "tyramine_exposure" to "nutrition_daily::max_tyramine_exposure",
         "alcohol_exposure" to "nutrition_daily::max_alcohol_exposure",
         "gluten_exposure" to "nutrition_daily::max_gluten_exposure",
+        "histamine_exposure" to "nutrition_daily::max_histamine_exposure",
     )
 
     // ── Favorites migration ──────────────────────────────────────────────────

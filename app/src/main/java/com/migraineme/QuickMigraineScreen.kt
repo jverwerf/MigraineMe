@@ -46,6 +46,7 @@ fun QuickMigraineScreen(
     // Symptom pools
     val painCharacter by symptomVm.painCharacter.collectAsState()
     val accompanying by symptomVm.accompanying.collectAsState()
+    val postdrome by symptomVm.postdrome.collectAsState()
     val favorites by symptomVm.favorites.collectAsState()
 
     LaunchedEffect(authState.accessToken) {
@@ -89,7 +90,11 @@ fun QuickMigraineScreen(
 
     // Split frequent by category
     val freqPainIds = favorites.filter { it.symptom?.category == "pain_character" }.mapNotNull { it.symptom?.label }.toSet()
-    val freqAccompIds = favorites.filter { it.symptom?.category != null && it.symptom?.category != "pain_character" }.mapNotNull { it.symptom?.label }.toSet()
+    val freqAccompIds = favorites.filter {
+        val c = it.symptom?.category
+        c != null && c != "pain_character" && c != "Postdrome"
+    }.mapNotNull { it.symptom?.label }.toSet()
+    val freqPostdromeIds = favorites.filter { it.symptom?.category == "Postdrome" }.mapNotNull { it.symptom?.label }.toSet()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -205,6 +210,34 @@ fun QuickMigraineScreen(
                         nonFreqAccomp.forEach { s ->
                             QuickSymptomButton(s.label, s.label in selectedSymptoms, s.iconKey) {
                                 if (s.label in selectedSymptoms) selectedSymptoms.remove(s.label) else selectedSymptoms.add(s.label)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Postdrome (after attack)
+            if (postdrome.isNotEmpty()) {
+                BaseCard {
+                    Text("Postdrome (after attack)", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    if (freqPostdromeIds.isNotEmpty()) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            postdrome.filter { it.label in freqPostdromeIds }.forEach { s ->
+                                QuickSymptomButton(s.label, s.label in selectedSymptoms, s.iconKey) {
+                                    if (s.label in selectedSymptoms) selectedSymptoms.remove(s.label) else selectedSymptoms.add(s.label)
+                                }
+                            }
+                        }
+                        val rest = postdrome.filter { it.label !in freqPostdromeIds }
+                        if (rest.isNotEmpty()) HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    }
+                    val nonFreqPost = postdrome.filter { it.label !in freqPostdromeIds }
+                    if (nonFreqPost.isNotEmpty()) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            nonFreqPost.forEach { s ->
+                                QuickSymptomButton(s.label, s.label in selectedSymptoms, s.iconKey) {
+                                    if (s.label in selectedSymptoms) selectedSymptoms.remove(s.label) else selectedSymptoms.add(s.label)
+                                }
                             }
                         }
                     }

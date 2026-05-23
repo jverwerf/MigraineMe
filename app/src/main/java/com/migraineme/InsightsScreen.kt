@@ -155,6 +155,7 @@ val AllMetricDefs = listOf(
     MetricDef("tyramine", "Tyramine", "risk", Color(0xFFFFAB40), "Diet"),
     MetricDef("alcohol", "Alcohol", "risk", Color(0xFFEF5350), "Diet"),
     MetricDef("gluten", "Gluten", "risk", Color(0xFFFFD54F), "Diet"),
+    MetricDef("histamine", "Histamine", "risk", Color(0xFFAB47BC), "Diet"),
 )
 
 @Composable
@@ -326,23 +327,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            // ── 1. WEEKLY SUMMARY (Hero) ──
-            if (weeklySummary != null) {
-                WeeklySummaryCard(weeklySummary!!, onClick = { navController.navigate(Routes.FREQUENCY_TRENDS) })
-            } else {
-                BaseCard {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(24.dp)) { HubIcons.run { drawCalendarWeek(AppTheme.AccentPurple) } }
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("Weekly Summary", color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Your weekly overview will appear after your first week of tracking",
-                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
-            }
+            // ── 1. WEEKLY SUMMARY + Explore Migraines moved to Monitor → Migraines ──
 
             // ── Content (data loaded) ──
             val ml by vm.migraines.collectAsState()
@@ -375,7 +360,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     }
                 }
 
-                // ── 3. EXPLORE MIGRAINES (tap-through, free) ──
+                // ── 3. Explore Migraines moved to Monitor → Migraines (file kept as Routes.INSIGHTS_DETAIL target) ──
+                if (false) {
                 BaseCard(modifier = Modifier.clickable {
                     navController.navigate(Routes.INSIGHTS_DETAIL)
                 }) {
@@ -391,11 +377,19 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                     }
                 }
-                // ── 3b. AI RECOMMENDATIONS (top-level card, all 5 types) ──
+                } // end if(false) wrapper hiding the moved Explore Migraines card
+                // ── 3b. AI RECOMMENDATIONS (premium) ──
                 val aiRecs by vm.aiRecommendations.collectAsState()
-                if (!aiRecs.isEmpty) {
-                    RecommendationsCard(aiRecs) {
-                        navController.navigate(Routes.INSIGHTS_RECOMMENDATIONS)
+                val dismissedRecKeys by vm.dismissedRecommendationKeys.collectAsState()
+                if (buildRecommendationSections(aiRecs, dismissedRecKeys).isNotEmpty()) {
+                    PremiumGate(
+                        message = "Unlock AI Recommendations",
+                        subtitle = "Per-category guidance from your data",
+                        onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                    ) {
+                        RecommendationsCard(aiRecs, dismissedRecKeys) {
+                            navController.navigate(Routes.INSIGHTS_RECOMMENDATIONS)
+                        }
                     }
                 }
 
@@ -439,9 +433,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         val previewInteractions = remember(interactionCorrelations) {
                             interactionCorrelations.take(2)
                         }
+                        val symptomOutcomes by vm.symptomOutcomes.collectAsState()
                         PatternsPreviewCard(
                             patterns = previewPatterns,
                             interactions = previewInteractions,
+                            symptomOutcomes = symptomOutcomes.take(2),
                             onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
                         )
                     }
@@ -459,9 +455,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     val previewTreatmentInteractions = remember(treatmentInteractionCorrelations) {
                         treatmentInteractionCorrelations.take(2)
                     }
+                    val symptomSegments by vm.symptomSegments.collectAsState()
                     TreatmentPreviewCard(
                         treatments = previewTreatments,
                         treatmentInteractions = previewTreatmentInteractions,
+                        symptomSegments = symptomSegments.take(2),
                         onShowAll = { navController.navigate(Routes.INSIGHTS_TREATMENTS) }
                     )
                 }
@@ -480,6 +478,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val painLocCounts by vm.painLocationCounts.collectAsState()
                 val sevCounts by vm.severityCounts.collectAsState()
                 val totalMigraineCount by vm.totalMigraineCount.collectAsState()
+                val topSymptoms by vm.symptomStats.collectAsState()
                 PremiumGate(
                     message = "Unlock Impact Analysis",
                     subtitle = "See severity, pain locations & missed activities",
@@ -491,6 +490,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         severityCounts = sevCounts,
                         totalMigraines = totalMigraineCount,
                         overallAvgSeverity = overallAvgSeverity,
+                        topSymptoms = topSymptoms.take(3),
                         onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
                     )
                 }
@@ -978,6 +978,7 @@ internal fun TopPatternsCard(
 internal fun PatternsPreviewCard(
     patterns: List<EdgeFunctionsService.CorrelationStat>,
     interactions: List<EdgeFunctionsService.CorrelationStat>,
+    symptomOutcomes: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     onShowAll: () -> Unit
 ) {
     BaseCard(modifier = Modifier.clickable { onShowAll() }) {
@@ -1008,7 +1009,20 @@ internal fun PatternsPreviewCard(
             }
         }
 
-
+        if (symptomOutcomes.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Text("Trigger \u2192 Symptom", color = Color(0xFFFFB74D),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+            symptomOutcomes.take(2).forEach { stat ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("${stat.factorName} \u2192 ${stat.symptomOutcome ?: ""}", color = Color.White,
+                        style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.weight(1f))
+                    Text(String.format("%.1f\u00d7", stat.liftRatio),
+                        color = if (stat.liftRatio >= 2f) Color(0xFFE57373) else if (stat.liftRatio >= 1.5f) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                }
+            }
+        }
     }
 }
 
@@ -1018,6 +1032,7 @@ internal fun PatternsPreviewCard(
 internal fun TreatmentPreviewCard(
     treatments: List<EdgeFunctionsService.CorrelationStat>,
     treatmentInteractions: List<EdgeFunctionsService.CorrelationStat>,
+    symptomSegments: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     onShowAll: () -> Unit
 ) {
     BaseCard(modifier = Modifier.clickable { onShowAll() }) {
@@ -1030,7 +1045,7 @@ internal fun TreatmentPreviewCard(
             Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
         }
 
-        if (treatments.isEmpty() && treatmentInteractions.isEmpty()) {
+        if (treatments.isEmpty() && treatmentInteractions.isEmpty() && symptomSegments.isEmpty()) {
             Spacer(Modifier.height(4.dp))
             Text("Log medicines and reliefs with your migraines to see what works best.",
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -1051,6 +1066,23 @@ internal fun TreatmentPreviewCard(
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             treatmentInteractions.forEach { stat ->
                 TreatmentRowCompact(stat)
+            }
+        }
+
+        if (symptomSegments.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Text("Works Best When", color = Color(0xFF4FC3F7),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+            symptomSegments.take(2).forEach { stat ->
+                val direction = if (stat.liftRatio > 1.1f) "better" else if (stat.liftRatio < 0.9f) "worse" else "similar"
+                val color = if (stat.liftRatio > 1.1f) Color(0xFF81C784) else if (stat.liftRatio < 0.9f) Color(0xFFE57373) else Color(0xFFCFCFCF)
+                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("${stat.factorName} + ${stat.symptomSegment ?: ""}",
+                        color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1,
+                        modifier = Modifier.weight(1f))
+                    Text(direction, color = color,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                }
             }
         }
     }
@@ -1650,9 +1682,10 @@ internal fun ImpactCard(
     severityCounts: List<Pair<Int, Int>> = emptyList(),
     totalMigraines: Int = 0,
     overallAvgSeverity: Float = 5f,
+    topSymptoms: List<EdgeFunctionsService.SymptomStat> = emptyList(),
     onClick: (() -> Unit)? = null,
 ) {
-    val hasData = impactItems.isNotEmpty() || painLocationCounts.isNotEmpty() || severityCounts.isNotEmpty()
+    val hasData = impactItems.isNotEmpty() || painLocationCounts.isNotEmpty() || severityCounts.isNotEmpty() || topSymptoms.isNotEmpty()
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1739,6 +1772,32 @@ internal fun ImpactCard(
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
             }
+        }
+
+        TopSymptomsSection(topSymptoms)
+    }
+}
+
+@Composable
+private fun TopSymptomsSection(topSymptoms: List<EdgeFunctionsService.SymptomStat>) {
+    if (topSymptoms.isEmpty()) return
+    Spacer(Modifier.height(12.dp))
+    Text("Top Symptoms", color = Color(0xFFCE93D8),
+        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+    topSymptoms.forEach { s ->
+        val pct = (s.pctOfAttacks * 100f).toInt()
+        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(s.symptomLabel, color = Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            val sev = s.avgSeverity
+            if (sev != null) {
+                Text("sev ${String.format("%.1f", sev)}",
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(end = 6.dp))
+            }
+            Text("$pct%", color = Color(0xFFCE93D8),
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
         }
     }
 }

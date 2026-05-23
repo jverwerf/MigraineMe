@@ -1831,6 +1831,8 @@ class EdgeFunctionsService {
         @SerialName("metric_table") val metricTable: String? = null,
         @SerialName("metric_column") val metricColumn: String? = null,
         @SerialName("lag_details") val lagDetails: kotlinx.serialization.json.JsonObject? = null,
+        @SerialName("symptom_outcome") val symptomOutcome: String? = null,
+        @SerialName("symptom_segment") val symptomSegment: String? = null,
         @SerialName("updated_at") val updatedAt: String = "",
     ) {
         /** Duration lift from lag_details (treatment/treatment_interaction only) */
@@ -2018,6 +2020,7 @@ class EdgeFunctionsService {
 
     /**
      * Read top significant correlations from PostgREST.
+     * Filters out symptom-aware rows so they don't crowd out the existing top-50 by lift.
      */
     suspend fun getTopCorrelations(context: Context, limit: Int = 50): List<CorrelationStat> {
         val appCtx = context.applicationContext
@@ -2026,12 +2029,13 @@ class EdgeFunctionsService {
         val client = buildClient()
         return try {
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/correlation_stats" +
-                "?order=lift_ratio.desc" +
+                "?symptom_outcome=is.null&symptom_segment=is.null" +
+                "&order=lift_ratio.desc" +
                 "&limit=$limit" +
                 "&select=id,factor_name,factor_type,factor_b,best_lag_days,lift_ratio," +
                 "pct_migraine_windows,pct_control_windows,sample_size,p_value," +
                 "suggested_threshold,current_threshold,threshold_direction," +
-                "metric_table,metric_column,lag_details,updated_at"
+                "metric_table,metric_column,lag_details,symptom_outcome,symptom_segment,updated_at"
 
             val res = client.get(url) {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
@@ -2050,6 +2054,87 @@ class EdgeFunctionsService {
         } finally {
             client.close()
         }
+    }
+
+    @Serializable
+    data class SymptomStat(
+        val id: String = "",
+        @SerialName("symptom_label") val symptomLabel: String = "",
+        @SerialName("total_count") val totalCount: Int = 0,
+        @SerialName("pct_of_attacks") val pctOfAttacks: Float = 0f,
+        @SerialName("avg_severity") val avgSeverity: Float? = null,
+        @SerialName("avg_duration_hours") val avgDurationHours: Float? = null,
+        @SerialName("sample_size") val sampleSize: Int = 0,
+    )
+
+    /** Phase 2a: per-symptom stats for the current user. */
+    suspend fun getSymptomStats(context: Context): List<SymptomStat> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/symptom_stats" +
+                "?order=total_count.desc" +
+                "&select=id,symptom_label,total_count,pct_of_attacks,avg_severity,avg_duration_hours,sample_size"
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+            if (res.status.value in 200..299) res.body<List<SymptomStat>>()
+            else { Log.w("EdgeFunctionsService", "getSymptomStats failed: ${res.status.value}"); emptyList() }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getSymptomStats exception", e); emptyList()
+        } finally { client.close() }
+    }
+
+    /** Phase 2b: trigger × symptom outcome rows. */
+    suspend fun getSymptomOutcomes(context: Context, limit: Int = 200): List<CorrelationStat> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/correlation_stats" +
+                "?symptom_outcome=not.is.null" +
+                "&order=lift_ratio.desc" +
+                "&limit=$limit" +
+                "&select=id,factor_name,factor_type,factor_b,best_lag_days,lift_ratio," +
+                "pct_migraine_windows,pct_control_windows,sample_size,p_value," +
+                "suggested_threshold,current_threshold,threshold_direction," +
+                "metric_table,metric_column,lag_details,symptom_outcome,symptom_segment,updated_at"
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+            if (res.status.value in 200..299) res.body<List<CorrelationStat>>()
+            else { Log.w("EdgeFunctionsService", "getSymptomOutcomes failed: ${res.status.value}"); emptyList() }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getSymptomOutcomes exception", e); emptyList()
+        } finally { client.close() }
+    }
+
+    /** Phase 2c: treatment × symptom segment rows. */
+    suspend fun getSymptomSegments(context: Context, limit: Int = 200): List<CorrelationStat> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/correlation_stats" +
+                "?symptom_segment=not.is.null" +
+                "&order=lift_ratio.desc" +
+                "&limit=$limit" +
+                "&select=id,factor_name,factor_type,factor_b,best_lag_days,lift_ratio," +
+                "pct_migraine_windows,pct_control_windows,sample_size,p_value," +
+                "suggested_threshold,current_threshold,threshold_direction," +
+                "metric_table,metric_column,lag_details,symptom_outcome,symptom_segment,updated_at"
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+            if (res.status.value in 200..299) res.body<List<CorrelationStat>>()
+            else { Log.w("EdgeFunctionsService", "getSymptomSegments failed: ${res.status.value}"); emptyList() }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getSymptomSegments exception", e); emptyList()
+        } finally { client.close() }
     }
 
     /**

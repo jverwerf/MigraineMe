@@ -786,6 +786,15 @@ object SymptomIcons {
         PickerIcon("tension", "Tension", Tension),
         PickerIcon("cluster", "Cluster", Cluster),
         PickerIcon("sinus", "Sinus", Sinus),
+        // Postdrome icon keys (mapped to existing glyphs)
+        PickerIcon("mood_crash", "Mood crash", Droplet),
+        PickerIcon("mood_lift", "Mood lift", Heart),
+        PickerIcon("hangover", "Hangover", DullAche),
+        PickerIcon("light_lingering", "Light lingering", LightSensitivity),
+        PickerIcon("sound_lingering", "Sound lingering", SoundSensitivity),
+        PickerIcon("body_aches", "Body aches", DullAche),
+        PickerIcon("weakness", "Weakness", Fatigue),
+        PickerIcon("cold", "Cold", Moon),
     ) }
 
     /** Look up icon by key (for DB-stored custom icon choices) */

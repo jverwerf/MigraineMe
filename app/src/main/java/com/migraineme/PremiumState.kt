@@ -5,13 +5,13 @@ package com.migraineme
  * Represents the user's premium status across the app.
  *
  * Sources of truth:
- *  - Supabase `premium_status` table → owns the 30-day app trial
+ *  - Supabase `premium_status` table → owns the 14-day app trial
  *  - RevenueCat → owns paid subscription state
  *
  * PremiumManager merges both into this single state.
  */
 enum class PremiumTier {
-    /** 30-day free trial (auto-granted on signup) */
+    /** 14-day free trial (started from onboarding) */
     TRIAL,
     /** Active paid subscription via RevenueCat */
     PREMIUM,

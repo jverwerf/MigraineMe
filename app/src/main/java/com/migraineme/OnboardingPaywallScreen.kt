@@ -174,7 +174,7 @@ fun OnboardingPaywallScreen(
                         .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        "30-DAY FREE TRIAL",
+                        "14-DAY FREE TRIAL",
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
@@ -186,7 +186,7 @@ fun OnboardingPaywallScreen(
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    "Try Premium free\nfor 30 days",
+                    "Try Premium free\nfor 14 days",
                     color = Color.White,
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center

@@ -361,6 +361,7 @@ object MetricRegistry {
         "nutrition_daily::total_pantothenic_acid_mg" to 35,
         "nutrition_daily::max_alcohol_exposure" to 36,
         "nutrition_daily::max_gluten_exposure" to 37,
+        "nutrition_daily::max_histamine_exposure" to 38,
     )
 
     // ── Label overrides ──────────────────────────────────────────────────────
@@ -398,6 +399,7 @@ object MetricRegistry {
         "nutrition_daily::max_tyramine_exposure" to "Tyramine",
         "nutrition_daily::max_alcohol_exposure" to "Alcohol",
         "nutrition_daily::max_gluten_exposure" to "Gluten",
+        "nutrition_daily::max_histamine_exposure" to "Histamine",
     )
 
     // ── Unit normalisation ───────────────────────────────────────────────────
@@ -502,6 +504,7 @@ object MetricRegistry {
         "nutrition_daily::max_tyramine_exposure" to "tyramine_exposure",
         "nutrition_daily::max_alcohol_exposure" to "alcohol_exposure",
         "nutrition_daily::max_gluten_exposure" to "gluten_exposure",
+        "nutrition_daily::max_histamine_exposure" to "histamine_exposure",
     )
 
     private val LEGACY_TO_REGISTRY_NUTRITION: Map<String, String> =

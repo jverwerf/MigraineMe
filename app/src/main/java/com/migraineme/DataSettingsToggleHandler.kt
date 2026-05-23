@@ -219,6 +219,7 @@ object DataSettingsToggleHandler {
     ): ToggleResult {
         return try {
             if (enabled) {
+                ensureMenstruationSettingsRowExists(context)
                 PredictedMenstruationHelper.ensureExists(context)
                 MetricToggleHelper.toggle(context, "menstruation", true)
                 MenstruationSyncScheduler.schedule(context)
@@ -239,6 +240,30 @@ object DataSettingsToggleHandler {
         } catch (e: Exception) {
             Log.e(TAG, "Menstruation toggle failed: ${e.message}", e)
             ToggleResult.Error(e.message ?: "Failed to toggle menstruation")
+        }
+    }
+
+    /**
+     * If no menstruation_settings row exists for the user, create one with sensible
+     * defaults (today as last_menstruation_date, 28-day cycle, auto_update_average true)
+     * so the Monitor card can render immediately. User can correct via MenstruationScreen.
+     */
+    private suspend fun ensureMenstruationSettingsRowExists(context: Context) {
+        try {
+            val appContext = context.applicationContext
+            val accessToken = SessionStore.getValidAccessToken(appContext) ?: return
+            val service = SupabaseMenstruationService(appContext)
+            val existing = service.getSettings(accessToken)
+            if (existing != null) return
+            service.updateSettings(
+                accessToken = accessToken,
+                lastMenstruationDate = java.time.LocalDate.now(),
+                avgCycleLength = 28,
+                autoUpdateAverage = true
+            )
+            Log.d(TAG, "Created default menstruation_settings row on toggle ON")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to ensure menstruation_settings row: ${e.message}")
         }
     }
 

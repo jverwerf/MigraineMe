@@ -288,7 +288,7 @@ fun LogHomeScreen(
 }
 
 @Composable
-private fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
+internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
     val icon = SymptomIcons.forLabel(label, iconKey)
     val circleColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val borderColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)

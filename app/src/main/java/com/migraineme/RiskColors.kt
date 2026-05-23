@@ -23,6 +23,11 @@ object RiskColors {
     val GlutenMedium = Color(0xFF64B5F6)
     val GlutenLow = Color(0xFFBBDEFB)
 
+    // Histamine — purples
+    val HistamineHigh = Color(0xFFAB47BC)
+    val HistamineMedium = Color(0xFFCE93D8)
+    val HistamineLow = Color(0xFFE1BEE7)
+
     /** Get the color for a risk metric at a given level (0-3) */
     fun colorFor(metric: String, level: Int): Color = when (metric) {
         MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> when (level) {
@@ -33,6 +38,9 @@ object RiskColors {
         }
         MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> when (level) {
             3 -> GlutenHigh; 2 -> GlutenMedium; 1 -> GlutenLow; else -> Color.Unspecified
+        }
+        MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE -> when (level) {
+            3 -> HistamineHigh; 2 -> HistamineMedium; 1 -> HistamineLow; else -> Color.Unspecified
         }
         else -> Color.Unspecified
     }

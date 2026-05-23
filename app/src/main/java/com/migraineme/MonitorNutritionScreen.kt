@@ -297,6 +297,7 @@ fun MonitorNutritionScreen(
             tyramineRisk = selectedFoodRisks?.tyramine,
             alcoholRisk = selectedFoodRisks?.alcohol,
             glutenRisk = selectedFoodRisks?.gluten,
+            histamineRisk = selectedFoodRisks?.histamine,
             isClassifyingRisks = isClassifyingRisks,
             onDismiss = { selectedFood = null; selectedFoodDetails = null },
             onConfirm = {
@@ -359,6 +360,7 @@ fun MonitorNutritionScreen(
             tyramineRisk = scanRisks?.tyramine,
             alcoholRisk = scanRisks?.alcohol,
             glutenRisk = scanRisks?.gluten,
+            histamineRisk = scanRisks?.histamine,
             isClassifyingRisks = isClassifyingScanRisks,
             onDismiss = { scannedProduct = null; scanRisks = null },
             onConfirm = {
@@ -589,7 +591,7 @@ fun MonitorNutritionScreen(
                         val allNutritionKeys = MetricRegistry.byGroup("nutrition").map { it.key }
                         allNutritionKeys.forEach { registryKey ->
                             val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
-                            val isRisk = legacyKey in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure")
+                            val isRisk = legacyKey in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure", "histamine_exposure")
                             val total = if (isRisk) {
                                 todayItems.maxOfOrNull { it.metricValue(legacyKey) ?: 0.0 } ?: 0.0
                             } else {
@@ -610,6 +612,7 @@ fun MonitorNutritionScreen(
                                             "tyramine_exposure" -> CheeseIcon(valueColor, 12.dp)
                                             "alcohol_exposure" -> WineGlassIcon(valueColor, 12.dp)
                                             "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
+                                            "histamine_exposure" -> FlaskIcon(valueColor, 12.dp)
                                         }
                                         Spacer(Modifier.width(5.dp))
                                         Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
