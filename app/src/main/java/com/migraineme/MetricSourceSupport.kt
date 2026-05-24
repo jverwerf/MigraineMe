@@ -32,6 +32,9 @@ object MetricSourceSupport {
     private val healthConnectMetrics = setOf(
         "sleep_duration_daily",
         "sleep_stages_daily",
+        "sleep_efficiency_daily",
+        "sleep_disturbances_daily",
+        "sleep_score_daily",
         "fell_asleep_time_daily",
         "woke_up_time_daily",
         "resting_hr_daily",
@@ -46,7 +49,9 @@ object MetricSourceSupport {
         "blood_pressure_daily",
         "blood_glucose_daily",
         "respiratory_rate_daily",
-        "stress_index_daily"
+        "stress_index_daily",
+        "strain_daily",
+        "recovery_score_daily"
     )
 
     // Metrics that Oura provides

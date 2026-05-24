@@ -84,7 +84,7 @@ class HealthConnectPushWorker(
                 // the sum of all sessions ending on that date, not just the last one
                 // processed. Sessions other than the representative are marked success
                 // (their data has been folded into the representative's payload).
-                val batch = aggregateSleepByDate(rawBatch, successIds)
+                val batch = aggregateActiveCaloriesByDate(aggregateSleepByDate(rawBatch, successIds), successIds)
 
                 for (item in batch) {
                     try {
@@ -221,6 +221,7 @@ class HealthConnectPushWorker(
             var totalDeep = 0L
             var totalLight = 0L
             var totalAwake = 0L
+            var totalAwakeCount = 0L
             var earliestStart: String? = null
             var latestEnd: String? = null
 
@@ -232,6 +233,7 @@ class HealthConnectPushWorker(
                 totalDeep += p["deep_minutes"]?.jsonPrimitive?.long ?: 0
                 totalLight += p["light_minutes"]?.jsonPrimitive?.long ?: 0
                 totalAwake += p["awake_minutes"]?.jsonPrimitive?.long ?: 0
+                totalAwakeCount += p["awake_count"]?.jsonPrimitive?.long ?: 0
                 val s = p["start_time"]?.jsonPrimitive?.content ?: ""
                 val e = p["end_time"]?.jsonPrimitive?.content ?: ""
                 if (s.isNotEmpty() && (earliestStart == null || s < earliestStart!!)) earliestStart = s
@@ -239,9 +241,51 @@ class HealthConnectPushWorker(
             }
 
             val rep = items.first()
-            val mergedPayload = """{"duration_minutes":$totalDuration,"start_time":"${earliestStart ?: ""}","end_time":"${latestEnd ?: ""}","rem_minutes":$totalRem,"deep_minutes":$totalDeep,"light_minutes":$totalLight,"awake_minutes":$totalAwake}"""
+            val mergedPayload = """{"duration_minutes":$totalDuration,"start_time":"${earliestStart ?: ""}","end_time":"${latestEnd ?: ""}","rem_minutes":$totalRem,"deep_minutes":$totalDeep,"light_minutes":$totalLight,"awake_minutes":$totalAwake,"awake_count":$totalAwakeCount}"""
             replacementsById[rep.id] = rep.copy(payload = mergedPayload)
             for (item in items.drop(1)) {
+                droppedIds.add(item.id)
+                successIds.add(item.id)
+            }
+        }
+
+        if (droppedIds.isEmpty() && replacementsById.isEmpty()) return batch
+        return batch.mapNotNull { item ->
+            if (item.id in droppedIds) null
+            else replacementsById[item.id] ?: item
+        }
+    }
+
+    /**
+     * Fold all ACTIVE_CALORIES upsert items in `batch` that share a date into one
+     * representative item whose payload sums kcal across all per-interval records.
+     * Non-representative items are added to `successIds`. Same pattern as sleep.
+     */
+    private fun aggregateActiveCaloriesByDate(
+        batch: List<HealthConnectOutboxEntity>,
+        successIds: MutableList<Long>
+    ): List<HealthConnectOutboxEntity> {
+        val items = batch.filter {
+            it.recordType == HealthConnectRecordTypes.ACTIVE_CALORIES && it.operation == "UPSERT"
+        }
+        if (items.size < 2) return batch
+
+        val groups = items.groupBy { it.date }
+        val replacementsById = mutableMapOf<Long, HealthConnectOutboxEntity>()
+        val droppedIds = mutableSetOf<Long>()
+
+        for ((_, dayItems) in groups) {
+            if (dayItems.size < 2) continue
+            var totalKcal = 0.0
+            for (item in dayItems) {
+                val p = try { json.decodeFromString<JsonObject>(item.payload) } catch (_: Exception) { null }
+                if (p == null) continue
+                totalKcal += p["value_kcal"]?.jsonPrimitive?.double ?: 0.0
+            }
+            val rep = dayItems.first()
+            val mergedPayload = """{"value_kcal":$totalKcal}"""
+            replacementsById[rep.id] = rep.copy(payload = mergedPayload)
+            for (item in dayItems.drop(1)) {
                 droppedIds.add(item.id)
                 successIds.add(item.id)
             }
@@ -295,17 +339,21 @@ class HealthConnectPushWorker(
                 val deepMin = payload["deep_minutes"]?.jsonPrimitive?.long?.toInt() ?: 0
                 val lightMin = payload["light_minutes"]?.jsonPrimitive?.long?.toInt() ?: 0
                 val awakeMin = payload["awake_minutes"]?.jsonPrimitive?.long?.toInt() ?: 0
+                val awakeCount = payload["awake_count"]?.jsonPrimitive?.long?.toInt() ?: 0
 
+                // Asleep-only duration: subtract in-session awake time to match Whoop/iOS semantics.
+                val asleepMinutes = (durationMinutes - awakeMin).coerceAtLeast(0)
                 service.upsertSleep(
                     accessToken = accessToken,
                     date = item.date,
-                    durationHours = durationMinutes / 60.0,
+                    durationHours = asleepMinutes / 60.0,
                     startTime = startTime,
                     endTime = endTime,
                     remMinutes = remMin,
                     deepMinutes = deepMin,
                     lightMinutes = lightMin,
                     awakeMinutes = awakeMin,
+                    awakeCount = awakeCount,
                     sourceId = item.healthConnectId
                 )
             }
@@ -313,7 +361,10 @@ class HealthConnectPushWorker(
             HealthConnectRecordTypes.HRV -> {
                 val valueMs = payload["value_ms"]?.jsonPrimitive?.double
                     ?: return ProcessResult.PermanentFailure("Missing value_ms")
-                service.upsertHrv(accessToken, item.date, valueMs, item.healthConnectId)
+                val ok = service.upsertHrv(accessToken, item.date, valueMs, item.healthConnectId)
+                // Derived recovery_score: mirrors iOS HealthKitService.syncRecoveryScore.
+                computeAndUpsertRecoveryScore(accessToken, service, item.date, item.healthConnectId)
+                ok
             }
 
             HealthConnectRecordTypes.RESTING_HR -> {
@@ -396,6 +447,14 @@ class HealthConnectPushWorker(
                 service.upsertSkinTemp(accessToken, item.date, valueCelsius, item.healthConnectId)
             }
 
+            HealthConnectRecordTypes.ACTIVE_CALORIES -> {
+                // Match Garmin's strain formula: kcal × 4.184 = kilojoules.
+                val kcal = payload["value_kcal"]?.jsonPrimitive?.double
+                    ?: return ProcessResult.PermanentFailure("Missing value_kcal")
+                val kj = (kcal * 4.184 * 10).toInt() / 10.0
+                service.upsertStrain(accessToken, item.date, kj, item.healthConnectId)
+            }
+
             else -> {
                 Log.w(TAG, "Unknown record type: ${item.recordType}")
                 return ProcessResult.PermanentFailure("Unknown record type: ${item.recordType}")
@@ -403,5 +462,57 @@ class HealthConnectPushWorker(
         }
 
         return if (success) ProcessResult.Success else ProcessResult.RetryableFailure("Upsert returned false")
+    }
+
+    /// Derived recovery_score: mirrors iOS HealthKitService.syncRecoveryScore.
+    /// HRV vs 7-day baseline (50%) + RHR vs 7-day baseline (25%, inverted) + sleep_score (25%).
+    /// Fallback 75/25 HRV+RHR if sleep_score missing.
+    private suspend fun computeAndUpsertRecoveryScore(
+        accessToken: String,
+        service: SupabaseHealthConnectService,
+        date: String,
+        sourceId: String
+    ) {
+        try {
+            val hc = androidx.health.connect.client.HealthConnectClient.getOrCreate(applicationContext)
+            val zone = java.time.ZoneId.systemDefault()
+            val dayStart = java.time.LocalDate.parse(date).atStartOfDay(zone).toInstant()
+            val dayEnd = dayStart.plus(1, java.time.temporal.ChronoUnit.DAYS)
+            val baselineStart = dayStart.minus(7, java.time.temporal.ChronoUnit.DAYS)
+
+            val hrvHistory = hc.readRecords(
+                androidx.health.connect.client.request.ReadRecordsRequest(
+                    recordType = androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord::class,
+                    timeRangeFilter = androidx.health.connect.client.time.TimeRangeFilter.between(baselineStart, dayEnd)
+                )
+            ).records
+            val rhrHistory = hc.readRecords(
+                androidx.health.connect.client.request.ReadRecordsRequest(
+                    recordType = androidx.health.connect.client.records.RestingHeartRateRecord::class,
+                    timeRangeFilter = androidx.health.connect.client.time.TimeRangeFilter.between(baselineStart, dayEnd)
+                )
+            ).records
+
+            val hrvToday = hrvHistory.filter { it.time >= dayStart && it.time < dayEnd }.map { it.heartRateVariabilityMillis }.average().takeIf { !it.isNaN() }
+            val rhrToday = rhrHistory.filter { it.time >= dayStart && it.time < dayEnd }.map { it.beatsPerMinute.toDouble() }.average().takeIf { !it.isNaN() }
+            val hrvBaseline = hrvHistory.filter { it.time < dayStart }.map { it.heartRateVariabilityMillis }.average().takeIf { !it.isNaN() }
+            val rhrBaseline = rhrHistory.filter { it.time < dayStart }.map { it.beatsPerMinute.toDouble() }.average().takeIf { !it.isNaN() }
+
+            if (hrvToday == null || rhrToday == null || hrvBaseline == null || rhrBaseline == null) return
+            if (hrvBaseline <= 0 || rhrToday <= 0) return
+
+            val hrvComponent = minOf(100.0, maxOf(0.0, (hrvToday / hrvBaseline) * 100.0))
+            val rhrComponent = minOf(100.0, maxOf(0.0, (rhrBaseline / rhrToday) * 100.0))
+            val sleepScore = service.fetchSleepScoreForDate(accessToken, date)
+
+            val recovery = if (sleepScore != null) {
+                hrvComponent * 0.50 + rhrComponent * 0.25 + sleepScore * 0.25
+            } else {
+                hrvComponent * 0.75 + rhrComponent * 0.25
+            }
+            service.upsertRecoveryScore(accessToken, date, (recovery * 100).toInt() / 100.0, sourceId)
+        } catch (e: Exception) {
+            Log.w(TAG, "Recovery score compute skipped: ${e.message}")
+        }
     }
 }

@@ -11,6 +11,7 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyFatRecord
@@ -79,7 +80,8 @@ class HealthConnectChangesWorker(
             BloodGlucoseRecord::class to HealthConnectRecordTypes.BLOOD_GLUCOSE,
             OxygenSaturationRecord::class to HealthConnectRecordTypes.SPO2,
             RespiratoryRateRecord::class to HealthConnectRecordTypes.RESPIRATORY_RATE,
-            BodyTemperatureRecord::class to HealthConnectRecordTypes.SKIN_TEMP
+            BodyTemperatureRecord::class to HealthConnectRecordTypes.SKIN_TEMP,
+            ActiveCaloriesBurnedRecord::class to HealthConnectRecordTypes.ACTIVE_CALORIES
         )
 
         /**
@@ -98,7 +100,8 @@ class HealthConnectChangesWorker(
             HealthConnectRecordTypes.BLOOD_GLUCOSE to "blood_glucose_daily",
             HealthConnectRecordTypes.SPO2 to "spo2_daily",
             HealthConnectRecordTypes.RESPIRATORY_RATE to "respiratory_rate_daily",
-            HealthConnectRecordTypes.SKIN_TEMP to "skin_temp_daily"
+            HealthConnectRecordTypes.SKIN_TEMP to "skin_temp_daily",
+            HealthConnectRecordTypes.ACTIVE_CALORIES to "strain_daily"
         )
 
         fun getRequiredPermissions(): Set<String> = SUPPORTED_RECORDS.keys.map {
@@ -288,7 +291,7 @@ class HealthConnectChangesWorker(
         Log.d(TAG, "Backfilling ${records.size} $recordType records")
 
         val outboxItems = records.mapNotNull { record ->
-            recordToOutboxEntry(record, recordType, "UPSERT")
+            recordToOutboxEntry(hc, record, recordType, "UPSERT")
         }
 
         if (outboxItems.isNotEmpty()) {
@@ -336,7 +339,7 @@ class HealthConnectChangesWorker(
             for (change in resp.changes) {
                 when (change) {
                     is UpsertionChange -> {
-                        val entry = recordToOutboxEntry(change.record, recordType, "UPSERT")
+                        val entry = recordToOutboxEntry(hc, change.record, recordType, "UPSERT")
                         if (entry != null) outboxItems.add(entry)
                     }
                     is DeletionChange -> {
@@ -361,9 +364,9 @@ class HealthConnectChangesWorker(
         return setTokenForType(state, recordType, nextToken)
     }
 
-    private fun recordToOutboxEntry(record: Record, recordType: String, operation: String): HealthConnectOutboxEntity? {
+    private suspend fun recordToOutboxEntry(hc: HealthConnectClient, record: Record, recordType: String, operation: String): HealthConnectOutboxEntity? {
         return try {
-            val (date, payload) = extractRecordData(record, recordType)
+            val (date, payload) = extractRecordData(hc, record, recordType)
             HealthConnectOutboxEntity(
                 healthConnectId = record.metadata.id,
                 recordType = recordType,
@@ -377,24 +380,25 @@ class HealthConnectChangesWorker(
         }
     }
 
-    private fun extractRecordData(record: Record, recordType: String): Pair<String, String> {
+    private suspend fun extractRecordData(hc: HealthConnectClient, record: Record, recordType: String): Pair<String, String> {
         return when (record) {
             is SleepSessionRecord -> {
                 val date = record.endTime.atZone(ZoneId.systemDefault()).toLocalDate().toString()
                 val duration = Duration.between(record.startTime, record.endTime).toMinutes()
                 
                 var remMin = 0L; var deepMin = 0L; var lightMin = 0L; var awakeMin = 0L
+                var awakeCount = 0
                 for (stage in record.stages) {
                     val mins = Duration.between(stage.startTime, stage.endTime).toMinutes()
                     when (stage.stage) {
                         SleepSessionRecord.STAGE_TYPE_REM -> remMin += mins
                         SleepSessionRecord.STAGE_TYPE_DEEP -> deepMin += mins
                         SleepSessionRecord.STAGE_TYPE_LIGHT -> lightMin += mins
-                        SleepSessionRecord.STAGE_TYPE_AWAKE -> awakeMin += mins
+                        SleepSessionRecord.STAGE_TYPE_AWAKE -> { awakeMin += mins; awakeCount += 1 }
                     }
                 }
-                
-                val payload = """{"duration_minutes":$duration,"start_time":"${record.startTime}","end_time":"${record.endTime}","rem_minutes":$remMin,"deep_minutes":$deepMin,"light_minutes":$lightMin,"awake_minutes":$awakeMin}"""
+
+                val payload = """{"duration_minutes":$duration,"start_time":"${record.startTime}","end_time":"${record.endTime}","rem_minutes":$remMin,"deep_minutes":$deepMin,"light_minutes":$lightMin,"awake_minutes":$awakeMin,"awake_count":$awakeCount}"""
                 date to payload
             }
             
@@ -460,10 +464,35 @@ class HealthConnectChangesWorker(
                 date to payload
             }
             
+            is ActiveCaloriesBurnedRecord -> {
+                val date = record.endTime.atZone(ZoneId.systemDefault()).toLocalDate().toString()
+                val kcal = record.energy.inKilocalories
+                val payload = """{"value_kcal":$kcal}"""
+                date to payload
+            }
+
             is BodyTemperatureRecord -> {
                 val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
-                val payload = """{"value_celsius":${record.temperature.inCelsius}}"""
-                date to payload
+                val todayCelsius = record.temperature.inCelsius
+                // Compute deviation against a 7-day baseline so format matches Whoop/Oura.
+                val end = record.time
+                val start = end.minus(7, ChronoUnit.DAYS)
+                val history = runCatching {
+                    hc.readRecords(
+                        ReadRecordsRequest(
+                            recordType = BodyTemperatureRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(start, end)
+                        )
+                    ).records
+                }.getOrDefault(emptyList())
+                val baselineSamples = history.map { it.temperature.inCelsius }.filter { it > 0 }
+                if (baselineSamples.isEmpty()) {
+                    // No baseline yet — skip writing so we don't pollute with absolute temps.
+                    throw IllegalStateException("skin_temp: no 7-day baseline available")
+                }
+                val baseline = baselineSamples.average()
+                val deviation = todayCelsius - baseline
+                date to """{"value_celsius":$deviation}"""
             }
             
             else -> throw IllegalArgumentException("Unsupported record type: ${record::class.simpleName}")

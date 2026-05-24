@@ -732,6 +732,9 @@ class EdgeFunctionsService {
         val metrics = listOf(
             "sleep_duration_daily",
             "sleep_stages_daily",
+            "sleep_efficiency_daily",
+            "sleep_disturbances_daily",
+            "sleep_score_daily",
             "fell_asleep_time_daily",
             "woke_up_time_daily",
             "resting_hr_daily",
@@ -746,7 +749,9 @@ class EdgeFunctionsService {
             "blood_pressure_daily",
             "blood_glucose_daily",
             "respiratory_rate_daily",
-            "stress_index_daily"
+            "stress_index_daily",
+            "strain_daily",
+            "recovery_score_daily"
         )
 
         // Load current settings so we don't overwrite wearable sources
@@ -782,6 +787,9 @@ class EdgeFunctionsService {
         val metrics = listOf(
             "sleep_duration_daily",
             "sleep_stages_daily",
+            "sleep_efficiency_daily",
+            "sleep_disturbances_daily",
+            "sleep_score_daily",
             "fell_asleep_time_daily",
             "woke_up_time_daily",
             "resting_hr_daily",
@@ -796,7 +804,9 @@ class EdgeFunctionsService {
             "blood_pressure_daily",
             "blood_glucose_daily",
             "respiratory_rate_daily",
-            "stress_index_daily"
+            "stress_index_daily",
+            "strain_daily",
+            "recovery_score_daily"
         )
 
         var allOk = true

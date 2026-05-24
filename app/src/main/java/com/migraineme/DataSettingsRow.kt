@@ -367,6 +367,18 @@ fun DataSettingsRow(
                         OuraConversionCard(note = conversionNote)
                     }
                 }
+
+                // Health Connect conversion info cards — shown when HC is the metric's source.
+                // Checked independent of row type so the note also surfaces for wearable rows
+                // that fall back to HC data (e.g. sleep_efficiency_daily).
+                if ((isPhoneOrWearableRow && selectedHybridSource == "health_connect")
+                    || metricSettings[row.table]?.preferredSource == "health_connect"
+                ) {
+                    val conversionNote = healthConnectConversionNote(row.table)
+                    if (conversionNote != null) {
+                        OuraConversionCard(note = conversionNote)
+                    }
+                }
             }
 
             // Toggle column
@@ -578,6 +590,31 @@ private fun garminConversionNote(table: String): String? = when (table) {
 
     "hrv_daily" ->
         "Garmin HRV status from overnight sleep window. Reports 7-day average and last-night values."
+
+    else -> null
+}
+
+private fun healthConnectConversionNote(table: String): String? = when (table) {
+    "sleep_efficiency_daily" ->
+        "Computed from Health Connect sleep stages: (total − awake) ÷ total × 100."
+
+    "sleep_disturbances_daily" ->
+        "Count of separate AWAKE stage events during sleep, as recorded by your sleep app in Health Connect."
+
+    "sleep_score_daily" ->
+        "Health Connect doesn't store a sleep score. Computed locally: 60% duration (best at 7–9h) + 40% efficiency."
+
+    "skin_temp_daily" ->
+        "Health Connect stores absolute body temperature. We compute deviation from your 7-day baseline (matches Whoop/Oura format). Requires at least 7 days of history; needs a compatible device."
+
+    "strain_daily" ->
+        "Active calories from Health Connect are converted to kilojoules (×4.184), matching Garmin's format."
+
+    "stress_index_daily" ->
+        "Computed daily at 9 AM local from your HRV and resting HR vs your 14-day personal baseline. Requires HRV + RHR data flowing from Health Connect or a wearable."
+
+    "recovery_score_daily" ->
+        "Health Connect doesn't store a recovery score. Computed locally: HRV vs your 7-day baseline (50%), resting HR vs baseline (25%, lower is better), sleep score (25%). Requires at least 7 days of HRV/RHR history."
 
     else -> null
 }

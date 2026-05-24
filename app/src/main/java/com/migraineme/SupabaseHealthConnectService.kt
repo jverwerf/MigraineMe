@@ -197,7 +197,51 @@ class SupabaseHealthConnectService(context: Context) {
             HealthConnectRecordTypes.SPO2 -> "spo2_daily"
             HealthConnectRecordTypes.RESPIRATORY_RATE -> "respiratory_rate_daily"
             HealthConnectRecordTypes.SKIN_TEMP -> "skin_temp_daily"
+            HealthConnectRecordTypes.ACTIVE_CALORIES -> "strain_daily"
             else -> null
+        }
+    }
+
+    @Serializable
+    private data class StrainRow(
+        val date: String,
+        val value_kilojoule: Double,
+        val source: String = SOURCE,
+        val source_measure_id: String? = null
+    )
+
+    suspend fun upsertStrain(accessToken: String, date: String, valueKj: Double, sourceId: String): Boolean {
+        return upsertDailyCompat(accessToken, "strain_daily", StrainRow(date, valueKj, SOURCE, sourceId))
+    }
+
+    @Serializable
+    private data class RecoveryScoreRow(
+        val date: String,
+        val value_pct: Double,
+        val source: String = SOURCE,
+        val source_measure_id: String? = null
+    )
+
+    suspend fun upsertRecoveryScore(accessToken: String, date: String, valuePct: Double, sourceId: String): Boolean {
+        return upsertDailyCompat(accessToken, "recovery_score_daily", RecoveryScoreRow(date, valuePct, SOURCE, sourceId))
+    }
+
+    /// Read today's sleep_score_daily value (any source) for use in derived recovery_score.
+    suspend fun fetchSleepScoreForDate(accessToken: String, date: String): Double? {
+        return try {
+            val resp = client.get("$supabaseUrl/rest/v1/sleep_score_daily") {
+                parameter("date", "eq.$date")
+                parameter("select", "value_pct")
+                parameter("order", "created_at.desc")
+                parameter("limit", "1")
+                header("apikey", supabaseKey)
+                header("Authorization", "Bearer $accessToken")
+            }
+            val body = resp.bodyAsText()
+            val parsed = kotlinx.serialization.json.Json.parseToJsonElement(body)
+            parsed.jsonArray.firstOrNull()?.jsonObject?.get("value_pct")?.jsonPrimitive?.double
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -241,6 +285,7 @@ class SupabaseHealthConnectService(context: Context) {
         deepMinutes: Int,
         lightMinutes: Int,
         awakeMinutes: Int,
+        awakeCount: Int = 0,
         sourceId: String
     ): Boolean {
         val results = mutableListOf<Boolean>()
@@ -274,8 +319,79 @@ class SupabaseHealthConnectService(context: Context) {
                 )))
         }
 
+        // Sleep efficiency — derive from total vs awake (matches Garmin formula).
+        // durationHours is already asleep-only, so add awake back to get total session length.
+        val totalMin = (durationHours * 60.0) + awakeMinutes.toDouble()
+        if (totalMin > 0.0) {
+            val effPct = ((totalMin - awakeMinutes.toDouble()) / totalMin) * 100.0
+            results.add(upsertDailyCompat(accessToken, "sleep_efficiency_daily",
+                SleepEfficiencyRow(
+                    date = date,
+                    value_pct = (effPct * 100.0).toInt() / 100.0,
+                    source = SOURCE,
+                    source_measure_id = sourceId
+                )))
+        }
+
+        // Sleep disturbances — count of AWAKE stage events (matches iOS approach).
+        if (awakeCount > 0) {
+            results.add(upsertDailyCompat(accessToken, "sleep_disturbances_daily",
+                SleepDisturbancesRow(
+                    date = date,
+                    value_count = awakeCount,
+                    source = SOURCE,
+                    source_measure_id = sourceId
+                )))
+        }
+
+        // Sleep score — derived locally with same formula as iOS HealthKitService.computeSleepScore.
+        // 60% duration-score (best at 7-9h) + 40% efficiency-score. Skip if no total session length.
+        if (totalMin > 0.0 && durationHours > 0.0) {
+            val asleepHours = durationHours
+            val durationScore: Double = when {
+                asleepHours in 7.0..9.0 -> 100.0
+                asleepHours in 6.0..7.0 -> 70.0 + (asleepHours - 6.0) * 30.0
+                asleepHours > 9.0 && asleepHours <= 10.0 -> 100.0 - (asleepHours - 9.0) * 20.0
+                asleepHours < 6.0 -> maxOf(20.0, asleepHours / 6.0 * 70.0)
+                else -> maxOf(40.0, 80.0 - (asleepHours - 10.0) * 20.0)
+            }
+            val efficiencyScore = minOf(100.0, (durationHours * 60.0) / totalMin * 100.0)
+            val score = minOf(100.0, maxOf(0.0, durationScore * 0.6 + efficiencyScore * 0.4))
+            results.add(upsertDailyCompat(accessToken, "sleep_score_daily",
+                SleepScoreRow(
+                    date = date,
+                    value_pct = (score * 100.0).toInt() / 100.0,
+                    source = SOURCE,
+                    source_measure_id = sourceId
+                )))
+        }
+
         return results.all { it }
     }
+
+    @Serializable
+    private data class SleepScoreRow(
+        val date: String,
+        val value_pct: Double,
+        val source: String = SOURCE,
+        val source_measure_id: String? = null
+    )
+
+    @Serializable
+    private data class SleepEfficiencyRow(
+        val date: String,
+        val value_pct: Double,
+        val source: String = SOURCE,
+        val source_measure_id: String? = null
+    )
+
+    @Serializable
+    private data class SleepDisturbancesRow(
+        val date: String,
+        val value_count: Int,
+        val source: String = SOURCE,
+        val source_measure_id: String? = null
+    )
 
     // ============================================================
     // HRV
