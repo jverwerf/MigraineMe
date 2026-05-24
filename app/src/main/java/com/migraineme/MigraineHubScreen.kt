@@ -239,8 +239,8 @@ fun MigraineHubScreen(navController: NavController) {
             ) {
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = "Symptoms",
-                    subtitle = "Log a symptom",
+                    title = "Migraine",
+                    subtitle = "Pain character, symptom, postdrome",
                     iconColor = AppTheme.AccentPink,
                     drawIcon = { HubIcons.run { drawMigraineStarburst(it) } },
                     onClick = { navController.navigate(Routes.QUICK_LOG_MIGRAINE) }
