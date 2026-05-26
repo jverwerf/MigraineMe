@@ -100,7 +100,7 @@ fun LocationsScreen(
                                 .background(Color.White.copy(alpha = 0.06f)).padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(loc.type, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
+                            Text(prettyLabel(loc.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
                             Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier.size(18.dp).clickable {
                                     rebuildDraftWithLocations(draft.locations.toMutableList().apply { removeAt(index) })

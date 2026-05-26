@@ -64,7 +64,7 @@ private data class RiskGraphDay(val date: String, val values: Map<String, Float>
 private data class MetricTemplate(
     val chipKey: String,       // e.g. "sleep:duration", "nutrition:caffeine"
     val label: String,         // Direction-stripped label: "Sleep Duration", "Caffeine"
-    val category: String,      // "Sleep", "Weather", "Physical", "Mental", "Nutrition"
+    val category: String,      // "Sleep", "Weather", "Physical", "Cognitive", "Diet"
     val triggerLabel: String?,  // Original trigger label: "Sleep duration high", "Caffeine low"
     val displayGroup: String?, // e.g. "Poor sleep", "Irregular sleep"
 )
@@ -626,7 +626,7 @@ fun RiskHistoryGraph(
                     ) {
                         Column {
                             Text(dateLabel, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                            Text(bar.trigger.name, color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text(prettyLabel(bar.trigger.name), color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                             Text("${bar.trigger.severity.uppercase()} · ${bar.trigger.score} pts", color = sevColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
@@ -677,7 +677,7 @@ fun RiskHistoryGraph(
         // fav-of-favs row, so every metric appears exactly once.
         data class CatGroup(val name: String, val color: Color, val keys: List<String>)
         val groups = remember(templates, favPool, favChipKeys) {
-            val catOrder = listOf("Sleep", "Weather", "Physical", "Mental", "Nutrition")
+            val catOrder = listOf("Sleep", "Weather", "Physical", "Cognitive", "Diet")
             val byCat = linkedMapOf<String, MutableList<String>>()
             val seenPerCat = mutableMapOf<String, MutableSet<String>>()
             fun add(category: String, key: String) {
@@ -718,7 +718,10 @@ private suspend fun loadRiskGraphData(ctx: android.content.Context, days: Int, e
     try {
         val token = SessionStore.getValidAccessToken(ctx) ?: return@withContext empty
         val startDate = endDate.minusDays(days.toLong() - 1)
-        val startStr = startDate.toString(); val endStr = endDate.toString()
+        // Extend the upper bound to include the 6-day forecast horizon written by
+        // risk-score-worker into risk_score_daily (matches iOS behaviour).
+        val forecastDate = endDate.plusDays(6)
+        val startStr = startDate.toString(); val endStr = forecastDate.toString()
         val fetchLimit = days + 14
         val dateMap = mutableMapOf<String, MutableMap<String, Float>>()
         fun put(date: String, key: String, value: Float) { if (date in startStr..endStr) dateMap.getOrPut(date) { mutableMapOf() }[key] = value }
@@ -861,7 +864,7 @@ private fun parseTopTriggersJsonElement(raw: JsonElement?): List<ParsedTrigger> 
 
 private fun catColor(category: String): Color = when (category) {
     "Sleep" -> Color(0xFF7E57C2); "Weather" -> Color(0xFF4FC3F7); "Physical" -> Color(0xFF81C784)
-    "Mental" -> Color(0xFFBA68C8); "Nutrition" -> Color(0xFFFFB74D); else -> Color(0xFF999999)
+    "Cognitive" -> Color(0xFFBA68C8); "Diet" -> Color(0xFFFFB74D); else -> Color(0xFF999999)
 }
 
 private fun fmtV(v: Float): String = if (v == v.toLong().toFloat()) "${v.toLong()}" else "%.1f".format(v)

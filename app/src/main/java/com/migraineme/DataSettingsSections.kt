@@ -52,7 +52,7 @@ object DataSettingsSections {
             )
         ),
         DataSection(
-            title = "Mental Health",
+            title = "Cognitive",
             rows = listOf(
                 wearableRow("stress_index_daily", "Stress index"),
                 phoneRow("screen_time_daily", "Phone screen time tracking"),
@@ -79,7 +79,7 @@ object DataSettingsSections {
         DataSection(
             title = "Diet",
             rows = listOf(
-                phoneRow("nutrition", "Nutrition")
+                phoneRow("nutrition", "Diet")
             )
         ),
         DataSection(

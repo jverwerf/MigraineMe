@@ -103,5 +103,22 @@ class CalendarDailySyncWorker(
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_WORK)
         }
+
+        /** Fire a one-shot calendar sync right now (no schedule, no constraints).
+         *  Used from app launch / foreground entry so mappings are fresh before
+         *  the user opens the daily check-in. */
+        fun runOnceNow(context: Context) {
+            val req = androidx.work.OneTimeWorkRequestBuilder<CalendarDailySyncWorker>()
+                .setConstraints(
+                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+                )
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "${UNIQUE_WORK}_oneshot",
+                androidx.work.ExistingWorkPolicy.REPLACE,
+                req,
+            )
+            Log.d(TAG, "runOnceNow enqueued")
+        }
     }
 }

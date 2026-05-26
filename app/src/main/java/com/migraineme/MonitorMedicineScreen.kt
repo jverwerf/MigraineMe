@@ -12,14 +12,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -359,32 +362,78 @@ suspend fun loadMedicineGraphData(
 fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: () -> Unit) {
     val ctx = LocalContext.current
     val accent = Color(0xFF4FC3F7)
+    var showInfo by remember { mutableStateOf(false) }
 
-    BaseCard(modifier = Modifier.clickable { onClick() }) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.MedicalServices, contentDescription = null,
-                tint = accent, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(10.dp))
-            Text("Medicines", color = Color.White,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.weight(1f))
-            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
-        }
-        Spacer(Modifier.height(8.dp))
+    Box(modifier = Modifier.fillMaxWidth()) {
+        BaseCard(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.MedicalServices, contentDescription = null,
+                    tint = accent, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(10.dp))
+                Text("Medicines", color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.weight(1f))
+                Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+            }
+            Spacer(Modifier.height(8.dp))
 
-        when {
-            isLoading -> Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-            summary.all.isEmpty() -> Text("No medicines logged in the last 30 days",
-                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-            else -> {
-                val favs = MedicineCardConfig.loadFavourites(ctx)
-                val slots = resolveMedicineCardSlots(favourites = favs, allEntries = summary.all)
-                MedicineDwmGrid(
-                    medicines = slots,
-                    categories = summary.categories.take(4),
-                )
+            when {
+                isLoading -> Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                summary.all.isEmpty() -> Text("No medicines logged in the last 30 days",
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                else -> {
+                    val favs = MedicineCardConfig.loadFavourites(ctx)
+                    val slots = resolveMedicineCardSlots(favourites = favs, allEntries = summary.all)
+                    MedicineDwmGrid(
+                        medicines = slots,
+                        categories = summary.categories.take(4),
+                    )
+                }
             }
         }
+
+        IconButton(
+            onClick = { showInfo = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 10.dp, y = (-14).dp)
+                .size(34.dp)
+        ) {
+            Icon(Icons.Outlined.Info, contentDescription = "About Medicines",
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+        }
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.MedicalServices, contentDescription = null,
+                        tint = accent, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("About Medicines", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+            },
+            text = {
+                Text(
+                    "Your medicine usage over the last 30 days. Each row shows a medicine name + the " +
+                    "category you've set on it (if any), with three numbers on the right: Day (today), " +
+                    "Week (last 7d) and Month (last 30d) totals in the units you logged — e.g. 1200mg, " +
+                    "2×, or 1200mg + if you mixed units. \"—\" means nothing logged in that window.\n\n" +
+                    "Which medicines appear here is driven by what you've favourited in Customize; if " +
+                    "you haven't picked favourites, the most-logged medicines from the past week show " +
+                    "up. Below those, the most-used categories appear as their own D/W/M totals.\n\n" +
+                    "Tap to open the detail screen with: Customize Medicines (pick favourites and " +
+                    "highlighted categories), a full breakdown across every medicine and category, " +
+                    "and a 14-day stacked-bar history chart you can filter by medicine or category.",
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            containerColor = Color(0xFF1E0A2E)
+        )
     }
 }
 
@@ -416,12 +465,6 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-            }
 
             // 1. Customize hero card
             BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.MEDICINE_CONFIG) }) {
@@ -602,7 +645,7 @@ private fun MedicineDwmGrid(
                             Text(row.name, color = Color.White, style = nameStyle, maxLines = 1)
                             if (!row.category.isNullOrBlank()) {
                                 Spacer(Modifier.width(4.dp))
-                                Text(row.category, color = AppTheme.SubtleTextColor,
+                                Text(prettyLabel(row.category), color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier
                                         .clip(CircleShape)
@@ -912,13 +955,6 @@ fun MonitorMedicineConfigScreen(onBack: () -> Unit) {
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-                Text("Customize Medicines", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            }
             BaseCard {
                 Text("Pick medicines and categories to prioritize on the Monitor card and chart.",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
@@ -1037,14 +1073,6 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-                Text("Medicines History", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            }
-
             BaseCard {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { selectedDate = selectedDate.minusDays(1) }) {

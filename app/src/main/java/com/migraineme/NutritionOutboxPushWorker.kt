@@ -64,7 +64,10 @@ class NutritionOutboxPushWorker(
             for (item in upserts) {
                 try {
                     val record = hc.readRecord(NutritionRecord::class, item.healthConnectId).record
-                    val date: LocalDate = record.startTime.atZone(ZoneOffset.UTC).toLocalDate()
+                    // Use the device's local timezone, not UTC — Cronometer's "today"
+                    // is local-day, so a UTC-day conversion shifts logs by ±1 day
+                    // for users not in UTC.
+                    val date: LocalDate = record.startTime.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                     val nutrition = mapToNutritionData(record, date)
 
                     // Step 1: Enrich nutrition data if needed

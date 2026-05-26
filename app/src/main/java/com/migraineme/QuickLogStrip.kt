@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -124,16 +125,23 @@ fun QuickLogStrip(
             }
         }
     }
+    // Postdrome symptoms are recovery symptoms after an attack, not the attack
+    // itself. Exclude them from migraine quick log (the wizard already does this).
     val migraineFavs = remember(symptomFavs) {
-        symptomFavs.mapNotNull { it.symptom?.let { s ->
-            QuickLogFavorite(s.label, s.iconKey, QuickLogCategory.MIGRAINE)
-        } }
+        symptomFavs.mapNotNull { pref ->
+            pref.symptom?.takeIf { it.category != "Postdrome" }?.let { s ->
+                QuickLogFavorite(s.label, s.iconKey, QuickLogCategory.MIGRAINE)
+            }
+        }
     }
 
     // Sheet state
     var activeCategory by remember { mutableStateOf<QuickLogCategory?>(null) }
     var saving by remember { mutableStateOf(false) }
     var savedLabel by remember { mutableStateOf<String?>(null) }
+    var showInfo by remember { mutableStateOf(false) }
+
+    val infoText = "Tap any icon to log something in one tap with the timestamp set to right now. Use it mid-attack or whenever you don't have the bandwidth for a full log.\n\nIf you've starred favourites in your pools (your usual triggers, rescue medicines, etc.), the button opens a quick sheet of those so you can pick the specific one and confirm. No favourites set, or no time to choose? Tap \"Skip, just log Migraine\" (or \"Trigger\" / \"Medicine\" / etc.) and it saves immediately with a generic label.\n\nYou'll notice postdrome isn't here. That's on purpose: postdromes are the recovery symptoms that belong to a specific migraine, so we want them linked to an attack rather than floating on their own. We'll prompt you for them in your daily check-in whenever you have an open migraine, and you can also log them via the full wizard or by editing the migraine afterwards.\n\nFor a full attack log with timing, symptoms, pain location, prodromes and medicines, use the Log tab. Quick log is the shortcut for when you can't deal with all of that."
 
     // Confirmation toast
     LaunchedEffect(savedLabel) {
@@ -244,29 +252,47 @@ fun QuickLogStrip(
         }
 
         // Quick log card
-        BaseCard {
-            Text(
-                "Quick log",
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                QuickLogCategory.entries.forEach { cat ->
-                    QuickLogButton(
-                        category = cat,
-                        onClick = {
-                            val favs = favsFor(cat)
-                            if (favs.isEmpty()) {
-                                doSave(cat, cat.label)
-                            } else {
-                                activeCategory = cat
+        Box(modifier = Modifier.fillMaxWidth()) {
+            BaseCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Quick log",
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    QuickLogCategory.entries.forEach { cat ->
+                        QuickLogButton(
+                            category = cat,
+                            onClick = {
+                                val favs = favsFor(cat)
+                                if (favs.isEmpty()) {
+                                    doSave(cat, cat.label)
+                                } else {
+                                    activeCategory = cat
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
+            }
+            IconButton(
+                onClick = { showInfo = true },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 10.dp, y = (-14).dp)
+                    .size(34.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Info,
+                    contentDescription = "About Quick log",
+                    tint = AppTheme.SubtleTextColor,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
@@ -283,6 +309,25 @@ fun QuickLogStrip(
             onSelect = { label -> doSave(cat, label) },
             onSkip = { doSave(cat, cat.label) },
             onDismiss = { activeCategory = null }
+        )
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            confirmButton = {
+                TextButton(onClick = { showInfo = false }) {
+                    Text("Got it", color = AppTheme.AccentPurple)
+                }
+            },
+            title = {
+                Text("About Quick log", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = {
+                Text(infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            },
+            containerColor = AppTheme.BaseCardContainer
         )
     }
 }

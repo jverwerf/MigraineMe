@@ -41,12 +41,6 @@ fun InsightsTreatmentsScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-            }
-
             if (correlationsLoading) {
                 BaseCard {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center,
@@ -122,12 +116,12 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
                     val color = if (lift > 1.1f) Color(0xFF81C784) else if (lift < 0.9f) Color(0xFFE57373) else Color(0xFFCFCFCF)
                     Column(Modifier.padding(top = 2.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(stat.symptomSegment ?: "", color = Color.White,
+                            Text(prettyLabel(stat.symptomSegment), color = Color.White,
                                 style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.weight(1f))
                             Text(direction, color = color,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
-                        Text("With ${stat.symptomSegment ?: ""}: ${reliefLabel(withRelief)} · Without: ${reliefLabel(withoutRelief)}",
+                        Text("With ${prettyLabel(stat.symptomSegment)}: ${reliefLabel(withRelief)} · Without: ${reliefLabel(withoutRelief)}",
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2,
                             overflow = TextOverflow.Ellipsis)
                     }

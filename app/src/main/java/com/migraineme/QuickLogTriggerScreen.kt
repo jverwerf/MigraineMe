@@ -91,20 +91,6 @@ fun QuickLogTriggerScreen(
     Box {
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-                // Back navigation
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                }
-                
                 // Hero Card - Trigger Selection
                 HeroCard {
                     Text(

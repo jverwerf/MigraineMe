@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -430,17 +432,43 @@ fun MonitorNutritionScreen(
         )
     }
 
+    // Dismissable note about per-food data requirement
+    val perFoodNotePrefs = remember { context.getSharedPreferences("nutrition_ui", android.content.Context.MODE_PRIVATE) }
+    var perFoodNoteDismissed by remember { mutableStateOf(perFoodNotePrefs.getBoolean("perfood_note_dismissed", false)) }
+
     // UI
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            // Back
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
+            if (!perFoodNoteDismissed) {
+                BaseCard {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Outlined.Info, contentDescription = null,
+                            tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Automated tyramine, alcohol, gluten & histamine classification",
+                                color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "We can only classify foods if your nutrition app writes per-item entries to Health Connect (with a food name). Apps that only send daily totals — like Cronometer — can't be classified automatically. Log trigger foods via the barcode/search above to get classification.",
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                perFoodNotePrefs.edit().putBoolean("perfood_note_dismissed", true).apply()
+                                perFoodNoteDismissed = true
+                            },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(Icons.Outlined.Close, contentDescription = "Dismiss",
+                                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                        }
+                    }
                 }
             }
-            
-
 
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.NUTRITION_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -644,8 +672,8 @@ fun MonitorNutritionScreen(
             
             // History Graph — premium only
             PremiumGate(
-                message = "Unlock Nutrition Trends",
-                subtitle = "Track your nutrition patterns over time",
+                message = "Unlock Diet Trends",
+                subtitle = "Track your diet patterns over time",
                 onUpgrade = { navController.navigate(Routes.PAYWALL) }
             ) {
                 NutritionHistoryGraph(

@@ -57,6 +57,7 @@ object MetricPalette {
         "user_weather_daily::humidity_pct_mean" to Color(0xFF26C6DA),
         "user_weather_daily::wind_speed_mps_mean" to Color(0xFF66BB6A),
         "user_weather_daily::uv_index_max" to Color(0xFFFFCA28),
+        "user_weather_daily::is_thunderstorm_day" to Color(0xFFFFD54F),
         "user_location_daily::altitude_max_m" to Color(0xFFCE93D8),
         "user_location_daily::altitude_change_m" to Color(0xFFBA68C8),
 

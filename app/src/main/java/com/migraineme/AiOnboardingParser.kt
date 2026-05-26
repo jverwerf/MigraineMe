@@ -53,6 +53,7 @@ data class OnboardingPreFill(
     val alcoholTriggers: DeterministicMapper.Certainty? = null,
     val specificDrinks: Set<String> = emptySet(),
     val tyramineFoods: Map<String, DeterministicMapper.Certainty> = emptyMap(),
+    val histamineFoods: Map<String, DeterministicMapper.Certainty> = emptyMap(),
     val glutenSensitivity: String? = null,
     val glutenTriggers: DeterministicMapper.Certainty? = null,
     val eatingPatterns: Map<String, DeterministicMapper.Certainty> = emptyMap(),
@@ -86,6 +87,8 @@ data class OnboardingPreFill(
     val matchedReliefs: Set<String> = emptySet(),
     val matchedActivities: Set<String> = emptySet(),
     val matchedMissedActivities: Set<String> = emptySet(),
+    val matchedLocations: Set<String> = emptySet(),
+    val matchedPostdromes: Set<String> = emptySet(),
 )
 
 object AiOnboardingParser {
@@ -97,6 +100,7 @@ object AiOnboardingParser {
     private val CAFFEINE_DIRECTION_VALUES = setOf("Too much triggers it", "Missing caffeine triggers it", "Both ways", "Not sure", "No")
     private val SPECIFIC_DRINKS_VALUES = setOf("Red wine", "Beer", "White wine", "Spirits", "Any alcohol")
     private val TYRAMINE_FOODS_KEYS = setOf("Aged cheese", "Chocolate", "Cured meats", "Fermented foods")
+    private val HISTAMINE_FOODS_KEYS = setOf("Aged or smoked fish", "Avocado", "Spinach", "Tomatoes", "Strawberries", "Vinegar")
     private val GLUTEN_SENSITIVITY_VALUES = setOf("Yes, diagnosed", "I suspect so", "No", "Not sure")
     private val EATING_PATTERNS_KEYS = setOf("Skipping meals", "Sugar", "Salty food", "Overeating", "Dehydration")
     private val WATER_INTAKE_VALUES = setOf("< 1L", "1-2L", "2-3L", "3L+")
@@ -128,6 +132,8 @@ object AiOnboardingParser {
         reliefLabels: List<String>,
         activityLabels: List<String>,
         missedActivityLabels: List<String>,
+        locationLabels: List<String> = emptyList(),
+        postdromeLabels: List<String> = emptyList(),
     ): OnboardingPreFill {
         val lower = text.lowercase()
 
@@ -223,6 +229,10 @@ object AiOnboardingParser {
             matchedReliefs = matchPool(reliefLabels),
             matchedActivities = matchPool(activityLabels),
             matchedMissedActivities = matchPool(missedActivityLabels),
+            // Locations + postdromes deliberately get NO deterministic keyword pass —
+            // they're semantic categories ("at work", "wiped out next day") that need GPT.
+            matchedLocations = emptySet(),
+            matchedPostdromes = emptySet(),
         )
     }
 
@@ -240,6 +250,8 @@ object AiOnboardingParser {
         reliefLabels: List<String>,
         activityLabels: List<String>,
         missedActivityLabels: List<String>,
+        locationLabels: List<String> = emptyList(),
+        postdromeLabels: List<String> = emptyList(),
         deterministicResult: OnboardingPreFill,
     ): OnboardingPreFill? {
         // Build a summary of everything the deterministic parser already extracted
@@ -287,6 +299,12 @@ object AiOnboardingParser {
                 appendLine("RELIEFS: ${reliefLabels.joinToString(", ")}")
                 appendLine("ACTIVITIES: ${activityLabels.joinToString(", ")}")
                 appendLine("MISSED_ACTIVITIES: ${missedActivityLabels.joinToString(", ")}")
+                appendLine("LOCATIONS: ${locationLabels.joinToString(", ")}")
+                appendLine("POSTDROMES: ${postdromeLabels.joinToString(", ")}")
+                appendLine()
+                appendLine("For LOCATIONS, infer from context (e.g. \"always at the office\" → Work; \"in the car\" → Commute/Car).")
+                appendLine("For POSTDROMES, infer recovery-phase mentions (e.g. \"wiped out next day\" → Fatigue; \"foggy after\" → Brain fog).")
+                appendLine("Return them as JSON arrays \"locations\" and \"postdromes\".")
             }
             val requestBody = JSONObject().apply {
                 put("context_type", "onboarding_parser")
@@ -309,7 +327,8 @@ object AiOnboardingParser {
                     return null
                 }
                 parseGptResponse(responseText, triggerLabels, prodromeLabels, symptomLabels,
-                    medicineLabels, reliefLabels, activityLabels, missedActivityLabels)
+                    medicineLabels, reliefLabels, activityLabels, missedActivityLabels,
+                    locationLabels, postdromeLabels)
             } finally {
                 client.close()
             }
@@ -328,6 +347,8 @@ object AiOnboardingParser {
         reliefLabels: List<String>,
         activityLabels: List<String>,
         missedActivityLabels: List<String>,
+        locationLabels: List<String> = emptyList(),
+        postdromeLabels: List<String> = emptyList(),
     ): OnboardingPreFill {
         val obj = JSONObject(json)
 
@@ -407,6 +428,7 @@ object AiOnboardingParser {
             alcoholTriggers = optCert("alcohol_triggers"),
             specificDrinks = optStrSet("specific_drinks", SPECIFIC_DRINKS_VALUES),
             tyramineFoods = optCertMap("tyramine_foods", TYRAMINE_FOODS_KEYS),
+            histamineFoods = optCertMap("histamine_foods", HISTAMINE_FOODS_KEYS),
             glutenSensitivity = optStrIn("gluten_sensitivity", GLUTEN_SENSITIVITY_VALUES),
             glutenTriggers = optCert("gluten_triggers"),
             eatingPatterns = optCertMap("eating_patterns", EATING_PATTERNS_KEYS),
@@ -440,6 +462,8 @@ object AiOnboardingParser {
             matchedReliefs = matchArray("reliefs", reliefLabels),
             matchedActivities = matchArray("activities", activityLabels),
             matchedMissedActivities = matchArray("missed_activities", missedActivityLabels),
+            matchedLocations = matchArray("locations", locationLabels),
+            matchedPostdromes = matchArray("postdromes", postdromeLabels),
         )
     }
 
@@ -483,6 +507,7 @@ object AiOnboardingParser {
             alcoholTriggers = gpt.alcoholTriggers ?: deter.alcoholTriggers,
             specificDrinks = deter.specificDrinks + gpt.specificDrinks,
             tyramineFoods = deter.tyramineFoods + gpt.tyramineFoods,
+            histamineFoods = deter.histamineFoods + gpt.histamineFoods,
             glutenSensitivity = gpt.glutenSensitivity ?: deter.glutenSensitivity,
             glutenTriggers = gpt.glutenTriggers ?: deter.glutenTriggers,
             eatingPatterns = deter.eatingPatterns + gpt.eatingPatterns,
@@ -516,6 +541,8 @@ object AiOnboardingParser {
             matchedReliefs = deter.matchedReliefs + gpt.matchedReliefs,
             matchedActivities = deter.matchedActivities + gpt.matchedActivities,
             matchedMissedActivities = deter.matchedMissedActivities + gpt.matchedMissedActivities,
+            matchedLocations = deter.matchedLocations + gpt.matchedLocations,
+            matchedPostdromes = deter.matchedPostdromes + gpt.matchedPostdromes,
         )
     }
 }

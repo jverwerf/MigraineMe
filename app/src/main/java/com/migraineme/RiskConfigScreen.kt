@@ -38,8 +38,8 @@ private val CATEGORY_COLORS = mapOf(
     "Sleep" to Color(0xFF7E57C2),
     "Weather" to Color(0xFF4FC3F7),
     "Physical" to Color(0xFF81C784),
-    "Mental" to Color(0xFFBA68C8),
-    "Nutrition" to Color(0xFFFFB74D)
+    "Cognitive" to Color(0xFFBA68C8),
+    "Diet" to Color(0xFFFFB74D)
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -59,12 +59,6 @@ fun RiskConfigScreen(onBack: () -> Unit) {
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                IconButton(onClick = { save(); onBack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-                }
-            }
-
             BaseCard {
                 Text("Choose 3 Favorites", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))

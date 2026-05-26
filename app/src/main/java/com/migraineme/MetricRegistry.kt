@@ -149,6 +149,7 @@ object MetricRegistry {
         "user_weather_daily::humidity_pct_mean"   to "humidity_daily",
         "user_weather_daily::wind_speed_mps_mean" to "wind_daily",
         "user_weather_daily::uv_index_max"        to "uv_daily",
+        "user_weather_daily::is_thunderstorm_day" to "thunderstorm_daily",
         "user_location_daily::altitude_max_m"     to "user_location_daily",
         "user_location_daily::altitude_change_m"  to "user_location_daily",
         // Mental: noise index table differs from settings key
@@ -321,8 +322,9 @@ object MetricRegistry {
         "user_weather_daily::pressure_hpa_mean" to 3,
         "user_weather_daily::wind_speed_mps_mean" to 4,
         "user_weather_daily::uv_index_max" to 5,
-        "user_location_daily::altitude_max_m" to 6,
-        "user_location_daily::altitude_change_m" to 7,
+        "user_weather_daily::is_thunderstorm_day" to 6,
+        "user_location_daily::altitude_max_m" to 7,
+        "user_location_daily::altitude_change_m" to 8,
         // Nutrition — defaults: Tyramine Exposure, Magnesium, Caffeine
         "nutrition_daily::max_tyramine_exposure" to 1,
         "nutrition_daily::total_magnesium_mg" to 2,

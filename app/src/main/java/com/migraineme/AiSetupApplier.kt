@@ -206,6 +206,30 @@ object AiSetupApplier {
                 progress("★ ${rec.label}")
             }
 
+            // ── Location favorites (user-picked from Locations onboarding page) ──
+            if (answers != null && answers.selectedLocations.isNotEmpty()) {
+                val locationPool = runCatching { db.getAllLocationPool(accessToken) }.getOrDefault(emptyList())
+                val locationIdMap = locationPool.associate { it.label.lowercase() to it.id }
+                pos = 0
+                for (label in answers.selectedLocations) {
+                    locationIdMap[label.lowercase()]?.let { id ->
+                        runCatching { db.insertLocationPref(accessToken, id, pos++, "frequent") }
+                            .onFailure { Log.w(TAG, "Failed location fav '$label': ${it.message}") }
+                    }
+                }
+            }
+
+            // ── Postdrome favorites (postdromes ARE symptoms with category=Postdrome) ──
+            if (answers != null && answers.selectedPostdromes.isNotEmpty()) {
+                pos = 0
+                for (label in answers.selectedPostdromes) {
+                    symptomIdMap[label.lowercase()]?.let { id ->
+                        runCatching { db.insertSymptomPref(accessToken, id, pos++, "frequent") }
+                            .onFailure { Log.w(TAG, "Failed postdrome fav '$label': ${it.message}") }
+                    }
+                }
+            }
+
             // ── Gauge thresholds ──
             val t = config.gaugeThresholds
             runCatching {

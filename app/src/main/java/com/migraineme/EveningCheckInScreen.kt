@@ -16,8 +16,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,12 +45,32 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-private enum class CheckInPage { NOTE, CALENDAR, TRIGGERS, PRODROMES, MEDICINES, RELIEFS, ACTIVITIES, REVIEW }
+/// Pages in the evening check-in. Sealed-class instead of plain enum so
+/// POSTDROME can appear conditionally (only when an open migraine exists)
+/// and SIDE_EFFECTS can repeat — one page per active treatment regimen.
+private sealed class CheckInPage {
+    data object Note : CheckInPage()
+    data object Calendar : CheckInPage()
+    data object Postdrome : CheckInPage()
+    data object Triggers : CheckInPage()
+    data object Prodromes : CheckInPage()
+    data object Medicines : CheckInPage()
+    data object Reliefs : CheckInPage()
+    data object Activities : CheckInPage()
+    data class SideEffects(val regimenIndex: Int) : CheckInPage()
+    data object Review : CheckInPage()
+}
+
+val TREATMENT_SIDE_EFFECT_POOL = listOf(
+    "Fatigue", "Tingling", "Brain fog", "Nausea", "Dizziness",
+    "Mood shift", "Insomnia", "Appetite", "Dry mouth", "Headache"
+)
 
 private data class SelectableItem(
     val label: String,
     val iconKey: String? = null,
     val isFavourite: Boolean = false,
+    val category: String? = null,
 )
 
 // Keep legacy types for backward compat with other files that import them
@@ -74,6 +96,7 @@ fun EveningCheckInScreen(
     medicineVm: MedicineViewModel = viewModel(),
     reliefVm: ReliefViewModel = viewModel(),
     activityVm: ActivityViewModel = viewModel(),
+    symptomVm: SymptomViewModel = viewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val authState by authVm.state.collectAsState()
@@ -85,6 +108,7 @@ fun EveningCheckInScreen(
             medicineVm.loadAll(token)
             reliefVm.loadAll(token)
             activityVm.loadAll(token)
+            symptomVm.loadAll(token)
         }
     }
 
@@ -99,19 +123,19 @@ fun EveningCheckInScreen(
 
     val triggerFavIds = remember(triggerFreq) { triggerFreq.map { it.triggerId }.toSet() }
     val triggerItems = remember(triggerPool, triggerFavIds) {
-        triggerPool.map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds) }
+        triggerPool.map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
     }
     val prodromeFavIds = remember(prodromeFreq) { prodromeFreq.map { it.prodromeId }.toSet() }
     val prodromeItems = remember(prodromePool, prodromeFavIds) {
-        prodromePool.map { SelectableItem(it.label, it.iconKey, it.id in prodromeFavIds) }
+        prodromePool.map { SelectableItem(it.label, it.iconKey, it.id in prodromeFavIds, it.category) }
     }
     val medicineFavIds = remember(medicineFreq) { medicineFreq.map { it.medicineId }.toSet() }
     val medicineItems = remember(medicinePool, medicineFavIds) {
-        medicinePool.map { SelectableItem(it.label, it.category, it.id in medicineFavIds) }
+        medicinePool.map { SelectableItem(it.label, iconKey = null, isFavourite = it.id in medicineFavIds, category = it.category) }
     }
     val reliefFavIds = remember(reliefFreq) { reliefFreq.map { it.reliefId }.toSet() }
     val reliefItems = remember(reliefPool, reliefFavIds) {
-        reliefPool.map { SelectableItem(it.label, it.iconKey, it.id in reliefFavIds) }
+        reliefPool.map { SelectableItem(it.label, it.iconKey, it.id in reliefFavIds, it.category) }
     }
 
     // ── Rich item state (carries all fields) ──
@@ -126,7 +150,101 @@ fun EveningCheckInScreen(
     var aiParsed by remember { mutableStateOf(false) }
     var aiLoading by remember { mutableStateOf(false) }
 
-    var currentPage by remember { mutableStateOf(CheckInPage.NOTE) }
+    var currentPage by remember { mutableStateOf<CheckInPage>(CheckInPage.Note) }
+
+    // Most-recent open migraine (ended_at IS NULL). Drives whether the
+    // Postdrome page is inserted into the sequence and which migraine_id
+    // the postdrome symptoms get linked to on save.
+    var openMigraine by remember { mutableStateOf<SupabaseDbService.MigraineRow?>(null) }
+
+    // Treatments side-effects page state — one bucket per regimen so each
+    // active treatment has its own page (pills + free text).
+    val activeRegimens = remember { mutableStateListOf<SupabaseDbService.TreatmentRegimenRow>() }
+    val seSelectedPillsByRegimen = remember { mutableStateMapOf<String, MutableList<String>>() }
+    val seFreeTextByRegimen = remember { mutableStateMapOf<String, String>() }
+    // User-managed pool of treatment side effects (mirrors triggers/reliefs pattern).
+    val treatmentSideEffectPool = remember { mutableStateListOf<SupabaseDbService.UserTreatmentSideEffectRow>() }
+    val treatmentSideEffectFavLabels = remember { mutableStateListOf<String>() }
+    // Postdrome page — labels selected by the user. Saved on review as
+    // `symptoms` rows tied to `openMigraine.id`.
+    val selectedPostdromes = remember { mutableStateListOf<String>() }
+    LaunchedEffect(authState.accessToken) {
+        val token = authState.accessToken ?: return@LaunchedEffect
+        try {
+            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+            val rows = withContext(Dispatchers.IO) { db.getTreatmentRegimens(token) }
+            activeRegimens.clear()
+            activeRegimens.addAll(rows.filter { it.stopDate == null })
+            openMigraine = withContext(Dispatchers.IO) { db.getOpenMigraine(token) }
+            var tsePool = withContext(Dispatchers.IO) {
+                runCatching { db.getUserTreatmentSideEffects(token) }.getOrDefault(emptyList())
+            }
+            // Seed defaults for legacy accounts so the side-effects page isn't empty.
+            // icon_key values match SymptomIcons registered keys so the circles
+            // render proper glyphs (not 2-letter initials). Categories group
+            // them sensibly in the Manage screen.
+            if (tsePool.isEmpty()) {
+                val defaults = listOf(
+                    // Cognitive
+                    Triple("Brain fog",          "brainfog",   "Cognitive"),
+                    Triple("Memory trouble",     "brainfog",   "Cognitive"),
+                    Triple("Confusion",          "aura",       "Cognitive"),
+                    Triple("Better focus",       "brainfog",   "Cognitive"),
+                    Triple("Mental clarity",     "aura",       "Cognitive"),
+                    // Mood
+                    Triple("Mood shift",         "mood_crash", "Mood"),
+                    Triple("Irritability",       "burning",    "Mood"),
+                    Triple("Low mood",           "mood_crash", "Mood"),
+                    Triple("Calmer",             "mood_lift",  "Mood"),
+                    Triple("Less anxious",       "heart",      "Mood"),
+                    Triple("Better mood",        "mood_lift",  "Mood"),
+                    // Sleep
+                    Triple("Insomnia",           "moon",       "Sleep"),
+                    Triple("Drowsiness",         "moon",       "Sleep"),
+                    Triple("Vivid dreams",       "aura",       "Sleep"),
+                    Triple("Fatigue",            "fatigue",    "Sleep"),
+                    Triple("Better sleep",       "moon",       "Sleep"),
+                    Triple("More energy",        "fatigue",    "Sleep"),
+                    // Body
+                    Triple("Dizziness",          "dizziness",  "Body"),
+                    Triple("Tingling",           "tingling",   "Body"),
+                    Triple("Headache",           "dullache",   "Body"),
+                    Triple("Nausea",             "nausea",     "Body"),
+                    Triple("Dry mouth",          "droplet",    "Body"),
+                    Triple("Sweating",           "droplet",    "Body"),
+                    Triple("Tremor",             "throbbing",  "Body"),
+                    Triple("Muscle weakness",    "weakness",   "Body"),
+                    Triple("Heart palpitations", "heart",      "Body"),
+                    Triple("Blurred vision",     "blur",       "Body"),
+                    Triple("Light sensitivity",  "light",      "Body"),
+                    Triple("Sound sensitivity",  "sound",      "Body"),
+                    Triple("Loss of appetite",   "cross",      "Body"),
+                    Triple("Increased appetite", "cross",      "Body"),
+                    Triple("Constipation",       "cross",      "Body"),
+                    Triple("Less pain",          "dullache",   "Body"),
+                    Triple("Less nausea",        "nausea",     "Body"),
+                )
+                withContext(Dispatchers.IO) {
+                    for ((label, iconKey, category) in defaults) {
+                        runCatching { db.insertTreatmentSideEffectToPool(token, label, category = category, iconKey = iconKey) }
+                    }
+                }
+                tsePool = withContext(Dispatchers.IO) {
+                    runCatching { db.getUserTreatmentSideEffects(token) }.getOrDefault(emptyList())
+                }
+            }
+            treatmentSideEffectPool.clear()
+            treatmentSideEffectPool.addAll(tsePool)
+            val tsePrefs = withContext(Dispatchers.IO) {
+                runCatching { db.getTreatmentSideEffectPrefs(token) }.getOrDefault(emptyList())
+            }
+            treatmentSideEffectFavLabels.clear()
+            treatmentSideEffectFavLabels.addAll(
+                tsePrefs.filter { it.status == "frequent" }
+                    .mapNotNull { it.sideEffect?.label ?: tsePool.firstOrNull { p -> p.id == it.sideEffectId }?.label }
+            )
+        } catch (_: Throwable) { }
+    }
     var saving by remember { mutableStateOf(false) }
     var saved by remember { mutableStateOf(false) }
 
@@ -171,7 +289,7 @@ fun EveningCheckInScreen(
 
     val activityPool by activityVm.pool.collectAsState()
     val activityItems = remember(activityPool) {
-        activityPool.map { SelectableItem(it.label, it.iconKey, false) }
+        activityPool.map { SelectableItem(it.label, it.iconKey, false, it.category) }
     }
 
     fun runAiParse() {
@@ -301,6 +419,31 @@ fun EveningCheckInScreen(
                             )
                         }
                     }
+                    // Per-regimen side-effects: one row per active regimen the
+                    // user actually filled in. Skip silent regimens.
+                    val today = LocalDate.now().toString()
+                    for (regimen in activeRegimens) {
+                        val pills = seSelectedPillsByRegimen[regimen.id] ?: emptyList<String>()
+                        val text = (seFreeTextByRegimen[regimen.id] ?: "").trim()
+                        if (pills.isEmpty() && text.isEmpty()) continue
+                        runCatching {
+                            db.insertTreatmentSideEffectLog(
+                                token,
+                                logDate = today,
+                                selectedSymptoms = pills.toList(),
+                                notes = if (text.isEmpty()) null else text,
+                                regimenId = regimen.id,
+                                source = "check_in",
+                            )
+                        }
+                    }
+                    // Postdrome: link each selected symptom to the open migraine.
+                    val mid = openMigraine?.id
+                    if (mid != null) {
+                        for (label in selectedPostdromes) {
+                            runCatching { db.insertMigraineSymptom(token, mid, label) }
+                        }
+                    }
                 }
                 saved = true
                 kotlinx.coroutines.delay(1200)
@@ -310,31 +453,38 @@ fun EveningCheckInScreen(
         }
     }
 
-    val pages = CheckInPage.entries
-    val pageIndex = pages.indexOf(currentPage)
-
     val context = androidx.compose.ui.platform.LocalContext.current
+    // Build the page sequence dynamically: postdrome only when an open
+    // migraine exists; one side-effects page per active regimen.
+    val pages: List<CheckInPage> = buildList {
+        add(CheckInPage.Note)
+        if (CalendarService.hasReadPermission(context)) add(CheckInPage.Calendar)
+        if (openMigraine != null) add(CheckInPage.Postdrome)
+        add(CheckInPage.Triggers)
+        add(CheckInPage.Prodromes)
+        add(CheckInPage.Medicines)
+        add(CheckInPage.Reliefs)
+        add(CheckInPage.Activities)
+        for (i in activeRegimens.indices) add(CheckInPage.SideEffects(i))
+        add(CheckInPage.Review)
+    }
+    val pageIndex = pages.indexOf(currentPage).coerceAtLeast(0)
+
     fun nextPageSkippingCalendar(delta: Int): CheckInPage? {
-        val candidate = pages.getOrNull(pageIndex + delta) ?: return null
-        if (candidate == CheckInPage.CALENDAR &&
-            !CalendarService.hasReadPermission(context)
-        ) {
-            return pages.getOrNull(pageIndex + delta + (if (delta > 0) 1 else -1))
-        }
-        return candidate
+        return pages.getOrNull(pageIndex + delta)
     }
 
     // Auto-advance from NOTE to the next page (calendar if granted, else triggers)
     var pendingAdvance by remember { mutableStateOf(false) }
     LaunchedEffect(aiParsed, pendingAdvance) {
-        if (aiParsed && pendingAdvance && currentPage == CheckInPage.NOTE) {
+        if (aiParsed && pendingAdvance && currentPage == CheckInPage.Note) {
             pendingAdvance = false
             nextPageSkippingCalendar(1)?.let { currentPage = it }
         }
     }
 
     fun goNext() {
-        if (currentPage == CheckInPage.NOTE) {
+        if (currentPage == CheckInPage.Note) {
             if (noteText.isBlank()) {
                 nextPageSkippingCalendar(1)?.let { currentPage = it }
                 return
@@ -374,7 +524,12 @@ fun EveningCheckInScreen(
             AnimatedContent(
                 targetState = currentPage,
                 transitionSpec = {
-                    if (targetState.ordinal > initialState.ordinal)
+                    // Sealed-class doesn't have an ordinal; compare by index
+                    // in the dynamic page sequence so direction is correct
+                    // even when postdrome / per-regimen pages appear.
+                    val toIdx = pages.indexOf(targetState)
+                    val fromIdx = pages.indexOf(initialState)
+                    if (toIdx > fromIdx)
                         slideInHorizontally { it } + fadeIn() togetherWith slideOutHorizontally { -it } + fadeOut()
                     else
                         slideInHorizontally { -it } + fadeIn() togetherWith slideOutHorizontally { it } + fadeOut()
@@ -387,7 +542,7 @@ fun EveningCheckInScreen(
                 val aiReliefLabels = remember(aiParseResult) { aiParseResult?.reliefs?.map { it.label }?.toSet() ?: emptySet() }
 
                 when (page) {
-                CheckInPage.NOTE -> NotePage(noteText, { noteText = it; if (aiParsed) { aiParsed = false; aiParseResult = null } }, aiLoading, aiParsed, aiParseResult, navController,
+                CheckInPage.Note -> NotePage(noteText, { noteText = it; if (aiParsed) { aiParsed = false; aiParseResult = null } }, aiLoading, aiParsed, aiParseResult, navController,
                     onRemoveMatch = { label, category ->
                         when (category) {
                             "trigger" -> selectedTriggers.removeAll { it.label == label }
@@ -397,48 +552,123 @@ fun EveningCheckInScreen(
                         }
                     }
                 ) { runAiParse() }
-                CheckInPage.TRIGGERS -> FavouritesPage("Any triggers today?", if (aiTriggerLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything that happened", triggerItems, selectedTriggers.map { it.label } + calendarLabelsForType("trigger"), Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
+                CheckInPage.Triggers -> FavouritesPage("Any triggers today?", if (aiTriggerLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything that happened", triggerItems, selectedTriggers.map { it.label } + calendarLabelsForType("trigger"), Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
                     val calMapping = calendarMappingFor(l, "trigger")
                     if (calMapping != null) {
                         activityScope.launch {
                             CalendarService.skip(activityCtx, calMapping)
-                            calendarMappings.removeAll { it.eventId == calMapping.eventId }
+                            calendarMappings.removeAll { it.compositeKey == calMapping.compositeKey }
                         }
                     } else if (isTriggerSelected(l)) selectedTriggers.removeAll { it.label == l } else selectedTriggers.add(CheckInTriggerItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
                 }
-                CheckInPage.PRODROMES -> FavouritesPage("Any warning signs?", if (aiProdromeLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Body signals you noticed", prodromeItems, selectedProdromes.map { it.label }, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }, aiProdromeLabels) { l ->
+                CheckInPage.Prodromes -> FavouritesPage("Any warning signs?", if (aiProdromeLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Body signals you noticed", prodromeItems, selectedProdromes.map { it.label }, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }, aiProdromeLabels) { l ->
                     if (isProdromeSelected(l)) selectedProdromes.removeAll { it.label == l } else selectedProdromes.add(CheckInProdromeItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
                 }
-                CheckInPage.MEDICINES -> FavouritesPage("Take any medicine?", if (aiMedicineLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What did you take today", medicineItems, selectedMedicines.map { it.label }, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }, aiMedicineLabels) { l ->
+                CheckInPage.Medicines -> FavouritesPage("Take any medicine?", if (aiMedicineLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What did you take today", medicineItems, selectedMedicines.map { it.label }, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }, aiMedicineLabels) { l ->
                     if (isMedicineSelected(l)) selectedMedicines.removeAll { it.label == l } else selectedMedicines.add(CheckInMedicineItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
                 }
-                CheckInPage.RELIEFS -> FavouritesPage("Use any relief methods?", if (aiReliefLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What helped today", reliefItems, selectedReliefs.map { it.label } + calendarLabelsForType("relief"), Color(0xFF81C784), { ReliefIcons.forKey(it) }, aiReliefLabels) { l ->
+                CheckInPage.Reliefs -> FavouritesPage("Use any relief methods?", if (aiReliefLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What helped today", reliefItems, selectedReliefs.map { it.label } + calendarLabelsForType("relief"), Color(0xFF81C784), { ReliefIcons.forKey(it) }, aiReliefLabels) { l ->
                     val calMapping = calendarMappingFor(l, "relief")
                     if (calMapping != null) {
                         activityScope.launch {
                             CalendarService.skip(activityCtx, calMapping)
-                            calendarMappings.removeAll { it.eventId == calMapping.eventId }
+                            calendarMappings.removeAll { it.compositeKey == calMapping.compositeKey }
                         }
                     } else if (isReliefSelected(l)) selectedReliefs.removeAll { it.label == l } else selectedReliefs.add(CheckInReliefItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
                 }
-                CheckInPage.ACTIVITIES -> {
+                CheckInPage.Activities -> {
                     val aiActivityLabels = remember(aiParseResult) { aiParseResult?.activities?.map { it.label }?.toSet() ?: emptySet() }
                     FavouritesPage("What did you do today?", if (aiActivityLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything you did", activityItems, selectedActivities.map { it.label } + calendarLabelsForType("activity"), Color(0xFFFF8A65), { ActivityIcons.forKey(it) }, aiActivityLabels) { l ->
                         val calMapping = calendarMappingFor(l, "activity")
                         if (calMapping != null) {
                             activityScope.launch {
                                 CalendarService.skip(activityCtx, calMapping)
-                                calendarMappings.removeAll { it.eventId == calMapping.eventId }
+                                calendarMappings.removeAll { it.compositeKey == calMapping.compositeKey }
                             }
                         } else if (isActivitySelected(l)) selectedActivities.removeAll { it.label == l } else selectedActivities.add(CheckInActivityItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
                     }
                 }
-                CheckInPage.CALENDAR -> CalendarCheckInPage(
+                CheckInPage.Calendar -> CalendarCheckInPage(
                     activityVm = activityVm,
                     reliefVm = reliefVm,
                     triggerVm = triggerVm,
                 )
-                CheckInPage.REVIEW -> ReviewPage(
+                CheckInPage.Postdrome -> {
+                    val postdromePool by symptomVm.postdrome.collectAsState()
+                    val allFavIds by symptomVm.favoriteIds.collectAsState()
+                    val postdromeFavIds = remember(allFavIds, postdromePool) {
+                        postdromePool.map { it.id }.filter { it in allFavIds }.toSet()
+                    }
+                    // Pre-fill from voice: any GPT-extracted postdrome labels
+                    // that exist in this user's pool get auto-selected.
+                    val aiPostdromeLabels = aiParseResult?.postdrome?.map { it.label } ?: emptyList()
+                    val poolLabelLowercase = postdromePool.map { it.label.lowercase() }.toSet()
+                    LaunchedEffect(aiPostdromeLabels, postdromePool) {
+                        for (l in aiPostdromeLabels) {
+                            if (l.lowercase() in poolLabelLowercase && l !in selectedPostdromes) {
+                                selectedPostdromes.add(l)
+                            }
+                        }
+                    }
+                    PostdromeStep(
+                        pool = postdromePool,
+                        favouriteIds = postdromeFavIds,
+                        selected = selectedPostdromes,
+                        openMigraine = openMigraine,
+                        onToggle = { l ->
+                            if (selectedPostdromes.contains(l)) selectedPostdromes.remove(l)
+                            else selectedPostdromes.add(l)
+                        }
+                    )
+                }
+                is CheckInPage.SideEffects -> {
+                    val page = currentPage as CheckInPage.SideEffects
+                    val regimen = activeRegimens.getOrNull(page.regimenIndex)
+                    if (regimen != null) {
+                        val regimenId = regimen.id
+                        val pills = seSelectedPillsByRegimen.getOrPut(regimenId) { mutableStateListOf() }
+                        val text = seFreeTextByRegimen[regimenId] ?: ""
+                        // Pre-fill from voice: GPT-extracted treatment side
+                        // effects whose regimen_name matches this regimen
+                        // (case-insensitive contains both ways) → add to pills
+                        // and seed free text if the user hasn't typed yet.
+                        val regimenLower = regimen.name.lowercase()
+                        val matched = aiParseResult?.treatmentSideEffects?.firstOrNull { se ->
+                            val n = se.regimenName?.lowercase().orEmpty()
+                            n.isNotEmpty() && (n == regimenLower || regimenLower.contains(n) || n.contains(regimenLower))
+                        }
+                        LaunchedEffect(matched?.regimenName, matched?.labels, regimenId) {
+                            matched?.labels?.forEach { l -> if (l !in pills) pills.add(l) }
+                            if (text.isBlank() && !matched?.freeText.isNullOrBlank()) {
+                                seFreeTextByRegimen[regimenId] = matched!!.freeText!!
+                            }
+                        }
+                        // Pool now comes from user_treatment_side_effects + the
+                        // frequent-prefs table, matching the rest of the app.
+                        // Falls back to the hard-coded constants if the user
+                        // hasn't been seeded yet (legacy accounts).
+                        val poolLabels = if (treatmentSideEffectPool.isNotEmpty())
+                            treatmentSideEffectPool.map { it.label }
+                        else TREATMENT_SIDE_EFFECT_POOL
+                        val favLabelSet = treatmentSideEffectFavLabels
+                        val items = poolLabels.map { l ->
+                            val row = treatmentSideEffectPool.firstOrNull { it.label == l }
+                            SelectableItem(l, row?.iconKey, l in favLabelSet, row?.category)
+                        }
+                        SideEffectsPageV2(
+                            regimen = regimen,
+                            items = items,
+                            selectedPills = pills,
+                            freeText = text,
+                            iconResolver = { key -> SymptomIcons.forKey(key) },
+                            onTogglePill = { l ->
+                                if (pills.contains(l)) pills.remove(l) else pills.add(l)
+                            },
+                            onFreeTextChange = { seFreeTextByRegimen[regimenId] = it },
+                        )
+                    }
+                }
+                CheckInPage.Review -> ReviewPage(
                     selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs, selectedActivities,
                     calendarMappings.toList(),
                     aiParseResult, saving, saved,
@@ -450,7 +680,7 @@ fun EveningCheckInScreen(
                     rmCalendar = { mapping ->
                         activityScope.launch {
                             CalendarService.skip(activityCtx, mapping)
-                            calendarMappings.removeAll { it.eventId == mapping.eventId }
+                            calendarMappings.removeAll { it.compositeKey == mapping.compositeKey }
                         }
                     },
                     onUpdateMedicine = { updated ->
@@ -468,16 +698,16 @@ fun EveningCheckInScreen(
 
         if (!saved) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                if (currentPage == CheckInPage.NOTE) {
+                if (currentPage == CheckInPage.Note) {
                     TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text("Cancel", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
                 } else {
                     TextButton(onClick = { goBack() }, modifier = Modifier.height(36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text("Back", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
                 }
                 when (currentPage) {
-                    CheckInPage.REVIEW -> Button(onClick = { save() }, enabled = !saving, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
+                    CheckInPage.Review -> Button(onClick = { save() }, enabled = !saving, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
                         if (saving) { CircularProgressIndicator(Modifier.size(14.dp), Color.White, strokeWidth = 2.dp) } else { Icon(Icons.Outlined.Check, null, Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Save", style = MaterialTheme.typography.bodySmall) }
                     }
-                    CheckInPage.NOTE -> Button(onClick = { goNext() }, enabled = !aiLoading, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
+                    CheckInPage.Note -> Button(onClick = { goNext() }, enabled = !aiLoading, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
                         Text(if (noteText.isNotBlank() && !aiParsed) "Match & continue" else if (noteText.isBlank()) "Skip" else "Next", style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
                     }
                     else -> Button(onClick = { goNext() }, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
@@ -486,6 +716,87 @@ fun EveningCheckInScreen(
                 }
             }
         }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Side Effects Page (conditional, shown only if active treatments)
+// ═══════════════════════════════════════════════════════════════════
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SideEffectsPage(
+    pillPool: List<String>,
+    selectedPills: List<String>,
+    freeText: String,
+    onTogglePill: (String) -> Unit,
+    onFreeTextChange: (String) -> Unit,
+    activeRegimens: List<SupabaseDbService.TreatmentRegimenRow>
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFF2A0C3C).copy(alpha = 0.78f))
+                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(Icons.Outlined.MedicalServices, contentDescription = null, tint = Color(0xFFB97BFF), modifier = Modifier.size(36.dp))
+            Spacer(Modifier.height(8.dp))
+            Text("Any side effects today?", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text("Tap what applies. Add details or skip.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+        }
+
+        FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            (pillPool + "+ other").forEach { label ->
+                val isSel = selectedPills.contains(label)
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isSel) Color(0xFFB97BFF).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.04f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) Color(0xFFB97BFF) else Color.White.copy(alpha = 0.10f)),
+                    onClick = { onTogglePill(label) }
+                ) {
+                    Text(
+                        label,
+                        color = if (isSel) Color(0xFFDCCEFF) else Color.White.copy(alpha = 0.86f),
+                        fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Normal,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
+
+        OutlinedTextField(
+            value = freeText,
+            onValueChange = onFreeTextChange,
+            label = { Text("Extra notes (optional)") },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 110.dp)
+        )
+
+        if (activeRegimens.isNotEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
+                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
+                    .padding(12.dp)
+            ) {
+                Text("Active treatments", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.height(4.dp))
+                activeRegimens.forEach { r ->
+                    val parts = listOfNotNull(r.name, r.amount, r.frequency).joinToString(" · ")
+                    Text(parts, color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -557,11 +868,23 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
         if (others.isNotEmpty()) {
             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
             Spacer(Modifier.height(12.dp))
-            Text("All", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.height(12.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                others.forEach { item ->
-                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
+            // Group unfavved items by category so each bucket gets its own
+            // sub-header. Falls back to "Other" for items with no category.
+            val grouped = others.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
+            val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
+            orderedCats.forEachIndexed { idx, cat ->
+                if (idx > 0) Spacer(Modifier.height(12.dp))
+                Text(cat, color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.height(12.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    grouped.getValue(cat).forEach { item ->
+                        CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
+                    }
                 }
             }
         }
@@ -1370,3 +1693,221 @@ private val SYNONYMS: Map<String, List<String>> = mapOf(
     "rest" to listOf("rested", "nap", "napped", "lay down"),
     "dark room" to listOf("darkness", "lay in dark"),
 )
+
+// ═══════════════════════════════════════════════════════════════════
+//  Postdrome Page (evening check-in)
+// ═══════════════════════════════════════════════════════════════════
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PostdromeStep(
+    pool: List<SupabaseDbService.UserSymptomRow>,
+    favouriteIds: Set<String> = emptySet(),
+    selected: MutableList<String>,
+    openMigraine: SupabaseDbService.MigraineRow?,
+    onToggle: (String) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+    val ageDays: Long? = openMigraine?.startAt?.let {
+        try {
+            val s = OffsetDateTime.parse(it)
+            java.time.Duration.between(s, OffsetDateTime.now()).toDays()
+        } catch (_: Exception) { null }
+    }
+    val isStale = (ageDays ?: 0) > 7
+    val migraineLabel: String = openMigraine?.startAt?.let {
+        try {
+            val s = OffsetDateTime.parse(it)
+            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM"))}"
+        } catch (_: Exception) { "your open migraine" }
+    } ?: "your open migraine"
+
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Text("Postdrome", color = Color.White,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Spacer(Modifier.height(4.dp))
+        Text("Any lingering symptoms from $migraineLabel?",
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(12.dp))
+
+        if (isStale) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .background(Color(0xFFFFB74D).copy(alpha = 0.18f), RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.Warning, null, tint = Color(0xFFFFB74D),
+                    modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "This migraine has been open for ${ageDays ?: 0} days. End it from the journal when it's truly over.",
+                    color = Color.White, style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        if (pool.isEmpty()) {
+            Text("No postdrome symptoms in your pool. Manage your symptoms list to add some.",
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 24.dp).fillMaxWidth())
+        } else {
+            val accent = Color(0xFFCE93D8)
+            val favs = pool.filter { it.id in favouriteIds }
+            val rest = pool.filter { it.id !in favouriteIds }
+            if (favs.isNotEmpty()) {
+                Text("Favourites", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.height(12.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxWidth()) {
+                    favs.forEach { item ->
+                        CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
+                            item.label in selected, accent, false) { onToggle(item.label) }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+            if (rest.isNotEmpty()) {
+                if (favs.isNotEmpty()) {
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    Spacer(Modifier.height(12.dp))
+                }
+                val grouped = rest.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
+                val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
+                orderedCats.forEachIndexed { idx, cat ->
+                    if (idx > 0) Spacer(Modifier.height(12.dp))
+                    Text(cat, color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(12.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        grouped.getValue(cat).forEach { item ->
+                            CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
+                                item.label in selected, accent, false) { onToggle(item.label) }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Side-Effects Page V2 (per regimen, uses pool + favourites + icons)
+// ═══════════════════════════════════════════════════════════════════
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SideEffectsPageV2(
+    regimen: SupabaseDbService.TreatmentRegimenRow,
+    items: List<SelectableItem>,
+    selectedPills: List<String>,
+    freeText: String,
+    iconResolver: (String?) -> androidx.compose.ui.graphics.vector.ImageVector?,
+    onTogglePill: (String) -> Unit,
+    onFreeTextChange: (String) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+    val favourites = remember(items) { items.filter { it.isFavourite } }
+    val others = remember(items) { items.filter { !it.isFavourite } }
+    val accentColor = Color(0xFFB97BFF)
+
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        // Title "Side effects" + regimen name underneath + amount/frequency meta.
+        Text("Side effects", color = Color.White,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Text(regimen.name, color = Color.White,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+        val parts = listOfNotNull(regimen.amount, regimen.frequency).joinToString(" · ")
+        if (parts.isNotEmpty()) {
+            Spacer(Modifier.height(2.dp))
+            Text(parts, color = accentColor, style = MaterialTheme.typography.labelSmall)
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        if (favourites.isNotEmpty()) {
+            Text("Favourites", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.height(12.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                favourites.forEach { item ->
+                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        if (others.isNotEmpty()) {
+            if (favourites.isNotEmpty()) {
+                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                Spacer(Modifier.height(12.dp))
+            }
+            // Group unfavved items by category (Cognitive / Body / Sleep / Mood / ...).
+            val grouped = others.groupBy { it.category?.takeIf { c -> c.isNotBlank() } ?: "Other" }
+            val orderedCats = grouped.keys.sortedWith(compareBy({ it == "Other" }, { it }))
+            orderedCats.forEachIndexed { idx, cat ->
+                if (idx > 0) Spacer(Modifier.height(12.dp))
+                Text(cat, color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.height(12.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    grouped.getValue(cat).forEach { item ->
+                        CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Voice → free-text — uses Android's RecognizerIntent (same as Note page).
+        val sideEffectsCtx = androidx.compose.ui.platform.LocalContext.current
+        val voiceLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+            contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+        ) { res ->
+            if (res.resultCode == android.app.Activity.RESULT_OK) {
+                val matches = res.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                val spoken = matches?.firstOrNull().orEmpty()
+                if (spoken.isNotBlank()) {
+                    val joined = if (freeText.isBlank()) spoken else "$freeText $spoken"
+                    onFreeTextChange(joined)
+                }
+            }
+        }
+        fun launchVoice() {
+            val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Any extra notes on side effects?")
+            }
+            try { voiceLauncher.launch(intent) } catch (_: Exception) {
+                android.widget.Toast.makeText(sideEffectsCtx, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = { launchVoice() },
+            modifier = Modifier.height(40.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = accentColor),
+            border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.5f)),
+        ) {
+            Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(4.dp))
+            Text("Voice", style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(Modifier.height(80.dp))
+    }
+}

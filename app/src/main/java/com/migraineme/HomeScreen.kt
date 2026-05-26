@@ -24,6 +24,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.ui.draw.blur
@@ -172,6 +175,7 @@ fun HomeScreenRoot(
 
         // Selected day index: 0 = today (default), 1 = tomorrow, etc.
         var selectedDay by remember { mutableStateOf(0) }
+        var showAskInfo by remember { mutableStateOf(false) }
 
         // Derive the displayed data from selected day
         val dayData = state.dayRisks.getOrNull(selectedDay)
@@ -188,6 +192,17 @@ fun HomeScreenRoot(
 
                 RecalibrationBanner(
                     onTap = onNavigateToRecalibrationReview
+                )
+
+                // ── Quick Log Strip — above the gauge ──
+                QuickLogStrip(
+                    authVm = authVm,
+                    triggerVm = triggerVm,
+                    medicineVm = medicineVm,
+                    reliefVm = reliefVm,
+                    prodromeVm = prodromeVm,
+                    symptomVm = symptomVm,
+                    onLogComplete = { vm.loadRisk(appCtx) }
                 )
 
                 RiskHeroCard(
@@ -213,18 +228,8 @@ fun HomeScreenRoot(
                         } else {
                             onNavigateToPaywall()
                         }
-                    }
-                )
-
-                // ── Quick Log Strip — below the gauge ──
-                QuickLogStrip(
-                    authVm = authVm,
-                    triggerVm = triggerVm,
-                    medicineVm = medicineVm,
-                    reliefVm = reliefVm,
-                    prodromeVm = prodromeVm,
-                    symptomVm = symptomVm,
-                    onLogComplete = { vm.loadRisk(appCtx) }
+                    },
+                    infoText = RiskInfoCopy.text
                 )
 
                 // ── Ask MigraineMe — chat assistant (premium only) ──
@@ -233,41 +238,83 @@ fun HomeScreenRoot(
                     subtitle = "Ask questions about your health data",
                     onUpgrade = onNavigateToPaywall
                 ) {
-                    Surface(
-                        onClick = onNavigateToChatAssistant,
-                        shape = AppTheme.BaseCardShape,
-                        color = AppTheme.BaseCardContainer,
-                        border = AppTheme.BaseCardBorder,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 6.dp)
                     ) {
-                        Row(
-                            Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            onClick = onNavigateToChatAssistant,
+                            shape = AppTheme.BaseCardShape,
+                            color = AppTheme.BaseCardContainer,
+                            border = AppTheme.BaseCardBorder,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("\u2726", fontSize = 20.sp, color = AppTheme.AccentPurple)
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Ask MigraineMe",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 15.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Text(
+                                        "Chat with your health data",
+                                        color = Color.White.copy(alpha = 0.55f),
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                                 Text(
-                                    "Ask MigraineMe",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp
-                                )
-                                Text(
-                                    "Chat with your health data",
-                                    color = Color.White.copy(alpha = 0.55f),
-                                    fontSize = 12.sp
+                                    "\u2726",
+                                    fontSize = 20.sp,
+                                    color = AppTheme.AccentPurple,
+                                    modifier = Modifier.align(Alignment.CenterStart)
                                 )
                             }
+                        }
+                        IconButton(
+                            onClick = { showAskInfo = true },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-14).dp)
+                                .size(34.dp)
+                        ) {
                             Icon(
-                                Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = AppTheme.AccentPurple.copy(alpha = 0.7f)
+                                Icons.Outlined.Info,
+                                contentDescription = "About Ask MigraineMe",
+                                tint = AppTheme.SubtleTextColor,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
+                }
+                if (showAskInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showAskInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showAskInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About Ask MigraineMe", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(AskMigraineMeInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
+                    )
                 }
 
                 // ── AI Daily Insight — premium only, today only ──
@@ -308,9 +355,14 @@ private fun RiskHeroCard(
     dayRisks: List<DayRisk> = emptyList(),
     onDaySelected: (Int) -> Unit = {},
     onTap: () -> Unit = {},
+    onHistoryTap: (() -> Unit)? = null,
+    infoText: String? = null,
+    showDayArrows: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val clamped = riskPercent.coerceIn(0, 100)
+    val maxDay = 6
+    var showInfo by remember { mutableStateOf(false) }
 
     val zoneColor = when (riskZone) {
         RiskZone.HIGH -> Color(0xFFE57373)
@@ -326,20 +378,73 @@ private fun RiskHeroCard(
         else "Risk"
     }
 
-    HeroCard(modifier = modifier.clickable { onTap() }) {
-        Text(
-            dayLabel,
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
+    Box(modifier = modifier) {
+    HeroCard(modifier = Modifier.clickable { onTap() }) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                dayLabel,
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.align(Alignment.Center)
+            )
+            if (onHistoryTap != null) {
+                Text(
+                    "History →",
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .clickable { onHistoryTap() }
+                        .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                )
+            }
+        }
 
-        RiskGauge(
-            percent = clamped,
-            diameter = 220.dp,
-            stroke = 16.dp,
-            trackColor = AppTheme.TrackColor,
-            progressColor = AppTheme.AccentPurple
-        )
+        if (showDayArrows) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                IconButton(
+                    onClick = { if (selectedDay > 0) onDaySelected(selectedDay - 1) },
+                    enabled = selectedDay > 0
+                ) {
+                    Icon(
+                        Icons.Outlined.KeyboardArrowLeft,
+                        contentDescription = "Previous day",
+                        tint = if (selectedDay > 0) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
+                    )
+                }
+
+                RiskGauge(
+                    percent = clamped,
+                    diameter = 220.dp,
+                    stroke = 16.dp,
+                    trackColor = AppTheme.TrackColor,
+                    progressColor = AppTheme.AccentPurple
+                )
+
+                IconButton(
+                    onClick = { if (selectedDay < maxDay) onDaySelected(selectedDay + 1) },
+                    enabled = selectedDay < maxDay
+                ) {
+                    Icon(
+                        Icons.Outlined.KeyboardArrowRight,
+                        contentDescription = "Next day",
+                        tint = if (selectedDay < maxDay) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
+                    )
+                }
+            }
+        } else {
+            RiskGauge(
+                percent = clamped,
+                diameter = 220.dp,
+                stroke = 16.dp,
+                trackColor = AppTheme.TrackColor,
+                progressColor = AppTheme.AccentPurple
+            )
+        }
 
         // Score display
         Text(
@@ -362,6 +467,50 @@ private fun RiskHeroCard(
             onDaySelected = onDaySelected
         )
     }
+        if (infoText != null) {
+            IconButton(
+                onClick = { showInfo = true },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 10.dp, y = (-14).dp)
+                    .size(34.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Info,
+                    contentDescription = "About Risk today",
+                    tint = AppTheme.SubtleTextColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+
+    if (showInfo && infoText != null) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            confirmButton = {
+                TextButton(onClick = { showInfo = false }) {
+                    Text("Got it", color = AppTheme.AccentPurple)
+                }
+            },
+            title = {
+                Text("About Risk today", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = {
+                Text(infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            },
+            containerColor = AppTheme.BaseCardContainer
+        )
+    }
+}
+
+object RiskInfoCopy {
+    const val text = "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve."
+}
+
+object AskMigraineMeInfoCopy {
+    const val text = "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines and reliefs. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP."
 }
 
 @Composable
@@ -471,23 +620,15 @@ private fun ActiveTriggersCard(
 ) {
     if (triggers.isEmpty()) return
 
-    BaseCard(modifier = Modifier.clickable { onTap() }) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Top contributors",
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                "→",
-                color = AppTheme.AccentPurple,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+    var showInfo by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+    BaseCard(modifier = Modifier.fillMaxWidth().clickable { onTap() }) {
+        Text(
+            "Top contributors",
+            color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -584,6 +725,45 @@ private fun ActiveTriggersCard(
             }
         }
     }
+        IconButton(
+            onClick = { showInfo = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 10.dp, y = (-14).dp)
+                .size(34.dp)
+        ) {
+            Icon(
+                Icons.Outlined.Info,
+                contentDescription = "About Active triggers",
+                tint = AppTheme.SubtleTextColor,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            confirmButton = {
+                TextButton(onClick = { showInfo = false }) {
+                    Text("Got it", color = AppTheme.AccentPurple)
+                }
+            },
+            title = {
+                Text("About Active triggers", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = {
+                Text(ActiveTriggersInfoCopy.text, color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium)
+            },
+            containerColor = AppTheme.BaseCardContainer
+        )
+    }
+}
+
+object ActiveTriggersInfoCopy {
+    const val text = "The three things pushing hardest on your bucket today, ordered by how much each is contributing to your risk score. Could be triggers you've logged (caffeine, poor sleep, stress) or prodromes you're currently in (yawning, mood shifts, neck stiffness).\n\nEach row shows the item's name, its severity tag (HIGH / MILD / LOW), and a bar showing how much it's adding compared to a fully-overflowing bucket. The more recent and the more severe, the bigger the contribution.\n\nTap the card to open the Risk detail screen and see every contributor in order, not just the top 3."
 }
 
 @Composable

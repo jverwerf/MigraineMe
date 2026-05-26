@@ -124,7 +124,7 @@ fun MentalHistoryGraph(
             }
         } else if (historyData.isEmpty() || daysWithData.isEmpty()) {
             Text(
-                text = "No mental health data available",
+                text = "No cognitive data available",
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -305,22 +305,45 @@ fun MentalHistoryGraph(
                                 }
                             }
 
-                            // Line
-                            if (plotPoints.size > 1) {
-                                val path = Path()
+                            // Noise: color line segments + dots by band (Quiet/Moderate/Loud/Very loud)
+                            val isNoise = metric == MentalCardConfig.METRIC_NOISE_HIGH ||
+                                          metric == MentalCardConfig.METRIC_NOISE_AVG ||
+                                          metric == MentalCardConfig.METRIC_NOISE_LOW
+                            if (isNoise) {
+                                for (i in 0 until plotPoints.size - 1) {
+                                    val a = plotPoints[i]; val b = plotPoints[i + 1]
+                                    val rawA = indexedValues[i].second.toDouble()
+                                    val rawB = indexedValues[i + 1].second.toDouble()
+                                    val segColor = noiseBandColor((rawA + rawB) / 2)
+                                    val x1 = padding + (a.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                    val y1 = padding + graphHeight - (a.second * graphHeight)
+                                    val x2 = padding + (b.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                    val y2 = padding + graphHeight - (b.second * graphHeight)
+                                    drawLine(segColor, Offset(x1, y1), Offset(x2, y2), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                                }
                                 plotPoints.forEachIndexed { i, pair ->
                                     val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
                                     val y = padding + graphHeight - (pair.second * graphHeight)
-                                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                                    drawCircle(noiseBandColor(indexedValues[i].second.toDouble()), 4.dp.toPx(), Offset(x, y))
                                 }
-                                drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                            }
+                            } else {
+                                // Line
+                                if (plotPoints.size > 1) {
+                                    val path = Path()
+                                    plotPoints.forEachIndexed { i, pair ->
+                                        val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                        val y = padding + graphHeight - (pair.second * graphHeight)
+                                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                                    }
+                                    drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                }
 
-                            // Dots
-                            for (pair in plotPoints) {
-                                val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
-                                val y = padding + graphHeight - (pair.second * graphHeight)
-                                drawCircle(color, 4.dp.toPx(), Offset(x, y))
+                                // Dots
+                                for (pair in plotPoints) {
+                                    val x = padding + (pair.first.toFloat() / (historyData.size - 1).coerceAtLeast(1)) * graphWidth
+                                    val y = padding + graphHeight - (pair.second * graphHeight)
+                                    drawCircle(color, 4.dp.toPx(), Offset(x, y))
+                                }
                             }
                         }
                     }
@@ -673,4 +696,12 @@ private suspend fun loadMentalGraphData(
     } catch (_: Exception) {
         MentalGraphResult(emptyList(), emptyMap(), emptyMap())
     }
+}
+
+/** Color a noise log-RMS value by its display band. Mirrors iOS noiseBandColor. */
+private fun noiseBandColor(v: Double): Color = when {
+    v >= 10.0 -> Color(0xFFEF5350)  // Very loud (>=85 dB)
+    v >= 8.0  -> Color(0xFFFFB74D)  // Loud (70-85 dB)
+    v >= 6.0  -> Color(0xFFFFEB3B)  // Moderate (50-70 dB)
+    else      -> Color(0xFF81C784)  // Quiet (<50 dB)
 }

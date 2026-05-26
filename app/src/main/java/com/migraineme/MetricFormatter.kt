@@ -183,3 +183,20 @@ object MetricFormatter {
         }
     }
 }
+
+/**
+ * Convert raw category strings (snake_case from DB / edge functions) into
+ * sentence-case display strings shown to the user.
+ *
+ *   "migraine_without_aura" -> "Migraine without aura"
+ *   "tension_type"          -> "Tension type"
+ *   "Brain fog"             -> "Brain fog"   (passes through unchanged)
+ *
+ * Use anywhere a raw category, symptom, trigger, prodrome, activity type,
+ * location type, or medicine category is rendered in UI / PDF / chart labels.
+ */
+fun prettyLabel(raw: String?): String {
+    if (raw.isNullOrBlank()) return ""
+    val spaced = raw.trim().replace('_', ' ').replace(Regex("\\s+"), " ")
+    return spaced.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}

@@ -218,7 +218,7 @@ fun ActivitiesScreen(
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text(act.type, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
+                                Text(prettyLabel(act.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
                                 Text(
                                     if (act.startAtIso == null) "Same as migraine start" else formatActTime(act.startAtIso),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall

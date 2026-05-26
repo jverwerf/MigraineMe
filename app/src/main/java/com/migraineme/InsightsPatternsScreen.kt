@@ -46,12 +46,6 @@ fun InsightsPatternsScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-            }
-
             if (correlationsLoading) {
                 BaseCard {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center,
@@ -117,7 +111,7 @@ private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.Correlatio
                     val baselinePct = stat.pctControlWindows
                     Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("→ ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(stat.symptomOutcome ?: "", color = Color.White,
+                        Text(prettyLabel(stat.symptomOutcome), color = Color.White,
                             style = MaterialTheme.typography.bodySmall, maxLines = 1,
                             modifier = Modifier.weight(1f))
                         Text(String.format("%.1f×", stat.liftRatio),

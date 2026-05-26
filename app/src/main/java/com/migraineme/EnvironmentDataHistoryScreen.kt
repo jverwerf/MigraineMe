@@ -100,7 +100,8 @@ private val weatherFields = listOf(
     Triple("pressure_hpa_mean", "Pressure", "hPa"),
     Triple("humidity_pct_mean", "Humidity", "%"),
     Triple("wind_speed_mps_mean", "Wind Speed", "m/s"),
-    Triple("uv_index_max", "UV Index", "")
+    Triple("uv_index_max", "UV Index", ""),
+    Triple("is_thunderstorm_day", "Thunderstorm", "")
 )
 
 private suspend fun fetchWeatherEntriesForDate(
@@ -329,15 +330,6 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-            }
-
             // Date navigation
             BaseCard {
                 Row(

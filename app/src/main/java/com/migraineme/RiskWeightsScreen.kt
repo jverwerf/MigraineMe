@@ -51,6 +51,20 @@ fun RiskWeightsScreen(
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var saveSuccess by remember { mutableStateOf(false) }
+    var showThresholdsInfo by remember { mutableStateOf(false) }
+    var showDecayInfo by remember { mutableStateOf(false) }
+
+    val thresholdsInfoText = "Your gauge thresholds control the colour bands on the risk meter.\n\n" +
+        "None (locked at 0) means no risk detected — the gauge sits at the start.\n" +
+        "Low is the score where the gauge fills green. Below this you can largely ignore today.\n" +
+        "Mild is where it turns amber. Triggers are starting to pile up; consider pre-emptive relief and avoid stacking new ones.\n" +
+        "High is where it goes red. Your bucket is close to overflowing; an attack is likely if you don't ease back.\n\n" +
+        "Defaults are 3 (Low) / 5 (Mild) / 10 (High) for the typical migraine profile. Tap any circle to edit. Lower thresholds make the gauge more sensitive (turns red sooner), higher ones make it more forgiving. The monthly AI Calibration nudges these for you based on which days actually preceded an attack."
+
+    val decayInfoText = "Your decay curve controls how much an old trigger contributes versus a fresh one. A trigger logged six days ago shouldn't push your bucket as hard as one from this morning, and the decay weights set exactly how that fade-out works.\n\n" +
+        "There's a separate curve for each severity (HIGH, MILD, LOW). Each curve is 7 day-by-day weights: T0 (today) through +6d (six days back). Higher numbers contribute more to the score, lower numbers contribute less.\n\n" +
+        "Default HIGH curve is 10 / 5 / 2.5 / 0 / 0 / 0 / 0 — a HIGH trigger from today counts for 10 points, halves the next day, then drops to nothing after three days. MILD and LOW follow the same shape on a smaller scale.\n\n" +
+        "Tap any bar to edit. Flatter curves keep old triggers in play longer (good if your attacks build up over a week). Steeper curves zero out the past quickly (good if your triggers fire fast). The monthly AI Calibration adjusts these for you based on what your data actually shows."
 
     // ── Gauge thresholds ──
     var thresholdNone by remember { mutableStateOf(0.0) }
@@ -135,37 +149,61 @@ fun RiskWeightsScreen(
                 // ═══════════════════════════════════════════════════════════
                 // HERO — Gauge Thresholds
                 // ═══════════════════════════════════════════════════════════
-                HeroCard {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Outlined.Speed, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                        Text("Gauge Thresholds", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    }
-                    Text("Minimum score to enter each risk zone. Tap to edit.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        // NONE is always 0 — not editable
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.size(52.dp).background(Color(0xFF666666).copy(alpha = 0.15f), CircleShape).border(2.dp, Color(0xFF666666).copy(alpha = 0.4f), CircleShape), contentAlignment = Alignment.Center) {
-                                Text("0", color = Color(0xFF666666), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            Text("None", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    HeroCard {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Outlined.Speed, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                            Text("Gauge Thresholds", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         }
-                        GaugeThresholdCircle("Low", thresholdLow, Color(0xFF81C784)) { thresholdLow = it }
-                        GaugeThresholdCircle("Mild", thresholdMild, Color(0xFFFFB74D)) { thresholdMild = it }
-                        GaugeThresholdCircle("High", thresholdHigh, Color(0xFFEF5350)) { thresholdHigh = it }
+                        Text("Minimum score to enter each risk zone. Tap to edit.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            // NONE is always 0 — not editable
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(Modifier.size(52.dp).background(Color(0xFF666666).copy(alpha = 0.15f), CircleShape).border(2.dp, Color(0xFF666666).copy(alpha = 0.4f), CircleShape), contentAlignment = Alignment.Center) {
+                                    Text("0", color = Color(0xFF666666), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Text("None", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            }
+                            GaugeThresholdCircle("Low", thresholdLow, Color(0xFF81C784)) { thresholdLow = it }
+                            GaugeThresholdCircle("Mild", thresholdMild, Color(0xFFFFB74D)) { thresholdMild = it }
+                            GaugeThresholdCircle("High", thresholdHigh, Color(0xFFEF5350)) { thresholdHigh = it }
+                        }
+                    }
+                    IconButton(
+                        onClick = { showThresholdsInfo = true },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 10.dp, y = (-14).dp)
+                            .size(34.dp)
+                    ) {
+                        Icon(Icons.Outlined.Info, contentDescription = "About Gauge Thresholds",
+                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                     }
                 }
 
                 // ═══════════════════════════════════════════════════════════
                 // BASE CARD — Decay Curves header
                 // ═══════════════════════════════════════════════════════════
-                BaseCard {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Outlined.TrendingDown, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                        Text("Decay Curves", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    BaseCard {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Outlined.TrendingDown, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                            Text("Decay Curves", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        }
+                        Text("How quickly trigger risk fades over days. Tap a bar to edit.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
-                    Text("How quickly trigger risk fades over days. Tap a bar to edit.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    IconButton(
+                        onClick = { showDecayInfo = true },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 10.dp, y = (-14).dp)
+                            .size(34.dp)
+                    ) {
+                        Icon(Icons.Outlined.Info, contentDescription = "About Decay Curves",
+                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                    }
                 }
 
                 // One card per severity
@@ -206,6 +244,32 @@ fun RiskWeightsScreen(
                 }
             }
         }
+    }
+
+    if (showThresholdsInfo) {
+        AlertDialog(
+            onDismissRequest = { showThresholdsInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Text("About Gauge Thresholds", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = { Text(thresholdsInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = { TextButton(onClick = { showThresholdsInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
+    }
+
+    if (showDecayInfo) {
+        AlertDialog(
+            onDismissRequest = { showDecayInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Text("About Decay Curves", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = { Text(decayInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = { TextButton(onClick = { showDecayInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
     }
 }
 

@@ -3,6 +3,7 @@ package com.migraineme
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,21 +48,6 @@ fun RecalibrationReviewScreen(
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-
-            // ── Header ──
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-                }
-                Text(
-                    "Recalibration",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                )
-            }
 
             // ── Loading ──
             if (state.loading) {
@@ -137,6 +123,44 @@ fun RecalibrationReviewScreen(
                 return@ScrollableScreenContent
             }
 
+            // ── Intro card — pinned to top ──
+            BaseCard {
+                Text(
+                    "Your monthly recalibration",
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "We've reviewed your recent migraines and logs and prepared the suggestions below. Use the buttons to accept or reject everything in one tap, or scroll down and pick the ones you want yourself.",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+
+            // ── Accept All / Reject All — pinned to top ──
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = { vm.acceptAll() },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text("Accept all", color = Color.White)
+                }
+                OutlinedButton(
+                    onClick = { vm.rejectAll() },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text("Reject all", color = Color.White)
+                }
+            }
+
             // ── Clinical Assessment ──
             if (state.clinicalAssessment.isNotBlank()) {
                 BaseCard {
@@ -171,29 +195,6 @@ fun RecalibrationReviewScreen(
                 }
             }
 
-            // ── Accept All / Reject All ──
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedButton(
-                    onClick = { vm.acceptAll() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Text("Accept all", color = Color.White)
-                }
-                OutlinedButton(
-                    onClick = { vm.rejectAll() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Text("Reject all", color = Color.White)
-                }
-            }
-
             // ── Proposals grouped by type, fixed display order ──
             val grouped = state.proposals.groupBy { it.type }
             val displayOrder = listOf(
@@ -208,6 +209,7 @@ fun RecalibrationReviewScreen(
                 "missed_activity" to "Missed activity favorites",
                 "gauge_threshold" to "Gauge thresholds",
                 "gauge_decay" to "Decay curves",
+                "menstruation_decay" to "Menstrual cycle decay",
                 "data_warning" to "Data warnings",
             )
 
@@ -220,15 +222,25 @@ fun RecalibrationReviewScreen(
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
+                    if (type != "data_warning") {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            "Keep checked to accept, untap to reject.",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
                     Spacer(Modifier.height(4.dp))
 
-                    // Gauge thresholds table removed — Was/New now shown on each card
-
                     for (proposal in proposals) {
-                        ProposalRow(
-                            proposal = proposal,
-                            onToggle = { vm.toggleProposal(proposal.id) },
-                        )
+                        if (type == "data_warning") {
+                            WarningRow(proposal)
+                        } else {
+                            ProposalRow(
+                                proposal = proposal,
+                                onToggle = { vm.toggleProposal(proposal.id) },
+                            )
+                        }
                         if (proposal != proposals.last()) {
                             Divider(
                                 color = AppTheme.SubtleTextColor.copy(alpha = 0.2f),
@@ -317,9 +329,9 @@ private fun ProposalRow(
                 )
 
                 if (proposal.fromValue != null && proposal.toValue != null &&
-                    proposal.type !in listOf("data_warning", "clinical_assessment")) {
+                    proposal.type !in listOf("data_warning", "clinical_assessment", "gauge_decay", "menstruation_decay")) {
                     Spacer(Modifier.width(8.dp))
-                    if (proposal.type == "gauge_threshold" || proposal.type == "gauge_decay") {
+                    if (proposal.type == "gauge_threshold") {
                         Text("Was ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         Text(proposal.fromValue, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                         Text(" → ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
@@ -337,6 +349,13 @@ private fun ProposalRow(
                 && proposal.fromValue.contains("day")) {
                 Spacer(Modifier.height(4.dp))
                 DecayCurveComparison(proposal.fromValue, proposal.toValue, proposal.accepted)
+            }
+
+            // Menstrual cycle decay visualization (15 days m7..0..p7)
+            if (proposal.type == "menstruation_decay" && proposal.fromValue != null && proposal.toValue != null
+                && proposal.fromValue.contains("day_")) {
+                Spacer(Modifier.height(4.dp))
+                MenstrualDecayComparison(proposal.fromValue, proposal.toValue, proposal.accepted)
             }
 
             // Favorite indicator
@@ -526,3 +545,89 @@ private fun formatDecayVal(v: Double): String {
     else String.format("%.1f", v)
 }
 
+private val MENSTRUAL_KEYS = listOf(
+    "day_m7","day_m6","day_m5","day_m4","day_m3","day_m2","day_m1",
+    "day_0",
+    "day_p1","day_p2","day_p3","day_p4","day_p5","day_p6","day_p7",
+)
+private val MENSTRUAL_LABELS = listOf(
+    "-7","-6","-5","-4","-3","-2","-1","0","+1","+2","+3","+4","+5","+6","+7",
+)
+
+private fun parseMenstrualDays(json: String): List<Double> {
+    return try {
+        val obj = org.json.JSONObject(json)
+        MENSTRUAL_KEYS.map { obj.optDouble(it, 0.0) }
+    } catch (_: Exception) { emptyList() }
+}
+
+@Composable
+private fun MenstrualDecayComparison(fromJson: String, toJson: String, accepted: Boolean) {
+    val fromVals = parseMenstrualDays(fromJson)
+    val toVals = parseMenstrualDays(toJson)
+    if (toVals.isEmpty()) return
+
+    val scroll = rememberScrollState()
+    Column(modifier = Modifier.horizontalScroll(scroll)) {
+        Row {
+            Text("Day", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
+            MENSTRUAL_LABELS.forEach { lbl ->
+                Text(lbl, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(28.dp))
+            }
+        }
+        Row {
+            Text("Was", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
+            fromVals.forEach { v ->
+                Text(formatDecayVal(v), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(28.dp))
+            }
+        }
+        Row {
+            Text("New", color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), modifier = Modifier.width(32.dp))
+            toVals.forEachIndexed { i, newV ->
+                val oldV = fromVals.getOrNull(i)
+                val effective = if (accepted) newV else (oldV ?: newV)
+                val changed = accepted && (oldV == null || oldV != newV)
+                Text(
+                    formatDecayVal(effective),
+                    color = if (changed) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
+                    style = if (changed) MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.width(28.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WarningRow(proposal: RecalibrationViewModel.Proposal) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF1A1A24))
+            .padding(12.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Warning,
+            contentDescription = null,
+            tint = Color(0xFFFFB74D),
+        )
+        Spacer(Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                proposal.label,
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            )
+            if (!proposal.reasoning.isNullOrBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    proposal.reasoning,
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
+}

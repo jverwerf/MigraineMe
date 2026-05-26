@@ -325,7 +325,7 @@ private data class RiskMetricLine(val key: String, val label: String, val color:
 
 private fun pickerCatColor(category: String): Color = when (category) {
     "Sleep" -> Color(0xFF7E57C2); "Weather" -> Color(0xFF4FC3F7); "Physical" -> Color(0xFF81C784)
-    "Mental" -> Color(0xFFBA68C8); "Nutrition" -> Color(0xFFFFB74D); else -> Color(0xFF999999)
+    "Cognitive" -> Color(0xFFBA68C8); "Diet" -> Color(0xFFFFB74D); else -> Color(0xFF999999)
 }
 
 @OptIn(ExperimentalLayoutApi::class)

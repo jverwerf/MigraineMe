@@ -421,7 +421,8 @@ private val EXPANDED_SYNONYMS: Map<String, List<String>> = mapOf(
     "stress" to listOf("stressed", "stressful", "anxious", "overwhelmed", "worried", "panic", "deadline", "pressure at work", "argument", "fight"),
     "bright light" to listOf("bright lights", "glare", "fluorescent", "sun", "sunlight", "harsh light"),
     "loud noise" to listOf("loud", "noisy", "noise", "concert", "music", "construction"),
-    "weather change" to listOf("weather", "barometric", "storm", "rain", "humidity", "hot day", "cold front", "temperature change"),
+    "weather change" to listOf("weather", "barometric", "rain", "humidity", "hot day", "cold front", "temperature change"),
+    "thunderstorm" to listOf("thunder", "lightning", "thunderstorm", "thunderstorms", "electrical storm", "storm"),
     "neck stiffness" to listOf("stiff neck", "neck pain", "tight neck", "neck tension"),
     "caffeine" to listOf("coffee", "espresso", "energy drink", "tea", "too much coffee", "latte", "cappuccino"),
     "menstruation" to listOf("period", "menstrual", "cycle", "time of the month", "pms"),
@@ -763,12 +764,20 @@ data class CheckInActivityItem(
     val inferred: Boolean = false
 )
 
+data class CheckInPostdromeItem(val label: String, val inferred: Boolean = false)
+data class CheckInTreatmentSideEffectItem(
+    val regimenName: String? = null,
+    val labels: List<String> = emptyList(),
+    val freeText: String? = null,
+)
 data class CheckInParseResult(
     val triggers: List<CheckInTriggerItem> = emptyList(),
     val prodromes: List<CheckInProdromeItem> = emptyList(),
     val medicines: List<CheckInMedicineItem> = emptyList(),
     val reliefs: List<CheckInReliefItem> = emptyList(),
-    val activities: List<CheckInActivityItem> = emptyList()
+    val activities: List<CheckInActivityItem> = emptyList(),
+    val postdrome: List<CheckInPostdromeItem> = emptyList(),
+    val treatmentSideEffects: List<CheckInTreatmentSideEffectItem> = emptyList(),
 )
 
 // ═════════════════════════════════════════════════════════════════════
@@ -1059,21 +1068,42 @@ Extract everything. JSON only.
     val resProdromes = mutableListOf<CheckInProdromeItem>()
     val resMedicines = mutableListOf<CheckInMedicineItem>()
     val resReliefs = mutableListOf<CheckInReliefItem>()
+    val resPostdromes = mutableListOf<CheckInPostdromeItem>()
+    // Group treatment side-effect rows by regimen_name so callers can pre-fill
+    // each per-regimen page (and we can also write the free-form notes).
+    val seByRegimen = mutableMapOf<String, MutableList<String>>()
+    val seNotesByRegimen = mutableMapOf<String, String>()
 
     obj.optJSONArray("items")?.let { arr ->
         for (i in 0 until arr.length()) {
             val item = arr.getJSONObject(i)
             val label = item.getString("label")
             val cat = item.getString("category")
-            val pool = allPools[cat] ?: continue
-            if (label !in pool) continue
-
             val inf = item.optBoolean("inferred", true)
             val startAt = item.optString("start_at", "").takeIf { it.isNotBlank() && it != "null" }
             val amount = item.optString("amount", "").takeIf { it.isNotBlank() && it != "null" }
             val reliefScale = item.optString("relief_scale", "NONE").takeIf { it.isNotBlank() && it != "null" } ?: "NONE"
             val sideEffectScale = item.optString("side_effect_scale", "NONE").takeIf { it.isNotBlank() && it != "null" } ?: "NONE"
             val sideEffectNotes = item.optString("side_effect_notes", "").takeIf { it.isNotBlank() && it != "null" }
+
+            // Postdrome + treatment_side_effect don't gate on the trigger/relief
+            // pools — they have their own pools the client already knows about.
+            if (cat == "postdrome") {
+                resPostdromes.add(CheckInPostdromeItem(label, inf))
+                continue
+            }
+            if (cat == "treatment_side_effect") {
+                val regimenName = item.optString("regimen_name", "").takeIf { it.isNotBlank() && it != "null" } ?: ""
+                seByRegimen.getOrPut(regimenName) { mutableListOf() }.add(label)
+                if (!sideEffectNotes.isNullOrBlank()) {
+                    val existing = seNotesByRegimen[regimenName].orEmpty()
+                    seNotesByRegimen[regimenName] = if (existing.isBlank()) sideEffectNotes else "$existing $sideEffectNotes"
+                }
+                continue
+            }
+
+            val pool = allPools[cat] ?: continue
+            if (label !in pool) continue
 
             when (cat) {
                 "trigger" -> resTriggers.add(CheckInTriggerItem(label, startAt, null, inf))
@@ -1084,7 +1114,23 @@ Extract everything. JSON only.
         }
     }
 
-    return CheckInParseResult(resTriggers, resProdromes, resMedicines, resReliefs)
+    val resSideEffects = seByRegimen.map { (rn, labels) ->
+        CheckInTreatmentSideEffectItem(
+            regimenName = rn.takeIf { it.isNotBlank() },
+            labels = labels,
+            freeText = seNotesByRegimen[rn]?.takeIf { it.isNotBlank() },
+        )
+    }
+
+    return CheckInParseResult(
+        triggers = resTriggers,
+        prodromes = resProdromes,
+        medicines = resMedicines,
+        reliefs = resReliefs,
+        activities = emptyList(),
+        postdrome = resPostdromes,
+        treatmentSideEffects = resSideEffects,
+    )
 }
 
 // ═════════════════════════════════════════════════════════════════════

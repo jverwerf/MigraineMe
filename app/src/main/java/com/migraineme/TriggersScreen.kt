@@ -329,7 +329,7 @@ fun TriggersScreen(
                 categoryEntries.forEachIndexed { catIndex, (category, items) ->
                     val nonFreqItems = items.filter { it.label !in frequentLabels }
                     if (nonFreqItems.isNotEmpty()) {
-                        Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(prettyLabel(category), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { trig ->
                                 TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recentDaysAgo[trig.label]) {

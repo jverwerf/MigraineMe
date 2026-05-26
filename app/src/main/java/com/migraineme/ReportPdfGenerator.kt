@@ -22,30 +22,13 @@ class ReportPdfGenerator(private val context: Context) {
     companion object {
         private const val TAG = "ReportPDF"
 
-        /** Resolve legacy/label pain location IDs to canonical point IDs (matches iOS PainHeatMapView). */
+        /** Pass through pain location IDs. The wizard writes canonical
+         *  PainPoint.id values (e.g. `forehead_center`, `temple_right`).
+         *  Removed the fuzzy alias map that was misplotting markers — old
+         *  seeded data is the only source of non-canonical strings and the
+         *  seeder now writes canonical IDs too. */
         fun resolvePainLocationCounts(raw: List<Pair<String, Int>>): Map<String, Int> {
-            val labelToIds = mapOf(
-                "forehead" to listOf("forehead_center", "forehead_left", "forehead_right"),
-                "both temples" to listOf("temple_left", "temple_right"),
-                "behind left eye" to listOf("eye_left"), "behind right eye" to listOf("eye_right"),
-                "behind both eyes" to listOf("eye_left", "eye_right"),
-                "back of head" to listOf("occipital_center"),
-                "base of skull" to listOf("base_skull_center", "base_skull_left", "base_skull_right"),
-                "jaw" to listOf("jaw_left", "jaw_right"), "neck" to listOf("neck_left", "neck_right"),
-                "sinus" to listOf("sinus_left", "sinus_right"), "ear" to listOf("ear_left", "ear_right"),
-                "brow" to listOf("brow_left", "brow_right"), "teeth" to listOf("teeth_left", "teeth_right"),
-                "upper back" to listOf("upper_back_center", "upper_back_left", "upper_back_right"),
-                "shoulder" to listOf("shoulder_left", "shoulder_right"),
-                "top of head" to listOf("vertex"), "top_of_head" to listOf("vertex"),
-                "right_temple" to listOf("temple_right"), "left_temple" to listOf("temple_left"),
-                "behind_right_eye" to listOf("eye_right"), "behind_left_eye" to listOf("eye_left"),
-            )
-            val result = mutableMapOf<String, Int>()
-            for ((loc, count) in raw) {
-                result[loc] = count
-                labelToIds[loc.lowercase()]?.forEach { id -> result[id] = maxOf(result[id] ?: 0, count) }
-            }
-            return result
+            return raw.toMap()
         }
     }
 
@@ -132,11 +115,24 @@ class ReportPdfGenerator(private val context: Context) {
         val severityCounts: List<Pair<Int, Int>> = emptyList(),
         val totalMigraineCount: Int = 0,
         val overallAvgSeverity: Float = 5f,
-        val sources: Set<String> = emptySet(),
         // Symptom analytics (Phase 2a/b/c)
         val symptomStats: List<EdgeFunctionsService.SymptomStat> = emptyList(),
         val symptomOutcomes: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
         val symptomSegments: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
+        // Treatments section
+        val treatments: List<SupabaseDbService.TreatmentLeaderboardRow> = emptyList(),
+        val treatmentNarratives: Map<String, String> = emptyMap(),
+        val treatmentSideEffects: Map<String, List<SupabaseDbService.TreatmentSideEffectLogRow>> = emptyMap(),
+        // Per-migraine linked items (triggers / medicines / reliefs /
+        // prodromes / activities / locations). Used by the opening
+        // "Migraine Log" section to render every reported value per attack
+        // instead of just date / severity / duration / type-truncated-30.
+        val linkedItemsByMigraine: Map<String, SupabaseDbService.MigraineLinkedItems> = emptyMap(),
+        // Per-migraine postdrome / linked-symptom rows from the `symptoms`
+        // table (separate from mg.label during-attack symptoms). Mirrors
+        // iOS ReportData.symptomsByMigraine so the Migraine Log card can
+        // surface postdrome rows too.
+        val symptomsByMigraine: Map<String, List<SupabaseDbService.SymptomLogRow>> = emptyMap(),
     )
 
     // ======= Public =======
@@ -164,7 +160,7 @@ class ReportPdfGenerator(private val context: Context) {
             newPage(); drawLogCompact(data)
 
             // 5. Frequency trends
-            if (data.filteredMigraines.size >= 3) { Log.d(TAG, "generate: drawFrequencyTrends"); drawFrequencyTrends(data) }
+            if (data.filteredMigraines.size >= 3) { Log.d(TAG, "generate: drawFrequencyTrends"); newPage(); drawFrequencyTrends(data) }
 
             // 6. What Happened (patterns + correlations)
             val significant = data.correlationStats.filter { it.isSignificant() }
@@ -201,6 +197,12 @@ class ReportPdfGenerator(private val context: Context) {
             if (data.severityCounts.isNotEmpty() || data.painLocationCounts.isNotEmpty() || data.impactItems.isNotEmpty() || data.symptomStats.isNotEmpty()) {
                 Log.d(TAG, "generate: drawImpact")
                 newPage(); drawImpact(data)
+            }
+
+            // 9.5 Treatments (per-regimen efficacy + GPT narratives + side effects)
+            if (data.treatments.isNotEmpty()) {
+                Log.d(TAG, "generate: drawTreatments (${data.treatments.size} regimens)")
+                newPage(); drawTreatments(data)
             }
 
             // 10. Migraine timelines
@@ -339,28 +341,6 @@ class ReportPdfGenerator(private val context: Context) {
         y += h + 6f
     }
 
-    /** Draw source attribution badges row (e.g. "Sources: [Garmin] [WHOOP]") */
-    private fun drawSourceBadges(sources: Set<String>) {
-        if (sources.isEmpty()) return
-        val c = cv ?: return
-        need(22f)
-        val labelP = tp(SUBTLE, 7f)
-        c.drawText("Sources:", M, y + 10f, labelP)
-        var x = M + labelP.measureText("Sources:") + 8f
-        for (src in sources.sorted()) {
-            val label = sourceDisplayLabel(src)
-            val badgeColor = cToA(sourceColor(src))
-            val textP = tp(Color.WHITE, 7f, b = true)
-            val tw = textP.measureText(label)
-            val bw = tw + 12f
-            if (x + bw > PW - M) { y += 16f; x = M; need(22f) }
-            c.drawRoundRect(RectF(x, y + 1f, x + bw, y + 14f), 7f, 7f, fp(badgeColor))
-            c.drawText(label, x + 6f, y + 11f, textP)
-            x += bw + 6f
-        }
-        y += 20f
-    }
-
     private fun tp(col: Int, sz: Float, b: Boolean = false, a: Paint.Align = Paint.Align.LEFT) = Paint().apply {
         color = col; textSize = sz; isAntiAlias = true; textAlign = a
         if (sz <= 10f) letterSpacing = 0.02f
@@ -422,8 +402,6 @@ class ReportPdfGenerator(private val context: Context) {
             c.drawText("$fr  —  $to", PW / 2f, y, tp(SUBTLE, 11f, a = Paint.Align.CENTER))
         }
         y += 30f
-        drawSourceBadges(d.sources)
-        y += 20f
     }
 
     // ======= Summary stats =======
@@ -634,6 +612,137 @@ class ReportPdfGenerator(private val context: Context) {
                 cv2.drawText(lb, cx, t + 28f, tp(SUBTLE, 8f, a = Paint.Align.CENTER))
             }
         }
+
+        // Weekly bars — span the full filtered range (was hardcoded last 12
+        // weeks, which clipped longer time ranges in the Full Report).
+        val purple = Color.parseColor("#9575CD")
+        val today = java.time.LocalDate.now(zone)
+        val mondayOf: (java.time.LocalDate) -> java.time.LocalDate = { ld ->
+            ld.minusDays(ld.dayOfWeek.value.toLong() - 1)
+        }
+        val migraineDates = d.filteredMigraines.map { it.start.atZone(zone).toLocalDate() }
+        val firstWeek: java.time.LocalDate = migraineDates.minOrNull()?.let(mondayOf) ?: mondayOf(today.minusWeeks(11))
+        val lastWeek: java.time.LocalDate = mondayOf(today)
+        val weekStarts: List<java.time.LocalDate> = generateSequence(firstWeek) { it.plusWeeks(1) }
+            .takeWhile { !it.isAfter(lastWeek) }
+            .toList()
+        val weekCounts: List<Int> = weekStarts.map { weekStart ->
+            val weekEnd = weekStart.plusWeeks(1)
+            d.filteredMigraines.count {
+                val ld = it.start.atZone(zone).toLocalDate()
+                !ld.isBefore(weekStart) && ld.isBefore(weekEnd)
+            }
+        }
+        if (weekCounts.sum() >= 3) {
+            val maxW = weekCounts.max().coerceAtLeast(1)
+            val weekFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM")
+
+            need(20f)
+            val title = "Weekly (${weekStarts.size} week${if (weekStarts.size == 1) "" else "s"})"
+            cv?.drawText(title, M + 12f, y + 10f, tp(purple, 10f, b = true))
+            y += 16f
+
+            card(120f) { cv2, l, t, r, b ->
+                val padL = l + 4f; val padR = r - 4f; val padT = t + 6f; val padB = b - 14f
+                val cw = padR - padL; val ch = padB - padT
+                val cellW = cw / weekCounts.size
+                val barW = cellW * 0.7f
+                for (i in weekCounts.indices) {
+                    val count = weekCounts[i]
+                    val x = padL + i * cellW + (cellW - barW) / 2f
+                    val barH = (count.toFloat() / maxW) * (ch - 12f)
+                    val barTop = padB - maxOf(2f, barH)
+                    val color = if (count == 0) Color.WHITE else purple
+                    val alpha = if (count == 0) 25 else 178
+                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 3f, 3f, fp(color, alpha))
+                    if (count > 0) {
+                        cv2.drawText("$count", x + barW / 2f, barTop - 2f, tp(purple, 6.5f, true, Paint.Align.CENTER))
+                    }
+                    if (i % 2 == 0) {
+                        cv2.drawText(weekStarts[i].format(weekFmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6f, a = Paint.Align.CENTER))
+                    }
+                }
+            }
+        }
+
+        // Day of Week bars (with worst day highlight) — mirrors DayOfWeekChart
+        val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        val dowCounts = IntArray(7)
+        for (m in d.filteredMigraines) {
+            val dow = m.start.atZone(zone).toLocalDate().dayOfWeek.value
+            dowCounts[dow - 1]++
+        }
+        val dowTotal = dowCounts.sum()
+        if (dowTotal > 0) {
+            val maxD = dowCounts.max().coerceAtLeast(1)
+
+            need(20f)
+            cv?.drawText("Day of Week", M + 12f, y + 10f, tp(purple, 10f, b = true))
+            y += 16f
+
+            card(120f) { cv2, l, t, r, b ->
+                val padL = l + 4f; val padR = r - 4f; val padT = t + 6f; val padB = b - 14f
+                val cw = padR - padL; val ch = padB - padT
+                val cellW = cw / 7f
+                val barW = cellW * 0.7f
+                for (i in 0 until 7) {
+                    val count = dowCounts[i]
+                    val isMax = count == maxD && count > 0
+                    val barColor = if (isMax) SS else purple
+                    val x = padL + i * cellW + (cellW - barW) / 2f
+                    val barH = (count.toFloat() / maxD) * (ch - 12f)
+                    val barTop = padB - maxOf(4f, barH)
+                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 4f, 4f, fp(barColor, 204))
+                    cv2.drawText("$count", x + barW / 2f, barTop - 3f, tp(barColor, 7f, true, Paint.Align.CENTER))
+                    cv2.drawText(dayNames[i], x + barW / 2f, padB + 10f, tp(SUBTLE, 7f, a = Paint.Align.CENTER))
+                }
+            }
+
+            val worstIdx = dowCounts.indices.maxByOrNull { dowCounts[it] } ?: 0
+            if (dowCounts[worstIdx] > 0) {
+                val pct = (dowCounts[worstIdx].toFloat() / dowTotal * 100f).toInt()
+                need(14f)
+                cv?.drawText("Most frequent: ${dayNames[worstIdx]} (${dowCounts[worstIdx]} migraines, $pct%)",
+                    PW / 2f, y + 9f, tp(BODY, 8f, a = Paint.Align.CENTER))
+                y += 12f
+            }
+        }
+
+        // Severity Over Time (monthly avg, ≥3 months gate) — mirrors SeverityOverTimeChart
+        val monthsWithSev: List<Triple<java.time.LocalDate, Float, Int>> = months.mapNotNull { monthStart ->
+            val sevs = (byMonth[monthStart] ?: emptyList()).mapNotNull { it.severity }
+            if (sevs.isEmpty()) null
+            else Triple(monthStart, sevs.average().toFloat(), sevs.size)
+        }
+        if (monthsWithSev.size >= 3) {
+            val pink = Color.parseColor("#FF7BB0")
+            val sevFmt = java.time.format.DateTimeFormatter.ofPattern("MMM")
+
+            need(20f)
+            cv?.drawText("Average Severity", M + 12f, y + 10f, tp(pink, 10f, b = true))
+            y += 16f
+
+            card(120f) { cv2, l, t, r, b ->
+                val padL = l + 4f; val padR = r - 4f; val padT = t + 6f; val padB = b - 14f
+                val cw = padR - padL; val ch = padB - padT
+                val cellW = cw / monthsWithSev.size
+                val barW = minOf(cellW * 0.7f, 24f)
+                for ((i, entry) in monthsWithSev.withIndex()) {
+                    val (monthStart, avg, _) = entry
+                    val sevColor = when {
+                        avg >= 7f -> SS
+                        avg >= 4f -> SMO
+                        else -> SM
+                    }
+                    val x = padL + i * cellW + (cellW - barW) / 2f
+                    val barH = (avg / 10f) * (ch - 14f)
+                    val barTop = padB - maxOf(4f, barH)
+                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 4f, 4f, fp(pink, 153))
+                    cv2.drawText(String.format("%.1f", avg), x + barW / 2f, barTop - 3f, tp(sevColor, 7f, true, Paint.Align.CENTER))
+                    cv2.drawText(monthStart.format(sevFmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
+                }
+            }
+        }
     }
 
     // ===============================================================
@@ -709,7 +818,8 @@ class ReportPdfGenerator(private val context: Context) {
             cv?.drawText("Dangerous Combinations", M + 12f, y + 14f, tp(red, 10f, true))
             y += 22f
 
-            for (stat in interactions.sortedByDescending { it.liftRatio }.take(8)) {
+            // PDF shows every significant interaction (was capped at 8).
+            for (stat in interactions.sortedByDescending { it.liftRatio }) {
                 need(44f)
                 val filled = when {
                     stat.pValue < 0.01f -> 3
@@ -742,6 +852,112 @@ class ReportPdfGenerator(private val context: Context) {
     }
 
     // ===============================================================
+    //  TREATMENTS (per-regimen efficacy + GPT narrative + side effects)
+    // ===============================================================
+
+    private fun drawTreatments(d: ReportData) {
+        heading("Treatments", ACCENT)
+        need(18f)
+        cv?.drawText(
+            "Per-regimen efficacy from start_date baseline vs the most recent 28 days.",
+            M + 12f, y + 10f, tp(SUBTLE, 7.5f)
+        )
+        y += 18f
+
+        val sorted = d.treatments.sortedBy { it.pctChangeMmd ?: Double.POSITIVE_INFINITY }
+        val maxPct = maxOf(50.0, sorted.mapNotNull { it.pctChangeMmd }.map { Math.abs(it) }.maxOrNull() ?: 50.0)
+
+        for (row in sorted) {
+            val narrative = d.treatmentNarratives[row.regimenId]
+            val band = row.band
+            val bandLabel = treatmentBandLabelKt(band)
+            val bandCol = treatmentBandColorKt(band)
+            val pctText = row.pctChangeMmd?.let { String.format("%+.0f%%", it) } ?: "N/A"
+            val dose = listOfNotNull(row.amount, row.frequency).joinToString(" · ")
+            val periodEnd = row.stopDate ?: "active"
+            val sub = listOfNotNull(row.kind, dose.ifBlank { null }, "${row.startDate} → $periodEnd").joinToString(" · ")
+
+            // Pre-wrap narrative so the card height fits exactly the lines
+            // we'll draw (was fixed at 78f, which clipped longer narratives).
+            val narrativeLines: List<String> = if (narrative != null) {
+                val paint = tp(BODY, 8.5f)
+                wrapText(narrative.take(400), paint, PW - 2 * M - 8f).take(5)
+            } else emptyList()
+            val cardH: Float = if (narrativeLines.isEmpty()) 34f else 40f + narrativeLines.size * 11f + 6f
+            need(cardH + 8f)
+
+            card(cardH) { c, l, t, r, _ ->
+                c.drawText(prettyLabel(row.name), l + 4f, t + 2f, tp(Color.WHITE, 10f, true))
+                c.drawText(pctText, r - 4f, t + 2f, tp(bandCol, 11f, true, Paint.Align.RIGHT))
+                c.drawText(sub, l + 4f, t + 14f, tp(SUBTLE, 7.5f))
+                c.drawText(bandLabel, l + 4f, t + 26f, tp(bandCol, 8f, true))
+
+                // mini bar
+                val barLeft  = l + 110f
+                val barRight = r - 60f
+                val trackW = (barRight - barLeft).coerceAtLeast(20f)
+                val mag = row.pctChangeMmd?.let { (Math.abs(it) / maxPct).coerceAtMost(1.0).toFloat() } ?: 0f
+                c.drawRoundRect(RectF(barLeft, t + 24f, barLeft + trackW, t + 28f), 2f, 2f, fp(Color.WHITE, 30))
+                c.drawRoundRect(RectF(barLeft, t + 24f, barLeft + trackW * mag, t + 28f), 2f, 2f, fp(bandCol, 220))
+
+                if (narrativeLines.isNotEmpty()) {
+                    val paint = tp(BODY, 8.5f)
+                    var ly = t + 40f
+                    for (line in narrativeLines) {
+                        c.drawText(line, l + 4f, ly, paint)
+                        ly += 11f
+                    }
+                }
+            }
+        }
+
+        // Side-effects roundup — one card per regimen so the rows stay
+        // bordered/grouped instead of flat list bleed (matches iOS).
+        val pink = Color.parseColor("#FF7BB0")
+        val withSE = sorted.filter { (d.treatmentSideEffects[it.regimenId]?.size ?: 0) > 0 }
+        if (withSE.isNotEmpty()) {
+            need(20f)
+            heading("Reported side effects", pink)
+            for (row in withSE) {
+                val logs = d.treatmentSideEffects[row.regimenId] ?: continue
+                if (logs.isEmpty()) continue
+                val visibleLogs = logs.take(8)
+                val cardH = 22f + visibleLogs.size * 14f + 8f
+                card(cardH) { c, l, t, r, _ ->
+                    c.drawText(prettyLabel(row.name), l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
+                    var ly = t + 18f
+                    for (log in visibleLogs) {
+                        val pills = log.selectedSymptoms.map { prettyLabel(it) }.joinToString(", ")
+                        val line = log.notes?.takeIf { it.isNotBlank() } ?: pills
+                        c.drawText("• ${log.logDate}", l + 4f, ly, tp(SUBTLE, 7.5f))
+                        // Clamp to one wrapped line so long sentences don't bleed past the card.
+                        val bodyX = l + 70f
+                        val avail = (r - bodyX - 4f).coerceAtLeast(40f)
+                        val truncated = wrapText(line, tp(BODY, 8f), avail).firstOrNull() ?: line
+                        c.drawText(truncated, bodyX, ly, tp(BODY, 8f))
+                        ly += 14f
+                    }
+                }
+            }
+        }
+    }
+
+    private fun treatmentBandLabelKt(band: String): String = when (band) {
+        "working_well" -> "Working well"
+        "showing_progress" -> "Showing progress"
+        "some_effect" -> "Some effect"
+        "not_noticeable" -> "Not noticeable yet"
+        else -> "Not enough data"
+    }
+    private fun treatmentBandColorKt(band: String): Int = when (band) {
+        "working_well" -> Color.parseColor("#81C784")
+        "showing_progress" -> Color.parseColor("#FFB74D")
+        "some_effect" -> BODY
+        "not_noticeable" -> Color.parseColor("#E57373")
+        else -> SUBTLE
+    }
+
+    // ===============================================================
     //  TREATMENT CORRELATIONS (What Worked — liftRatio based)
     // ===============================================================
 
@@ -758,7 +974,8 @@ class ReportPdfGenerator(private val context: Context) {
             cv?.drawText("shorter = reduced duration • milder = reduced severity • based on your migraine data", M + 12f, y + 10f, tp(SUBTLE, 7.5f))
             y += 18f
 
-            for (stat in treatments.sortedByDescending { it.liftRatio }.take(10)) {
+            // PDF shows every effective treatment (was capped at 10).
+            for (stat in treatments.sortedByDescending { it.liftRatio }) {
                 need(30f)
                 val liftParts = mutableListOf<String>()
                 if (stat.durationLift > 1f) liftParts.add("${String.format("%.1f", stat.durationLift)}× shorter")
@@ -777,7 +994,8 @@ class ReportPdfGenerator(private val context: Context) {
             need(30f)
             heading("Effective Combinations", green)
 
-            for (stat in treatmentInteractions.sortedByDescending { it.liftRatio }.take(8)) {
+            // PDF shows every effective combination (was capped at 8).
+            for (stat in treatmentInteractions.sortedByDescending { it.liftRatio }) {
                 need(38f)
                 val liftParts = mutableListOf<String>()
                 if (stat.durationLift > 1f) liftParts.add("${String.format("%.1f", stat.durationLift)}× shorter")
@@ -980,16 +1198,19 @@ class ReportPdfGenerator(private val context: Context) {
             cs.drawText("Your Symptoms", M + 12f, y + 12f, tp(purple, 10f, true))
             y += 22f
             for (s in data.symptomStats.take(12)) {
-                need(30f)
+                need(42f)
                 val pct = (s.pctOfAttacks * 100f).toInt()
                 val sevText = s.avgSeverity?.let { "sev ${String.format("%.1f", it)}" } ?: ""
                 val durText = s.avgDurationHours?.let { String.format("%.1fh", it) } ?: ""
-                card(24f) { cv2, l, t, r, _ ->
-                    cv2.drawText(s.symptomLabel, l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
+                val meta = listOf(sevText, durText).filter { it.isNotEmpty() }.joinToString(" · ")
+                // Two-line card height when meta is present so the sub-text
+                // doesn't bleed past the bottom border (matches iOS).
+                val rowH = if (meta.isEmpty()) 24f else 36f
+                card(rowH) { cv2, l, t, r, _ ->
+                    cv2.drawText(prettyLabel(s.symptomLabel), l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
                     cv2.drawText("$pct% · ${s.totalCount} attacks", r - 4f, t + 2f, tp(purple, 8.5f, true, Paint.Align.RIGHT))
-                    val meta = listOf(sevText, durText).filter { it.isNotEmpty() }.joinToString(" · ")
                     if (meta.isNotEmpty()) {
-                        cv2.drawText(meta, l + 4f, t + 14f, tp(SUBTLE, 7f))
+                        cv2.drawText(meta, l + 4f, t + 16f, tp(SUBTLE, 7.5f))
                     }
                 }
             }
@@ -1021,7 +1242,7 @@ class ReportPdfGenerator(private val context: Context) {
                     ?: stat.pctMigraineWindows.toInt()
                 val baselinePct = (stat.lagDetails?.get("baseline_pct") as? kotlinx.serialization.json.JsonPrimitive)?.content?.toFloatOrNull()?.toInt()
                     ?: stat.pctControlWindows.toInt()
-                c3.drawText("→ ${stat.symptomOutcome ?: ""}", M + 24f, y + 4f, tp(BODY, 8.5f))
+                c3.drawText("→ ${prettyLabel(stat.symptomOutcome)}", M + 24f, y + 4f, tp(BODY, 8.5f))
                 c3.drawText("${String.format("%.1f", stat.liftRatio)}x", PW - M - 80f, y + 4f, tp(purple, 8f, true, Paint.Align.RIGHT))
                 c3.drawText("$condPct% vs $baselinePct%", PW - M - 12f, y + 4f, tp(SUBTLE, 7.5f, false, Paint.Align.RIGHT))
                 y += 14f
@@ -1066,10 +1287,10 @@ class ReportPdfGenerator(private val context: Context) {
                     ?: stat.pctControlWindows
                 val direction = if (stat.liftRatio > 1.1f) "better" else if (stat.liftRatio < 0.9f) "worse" else "similar"
                 val dirColor = if (stat.liftRatio > 1.1f) SM else if (stat.liftRatio < 0.9f) SS else SUBTLE
-                c3.drawText(stat.symptomSegment ?: "", M + 24f, y + 4f, tp(BODY, 8.5f))
+                c3.drawText(prettyLabel(stat.symptomSegment), M + 24f, y + 4f, tp(BODY, 8.5f))
                 c3.drawText(direction, PW - M - 12f, y + 4f, tp(dirColor, 8f, true, Paint.Align.RIGHT))
                 y += 12f
-                c3.drawText("With ${stat.symptomSegment ?: ""}: ${reliefLabel(withRelief)} · Without: ${reliefLabel(withoutRelief)}",
+                c3.drawText("With ${prettyLabel(stat.symptomSegment)}: ${reliefLabel(withRelief)} · Without: ${reliefLabel(withoutRelief)}",
                     M + 24f, y + 4f, tp(SUBTLE, 7f))
                 y += 12f
             }
@@ -1092,6 +1313,7 @@ class ReportPdfGenerator(private val context: Context) {
     private fun hasSymptomsData(d: ReportData): Boolean {
         return d.spiders.painChar?.axes?.isNotEmpty() == true ||
             d.spiders.accompanying?.axes?.isNotEmpty() == true ||
+            d.spiders.postdrome?.axes?.isNotEmpty() == true ||
             d.spiders.painLocations?.axes?.isNotEmpty() == true ||
             d.spiders.severityCounts.isNotEmpty() ||
             d.spiders.durationStats != null
@@ -1100,18 +1322,22 @@ class ReportPdfGenerator(private val context: Context) {
     private fun drawSymptomsBreakdown(d: ReportData) {
         val hasPC = d.spiders.painChar?.axes?.isNotEmpty() == true
         val hasAC = d.spiders.accompanying?.axes?.isNotEmpty() == true
+        val hasPD = d.spiders.postdrome?.axes?.isNotEmpty() == true
         val hasPL = d.spiders.painLocations?.axes?.isNotEmpty() == true
         val hasSev = d.spiders.severityCounts.isNotEmpty()
         val hasDur = d.spiders.durationStats != null
-        if (!hasPC && !hasAC && !hasPL && !hasSev && !hasDur) return
+        if (!hasPC && !hasAC && !hasPD && !hasPL && !hasSev && !hasDur) return
 
-        heading("Symptoms", Color.parseColor("#E57373"))
+        heading("Migraines", Color.parseColor("#E57373"))
 
         // Pain Character
         if (hasPC) drawSpiderSection("Pain Character", d.spiders.painChar!!, Color.parseColor("#EF5350"))
 
         // Accompanying Experience
         if (hasAC) drawSpiderSection("Accompanying Experience", d.spiders.accompanying!!, Color.parseColor("#BA68C8"))
+
+        // Postdrome
+        if (hasPD) drawSpiderSection("Postdrome", d.spiders.postdrome!!, Color.parseColor("#4DB6AC"))
 
         // Pain Locations
         if (hasPL) drawSpiderSection("Pain Locations", d.spiders.painLocations!!, Color.parseColor("#FF8A65"))
@@ -1401,7 +1627,6 @@ class ReportPdfGenerator(private val context: Context) {
     // ======= Metrics =======
     private fun drawMetrics(d: ReportData) {
         heading("Health Metrics", Color.parseColor("#4DD0E1"))
-        drawSourceBadges(d.sources)
         val zone = ZoneId.systemDefault()
 
         // Compute date range from filtered migraines (with padding for window)
@@ -1531,7 +1756,6 @@ class ReportPdfGenerator(private val context: Context) {
     private fun drawTimelines(d: ReportData) {
         Log.d(TAG, "drawTimelines: ${d.timelineCaptures.size} captures")
         heading("Migraine Timelines", ACCENT)
-        drawSourceBadges(d.sources)
         val fmt = DateTimeFormatter.ofPattern("dd MMM yyyy  HH:mm")
         val contentWidth = PW - 2 * M
 
@@ -1649,19 +1873,73 @@ class ReportPdfGenerator(private val context: Context) {
         val m = d.filteredMigraines; if (m.isEmpty()) return
         subHead("Migraine Log (${m.size})", PINK)
         val fmt = DateTimeFormatter.ofPattern("dd MMM yy  HH:mm")
-        card(28f) { c, l, t, r, _ ->
-            c.drawText("Date", l, t + 9f, tp(ACCENT, 7f, true))
-            c.drawText("Sev", l + (r - l) * 0.40f, t + 9f, tp(ACCENT, 7f, true))
-            c.drawText("Duration", l + (r - l) * 0.48f, t + 9f, tp(ACCENT, 7f, true))
-            c.drawText("Type", l + (r - l) * 0.65f, t + 9f, tp(ACCENT, 7f, true))
-        }
+        val labelW = 70f
+        val bodyFontSize = 8f
+        val lineH = 11f
+
+        // One rich card per migraine: header (date · severity · duration) +
+        // labeled rows for every linked value. Mirrors the iOS rewrite
+        // (drawLogCompact in PDFReportService.swift) so the opening Migraine
+        // Log section shows the full set of reported values per attack
+        // instead of just date/severity/duration/type-truncated-30.
         m.forEach { mg ->
-            card(26f) { c, l, t, r, _ ->
-                c.drawText(mg.start.atZone(ZoneId.systemDefault()).format(fmt), l, t + 9f, tp(BODY, 7f))
+            val mgId = mg.id
+            val sym = (mg.label ?: "")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && it != "Migraine" }
+            val postSyms = mgId?.let { d.symptomsByMigraine[it] }
+                ?.mapNotNull { it.type?.takeIf { t -> t.isNotBlank() } }
+                ?: emptyList()
+            val pains = mg.painLocations
+            val linked = mgId?.let { d.linkedItemsByMigraine[it] }
+            val triggers  = linked?.triggers?.mapNotNull { it.type }  ?: emptyList()
+            val prodromes = linked?.prodromes?.mapNotNull { it.type } ?: emptyList()
+            val medicines = linked?.medicines?.mapNotNull { row ->
+                val n = row.name ?: return@mapNotNull null
+                val amt = row.amount?.takeIf { it.isNotBlank() }
+                if (amt != null) "$n ($amt)" else n
+            } ?: emptyList()
+            val reliefs    = linked?.reliefs?.mapNotNull { it.type }    ?: emptyList()
+            val activities = linked?.activities?.mapNotNull { it.type } ?: emptyList()
+            val locations  = linked?.locations?.mapNotNull { it.type }  ?: emptyList()
+
+            val contentMaxW = PW - 2 * M - 16f - labelW
+            val bodyPaint = tp(BODY, bodyFontSize)
+            fun rowLines(values: List<String>): List<String> {
+                if (values.isEmpty()) return emptyList()
+                val joined = values.map { prettyLabel(it) }.joinToString(", ")
+                return wrapText(joined, bodyPaint, contentMaxW)
+            }
+            val sections: List<Triple<String, List<String>, Int>> = listOf(
+                Triple("Symptoms",     rowLines(sym),        Color.parseColor("#E57373")),
+                Triple("Postdrome",    rowLines(postSyms),   Color.parseColor("#9575CD")),
+                Triple("Pain location",rowLines(pains),      Color.parseColor("#E57373")),
+                Triple("Triggers",     rowLines(triggers),   Color.parseColor("#FFB74D")),
+                Triple("Prodromes",    rowLines(prodromes),  Color.parseColor("#9575CD")),
+                Triple("Medicines",    rowLines(medicines),  Color.parseColor("#4FC3F7")),
+                Triple("Reliefs",      rowLines(reliefs),    Color.parseColor("#81C784")),
+                Triple("Activities",   rowLines(activities), Color.parseColor("#FF8A65")),
+                Triple("Locations",    rowLines(locations),  Color.parseColor("#78909C")),
+            ).filter { it.second.isNotEmpty() }
+
+            val bodyH = sections.sumOf { it.second.size }.toFloat() * lineH
+            val cardH = 22f + bodyH + 6f
+            card(cardH) { c, l, t, r, _ ->
                 val sc = when { (mg.severity ?: 0) <= 3 -> SM; (mg.severity ?: 0) <= 6 -> SMO; else -> SS }
-                c.drawText(mg.severity?.toString() ?: "—", l + (r - l) * 0.42f, t + 9f, tp(sc, 7.5f, true))
-                c.drawText(mg.end?.let { String.format("%.1fh", (it.toEpochMilli() - mg.start.toEpochMilli()) / 3600000.0) } ?: "ongoing", l + (r - l) * 0.48f, t + 9f, tp(BODY, 7f))
-                c.drawText(mg.label?.take(30) ?: "—", l + (r - l) * 0.65f, t + 9f, tp(BODY, 6.5f))
+                val dateText = mg.start.atZone(ZoneId.systemDefault()).format(fmt)
+                val sevStr = mg.severity?.let { "Severity $it" } ?: "Severity —"
+                val durStr = mg.end?.let { String.format("%.1fh", (it.toEpochMilli() - mg.start.toEpochMilli()) / 3600000.0) } ?: "ongoing"
+                c.drawText(dateText, l, t + 9f, tp(Color.WHITE, 9f, true))
+                c.drawText("$sevStr · $durStr", r, t + 9f, tp(sc, 8.5f, true, Paint.Align.RIGHT))
+                var ly = t + 22f
+                for ((label, lines, color) in sections) {
+                    c.drawText(label, l, ly, tp(color, bodyFontSize, true))
+                    for ((i, line) in lines.withIndex()) {
+                        c.drawText(line, l + labelW, ly + i * lineH, bodyPaint)
+                    }
+                    ly += lines.size * lineH
+                }
             }
         }
     }

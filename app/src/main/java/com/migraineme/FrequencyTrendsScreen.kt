@@ -2,13 +2,16 @@
 package com.migraineme
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,13 +39,6 @@ fun FrequencyTrendsScreen(
     val scrollState = rememberScrollState()
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-                }
-                Text("Frequency Trends", color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            }
             FrequencyTrendsContent(vm = vm)
         }
     }
@@ -240,14 +236,20 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                 if (monthsWithSev.size >= 3) {
                     Spacer(Modifier.height(4.dp))
                     BaseCard {
-                        Text("Average Severity", color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.MonitorHeart,
+                                contentDescription = null,
+                                tint = AppTheme.AccentPink,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Average Severity", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        }
                         Spacer(Modifier.height(8.dp))
 
-                        SeverityLineChart(
-                            data = monthsWithSev,
-                            modifier = Modifier.fillMaxWidth().height(160.dp),
-                        )
+                        SeverityMonthlyBars(data = monthsWithSev)
                     }
                 }
             }
@@ -442,84 +444,46 @@ internal fun WeeklyBarChart(
 }
 
 @Composable
-private fun SeverityLineChart(
-    data: List<Triple<LocalDate, Float, Int>>, // month, avgSeverity, count
-    modifier: Modifier = Modifier,
-) {
+private fun SeverityMonthlyBars(data: List<Triple<LocalDate, Float, Int>>) {
+    // Mirrors iOS SeverityOverTimeChart (InsightsSubScreens.swift L1236-1249):
+    // horizontally-scrolling row of bars, value-on-top coloured by severity.
     val fmt = DateTimeFormatter.ofPattern("MMM")
-
-    Canvas(modifier) {
-        val w = size.width; val h = size.height
-        val padL = 32f; val padR = 8f; val padT = 12f; val padB = 28f
-        val cw = w - padL - padR; val ch = h - padT - padB
-
-        val maxSev = 10f
-        val minSev = 0f
-
-        // Grid lines
-        for (sev in listOf(2f, 4f, 6f, 8f)) {
-            val gy = padT + ch - (sev / maxSev) * ch
-            drawLine(Color.White.copy(alpha = 0.06f), Offset(padL, gy), Offset(w - padR, gy), 1f)
-        }
-
-        // Y-axis
-        val yPaint = android.graphics.Paint().apply {
-            color = Color.White.copy(alpha = 0.4f).toArgb()
-            textSize = 18f; isAntiAlias = true; textAlign = android.graphics.Paint.Align.RIGHT
-        }
-        drawContext.canvas.nativeCanvas.drawText("10", padL - 4f, padT + 5f, yPaint)
-        drawContext.canvas.nativeCanvas.drawText("0", padL - 4f, padT + ch + 4f, yPaint)
-
-        if (data.size < 2) return@Canvas
-
-        val daySpan = ChronoUnit.DAYS.between(data.first().first, data.last().first).toFloat().coerceAtLeast(1f)
-        fun dateX(d: LocalDate) = padL + (ChronoUnit.DAYS.between(data.first().first, d).toFloat() / daySpan) * cw
-        fun sevY(s: Float) = padT + ch - (s / maxSev) * ch
-
-        // Line
-        val path = android.graphics.Path()
-        data.forEachIndexed { i, (month, avg, _) ->
-            val x = dateX(month); val py = sevY(avg)
-            if (i == 0) path.moveTo(x, py) else path.lineTo(x, py)
-        }
-        drawContext.canvas.nativeCanvas.drawPath(path, android.graphics.Paint().apply {
-            color = AppTheme.AccentPink.copy(alpha = 0.15f).toArgb()
-            strokeWidth = 5f; style = android.graphics.Paint.Style.STROKE
-            isAntiAlias = true; strokeCap = android.graphics.Paint.Cap.ROUND
-        })
-        drawContext.canvas.nativeCanvas.drawPath(path, android.graphics.Paint().apply {
-            color = AppTheme.AccentPink.copy(alpha = 0.8f).toArgb()
-            strokeWidth = 2.5f; style = android.graphics.Paint.Style.STROKE
-            isAntiAlias = true; strokeCap = android.graphics.Paint.Cap.ROUND
-        })
-
-        // Points + labels
-        data.forEach { (month, avg, count) ->
-            val x = dateX(month); val py = sevY(avg)
-            drawCircle(AppTheme.AccentPink.copy(alpha = 0.3f), 5f, Offset(x, py))
-            drawCircle(AppTheme.AccentPink, 3f, Offset(x, py))
-
-            drawContext.canvas.nativeCanvas.drawText(
-                String.format("%.1f", avg), x, py - 8f,
-                android.graphics.Paint().apply {
-                    color = Color.White.copy(alpha = 0.7f).toArgb()
-                    textSize = 16f; isAntiAlias = true
-                    textAlign = android.graphics.Paint.Align.CENTER
-                    typeface = android.graphics.Typeface.DEFAULT_BOLD
-                })
-        }
-
-        // X-axis month labels
-        val xPaint = android.graphics.Paint().apply {
-            color = Color.White.copy(alpha = 0.4f).toArgb()
-            textSize = 16f; isAntiAlias = true
-            textAlign = android.graphics.Paint.Align.CENTER
-        }
-        val step = (data.size / 6).coerceAtLeast(1)
-        data.forEachIndexed { i, (month, _, _) ->
-            if (i % step == 0 || i == data.lastIndex) {
-                drawContext.canvas.nativeCanvas.drawText(
-                    month.format(fmt), dateX(month), h - 4f, xPaint)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .height(120.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        data.forEach { (month, avg, _) ->
+            val sevColor = when {
+                avg >= 7f -> Color(0xFFE57373)
+                avg >= 4f -> Color(0xFFFFB74D)
+                else -> Color(0xFF81C784)
+            }
+            val barHeight = (avg / 10f * 80f).coerceAtLeast(4f).dp
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    String.format("%.1f", avg),
+                    color = sevColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                )
+                Box(
+                    Modifier
+                        .width(24.dp)
+                        .height(barHeight)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(AppTheme.AccentPink.copy(alpha = 0.6f)),
+                )
+                Text(
+                    month.format(fmt),
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
         }
     }

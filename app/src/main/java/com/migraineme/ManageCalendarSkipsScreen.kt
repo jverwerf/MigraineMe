@@ -11,8 +11,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,6 +75,11 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var groups by remember { mutableStateOf<List<SkipGroup>>(emptyList()) }
+    var showInfo by remember { mutableStateOf(false) }
+
+    val infoText = "Calendar events you've told MigraineMe to stop suggesting. Every time the Daily Check-In's \"From your calendar\" page surfaces an event and you tap dismiss instead of tagging it as a trigger, relief, or activity, the event title lands here.\n\n" +
+        "For each entry:\n• Tap the trash icon to remove it from the opt-out list. The next time an event with that title shows up in your calendar, the Daily Check-In will suggest it again.\n\n" +
+        "This is the inverse of the other Manage Items pools: instead of adding things you want to track, this is the list of things you've explicitly chosen NOT to track. Useful when you accidentally dismissed something important, or when a recurring meeting title becomes relevant (e.g. you used to dismiss \"Standup\" but now want to flag standup-stress as a trigger)."
 
     suspend fun reload() {
         loading = true
@@ -118,40 +126,40 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
     LaunchedEffect(Unit) { reload() }
 
     Column(Modifier.fillMaxSize().background(AppTheme.FadeColor)) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White,
-                    modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("Back", color = Color.White)
-            }
-        }
-
         Column(
             Modifier.fillMaxSize().padding(horizontal = 16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
-                Modifier.fillMaxWidth().background(
-                    Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)
-                ).padding(vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Icon(Icons.Outlined.CalendarMonth, null, tint = Color(0xFF64B5F6),
-                    modifier = Modifier.size(36.dp))
-                Text("Calendar opt-outs", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    "Titles you've removed from the calendar mapper. Delete one to let it be auto-saved again.",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    Modifier.fillMaxWidth().background(
+                        Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)
+                    ).padding(vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(Icons.Outlined.CalendarMonth, null, tint = Color(0xFF64B5F6),
+                        modifier = Modifier.size(36.dp))
+                    Text("Calendar opt-outs", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Titles you've removed from the calendar mapper. Delete one to let it be auto-saved again.",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
+                IconButton(
+                    onClick = { showInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 10.dp, y = (-14).dp)
+                        .size(34.dp)
+                ) {
+                    Icon(Icons.Outlined.Info, contentDescription = "About Calendar opt-outs",
+                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                }
             }
 
             when {
@@ -194,6 +202,19 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
             }
             Spacer(Modifier.height(32.dp))
         }
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Text("About Calendar opt-outs", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = { Text(infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
     }
 }
 

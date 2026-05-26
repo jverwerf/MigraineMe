@@ -20,7 +20,10 @@ object DemoDataSeeder {
 
     private const val TAG = "DemoSeeder"
     private const val SOURCE = "demo"
-    private const val DAYS = 14
+    // Daily-metric window. Must cover the treatments baseline window
+    // (regimens start_date = today-70d → baseline 28d before that = days
+    // 71..98 ago). Confounder RPC reads sleep/HRV/RHR in this window.
+    private const val DAYS = 98
 
     data class SeedProgress(val phase: String = "", val fraction: Float = 0f, val isComplete: Boolean = false)
     private val _progress = MutableStateFlow(SeedProgress())
@@ -80,9 +83,17 @@ object DemoDataSeeder {
     private val MIGRAINE_DAYS = listOf(
         1 to 7, 3 to 5, 5 to 8, 8 to 6, 10 to 4, 13 to 7
     )
-    private val MIGRAINE_DAYS_SET = MIGRAINE_DAYS.map { it.first }.toSet()
-    private val PRE_MIGRAINE_DAYS = MIGRAINE_DAYS.map { it.first + 1 }.toSet()
-    private fun isBadDay(daysAgo: Int) = daysAgo in MIGRAINE_DAYS_SET || daysAgo in PRE_MIGRAINE_DAYS
+    // Baseline-era migraines covering the 28-day baseline window of treatments
+    // started 70 days ago, so compute_treatment_efficacy / _confounders /
+    // _trigger_shift / _mmd_series have data to compute against.
+    private val BASELINE_MIGRAINE_DAYS = listOf(
+        72 to 8, 74 to 7, 76 to 6, 78 to 8, 80 to 5, 82 to 9,
+        84 to 7, 86 to 6, 88 to 8, 90 to 7, 92 to 9, 94 to 6,
+        96 to 7, 98 to 8
+    )
+    private val ALL_MIGRAINE_DAYS_SET = (MIGRAINE_DAYS + BASELINE_MIGRAINE_DAYS).map { it.first }.toSet()
+    private val PRE_MIGRAINE_DAYS = (MIGRAINE_DAYS + BASELINE_MIGRAINE_DAYS).map { it.first + 1 }.toSet()
+    private fun isBadDay(daysAgo: Int) = daysAgo in ALL_MIGRAINE_DAYS_SET || daysAgo in PRE_MIGRAINE_DAYS
 
     // ── Main seed ───────────────────────────────────────────────────────────
 
@@ -112,7 +123,7 @@ object DemoDataSeeder {
                 seedSteps(token, userId, base, key, today);  Log.d(TAG, "✓ Steps done")
                 prog("Seeding screen time…", 0.22f)
                 seedScreenTime(token, personal, today);      Log.d(TAG, "✓ Screen time done")
-                prog("Seeding mental health…", 0.30f)
+                prog("Seeding cognitive data…", 0.30f)
                 seedMental(token, userId, base, key, today); Log.d(TAG, "✓ Mental done")
                 prog("Seeding weather…", 0.42f)
                 seedWeather(token, userId, base, key, today);Log.d(TAG, "✓ Weather done")
@@ -124,6 +135,8 @@ object DemoDataSeeder {
                 seedRiskScoreLive(token, userId, today)
                 prog("Seeding AI suggestions…", 0.88f)
                 seedAiSuggestions(token, userId, base, key); Log.d(TAG, "✓ AI suggestions done")
+                prog("Seeding treatments…", 0.94f)
+                seedTreatments(token, userId, db, today); Log.d(TAG, "✓ Treatments done")
                 prog("All set!", 1.0f)
                 _progress.value = SeedProgress("Ready!", 1f, true)
                 _dataReady.value = true
@@ -237,7 +250,7 @@ object DemoDataSeeder {
                         put("date",d); put("user_id",userId); put("source",SOURCE)
                         put("value_index_pct", if (bad) 55.0+Random.nextDouble(40.0) else 10.0+Random.nextDouble(35.0))
                         put("samples_count", 10+Random.nextInt(50)); put("baseline_days", 14)
-                        put("day_mean_lmean", if (bad) 50.0+Random.nextDouble(30.0) else 25.0+Random.nextDouble(25.0))
+                        put("day_mean_lmean", if (bad) 8.0+Random.nextDouble(2.5) else 4.0+Random.nextDouble(2.5))
                     })
                 upsertRow(client, "$base/rest/v1/screen_time_late_night", token, key, "user_id,date,source",
                     buildJsonObject {
@@ -430,7 +443,10 @@ object DemoDataSeeder {
                     "${day}T${h.toString().padStart(2,'0')}:00:00Z",
                     "${day}T${(h+dur).coerceAtMost(23).toString().padStart(2,'0')}:00:00Z",
                     "[demo] Episode ${idx+1}",
-                    listOf("right_temple","behind_right_eye","forehead","left_temple").shuffled().take(2))
+                    // Canonical PainPoint.id values (matching iOS PainLocationData
+                    // and Android painpoints). Non-canonical strings forced an
+                    // alias map that misplotted markers.
+                    listOf("temple_right","eye_right","forehead_center","temple_left").shuffled().take(2))
 
                 // Link 2-3 triggers to each migraine (source=system so metrics auto-select on chart)
                 val linked = triggerTypes.shuffled().take(2 + Random.nextInt(2))
@@ -537,6 +553,57 @@ object DemoDataSeeder {
                     }
                 }
             } catch (e: Exception) { Log.w(TAG, "Migraine $idx: ${e.message}") }
+        }
+
+        // Baseline-era migraines (days 71..98 ago) so treatments started
+        // 70 days ago have a populated 28-day baseline window. Lighter
+        // shape than recent migraines: severity + triggers + a medicine,
+        // no symptoms/prodromes/activities/locations.
+        for ((idx, entry) in BASELINE_MIGRAINE_DAYS.withIndex()) {
+            val (daysAgo, severity) = entry
+            val day = today.minusDays(daysAgo.toLong())
+            val h = listOf(7,9,11,14,16,18).random()
+            val dur = listOf(4,6,8,10,12).random()
+            try {
+                val m = db.insertMigraine(token, types[idx % types.size], severity,
+                    "${day}T${h.toString().padStart(2,'0')}:00:00Z",
+                    "${day}T${(h+dur).coerceAtMost(23).toString().padStart(2,'0')}:00:00Z",
+                    "[demo] Baseline episode ${idx+1}",
+                    listOf("temple_right","eye_right","forehead_center","temple_left").shuffled().take(2))
+
+                val linked = triggerTypes.shuffled().take(2 + Random.nextInt(2))
+                for (trig in linked) {
+                    try {
+                        upsertRow(client, "$base/rest/v1/triggers", token, key, "user_id,start_at,type",
+                            buildJsonObject {
+                                put("user_id", userId); put("type", trig); put("migraine_id", m.id)
+                                put("start_at", "${day}T${(h-2).coerceAtLeast(4).toString().padStart(2,'0')}:00:00Z")
+                                put("notes", "[demo]"); put("source", "system")
+                            })
+                    } catch (_: Exception) {}
+                }
+
+                // One medicine per baseline migraine (Ibuprofen-heavy)
+                data class BMedOpt(val name: String, val amount: String, val category: String, val relief: String)
+                val bMedOptions = listOf(
+                    BMedOpt("Ibuprofen", "400mg", "NSAID", "MILD"),
+                    BMedOpt("Ibuprofen", "400mg", "NSAID", "LOW"),
+                    BMedOpt("Acetaminophen", "500mg", "Analgesic", "MILD"),
+                )
+                val mp = bMedOptions.random()
+                try {
+                    insertRow(client, "$base/rest/v1/medicines", token, key,
+                        buildJsonObject {
+                            put("user_id", userId); put("migraine_id", m.id)
+                            put("name", mp.name); put("amount", mp.amount)
+                            put("category", mp.category)
+                            put("relief_scale", mp.relief)
+                            put("side_effect_scale", "NONE")
+                            put("start_at", "${day}T${h.toString().padStart(2,'0')}:30:00Z")
+                            put("source", "demo")
+                        })
+                } catch (_: Exception) {}
+            } catch (e: Exception) { Log.w(TAG, "Baseline migraine $idx: ${e.message}") }
         }
 
         // Standalone trigger observations on bad days
@@ -774,6 +841,60 @@ object DemoDataSeeder {
         finally { client.close() }
     }
 
+    // ── Treatments ──────────────────────────────────────────────────────
+
+    private suspend fun seedTreatments(token: String, userId: String?, db: SupabaseDbService, today: LocalDate) {
+        if (userId.isNullOrBlank()) { Log.e(TAG, "No userId for treatments"); return }
+        val treatmentStart = today.minusDays(70).toString()
+        var ibuId: String? = null
+        try {
+            val ibu = db.insertTreatmentRegimen(
+                accessToken = token,
+                kind = "drug",
+                name = "Ibuprofen",
+                amount = "400mg",
+                frequency = "PRN",
+                startDate = treatmentStart,
+                notes = "[demo] Acute attacks only"
+            )
+            ibuId = ibu.id
+            Log.d(TAG, "✓ Treatment regimen Ibuprofen id=${ibu.id}")
+        } catch (e: Exception) { Log.w(TAG, "Insert Ibuprofen regimen: ${e.message}") }
+
+        try {
+            val dark = db.insertTreatmentRegimen(
+                accessToken = token,
+                kind = "lifestyle",
+                name = "Dark room",
+                amount = null,
+                frequency = "As needed",
+                startDate = treatmentStart,
+                notes = "[demo] At first prodrome sign"
+            )
+            Log.d(TAG, "✓ Treatment regimen Dark room id=${dark.id}")
+        } catch (e: Exception) { Log.w(TAG, "Insert Dark room regimen: ${e.message}") }
+
+        // Side-effect logs for Ibuprofen so the regimen detail screen's
+        // pills section has content. Recent dates only.
+        if (ibuId != null) {
+            val se1 = today.minusDays(3).toString()
+            val se2 = today.minusDays(7).toString()
+            val se3 = today.minusDays(11).toString()
+            try {
+                db.insertTreatmentSideEffectLog(token, se1, listOf("Stomach upset"),
+                    "Mild after morning dose, settled with food", ibuId, "check_in")
+            } catch (e: Exception) { Log.w(TAG, "Side-effect log 1: ${e.message}") }
+            try {
+                db.insertTreatmentSideEffectLog(token, se2, listOf("Fatigue", "Brain fog"),
+                    "Felt foggy for a few hours after dosing", ibuId, "manual")
+            } catch (e: Exception) { Log.w(TAG, "Side-effect log 2: ${e.message}") }
+            try {
+                db.insertTreatmentSideEffectLog(token, se3, emptyList(),
+                    "No side effects this week", ibuId, "check_in")
+            } catch (e: Exception) { Log.w(TAG, "Side-effect log 3: ${e.message}") }
+        }
+    }
+
     // ── Clear ALL ───────────────────────────────────────────────────────
 
     suspend fun clearDemoData(
@@ -807,7 +928,9 @@ object DemoDataSeeder {
             // AI & analytics
             "correlation_stats","recalibration_proposals","gauge_accuracy","daily_insights",
             // Risk
-            "risk_score_daily"
+            "risk_score_daily",
+            // Treatments — children first (cache + side-effect logs FK to regimens)
+            "treatment_narrative_cache","treatment_side_effect_logs","treatment_regimens"
         )
 
         withContext(Dispatchers.IO) {

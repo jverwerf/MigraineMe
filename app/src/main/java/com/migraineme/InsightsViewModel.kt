@@ -91,6 +91,9 @@ class InsightsViewModel : ViewModel() {
     private val _accompSpider = MutableStateFlow<SpiderData?>(null)
     val accompSpider: StateFlow<SpiderData?> = _accompSpider
 
+    private val _postdromeSpider = MutableStateFlow<SpiderData?>(null)
+    val postdromeSpider: StateFlow<SpiderData?> = _postdromeSpider
+
     private val _painLocationSpider = MutableStateFlow<SpiderData?>(null)
     val painLocationSpider: StateFlow<SpiderData?> = _painLocationSpider
 
@@ -132,6 +135,17 @@ class InsightsViewModel : ViewModel() {
 
     private val _reliefItemEffectiveness = MutableStateFlow<Map<String, Float>>(emptyMap())
     val reliefItemEffectiveness: StateFlow<Map<String, Float>> = _reliefItemEffectiveness
+
+    /**
+     * Transient override consumed by InsightsBreakdownScreen so the Full Report
+     * spider drill-ins display the report's time-range-filtered data instead of
+     * the all-time spiders. ReportScreen sets this immediately before navigating
+     * to the breakdown route; the breakdown screen clears it on dispose.
+     * Mirrors iOS overrides on `InsightsBreakdownScreen`.
+     */
+    private val _reportBreakdownFilter = MutableStateFlow<FilteredSpiders?>(null)
+    val reportBreakdownFilter: StateFlow<FilteredSpiders?> = _reportBreakdownFilter
+    fun setReportBreakdownFilter(filter: FilteredSpiders?) { _reportBreakdownFilter.value = filter }
 
     // Item-level effectiveness with counts for Treatment Ranking card
     data class TreatmentItem(val name: String, val count: Int, val avgRelief: Float)
@@ -322,6 +336,8 @@ class InsightsViewModel : ViewModel() {
     private val _allMedicines = MutableStateFlow<List<SupabaseDbService.MedicineRow>>(emptyList())
     private val _allReliefs = MutableStateFlow<List<SupabaseDbService.ReliefRow>>(emptyList())
     private val _allProdromes = MutableStateFlow<List<SupabaseDbService.ProdromeLogRow>>(emptyList())
+    private val _allSymptoms = MutableStateFlow<List<SupabaseDbService.SymptomLogRow>>(emptyList())
+    val allSymptoms: StateFlow<List<SupabaseDbService.SymptomLogRow>> = _allSymptoms
     private val _allLocations = MutableStateFlow<List<SupabaseDbService.LocationLogRow>>(emptyList())
 
     // "What Were You Doing?" card data (activities + locations)
@@ -352,6 +368,7 @@ class InsightsViewModel : ViewModel() {
         val symptoms: SpiderData? = null,
         val painChar: SpiderData? = null,
         val accompanying: SpiderData? = null,
+        val postdrome: SpiderData? = null,
         val painLocations: SpiderData? = null,
         val medicines: SpiderData? = null,
         val reliefs: SpiderData? = null,
@@ -384,6 +401,10 @@ class InsightsViewModel : ViewModel() {
         }
         val painCharLabels = allSym.filter { cm.symptom[it.lowercase()] == "pain_character" }
         val accompLabels = allSym.filter { cm.symptom[it.lowercase()] == "accompanying" }
+        val postdromeLabels = _allSymptoms.value
+            .filter { it.migraineId in migraineIds }
+            .mapNotNull { it.type }
+            .filter { (cm.symptom[it.lowercase()] ?: "").equals("postdrome", ignoreCase = true) }
         val allPainLocs = rows.flatMap { it.painLocations ?: emptyList() }
 
         // Duration stats
@@ -408,6 +429,7 @@ class InsightsViewModel : ViewModel() {
             symptoms = if (allSym.isNotEmpty()) buildSpider("Symptoms", allSym, cm.symptom) else null,
             painChar = if (painCharLabels.isNotEmpty()) buildFlatSpider("Pain Character", painCharLabels) else null,
             accompanying = if (accompLabels.isNotEmpty()) buildFlatSpider("Accompanying", accompLabels) else null,
+            postdrome = if (postdromeLabels.isNotEmpty()) buildFlatSpider("Postdrome", postdromeLabels) else null,
             painLocations = if (allPainLocs.isNotEmpty()) buildFlatSpider("Pain Locations", allPainLocs) else null,
             medicines = if (fM.isNotEmpty()) buildSpider("Medicines", fM.mapNotNull { it.name }, cm.medicine).withMedicineSEBadges(fM, cm.medicine) else null,
             reliefs = if (fR.isNotEmpty()) buildSpider("Reliefs", fR.mapNotNull { it.type }, cm.relief).withReliefSEBadges(fR, cm.relief) else null,
@@ -664,6 +686,11 @@ class InsightsViewModel : ViewModel() {
             "nutrition_daily:total_magnesium_mg" to "magnesium",
             "nutrition_daily:total_zinc_mg" to "zinc",
             "nutrition_daily:total_selenium_mcg" to "selenium",
+            // Risk exposures (per-meal records, classified low/medium/high -> 1/2/3)
+            "nutrition_records:tyramine_exposure" to "tyramine",
+            "nutrition_records:alcohol_exposure" to "alcohol",
+            "nutrition_records:gluten_exposure" to "gluten",
+            "nutrition_records:histamine_exposure" to "histamine",
         )
     }
 
@@ -787,7 +814,7 @@ class InsightsViewModel : ViewModel() {
         ALL("All Time", null),
         WEEK_1("7 Days", 7),
         WEEK_2("14 Days", 14),
-        MONTH_1("30 Days", 30),
+        MONTH_1("1 Month", 30),
         MONTH_3("3 Months", 90),
         MONTH_6("6 Months", 180),
         YEAR_1("1 Year", 365),
@@ -828,6 +855,32 @@ class InsightsViewModel : ViewModel() {
         _selectedMigraineIndex.value = 0
     }
 
+    /** Map of symptom label (lowercased) → category, populated from user_symptoms pool. */
+    private var catSymptom: Map<String, String> = emptyMap()
+
+    /** Expose for screen-level filtering (e.g. buildEventMarkers postdrome filter). */
+    fun catSymptomMap(): Map<String, String> = catSymptom
+
+    /** Migraine navigator title resolution: Pain Character > Accompanying > raw type field. */
+    fun displayTitleForMigraine(migraineId: String?, fallback: String?): String {
+        val linkedSymptoms = _selectedLinkedItems.value.postdromes.mapNotNull { it.type }.filter { it.isNotBlank() }
+        linkedSymptoms.firstOrNull { catSymptom[it.lowercase()]?.lowercase() == "pain_character" }?.let { return it }
+        linkedSymptoms.firstOrNull { catSymptom[it.lowercase()]?.lowercase() == "accompanying" }?.let { return it }
+        fallback?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() && !it.equals("Migraine", ignoreCase = true) }?.let { parts ->
+            parts.firstOrNull { catSymptom[it.lowercase()]?.lowercase() == "pain_character" }?.let { return it }
+            parts.firstOrNull { catSymptom[it.lowercase()]?.lowercase() == "accompanying" }?.let { return it }
+        }
+        return fallback ?: "Migraine"
+    }
+
+    /** Resolve a symptom label to its filter category bucket (mirrors iOS symptomBucket). */
+    private fun symptomBucket(label: String): String =
+        when (catSymptom[label.lowercase()]?.lowercase()) {
+            "pain_character" -> "Pain Character"
+            "postdrome" -> "Postdrome"
+            else -> "Accompanying"
+        }
+
     private fun buildMigraineTagIndex(
         rawRows: List<SupabaseDbService.MigraineRow>,
         allTriggers: List<SupabaseDbService.TriggerRow>,
@@ -836,16 +889,17 @@ class InsightsViewModel : ViewModel() {
         allProdromes: List<SupabaseDbService.ProdromeLogRow>,
         allActivities: List<SupabaseDbService.ActivityLogRow>,
         allLocations: List<SupabaseDbService.LocationLogRow>,
-        allMissed: List<SupabaseDbService.MissedActivityLogRow>
+        allMissed: List<SupabaseDbService.MissedActivityLogRow>,
+        allSymptoms: List<SupabaseDbService.SymptomLogRow> = emptyList()
     ) {
         val index = mutableMapOf<String, MutableSet<FilterTag>>()
         val allTags = mutableSetOf<FilterTag>()
 
         for (m in rawRows) {
             val tags = index.getOrPut(m.id) { mutableSetOf() }
-            // Symptoms from type field (comma-separated)
-            m.type?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() && it != "Migraine" }?.forEach {
-                val t = FilterTag("Symptom", it); tags += t; allTags += t
+            // Symptoms from type field (comma-separated), bucketed by pool category.
+            m.type?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() && !it.equals("Migraine", ignoreCase = true) }?.forEach { sym ->
+                val t = FilterTag(symptomBucket(sym), sym); tags += t; allTags += t
             }
             // Pain locations
             m.painLocations?.forEach {
@@ -878,6 +932,13 @@ class InsightsViewModel : ViewModel() {
         indexItems(allActivities, "Activity", { it.migraineId }, { it.type })
         indexItems(allLocations, "Location", { it.migraineId }, { it.type })
         indexItems(allMissed, "Missed Activity", { it.migraineId }, { it.type })
+        // Symptoms table (postdromes + wizard-side inserts) bucketed by pool category.
+        for (s in allSymptoms) {
+            val mid = s.migraineId ?: continue
+            val lbl = s.type?.takeIf { it.isNotBlank() } ?: continue
+            val t = FilterTag(symptomBucket(lbl), lbl)
+            index.getOrPut(mid) { mutableSetOf() } += t; allTags += t
+        }
 
         _migraineTagIndex.value = index
         _availableFilterTags.value = allTags.groupBy({ it.category }, { it.label })
@@ -913,7 +974,8 @@ class InsightsViewModel : ViewModel() {
                         end = row.endAt?.let { Instant.parse(it) },
                         severity = row.severity,
                         label = row.type,
-                        id = row.id
+                        id = row.id,
+                        painLocations = row.painLocations ?: emptyList()
                     )
                 }
 
@@ -1020,13 +1082,14 @@ class InsightsViewModel : ViewModel() {
 
         //  Weather (user_weather_daily) 
         val weatherArr = fetchArr(client, base, key, token, userId, "user_weather_daily",
-            "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max", cutoff)
+            "date,temp_c_mean,pressure_hpa_mean,humidity_pct_mean,wind_speed_mps_mean,uv_index_max,is_thunderstorm_day", cutoff)
         if (weatherArr != null) {
             map["pressure"] = parseDoubleCol(weatherArr, "pressure_hpa_mean")
             map["temp"] = parseDoubleCol(weatherArr, "temp_c_mean")
             map["humidity"] = parseDoubleCol(weatherArr, "humidity_pct_mean")
             map["wind"] = parseDoubleCol(weatherArr, "wind_speed_mps_mean")
             map["uv"] = parseDoubleCol(weatherArr, "uv_index_max")
+            map["thunderstorm"] = parseDoubleCol(weatherArr, "is_thunderstorm_day")
         }
 
         //  Location/Altitude (user_location_daily) 
@@ -1082,18 +1145,25 @@ class InsightsViewModel : ViewModel() {
         val nutritionArr = fetchArr(client, base, key, token, userId, "nutrition_daily",
             "date,total_calories,total_protein_g,total_carbs_g,total_fat_g,total_fiber_g,total_sugar_g,total_sodium_mg,total_caffeine_mg", cutoff)
         if (nutritionArr != null) {
-            // Only fill in keys that weren't already populated from nutrition_records
-            fun fillIfEmpty(key: String, col: String) {
-                if (map[key].isNullOrEmpty()) map[key] = parseDoubleCol(nutritionArr, col)
+            // Merge nutrition_daily into whatever nutrition_records already gave us.
+            // Records win per-date; daily totals fill in dates records didn't cover.
+            fun mergeFromDaily(metKey: String, col: String) {
+                val dailyVals = parseDoubleCol(nutritionArr, col)
+                if (dailyVals.isEmpty()) return
+                val existing = map[metKey] ?: emptyList()
+                val existingDates = existing.map { it.date }.toSet()
+                val added = dailyVals.filter { it.date !in existingDates }
+                if (added.isEmpty() && existing.isEmpty()) return
+                map[metKey] = (existing + added).sortedByDescending { it.date }
             }
-            fillIfEmpty("calories", "total_calories")
-            fillIfEmpty("protein", "total_protein_g")
-            fillIfEmpty("carbs", "total_carbs_g")
-            fillIfEmpty("fat", "total_fat_g")
-            fillIfEmpty("fiber", "total_fiber_g")
-            fillIfEmpty("sugar", "total_sugar_g")
-            fillIfEmpty("sodium", "total_sodium_mg")
-            fillIfEmpty("caffeine", "total_caffeine_mg")
+            mergeFromDaily("calories", "total_calories")
+            mergeFromDaily("protein", "total_protein_g")
+            mergeFromDaily("carbs", "total_carbs_g")
+            mergeFromDaily("fat", "total_fat_g")
+            mergeFromDaily("fiber", "total_fiber_g")
+            mergeFromDaily("sugar", "total_sugar_g")
+            mergeFromDaily("sodium", "total_sodium_mg")
+            mergeFromDaily("caffeine", "total_caffeine_mg")
         }
 
         //  Bedtime / Wake time (timestamp -> 24h decimal, bedtime shifted +24 if < 12 for smooth plotting) 
@@ -1303,7 +1373,13 @@ class InsightsViewModel : ViewModel() {
         val list = mutableListOf<DailyValue>()
         for (i in 0 until arr.length()) {
             val o = arr.getJSONObject(i)
-            val v = o.optDouble(col)
+            val raw = o.opt(col)
+            val v = when (raw) {
+                is Boolean -> if (raw) 1.0 else 0.0
+                is Number -> raw.toDouble()
+                is String -> raw.toDoubleOrNull() ?: Double.NaN
+                else -> Double.NaN
+            }
             if (!v.isNaN()) list += DailyValue(o.getString("date"), v)
         }
         return list
@@ -1350,6 +1426,10 @@ class InsightsViewModel : ViewModel() {
             val triggerPool = db.getAllTriggerPool(accessToken)
             val prodromePool = db.getAllProdromePool(accessToken)
             val symptomPool = db.getAllSymptomPool(accessToken)
+            // Cache label → category map for symptom bucket resolution in buildMigraineTagIndex.
+            catSymptom = symptomPool.associate { it.label.lowercase() to (it.category ?: "Other") }
+            // Per-migraine symptom rows (postdromes + wizard-side inserts). Mirrors iOS vm.symptoms.
+            _allSymptoms.value = db.getSymptoms(accessToken)
             val medicinePool = db.getAllMedicinePool(accessToken)
             val reliefPool = db.getAllReliefPool(accessToken)
             val activityPool = db.getAllActivityPool(accessToken)
@@ -1511,9 +1591,14 @@ class InsightsViewModel : ViewModel() {
 
             val painCharLabels = allSym.filter { sc[it.lowercase()] == "pain_character" }
             val accompLabels = allSym.filter { sc[it.lowercase()] == "accompanying" }
+            val postdromeLabels = _allSymptoms.value
+                .filter { it.migraineId != null }
+                .mapNotNull { it.type }
+                .filter { (sc[it.lowercase()] ?: "").equals("postdrome", ignoreCase = true) }
 
             _painCharSpider.value = buildFlatSpider("Pain Character", painCharLabels)
             _accompSpider.value = buildFlatSpider("Accompanying", accompLabels)
+            _postdromeSpider.value = buildFlatSpider("Postdrome", postdromeLabels)
 
             val allPainLocs = migs.flatMap { it.painLocations ?: emptyList() }
             _painLocationSpider.value = buildFlatSpider("Pain Locations", allPainLocs)
@@ -1551,7 +1636,8 @@ class InsightsViewModel : ViewModel() {
             buildMigraineTagIndex(
                 _rawMigraineRows.value,
                 allTriggers, allMedicines, allReliefs,
-                allP, allA, allL, allMs
+                allP, allA, allL, allMs,
+                _allSymptoms.value
             )
         } catch (e: Exception) {
             e.printStackTrace()

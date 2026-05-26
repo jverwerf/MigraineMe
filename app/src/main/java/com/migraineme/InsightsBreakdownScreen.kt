@@ -31,10 +31,31 @@ fun InsightsBreakdownScreen(
     navController: NavController,
     vm: InsightsViewModel = viewModel()
 ) {
-    val spiderData = when (logType) {
+    val isMigraines = logType == "Symptoms" || logType == "Migraines"
+
+    // Optional Full Report override — set by InsightsReportScreen right before
+    // navigating here. When non-null, this screen renders the date-range-filtered
+    // spiders/effectiveness instead of vm's all-time flows. Cleared on dispose so
+    // direct navigations from the Explore screen still see all-time data.
+    val reportFilter by vm.reportBreakdownFilter.collectAsState()
+    DisposableEffect(Unit) {
+        onDispose { vm.setReportBreakdownFilter(null) }
+    }
+
+    val spiderData = if (reportFilter != null) when (logType) {
+        "Triggers" -> reportFilter!!.triggers
+        "Prodromes" -> reportFilter!!.prodromes
+        "Symptoms", "Migraines" -> reportFilter!!.symptoms
+        "Medicines" -> reportFilter!!.medicines
+        "Reliefs" -> reportFilter!!.reliefs
+        "Activities" -> reportFilter!!.activities
+        "Missed Activities" -> reportFilter!!.missedActivities
+        "Locations" -> reportFilter!!.locations
+        else -> null
+    } else when (logType) {
         "Triggers" -> vm.triggerSpider.collectAsState().value
         "Prodromes" -> vm.prodromeSpider.collectAsState().value
-        "Symptoms" -> vm.symptomSpider.collectAsState().value
+        "Symptoms", "Migraines" -> vm.symptomSpider.collectAsState().value
         "Medicines" -> vm.medicineSpider.collectAsState().value
         "Reliefs" -> vm.reliefSpider.collectAsState().value
         "Activities" -> vm.activitySpider.collectAsState().value
@@ -43,28 +64,35 @@ fun InsightsBreakdownScreen(
         else -> null
     }
 
+    val painCharForGate = reportFilter?.painChar ?: vm.painCharSpider.collectAsState().value
+    val accompForGate = reportFilter?.accompanying ?: vm.accompSpider.collectAsState().value
+    val postdromeForGate = reportFilter?.postdrome ?: vm.postdromeSpider.collectAsState().value
+    val painLocsForGate = reportFilter?.painLocationCounts ?: vm.painLocationCounts.collectAsState().value
+    val severityForGate = reportFilter?.severityCounts ?: vm.severityCounts.collectAsState().value
+    val hasMigraineContent = (painCharForGate?.totalLogged ?: 0) > 0
+        || (accompForGate?.totalLogged ?: 0) > 0
+        || (postdromeForGate?.totalLogged ?: 0) > 0
+        || painLocsForGate.isNotEmpty()
+        || severityForGate.isNotEmpty()
+
     val scrollState = rememberScrollState()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
+            if (isMigraines) {
+                if (hasMigraineContent) {
+                    SymptomsBreakdownContent(vm = vm, reportFilter = reportFilter)
+                } else {
+                    BaseCard {
+                        Text(
+                            "No data yet — log migraines with symptoms to see breakdowns here.",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
+                return@ScrollableScreenContent
             }
-
-            // Source badges
-            val metricSources by vm.metricSources.collectAsState()
-            if (metricSources.isNotEmpty()) {
-                SourceBadgeRow(metricSources.sorted())
-                Spacer(Modifier.height(4.dp))
-            }
-
-            Spacer(Modifier.height(8.dp))
 
             if (spiderData == null || spiderData.breakdown.isEmpty()) {
                 BaseCard {
@@ -74,12 +102,6 @@ fun InsightsBreakdownScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                return@ScrollableScreenContent
-            }
-
-            // Special layout for Symptoms
-            if (logType == "Symptoms") {
-                SymptomsBreakdownContent(vm = vm)
                 return@ScrollableScreenContent
             }
 
@@ -114,7 +136,10 @@ fun InsightsBreakdownScreen(
 
             // Effectiveness by category (Medicines & Reliefs only) — dual spider
             if (logType == "Medicines" || logType == "Reliefs") {
-                val effectiveness = if (logType == "Medicines")
+                val effectiveness = if (reportFilter != null) {
+                    if (logType == "Medicines") reportFilter!!.medicineEffectiveness
+                    else reportFilter!!.reliefEffectiveness
+                } else if (logType == "Medicines")
                     vm.medicineEffectiveness.collectAsState().value
                 else
                     vm.reliefEffectiveness.collectAsState().value
@@ -186,7 +211,10 @@ fun InsightsBreakdownScreen(
 
                         // Show category-level relief badge for meds/reliefs
                         if (logType == "Medicines" || logType == "Reliefs") {
-                            val effectiveness = if (logType == "Medicines")
+                            val effectiveness = if (reportFilter != null) {
+                                if (logType == "Medicines") reportFilter!!.medicineEffectiveness
+                                else reportFilter!!.reliefEffectiveness
+                            } else if (logType == "Medicines")
                                 vm.medicineEffectiveness.collectAsState().value
                             else
                                 vm.reliefEffectiveness.collectAsState().value
@@ -220,7 +248,11 @@ fun InsightsBreakdownScreen(
                     Spacer(Modifier.height(8.dp))
 
                     // Build item-level relief axes for meds/reliefs
-                    val itemEffMap = if (logType == "Medicines")
+                    val itemEffMap = if (reportFilter != null) {
+                        if (logType == "Medicines") reportFilter!!.medicineItemEffectiveness
+                        else if (logType == "Reliefs") reportFilter!!.reliefItemEffectiveness
+                        else emptyMap()
+                    } else if (logType == "Medicines")
                         vm.medicineItemEffectiveness.collectAsState().value
                     else if (logType == "Reliefs")
                         vm.reliefItemEffectiveness.collectAsState().value
@@ -330,7 +362,7 @@ private fun CategoryBarRow(label: String, count: Int, maxCount: Int, color: Colo
 internal fun colorForLogType(logType: String): Color = when (logType) {
     "Triggers" -> Color(0xFFFFB74D)
     "Prodromes" -> Color(0xFF9575CD)
-    "Symptoms" -> Color(0xFFE57373)
+    "Symptoms", "Migraines" -> Color(0xFFE57373)
     "Medicines" -> Color(0xFF4FC3F7)
     "Reliefs" -> Color(0xFF81C784)
     "Activities" -> Color(0xFFFF8A65)
@@ -340,25 +372,23 @@ internal fun colorForLogType(logType: String): Color = when (logType) {
 }
 
 @Composable
-private fun SymptomsBreakdownContent(vm: InsightsViewModel) {
-    val symptomSpider by vm.symptomSpider.collectAsState()
-    val painCharSpider by vm.painCharSpider.collectAsState()
-    val accompSpider by vm.accompSpider.collectAsState()
-    val painLocSpider by vm.painLocationSpider.collectAsState()
-    val severityCounts by vm.severityCounts.collectAsState()
-    val durationStats by vm.durationStats.collectAsState()
+private fun SymptomsBreakdownContent(
+    vm: InsightsViewModel,
+    reportFilter: InsightsViewModel.FilteredSpiders? = null
+) {
+    val painCharSpider = reportFilter?.painChar ?: vm.painCharSpider.collectAsState().value
+    val accompSpider = reportFilter?.accompanying ?: vm.accompSpider.collectAsState().value
+    val postdromeSpider = reportFilter?.postdrome ?: vm.postdromeSpider.collectAsState().value
+    val painLocSpider = reportFilter?.painLocations ?: vm.painLocationSpider.collectAsState().value
+    val severityCounts = reportFilter?.severityCounts ?: vm.severityCounts.collectAsState().value
+    val durationStats = reportFilter?.durationStats ?: vm.durationStats.collectAsState().value
 
-    val symptomColor = AppTheme.AccentPink
     val painCharColor = Color(0xFFEF5350)
     val accompColor = Color(0xFFBA68C8)
+    val postdromeColor = Color(0xFF4DB6AC)
     val painLocColor = Color(0xFFFF8A65)
     val severityColor = Color(0xFF4FC3F7)
     val durationColor = Color(0xFF81C784)
-
-    // Overall Symptoms spider (matches iOS — shown first)
-    if (symptomSpider != null && symptomSpider!!.axes.isNotEmpty()) {
-        SpiderSection(title = "Symptoms Overview", spider = symptomSpider!!, color = symptomColor)
-    }
 
     // Pain Character
     if (painCharSpider != null && painCharSpider!!.axes.isNotEmpty()) {
@@ -368,6 +398,11 @@ private fun SymptomsBreakdownContent(vm: InsightsViewModel) {
     // Accompanying Experience
     if (accompSpider != null && accompSpider!!.axes.isNotEmpty()) {
         SpiderSection(title = "Accompanying Experience", spider = accompSpider!!, color = accompColor)
+    }
+
+    // Postdrome
+    if (postdromeSpider != null && postdromeSpider!!.axes.isNotEmpty()) {
+        SpiderSection(title = "Postdrome", spider = postdromeSpider!!, color = postdromeColor)
     }
 
     // Pain Locations

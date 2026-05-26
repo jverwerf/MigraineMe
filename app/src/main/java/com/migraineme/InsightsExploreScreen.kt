@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EnergySavingsLeaf
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -41,6 +42,9 @@ fun InsightsExploreScreen(
     val linkedLoading by vm.linkedItemsLoading.collectAsState()
 
     val symptomSpider by vm.symptomSpider.collectAsState()
+    val painCharSpider by vm.painCharSpider.collectAsState()
+    val accompSpider by vm.accompSpider.collectAsState()
+    val postdromeSpider by vm.postdromeSpider.collectAsState()
     val prodromeSpider by vm.prodromeSpider.collectAsState()
     val triggerSpider by vm.triggerSpider.collectAsState()
     val medicineSpider by vm.medicineSpider.collectAsState()
@@ -71,27 +75,22 @@ fun InsightsExploreScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-                Text("Migraines", color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            }
-
             // ── 1. Hero (Weekly Summary) ──
             FrequencyHeroSection(vm = vm)
 
             // ── 2. Compact Migraine Timeline (tappable → full timeline) ──
-            BaseCard(modifier = Modifier.clickable {
-                navController.navigate(Routes.INSIGHTS_TIMELINE)
-            }) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Migraine Timeline", color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.weight(1f))
-                    Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
-                }
+            var showTimelineInfo by remember { mutableStateOf(false) }
+            Box(modifier = Modifier.fillMaxWidth()) {
+                BaseCard(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navController.navigate(Routes.INSIGHTS_TIMELINE) }
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Migraine Timeline", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.weight(1f))
+                        Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                    }
 
                 if (sorted.isEmpty()) {
                     Text("No migraines logged yet", color = AppTheme.SubtleTextColor,
@@ -126,6 +125,40 @@ fun InsightsExploreScreen(
                     Text("Tap for full timeline with graph & filters",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
+                }
+                IconButton(
+                    onClick = { showTimelineInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 10.dp, y = (-14).dp)
+                        .size(34.dp)
+                ) {
+                        Icon(
+                            Icons.Outlined.Info,
+                            contentDescription = "About Migraine Timeline",
+                            tint = AppTheme.SubtleTextColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                }
+            }
+            if (showTimelineInfo) {
+                AlertDialog(
+                    onDismissRequest = { showTimelineInfo = false },
+                    confirmButton = {
+                        TextButton(onClick = { showTimelineInfo = false }) {
+                            Text("Got it", color = AppTheme.AccentPurple)
+                        }
+                    },
+                    title = {
+                        Text("About Migraine Timeline", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    },
+                    text = {
+                        Text(MigraineTimelineInfoCopy.text, color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium)
+                    },
+                    containerColor = AppTheme.BaseCardContainer
+                )
             }
 
             // ── 3-6. Frequency charts (day-of-week, weekly, monthly, severity) ──
@@ -133,13 +166,16 @@ fun InsightsExploreScreen(
 
             // ── 7. Spider Charts ──
 
-            // Symptoms
-            if (symptomSpider != null && symptomSpider!!.totalLogged > 0) {
+            // Migraines (Pain Character + Accompanying + Postdrome)
+            val hasMigraineSymptoms = (painCharSpider?.totalLogged ?: 0) > 0
+                || (accompSpider?.totalLogged ?: 0) > 0
+                || (postdromeSpider?.totalLogged ?: 0) > 0
+            if (hasMigraineSymptoms) {
                 SymptomsInsightCard(migraines) {
-                    navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${symptomSpider!!.logType}")
+                    navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/Migraines")
                 }
             } else {
-                EmptyInsightCard("Symptoms", "Log migraines with symptoms to see patterns here")
+                EmptyInsightCard("Migraines", "Log migraines with symptoms to see patterns here")
             }
 
             // Prodromes
@@ -361,12 +397,12 @@ fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys
         Spacer(Modifier.height(10.dp))
 
         sections.forEachIndexed { i, section ->
-            if (i > 0) Spacer(Modifier.height(12.dp))
+            if (i > 0) Spacer(Modifier.height(10.dp))
             val preview = section.items.take(2)
             val extra = (section.items.size - preview.size).coerceAtLeast(0)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(section.icon, contentDescription = null,
-                    tint = section.color, modifier = Modifier.size(14.dp))
+                    tint = section.color, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(section.title, color = section.color,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -377,19 +413,19 @@ fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys
                 }
             }
             Spacer(Modifier.height(6.dp))
-            preview.forEach { row ->
+            preview.forEachIndexed { j, row ->
+                if (j > 0) Spacer(Modifier.height(6.dp))
                 Column(
                     Modifier.fillMaxWidth()
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
                         .background(Color.White.copy(alpha = 0.04f))
                         .padding(10.dp)
                 ) {
-                    Text(row.name, color = Color.White,
+                    Text(prettyLabel(row.name), color = Color.White,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(3.dp))
                     Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
                 }
-                Spacer(Modifier.height(6.dp))
             }
         }
     }
@@ -405,14 +441,6 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-                Text("Recommendations", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            }
-
             sections.forEach { section ->
                 BaseCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -432,7 +460,7 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                             verticalAlignment = Alignment.Top
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text(row.name, color = Color.White,
+                                Text(prettyLabel(row.name), color = Color.White,
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                                 Spacer(Modifier.height(3.dp))
                                 Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
@@ -442,7 +470,7 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                                 onClick = {
                                     vm.dismissRecommendation(context, row.category, row.name, row.evidence)
                                 },
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(34.dp)
                             ) {
                                 Icon(
                                     androidx.compose.material.icons.Icons.Outlined.Close,
@@ -458,4 +486,8 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
             }
         }
     }
+}
+
+object MigraineTimelineInfoCopy {
+    const val text = "A scrollable record of every migraine you've logged. Use the arrows on the card to flip through them one at a time, left for older and right for newer. The compact view shows the type, date, duration, severity, and how many of each linked item (triggers, prodromes, medicines, reliefs, locations, activities) you tagged on that attack, with a coloured dot per category.\n\nTap the card to open the full Migraine Timeline screen, where you can:\n• Filter the list by time range (last 7 days, last month, custom range) and by category tags.\n• See each attack as a window of days around it, with every linked event plotted on a timeline so you can see what built up before, during, and lingered after.\n• Switch which migraine sits at the centre of the window using the same arrows.\n\nThis is the place to dig into a specific attack: what was going on the day before, what you took, when you took it, what helped, and what symptoms lingered after."
 }

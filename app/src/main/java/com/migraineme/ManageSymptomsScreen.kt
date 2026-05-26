@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Star
@@ -78,6 +80,25 @@ fun ManageSymptomsScreen(
     var addSubCategory by remember { mutableStateOf("pain_character") }
     var addLabel by remember { mutableStateOf("") }
     var addIconKey by remember { mutableStateOf<String?>(null) }
+    var showHeroInfo by remember { mutableStateOf(false) }
+
+    val heroInfoText = "Your full migraine symptom pool. Symptoms are everything that defines how an attack feels: pain character (throbbing, stabbing, pressure, burning), accompanying experiences (nausea, vomiting, light sensitivity, sound sensitivity, smell sensitivity, dizziness), aura types (visual, sensory, speech, motor), and postdrome symptoms (cognitive fog, exhaustion, mood drop) that linger after the pain ends.\n\n" +
+        "For each symptom:\n• Tap the row to change its category.\n• Tap the trash icon to remove one from the picker. Past entries you tagged with it stay intact.\n\n" +
+        "Use the + button to add anything specific to your attacks (e.g. \"jaw clenching\", \"tinnitus\", \"numbness in left arm\"). The more precise your symptoms, the better the patterns Insights can surface.\n\n" +
+        "Symptoms have no severity weight because they don't feed the risk gauge; they're for pattern tracking. The Insights How Did It Impact You card uses them to score which symptoms cluster around your worst attacks, and the Migraine Timeline shows which symptoms came up around each individual log."
+
+    if (showHeroInfo) {
+        AlertDialog(
+            onDismissRequest = { showHeroInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Text("About Migraines", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = { Text(heroInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
+    }
 
     if (showAddDialog) {
         AlertDialog(
@@ -222,22 +243,34 @@ fun ManageSymptomsScreen(
 
             // Close bar
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Manage Symptoms", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("Manage Migraines", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
             // Hero
-            HeroCard {
-                Icon(Icons.Outlined.Psychology, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(40.dp))
-                Text("Symptoms", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(
-                    "Add, remove, or star frequent symptoms",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                HeroCard {
+                    Icon(Icons.Outlined.Psychology, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(40.dp))
+                    Text("Migraines", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        "Add, remove, or star frequent symptoms",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                IconButton(
+                    onClick = { showHeroInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 10.dp, y = (-14).dp)
+                        .size(34.dp)
+                ) {
+                    Icon(Icons.Outlined.Info, contentDescription = "About Migraines",
+                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                }
             }
 
             // Pain Character section

@@ -42,12 +42,6 @@ fun InsightsImpactScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
-                }
-            }
-
             // ── Card 1: Severity ──
             if (severityCounts.isNotEmpty()) {
                 BaseCard {
@@ -114,7 +108,7 @@ fun InsightsImpactScreen(
                             else Color(0xFF81C784)
                         Column(Modifier.padding(vertical = 4.dp)) {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text(s.symptomLabel, color = Color.White,
+                                Text(prettyLabel(s.symptomLabel), color = Color.White,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                                     overflow = TextOverflow.Ellipsis, maxLines = 1, modifier = Modifier.weight(1f))
                                 Text("$pct% · ${s.totalCount} attacks",
@@ -229,7 +223,7 @@ fun InsightsImpactScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text(item.name, color = Color.White,
+                                Text(prettyLabel(item.name), color = Color.White,
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text("missed during ${item.pctOfMigraines.toInt()}% of migraines",

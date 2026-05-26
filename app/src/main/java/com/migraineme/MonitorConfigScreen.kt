@@ -15,14 +15,16 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BubbleChart
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.outlined.TrendingUp
-import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -83,18 +85,6 @@ fun MonitorConfigScreen(
         item {
         }
 
-        // Back button
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-            }
-        }
-
         // Header in HeroCard
         item {
             HeroCard {
@@ -149,8 +139,8 @@ private fun CardConfigItem(
     onToggleVisibility: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val icon = getCardIcon(cardId)
     val iconTint = getCardIconTint(cardId)
+    val effectiveTint = if (isVisible) iconTint else iconTint.copy(alpha = 0.4f)
     val label = MonitorCardConfig.CARD_LABELS[cardId] ?: cardId
 
     BaseCard(
@@ -172,13 +162,19 @@ private fun CardConfigItem(
 
             Spacer(Modifier.width(12.dp))
 
-            // Card icon
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isVisible) iconTint else iconTint.copy(alpha = 0.4f),
-                modifier = Modifier.size(24.dp)
-            )
+            // Card icon — Migraines uses the custom starburst, others use Material icons
+            if (cardId == MonitorCardConfig.CARD_MIGRAINES) {
+                Canvas(Modifier.size(24.dp)) {
+                    HubIcons.run { drawMigraineStarburst(effectiveTint) }
+                }
+            } else {
+                Icon(
+                    imageVector = getCardIcon(cardId),
+                    contentDescription = null,
+                    tint = effectiveTint,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             Spacer(Modifier.width(12.dp))
 
@@ -195,10 +191,12 @@ private fun CardConfigItem(
                 checked = isVisible,
                 onCheckedChange = { onToggleVisibility() },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = AppTheme.AccentPurple,
-                    checkedTrackColor = AppTheme.AccentPurple.copy(alpha = 0.5f),
-                    uncheckedThumbColor = AppTheme.SubtleTextColor,
-                    uncheckedTrackColor = AppTheme.TrackColor
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = AppTheme.AccentPurple,
+                    checkedBorderColor = AppTheme.AccentPurple,
+                    uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                    uncheckedTrackColor = AppTheme.TrackColor,
+                    uncheckedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.4f)
                 )
             )
         }
@@ -212,9 +210,11 @@ private fun getCardIcon(cardId: String): ImageVector {
         MonitorCardConfig.CARD_SLEEP -> Icons.Outlined.Bedtime
         MonitorCardConfig.CARD_MENTAL -> Icons.Outlined.BubbleChart
         MonitorCardConfig.CARD_ENVIRONMENT -> Icons.Outlined.Cloud
+        MonitorCardConfig.CARD_MEDICINES -> Icons.Outlined.MedicalServices
+        MonitorCardConfig.CARD_TREATMENTS -> Icons.Outlined.TrackChanges
         MonitorCardConfig.CARD_MENSTRUATION -> Icons.Outlined.FavoriteBorder
         MonitorCardConfig.CARD_RISK -> Icons.Outlined.TrendingUp
-        MonitorCardConfig.CARD_MIGRAINES -> Icons.Outlined.WbSunny
+        MonitorCardConfig.CARD_MIGRAINES -> Icons.Outlined.TrendingUp // unused — Canvas drawing used instead
         else -> Icons.Outlined.Cloud
     }
 }
@@ -226,6 +226,8 @@ private fun getCardIconTint(cardId: String): Color {
         MonitorCardConfig.CARD_SLEEP -> Color(0xFF7986CB)
         MonitorCardConfig.CARD_MENTAL -> Color(0xFFBA68C8)
         MonitorCardConfig.CARD_ENVIRONMENT -> Color(0xFF4FC3F7)
+        MonitorCardConfig.CARD_MEDICINES -> Color(0xFF4FC3F7)
+        MonitorCardConfig.CARD_TREATMENTS -> Color(0xFF4DD0E1)
         MonitorCardConfig.CARD_MENSTRUATION -> Color(0xFFE57373)
         MonitorCardConfig.CARD_RISK -> Color(0xFFEF5350)
         MonitorCardConfig.CARD_MIGRAINES -> AppTheme.AccentPink

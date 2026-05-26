@@ -2,6 +2,22 @@ package com.migraineme
 
 import androidx.compose.ui.graphics.Color
 
+/**
+ * Human-readable bucket for the log-RMS noise value stored in
+ * ambient_noise_index_daily. Calibrated against NIOSH/CDC everyday-sound
+ * references via the dB SPL ↔ log-RMS map ln(10^((dB-90)/20)*32767+1):
+ *   <50 dB (logRms<6)  Quiet      library, quiet home
+ *   50-70 dB (6-8)     Moderate   conversation, office
+ *   70-85 dB (8-10)    Loud       vacuum, busy street
+ *   >=85 dB (>=10)     Very loud  NIOSH hazard threshold, migraine-relevant
+ */
+fun noiseLabel(logRms: Double): String = when {
+    logRms < 6.0  -> "Quiet"
+    logRms < 8.0  -> "Moderate"
+    logRms < 10.0 -> "Loud"
+    else          -> "Very loud"
+}
+
 object MentalCardConfig {
     // Metric keys
     const val METRIC_STRESS = "stress"
@@ -52,7 +68,7 @@ object MentalCardConfig {
         METRIC_STRESS -> ""
         METRIC_SCREEN_TIME -> "h"
         METRIC_LATE_SCREEN_TIME -> "h"
-        METRIC_NOISE, METRIC_NOISE_HIGH, METRIC_NOISE_AVG, METRIC_NOISE_LOW -> "dB"
+        METRIC_NOISE, METRIC_NOISE_HIGH, METRIC_NOISE_AVG, METRIC_NOISE_LOW -> ""
         METRIC_BRIGHTNESS -> ""
         METRIC_VOLUME -> "%"
         METRIC_DARK_MODE -> "h"

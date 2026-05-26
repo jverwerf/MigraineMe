@@ -18,6 +18,8 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -91,7 +93,8 @@ data class PoolConfig(
     val onToggleAutomation: (itemId: String, enabled: Boolean) -> Unit = { _, _ -> },
     val onSetCategory: (itemId: String, category: String?) -> Unit = { _, _ -> },
     val onThresholdChange: (itemId: String, threshold: Double?) -> Unit = { _, _ -> },
-    val onSave: (suspend () -> Unit)? = null
+    val onSave: (suspend () -> Unit)? = null,
+    val infoText: String? = null,
 )
 
 /* ────────────────────────────────────────────────
@@ -116,6 +119,7 @@ fun ManagePoolScreen(
     val isDirty = pendingPredictions.isNotEmpty() || pendingThresholds.isNotEmpty()
     var isSaving by remember { mutableStateOf(false) }
     var showUnsavedDialog by remember { mutableStateOf(false) }
+    var showHeroInfo by remember { mutableStateOf(false) }
 
     // ── Overlay pending changes onto items for display ──
     val displayItems = remember(config.items, pendingPredictions, pendingThresholds) {
@@ -160,15 +164,29 @@ fun ManagePoolScreen(
             }
 
             // Hero
-            HeroCard {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .drawBehind { effectiveConfig.drawHeroIcon(this, effectiveConfig.iconColor) }
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(effectiveConfig.title, color = AppTheme.TitleColor, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                Text(effectiveConfig.subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                HeroCard {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .drawBehind { effectiveConfig.drawHeroIcon(this, effectiveConfig.iconColor) }
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(effectiveConfig.title, color = AppTheme.TitleColor, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(effectiveConfig.subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                }
+                if (effectiveConfig.infoText != null) {
+                    IconButton(
+                        onClick = { showHeroInfo = true },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 10.dp, y = (-14).dp)
+                            .size(34.dp)
+                    ) {
+                        Icon(Icons.Outlined.Info, contentDescription = "About ${effectiveConfig.title}",
+                            tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+                    }
+                }
             }
 
             // Search bar
@@ -421,6 +439,20 @@ fun ManagePoolScreen(
         }
     }
 
+    // ── Hero info dialog ──
+    if (showHeroInfo && effectiveConfig.infoText != null) {
+        AlertDialog(
+            onDismissRequest = { showHeroInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Text("About ${effectiveConfig.title}", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = { Text(effectiveConfig.infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
+    }
+
     // ── Unsaved changes dialog ──
     if (showUnsavedDialog) {
         AlertDialog(
@@ -641,6 +673,11 @@ private fun PoolItemRow(
     indent: Dp = 0.dp
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var showNoiseInfo by remember { mutableStateOf(false) }
+
+    if (showNoiseInfo) {
+        NoiseInfoDialog(iconColor = config.iconColor, onDismiss = { showNoiseInfo = false })
+    }
 
     Column(modifier = Modifier.padding(start = indent)) {
         Row(
@@ -670,7 +707,16 @@ private fun PoolItemRow(
             }
 
             // Label
-            Text(item.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text(item.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+
+            // (i) for noise rows — explains Quiet/Moderate/Loud/Very loud
+            if (item.label == "Noise high" || item.label == "Noise low") {
+                IconButton(onClick = { showNoiseInfo = true }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Outlined.Info, "Noise levels", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                }
+            }
+
+            Spacer(Modifier.weight(1f))
 
             // Prediction badge
             if (config.showPrediction && item.prediction != PredictionValue.NONE) {
@@ -772,9 +818,7 @@ private fun PoolItemRow(
                     if (item.isAutomated && item.direction != null) {
                         val currentThreshold = item.threshold ?: item.defaultThreshold
                         val dimAlpha = if (currentThreshold != null) 1f else 0.4f
-                        var textValue by remember(currentThreshold) {
-                            mutableStateOf(currentThreshold?.let { formatThresholdForDisplay(it, item.unit) } ?: "")
-                        }
+                        val isNoise = item.label == "Noise high" || item.label == "Noise low"
 
                         Row(
                             Modifier.fillMaxWidth(),
@@ -786,20 +830,53 @@ private fun PoolItemRow(
                                 color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha),
                                 style = MaterialTheme.typography.labelSmall
                             )
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                OutlinedTextField(
-                                    value = textValue, onValueChange = { newText -> textValue = newText; newText.toDoubleOrNull()?.let { config.onThresholdChange(item.id, it) } },
-                                    singleLine = true,
-                                    modifier = Modifier.width(80.dp),
-                                    textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White, textAlign = TextAlign.End),
-                                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = config.iconColor, unfocusedBorderColor = Color.White.copy(alpha = 0.12f),
-                                        cursorColor = config.iconColor
+                            if (isNoise) {
+                                var noiseExpanded by remember { mutableStateOf(false) }
+                                val selectedLabel = noiseLabelForThreshold(currentThreshold ?: 6.0)
+                                Box {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier
+                                            .clickable { noiseExpanded = true }
+                                            .background(Color.White.copy(alpha = 0.06f), MaterialTheme.shapes.small)
+                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(selectedLabel, color = Color.White, style = MaterialTheme.typography.bodySmall)
+                                        Text("▾", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    DropdownMenu(
+                                        expanded = noiseExpanded,
+                                        onDismissRequest = { noiseExpanded = false },
+                                        modifier = Modifier.background(Color(0xFF2A0C3C))
+                                    ) {
+                                        NOISE_BUCKETS.forEach { (label, threshold) ->
+                                            DropdownMenuItem(
+                                                text = { Text(label, color = Color.White, style = MaterialTheme.typography.bodySmall) },
+                                                onClick = { config.onThresholdChange(item.id, threshold); noiseExpanded = false }
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                var textValue by remember(currentThreshold) {
+                                    mutableStateOf(currentThreshold?.let { formatThresholdForDisplay(it, item.unit) } ?: "")
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    OutlinedTextField(
+                                        value = textValue, onValueChange = { newText -> textValue = newText; newText.toDoubleOrNull()?.let { config.onThresholdChange(item.id, it) } },
+                                        singleLine = true,
+                                        modifier = Modifier.width(80.dp),
+                                        textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White, textAlign = TextAlign.End),
+                                        keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = config.iconColor, unfocusedBorderColor = Color.White.copy(alpha = 0.12f),
+                                            cursorColor = config.iconColor
+                                        )
                                     )
-                                )
-                                Text(when (item.unit) { "hours" -> "h"; "%" -> "%"; "count" -> ""; "time" -> ""; else -> item.unit ?: "" },
-                                    color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha), style = MaterialTheme.typography.labelSmall)
+                                    Text(when (item.unit) { "hours" -> "h"; "%" -> "%"; "count" -> ""; "time" -> ""; else -> item.unit ?: "" },
+                                        color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha), style = MaterialTheme.typography.labelSmall)
+                                }
                             }
                         }
                     }
@@ -822,3 +899,49 @@ private fun formatThresholdForDisplay(value: Double, unit: String?): String {
     }
 }
 
+
+/** Noise threshold preset buckets — pair of label and the log-RMS threshold boundary
+ *  that "Noise high" fires at-or-above and "Noise low" fires below. */
+private val NOISE_BUCKETS = listOf(
+    "Quiet" to 6.0,
+    "Moderate" to 8.0,
+    "Loud" to 10.0,
+    "Very loud" to 11.0
+)
+
+private fun noiseLabelForThreshold(v: Double): String =
+    NOISE_BUCKETS.minByOrNull { kotlin.math.abs(it.second - v) }?.first ?: "Loud"
+
+@Composable
+private fun NoiseInfoDialog(iconColor: Color, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Got it", color = iconColor) } },
+        title = { Text("How noise is measured", color = Color.White) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Ambient noise is sampled from your phone mic. The number we store is a relative loudness score; for the threshold we group it into four bands you can pick from:",
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
+                )
+                NoiseBandRow("Quiet", "Under 50 dB: library, quiet home")
+                NoiseBandRow("Moderate", "50–70 dB: conversation, office")
+                NoiseBandRow("Loud", "70–85 dB: vacuum, busy street")
+                NoiseBandRow("Very loud", "85 dB+: NIOSH hazard threshold")
+                Text(
+                    "\"Noise high\" fires when the day's average reaches the band you pick; \"Noise low\" fires when it drops below it.",
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
+                )
+            }
+        },
+        containerColor = Color(0xFF1B0B2E)
+    )
+}
+
+@Composable
+private fun NoiseBandRow(name: String, note: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(name, color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.width(92.dp))
+        Text(note, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    }
+}

@@ -236,25 +236,6 @@ fun HelpScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header with back button so users have a clear way to leave the screen.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            Text("Help", style = MaterialTheme.typography.titleMedium, color = Color.White)
-            Spacer(Modifier.weight(1f))
-            Spacer(Modifier.width(48.dp))
-        }
 
         // Search
         OutlinedTextField(
@@ -381,25 +362,6 @@ fun HelpArticleDetailRoute(slug: String, onBack: () -> Unit) {
 fun HelpArticleDetailScreen(article: HelpArticle, onBack: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Header with back button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            Text("Help", style = MaterialTheme.typography.titleMedium, color = Color.White)
-            Spacer(Modifier.weight(1f))
-            Spacer(Modifier.width(48.dp))
-        }
-
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

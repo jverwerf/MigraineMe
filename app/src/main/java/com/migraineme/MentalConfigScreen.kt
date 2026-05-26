@@ -89,31 +89,15 @@ fun MentalConfigScreen(
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                IconButton(onClick = {
-                    saveConfig()
-                    onBack()
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
-                }
-            }
-
             HeroCard {
                 Text(
-                    text = "Customize Mental Health",
+                    text = "Customize Cognitive",
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Choose which mental health metrics to display on the Monitor screen.",
+                    text = "Choose which cognitive metrics to display on the Monitor screen.",
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -122,13 +106,13 @@ fun MentalConfigScreen(
             if (settingsLoaded && availableMetrics.isEmpty()) {
                 BaseCard {
                     Text(
-                        text = "No mental health source enabled",
+                        text = "No cognitive source enabled",
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Enable mental health tracking in Data Settings to customize metrics.",
+                        text = "Enable cognitive tracking in Data Settings to customize metrics.",
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.labelSmall
                     )

@@ -200,7 +200,7 @@ fun DataSettingsScreen(
     val sectionIcons = mapOf(
         "Sleep" to Icons.Outlined.Bedtime,
         "Physical Health" to Icons.Outlined.FitnessCenter,
-        "Mental Health" to Icons.Outlined.Psychology,
+        "Cognitive" to Icons.Outlined.Psychology,
         "Environment" to Icons.Outlined.Cloud,
         "Diet" to Icons.Outlined.Restaurant,
         "Menstruation" to Icons.Outlined.FavoriteBorder

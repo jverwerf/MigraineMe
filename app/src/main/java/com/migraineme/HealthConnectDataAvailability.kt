@@ -54,9 +54,9 @@ object HealthConnectDataAvailability {
         val hasData = hasNutritionData(context)
         
         return if (hasData) {
-            "Connected • Syncing nutrition data"
+            "Connected • Syncing diet data"
         } else {
-            "Connected • No nutrition data yet. Install Cronometer or MyFitnessPal to start tracking."
+            "Connected • No diet data yet. Install Cronometer or MyFitnessPal to start tracking."
         }
     }
 }

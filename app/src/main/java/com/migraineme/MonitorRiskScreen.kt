@@ -55,7 +55,7 @@ import java.time.ZoneId
 
 private val CAT_COLORS = mapOf(
     "Sleep" to Color(0xFF7E57C2), "Weather" to Color(0xFF4FC3F7),
-    "Physical" to Color(0xFF81C784), "Mental" to Color(0xFFBA68C8), "Nutrition" to Color(0xFFFFB74D)
+    "Physical" to Color(0xFF81C784), "Cognitive" to Color(0xFFBA68C8), "Diet" to Color(0xFFFFB74D)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,13 +136,6 @@ fun MonitorRiskScreen(
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            // Back
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-                }
-            }
-
             // 1. Configure HeroCard
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.RISK_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -243,17 +236,14 @@ fun MonitorRiskScreen(
                         Text("No risk data yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
 
-                    // All Metrics — remaining favorites grouped by category
-                    val selectedKeys = effectiveFavs.map { it.key }.toSet()
-                    val remaining = favPool.filter { it.key !in selectedKeys }
-                    if (remaining.isNotEmpty()) {
+                    if (favPool.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                         Spacer(Modifier.height(8.dp))
                         Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
 
-                        remaining.groupBy { it.category }.forEach { (category, entries) ->
+                        favPool.groupBy { it.category }.forEach { (category, entries) ->
                             val color = CAT_COLORS[category] ?: Color(0xFF999999)
                             Spacer(Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

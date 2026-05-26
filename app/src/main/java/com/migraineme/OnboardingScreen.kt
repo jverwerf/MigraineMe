@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -385,6 +386,32 @@ fun OnboardingScreen(
 // Loading Data Page
 // ═════════════════════════════════════════════════════════════════════════════
 
+private val LOADING_FACTS = listOf(
+    "MigraineMe predicts your attacks before they happen.",
+    "Chat with your own data — ask MigraineMe anything.",
+    "MigraineMe learns your patterns and recalibrates every month.",
+    "A 7-day risk forecast on your home screen.",
+    "HRV dips, pressure drops, sleep disruption — caught before you feel them.",
+    "See which treatments are actually working — efficacy scored against your data.",
+    "AI recommendations every month based on what your data actually shows.",
+    "30+ migraine signals tracked automatically.",
+    "Connect WHOOP, Oura, Polar, Garmin, Apple Health and Health Connect.",
+    "Your full migraine profile, AI-configured in under a minute.",
+    "Cycle-aware: hormonal windows feed straight into your risk score.",
+    "Watch your risk gauge fill in real time.",
+    "\"It's happening right now\" — one tap to log, fill in details later.",
+    "Caffeine, sodium, tyramine, alcohol, gluten and histamine — flagged in every meal.",
+    "One-tap doctor-ready PDF of everything you've logged.",
+    "Talk through your day — voice-powered evening check-ins.",
+    "Customise every trigger, prodrome, threshold and weight to fit you.",
+    "Personalised companions for nutrition, sleep, stress and more.",
+    "Pulls food from MyFitnessPal, Cronometer or barcode scan in seconds.",
+    "Apple Watch, Wear OS, Garmin and your phone — always in sync.",
+    "Triggers, prodromes, reliefs, treatments — all in one place.",
+    "Articles and a forum built for migraine sufferers, by migraine sufferers.",
+    "Your data, locked to your account. End-to-end private.",
+)
+
 @Composable
 private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boolean) {
     val animatedProgress by animateFloatAsState(
@@ -397,38 +424,47 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
     val pulseScale by pulse.animateFloat(0.95f, 1.08f, infiniteRepeatable(tween(1200), RepeatMode.Reverse), label = "s")
     val pulseAlpha by pulse.animateFloat(0.4f, 0.8f, infiniteRepeatable(tween(1200), RepeatMode.Reverse), label = "a")
 
-    data class LoadStep(val label: String, val threshold: Float, val icon: androidx.compose.ui.graphics.vector.ImageVector)
-    val steps = listOf(
-        LoadStep("Account", 0.05f, Icons.Outlined.Person),
-        LoadStep("Sleep & health data", 0.25f, Icons.Outlined.FavoriteBorder),
-        LoadStep("Weather & nutrition", 0.50f, Icons.Outlined.Cloud),
-        LoadStep("Migraine history", 0.70f, Icons.Outlined.Psychology),
-        LoadStep("Risk gauge", 0.85f, Icons.Outlined.Speed),
-        LoadStep("Ready!", 1.0f, Icons.Outlined.CheckCircle),
-    )
+    var factIndex by remember { mutableStateOf(0) }
+    LaunchedEffect(isComplete) {
+        if (!isComplete) {
+            while (true) {
+                kotlinx.coroutines.delay(3500)
+                factIndex = (factIndex + 1) % LOADING_FACTS.size
+            }
+        }
+    }
 
     Column(
         Modifier.fillMaxSize().padding(horizontal = 32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Animated icon
-        Box(
-            Modifier
-                .size((80 * if (!isComplete) pulseScale else 1f).dp)
-                .background(
-                    Brush.linearGradient(listOf(
-                        AppTheme.AccentPurple.copy(alpha = if (!isComplete) pulseAlpha else 0.8f),
-                        AppTheme.AccentPink.copy(alpha = if (!isComplete) pulseAlpha * 0.7f else 0.6f)
-                    )),
-                    CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                if (isComplete) Icons.Outlined.CheckCircle else Icons.Outlined.CloudSync,
-                null, tint = Color.White, modifier = Modifier.size(40.dp)
-            )
+        // Pulsing gradient icon with circular-progress halo
+        Box(contentAlignment = Alignment.Center) {
+            if (!isComplete) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(108.dp),
+                    color = AppTheme.AccentPink,
+                    strokeWidth = 3.dp,
+                )
+            }
+            Box(
+                Modifier
+                    .size((80 * if (!isComplete) pulseScale else 1f).dp)
+                    .background(
+                        Brush.linearGradient(listOf(
+                            AppTheme.AccentPurple.copy(alpha = if (!isComplete) pulseAlpha else 0.8f),
+                            AppTheme.AccentPink.copy(alpha = if (!isComplete) pulseAlpha * 0.7f else 0.6f)
+                        )),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    if (isComplete) Icons.Outlined.CheckCircle else Icons.Outlined.CloudSync,
+                    null, tint = Color.White, modifier = Modifier.size(40.dp)
+                )
+            }
         }
 
         Spacer(Modifier.height(28.dp))
@@ -442,13 +478,22 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
 
         Spacer(Modifier.height(8.dp))
 
-        Text(
-            if (isComplete) "Your dashboard is ready for the tour."
-            else "We're getting everything ready so you\ncan see the app in action.",
-            color = AppTheme.BodyTextColor,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
-        )
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(AppTheme.AccentPurple.copy(alpha = 0.12f))
+                .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Text(
+                if (isComplete) "Your dashboard is ready for the tour."
+                else "Hang tight — before we take you on the app tour, we're setting up your profile in the background.\n\nAfter the tour we'll ask you a few personal questions and get everything connected, so the app is fully integrated to learn from your data. We only need to do this once, so you'll never have to worry about it again.",
+                color = AppTheme.BodyTextColor,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+        }
 
         Spacer(Modifier.height(32.dp))
 
@@ -465,67 +510,21 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
             )
         }
 
-        Spacer(Modifier.height(24.dp))
-
-        // Step checklist
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            steps.forEach { step ->
-                val isDone = animatedProgress >= step.threshold
-                val isActive = !isDone && animatedProgress >= (step.threshold - 0.15f)
-                val alpha by animateFloatAsState(
-                    when { isDone -> 1f; isActive -> 0.9f; else -> 0.35f },
-                    tween(400), label = "a_${step.label}"
+        if (!isComplete) {
+            Spacer(Modifier.height(20.dp))
+            AnimatedContent(
+                targetState = factIndex,
+                transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(300)) },
+                label = "fact"
+            ) { i ->
+                Text(
+                    LOADING_FACTS[i],
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
-
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.size(32.dp).background(
-                            when {
-                                isDone -> AppTheme.AccentPurple.copy(alpha = 0.25f)
-                                isActive -> AppTheme.AccentPink.copy(alpha = 0.15f)
-                                else -> Color.White.copy(alpha = 0.05f)
-                            }, CircleShape
-                        ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        when {
-                            isDone -> Icon(Icons.Outlined.Check, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
-                            isActive -> CircularProgressIndicator(Modifier.size(14.dp), AppTheme.AccentPink, strokeWidth = 2.dp)
-                            else -> Icon(step.icon, null, tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(16.dp))
-                        }
-                    }
-                    Text(
-                        step.label,
-                        color = Color.White.copy(alpha = alpha),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (isDone || isActive) FontWeight.Medium else FontWeight.Normal
-                        )
-                    )
-                }
             }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Current status text
-        AnimatedContent(
-            targetState = statusText,
-            transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
-            label = "status"
-        ) { text ->
-            Text(
-                text,
-                color = if (isComplete) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontWeight = if (isComplete) FontWeight.SemiBold else FontWeight.Normal
-                ),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
     }
 }

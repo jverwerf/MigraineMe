@@ -183,6 +183,7 @@ object MetricDisplayStore {
         "humidity_pct_mean" to "user_weather_daily::humidity_pct_mean",
         "wind_speed_mps_mean" to "user_weather_daily::wind_speed_mps_mean",
         "uv_index_max" to "user_weather_daily::uv_index_max",
+        "is_thunderstorm_day" to "user_weather_daily::is_thunderstorm_day",
         "altitude_m" to "user_location_daily::altitude_max_m",
         "altitude_change_m" to "user_location_daily::altitude_change_m",
     )

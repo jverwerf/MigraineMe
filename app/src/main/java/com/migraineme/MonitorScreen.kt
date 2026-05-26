@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bedtime
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.BubbleChart
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -405,6 +410,11 @@ fun MonitorScreen(
                                 onClick = { navController.navigate(Routes.MONITOR_MEDICINES) }
                             )
                         }
+                        MonitorCardConfig.CARD_TREATMENTS -> {
+                            TreatmentsMonitorCard(
+                                onClick = { navController.navigate(Routes.MONITOR_TREATMENTS) }
+                            )
+                        }
                         MonitorCardConfig.CARD_PHYSICAL -> {
                             PhysicalHealthCard(
                                 physicalLoading = physicalLoading,
@@ -459,8 +469,9 @@ private fun NutritionCard(
 ) {
     MonitorCategoryCard(
         icon = Icons.Outlined.Restaurant,
-        title = "Nutrition",
+        title = "Diet",
         iconTint = Color(0xFFFFB74D),
+        infoBody = "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten and histamine. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods.",
         onClick = onClick
     ) {
         if (nutritionLoading) {
@@ -510,6 +521,7 @@ private fun EnvironmentCard(
         icon = Icons.Outlined.Cloud,
         title = "Environment",
         iconTint = Color(0xFF4FC3F7),
+        infoBody = "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief.",
         onClick = onClick
     ) {
         if (weatherLoading) {
@@ -555,6 +567,7 @@ internal fun getWeatherMetricValue(weather: WeatherSummary, metric: String): Str
         WeatherCardConfig.METRIC_HUMIDITY -> weather.humidity.toString()
         WeatherCardConfig.METRIC_WIND_SPEED -> String.format("%.1f", weather.windSpeed)
         WeatherCardConfig.METRIC_UV_INDEX -> weather.uvIndex.toString()
+        WeatherCardConfig.METRIC_THUNDERSTORM -> if (weather.isThunderstormDay) "Yes" else "No"
         WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM?.let { String.format("%.0f", it) } ?: "—"
         WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM?.let { String.format("%.0f", it) } ?: "—"
         else -> "—"
@@ -574,6 +587,7 @@ private fun PhysicalHealthCard(
         icon = Icons.Outlined.FitnessCenter,
         title = "Physical Health",
         iconTint = Color(0xFF81C784),
+        infoBody = "Resting heart rate, HRV, steps and activity. Low HRV and elevated resting HR often precede a migraine by 12-48 hours — your autonomic nervous system shifts before the attack starts. Sudden bursts of intense exercise can also trigger.\n\nUseful as an early-warning signal: if HRV drops well below your baseline, treat that day as higher-risk even if you feel fine.",
         onClick = onClick
     ) {
         if (physicalLoading) {
@@ -634,6 +648,7 @@ private fun SleepCard(
         icon = Icons.Outlined.Bedtime,
         title = "Sleep",
         iconTint = Color(0xFF7986CB),
+        infoBody = "Total hours, quality and timing. Sleep is one of the top three migraine triggers — and BOTH too little AND too much can set one off. Irregular schedules (weekend lie-ins, jet-lag, shift work) are especially bad: it's the change vs your baseline that matters.\n\nUse this card to spot patterns: aim for a consistent window every night, not just \"7 hours on average\".",
         onClick = onClick
     ) {
         if (sleepLoading) {
@@ -677,14 +692,15 @@ private fun MentalHealthCard(
 ) {
     MonitorCategoryCard(
         icon = Icons.Outlined.BubbleChart,
-        title = "Mental Health",
+        title = "Cognitive",
         iconTint = Color(0xFFBA68C8),
+        infoBody = "Stress score, mood, screen time. \"Let-down\" migraines are real, relaxing after high stress (weekend, after a deadline, on holiday) triggers an attack in many people. Sustained high stress is also a top trigger.\n\nUse this card to spot let-down patterns: if you see migraines clustered on Fridays / Saturdays, that's often the signal.\n\nNoise: sampled from your phone mic. Shown as Quiet, Moderate, Loud, or Very loud so you can read it at a glance. The underlying score is kept for correlations and trigger detection.",
         onClick = onClick
     ) {
         if (mentalLoading) {
             Text("Loading...", color = AppTheme.SubtleTextColor)
         } else if (mentalSummary == null) {
-            Text("No mental health data", color = AppTheme.SubtleTextColor)
+            Text("No cognitive data", color = AppTheme.SubtleTextColor)
             Text("Enable metrics in Data Settings", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
         } else {
             val mental = mentalSummary
@@ -695,13 +711,25 @@ private fun MentalHealthCard(
             ) {
                 displayMetrics.forEachIndexed { index, metric ->
                     val label = MentalCardConfig.labelFor(metric)
-                    val color = slotColors.getOrElse(index) { slotColors.last() }
                     val value = mental.displayValue(metric)
+                    // Noise rows use band color (Quiet/Moderate/Loud/Very loud) instead of slot palette.
+                    val color = if (metric.startsWith("noise")) noiseSlotColor(value)
+                                else slotColors.getOrElse(index) { slotColors.last() }
                     MentalMetric(label, value, color)
                 }
             }
         }
     }
+}
+
+/** Map a noise band label to its band color so the Mental card text reads
+ *  green/yellow/orange/red instead of the generic slot palette. */
+private fun noiseSlotColor(label: String): Color = when (label) {
+    "Quiet"     -> Color(0xFF81C784)
+    "Moderate"  -> Color(0xFFFFEB3B)
+    "Loud"      -> Color(0xFFFFB74D)
+    "Very loud" -> Color(0xFFEF5350)
+    else        -> Color(0xFF9E9E9E)
 }
 
 @Composable
@@ -724,6 +752,7 @@ private fun MenstruationCard(
         icon = Icons.Outlined.FavoriteBorder,
         title = "Menstruation",
         iconTint = Color(0xFFE57373),
+        infoBody = "Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment.",
         onClick = onClick
     ) {
         if (menstruationLoading) {
@@ -806,41 +835,83 @@ private fun MonitorCategoryCard(
     title: String,
     iconTint: Color,
     enabled: Boolean = true,
+    infoBody: String? = null,
     onClick: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    BaseCard(
-        modifier = if (enabled) Modifier.clickable(onClick = onClick) else Modifier
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    var showInfo by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        BaseCard(
+            modifier = if (enabled) Modifier.fillMaxWidth().clickable(onClick = onClick) else Modifier.fillMaxWidth()
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = if (enabled) iconTint else iconTint.copy(alpha = 0.4f),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                title,
-                color = if (enabled) AppTheme.TitleColor else AppTheme.TitleColor.copy(alpha = 0.5f),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Spacer(Modifier.weight(1f))
-            if (enabled) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = if (enabled) iconTint else iconTint.copy(alpha = 0.4f),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(10.dp))
                 Text(
-                    "→",
-                    color = AppTheme.AccentPurple,
-                    style = MaterialTheme.typography.bodyMedium
+                    title,
+                    color = if (enabled) AppTheme.TitleColor else AppTheme.TitleColor.copy(alpha = 0.5f),
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Spacer(Modifier.weight(1f))
+                if (enabled) {
+                    Text(
+                        "→",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            content()
+        }
+        if (infoBody != null) {
+            IconButton(
+                onClick = { showInfo = true },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 10.dp, y = (-14).dp)
+                    .size(34.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Info,
+                    contentDescription = "About $title",
+                    tint = AppTheme.SubtleTextColor,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
-        
-        Spacer(Modifier.height(8.dp))
-        
-        content()
+    }
+    if (showInfo && infoBody != null) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            confirmButton = {
+                TextButton(onClick = { showInfo = false }) {
+                    Text("Got it", color = AppTheme.AccentPurple)
+                }
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("About $title", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+            },
+            text = {
+                Text(infoBody, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            },
+            containerColor = Color(0xFF1E0A2E)
+        )
     }
 }
 
@@ -907,6 +978,7 @@ internal data class WeatherSummary(
     val pressure: Int,
     val uvIndex: Int,
     val windSpeed: Double = 0.0,
+    val isThunderstormDay: Boolean = false,
     val altitudeMaxM: Double? = null,
     val altitudeChangeM: Double? = null
 )
@@ -1007,6 +1079,7 @@ internal suspend fun loadWeatherSummary(
                 pressure = obj.optDouble("pressure_hpa_mean", 0.0).toInt(),
                 uvIndex = obj.optDouble("uv_index_max", 0.0).toInt(),
                 windSpeed = obj.optDouble("wind_speed_mps_mean", 0.0),
+                isThunderstormDay = obj.optBoolean("is_thunderstorm_day", false),
                 altitudeMaxM = altitudeMaxM,
                 altitudeChangeM = altitudeChangeM
             )
@@ -1433,7 +1506,7 @@ internal data class MentalSummary(
         MentalCardConfig.METRIC_STRESS -> stress?.let { String.format("%.0f", it) } ?: "—"
         MentalCardConfig.METRIC_SCREEN_TIME -> screenTimeHours?.let { String.format("%.1fh", it) } ?: "—"
         MentalCardConfig.METRIC_LATE_SCREEN_TIME -> lateScreenTimeHours?.let { String.format("%.1fh", it) } ?: "—"
-        MentalCardConfig.METRIC_NOISE -> noiseIndex?.let { String.format("%.0f dB", it) } ?: "—"
+        MentalCardConfig.METRIC_NOISE -> noiseIndex?.let { noiseLabel(it) } ?: "—"
         MentalCardConfig.METRIC_BRIGHTNESS -> brightness?.let { String.format("%.0f", it) } ?: "—"
         MentalCardConfig.METRIC_VOLUME -> volumePct?.let { "${it.toInt()}%" } ?: "—"
         MentalCardConfig.METRIC_DARK_MODE -> darkModeHours?.let { String.format("%.1fh", it) } ?: "—"
@@ -1592,6 +1665,7 @@ private fun RiskCard(
         icon = Icons.Outlined.TrendingUp,
         title = "Risk",
         iconTint = Color(0xFFEF5350),
+        infoBody = "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief.",
         onClick = onClick
     ) {
         if (isLoading) {

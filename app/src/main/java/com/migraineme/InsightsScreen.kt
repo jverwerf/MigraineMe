@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.*
@@ -48,7 +49,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.interaction.MutableInteractionSource
 
-data class MigraineSpan(val start: Instant, val end: Instant?, val severity: Int? = null, val label: String? = null, val id: String? = null)
+data class MigraineSpan(
+    val start: Instant,
+    val end: Instant?,
+    val severity: Int? = null,
+    val label: String? = null,
+    val id: String? = null,
+    val painLocations: List<String> = emptyList()
+)
 data class ReliefSpan(val start: Instant, val end: Instant?, val intensity: Int? = null, val name: String, val sideEffectScale: String? = null)
 data class TriggerPoint(val at: Instant, val name: String)
 data class MedicinePoint(val at: Instant, val name: String, val amount: String?, val sideEffectScale: String? = null)
@@ -58,7 +66,10 @@ data class MetricSeries(val key: String, val label: String, val unit: String, va
 data class EventMarker(val at: Instant, val endAt: Instant? = null, val name: String, val category: String, val detail: String? = null, val color: Color, val isAutomated: Boolean = false)
 
 val EventCategoryColors = mapOf(
-    "Trigger" to Color(0xFFFFB74D), "Prodrome" to Color(0xFF9575CD), "Medicine" to Color(0xFF4FC3F7),
+    "Trigger" to Color(0xFFFFB74D), "Prodrome" to Color(0xFF9575CD),
+    "Pain Character" to Color(0xFFCE93D8), "Accompanying" to Color(0xFFBA68C8),
+    "Postdrome" to Color(0xFFAB47BC),
+    "Medicine" to Color(0xFF4FC3F7),
     "Relief" to Color(0xFF81C784), "Activity" to Color(0xFFFF8A65), "Location" to Color(0xFF78909C),
     "Missed Activity" to Color(0xFFFF7043)
 )
@@ -77,6 +88,7 @@ val AllMetricDefs = listOf(
     MetricDef("humidity", "Humidity", "%", Color(0xFF4FC3F7), "Environment"),
     MetricDef("wind", "Wind", "m/s", Color(0xFF81C784), "Environment"),
     MetricDef("uv", "UV Index", "", Color(0xFFFFB74D), "Environment"),
+    MetricDef("thunderstorm", "Thunderstorm", "", Color(0xFFFFD54F), "Environment"),
     MetricDef("altitude", "Altitude", "m", Color(0xFFCE93D8), "Environment"),
     MetricDef("alt_change", "Alt. Change", "m", Color(0xFFBA68C8), "Environment"),
     // Physical
@@ -105,14 +117,14 @@ val AllMetricDefs = listOf(
     MetricDef("bedtime", "Bedtime", "hrs", Color(0xFF3949AB), "Sleep"),
     MetricDef("wake_time", "Wake Time", "hrs", Color(0xFF26A69A), "Sleep"),
     // Mental
-    MetricDef("screen_time", "Screen Time", "min", Color(0xFFFF8A65), "Mental"),
-    MetricDef("late_screen", "Late Screen", "hrs", Color(0xFFFF7043), "Mental"),
-    MetricDef("noise", "Noise", "dB", Color(0xFFFFB74D), "Mental"),
-    MetricDef("brightness", "Brightness", "%", Color(0xFFFFF176), "Mental"),
-    MetricDef("volume", "Volume", "%", Color(0xFFAED581), "Mental"),
-    MetricDef("unlocks", "Unlocks", "", Color(0xFF4DD0E1), "Mental"),
-    MetricDef("dark_mode", "Dark Mode", "hrs", Color(0xFF546E7A), "Mental"),
-    MetricDef("mindfulness", "Mindfulness", "min", Color(0xFF80CBC4), "Mental"),
+    MetricDef("screen_time", "Screen Time", "min", Color(0xFFFF8A65), "Cognitive"),
+    MetricDef("late_screen", "Late Screen", "hrs", Color(0xFFFF7043), "Cognitive"),
+    MetricDef("noise", "Noise", "", Color(0xFFFFB74D), "Cognitive"),
+    MetricDef("brightness", "Brightness", "%", Color(0xFFFFF176), "Cognitive"),
+    MetricDef("volume", "Volume", "%", Color(0xFFAED581), "Cognitive"),
+    MetricDef("unlocks", "Unlocks", "", Color(0xFF4DD0E1), "Cognitive"),
+    MetricDef("dark_mode", "Dark Mode", "hrs", Color(0xFF546E7A), "Cognitive"),
+    MetricDef("mindfulness", "Mindfulness", "min", Color(0xFF80CBC4), "Cognitive"),
     // Diet – macros
     MetricDef("calories", "Calories", "kcal", Color(0xFFFFAB91), "Diet"),
     MetricDef("protein", "Protein", "g", Color(0xFFEF9A9A), "Diet"),
@@ -325,7 +337,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp, spacing = 8.dp) {
 
             // ── 1. WEEKLY SUMMARY + Explore Migraines moved to Monitor → Migraines ──
 
@@ -337,27 +349,66 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val recomputeStatus by vm.recomputeStatus.collectAsState()
 
                 // ── 2. FULL REPORT ──
-                BaseCard(modifier = Modifier.clickable {
-                    if (premiumStateTop.isPremium) navController.navigate(Routes.INSIGHTS_REPORT)
-                    else navController.navigate(Routes.PAYWALL)
-                }) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(24.dp)) { HubIcons.run { drawBriefcase(Color(0xFF4FC3F7)) } }
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("Full Report", color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Generate a doctor-ready PDF with all your migraine data",
-                                color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.bodySmall)
+                var showFullReportInfo by remember { mutableStateOf(false) }
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    BaseCard(modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (premiumStateTop.isPremium) navController.navigate(Routes.INSIGHTS_REPORT)
+                            else navController.navigate(Routes.PAYWALL)
                         }
-                        if (!premiumStateTop.isPremium) {
-                            Icon(Icons.Outlined.Lock, contentDescription = "Premium",
-                                tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
+                    ) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawBriefcase(Color(0xFF4FC3F7)) } }
+                            Spacer(Modifier.width(10.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("Full Report", color = AppTheme.TitleColor,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text("Generate a doctor-ready PDF with all your migraine data",
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
+                            if (!premiumStateTop.isPremium) {
+                                Icon(Icons.Outlined.Lock, contentDescription = "Premium",
+                                    tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                            }
+                            Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                         }
-                        Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                     }
+                    IconButton(
+                        onClick = { showFullReportInfo = true },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 10.dp, y = (-14).dp)
+                            .size(34.dp)
+                    ) {
+                            Icon(
+                                Icons.Outlined.Info,
+                                contentDescription = "About Full Report",
+                                tint = AppTheme.SubtleTextColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                    }
+                }
+                if (showFullReportInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showFullReportInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showFullReportInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About Full Report", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(FullReportInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
+                    )
                 }
 
                 // ── 3. Explore Migraines moved to Monitor → Migraines (file kept as Routes.INSIGHTS_DETAIL target) ──
@@ -381,69 +432,181 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // ── 3b. AI RECOMMENDATIONS (premium) ──
                 val aiRecs by vm.aiRecommendations.collectAsState()
                 val dismissedRecKeys by vm.dismissedRecommendationKeys.collectAsState()
+                var showRecsInfo by remember { mutableStateOf(false) }
                 if (buildRecommendationSections(aiRecs, dismissedRecKeys).isNotEmpty()) {
                     PremiumGate(
                         message = "Unlock AI Recommendations",
                         subtitle = "Per-category guidance from your data",
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
-                        RecommendationsCard(aiRecs, dismissedRecKeys) {
-                            navController.navigate(Routes.INSIGHTS_RECOMMENDATIONS)
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            RecommendationsCard(aiRecs, dismissedRecKeys) {
+                                navController.navigate(Routes.INSIGHTS_RECOMMENDATIONS)
+                            }
+                            IconButton(
+                                onClick = { showRecsInfo = true },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 10.dp, y = (-14).dp)
+                                    .size(34.dp)
+                            ) {
+                                    Icon(
+                                        Icons.Outlined.Info,
+                                        contentDescription = "About AI Recommendations",
+                                        tint = AppTheme.SubtleTextColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                            }
                         }
                     }
+                }
+                if (showRecsInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showRecsInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showRecsInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About AI Recommendations", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(AiRecommendationsInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
+                    )
                 }
 
 
                 // ── 4. ACCURACY ──
+                var showAccuracyInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = "Unlock Accuracy",
                     subtitle = "See how well your gauge predicts migraines",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
-                    AccuracyPreviewCard(
-                        gaugeAccuracy = gaugeAccuracy,
-                        onClick = { navController.navigate(Routes.INSIGHTS_THRESHOLDS) },
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        AccuracyPreviewCard(
+                            gaugeAccuracy = gaugeAccuracy,
+                            onClick = { navController.navigate(Routes.INSIGHTS_THRESHOLDS) },
+                        )
+                        IconButton(
+                            onClick = { showAccuracyInfo = true },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-14).dp)
+                                .size(34.dp)
+                        ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "About Accuracy",
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                        }
+                    }
+                }
+                if (showAccuracyInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showAccuracyInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showAccuracyInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About Accuracy", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(AccuracyInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
                     )
                 }
 
                 // ── 5. WHAT HAPPENED ──
+                var showWhatHappenedInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = "Unlock Pattern Analysis",
                     subtitle = "See correlations, combinations & thresholds",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
-                    if (significantCorrelations.isEmpty()) {
-                        BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.INSIGHTS_PATTERNS) }) {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Canvas(Modifier.size(24.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
-                                Spacer(Modifier.width(10.dp))
-                                Text("What Happened", color = AppTheme.TitleColor,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    modifier = Modifier.weight(1f))
-                                Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        if (significantCorrelations.isEmpty()) {
+                            BaseCard(modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { navController.navigate(Routes.INSIGHTS_PATTERNS) }
+                            ) {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Canvas(Modifier.size(24.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
+                                    Spacer(Modifier.width(10.dp))
+                                    Text("What Happened", color = AppTheme.TitleColor,
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                        modifier = Modifier.weight(1f))
+                                    Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Text("Discover correlations and dangerous trigger combinations from your data.",
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
-                            Spacer(Modifier.height(4.dp))
-                            Text("Discover correlations and dangerous trigger combinations from your data.",
-                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        } else {
+                            val previewPatterns = remember(triggerCorrelations, metricCorrelations) {
+                                (triggerCorrelations + metricCorrelations).sortedByDescending { it.liftRatio }.take(2)
+                            }
+                            val previewInteractions = remember(interactionCorrelations) {
+                                interactionCorrelations.take(2)
+                            }
+                            val symptomOutcomes by vm.symptomOutcomes.collectAsState()
+                            PatternsPreviewCard(
+                                patterns = previewPatterns,
+                                interactions = previewInteractions,
+                                symptomOutcomes = symptomOutcomes.take(2),
+                                onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
+                            )
                         }
-                    } else {
-                        val previewPatterns = remember(triggerCorrelations, metricCorrelations) {
-                            (triggerCorrelations + metricCorrelations).sortedByDescending { it.liftRatio }.take(2)
+                        IconButton(
+                            onClick = { showWhatHappenedInfo = true },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-14).dp)
+                                .size(34.dp)
+                        ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "About What Happened",
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
                         }
-                        val previewInteractions = remember(interactionCorrelations) {
-                            interactionCorrelations.take(2)
-                        }
-                        val symptomOutcomes by vm.symptomOutcomes.collectAsState()
-                        PatternsPreviewCard(
-                            patterns = previewPatterns,
-                            interactions = previewInteractions,
-                            symptomOutcomes = symptomOutcomes.take(2),
-                            onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
-                        )
                     }
+                }
+                if (showWhatHappenedInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showWhatHappenedInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showWhatHappenedInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About What Happened", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(WhatHappenedInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
+                    )
                 }
 
                 // ── 6. WHAT WORKED ──
+                var showWhatWorkedInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = "Unlock Treatment Analysis",
                     subtitle = "See which medicines and reliefs work best",
@@ -456,22 +619,93 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         treatmentInteractionCorrelations.take(2)
                     }
                     val symptomSegments by vm.symptomSegments.collectAsState()
-                    TreatmentPreviewCard(
-                        treatments = previewTreatments,
-                        treatmentInteractions = previewTreatmentInteractions,
-                        symptomSegments = symptomSegments.take(2),
-                        onShowAll = { navController.navigate(Routes.INSIGHTS_TREATMENTS) }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TreatmentPreviewCard(
+                            treatments = previewTreatments,
+                            treatmentInteractions = previewTreatmentInteractions,
+                            symptomSegments = symptomSegments.take(2),
+                            onShowAll = { navController.navigate(Routes.INSIGHTS_TREATMENTS) }
+                        )
+                        IconButton(
+                            onClick = { showWhatWorkedInfo = true },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-14).dp)
+                                .size(34.dp)
+                        ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "About What Worked",
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                        }
+                    }
+                }
+                if (showWhatWorkedInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showWhatWorkedInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showWhatWorkedInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About What Worked", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(WhatWorkedInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
                     )
                 }
 
                 // ── 7. WHAT WERE YOU DOING ──
+                var showContextInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = "Unlock Context Analysis",
                     subtitle = "See what you were doing when migraines hit",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
-                    ContextCard(contextItems.take(2), overallAvgSeverity,
-                        onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) })
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        ContextCard(contextItems.take(2), overallAvgSeverity,
+                            onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) })
+                        IconButton(
+                            onClick = { showContextInfo = true },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-14).dp)
+                                .size(34.dp)
+                        ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "About What Were You Doing",
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                        }
+                    }
+                }
+                if (showContextInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showContextInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showContextInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About What Were You Doing", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(ContextInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
+                    )
                 }
 
                 // ── 8. HOW DID IT IMPACT YOU ──
@@ -479,19 +713,55 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val sevCounts by vm.severityCounts.collectAsState()
                 val totalMigraineCount by vm.totalMigraineCount.collectAsState()
                 val topSymptoms by vm.symptomStats.collectAsState()
+                var showImpactInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = "Unlock Impact Analysis",
                     subtitle = "See severity, pain locations & missed activities",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
-                    ImpactCard(
-                        impactItems = impactItems.take(2),
-                        painLocationCounts = painLocCounts,
-                        severityCounts = sevCounts,
-                        totalMigraines = totalMigraineCount,
-                        overallAvgSeverity = overallAvgSeverity,
-                        topSymptoms = topSymptoms.take(3),
-                        onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        ImpactCard(
+                            impactItems = impactItems.take(2),
+                            painLocationCounts = painLocCounts,
+                            severityCounts = sevCounts,
+                            totalMigraines = totalMigraineCount,
+                            overallAvgSeverity = overallAvgSeverity,
+                            topSymptoms = topSymptoms.take(3),
+                            onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
+                        )
+                        IconButton(
+                            onClick = { showImpactInfo = true },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-14).dp)
+                                .size(34.dp)
+                        ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "About How Did It Impact You",
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                        }
+                    }
+                }
+                if (showImpactInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showImpactInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showImpactInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About How Did It Impact You", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(ImpactInfoCopy.text, color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
                     )
                 }
 
@@ -665,29 +935,20 @@ internal fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes
 @Composable
 internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
     val vm: InsightsViewModel = viewModel(LocalContext.current as ViewModelStoreOwner)
-    val ss by vm.symptomSpider.collectAsState()
     val pcs by vm.painCharSpider.collectAsState()
     val acs by vm.accompSpider.collectAsState()
+    val pds by vm.postdromeSpider.collectAsState()
     BaseCard(modifier = Modifier.clickable(onClick = onClick)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("Symptoms", color = AppTheme.TitleColor,
+                Text("Migraines", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Text("${ms.size} migraines logged",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
-        }
-        // Overall symptom spider (matches iOS — shows migraine types as spider chart)
-        ss?.takeIf { it.axes.isNotEmpty() }?.let { data ->
-            Spacer(Modifier.height(12.dp))
-            if (data.axes.size >= 3) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    SpiderChart(axes = data.axes, accentColor = AppTheme.AccentPink, size = 200.dp)
-                }
-            } else StackedProportionalBar(axes = data.axes, accentColor = AppTheme.AccentPink)
         }
         pcs?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(16.dp))
@@ -710,6 +971,17 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
                     SpiderChart(axes = data.axes, accentColor = Color(0xFFBA68C8), size = 200.dp)
                 }
             } else StackedProportionalBar(axes = data.axes, accentColor = Color(0xFFBA68C8))
+        }
+        pds?.takeIf { it.axes.isNotEmpty() }?.let { data ->
+            Spacer(Modifier.height(16.dp))
+            Text("Postdrome", color = Color(0xFF4DB6AC),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.height(4.dp))
+            if (data.axes.size >= 3) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    SpiderChart(axes = data.axes, accentColor = Color(0xFF4DB6AC), size = 200.dp)
+                }
+            } else StackedProportionalBar(axes = data.axes, accentColor = Color(0xFF4DB6AC))
         }
     }
 }
@@ -860,37 +1132,40 @@ internal fun CorrelationRow(stat: EdgeFunctionsService.CorrelationStat) {
 /** Compact correlation row — name + lag + lift only, no insight text */
 @Composable
 private fun CorrelationRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    // Tightened vertical padding so rows are denser (was 6.dp + 2.dp/4.dp
+    // internal gaps — looked airy compared to iOS). Labels also run through
+    // prettyLabel so snake_case from older logs renders cleanly.
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             if (stat.factorB != null) {
                 Text(
-                    stat.factorName,
+                    prettyLabel(stat.factorName),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    stat.factorB,
+                    prettyLabel(stat.factorB),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             } else {
                 Text(
-                    stat.factorName,
+                    prettyLabel(stat.factorName),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(1.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 LagChip(stat.bestLagDays)
                 ConfidenceDots(stat.pValue)
             }
             // Duration & severity descriptors for triggers
             if (stat.factorType == "trigger" && (stat.avgDurationHrs != null || stat.avgSeverity != null)) {
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(1.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     stat.avgSeverity?.let { sev ->
                         val sevColor = when {
@@ -928,12 +1203,15 @@ internal fun TopPatternsCard(
     metrics: List<EdgeFunctionsService.CorrelationStat>,
     interactions: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
 ) {
-    // Merge and sort by lift, show top 5
+    // Source of truth — matches the edge function's "topRiskFactors"
+    // definition (compute-correlation-stats:1491): trigger || metric.
+    // The detail screen (sole caller) shows ALL significant findings;
+    // home / Full Report previews use the dedicated *Preview* cards.
     val combined = remember(triggers, metrics) {
-        (triggers + metrics).sortedByDescending { it.liftRatio }.take(5)
+        (triggers + metrics).sortedByDescending { it.liftRatio }
     }
     val topInteractions = remember(interactions) {
-        interactions.sortedByDescending { it.liftRatio }.take(5)
+        interactions.sortedByDescending { it.liftRatio }
     }
     if (combined.isEmpty() && topInteractions.isEmpty()) return
 
@@ -1015,7 +1293,7 @@ internal fun PatternsPreviewCard(
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             symptomOutcomes.take(2).forEach { stat ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("${stat.factorName} \u2192 ${stat.symptomOutcome ?: ""}", color = Color.White,
+                    Text("${prettyLabel(stat.factorName)} \u2192 ${prettyLabel(stat.symptomOutcome)}", color = Color.White,
                         style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.weight(1f))
                     Text(String.format("%.1f\u00d7", stat.liftRatio),
                         color = if (stat.liftRatio >= 2f) Color(0xFFE57373) else if (stat.liftRatio >= 1.5f) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
@@ -1077,7 +1355,7 @@ internal fun TreatmentPreviewCard(
                 val direction = if (stat.liftRatio > 1.1f) "better" else if (stat.liftRatio < 0.9f) "worse" else "similar"
                 val color = if (stat.liftRatio > 1.1f) Color(0xFF81C784) else if (stat.liftRatio < 0.9f) Color(0xFFE57373) else Color(0xFFCFCFCF)
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("${stat.factorName} + ${stat.symptomSegment ?: ""}",
+                    Text("${prettyLabel(stat.factorName)} + ${prettyLabel(stat.symptomSegment)}",
                         color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1,
                         modifier = Modifier.weight(1f))
                     Text(direction, color = color,
@@ -1437,7 +1715,8 @@ internal fun InteractionInsightsCard(interactions: List<EdgeFunctionsService.Cor
 
         Spacer(Modifier.height(8.dp))
 
-        interactions.take(5).forEach { stat ->
+        // Detail card — show every interaction (was capped at 5).
+        interactions.forEach { stat ->
             CorrelationRow(stat)
         }
     }
@@ -1451,11 +1730,12 @@ internal fun TreatmentEffectivenessCard(
     treatmentInteractions: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     showLegend: Boolean = false,
 ) {
+    // Detail card — show every treatment (was capped at 5).
     val top = remember(treatments) {
-        treatments.sortedByDescending { it.liftRatio }.take(5)
+        treatments.sortedByDescending { it.liftRatio }
     }
     val topInteractions = remember(treatmentInteractions) {
-        treatmentInteractions.sortedByDescending { it.liftRatio }.take(5)
+        treatmentInteractions.sortedByDescending { it.liftRatio }
     }
     BaseCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1597,7 +1877,8 @@ internal fun TreatmentInteractionCard(interactions: List<EdgeFunctionsService.Co
 
         Spacer(Modifier.height(8.dp))
 
-        interactions.take(5).forEach { stat ->
+        // Detail card — show every effective combination (was capped at 5).
+        interactions.forEach { stat ->
             TreatmentRow(stat)
         }
     }
@@ -1762,7 +2043,7 @@ internal fun ImpactCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(item.name, color = Color.White,
+                        Text(prettyLabel(item.name), color = Color.White,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text("missed during ${item.pctOfMigraines.toInt()}% of migraines",
@@ -1787,7 +2068,7 @@ private fun TopSymptomsSection(topSymptoms: List<EdgeFunctionsService.SymptomSta
     topSymptoms.forEach { s ->
         val pct = (s.pctOfAttacks * 100f).toInt()
         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(s.symptomLabel, color = Color.White,
+            Text(prettyLabel(s.symptomLabel), color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             val sev = s.avgSeverity
@@ -1814,37 +2095,14 @@ internal fun PainHeatMap(
 ) {
     val density = LocalDensity.current
     var imageSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
-    // Resolve both direct IDs and legacy label-based entries (matches iOS PainHeatMapView)
+    // The wizard writes canonical PainPoint.id values directly. Removed the
+    // fuzzy alias map that was misplotting markers for non-canonical strings
+    // (seeded data is the only source of those; seeder now writes canonical
+    // IDs too — matches iOS PainHeatMapView).
     val countsMap = remember(painLocationCounts) {
-        val labelToIds = mapOf(
-            "forehead" to listOf("forehead_center", "forehead_left", "forehead_right"),
-            "both temples" to listOf("temple_left", "temple_right"),
-            "behind left eye" to listOf("eye_left"),
-            "behind right eye" to listOf("eye_right"),
-            "behind both eyes" to listOf("eye_left", "eye_right"),
-            "back of head" to listOf("occipital_center"),
-            "base of skull" to listOf("base_skull_center", "base_skull_left", "base_skull_right"),
-            "jaw" to listOf("jaw_left", "jaw_right"),
-            "neck" to listOf("neck_left", "neck_right"),
-            "sinus" to listOf("sinus_left", "sinus_right"),
-            "ear" to listOf("ear_left", "ear_right"),
-            "brow" to listOf("brow_left", "brow_right"),
-            "teeth" to listOf("teeth_left", "teeth_right"),
-            "upper back" to listOf("upper_back_center", "upper_back_left", "upper_back_right"),
-            "shoulder" to listOf("shoulder_left", "shoulder_right"),
-            "top of head" to listOf("vertex"),
-            "top_of_head" to listOf("vertex"),
-            "right_temple" to listOf("temple_right"),
-            "left_temple" to listOf("temple_left"),
-            "behind_right_eye" to listOf("eye_right"),
-            "behind_left_eye" to listOf("eye_left"),
-        )
         val result = mutableMapOf<String, Int>()
         for ((loc, count) in painLocationCounts) {
             result[loc] = count
-            labelToIds[loc.lowercase()]?.forEach { id ->
-                result[id] = maxOf(result[id] ?: 0, count)
-            }
         }
         result.toMap()
     }
@@ -2248,7 +2506,7 @@ private fun TreatmentRow(item: InsightsViewModel.TreatmentItem) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(item.name, color = Color.White,
+            Text(prettyLabel(item.name), color = Color.White,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("${item.count}\u00D7 used", color = AppTheme.SubtleTextColor,
@@ -2370,3 +2628,31 @@ private fun DayOfWeekCard(pattern: List<InsightsViewModel.DayOfWeekStat>) {
 }
 
 
+
+object FullReportInfoCopy {
+    const val text = "The big one. A single scrollable report that pulls every angle we have on your data into one place: frequency over time, top patterns and trigger interactions, which treatments and lifestyle changes are working, the activities and locations that surround your attacks, severity and pain location breakdowns, missed-activity counts, plus the full migraine timeline with spider charts of what was happening around each attack.\n\nThe raw inputs are tweakable. You can edit any logged migraine, change a trigger or prodrome's severity in Manage Items, and filter the whole report by time range or tags. The AI-derived parts (Recommendations and the What Happened pattern findings) aren't directly editable; they recompute live from whatever data you've kept in.\n\nUseful for sharing with your neurologist or just getting a quarterly read of how things are trending. Everything you see in the individual cards below is in here too, but stitched together so patterns across categories become obvious."
+}
+
+object AiRecommendationsInfoCopy {
+    const val text = "A more useful read on top of the patterns we've already found in your data. The AI takes what's showing up (the items that turn up around your attacks, the combinations that look risky together, the treatments that seem to be helping) and adds a personal next step for each one, across six categories.\n\nWhat it looks at per category:\n• Triggers: the ones that keep showing up before attacks, and the pairs that look especially risky together. Gives you a preventive action tied to your pattern.\n• Prodromes: your personal early warning signs, with interventions that may abort or shorten an attack when they appear.\n• Medicines: rebound and overuse flags (triptans, NSAIDs, paracetamol, opioids), alternatives when something isn't relieving well, side-effect mitigation, same-class swaps, doctor-discussion prompts. All tied to your own usage.\n• Reliefs: same angles for non-drug methods (alternatives, technique tweaks, timing).\n• Activities: links your timing (exercise, sleep, stress) to context like cortisol and dehydration.\n• Symptoms: the ones running high or severe in your attacks, with targeted prep (anti-emetic on hand, dim-room kit, postdrome plan).\n\nEach recommendation comes with a short evidence line so you can see why it's being suggested. Dismiss anything that doesn't match your reality and it won't come back. These are starting points to discuss with your neurologist, not diagnoses."
+}
+
+object AccuracyInfoCopy {
+    const val text = "A reality check on your risk gauge. We look back at every day you've used the app and ask two questions: when the gauge said HIGH or MILD, did an attack actually happen? And when an attack happened, was the gauge warning the day before?\n\nThat gives you two numbers:\n• Hit rate: of all your attack days, what share the gauge correctly flagged as high-risk beforehand.\n• False alarm rate: of all your non-attack days, what share the gauge flagged anyway.\n\nTap in for the full breakdown (true positives, missed attacks, etc.) and to review any pending recalibration proposals. To tune the LOW / MILD / HIGH thresholds and the day-by-day decay curve yourself, open the menu and tap Risk Model. Lowering the HIGH threshold catches more attacks (higher hit rate) but also more false alarms; raising it does the opposite.\n\nThe monthly recalibration uses these same numbers to nudge your thresholds in the right direction: too many false alarms means thresholds get raised; missed attacks means they get lowered. Changes are incremental (around 20-30% per pass) so the gauge gradually homes in on what works for you.\n\nNeeds at least 7 days of logged data to start showing."
+}
+
+object WhatHappenedInfoCopy {
+    const val text = "The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most often around your attacks. The ones at the top are those whose appearance makes an attack noticeably more likely in the day or two that follows.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up. Useful for knowing what to expect from a given attack.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list with how strong each finding is.\n\nFindings sharpen up as you log more data; sparse logging means weaker findings, consistent logging means the patterns get cleaner."
+}
+
+object WhatWorkedInfoCopy {
+    const val text = "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this."
+}
+
+object ContextInfoCopy {
+    const val text = "A simple picture of the activities and locations you've tagged on your migraine logs. For each one we show how often it showed up alongside an attack (count and percentage of your attacks) and the average severity of those attacks compared to your overall average. Higher than usual gets flagged red; lower gets flagged green.\n\nThe preview shows the top 2 by frequency. Tap in for the full list.\n\nImportant: this only counts activities and locations you've actually linked to a specific migraine (via the Activities and Locations steps in the full wizard, or in the Daily Check-In). It's not a correlation analysis like What Happened; it's a straight tally of what was around when you logged each attack. If you don't tag activities or locations, nothing shows up here."
+}
+
+object ImpactInfoCopy {
+    const val text = "The downstream story: not what caused your attacks, but what they looked like and what you missed because of them.\n• Severity distribution: how your attacks break down across the 1-10 scale. Useful for spotting whether you mostly get moderate ones or whether you're getting a creeping number of severe ones.\n• Pain locations: which sides and zones of your head get hit most. Pulled from the Pain step in the wizard.\n• Top symptoms: which symptoms show up most often, with the average severity and duration of the attacks they appear in. Comes from your linked symptom logs.\n• Missed activities: the things you've explicitly tagged as missed because of an attack, ranked by how often they came up.\n\nTap in for the full breakdown.\n\nLike the other cards, this only counts data you've logged. If you don't rate severity, pick pain locations, or tag missed activities in your wizard, those sections stay empty."
+}

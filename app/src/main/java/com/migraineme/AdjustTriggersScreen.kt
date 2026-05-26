@@ -45,28 +45,6 @@ fun AdjustTriggersScreen(
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Back arrow card
-            item {
-                Card(
-                    onClick = { navController.popBackStack() },
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("Back")
-                    }
-                }
-            }
-
             // New trigger input
             item {
                 Column {

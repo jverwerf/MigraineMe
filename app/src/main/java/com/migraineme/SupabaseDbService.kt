@@ -14,6 +14,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.time.Duration
 import java.time.Instant
 
 class SupabaseDbService(
@@ -83,6 +84,7 @@ class SupabaseDbService(
         val medicines: List<MedicineRow> = emptyList(),
         val reliefs: List<ReliefRow> = emptyList(),
         val prodromes: List<ProdromeLogRow> = emptyList(),
+        val postdromes: List<SymptomLogRow> = emptyList(),
         val activities: List<ActivityLogRow> = emptyList(),
         val locations: List<LocationLogRow> = emptyList()
     )
@@ -142,11 +144,21 @@ class SupabaseDbService(
             }
             return if (r.status.isSuccess()) r.body() else emptyList()
         }
+        suspend fun fetchPostdromes(): List<SymptomLogRow> {
+            val r = client.get("$supabaseUrl/rest/v1/symptoms") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "created_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
         return MigraineLinkedItems(
             triggers = fetchTriggers("triggers"),
             medicines = fetchMedicines("medicines"),
             reliefs = fetchReliefs("reliefs"),
             prodromes = fetchProdromes("prodromes"),
+            postdromes = fetchPostdromes(),
             activities = fetchActivities("time_in_high_hr_zones_daily"),
             locations = fetchLocations("locations")
         )
@@ -513,7 +525,372 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete medicine failed: ${response.bodyAsText()}")
     }
 
-    //  RELIEFS 
+    //  TREATMENT REGIMENS
+    @Serializable
+    data class TreatmentRegimenRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        val kind: String,
+        val name: String,
+        val amount: String? = null,
+        val frequency: String? = null,
+        @SerialName("start_date") val startDate: String,
+        @SerialName("stop_date") val stopDate: String? = null,
+        val notes: String? = null,
+        @SerialName("group_id") val groupId: String? = null
+    )
+    @Serializable
+    data class TreatmentRegimenInsert(
+        val kind: String,
+        val name: String,
+        val amount: String? = null,
+        val frequency: String? = null,
+        @SerialName("start_date") val startDate: String,
+        @SerialName("stop_date") val stopDate: String? = null,
+        val notes: String? = null,
+        @SerialName("group_id") val groupId: String? = null
+    )
+    suspend fun insertTreatmentRegimen(
+        accessToken: String,
+        kind: String,
+        name: String,
+        amount: String?,
+        frequency: String?,
+        startDate: String,
+        stopDate: String? = null,
+        notes: String? = null,
+        groupId: String? = null
+    ): TreatmentRegimenRow {
+        val payload = TreatmentRegimenInsert(kind, name, amount, frequency, startDate, stopDate, notes, groupId)
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/treatment_regimens") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            header("Prefer", "return=representation")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Insert treatment regimen failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun getTreatmentRegimens(accessToken: String): List<TreatmentRegimenRow> {
+        val response: HttpResponse = client.get("$supabaseUrl/rest/v1/treatment_regimens") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("select", "*")
+            parameter("order", "start_date.desc")
+        }
+        if (!response.status.isSuccess()) error("Fetch treatment regimens failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    suspend fun updateTreatmentRegimen(
+        accessToken: String,
+        id: String,
+        amount: String? = null,
+        frequency: String? = null,
+        stopDate: String? = null,
+        clearStopDate: Boolean = false,
+        notes: String? = null,
+        groupId: String? = null,
+        clearGroupId: Boolean = false
+    ): TreatmentRegimenRow {
+        val payload = buildJsonObject {
+            if (amount != null) put("amount", amount)
+            if (frequency != null) put("frequency", frequency)
+            if (clearStopDate) put("stop_date", kotlinx.serialization.json.JsonNull)
+            else stopDate?.let { put("stop_date", it) }
+            notes?.let { put("notes", it) }
+            if (clearGroupId) put("group_id", kotlinx.serialization.json.JsonNull)
+            else groupId?.let { put("group_id", it) }
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/treatment_regimens") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            header("Prefer", "return=representation")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Update treatment regimen failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+    /** Sets only `group_id` (or null to unlink) without touching any other field. */
+    suspend fun setTreatmentRegimenGroupId(accessToken: String, id: String, groupId: String?) {
+        val payload = buildJsonObject {
+            if (groupId == null) put("group_id", kotlinx.serialization.json.JsonNull)
+            else put("group_id", groupId)
+        }
+        val response = client.patch("$supabaseUrl/rest/v1/treatment_regimens") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Set group_id failed: ${response.bodyAsText()}")
+    }
+
+    suspend fun deleteTreatmentRegimen(accessToken: String, id: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/treatment_regimens") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+        if (!response.status.isSuccess()) error("Delete treatment regimen failed: ${response.bodyAsText()}")
+    }
+
+    //  TREATMENT SIDE EFFECT LOGS
+    @Serializable
+    data class TreatmentSideEffectLogRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        @SerialName("log_date") val logDate: String,
+        @SerialName("selected_symptoms") val selectedSymptoms: List<String> = emptyList(),
+        val notes: String? = null,
+        val source: String? = "check_in"
+    )
+    @Serializable
+    data class TreatmentSideEffectLogInsert(
+        @SerialName("log_date") val logDate: String,
+        @SerialName("selected_symptoms") val selectedSymptoms: List<String>,
+        val notes: String? = null,
+        val source: String = "check_in",
+        @SerialName("regimen_id") val regimenId: String? = null,
+    )
+    suspend fun insertTreatmentSideEffectLog(
+        accessToken: String,
+        logDate: String,
+        selectedSymptoms: List<String>,
+        notes: String?,
+        regimenId: String? = null,
+        source: String = "check_in"
+    ): TreatmentSideEffectLogRow {
+        val payload = TreatmentSideEffectLogInsert(logDate, selectedSymptoms, notes, source, regimenId)
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/treatment_side_effect_logs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            header("Prefer", "return=representation")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Insert side-effect log failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+
+    /** Most-recent migraine without an ended_at, or null if none open. */
+    suspend fun getOpenMigraine(accessToken: String): MigraineRow? {
+        val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "*")
+            parameter("ended_at", "is.null")
+            parameter("order", "start_at.desc")
+            parameter("limit", "1")
+        }
+        if (!response.status.isSuccess()) return null
+        val rows: List<MigraineRow> = response.body()
+        return rows.firstOrNull()
+    }
+
+    @Serializable
+    data class SymptomLogRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val type: String? = null,
+        @SerialName("created_at") val createdAt: String? = null,
+    )
+
+    /** Fetch per-migraine symptom log rows (postdromes + wizard-side inserts). Mirrors iOS getSymptoms. */
+    suspend fun getSymptoms(accessToken: String, days: Int = 365): List<SymptomLogRow> {
+        val response: HttpResponse = client.get("$supabaseUrl/rest/v1/symptoms") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,user_id,migraine_id,type,created_at")
+            parameter("created_at", "gte.${Instant.now().minus(Duration.ofDays(days.toLong()))}")
+            parameter("order", "created_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    /** Insert a postdrome symptom row linked to a specific migraine. */
+    suspend fun insertMigraineSymptom(accessToken: String, migraineId: String, type: String) {
+        val payload = buildJsonObject {
+            put("migraine_id", migraineId)
+            put("type", type)
+        }
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/symptoms") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            header("Prefer", "return=minimal")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Insert symptom failed: ${response.bodyAsText()}")
+    }
+
+    suspend fun getTreatmentSideEffectLogs(
+        accessToken: String, fromDate: String, toDate: String
+    ): List<TreatmentSideEffectLogRow> {
+        val response: HttpResponse = client.get("$supabaseUrl/rest/v1/treatment_side_effect_logs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "*")
+            parameter("log_date", "gte.$fromDate")
+            parameter("log_date", "lte.$toDate")
+            parameter("order", "log_date.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch side-effect logs failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+
+    //  TREATMENT EFFICACY (RPC calls)
+    @Serializable
+    data class TreatmentEfficacyRow(
+        @SerialName("baseline_mmd") val baselineMmd: Double? = null,
+        @SerialName("rolling_mmd") val rollingMmd: Double? = null,
+        @SerialName("trailing_4w_mmd") val trailing4wMmd: Double? = null,
+        @SerialName("baseline_severity") val baselineSeverity: Double? = null,
+        @SerialName("rolling_severity") val rollingSeverity: Double? = null,
+        @SerialName("baseline_duration_h") val baselineDurationH: Double? = null,
+        @SerialName("rolling_duration_h") val rollingDurationH: Double? = null,
+        @SerialName("pct_change_mmd") val pctChangeMmd: Double? = null,
+        @SerialName("weeks_active") val weeksActive: Int = 0,
+        @SerialName("weeks_post_ramp") val weeksPostRamp: Int? = null,
+        @SerialName("ramp_weeks") val rampWeeks: Int? = null,
+        @SerialName("n_attacks_rolling") val nAttacksRolling: Int = 0,
+        val band: String = "not_enough_data",
+        @SerialName("ramp_complete") val rampComplete: Boolean = false
+    )
+    @Serializable
+    data class TreatmentConfounderRow(
+        val metric: String,
+        @SerialName("baseline_value") val baselineValue: Double? = null,
+        @SerialName("rolling_value") val rollingValue: Double? = null,
+        @SerialName("pct_change") val pctChange: Double? = null,
+        val direction: String
+    )
+    @Serializable
+    data class TreatmentTriggerShiftRow(
+        @SerialName("trigger_type") val triggerType: String,
+        @SerialName("baseline_rank") val baselineRank: Int? = null,
+        @SerialName("rolling_rank") val rollingRank: Int? = null,
+        @SerialName("rank_change") val rankChange: Int? = null
+    )
+    @Serializable
+    data class TreatmentLeaderboardRow(
+        @SerialName("regimen_id") val regimenId: String,
+        val name: String,
+        val kind: String,
+        val amount: String? = null,
+        val frequency: String? = null,
+        @SerialName("start_date") val startDate: String,
+        @SerialName("stop_date") val stopDate: String? = null,
+        @SerialName("group_id") val groupId: String? = null,
+        @SerialName("pct_change_mmd") val pctChangeMmd: Double? = null,
+        val band: String
+    )
+
+    @Serializable
+    data class TreatmentGroupEfficacyRow(
+        @SerialName("group_id") val groupId: String,
+        @SerialName("member_count") val memberCount: Int,
+        @SerialName("member_names") val memberNames: List<String> = emptyList(),
+        @SerialName("earliest_start") val earliestStart: String,
+        @SerialName("latest_stop") val latestStop: String? = null,
+        @SerialName("any_active") val anyActive: Boolean,
+        val kind: String,
+        @SerialName("baseline_mmd") val baselineMmd: Double? = null,
+        @SerialName("rolling_mmd") val rollingMmd: Double? = null,
+        @SerialName("trailing_4w_mmd") val trailing4wMmd: Double? = null,
+        @SerialName("pct_change_mmd") val pctChangeMmd: Double? = null,
+        @SerialName("weeks_active") val weeksActive: Int = 0,
+        @SerialName("weeks_post_ramp") val weeksPostRamp: Int? = null,
+        @SerialName("ramp_weeks") val rampWeeks: Int? = null,
+        @SerialName("n_attacks_rolling") val nAttacksRolling: Int = 0,
+        val band: String,
+        @SerialName("ramp_complete") val rampComplete: Boolean = false
+    )
+
+    @Serializable
+    private data class RegimenParam(val p_regimen: String)
+
+    @Serializable
+    private data class GroupParam(val p_group: String)
+
+    suspend fun getTreatmentGroupEfficacy(accessToken: String, groupId: String): TreatmentGroupEfficacyRow? {
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/rpc/compute_group_efficacy") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json); setBody(GroupParam(groupId))
+        }
+        if (!response.status.isSuccess()) return null
+        val rows: List<TreatmentGroupEfficacyRow> = response.body()
+        return rows.firstOrNull()
+    }
+
+    suspend fun getTreatmentEfficacy(accessToken: String, regimenId: String): TreatmentEfficacyRow? {
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/rpc/compute_treatment_efficacy") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json); setBody(RegimenParam(regimenId))
+        }
+        if (!response.status.isSuccess()) return null
+        val rows: List<TreatmentEfficacyRow> = response.body()
+        return rows.firstOrNull()
+    }
+
+    suspend fun getTreatmentConfounders(accessToken: String, regimenId: String): List<TreatmentConfounderRow> {
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/rpc/compute_treatment_confounders") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json); setBody(RegimenParam(regimenId))
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    suspend fun getTreatmentTriggerShift(accessToken: String, regimenId: String): List<TreatmentTriggerShiftRow> {
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/rpc/compute_treatment_trigger_shift") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json); setBody(RegimenParam(regimenId))
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    suspend fun getTreatmentLeaderboard(accessToken: String): List<TreatmentLeaderboardRow> {
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/rpc/compute_treatment_leaderboard") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json); setBody("{}")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    @Serializable
+    data class TreatmentMmdSeriesPoint(
+        @SerialName("week_start") val weekStart: String,
+        @SerialName("weeks_from_start") val weeksFromStart: Int,
+        val attacks: Int,
+        val mmd: Int
+    )
+
+    suspend fun getTreatmentMmdSeries(accessToken: String, regimenId: String): List<TreatmentMmdSeriesPoint> {
+        val response: HttpResponse = client.post("$supabaseUrl/rest/v1/rpc/compute_treatment_mmd_series") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json); setBody(RegimenParam(regimenId))
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    //  TREATMENT NARRATIVE EDGE FUNCTION
+    @Serializable
+    data class TreatmentNarrativeRequest(val regimen_id: String, val force: Boolean = false)
+    @Serializable
+    data class TreatmentNarrativeResponse(val narrative: String? = null, val cached: Boolean? = null)
+
+    suspend fun getTreatmentNarrative(accessToken: String, regimenId: String, force: Boolean = false): TreatmentNarrativeResponse? {
+        val response: HttpResponse = client.post("$supabaseUrl/functions/v1/generate-treatment-narrative") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json)
+            setBody(TreatmentNarrativeRequest(regimenId, force))
+        }
+        if (!response.status.isSuccess()) return null
+        return response.body()
+    }
+
+    //  RELIEFS
     @Serializable
     data class ReliefRow(
         val id: String,
@@ -2009,7 +2386,7 @@ class SupabaseDbService(
         /** Derive graph category from chip key prefix. */
         fun chipCategory(chipKey: String): String = when (chipKey.substringBefore(':')) {
             "sleep" -> "Sleep"; "weather" -> "Weather"; "physical" -> "Physical"
-            "mental" -> "Mental"; "nutrition" -> "Nutrition"; else -> "Other"
+            "mental" -> "Cognitive"; "nutrition" -> "Diet"; else -> "Other"
         }
 
         // (metric_table|metric_column) → chip key
@@ -2096,6 +2473,102 @@ class SupabaseDbService(
             "nutrition_daily|max_gluten_exposure" to "nutrition:gluten_exposure",
             "nutrition_daily|max_histamine_exposure" to "nutrition:histamine_exposure",
         )
+    }
+
+    //  TREATMENT SIDE EFFECTS POOL / PREFS
+
+    @Serializable
+    data class UserTreatmentSideEffectRow(
+        val id: String,
+        val label: String,
+        val category: String? = null,
+        @SerialName("icon_key") val iconKey: String? = null,
+    )
+
+    @Serializable
+    data class TreatmentSideEffectPrefRow(
+        val id: String,
+        @SerialName("user_id") val userId: String,
+        @SerialName("side_effect_id") val sideEffectId: String,
+        val position: Int,
+        val status: String,
+        @SerialName("user_treatment_side_effects") val sideEffect: UserTreatmentSideEffectRow? = null,
+    )
+
+    @Serializable
+    private data class UserTreatmentSideEffectInsert(
+        val label: String,
+        val category: String? = null,
+        @SerialName("icon_key") val iconKey: String? = null,
+    )
+
+    suspend fun getUserTreatmentSideEffects(accessToken: String): List<UserTreatmentSideEffectRow> {
+        val response = client.get("$supabaseUrl/rest/v1/user_treatment_side_effects") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,label,category,icon_key"); parameter("order", "label.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch user_treatment_side_effects failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+
+    suspend fun insertTreatmentSideEffectToPool(accessToken: String, label: String, category: String? = null, iconKey: String? = null): UserTreatmentSideEffectRow {
+        val response = client.post("$supabaseUrl/rest/v1/user_treatment_side_effects") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            header("Prefer", "return=representation"); header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+            contentType(ContentType.Application.Json)
+            setBody(UserTreatmentSideEffectInsert(label, category, iconKey))
+        }
+        if (!response.status.isSuccess()) error("Insert user_treatment_side_effects failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+
+    suspend fun deleteTreatmentSideEffectFromPool(accessToken: String, id: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/user_treatment_side_effects") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+        }
+        if (!response.status.isSuccess()) error("Delete user_treatment_side_effects failed: ${response.bodyAsText()}")
+    }
+
+    suspend fun getTreatmentSideEffectPrefs(accessToken: String): List<TreatmentSideEffectPrefRow> {
+        val response = client.get("$supabaseUrl/rest/v1/treatment_side_effect_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id,user_id,side_effect_id,position,status,user_treatment_side_effects(id,label,category,icon_key)")
+            parameter("order", "position.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch treatment_side_effect_preferences failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+
+    @Serializable
+    private data class TreatmentSideEffectPrefInsert(
+        @SerialName("side_effect_id") val sideEffectId: String,
+        val position: Int,
+        val status: String,
+    )
+
+    suspend fun insertTreatmentSideEffectPref(accessToken: String, sideEffectId: String, position: Int, status: String = "frequent") {
+        // Delete-then-insert mirrors the trigger pattern so re-fav'ing reorders cleanly.
+        runCatching {
+            client.delete("$supabaseUrl/rest/v1/treatment_side_effect_preferences") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+                parameter("side_effect_id", "eq.$sideEffectId")
+            }
+        }
+        val response = client.post("$supabaseUrl/rest/v1/treatment_side_effect_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json)
+            setBody(TreatmentSideEffectPrefInsert(sideEffectId, position, status))
+        }
+        if (!response.status.isSuccess()) error("Insert treatment_side_effect_preferences failed: ${response.bodyAsText()}")
+    }
+
+    suspend fun deleteTreatmentSideEffectPref(accessToken: String, sideEffectId: String) {
+        val response = client.delete("$supabaseUrl/rest/v1/treatment_side_effect_preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("side_effect_id", "eq.$sideEffectId")
+        }
+        if (!response.status.isSuccess()) error("Delete treatment_side_effect_preferences failed: ${response.bodyAsText()}")
     }
 }
 

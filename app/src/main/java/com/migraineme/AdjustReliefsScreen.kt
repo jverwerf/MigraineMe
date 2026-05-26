@@ -52,22 +52,6 @@ fun AdjustReliefsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                ElevatedCard(
-                    onClick = { navController.popBackStack() },
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        Spacer(Modifier.width(8.dp))
-                        Text("Back")
-                    }
-                }
-            }
-
-            item {
                 Column {
                     OutlinedTextField(
                         value = newLabel,

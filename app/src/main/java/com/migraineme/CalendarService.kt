@@ -78,7 +78,11 @@ object CalendarService {
         @SerialName("auto_inserted") val autoInserted: Boolean? = null,
         @SerialName("inserted_log_id") val insertedLogId: String? = null,
         val action: String? = null,
-    )
+    ) {
+        /// Composite identity — one calendar event can map to multiple
+        /// categories (activity + trigger), so eventId alone isn't unique.
+        val compositeKey: String get() = "$eventId|${targetType.orEmpty()}"
+    }
 
     @Serializable
     private data class SyncRequest(val events: List<CalendarEvent>)
@@ -221,7 +225,7 @@ object CalendarService {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return false
         return insertLog(context, token, mapping, targetType, targetLabel)
             && patchMapping(
-                context, token, mapping.eventId,
+                context, token, mapping.eventId, mapping.targetType,
                 buildJsonObject {
                     put("target_type", targetType)
                     put("target_id", targetId)
@@ -265,7 +269,7 @@ object CalendarService {
         }
         return insertLog(context, token, mapping, targetType, newLabel)
             && patchMapping(
-                context, token, mapping.eventId,
+                context, token, mapping.eventId, mapping.targetType,
                 buildJsonObject {
                     put("target_type", targetType)
                     put("target_label", newLabel)
@@ -275,10 +279,10 @@ object CalendarService {
             )
     }
 
-    /** Opt-out: undo the auto-save. Deletes the inserted log row (if any) and
-     *  caches the decision so the same title and the same event don't get
-     *  re-saved on the next sync. */
-    suspend fun skip(context: Context, mapping: Mapping): Boolean {
+    /** One-shot undo: delete the log row and reset auto_inserted on the
+     *  mapping, but keep the title cache untouched. Future events with the
+     *  same title may still be suggested by GPT on the next sync. */
+    suspend fun undoOnce(context: Context, mapping: Mapping): Boolean {
         val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return false
         mapping.insertedLogId?.let { id ->
             val table = when (mapping.targetType) {
@@ -292,7 +296,36 @@ object CalendarService {
             }
         }
         val ok = patchMapping(
-            context, token, mapping.eventId,
+            context, token, mapping.eventId, mapping.targetType,
+            buildJsonObject {
+                put("auto_inserted", false)
+                put("inserted_log_id", JsonNull)
+            }
+        )
+        if (ok) {
+            runCatching { EdgeFunctionsService().triggerRecalcRiskScores(context) }
+        }
+        return ok
+    }
+
+    /** Permanent skip: delete the log row AND cache decision=user_skipped so
+     *  the same title (and re-syncs of the same event) never resurface.
+     *  Visible/editable in ManageCalendarSkipsScreen. */
+    suspend fun neverSuggestAgain(context: Context, mapping: Mapping): Boolean {
+        val token = SessionStore.getValidAccessToken(context.applicationContext) ?: return false
+        mapping.insertedLogId?.let { id ->
+            val table = when (mapping.targetType) {
+                "activity" -> "activities"
+                "relief" -> "reliefs"
+                "trigger" -> "triggers"
+                else -> null
+            }
+            if (table != null) {
+                runCatching { deleteLogRow(context, token, table, id) }
+            }
+        }
+        val ok = patchMapping(
+            context, token, mapping.eventId, mapping.targetType,
             buildJsonObject {
                 put("decision", "user_skipped")
                 put("target_type", "skip")
@@ -301,14 +334,15 @@ object CalendarService {
             }
         )
         if (ok) {
-            // Removing a logged item changes risk inputs — kick a recompute.
-            val userId = SessionStore.readUserId(context.applicationContext)
-            if (userId != null) {
-                runCatching { EdgeFunctionsService().triggerRiskCalculation(context, userId) }
-            }
+            runCatching { EdgeFunctionsService().triggerRecalcRiskScores(context) }
         }
         return ok
     }
+
+    /** Back-compat shim — keep `skip` as an alias for the permanent variant
+     *  so EveningCheckInScreen.kt (and other call sites) keep compiling. */
+    suspend fun skip(context: Context, mapping: Mapping): Boolean =
+        neverSuggestAgain(context, mapping)
 
     private suspend fun deleteLogRow(context: Context, token: String, table: String, id: String) {
         val client = buildClient()
@@ -410,13 +444,14 @@ object CalendarService {
     }
 
     private suspend fun patchMapping(
-        context: Context, token: String, eventId: String, fields: JsonElement
+        context: Context, token: String, eventId: String, targetType: String?, fields: JsonElement
     ): Boolean {
         val client = buildClient()
         return try {
             val userId = SessionStore.readUserId(context.applicationContext) ?: return false
+            val typeFilter = if (!targetType.isNullOrEmpty()) "&target_type=eq.$targetType" else ""
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/calendar_event_mappings" +
-                "?event_id=eq.$eventId&user_id=eq.$userId"
+                "?event_id=eq.$eventId&user_id=eq.$userId$typeFilter"
             val res = client.patch(url) {
                 header("apikey", BuildConfig.SUPABASE_ANON_KEY)
                 header(HttpHeaders.Authorization, "Bearer $token")

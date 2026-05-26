@@ -177,17 +177,6 @@ fun JournalEditScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit $typeTitle", color = Color.White) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = AppTheme.BaseCardContainer),
-            )
-        },
         containerColor = AppTheme.FadeColor,
     ) { padding ->
 

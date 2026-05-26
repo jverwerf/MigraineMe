@@ -102,7 +102,7 @@ private fun QMultiChips(options: List<String>, selected: Set<String>, onToggle: 
     }
 }
 
-private enum class PoolType { SYMPTOM, MEDICINE, RELIEF, ACTIVITY, MISSED_ACTIVITY, TRIGGER, PRODROME }
+private enum class PoolType { SYMPTOM, MEDICINE, RELIEF, ACTIVITY, MISSED_ACTIVITY, TRIGGER, PRODROME, LOCATION, POSTDROME, PAIN_CHAR, ACCOMPANYING }
 
 @Composable
 private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, accentColor: Color = AppTheme.AccentPink, poolType: PoolType = PoolType.SYMPTOM) {
@@ -128,6 +128,10 @@ private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Se
                             PoolType.MISSED_ACTIVITY -> MissedActivityIcons.forLabel(item.label, item.iconKey)
                             PoolType.TRIGGER -> TriggerIcons.forKey(item.iconKey) ?: TriggerIcons.forKey(item.label.lowercase())
                             PoolType.PRODROME -> ProdromeIcons.forKey(item.iconKey) ?: ProdromeIcons.forKey(item.label.lowercase())
+                            PoolType.LOCATION -> LocationIcons.forLabel(item.label, item.iconKey)
+                            PoolType.POSTDROME -> SymptomIcons.forLabel(item.label, item.iconKey)
+                            PoolType.PAIN_CHAR -> SymptomIcons.forLabel(item.label, item.iconKey)
+                            PoolType.ACCOMPANYING -> SymptomIcons.forLabel(item.label, item.iconKey)
                         }
 
                         Column(
@@ -246,7 +250,7 @@ fun AiQuestionsPage1(
     seasonalPattern: String?, onSeasonalPattern: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Psychology, "About You & Your Migraines", "Help us personalise your experience", 1, 8)
+        QPageHeader(Icons.Outlined.Psychology, "About You & Your Migraines", "Help us personalise your experience", 1, 17)
         QCard("What is your gender?", Icons.Outlined.Person, "Used to personalise thresholds (e.g. nutrition, body composition)") { QSingleChips(listOf("Female", "Male", "Prefer not to say"), gender, onGender) }
         QCard("What is your age range?", Icons.Outlined.Cake) { QSingleChips(listOf("18-25", "26-35", "36-45", "46-55", "56+"), ageRange, onAgeRange) }
         QCard("How often do you get migraines?", Icons.Outlined.CalendarMonth) {
@@ -291,7 +295,7 @@ fun AiQuestionsPage2(
     sleepIssues: Set<String>, onToggleSleepIssue: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Bedtime, "Sleep", "Sleep is one of the most common migraine triggers", 2, 8)
+        QPageHeader(Icons.Outlined.Bedtime, "Sleep", "Sleep is one of the most common migraine triggers", 2, 17)
         QCard("How many hours do you usually sleep?", Icons.Outlined.Schedule) { QSingleChips(listOf("< 5h", "5-6h", "6-7h", "7-8h", "8-9h", "9+h"), sleepHours, onSleepHours) }
         QCard("How would you rate your sleep quality?", Icons.Outlined.NightsStay) { QSingleChips(listOf("Good", "OK", "Poor", "Varies a lot"), sleepQuality, onSleepQuality) }
         QCard("Does POOR QUALITY sleep trigger a migraine?", Icons.Outlined.Bolt, "Restless, waking up, light sleep") { SingleCertaintySelect(poorQualityTriggers, onPoorQualityTriggers) }
@@ -319,7 +323,7 @@ fun AiQuestionsPage3(
     lateScreenTriggers: DeterministicMapper.Certainty?, onLateScreenTriggers: (DeterministicMapper.Certainty) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Psychology, "Stress & Screen", "Emotional and cognitive triggers", 3, 8)
+        QPageHeader(Icons.Outlined.Psychology, "Stress & Screen", "Emotional and cognitive triggers", 3, 17)
         QCard("How would you describe your general stress level?", Icons.Outlined.Whatshot) { QSingleChips(listOf("Low", "Moderate", "High", "Very high"), stressLevel, onStressLevel) }
         QCard("Does a CHANGE in your stress level trigger migraines?", Icons.Outlined.Bolt) { SingleCertaintySelect(stressChangeTriggers, onStressChangeTriggers) }
         AnimatedVisibility(visible = stressChangeTriggers != null && stressChangeTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
@@ -349,6 +353,7 @@ fun AiQuestionsPage4(
     alcoholTriggers: DeterministicMapper.Certainty?, onAlcoholTriggers: (DeterministicMapper.Certainty) -> Unit,
     specificDrinks: Set<String>, onToggleDrink: (String) -> Unit,
     tyramineFoods: Map<String, DeterministicMapper.Certainty>, onTyramineFoods: (Map<String, DeterministicMapper.Certainty>) -> Unit,
+    histamineFoods: Map<String, DeterministicMapper.Certainty>, onHistamineFoods: (Map<String, DeterministicMapper.Certainty>) -> Unit,
     glutenSensitivity: String?, onGlutenSensitivity: (String) -> Unit,
     glutenTriggers: DeterministicMapper.Certainty?, onGlutenTriggers: (DeterministicMapper.Certainty) -> Unit,
     eatingPatterns: Map<String, DeterministicMapper.Certainty>, onEatingPatterns: (Map<String, DeterministicMapper.Certainty>) -> Unit,
@@ -356,7 +361,7 @@ fun AiQuestionsPage4(
     tracksNutrition: String?, onTracksNutrition: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Restaurant, "Diet & Substances", "Food, drink, and nutrition triggers", 4, 8)
+        QPageHeader(Icons.Outlined.Restaurant, "Diet & Substances", "Food, drink, and nutrition triggers", 4, 17)
         QCard("How much caffeine do you have daily?", Icons.Outlined.LocalCafe) { QSingleChips(listOf("None", "1-2 cups", "3-4 cups", "5+ cups"), caffeineIntake, onCaffeineIntake) }
         QCard("Does caffeine affect your migraines?", Icons.Outlined.Bolt) { QSingleChips(listOf("Too much triggers it", "Missing caffeine triggers it", "Both ways", "Not sure", "No"), caffeineDirection, onCaffeineDirection) }
         AnimatedVisibility(visible = caffeineDirection != null && caffeineDirection != "No", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
@@ -373,6 +378,9 @@ fun AiQuestionsPage4(
         }
         QCard("Do any of these foods trigger migraines?", Icons.Outlined.Fastfood, "Select all, set certainty") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Aged cheese", "Aged cheese", "Parmesan, brie, blue cheese"), CertaintyItem("Chocolate", "Chocolate"), CertaintyItem("Cured meats", "Cured or processed meats", "Salami, bacon, hot dogs"), CertaintyItem("Fermented foods", "Fermented foods", "Soy sauce, kimchi, miso")), selections = tyramineFoods, onSelectionChanged = onTyramineFoods)
+        }
+        QCard("Any high-histamine foods trigger migraines?", Icons.Outlined.Science, "Select all, set certainty") {
+            CertaintyMultiSelect(items = listOf(CertaintyItem("Aged or smoked fish", "Aged or smoked fish", "Tuna, mackerel, sardines, anchovies"), CertaintyItem("Avocado", "Avocado"), CertaintyItem("Spinach", "Spinach or aubergine"), CertaintyItem("Tomatoes", "Tomatoes (esp. tinned/cooked)"), CertaintyItem("Strawberries", "Strawberries or citrus"), CertaintyItem("Vinegar", "Vinegar or pickled foods")), selections = histamineFoods, onSelectionChanged = onHistamineFoods)
         }
         QCard("Are you sensitive to gluten?", Icons.Outlined.SetMeal) { QSingleChips(listOf("Yes, diagnosed", "I suspect so", "No", "Not sure"), glutenSensitivity, onGlutenSensitivity) }
         AnimatedVisibility(visible = glutenSensitivity == "Yes, diagnosed" || glutenSensitivity == "I suspect so", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
@@ -399,7 +407,7 @@ fun AiQuestionsPage5(
     physicalFactors: Map<String, DeterministicMapper.Certainty>, onPhysicalFactors: (Map<String, DeterministicMapper.Certainty>) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Cloud, "Weather, Environment & Physical", "External and physical triggers", 5, 8)
+        QPageHeader(Icons.Outlined.Cloud, "Weather, Environment & Physical", "External and physical triggers", 5, 17)
         QCard("Does weather affect your migraines?", Icons.Outlined.Thunderstorm) { SingleCertaintySelect(weatherTriggers, onWeatherTriggers) }
         AnimatedVisibility(visible = weatherTriggers != null && weatherTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             QCard("Which weather changes?", Icons.Outlined.Air, "Select all, set certainty") {
@@ -434,7 +442,7 @@ fun AiQuestionsPage6(
     contraceptionEffect: String?, onContraceptionEffect: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.FitnessCenter, "Exercise & Hormones", "Physical activity and hormonal triggers", 6, 8)
+        QPageHeader(Icons.Outlined.FitnessCenter, "Exercise & Hormones", "Physical activity and hormonal triggers", 6, 17)
         QCard("How often do you exercise?", Icons.Outlined.DirectionsRun) { QSingleChips(listOf("Daily", "Few times/week", "Weekly", "Rarely", "Never"), exerciseFrequency, onExerciseFrequency) }
         QCard("Does exercise trigger migraines?", Icons.Outlined.Bolt) { SingleCertaintySelect(exerciseTriggers, onExerciseTriggers) }
         AnimatedVisibility(visible = exerciseTriggers != null && exerciseTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
@@ -495,7 +503,7 @@ fun AiQuestionsPage7(
     sensoryProdromes: Map<String, DeterministicMapper.Certainty>, onSensoryProdromes: (Map<String, DeterministicMapper.Certainty>) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Sensors, "Warning Signs", "Subtle changes before a migraine can help predict attacks", 7, 8)
+        QPageHeader(Icons.Outlined.Sensors, "Warning Signs", "Subtle changes before a migraine can help predict attacks", 7, 17)
         QCard("Before a migraine, do you notice physical changes?", Icons.Outlined.AccessibilityNew, "Select all, set certainty") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Neck stiffness", "Neck stiffness or tension"), CertaintyItem("Yawning", "Excessive yawning"), CertaintyItem("Urination", "Frequent need to urinate"), CertaintyItem("Stuffy nose", "Stuffy or runny nose"), CertaintyItem("Watery eyes", "Watery eyes"), CertaintyItem("Muscle tension", "General muscle tension (shoulders, jaw)")), selections = physicalProdromes, onSelectionChanged = onPhysicalProdromes)
         }
@@ -658,7 +666,7 @@ fun AiQuestionsPageTriggers(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(Icons.Outlined.Whatshot, "Your Triggers", "Tap anything that triggers your migraines — we've pre-selected what we found", 9, 14)
+        QPageHeader(Icons.Outlined.Whatshot, "Your Triggers", "Tap anything that triggers your migraines — we've pre-selected what we found", 8, 17)
         if (selected.isNotEmpty()) {
             Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
@@ -681,12 +689,174 @@ fun AiQuestionsPageProdromes(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(Icons.Outlined.Sensors, "Warning Signs", "Tap any signs you notice before a migraine — we've pre-selected what we found", 10, 14)
+        QPageHeader(Icons.Outlined.Sensors, "Warning Signs", "Tap any signs you notice before a migraine — we've pre-selected what we found", 9, 17)
         if (selected.isNotEmpty()) {
             Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
         QPoolMultiSelect(prodromePool, selected, onToggle, Color(0xFF9575CD), PoolType.PRODROME)
         Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Locations Page — where migraines happen (home, work, in transit, etc.)
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun AiQuestionsPageLocations(
+    locationPool: List<AiSetupService.PoolLabel>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QPageHeader(Icons.Outlined.Place, "Where They Hit", "Tap places where you usually get migraines — patterns here can point to specific triggers", 12, 17)
+        if (selected.isNotEmpty()) {
+            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+        }
+        if (locationPool.isEmpty()) {
+            Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        } else {
+            QPoolMultiSelect(locationPool, selected, onToggle, Color(0xFF4FC3F7), PoolType.LOCATION)
+        }
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Postdromes Page — symptoms that linger after the attack (fatigue, brain fog…)
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+fun AiQuestionsPagePostdromes(
+    postdromePool: List<AiSetupService.PoolLabel>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QPageHeader(Icons.Outlined.Bedtime, "After the Attack", "Tap anything that lingers once the migraine is over — fatigue, brain fog, mood crash", 11, 17)
+        if (selected.isNotEmpty()) {
+            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+        }
+        if (postdromePool.isEmpty()) {
+            Text("No postdrome symptoms in the pool yet — you can add your own later from Manage Items.",
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        } else {
+            QPoolMultiSelect(postdromePool, selected, onToggle, Color(0xFF4DB6AC), PoolType.POSTDROME)
+        }
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Generic Pool Page — used for Symptoms, Pain Character, Accompanying,
+// Activities, Missed Activities, Medicines, Reliefs.
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+private fun AiPoolPage(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    pageNum: Int,
+    totalPages: Int,
+    pool: List<AiSetupService.PoolLabel>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+    accent: Color,
+    poolType: PoolType,
+    emptyMessage: String? = null,
+) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QPageHeader(icon, title, subtitle, pageNum, totalPages)
+        if (selected.isNotEmpty()) {
+            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+        }
+        if (pool.isEmpty()) {
+            if (emptyMessage != null) {
+                Text(emptyMessage, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            } else {
+                Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        } else {
+            QPoolMultiSelect(pool, selected, onToggle, accent, poolType)
+        }
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+@Composable
+fun AiQuestionsPageSymptomsCore(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+    AiPoolPage(Icons.Outlined.MedicalServices, "Symptoms During an Attack",
+        "Tap the migraine type you usually get under Pain Character, plus anything that tags along under Accompanying.",
+        10, 17, pool, selected, onToggle, AppTheme.AccentPink, PoolType.SYMPTOM,
+        emptyMessage = "No symptoms in the pool yet.")
+}
+
+@Composable
+fun AiQuestionsPageActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+    AiPoolPage(Icons.Outlined.DirectionsRun, "What You Were Doing",
+        "Tap what you're usually doing when a migraine hits.",
+        15, 17, pool, selected, onToggle, Color(0xFFFF8A65), PoolType.ACTIVITY)
+}
+
+@Composable
+fun AiQuestionsPageMissedActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+    AiPoolPage(Icons.Outlined.EventBusy, "What You Missed",
+        "Tap anything you regularly miss because of migraines.",
+        16, 17, pool, selected, onToggle, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY)
+}
+
+@Composable
+fun AiQuestionsPageMedicines(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+    AiPoolPage(Icons.Outlined.Medication, "Your Medicines",
+        "Anything you take to prevent or stop a migraine.",
+        13, 17, pool, selected, onToggle, Color(0xFF4FC3F7), PoolType.MEDICINE)
+}
+
+@Composable
+fun AiQuestionsPageReliefs(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+    AiPoolPage(Icons.Outlined.Spa, "What Brings Relief",
+        "Tap anything that helps — dark room, cold compress, sleep, caffeine.",
+        14, 17, pool, selected, onToggle, Color(0xFF81C784), PoolType.RELIEF)
+}
+
+@Composable
+fun AiQuestionsPageNotes(notes: String?, onNotesChange: (String) -> Unit) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QPageHeader(Icons.Outlined.Notes, "Anything Else?",
+            "Anything we should know that didn't fit elsewhere — type or speak.", 17, 17)
+        AiNotesCard(notes ?: "", onNotesChange)
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+@Composable
+private fun AiNotesCard(value: String, onChange: (String) -> Unit) {
+    Card(colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.Edit, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Notes", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+            }
+            Spacer(Modifier.height(4.dp))
+            Text("Optional", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Spacer(Modifier.height(12.dp))
+            QFreeText(value, onChange,
+                "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...")
+        }
     }
 }
 

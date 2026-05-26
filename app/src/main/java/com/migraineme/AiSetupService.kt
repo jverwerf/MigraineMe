@@ -82,16 +82,43 @@ object AiSetupService {
     data class AvailableItems(
         val triggers: List<PoolLabel>,
         val prodromes: List<PoolLabel>,
+        /** Full symptom pool — includes "Pain Character", "Accompanying", "Postdrome" categories.
+         *  The UI splits them into dedicated pages by `category`. */
         val symptoms: List<PoolLabel>,
         val medicines: List<PoolLabel>,
         val reliefs: List<PoolLabel>,
         val activities: List<PoolLabel>,
         val missedActivities: List<PoolLabel>,
+        val locations: List<PoolLabel> = emptyList(),
         /** Individual trigger labels (pre-group-collapse) that have a metric_table in Supabase = auto-detected */
         val autoTriggerLabels: Set<String> = emptySet(),
         /** Individual prodrome labels that have a metric_table = auto-detected */
         val autoProdromeLabels: Set<String> = emptySet(),
-    )
+    ) {
+        // DB categories (verified against production symptom_templates):
+        //   "Postdrome" (14), "pain_character" (7), "accompanying" (4),
+        //   "Visual" (3), "Cognitive" (2), "Motor" (1).
+        // User-facing buckets collapse those 6 categories into 3:
+        //   - Pain Character (= "pain_character")
+        //   - Accompanying    (= "accompanying" ∪ "Visual" ∪ "Cognitive" ∪ "Motor")
+        //   - Postdrome       (= "Postdrome")
+
+        /** Postdrome page pool. */
+        val postdromes: List<PoolLabel> get() = symptoms.filter { it.category.equals("Postdrome", ignoreCase = true) }
+
+        /** Single "Symptoms During an Attack" page — Pain Character + Accompanying combined,
+         *  with category strings normalized to the two user-facing headers so QPoolMultiSelect's
+         *  `groupBy { category }` produces exactly two sub-sections. */
+        val symptomsDuringAttack: List<PoolLabel> get() = symptoms
+            .filterNot { it.category.equals("Postdrome", ignoreCase = true) }
+            .map { item ->
+                val bucket = when ((item.category ?: "").lowercase()) {
+                    "pain_character" -> "Pain Character"
+                    else             -> "Accompanying Signs"   // accompanying, Visual, Cognitive, Motor
+                }
+                item.copy(category = bucket)
+            }
+    }
 
     data class PoolLabel(val label: String, val category: String? = null, val iconKey: String? = null, val isAuto: Boolean = false)
 
@@ -446,8 +473,13 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         val reliefs = db.getAllReliefPool(accessToken).map { PoolLabel(it.label, it.category, it.iconKey) }
         val activities = db.getAllActivityPool(accessToken).map { PoolLabel(it.label, it.category, it.iconKey) }
         val missedActivities = db.getAllMissedActivityPool(accessToken).map { PoolLabel(it.label, it.category, it.iconKey) }
+        val locations = runCatching {
+            db.getAllLocationPool(accessToken).map { PoolLabel(it.label, it.category, it.iconKey) }
+        }.getOrElse {
+            Log.w(TAG, "Failed to load location pool", it); emptyList()
+        }
 
-        AvailableItems(triggers, prodromes, symptoms, medicines, reliefs, activities, missedActivities, autoTriggerLabels, autoProdromeLabels)
+        AvailableItems(triggers, prodromes, symptoms, medicines, reliefs, activities, missedActivities, locations, autoTriggerLabels, autoProdromeLabels)
     }
 
     // ═══════════════════════════════════════════════════════════════════════

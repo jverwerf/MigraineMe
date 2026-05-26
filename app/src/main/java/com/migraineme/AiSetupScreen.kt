@@ -21,7 +21,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private enum class AiPage { STORY, Q1, Q2, Q3, Q4, Q5, Q6, Q7, TRIGGERS, PRODROMES, Q8, PROCESSING, RESULTS, COMPANIONS }
+private enum class AiPage {
+    STORY,
+    Q1, Q2, Q3, Q4, Q5, Q6, Q7,
+    TRIGGERS, PRODROMES,
+    SYMPTOMS, POSTDROMES,
+    LOCATIONS,
+    MEDICINES, RELIEFS,
+    ACTIVITIES, MISSED_ACTIVITIES,
+    NOTES,
+    PROCESSING, RESULTS, COMPANIONS
+}
 
 @Composable
 fun AiSetupScreen(
@@ -57,9 +67,11 @@ fun AiSetupScreen(
     // Track which fields were pre-filled by story (so UI can show hints)
     var preFilledFields by remember { mutableStateOf(setOf<String>()) }
 
-    // ── Trigger / prodrome pool selections ──
+    // ── Trigger / prodrome / location / postdrome pool selections ──
     var selectedTriggers by remember { mutableStateOf(setOf<String>()) }
     var selectedProdromes by remember { mutableStateOf(setOf<String>()) }
+    var selectedLocations by remember { mutableStateOf(setOf<String>()) }
+    var selectedPostdromes by remember { mutableStateOf(setOf<String>()) }
 
     // ═══════════════════════════════════════════════════════════════
     // Page 1 — Demographics & Migraine Profile
@@ -99,6 +111,7 @@ fun AiSetupScreen(
     var alcoholTriggers by remember { mutableStateOf<DeterministicMapper.Certainty?>(null) }
     var specificDrinks by remember { mutableStateOf(setOf<String>()) }
     var tyramineFoods by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
+    var histamineFoods by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
     var glutenSensitivity by remember { mutableStateOf<String?>(null) }
     var glutenTriggers by remember { mutableStateOf<DeterministicMapper.Certainty?>(null) }
     var eatingPatterns by remember { mutableStateOf(mapOf<String, DeterministicMapper.Certainty>()) }
@@ -167,6 +180,7 @@ fun AiSetupScreen(
         alcoholFrequency = alcoholFrequency,
         alcoholTriggers = alcoholTriggers ?: DeterministicMapper.Certainty.NO,
         specificDrinks = specificDrinks, tyramineFoods = tyramineFoods,
+        histamineFoods = histamineFoods,
         glutenSensitivity = glutenSensitivity,
         glutenTriggers = glutenTriggers ?: DeterministicMapper.Certainty.NO,
         eatingPatterns = eatingPatterns, waterIntake = waterIntake, tracksNutrition = tracksNutrition,
@@ -186,6 +200,8 @@ fun AiSetupScreen(
         selectedSymptoms = selectedSymptoms, selectedMedicines = selectedMedicines,
         selectedReliefs = selectedReliefs, selectedActivities = selectedActivities,
         selectedMissedActivities = selectedMissedActivities,
+        selectedLocations = selectedLocations,
+        selectedPostdromes = selectedPostdromes,
         freeText = additionalNotes,
     )
 
@@ -227,6 +243,7 @@ fun AiSetupScreen(
         pf.alcoholTriggers?.let { alcoholTriggers = it; filled.add("alcoholTriggers") }
         if (pf.specificDrinks.isNotEmpty()) { specificDrinks = specificDrinks + pf.specificDrinks; filled.add("specificDrinks") }
         if (pf.tyramineFoods.isNotEmpty()) { tyramineFoods = tyramineFoods + pf.tyramineFoods; filled.add("tyramineFoods") }
+        if (pf.histamineFoods.isNotEmpty()) { histamineFoods = histamineFoods + pf.histamineFoods; filled.add("histamineFoods") }
         pf.glutenSensitivity?.let { glutenSensitivity = it; filled.add("glutenSensitivity") }
         pf.glutenTriggers?.let { glutenTriggers = it; filled.add("glutenTriggers") }
         if (pf.eatingPatterns.isNotEmpty()) { eatingPatterns = eatingPatterns + pf.eatingPatterns; filled.add("eatingPatterns") }
@@ -260,6 +277,8 @@ fun AiSetupScreen(
         if (pf.matchedReliefs.isNotEmpty()) { selectedReliefs = selectedReliefs + pf.matchedReliefs; filled.add("reliefs") }
         if (pf.matchedActivities.isNotEmpty()) { selectedActivities = selectedActivities + pf.matchedActivities; filled.add("activities") }
         if (pf.matchedMissedActivities.isNotEmpty()) { selectedMissedActivities = selectedMissedActivities + pf.matchedMissedActivities; filled.add("missedActivities") }
+        if (pf.matchedLocations.isNotEmpty()) { selectedLocations = selectedLocations + pf.matchedLocations; filled.add("locations") }
+        if (pf.matchedPostdromes.isNotEmpty()) { selectedPostdromes = selectedPostdromes + pf.matchedPostdromes; filled.add("postdromes") }
         preFilledFields = filled
     }
 
@@ -271,17 +290,25 @@ fun AiSetupScreen(
                 val items = availableItems
                 val trigLabels = items?.triggers?.map { it.label } ?: emptyList()
                 val prodLabels = items?.prodromes?.map { it.label } ?: emptyList()
-                val symLabels = items?.symptoms?.map { it.label } ?: emptyList()
+                // Include core + pain character + accompanying (everything except postdromes,
+                // which are passed as their own pool). All three categories share `selectedSymptoms`
+                // so matched labels land on whichever page hosts the category.
+                val symLabels = items?.symptoms?.filter {
+                    !((it.category ?: "").equals("Postdrome", ignoreCase = true))
+                }?.map { it.label } ?: emptyList()
                 val medLabels = items?.medicines?.map { it.label } ?: emptyList()
                 val relLabels = items?.reliefs?.map { it.label } ?: emptyList()
                 val actLabels = items?.activities?.map { it.label } ?: emptyList()
                 val missLabels = items?.missedActivities?.map { it.label } ?: emptyList()
+                val locLabels = items?.locations?.map { it.label } ?: emptyList()
+                val postdromeLabels = items?.postdromes?.map { it.label } ?: emptyList()
 
                 // Step 1: deterministic
                 val deter = withContext(Dispatchers.IO) {
                     AiOnboardingParser.deterministicPreFill(
                         storyText, trigLabels, prodLabels, symLabels,
-                        medLabels, relLabels, actLabels, missLabels
+                        medLabels, relLabels, actLabels, missLabels,
+                        locLabels, postdromeLabels
                     )
                 }
 
@@ -292,7 +319,8 @@ fun AiSetupScreen(
                         withContext(Dispatchers.IO) {
                             AiOnboardingParser.gptPreFill(
                                 token, storyText, trigLabels, prodLabels, symLabels,
-                                medLabels, relLabels, actLabels, missLabels, deter
+                                medLabels, relLabels, actLabels, missLabels,
+                                locLabels, postdromeLabels, deter
                             )
                         }
                     } catch (_: Exception) { null }
@@ -392,6 +420,23 @@ fun AiSetupScreen(
         if (currentPage == AiPage.PROCESSING && !isProcessing && aiConfig == null) process()
     }
 
+    // Silent 1:1 pre-selection from Q1–Q7 answers when entering the matching pool page.
+    // Union with whatever the user (or story pre-fill) already selected — never removes.
+    LaunchedEffect(currentPage, availableItems) {
+        val items = availableItems ?: return@LaunchedEffect
+        when (currentPage) {
+            AiPage.TRIGGERS -> {
+                val seed = DeterministicMapper.deriveTriggerSeed(buildAnswers(), items.triggers.map { it.label })
+                if (seed.isNotEmpty()) selectedTriggers = selectedTriggers + seed
+            }
+            AiPage.PRODROMES -> {
+                val seed = DeterministicMapper.deriveProdromeSeed(buildAnswers(), items.prodromes.map { it.label })
+                if (seed.isNotEmpty()) selectedProdromes = selectedProdromes + seed
+            }
+            else -> {}
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // UI
     // ═══════════════════════════════════════════════════════════════
@@ -435,7 +480,7 @@ fun AiSetupScreen(
                         AiPage.Q1 -> AiQuestionsPage1(gender, { gender = it }, ageRange, { ageRange = it }, frequency, { frequency = it }, duration, { duration = it }, experience, { experience = it }, trajectory, { trajectory = it }, warningBefore, { warningBefore = it }, triggerDelay, { triggerDelay = it }, dailyRoutine, { dailyRoutine = it }, seasonalPattern, { seasonalPattern = it })
                         AiPage.Q2 -> AiQuestionsPage2(sleepHours, { sleepHours = it }, sleepQuality, { sleepQuality = it }, poorQualityTriggers, { poorQualityTriggers = it }, tooLittleSleepTriggers, { tooLittleSleepTriggers = it }, oversleepTriggers, { oversleepTriggers = it }, sleepIssues, { i -> sleepIssues = if (i in sleepIssues) sleepIssues - i else sleepIssues + i })
                         AiPage.Q3 -> AiQuestionsPage3(stressLevel, { stressLevel = it }, stressChangeTriggers, { stressChangeTriggers = it }, emotionalPatterns, { emotionalPatterns = it }, screenTimeDaily, { screenTimeDaily = it }, screenTimeTriggers, { screenTimeTriggers = it }, lateScreenTriggers, { lateScreenTriggers = it })
-                        AiPage.Q4 -> AiQuestionsPage4(caffeineIntake, { caffeineIntake = it }, caffeineDirection, { caffeineDirection = it }, caffeineCertainty, { caffeineCertainty = it }, alcoholFrequency, { alcoholFrequency = it }, alcoholTriggers, { alcoholTriggers = it }, specificDrinks, { d -> specificDrinks = if (d in specificDrinks) specificDrinks - d else specificDrinks + d }, tyramineFoods, { tyramineFoods = it }, glutenSensitivity, { glutenSensitivity = it }, glutenTriggers, { glutenTriggers = it }, eatingPatterns, { eatingPatterns = it }, waterIntake, { waterIntake = it }, tracksNutrition, { tracksNutrition = it })
+                        AiPage.Q4 -> AiQuestionsPage4(caffeineIntake, { caffeineIntake = it }, caffeineDirection, { caffeineDirection = it }, caffeineCertainty, { caffeineCertainty = it }, alcoholFrequency, { alcoholFrequency = it }, alcoholTriggers, { alcoholTriggers = it }, specificDrinks, { d -> specificDrinks = if (d in specificDrinks) specificDrinks - d else specificDrinks + d }, tyramineFoods, { tyramineFoods = it }, histamineFoods, { histamineFoods = it }, glutenSensitivity, { glutenSensitivity = it }, glutenTriggers, { glutenTriggers = it }, eatingPatterns, { eatingPatterns = it }, waterIntake, { waterIntake = it }, tracksNutrition, { tracksNutrition = it })
                         AiPage.Q5 -> AiQuestionsPage5(weatherTriggers, { weatherTriggers = it }, specificWeather, { specificWeather = it }, environmentSensitivities, { environmentSensitivities = it }, physicalFactors, { physicalFactors = it })
                         AiPage.Q6 -> AiQuestionsPage6(exerciseFrequency, { exerciseFrequency = it }, exerciseTriggers, { exerciseTriggers = it }, exercisePattern, { p -> exercisePattern = if (p in exercisePattern) exercisePattern - p else exercisePattern + p }, tracksCycle, { tracksCycle = it }, cyclePatterns, { cyclePatterns = it }, cycleLength, { cycleLength = it }, cycleMigraineTiming, { t -> cycleMigraineTiming = if (t in cycleMigraineTiming) cycleMigraineTiming - t else cycleMigraineTiming + t }, lastPeriodDate, { lastPeriodDate = it }, usesContraception, { usesContraception = it }, contraceptionEffect, { contraceptionEffect = it })
                         AiPage.Q7 -> AiQuestionsPage7(physicalProdromes, { physicalProdromes = it }, moodProdromes, { moodProdromes = it }, sensoryProdromes, { sensoryProdromes = it })
@@ -449,18 +494,44 @@ fun AiSetupScreen(
                             selected = selectedProdromes,
                             onToggle = { p -> selectedProdromes = if (p in selectedProdromes) selectedProdromes - p else selectedProdromes + p },
                         )
-                        AiPage.Q8 -> AiQuestionsPage8(
-                            symptomPool = availableItems?.symptoms ?: emptyList(),
-                            medicinePool = availableItems?.medicines ?: emptyList(),
-                            reliefPool = availableItems?.reliefs ?: emptyList(),
-                            activityPool = availableItems?.activities ?: emptyList(),
-                            missedActivityPool = availableItems?.missedActivities ?: emptyList(),
-                            selectedSymptoms, { s -> selectedSymptoms = if (s in selectedSymptoms) selectedSymptoms - s else selectedSymptoms + s },
-                            selectedMedicines, { m -> selectedMedicines = if (m in selectedMedicines) selectedMedicines - m else selectedMedicines + m },
-                            selectedReliefs, { r -> selectedReliefs = if (r in selectedReliefs) selectedReliefs - r else selectedReliefs + r },
-                            selectedActivities, { a -> selectedActivities = if (a in selectedActivities) selectedActivities - a else selectedActivities + a },
-                            selectedMissedActivities, { ma -> selectedMissedActivities = if (ma in selectedMissedActivities) selectedMissedActivities - ma else selectedMissedActivities + ma },
-                            additionalNotes, { additionalNotes = it },
+                        AiPage.SYMPTOMS -> AiQuestionsPageSymptomsCore(
+                            pool = availableItems?.symptomsDuringAttack ?: emptyList(),
+                            selected = selectedSymptoms,
+                            onToggle = { s -> selectedSymptoms = if (s in selectedSymptoms) selectedSymptoms - s else selectedSymptoms + s },
+                        )
+                        AiPage.POSTDROMES -> AiQuestionsPagePostdromes(
+                            postdromePool = availableItems?.postdromes ?: emptyList(),
+                            selected = selectedPostdromes,
+                            onToggle = { p -> selectedPostdromes = if (p in selectedPostdromes) selectedPostdromes - p else selectedPostdromes + p },
+                        )
+                        AiPage.LOCATIONS -> AiQuestionsPageLocations(
+                            locationPool = availableItems?.locations ?: emptyList(),
+                            selected = selectedLocations,
+                            onToggle = { l -> selectedLocations = if (l in selectedLocations) selectedLocations - l else selectedLocations + l },
+                        )
+                        AiPage.MEDICINES -> AiQuestionsPageMedicines(
+                            pool = availableItems?.medicines ?: emptyList(),
+                            selected = selectedMedicines,
+                            onToggle = { m -> selectedMedicines = if (m in selectedMedicines) selectedMedicines - m else selectedMedicines + m },
+                        )
+                        AiPage.RELIEFS -> AiQuestionsPageReliefs(
+                            pool = availableItems?.reliefs ?: emptyList(),
+                            selected = selectedReliefs,
+                            onToggle = { r -> selectedReliefs = if (r in selectedReliefs) selectedReliefs - r else selectedReliefs + r },
+                        )
+                        AiPage.ACTIVITIES -> AiQuestionsPageActivities(
+                            pool = availableItems?.activities ?: emptyList(),
+                            selected = selectedActivities,
+                            onToggle = { a -> selectedActivities = if (a in selectedActivities) selectedActivities - a else selectedActivities + a },
+                        )
+                        AiPage.MISSED_ACTIVITIES -> AiQuestionsPageMissedActivities(
+                            pool = availableItems?.missedActivities ?: emptyList(),
+                            selected = selectedMissedActivities,
+                            onToggle = { ma -> selectedMissedActivities = if (ma in selectedMissedActivities) selectedMissedActivities - ma else selectedMissedActivities + ma },
+                        )
+                        AiPage.NOTES -> AiQuestionsPageNotes(
+                            notes = additionalNotes,
+                            onNotesChange = { additionalNotes = it },
                         )
                         AiPage.PROCESSING -> AiProcessingPage(isProcessing, aiError, onRetry = { aiError = null; process() })
                         AiPage.RESULTS -> aiConfig?.let { config ->
@@ -491,7 +562,7 @@ fun AiSetupScreen(
                     } else {
                         TextButton(onClick = { val prev = AiPage.entries.getOrNull(currentPage.ordinal - 1); if (prev != null) currentPage = prev }) { Text("Back", color = AppTheme.SubtleTextColor) }
                     }
-                    if (currentPage == AiPage.Q8) {
+                    if (currentPage == AiPage.NOTES) {
                         Button(onClick = { currentPage = AiPage.PROCESSING }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(12.dp)) {
                             Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Analyse & Configure")
                         }
@@ -518,7 +589,7 @@ fun AiSetupScreen(
             }
             if (currentPage == AiPage.PROCESSING && !isProcessing && aiError != null) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { currentPage = AiPage.Q8 }) { Text("Back", color = AppTheme.SubtleTextColor) }
+                    TextButton(onClick = { currentPage = AiPage.NOTES }) { Text("Back", color = AppTheme.SubtleTextColor) }
                     TextButton(onClick = onSkip) { Text("Skip Setup", color = AppTheme.SubtleTextColor) }
                 }
             }

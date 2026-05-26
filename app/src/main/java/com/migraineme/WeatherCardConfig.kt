@@ -11,6 +11,7 @@ object WeatherCardConfig {
     const val METRIC_HUMIDITY = "humidity_pct_mean"
     const val METRIC_WIND_SPEED = "wind_speed_mps_mean"
     const val METRIC_UV_INDEX = "uv_index_max"
+    const val METRIC_THUNDERSTORM = "is_thunderstorm_day"
     const val METRIC_ALTITUDE = "altitude_m"
     const val METRIC_ALTITUDE_CHANGE = "altitude_change_m"
 
@@ -21,6 +22,7 @@ object WeatherCardConfig {
         METRIC_HUMIDITY,
         METRIC_WIND_SPEED,
         METRIC_UV_INDEX,
+        METRIC_THUNDERSTORM,
         METRIC_ALTITUDE,
         METRIC_ALTITUDE_CHANGE
     )
@@ -39,6 +41,7 @@ object WeatherCardConfig {
         METRIC_HUMIDITY to "Humidity",
         METRIC_WIND_SPEED to "Wind Speed",
         METRIC_UV_INDEX to "UV Index",
+        METRIC_THUNDERSTORM to "Thunderstorm",
         METRIC_ALTITUDE to "Altitude",
         METRIC_ALTITUDE_CHANGE to "Altitude Change"
     )
@@ -50,6 +53,7 @@ object WeatherCardConfig {
         METRIC_HUMIDITY to "%",
         METRIC_WIND_SPEED to "m/s",
         METRIC_UV_INDEX to "",
+        METRIC_THUNDERSTORM to "",
         METRIC_ALTITUDE to "m",
         METRIC_ALTITUDE_CHANGE to "m"
     )

@@ -10,17 +10,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +44,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 /* -- Custom hand-drawn icons for the hub -- */
@@ -148,87 +159,159 @@ private fun DrawScope.drawProdromeIcon(color: Color) {
 @Composable
 fun MigraineHubScreen(navController: NavController) {
     val scrollState = rememberScrollState()
+    var showLogMigraineInfo by remember { mutableStateOf(false) }
+    var showCheckInInfo by remember { mutableStateOf(false) }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             // Hero Card - Log Full Migraine
-            HeroCard(
-                modifier = Modifier.clickable { navController.navigate(Routes.TIMING) }
-            ) {
-                Box(
+            Box(modifier = Modifier.fillMaxWidth()) {
+                HeroCard(
                     modifier = Modifier
-                        .size(56.dp)
-                        .drawBehind { drawMigraineIcon(Color(0xFFE091C8)) }
-                )
+                        .fillMaxWidth()
+                        .clickable { navController.navigate(Routes.TIMING) }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .drawBehind { drawMigraineIcon(Color(0xFFE091C8)) }
+                    )
 
-                Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
-                Text(
-                    "Log Migraine",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
+                    Text(
+                        "Log Migraine",
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
 
-                Text(
-                    "Timing → Pain location → Prodromes → Triggers → Medicines → Reliefs → Notes → Review",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center
-                )
+                    Text(
+                        "Timing → Symptoms → Pain → Prodromes → Triggers → Medicines → Reliefs → Locations → Activities → Postdromes → Missed activities → Notes → Review",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
 
-                Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(12.dp))
 
-                Text(
-                    "Tap to start →",
-                    color = AppTheme.AccentPurple,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
+                    Text(
+                        "Tap to start →",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+                IconButton(
+                    onClick = { showLogMigraineInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 10.dp, y = (-14).dp)
+                        .size(34.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Info,
+                        contentDescription = "About Log Migraine",
+                        tint = AppTheme.SubtleTextColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             // Daily Check-In
-            BaseCard(modifier = Modifier.clickable { navController.navigate(Routes.EVENING_CHECKIN) }) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+            Box(modifier = Modifier.fillMaxWidth()) {
+                BaseCard(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navController.navigate(Routes.EVENING_CHECKIN) }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.EditNote,
+                            contentDescription = null,
+                            tint = AppTheme.AccentPink,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Daily Check-In",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Text(
+                                "Review your day",
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+                IconButton(
+                    onClick = { showCheckInInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 10.dp, y = (-14).dp)
+                        .size(34.dp)
                 ) {
                     Icon(
-                        Icons.Outlined.EditNote,
-                        contentDescription = null,
-                        tint = AppTheme.AccentPink,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Daily Check-In",
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                        Text(
-                            "Review your day",
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    Text(
-                        "→",
-                        color = AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.bodyMedium
+                        Icons.Outlined.Info,
+                        contentDescription = "About Daily Check-In",
+                        tint = AppTheme.SubtleTextColor,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
             // Quick Log Section Title
-            BaseCard {
-                Text(
-                    "Quick Log",
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Text(
-                    "Log a single item without a full migraine entry",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
+            var showQuickLogInfo by remember { mutableStateOf(false) }
+            Box(modifier = Modifier.fillMaxWidth()) {
+                BaseCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            "Quick Log",
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        Text(
+                            "Log a single item without a full migraine entry",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = { showQuickLogInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 10.dp, y = (-14).dp)
+                        .size(34.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Info,
+                        contentDescription = "About Quick Log",
+                        tint = AppTheme.SubtleTextColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            if (showQuickLogInfo) {
+                AlertDialog(
+                    onDismissRequest = { showQuickLogInfo = false },
+                    confirmButton = {
+                        TextButton(onClick = { showQuickLogInfo = false }) {
+                            Text("Got it", color = AppTheme.AccentPurple)
+                        }
+                    },
+                    title = {
+                        Text("About Quick Log", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    },
+                    text = {
+                        Text(LogQuickLogInfoCopy.text, color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium)
+                    },
+                    containerColor = AppTheme.BaseCardContainer
                 )
             }
 
@@ -240,7 +323,7 @@ fun MigraineHubScreen(navController: NavController) {
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
                     title = "Migraine",
-                    subtitle = "Pain character, symptom, postdrome",
+                    subtitle = "Pain character, symptom",
                     iconColor = AppTheme.AccentPink,
                     drawIcon = { HubIcons.run { drawMigraineStarburst(it) } },
                     onClick = { navController.navigate(Routes.QUICK_LOG_MIGRAINE) }
@@ -305,6 +388,46 @@ fun MigraineHubScreen(navController: NavController) {
             }
         }
     }
+
+    if (showLogMigraineInfo) {
+        AlertDialog(
+            onDismissRequest = { showLogMigraineInfo = false },
+            confirmButton = {
+                TextButton(onClick = { showLogMigraineInfo = false }) {
+                    Text("Got it", color = AppTheme.AccentPurple)
+                }
+            },
+            title = {
+                Text("About Log Migraine", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = {
+                Text(LogMigraineInfoCopy.text, color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium)
+            },
+            containerColor = AppTheme.BaseCardContainer
+        )
+    }
+
+    if (showCheckInInfo) {
+        AlertDialog(
+            onDismissRequest = { showCheckInInfo = false },
+            confirmButton = {
+                TextButton(onClick = { showCheckInInfo = false }) {
+                    Text("Got it", color = AppTheme.AccentPurple)
+                }
+            },
+            title = {
+                Text("About Daily Check-In", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = {
+                Text(CheckInInfoCopy.text, color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium)
+            },
+            containerColor = AppTheme.BaseCardContainer
+        )
+    }
 }
 
 @Composable
@@ -360,11 +483,25 @@ private fun QuickLogCard(
             Text(
                 subtitle,
                 color = if (enabled) AppTheme.SubtleTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Visible,
+                softWrap = false
             )
         }
     }
 }
 
 
+object LogQuickLogInfoCopy {
+    const val text = "Still quick, but with a bit more choice. The home strip is one-tap-and-done; this Quick Log lets you pick any item from your full pool (not just your favourites), set the time to something other than right now, and add notes.\n\nFor medicines and reliefs you can also log the amount, how much it helped, and any side effects, so this is the right place when you've taken something specific and want it recorded properly.\n\nActivity logging lives here too. For a full attack with everything that goes around it (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities and notes), use the \"Log Migraine\" hero card above."
+}
+
+object LogMigraineInfoCopy {
+    const val text = "The full attack log. Tap to walk through every step that goes into recording a migraine: timing, paint-the-picture AI shortcut, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, and a final review.\n\nUse this when you want the complete record of an attack and have a few minutes to fill it in. Every step is optional, so skip what doesn't apply.\n\nFor one-tap or single-item logging during an attack, use the Quick Log strip on the Home tab or the Quick Log section below."
+}
+
+object CheckInInfoCopy {
+    const val text = "A guided evening review of your day in one go. Walks you through a free-text note about how the day went, anything notable from your calendar, and a quick pass over your triggers, prodromes, medicines, reliefs and activities so nothing slips through.\n\nWhen you have an open migraine, it also asks about postdrome symptoms.\n\nIf you're on any treatments, it checks in about side effects from each one.\n\nUse it once a day to keep your log complete without remembering everything at the moment it happens."
+}

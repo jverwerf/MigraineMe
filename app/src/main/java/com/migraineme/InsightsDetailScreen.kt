@@ -42,7 +42,9 @@ import java.time.format.DateTimeFormatter
 
 private val FilterCatColors = mapOf(
     "Severity" to Color(0xFFFF7043),
-    "Symptom" to Color(0xFFCE93D8),
+    "Pain Character" to Color(0xFFCE93D8),
+    "Accompanying" to Color(0xFFBA68C8),
+    "Postdrome" to Color(0xFFAB47BC),
     "Pain Location" to Color(0xFFFF8A80),
     "Trigger" to Color(0xFFFFB74D),
     "Prodrome" to Color(0xFF9575CD),
@@ -56,7 +58,8 @@ private val FilterCatColors = mapOf(
 // ======= Ordered categories to match the migraine log flow =======
 
 private val FilterCatOrder = listOf(
-    "Severity", "Symptom", "Pain Location", "Trigger", "Prodrome",
+    "Severity", "Pain Character", "Accompanying", "Postdrome",
+    "Pain Location", "Trigger", "Prodrome",
     "Medicine", "Relief", "Activity", "Location", "Missed Activity"
 )
 
@@ -144,7 +147,7 @@ fun InsightsDetailScreen(
     val windowEvents = remember(linkedItems, allMissed, allActs, sel?.id) {
         val actsForMigraine = allActs.filter { it.migraineId == sel?.id }
         val missedForMigraine = allMissed.filter { it.migraineId == sel?.id }
-        buildEventMarkers(linkedItems, actsForMigraine, missedForMigraine)
+        buildEventMarkers(linkedItems, actsForMigraine, missedForMigraine, vm.catSymptomMap(), sel)
     }
 
     val templateMap by vm.labelToMetricMap.collectAsState()
@@ -184,14 +187,6 @@ fun InsightsDetailScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            //  Back arrow 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back", tint = Color.White)
-                }
-            }
-
             // ========== 1. FILTER CARD (collapsible) ==========
             FilterCard(
                 availableTags = availableTags,
@@ -224,7 +219,8 @@ fun InsightsDetailScreen(
                 // Migraine selector (navigates filtered list)
                 DetailMigraineSelector(filteredSorted, clampedIdx, sel,
                     onPrev = { if (clampedIdx < filteredSorted.size - 1) vm.selectMigraine(clampedIdx + 1) },
-                    onNext = { if (clampedIdx > 0) vm.selectMigraine(clampedIdx - 1) })
+                    onNext = { if (clampedIdx > 0) vm.selectMigraine(clampedIdx - 1) },
+                    displayTitle = sel?.let { vm.displayTitleForMigraine(it.id, it.label) })
 
                 if (linkedLoading) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -273,7 +269,7 @@ fun InsightsDetailScreen(
                     Text("Overlay Metrics", color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(2.dp))
-                    Text("Tap to toggle metric lines on the graph. * = auto-detected from triggers.",
+                    Text("Tap to toggle metric lines. Highlighted chips were logged with this attack.",
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
@@ -615,7 +611,9 @@ private fun FilterOptionChip(
 internal fun buildEventMarkers(
     linkedItems: SupabaseDbService.MigraineLinkedItems,
     extraActivities: List<SupabaseDbService.ActivityLogRow> = emptyList(),
-    missedActivities: List<SupabaseDbService.MissedActivityLogRow> = emptyList()
+    missedActivities: List<SupabaseDbService.MissedActivityLogRow> = emptyList(),
+    catSymptom: Map<String, String> = emptyMap(),
+    currentMigraine: MigraineSpan? = null
 ): List<EventMarker> {
     val ev = mutableListOf<EventMarker>()
     linkedItems.triggers.forEach { row ->
@@ -628,6 +626,37 @@ internal fun buildEventMarkers(
         parseInstant(row.startAt)?.let { t ->
             ev += EventMarker(t, null, row.type ?: "Prodrome", "Prodrome", row.notes,
                 EventCategoryColors["Prodrome"]!!, row.source == "system")
+        }
+    }
+    // Pain Character is intentionally skipped here — it surfaces in the migraine navigator title.
+    fun graphCategory(label: String): String? = when (catSymptom[label.lowercase()]?.lowercase()) {
+        "accompanying" -> "Accompanying"
+        "postdrome"    -> "Postdrome"
+        else           -> null
+    }
+    val seenSymptoms = mutableSetOf<String>()
+    // Per-migraine symptom rows (postdromes + wizard-side accompanying/pain-character inserts).
+    linkedItems.postdromes.forEach { row ->
+        val label = row.type ?: return@forEach
+        val category = graphCategory(label) ?: return@forEach
+        val color = EventCategoryColors[category] ?: return@forEach
+        seenSymptoms += "$category|${label.lowercase()}"
+        parseInstant(row.createdAt)?.let { t ->
+            ev += EventMarker(t, null, label, category, null, color, false)
+        }
+    }
+    // Standalone symptom rows whose `type` is a symptom label (no actual migraine type).
+    // Show the symptom-part as a dot too so the title can stay as-is.
+    currentMigraine?.let { cm ->
+        val raw = cm.label ?: return@let
+        val parts = raw.split(",").map { it.trim() }.filter { it.isNotEmpty() && !it.equals("Migraine", ignoreCase = true) }
+        parts.forEach { sym ->
+            val category = graphCategory(sym) ?: return@forEach
+            val color = EventCategoryColors[category] ?: return@forEach
+            val key = "$category|${sym.lowercase()}"
+            if (key in seenSymptoms) return@forEach
+            seenSymptoms += key
+            ev += EventMarker(cm.start, null, sym, category, null, color, false)
         }
     }
     linkedItems.medicines.forEach { row ->
@@ -681,7 +710,8 @@ internal fun parseInstant(iso: String?): Instant? =
 @Composable
 private fun DetailMigraineSelector(
     sorted: List<MigraineSpan>, idx: Int, sel: MigraineSpan?,
-    onPrev: () -> Unit, onNext: () -> Unit
+    onPrev: () -> Unit, onNext: () -> Unit,
+    displayTitle: String? = null
 ) {
     val z = ZoneId.systemDefault()
     val df = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(z)
@@ -695,7 +725,7 @@ private fun DetailMigraineSelector(
                 modifier = Modifier.size(22.dp))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-            Text(sel?.label ?: "Migraine", color = Color.White,
+            Text(displayTitle ?: sel?.label ?: "Migraine", color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sel != null) {

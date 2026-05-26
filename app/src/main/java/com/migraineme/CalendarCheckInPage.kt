@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -46,6 +48,11 @@ fun CalendarCheckInPage(
     val loadingState = remember { mutableStateOf(true) }
     val mappingsState = remember { mutableStateOf<List<CalendarService.Mapping>>(emptyList()) }
     val pendingState = remember { mutableStateMapOf<String, ItemState>() }
+    // Trigger ids the user just rated inline — hides the picker immediately
+    // without waiting for triggerVm.pool to reload.
+    val ratedTriggerIds = remember { mutableStateMapOf<String, String>() }
+    val savingSeverity = remember { mutableStateMapOf<String, Boolean>() }
+    val triggerPool by triggerVm.pool.collectAsState()
 
     LaunchedEffect(hasPermission) {
         if (hasPermission) loadInto(loadingState, mappingsState, context)
@@ -53,7 +60,7 @@ fun CalendarCheckInPage(
     }
 
     Column(
-        Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -85,15 +92,47 @@ fun CalendarCheckInPage(
                 modifier = Modifier.padding(vertical = 24.dp))
         } else {
             mappings.forEach { m ->
-                val state = pendingState[m.eventId] ?: ItemState.Saved
+                val state = pendingState[m.compositeKey] ?: ItemState.Saved
+                val targetId = m.targetId
+                val matchedPool = if (m.targetType == "trigger" && targetId != null)
+                    triggerPool.firstOrNull { it.id == targetId } else null
+                val currentSeverity = (ratedTriggerIds[targetId]
+                    ?: matchedPool?.predictionValue
+                    ?: "NONE").uppercase()
+                val isSaving = targetId != null && (savingSeverity[targetId] == true)
+                // Auto-apply LOW to any NONE-rated trigger so the gauge moves
+                // without requiring a tap. Re-keyed on (targetId, poolSeverity)
+                // so it only fires once until the value actually changes.
+                LaunchedEffect(targetId, matchedPool?.predictionValue) {
+                    if (targetId != null && currentSeverity == "NONE"
+                        && !ratedTriggerIds.containsKey(targetId)
+                    ) {
+                        ratedTriggerIds[targetId] = "LOW"
+                        savingSeverity[targetId] = true
+                        SessionStore.readAccessToken(context)?.let { tok ->
+                            runCatching {
+                                SupabaseDbService(
+                                    BuildConfig.SUPABASE_URL,
+                                    BuildConfig.SUPABASE_ANON_KEY,
+                                ).updateTriggerPoolItem(tok, targetId, predictionValue = "LOW")
+                            }
+                            EdgeFunctionsService().triggerRecalcRiskScores(context)
+                            triggerVm.loadAll(tok)
+                        }
+                        savingSeverity[targetId] = false
+                    }
+                }
                 EventCard(
                     mapping = m,
                     state = state,
+                    currentSeverity = currentSeverity,
+                    isTrigger = m.targetType == "trigger" && targetId != null,
+                    isSavingSeverity = isSaving,
                     onUndo = {
                         scope.launch {
-                            pendingState[m.eventId] = ItemState.Undoing
-                            val ok = CalendarService.skip(context, m)
-                            pendingState[m.eventId] = if (ok) ItemState.Undone
+                            pendingState[m.compositeKey] = ItemState.Undoing
+                            val ok = CalendarService.undoOnce(context, m)
+                            pendingState[m.compositeKey] = if (ok) ItemState.Undone
                             else ItemState.Error("Could not undo")
                             if (ok) {
                                 SessionStore.readAccessToken(context)?.let { tok ->
@@ -104,6 +143,43 @@ fun CalendarCheckInPage(
                                     }
                                 }
                             }
+                        }
+                    },
+                    onNeverSuggest = {
+                        scope.launch {
+                            pendingState[m.compositeKey] = ItemState.Undoing
+                            val ok = CalendarService.neverSuggestAgain(context, m)
+                            pendingState[m.compositeKey] = if (ok) ItemState.Undone
+                            else ItemState.Error("Could not save")
+                            if (ok) {
+                                SessionStore.readAccessToken(context)?.let { tok ->
+                                    when (m.targetType) {
+                                        "activity" -> activityVm.loadAll(tok)
+                                        "relief" -> reliefVm.loadAll(tok)
+                                        "trigger" -> triggerVm.loadAll(tok)
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    onSetSeverity = { value ->
+                        if (targetId == null) return@EventCard
+                        scope.launch {
+                            savingSeverity[targetId] = true
+                            val tok = SessionStore.readAccessToken(context)
+                            if (tok != null) {
+                                runCatching {
+                                    val db = SupabaseDbService(
+                                        BuildConfig.SUPABASE_URL,
+                                        BuildConfig.SUPABASE_ANON_KEY,
+                                    )
+                                    db.updateTriggerPoolItem(tok, targetId, predictionValue = value)
+                                }
+                                EdgeFunctionsService().triggerRecalcRiskScores(context)
+                                triggerVm.loadAll(tok)
+                            }
+                            ratedTriggerIds[targetId] = value
+                            savingSeverity[targetId] = false
                         }
                     },
                 )
@@ -155,7 +231,12 @@ private suspend fun loadInto(
 private fun EventCard(
     mapping: CalendarService.Mapping,
     state: ItemState,
+    currentSeverity: String = "NONE",
+    isTrigger: Boolean = false,
+    isSavingSeverity: Boolean = false,
     onUndo: () -> Unit,
+    onNeverSuggest: () -> Unit = {},
+    onSetSeverity: (String) -> Unit = {},
 ) {
     val type = mapping.targetType ?: "activity"
     val label = mapping.targetLabel ?: "(unknown)"
@@ -218,12 +299,23 @@ private fun EventCard(
             }
             when (state) {
                 is ItemState.Saved ->
-                    Box(
-                        Modifier.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
-                            .clickable { onUndo() }
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text("Undo", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+                                .clickable { onUndo() }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text("Undo", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Spacer(Modifier.width(6.dp))
+                        Box(
+                            Modifier.background(Color(0xFFE57373).copy(alpha = 0.18f), RoundedCornerShape(8.dp))
+                                .clickable { onNeverSuggest() }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text("Never suggest again",
+                                color = Color(0xFFE57373), fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 is ItemState.Undoing ->
                     CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp,
@@ -233,6 +325,69 @@ private fun EventCard(
                     Text(state.msg, color = Color(0xFFE57373), fontSize = 10.sp)
             }
         }
+
+        // Severity picker — visible on every trigger mapping. Currently
+        // selected value is highlighted; tap any chip to readjust + recalc.
+        if (state is ItemState.Saved && isTrigger) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "How strong is this trigger for you?",
+                        color = AppTheme.SubtleTextColor,
+                        fontSize = 10.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (currentSeverity == "NONE") {
+                        Text(
+                            "Suggested: Low",
+                            color = Color(0xFFFFB74D),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isSavingSeverity) {
+                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp,
+                            modifier = Modifier.size(12.dp))
+                    } else {
+                        SeverityChip("None", "NONE", onSetSeverity, selected = currentSeverity == "NONE")
+                        Spacer(Modifier.width(4.dp))
+                        SeverityChip("Low",  "LOW",  onSetSeverity, selected = currentSeverity == "LOW")
+                        Spacer(Modifier.width(4.dp))
+                        SeverityChip("Mild", "MILD", onSetSeverity, selected = currentSeverity == "MILD")
+                        Spacer(Modifier.width(4.dp))
+                        SeverityChip("High", "HIGH", onSetSeverity, selected = currentSeverity == "HIGH")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SeverityChip(
+    label: String,
+    value: String,
+    onTap: (String) -> Unit,
+    selected: Boolean = false,
+) {
+    val accent = Color(0xFFFFB74D)
+    Box(
+        Modifier
+            .background(
+                if (selected) accent else accent.copy(alpha = 0.18f),
+                RoundedCornerShape(999.dp),
+            )
+            .clickable { onTap(value) }
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            label,
+            color = if (selected) Color.White else accent,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 

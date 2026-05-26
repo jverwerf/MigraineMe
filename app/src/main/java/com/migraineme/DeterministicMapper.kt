@@ -82,7 +82,7 @@ object DeterministicMapper {
         "Weight high" to 120.0, "Weight low" to 45.0,
         // Cognitive
         "Late screen time high" to 2.0, "Late screen time low" to 0.0,
-        "Noise high" to 75.0, "Noise low" to 30.0,
+        "Noise high" to 10.0, "Noise low" to 5.0,
         "Screen time high" to 8.0, "Screen time low" to 0.5,
         // Diet
         "Alcohol exposure high" to 1.0, "Alcohol exposure low" to 0.0,
@@ -408,6 +408,7 @@ object DeterministicMapper {
         val alcoholTriggers: Certainty = Certainty.NO,
         val specificDrinks: Set<String> = emptySet(),
         val tyramineFoods: Map<String, Certainty> = emptyMap(),
+        val histamineFoods: Map<String, Certainty> = emptyMap(),
         val glutenSensitivity: String? = null,
         val glutenTriggers: Certainty = Certainty.NO,
         val eatingPatterns: Map<String, Certainty> = emptyMap(),
@@ -442,6 +443,8 @@ object DeterministicMapper {
         val selectedReliefs: Set<String> = emptySet(),
         val selectedActivities: Set<String> = emptySet(),
         val selectedMissedActivities: Set<String> = emptySet(),
+        val selectedLocations: Set<String> = emptySet(),
+        val selectedPostdromes: Set<String> = emptySet(),
         val freeText: String? = null,
     )
 
@@ -467,6 +470,8 @@ object DeterministicMapper {
         val symptoms: List<String>, val medicines: List<String>,
         val reliefs: List<String>, val activities: List<String>,
         val missedActivities: List<String>,
+        val locations: List<String> = emptyList(),
+        val postdromes: List<String> = emptyList(),
     )
 
     data class ProfileContext(
@@ -814,7 +819,7 @@ object DeterministicMapper {
     private fun mapEnvironment(a: QuestionnaireAnswers, d: Map<String, Double>, out: MutableMap<String, TriggerSetting>) {
         if ("Not sure which" in a.specificWeather) {
             for (l in listOf("Pressure high", "Pressure low", "Temperature high", "Temperature low",
-                "Humidity high", "Humidity low", "Wind speed high", "UV index high")) {
+                "Humidity high", "Humidity low", "Wind speed high", "UV index high", "Thunderstorm")) {
                 out[l] = TriggerSetting(l, "LOW", d[l])
             }
         } else {
@@ -832,10 +837,7 @@ object DeterministicMapper {
                     "Dry air"       -> out["Humidity low"] = trigLow("Humidity low", sev, d, cert)
                     "Wind"          -> out["Wind speed high"] = trigHigh("Wind speed high", sev, d, cert)
                     "Sunshine"      -> out["UV index high"] = trigHigh("UV index high", sev, d, cert)
-                    "Thunderstorms" -> {
-                        out["Pressure low"] = trigLow("Pressure low", sev, d, cert, fav = true)
-                        out["Humidity high"] = trigHigh("Humidity high", sev, d, cert)
-                    }
+                    "Thunderstorms" -> out["Thunderstorm"] = trigManual("Thunderstorm", sev, fav = true)
                 }
             }
         }
@@ -1081,7 +1083,90 @@ object DeterministicMapper {
         symptoms = a.selectedSymptoms.toList(), medicines = a.selectedMedicines.toList(),
         reliefs = a.selectedReliefs.toList(), activities = a.selectedActivities.toList(),
         missedActivities = a.selectedMissedActivities.toList(),
+        locations = a.selectedLocations.toList(),
+        postdromes = a.selectedPostdromes.toList(),
     )
 
     private fun severityRank(sev: String): Int = when (sev) { "HIGH" -> 3; "MILD" -> 2; "LOW" -> 1; else -> 0 }
+
+    // ═════════════════════════════════════════════════════════════════════
+    // POOL SEED — convert Q1–Q7 answers to pool-label selections.
+    // Silent: matched labels get toggled on without any UI hint.
+    // Match is case-insensitive; a hand-written alias map covers cases
+    // where the question key differs from the pool label.
+    // ═════════════════════════════════════════════════════════════════════
+
+    private val triggerAliases = mapOf(
+        "spike in stress" to setOf("Stress"),
+        "let-down" to setOf("Let-down", "Let-down effect"),
+        "let down" to setOf("Let-down", "Let-down effect"),
+        "feeling low" to setOf("Low mood", "Depression"),
+        "pressure changes" to setOf("Pressure low", "Pressure high", "Pressure changes"),
+        "hot weather" to setOf("Temperature high"),
+        "cold weather" to setOf("Temperature low"),
+        "humidity" to setOf("Humidity high"),
+        "wind" to setOf("Wind speed high"),
+        "sunshine" to setOf("UV high"),
+        "fluorescent lights" to setOf("Bright lights", "Fluorescent lights"),
+        "strong smells" to setOf("Strong odours", "Strong smells"),
+        "loud noise" to setOf("Noise high", "Loud noise"),
+    )
+
+    private val prodromeAliases = mapOf(
+        "urination" to setOf("Frequent urination"),
+        "stuffy nose" to setOf("Nasal congestion"),
+        "watery eyes" to setOf("Tearing"),
+        "muscle tension" to setOf("Muscle tension", "Neck/shoulder tension"),
+        "concentrating" to setOf("Difficulty focusing", "Brain fog"),
+        "words" to setOf("Word-finding trouble"),
+        "mood swings" to setOf("Mood change"),
+        "feeling low" to setOf("Depression", "Low mood"),
+        "unusually happy" to setOf("Euphoria"),
+        "light" to setOf("Sensitivity to light"),
+        "sound" to setOf("Sensitivity to sound"),
+        "smell" to setOf("Sensitivity to smell"),
+    )
+
+    private fun seedFor(key: String, poolByLower: Map<String, String>, aliases: Map<String, Set<String>>): Set<String> {
+        val out = mutableSetOf<String>()
+        // Direct case-insensitive hit
+        poolByLower[key.lowercase()]?.let { out.add(it) }
+        // Alias expansion — try each alias variant
+        aliases[key.lowercase()]?.forEach { alias ->
+            poolByLower[alias.lowercase()]?.let { out.add(it) }
+        }
+        return out
+    }
+
+    fun deriveTriggerSeed(answers: QuestionnaireAnswers, triggerPoolLabels: List<String>): Set<String> {
+        val byLower = triggerPoolLabels.associateBy { it.lowercase() }
+        val out = mutableSetOf<String>()
+        fun add(key: String?) {
+            if (key.isNullOrBlank()) return
+            out.addAll(seedFor(key, byLower, triggerAliases))
+        }
+        answers.emotionalPatterns.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.tyramineFoods.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.histamineFoods.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.eatingPatterns.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.specificDrinks.forEach { add(it) }
+        answers.specificWeather.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.environmentSensitivities.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.physicalFactors.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        if (answers.tracksCycle == "Yes") add("menstruation_predicted")
+        return out
+    }
+
+    fun deriveProdromeSeed(answers: QuestionnaireAnswers, prodromePoolLabels: List<String>): Set<String> {
+        val byLower = prodromePoolLabels.associateBy { it.lowercase() }
+        val out = mutableSetOf<String>()
+        fun add(key: String?) {
+            if (key.isNullOrBlank()) return
+            out.addAll(seedFor(key, byLower, prodromeAliases))
+        }
+        answers.physicalProdromes.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.moodProdromes.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        answers.sensoryProdromes.forEach { (k, v) -> if (v != Certainty.NO) add(k) }
+        return out
+    }
 }

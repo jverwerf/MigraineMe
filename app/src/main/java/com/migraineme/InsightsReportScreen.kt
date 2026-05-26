@@ -7,6 +7,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,7 +54,14 @@ import java.time.format.DateTimeFormatter
 
 private val FilterCatColors = mapOf(
     "Severity" to Color(0xFFFF7043),
-    "Symptom" to Color(0xFFCE93D8),
+    // Symptom split into 3 pool-category buckets — matches iOS
+    // ReportFilterCard.filterCategoryColors after the pain_character /
+    // accompanying / Postdrome split. The Kotlin viewmodel emits these
+    // bucket names directly (symptomBucket() in InsightsViewModel), so
+    // FilterCatOrder must list them or the chips never render.
+    "Pain Character" to Color(0xFFCE93D8),
+    "Accompanying" to Color(0xFFBA68C8),
+    "Postdrome" to Color(0xFFAB47BC),
     "Pain Location" to Color(0xFFFF8A80),
     "Trigger" to Color(0xFFFFB74D),
     "Prodrome" to Color(0xFF9575CD),
@@ -66,7 +75,8 @@ private val FilterCatColors = mapOf(
 // ======= Ordered categories to match the migraine log flow =======
 
 private val FilterCatOrder = listOf(
-    "Severity", "Symptom", "Pain Location", "Trigger", "Prodrome",
+    "Severity", "Pain Character", "Accompanying", "Postdrome",
+    "Pain Location", "Trigger", "Prodrome",
     "Medicine", "Relief", "Activity", "Location", "Missed Activity"
 )
 
@@ -152,6 +162,7 @@ fun InsightsReportScreen(
 
     val allMissed by vm.allMissedActivities.collectAsState()
     val allActs by vm.allActivities.collectAsState()
+    val allSymptoms by vm.allSymptoms.collectAsState()
 
     // Data for comprehensive doctor report
     val correlationStats by vm.correlationStats.collectAsState()
@@ -281,6 +292,17 @@ fun InsightsReportScreen(
                     .map { DailyMetricPoint(it.date, it.value) })
         }
     }
+    // Second pass — every other metric that has data in the window. Used
+    // by the Health Metrics section to render "Overlay Metrics" first and
+    // "All Available Metrics" below (matches iOS InsightsScreen split).
+    val availableNotEnabledSeries = remember(available, enabledKeys, allDailyMetrics, windowDates) {
+        available.filter { it.key !in enabledKeys }.map { d ->
+            MetricSeries(d.key, d.label, d.unit, d.color,
+                allDailyMetrics[d.key]!!
+                    .filter { it.date in windowDates }
+                    .map { DailyMetricPoint(it.date, it.value) })
+        }
+    }
 
     val windowMigs = remember(migraines, wStart, wEnd) {
         if (wStart == null || wEnd == null) listOfNotNull(sel)
@@ -292,14 +314,6 @@ fun InsightsReportScreen(
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-
-            //  Back arrow 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back", tint = Color.White)
-                }
-            }
 
             // ========== 1. FILTER CARD (collapsible) ==========
             FilterCard(
@@ -334,7 +348,10 @@ fun InsightsReportScreen(
             }
 
             // ========== GENERATE / DOWNLOAD REPORT BUTTON ==========
-            if (!reportGenerated) {
+            // Hidden until the user picks a time range (matches iOS — making
+            // the chip selection the explicit gate so the user can't generate
+            // an empty / un-scoped report).
+            if (!reportGenerated && timeFrame != InsightsViewModel.TimeFrame.NONE) {
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { vm.setReportGenerated(true) },
@@ -396,12 +413,17 @@ fun InsightsReportScreen(
                             )
                             val allGd = mutableListOf<MgGraphData>()
                             val globalAutoKeys = mutableSetOf<String>()
+                            // Map<migraine_id → MigraineLinkedItems> — passed to the PDF
+                            // so the opening Migraine Log section can render every logged
+                            // value per attack instead of just truncating to `type`.
+                            val linkedItemsByMigraine = mutableMapOf<String, SupabaseDbService.MigraineLinkedItems>()
 
                             android.util.Log.d("ReportPDF", "Building graph data for ${filteredSorted.size} migraines")
                             for (mg in filteredSorted) {
                                 val mgId = mg.id ?: continue
                                 try {
                                 val linked = vm.getLinkedItemsFor(mgId)
+                                linkedItemsByMigraine[mgId] = linked
                                 val actsFor = allActs.filter { it.migraineId == mgId }
                                 val missedFor = allMissed.filter { it.migraineId == mgId }
                                 val events = buildEventMarkers(linked, actsFor, missedFor)
@@ -475,6 +497,33 @@ fun InsightsReportScreen(
                             }
 
                             android.util.Log.d("ReportPDF", "Captured ${captures.size} timelines, generating PDF")
+
+                            // Treatments section: leaderboard + cached GPT narratives + side-effect logs
+                            val token = auth.accessToken
+                            var treatments: List<SupabaseDbService.TreatmentLeaderboardRow> = emptyList()
+                            val narratives = mutableMapOf<String, String>()
+                            val sideEffects = mutableMapOf<String, List<SupabaseDbService.TreatmentSideEffectLogRow>>()
+                            if (token != null) {
+                                try {
+                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                    treatments = db.getTreatmentLeaderboard(token)
+                                    val today = java.time.LocalDate.now().toString()
+                                    for (row in treatments) {
+                                        runCatching { db.getTreatmentNarrative(token, row.regimenId)?.narrative }
+                                            .getOrNull()?.let { narratives[row.regimenId] = it }
+                                        runCatching {
+                                            db.getTreatmentSideEffectLogs(token, row.startDate, row.stopDate ?: today)
+                                        }.getOrNull()?.let { if (it.isNotEmpty()) sideEffects[row.regimenId] = it }
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.w("ReportPDF", "Treatments fetch for PDF failed", e)
+                                }
+                            }
+
+                            val symptomsByMigraine: Map<String, List<SupabaseDbService.SymptomLogRow>> =
+                                allSymptoms.groupBy { it.migraineId ?: "" }
+                                    .filterKeys { it.isNotBlank() }
+
                             val reportData = ReportPdfGenerator.ReportData(
                                 filteredMigraines = filteredSorted, timeFrameLabel = timeLabel,
                                 spiders = spiders, enabledMetrics = enabledSeries,
@@ -502,10 +551,14 @@ fun InsightsReportScreen(
                                 severityCounts = filteredImpact.severityCounts,
                                 totalMigraineCount = filteredImpact.totalMigraineCount,
                                 overallAvgSeverity = filteredImpact.overallAvgSeverity,
-                                sources = vm.metricSources.value,
                                 symptomStats = vm.symptomStats.value,
                                 symptomOutcomes = vm.symptomOutcomes.value,
-                                symptomSegments = vm.symptomSegments.value)
+                                symptomSegments = vm.symptomSegments.value,
+                                treatments = treatments,
+                                treatmentNarratives = narratives,
+                                treatmentSideEffects = sideEffects,
+                                linkedItemsByMigraine = linkedItemsByMigraine,
+                                symptomsByMigraine = symptomsByMigraine)
                             val generator = ReportPdfGenerator(ctx)
                             android.util.Log.d("ReportPDF", "Calling generator.generate()")
                             val file = generator.generate(reportData)
@@ -652,11 +705,58 @@ fun InsightsReportScreen(
                         }
                     }
                 }
+
+                // Severity over time (monthly avg, ≥3 months gate) — mirrors iOS SeverityOverTimeChart
+                val monthsWithSev = remember(filteredSorted) {
+                    filteredByMonth.mapNotNull { (monthStart, items) ->
+                        val sevs = items.mapNotNull { it.severity }
+                        if (sevs.isEmpty()) null
+                        else Triple(monthStart, sevs.average().toFloat(), sevs.size)
+                    }
+                }
+                if (monthsWithSev.size >= 3) {
+                    BaseCard {
+                        Text("Average Severity", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(8.dp))
+                        val sevFmt = DateTimeFormatter.ofPattern("MMM")
+                        Row(
+                            Modifier.fillMaxWidth().height(120.dp).horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            monthsWithSev.forEach { (monthStart, avg, _) ->
+                                val sevColor = when {
+                                    avg >= 7f -> Color(0xFFE57373)
+                                    avg >= 4f -> Color(0xFFFFB74D)
+                                    else -> Color(0xFF81C784)
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(String.format("%.1f", avg), color = sevColor,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    Spacer(Modifier.height(2.dp))
+                                    val barH = (avg / 10f * 80f).coerceAtLeast(4f)
+                                    Canvas(Modifier.width(24.dp).height(barH.dp)) {
+                                        drawRoundRect(AppTheme.AccentPink.copy(alpha = 0.6f), cornerRadius = CornerRadius(4f, 4f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(monthStart.format(sevFmt), color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // ========== 2. WHAT HAPPENED (all time) ==========
+            // Include both `trigger` and `metric` factor types so the Full
+            // Report matches iOS (InsightsScreen.swift previewTriggers). The
+            // metric bucket carries the sleep / weather / HRV patterns that
+            // were silently dropped before — same account showed different
+            // top items between iOS and Android because of this filter.
             val previewTriggers = remember(correlationStats) {
-                correlationStats.filter { it.isSignificant() && it.factorType == "trigger" }
+                correlationStats.filter { it.isSignificant() && (it.factorType == "trigger" || it.factorType == "metric") }
                     .sortedByDescending { it.liftRatio }.take(3)
             }
             val previewInteractions = remember(correlationStats) {
@@ -679,11 +779,11 @@ fun InsightsReportScreen(
             // ========== 3. WHAT WORKED (all time) ==========
             val previewTreatments = remember(correlationStats) {
                 correlationStats.filter { it.factorType == "treatment" && it.liftRatio > 1.2f }
-                    .sortedByDescending { it.liftRatio }.take(2)
+                    .sortedByDescending { it.liftRatio }.take(3)
             }
             val previewTreatmentInteractions = remember(correlationStats) {
                 correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
-                    .sortedByDescending { it.liftRatio }.take(2)
+                    .sortedByDescending { it.liftRatio }.take(3)
             }
             if (previewTreatments.isNotEmpty() || previewTreatmentInteractions.isNotEmpty()) {
                 Column {
@@ -772,12 +872,19 @@ fun InsightsReportScreen(
             // ========== 7. SPIDERS (filtered) ==========
 
             if (filteredSorted.isNotEmpty()) {
-                spiders.symptoms?.takeIf { it.totalLogged > 0 }?.let {
+                val hasMigraineSyms = (spiders.painChar?.totalLogged ?: 0) > 0
+                    || (spiders.accompanying?.totalLogged ?: 0) > 0
+                    || (spiders.postdrome?.totalLogged ?: 0) > 0
+                if (hasMigraineSyms) {
                     FilteredSymptomsCard(
                         migCount = filteredSorted.size,
                         painChar = spiders.painChar,
                         accompanying = spiders.accompanying,
-                        onClick = { navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/Symptoms") }
+                        postdrome = spiders.postdrome,
+                        onClick = {
+                            vm.setReportBreakdownFilter(spiders)
+                            navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/Migraines")
+                        }
                     )
                 }
 
@@ -800,6 +907,7 @@ fun InsightsReportScreen(
                             else -> null
                         }
                         FilteredSpiderCard(sp, effAxes) {
+                            vm.setReportBreakdownFilter(spiders)
                             navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${sp.logType}")
                         }
                     }
@@ -990,6 +1098,8 @@ private fun FilterCard(
     metricSources: Set<String> = emptySet()
 ) {
     var expanded by remember { mutableStateOf(true) }
+    var showFilterByInfo by remember { mutableStateOf(false) }
+    var showOverlayMetricsInfo by remember { mutableStateOf(false) }
     val hasFilters = activeFilters.isNotEmpty() || (timeFrame != InsightsViewModel.TimeFrame.ALL && timeFrame != InsightsViewModel.TimeFrame.NONE)
     val activeCount = activeFilters.size + if (timeFrame != InsightsViewModel.TimeFrame.ALL && timeFrame != InsightsViewModel.TimeFrame.NONE) 1 else 0
     val enabledMetricCount = enabledKeys.size
@@ -1093,9 +1203,17 @@ private fun FilterCard(
                     modifier = Modifier.padding(bottom = 2.dp))
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    InsightsViewModel.TimeFrame.entries
-                        .filter { it != InsightsViewModel.TimeFrame.NONE }
-                        .forEach { tf ->
+                    // Time range chips — reduced set: All Time, 1 Year,
+                    // 6 Months, 3 Months, 1 Month, Custom. Day-grained
+                    // chips (7d / 14d) hidden to keep the row simple.
+                    listOf(
+                        InsightsViewModel.TimeFrame.ALL,
+                        InsightsViewModel.TimeFrame.YEAR_1,
+                        InsightsViewModel.TimeFrame.MONTH_6,
+                        InsightsViewModel.TimeFrame.MONTH_3,
+                        InsightsViewModel.TimeFrame.MONTH_1,
+                        InsightsViewModel.TimeFrame.CUSTOM,
+                    ).forEach { tf ->
                         val isActive = tf == timeFrame
                         FilterOptionChip(
                             label = tf.label,
@@ -1163,64 +1281,163 @@ private fun FilterCard(
                 // Tag categories + Overlay Metrics – only shown after a time range is selected
                 if (timeFrame != InsightsViewModel.TimeFrame.NONE) {
 
-                // Tag categories
-                val orderedCats = FilterCatOrder.filter { it in availableTags }
-                orderedCats.forEach { cat ->
-                    val labels = availableTags[cat] ?: return@forEach
-                    val color = FilterCatColors[cat] ?: AppTheme.AccentPurple
-                    Text(cat, color = color.copy(alpha = 0.8f),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
-                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        labels.forEach { label ->
-                            val tag = InsightsViewModel.FilterTag(cat, label)
-                            val isActive = tag in activeFilters
-                            FilterOptionChip(label, color, isActive) { onToggle(tag) }
+                // "Filter by" tinted section — light purple box matches iOS
+                // so the chip filters read as a distinct interactive group
+                // under the time-range row. Header + helper colors match the
+                // Overlay Metrics box below for visual consistency.
+                Spacer(Modifier.height(18.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AppTheme.AccentPurple.copy(alpha = 0.10f))
+                        .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Filter by",
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                        IconButton(
+                            onClick = { showFilterByInfo = true },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Info,
+                                contentDescription = "About Filter by",
+                                tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
-                }
-
-                //  Overlay Metrics 
-                if (availableMetrics.isNotEmpty()) {
-                    Spacer(Modifier.height(12.dp))
-                    Text("Overlay Metrics", color = AppTheme.AccentPurple.copy(alpha = 0.8f),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(bottom = 2.dp))
-                    Text("Toggle metric lines on the graph. * = auto-detected.",
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall)
                     Spacer(Modifier.height(4.dp))
-                    val metricGroups = availableMetrics.groupBy { it.group }
-                    metricGroups.forEach { (group, defs) ->
-                        Text(group, color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
+                    Text("Tap any chip below to limit the report to attacks matching it.",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium)
+
+                    val orderedCats = FilterCatOrder.filter { it in availableTags }
+                    orderedCats.forEach { cat ->
+                        val labels = availableTags[cat] ?: return@forEach
+                        val color = FilterCatColors[cat] ?: AppTheme.AccentPurple
+                        Text(cat, color = color.copy(alpha = 0.8f),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
                         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            defs.forEach { d ->
-                                val isAuto = d.key in autoSelectedKeys
-                                val isEnabled = d.key in enabledKeys
-                                DetailToggle(
-                                    label = d.label,
-                                    color = d.color,
-                                    active = isEnabled,
-                                    isAutoSelected = isAuto,
-                                    onClick = { onToggleMetric(d.key) }
-                                )
+                            labels.forEach { label ->
+                                val tag = InsightsViewModel.FilterTag(cat, label)
+                                val isActive = tag in activeFilters
+                                FilterOptionChip(prettyLabel(label), color, isActive) { onToggle(tag) }
                             }
                         }
                     }
                 }
 
-                // Source badges
-                if (metricSources.isNotEmpty()) {
-                    Spacer(Modifier.height(10.dp))
-                    SourceBadgeRow(metricSources.sorted())
+                //  Overlay Metrics — matching tinted section.
+                if (availableMetrics.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(AppTheme.AccentPurple.copy(alpha = 0.10f))
+                            .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Overlay Metrics",
+                                color = AppTheme.AccentPurple,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            IconButton(
+                                onClick = { showOverlayMetricsInfo = true },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "About Overlay Metrics",
+                                    tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text("Tap any metric to add it to the graph. Highlighted ones have been detected in your migraine data.",
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(4.dp))
+                        val metricGroups = availableMetrics.groupBy { it.group }
+                        metricGroups.forEach { (group, defs) ->
+                            Text(group, color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
+                            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                defs.forEach { d ->
+                                    val isAuto = d.key in autoSelectedKeys
+                                    val isEnabled = d.key in enabledKeys
+                                    DetailToggle(
+                                        label = d.label,
+                                        color = d.color,
+                                        active = isEnabled,
+                                        isAutoSelected = isAuto,
+                                        onClick = { onToggleMetric(d.key) }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
+
+                // Source badges removed per product decision (matches iOS).
 
                 } // end if timeFrame != NONE
             }
+        }
+
+        // "Filter by" / "Overlay Metrics" info dialogs — same copy as iOS so
+        // the explanation about chips only showing what data exists is
+        // surfaced on both platforms.
+        if (showFilterByInfo) {
+            AlertDialog(
+                onDismissRequest = { showFilterByInfo = false },
+                confirmButton = {
+                    TextButton(onClick = { showFilterByInfo = false }) {
+                        Text("Got it", color = AppTheme.AccentPurple)
+                    }
+                },
+                title = {
+                    Text("About Filter by", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                },
+                text = {
+                    Text(
+                        "Tap any chip below to narrow the report down to just the migraine attacks that have that severity / symptom / trigger / medicine / etc. Multiple chips stack — picking a Trigger plus a Symptom shows only attacks with both. Chips are grouped by category and only the values that appear in your logs show up here.",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium)
+                },
+                containerColor = AppTheme.BaseCardContainer
+            )
+        }
+        if (showOverlayMetricsInfo) {
+            AlertDialog(
+                onDismissRequest = { showOverlayMetricsInfo = false },
+                confirmButton = {
+                    TextButton(onClick = { showOverlayMetricsInfo = false }) {
+                        Text("Got it", color = AppTheme.AccentPurple)
+                    }
+                },
+                title = {
+                    Text("About Overlay Metrics", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                },
+                text = {
+                    Text(
+                        "Toggle metrics on or off to overlay them on the timeline graph below. We only show metrics you actually have data for — if a metric isn't here, that table is empty for your account (e.g. no sleep stages logged means no Deep / REM / Light chips). Highlighted ones were auto-detected from triggers / prodromes you've logged.",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium)
+                },
+                containerColor = AppTheme.BaseCardContainer
+            )
         }
     }
 
@@ -1372,6 +1589,7 @@ private fun FilteredSymptomsCard(
     migCount: Int,
     painChar: SpiderData?,
     accompanying: SpiderData?,
+    postdrome: SpiderData?,
     onClick: () -> Unit = {}
 ) {
     BaseCard(modifier = Modifier.clickable(onClick = onClick)) {
@@ -1379,7 +1597,7 @@ private fun FilteredSymptomsCard(
             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("Symptoms", color = AppTheme.TitleColor,
+                Text("Migraines", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Text("$migCount migraines",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -1407,6 +1625,17 @@ private fun FilteredSymptomsCard(
                     SpiderChart(axes = data.axes, accentColor = Color(0xFFBA68C8), size = 200.dp)
                 }
             } else StackedProportionalBar(axes = data.axes, accentColor = Color(0xFFBA68C8))
+        }
+        postdrome?.takeIf { it.axes.isNotEmpty() }?.let { data ->
+            Spacer(Modifier.height(16.dp))
+            Text("Postdrome", color = Color(0xFF4DB6AC),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.height(4.dp))
+            if (data.axes.size >= 3) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    SpiderChart(axes = data.axes, accentColor = Color(0xFF4DB6AC), size = 200.dp)
+                }
+            } else StackedProportionalBar(axes = data.axes, accentColor = Color(0xFF4DB6AC))
         }
     }
 }

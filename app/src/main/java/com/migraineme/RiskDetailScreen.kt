@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,19 +52,7 @@ fun RiskDetailScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            // Top bar
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-                }
-                Spacer(Modifier.weight(1f))
-            }
-
-            // Gauge + forecast — exact same as HomeScreen
+            // Gauge + forecast — exact same as HomeScreen, plus History → and day arrows
             DetailHeroCard(
                 riskPercent = displayPercent,
                 riskScore = displayScore,
@@ -70,7 +60,13 @@ fun RiskDetailScreen(
                 forecast = state.forecast,
                 selectedDay = selectedDay,
                 dayRisks = state.dayRisks,
-                onDaySelected = { selectedDay = it }
+                onDaySelected = { selectedDay = it },
+                onHistoryTap = {
+                    val contribParam = java.net.URLEncoder.encode(
+                        displayTriggers.joinToString("|") { it.name }, "UTF-8"
+                    )
+                    navController.navigate(Routes.FULL_GRAPH_RISK + "?contributors=$contribParam")
+                }
             )
 
             // ALL triggers — not limited to 3
@@ -100,9 +96,11 @@ private fun DetailHeroCard(
     selectedDay: Int = 0,
     dayRisks: List<DayRisk> = emptyList(),
     onDaySelected: (Int) -> Unit = {},
+    onHistoryTap: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val clamped = riskPercent.coerceIn(0, 100)
+    val maxDay = 6
 
     val zoneColor = when (riskZone) {
         RiskZone.HIGH -> Color(0xFFE57373)
@@ -119,19 +117,61 @@ private fun DetailHeroCard(
     }
 
     HeroCard(modifier = modifier) {
-        Text(
-            dayLabel,
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                dayLabel,
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.align(Alignment.Center)
+            )
+            if (onHistoryTap != null) {
+                Text(
+                    "History →",
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .clickable { onHistoryTap() }
+                        .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                )
+            }
+        }
 
-        DetailGauge(
-            percent = clamped,
-            diameter = 220.dp,
-            stroke = 16.dp,
-            trackColor = AppTheme.TrackColor,
-            progressColor = AppTheme.AccentPurple
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            IconButton(
+                onClick = { if (selectedDay > 0) onDaySelected(selectedDay - 1) },
+                enabled = selectedDay > 0
+            ) {
+                Icon(
+                    Icons.Outlined.KeyboardArrowLeft,
+                    contentDescription = "Previous day",
+                    tint = if (selectedDay > 0) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
+                )
+            }
+
+            DetailGauge(
+                percent = clamped,
+                diameter = 220.dp,
+                stroke = 16.dp,
+                trackColor = AppTheme.TrackColor,
+                progressColor = AppTheme.AccentPurple
+            )
+
+            IconButton(
+                onClick = { if (selectedDay < maxDay) onDaySelected(selectedDay + 1) },
+                enabled = selectedDay < maxDay
+            ) {
+                Icon(
+                    Icons.Outlined.KeyboardArrowRight,
+                    contentDescription = "Next day",
+                    tint = if (selectedDay < maxDay) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
+                )
+            }
+        }
 
         // Score display
         Text(

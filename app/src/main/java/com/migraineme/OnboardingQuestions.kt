@@ -50,7 +50,7 @@ val dataCollectionGroups = listOf(
         DataCollectionItem("steps_daily", "Steps", "Daily step count", "wearable", requiresWearable = true),
         DataCollectionItem("time_in_high_hr_zones_daily", "High HR zones", "Minutes in elevated heart rate", "wearable", requiresWearable = true),
     )),
-    DataCollectionGroup("Mental Health & Screen", listOf(
+    DataCollectionGroup("Cognitive & Screen", listOf(
         DataCollectionItem("stress_index_daily", "Stress index", "Computed from HRV and activity", "computed"),
         DataCollectionItem("screen_time_daily", "Screen time", "Total phone screen time", "phone"),
         DataCollectionItem("screen_time_late_night", "Late night screen time", "Screen use after 10pm", "phone"),
@@ -103,6 +103,7 @@ val environmentTriggerQuestions = listOf(
     SeverityQuestion("Temperature high", "Hot weather", "Heat waves, high temperatures", "trigger"),
     SeverityQuestion("Wind speed high", "Strong wind", "Windy or gusty conditions", "trigger"),
     SeverityQuestion("UV high", "High UV", "High ultraviolet radiation", "trigger"),
+    SeverityQuestion("Thunderstorm", "Thunderstorm", "Lightning / electrical storms", "trigger"),
 )
 
 val cognitiveTriggerQuestions = listOf(

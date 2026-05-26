@@ -68,11 +68,11 @@ fun buildFavoritesPool(context: Context): List<FavPoolEntry> {
 
     addGroup("sleep", "Sleep", SleepCardConfigStore.load(context).sleepDisplayMetrics) { SleepCardConfig.labelFor(it) }
     addGroup("physical", "Physical", PhysicalCardConfigStore.load(context).physicalDisplayMetrics) { PhysicalCardConfig.labelFor(it) }
-    addGroup("mental", "Mental", MentalCardConfigStore.load(context).mentalDisplayMetrics) { MentalCardConfig.labelFor(it) }
+    addGroup("mental", "Cognitive", MentalCardConfigStore.load(context).mentalDisplayMetrics) { MentalCardConfig.labelFor(it) }
 
     // Nutrition stays on old system
     MonitorCardConfigStore.load(context).nutritionDisplayMetrics.forEach {
-        pool.add(FavPoolEntry("nutrition:$it", MonitorCardConfig.NUTRITION_METRIC_LABELS[it] ?: it, "Nutrition"))
+        pool.add(FavPoolEntry("nutrition:$it", MonitorCardConfig.NUTRITION_METRIC_LABELS[it] ?: it, "Diet"))
     }
     return pool
 }

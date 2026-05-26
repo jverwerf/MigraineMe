@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
@@ -151,6 +152,8 @@ object Routes {
     
     const val MONITOR_NUTRITION = "monitor_nutrition"
     const val MONITOR_MEDICINES = "monitor_medicines"
+    const val MONITOR_TREATMENTS = "monitor_treatments"
+    const val MONITOR_TREATMENT_DETAIL = "monitor_treatment_detail/{regimenId}"
     const val MEDICINE_CONFIG = "medicine_config"
     const val MEDICINE_DATA_HISTORY = "medicine_data_history"
     const val NUTRITION_CONFIG = "nutrition_config"
@@ -216,6 +219,7 @@ object Routes {
     const val MISSED_ACTIVITIES = "missed_activities"
     const val MANAGE_MISSED_ACTIVITIES = "manage_missed_activities"
     const val MANAGE_CALENDAR_SKIPS = "manage_calendar_skips"
+    const val MANAGE_TREATMENT_SIDE_EFFECTS = "manage_treatment_side_effects"
     const val POSTDROMES = "postdromes"
     const val TIMING = "timing"
     const val PAINT_PICTURE = "paint_picture"
@@ -530,8 +534,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 // Run location sync on app resume
                 LocationDailySyncWorker.runOnceNow(appCtx)
 
-                // Schedule the daily 7am calendar sync (no-op if already scheduled).
+                // Schedule the daily 7am calendar sync (no-op if already scheduled),
+                // and fire a one-shot sync right now so mappings are fresh by the
+                // time the user opens the daily check-in.
                 CalendarDailySyncWorker.schedule(appCtx)
+                CalendarDailySyncWorker.runOnceNow(appCtx)
 
                 // Run Health Connect sync on app resume
                 // This is the primary sync method - always works when app is open
@@ -833,9 +840,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.QUICK_LOG_ACTIVITY -> "Log Activity"
                                     Routes.QUICK_LOG_PRODROME -> "Log Prodrome"
                                     Routes.QUICK_LOG_MIGRAINE -> "Quick Migraine"
-                                    Routes.MONITOR_NUTRITION -> "Nutrition"
-                                    Routes.NUTRITION_CONFIG -> "Customize Nutrition"
-                                    Routes.NUTRITION_HISTORY -> "Nutrition History"
+                                    Routes.MONITOR_NUTRITION -> "Diet"
+                                    Routes.NUTRITION_CONFIG -> "Customize Diet"
+                                    Routes.NUTRITION_HISTORY -> "Diet History"
                                     Routes.MONITOR_ENVIRONMENT -> "Environment"
                                     Routes.WEATHER_CONFIG -> "Customize Environment"
                                     Routes.SLEEP_DATA_HISTORY -> "Sleep Data"
@@ -843,15 +850,15 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.SLEEP_CONFIG -> "Customize Sleep"
                                     Routes.FULL_GRAPH_SLEEP -> "Sleep History"
                                     Routes.FULL_GRAPH_WEATHER -> "Environment History"
-                                    Routes.FULL_GRAPH_NUTRITION -> "Nutrition History"
+                                    Routes.FULL_GRAPH_NUTRITION -> "Diet History"
                                     Routes.FULL_GRAPH_MEDICINES -> "Medicines History"
                                     Routes.MONITOR_PHYSICAL -> "Physical Health"
                                     Routes.MONITOR_SLEEP -> "Sleep"
-                                    Routes.MONITOR_MENTAL -> "Mental Health"
+                                    Routes.MONITOR_MENTAL -> "Cognitive"
                                     Routes.MONITOR_RISK -> "Risk"
                                     Routes.RISK_CONFIG -> "Risk Card Settings"
                                     Routes.RISK_DATA_HISTORY -> "Risk Data"
-                                    Routes.MENTAL_DATA_HISTORY -> "Mental Health Data"
+                                    Routes.MENTAL_DATA_HISTORY -> "Cognitive Data"
                                     Routes.PHYSICAL_DATA_HISTORY -> "Physical Health Data"
                                     Routes.COMMUNITY -> "Community"
                                     Routes.JOURNAL -> "Journal"
@@ -890,10 +897,28 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.CHANGE_PASSWORD -> "Change password"
                                     Routes.RISK_WEIGHTS -> "Risk Model"
                                     Routes.RISK_DETAIL -> "Risk Detail"
+                                    Routes.INSIGHTS_RECOMMENDATIONS -> "Recommendations"
+                                    Routes.MONITOR_MEDICINES -> "Medicines"
+                                    Routes.MONITOR_TREATMENTS -> "Treatments"
+                                    "monitor_treatments_config" -> "Customize Treatments"
+                                    Routes.MEDICINE_CONFIG -> "Customize Medicines"
+                                    Routes.MEDICINE_DATA_HISTORY -> "Medicines Data"
+                                    Routes.FULL_GRAPH_PHYSICAL -> "Physical History"
+                                    Routes.PHYSICAL_CONFIG -> "Customize Physical Health"
+                                    Routes.FULL_GRAPH_RISK -> "Risk History"
+                                    Routes.MENTAL_CONFIG -> "Customize Cognitive"
+                                    Routes.MANAGE_CALENDAR_SKIPS -> "Calendar Skips"
+                                    Routes.TRIGGERS_SETTINGS -> "Triggers Settings"
+                                    Routes.RECALIBRATION_REVIEW -> "Recalibration"
+                                    Routes.PAYWALL -> "Upgrade"
+                                    Routes.CHAT_ASSISTANT -> "Assistant"
                                     else -> when {
                                         current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true ->
                                             backStack?.arguments?.getString("logType") ?: "Breakdown"
                                         current?.startsWith("help_article") == true -> "Help"
+                                        current?.startsWith(Routes.ARTICLE_DETAIL) == true -> "Article"
+                                        current?.startsWith(Routes.FORUM_POST_DETAIL) == true -> "Post"
+                                        current?.startsWith("monitor_treatment_detail") == true -> "Treatment"
                                         else -> ""
                                     }
                                 }
@@ -901,26 +926,45 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         },
                         navigationIcon = {
                             if (current != Routes.LOGIN && current != Routes.SIGNUP) {
-                                IconButton(onClick = {
-                                    val ts = TourManager.state.value
-                                    if (ts.active && ts.phase == CoachPhase.TOUR && topBarTourHint != NavHintLocation.TOP_SETTINGS) return@IconButton
-                                    scope.launch { drawerState.open() }
-                                }) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        if (topBarTourHint == NavHintLocation.TOP_SETTINGS) {
-                                            Box(
-                                                Modifier
-                                                    .size((24 * topBarPulseScale).dp)
-                                                    .background(AppTheme.AccentPink.copy(alpha = topBarPulseAlpha), CircleShape)
-                                            )
+                                val isRootTab = current == Routes.HOME ||
+                                    current == Routes.MONITOR ||
+                                    current == Routes.INSIGHTS ||
+                                    current == Routes.MIGRAINE ||
+                                    current == Routes.JOURNAL
+                                if (isRootTab) {
+                                    IconButton(onClick = {
+                                        val ts = TourManager.state.value
+                                        if (ts.active && ts.phase == CoachPhase.TOUR && topBarTourHint != NavHintLocation.TOP_SETTINGS) return@IconButton
+                                        scope.launch { drawerState.open() }
+                                    }) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            if (topBarTourHint == NavHintLocation.TOP_SETTINGS) {
+                                                Box(
+                                                    Modifier
+                                                        .size((24 * topBarPulseScale).dp)
+                                                        .background(AppTheme.AccentPink.copy(alpha = topBarPulseAlpha), CircleShape)
+                                                )
+                                            }
+                                            Icon(Icons.Outlined.Settings, contentDescription = "Settings")
                                         }
-                                        Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                                    }
+                                } else {
+                                    IconButton(onClick = { nav.popBackStack() }) {
+                                        Icon(
+                                            Icons.AutoMirrored.Outlined.ArrowBack,
+                                            contentDescription = "Back"
+                                        )
                                     }
                                 }
                             }
                         },
                         actions = {
-                            if (current != Routes.LOGIN && current != Routes.SIGNUP) {
+                            val isRootTab = current == Routes.HOME ||
+                                current == Routes.MONITOR ||
+                                current == Routes.INSIGHTS ||
+                                current == Routes.MIGRAINE ||
+                                current == Routes.JOURNAL
+                            if (isRootTab && current != Routes.LOGIN && current != Routes.SIGNUP) {
                                 IconButton(onClick = {
                                     val ts = TourManager.state.value
                                     if (ts.active && ts.phase == CoachPhase.TOUR && topBarTourHint != NavHintLocation.TOP_COMMUNITY) return@IconButton
@@ -972,6 +1016,29 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     // Monitor detail screens (placeholders for now)
                     composable(Routes.MONITOR_NUTRITION) { MonitorNutritionScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_MEDICINES) { MonitorMedicineScreen(navController = nav, authVm = authVm) }
+                    composable(Routes.MONITOR_TREATMENTS) {
+                        // Premium gating is now handled inline via PremiumGate
+                        // inside the screen (matches Insights / Home / Nutrition pattern).
+                        MonitorTreatmentsScreen(navController = nav)
+                    }
+                    composable("monitor_treatments_config") {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else { MonitorTreatmentsConfigScreen(navController = nav) }
+                    }
+                    composable(
+                        Routes.MONITOR_TREATMENT_DETAIL,
+                        arguments = listOf(androidx.navigation.navArgument("regimenId") { type = androidx.navigation.NavType.StringType })
+                    ) { backStack ->
+                        val regimenId = backStack.arguments?.getString("regimenId") ?: ""
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
+                        } else {
+                            MonitorTreatmentDetailScreen(navController = nav, regimenId = regimenId)
+                        }
+                    }
                     composable(Routes.MEDICINE_CONFIG) { MonitorMedicineConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.MEDICINE_DATA_HISTORY) {
                         val pState by PremiumManager.state.collectAsState()
@@ -1237,7 +1304,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         nav.popBackStack(Routes.MIGRAINE, inclusive = false)
                     }
                     composable(Routes.LOG_MIGRAINE) { LogHomeScreen(navController = nav, authVm = authVm, vm = logVm, symptomVm = symptomVm, onClose = wizardClose) }
-                    composable(Routes.TIMING) { TimingScreen(navController = nav, vm = logVm, onClose = wizardClose) }
+                    composable(Routes.TIMING) { TimingScreen(navController = nav, authVm = authVm, vm = logVm, onClose = wizardClose) }
                     composable(Routes.PAINT_PICTURE) { PaintThePictureScreen(navController = nav, authVm = authVm, vm = logVm, symptomVm = symptomVm, onClose = wizardClose) }
                     composable(Routes.PAIN_LOCATION) { PainLocationScreen(navController = nav, vm = logVm, onClose = wizardClose) }
                     composable(Routes.PRODROMES_LOG) {
@@ -1531,6 +1598,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 drawHeroIcon = { HubIcons.run { drawTriggerBolt(it) } },
                                 items = items,
                                 showPrediction = true,
+                                infoText = "This is your full trigger pool: every trigger that can be picked in the wizard, Quick Log, or Daily Check-In, plus every trigger that gets auto-fired from your wearable, weather, nutrition or menstruation data.\n\n" +
+                                    "For each trigger:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log and in the wizard, so put your most-logged ones up top.\n• Tap the row to expand it. From there you can change the category, set the severity (HIGH / MILD / LOW / NONE — NONE keeps it in the pool but stops it contributing to your risk score), and for auto-detected triggers, toggle the automation on/off and set the threshold the app uses to fire it.\n• Tap the trash icon to remove a trigger entirely. Past logged entries aren't affected; the trigger just stops appearing as an option going forward.\n\n" +
+                                    "Use the + button to add a custom trigger your doctor mentioned or that you've noticed isn't in the defaults. Manual triggers don't auto-fire, you log them yourself.\n\n" +
+                                    "Changes to severity, category, automation and thresholds save together when you tap Save & Recalculate at the bottom. That recomputes your risk score so the gauge reflects the new weights immediately.",
                                 categories = listOf("Body", "Cognitive", "Diet", "Environment", "Menstrual Cycle", "Physical", "Sleep"),
                                 iconResolver = { key, _ -> TriggerIcons.forKey(key) },
                                 pickerIcons = TriggerIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
@@ -1618,6 +1689,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 iconColor = Color(0xFF4FC3F7),
                                 drawHeroIcon = { HubIcons.run { drawMedicinePill(it) } },
                                 items = items,
+                                infoText = "Your full medicine pool. Anything you might log via the wizard, Quick Log, or Daily Check-In lives here, organised by category (Analgesic, Anti-Nausea, CGRP, Preventive, Supplement, Triptan, Other).\n\n" +
+                                    "For each medicine:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your most-used meds are one tap away.\n• Tap the row to change its category. The category is what AI Recommendations uses to flag overuse risk (e.g. taking a Triptan more than 10 days a month, or daily Analgesic use). Get it right or the overuse flag won't fire.\n• Tap the trash icon to remove a medicine entirely. Past entries you logged with it stay intact.\n\n" +
+                                    "Use the + button to add anything specific to your routine (a brand name, a compound, a vitamin). Custom items go straight into your pool and appear in the wizard and Quick Log immediately.\n\n" +
+                                    "There's no severity weight on medicines because they don't push your bucket up; the Insights screen separately scores how well each one works for you via the What Worked card.",
                                 categories = listOf("Analgesic", "Anti-Nausea", "CGRP", "Preventive", "Supplement", "Triptan", "Other"),
                                 iconResolver = { key, _ -> MedicineIcons.forKey(key) },
                                 pickerIcons = MedicineIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
@@ -1672,6 +1747,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 iconColor = Color(0xFF81C784),
                                 drawHeroIcon = { HubIcons.run { drawReliefLeaf(it) } },
                                 items = items,
+                                infoText = "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment.\n\n" +
+                                    "For each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\n" +
+                                    "Use the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\n" +
+                                    "No severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets.",
                                 categories = listOf("Breathing", "Cold/Heat", "Darkness", "Hydration", "Massage", "Meditation", "Movement", "Rest", "Supplement", "Other"),
                                 iconResolver = { key, label -> ReliefIcons.forLabel(label, key) },
                                 pickerIcons = ReliefIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
@@ -1757,6 +1836,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 drawHeroIcon = { HubIcons.run { drawProdromeEye(it) } },
                                 items = items,
                                 showPrediction = true,
+                                infoText = "Your full prodrome pool. Prodromes are the early warning signs that fire 6-48 hours before an attack: yawning, neck stiffness, food cravings, mood shifts, fatigue, blurred vision, frequent urination, increased thirst, sensitivity to light or sound.\n\n" +
+                                    "For each prodrome:\n• Tap the row to expand it. Set the severity (HIGH / MILD / LOW / NONE). Unlike triggers that \"cause\" attacks, prodromes mean an attack is already on the way, so logging one pushes your bucket up like a fresh trigger. HIGH-weighted prodromes spike your gauge meaningfully.\n• Star one as a favourite to pin it to the top of Quick Log.\n• Tap the trash icon to remove it from your pool.\n\n" +
+                                    "Use the + button to add anything specific you've noticed about your own warning signs. Personal prodromes (e.g. \"wide awake at 3am\", \"irritable for no reason\") are often the most reliable predictors.\n\n" +
+                                    "Log these whenever you spot one. The Insights What Happened card uses your prodrome history to score which signs reliably predict your attacks, so over time the app learns which ones to weight most heavily for you specifically.",
                                 categories = listOf("Autonomic", "Cognitive", "Digestive", "Mood", "Physical", "Sensitivity", "Sensory", "Sleep", "Speech", "Visual"),
                                 iconResolver = { key, _ -> ProdromeIcons.forKey(key) },
                                 pickerIcons = ProdromeIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
@@ -1837,6 +1920,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 iconColor = Color(0xFF64B5F6),
                                 drawHeroIcon = { HubIcons.run { drawLocationPin(it) } },
                                 items = items,
+                                infoText = "Your location pool. Anywhere you might tag with a migraine: home, work, specific rooms (bedroom, office, kitchen), outdoors (park, gym, beach), travel (hotel, airport, in-car), social spaces (restaurant, bar, friend's house).\n\n" +
+                                    "For each location:\n• Tap the star to pin it as a favourite. Favourites show up first in the wizard's Locations step and the Daily Check-In.\n• Tap the trash icon to remove one. Past attacks tagged with it stay intact.\n\n" +
+                                    "Use the + button to add anything specific (e.g. \"mom's house\", \"gym treadmill\", \"meeting room 3\"). The more specific the location, the easier it is to spot environmental patterns later.\n\n" +
+                                    "Locations have no severity weight. The Insights What Were You Doing card uses your location history to flag which places turn up most around your attacks (sometimes pointing to a real environmental trigger: bad lighting, smells, noise, low air quality).",
                                 categories = listOf("Exercise", "Home", "Medical", "Outdoors", "Social", "Transport", "Work", "Other"),
                                 iconResolver = { key, label -> LocationIcons.forLabel(label, key) },
                                 pickerIcons = LocationIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
@@ -1880,6 +1967,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 iconColor = Color(0xFFFF8A65),
                                 drawHeroIcon = { HubIcons.run { drawActivityPulse(it) } },
                                 items = items,
+                                infoText = "Your activity pool. Anything you were doing around an attack: working, exercising (running, cycling, weightlifting, yoga), screen time, social events, travel, errands, sleeping, eating, drinking alcohol, meditation, breathing exercises.\n\n" +
+                                    "For each activity:\n• Tap the star to pin it as a favourite. Favourites show up first in the wizard's Activities step and the Daily Check-In.\n• Tap the trash icon to remove one. Past attacks tagged with it stay intact.\n\n" +
+                                    "Use the + button to add anything specific to your routine (e.g. \"CrossFit class\", \"team standup\", \"driving long distance\"). The more granular, the more useful the patterns.\n\n" +
+                                    "Many activities also get auto-captured from your wearable or phone: workouts, runs, walks, meditations all flow into your daily logs without you tapping anything. You can dial that off here too.\n\n" +
+                                    "Activities have no severity weight. The Insights What Were You Doing card uses your activity history to flag which ones turn up most around your attacks; some are protective (regular cardio), others are triggers (intense exertion, alcohol, late-night screen time).",
                                 categories = listOf("Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
                                 iconResolver = { key, label -> ActivityIcons.forLabel(label, key) },
                                 pickerIcons = ActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
@@ -1923,6 +2015,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 iconColor = Color(0xFFEF9A9A),
                                 drawHeroIcon = { HubIcons.run { drawMissedActivity(it) } },
                                 items = items,
+                                infoText = "Your missed activity pool. Things you skipped because of a migraine: a workout, a meeting, a meal, social plans, a school day, a date, a phone call, sleep.\n\n" +
+                                    "For each missed activity:\n• Tap the star to pin one as a favourite. Favourites show up first in the wizard's Missed Activities step and the Daily Check-In.\n• Tap the trash icon to remove one. Past entries you tagged with it stay intact.\n\n" +
+                                    "Use the + button to add anything specific (e.g. \"kids' bedtime\", \"volunteering shift\", \"travel day\"). Granular entries make the impact summary more meaningful.\n\n" +
+                                    "Missed activities have no severity weight; they don't push your bucket up. The Insights How Did It Impact You card surfaces these so you can see the real-life cost of your attacks, and the Full Report PDF shows the totals to bring to your doctor when arguing for stronger treatment.",
                                 categories = listOf("Care", "Exercise", "Leisure", "Screen", "Sleep", "Social", "Travel", "Work", "Other"),
                                 iconResolver = { key, label -> MissedActivityIcons.forLabel(label, key) },
                                 pickerIcons = MissedActivityIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
@@ -1936,6 +2032,52 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 onSetCategory = { id, cat -> authState.accessToken?.let { missedVm.setCategory(it, id, cat) } },
                                 onToggleAutomation = { id, en -> authState.accessToken?.let { missedVm.setAutomation(it, id, en) } }
                             )
+                        )
+                    }
+
+                    composable(Routes.MANAGE_TREATMENT_SIDE_EFFECTS) {
+                        val tseVm: TreatmentSideEffectViewModel = viewModel()
+                        val authState by authVm.state.collectAsState()
+                        val pool by tseVm.pool.collectAsState()
+                        val frequent by tseVm.frequent.collectAsState()
+
+                        LaunchedEffect(authState.accessToken) {
+                            authState.accessToken?.let { tseVm.loadAll(it) }
+                        }
+
+                        val frequentIds = remember(frequent) { frequent.map { it.sideEffectId }.toSet() }
+                        val items = remember(pool, frequentIds) {
+                            pool.map { row ->
+                                PoolItem(
+                                    id = row.id, label = row.label, iconKey = row.iconKey, category = row.category,
+                                    isFavorite = row.id in frequentIds,
+                                )
+                            }
+                        }
+
+                        ManagePoolScreen(
+                            navController = nav,
+                            config = PoolConfig(
+                                title = "Treatment side effects",
+                                subtitle = "Symptoms you flag as caused by your treatments",
+                                iconColor = AppTheme.AccentPurple,
+                                drawHeroIcon = { HubIcons.run { drawCapsulePlus(it) } },
+                                items = items,
+                                infoText = "Your treatment side effects pool. The list of symptoms you want to be able to flag as caused by a treatment regimen rather than by your migraines themselves: nausea (from a triptan), drowsiness (from a preventive), weight gain (from beta blockers), brain fog (from topiramate), constipation, dizziness, mood changes, anything your medication might be doing to you.\n\n" +
+                                    "For each side effect:\n• Tap the star to pin it as a favourite. Favourites show up first in the Daily Check-In side-effects page and the Treatments detail screen.\n• Tap the trash icon to remove one entirely. Past entries you tagged with it stay intact.\n\n" +
+                                    "Use the + button to add anything specific to your treatments (e.g. \"thirsty all day\", \"numb fingertips\", \"low libido\"). Whatever your meds are actually doing to you.\n\n" +
+                                    "During the Daily Check-In, the side-effects page asks you which (if any) of these you experienced today, per active treatment regimen. The Treatments efficacy score then weighs the side effects you flag against the benefit it sees from each regimen, so a drug that's reducing your attacks by 40% but giving you constant fatigue scores worse than one that's reducing them by 35% with no side effects.",
+                                categories = listOf("Cognitive", "Mood", "Sleep", "Body", "Other"),
+                                iconResolver = { key, label -> SymptomIcons.forKey(key) ?: SymptomIcons.forKey(label.lowercase()) },
+                                pickerIcons = SymptomIcons.PICKER_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
+                                onAdd = { label, _, _ -> authState.accessToken?.let { tseVm.addNewToPool(it, label) } },
+                                onDelete = { id -> authState.accessToken?.let { tseVm.removeFromPool(it, id) } },
+                                onToggleFavorite = { id, starred ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    if (starred) tseVm.addToFrequent(token, id)
+                                    else frequent.find { it.sideEffectId == id }?.let { tseVm.removeFromFrequent(token, id) }
+                                },
+                            ),
                         )
                     }
 

@@ -122,13 +122,6 @@ fun MonitorMentalScreen(
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            // Back
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-            }
-
             // Customize HeroCard
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.MENTAL_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -152,7 +145,7 @@ fun MonitorMentalScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Enable mental health metrics in Data Settings to start tracking.",
+                        "Enable cognitive metrics in Data Settings to start tracking.",
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -192,7 +185,7 @@ fun MonitorMentalScreen(
                             CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                         }
                     } else if (mentalDetail == null) {
-                        Text("No mental health data for today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text("No cognitive data for today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(4.dp))
                         Text("Enable metrics in Data Settings to start tracking", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                     } else {
@@ -245,7 +238,7 @@ fun MonitorMentalScreen(
                 // History Graph — premium only
                 PremiumGate(
                     message = "Unlock Mental Health Trends",
-                    subtitle = "Track your mental health patterns over time",
+                    subtitle = "Track your cognitive patterns over time",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     MentalHistoryGraph(

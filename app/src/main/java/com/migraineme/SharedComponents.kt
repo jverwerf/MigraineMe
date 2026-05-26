@@ -101,14 +101,15 @@ fun ScrollFadeContainer(
 fun ScrollableScreenContent(
     scrollState: ScrollState,
     logoRevealHeight: Dp = AppTheme.LogoRevealHeight,
+    spacing: Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
         // Space at top to reveal background image
         Spacer(Modifier.height(logoRevealHeight))
@@ -177,6 +178,11 @@ fun HeroCard(
 @Composable
 fun BaseCard(
     modifier: Modifier = Modifier,
+    // Tightened from 16/10 → 12/6 so Insights / Home cards stop wasting
+    // vertical space between rows. Overridable per call site if a denser
+    // or roomier card is needed elsewhere.
+    contentPadding: Dp = 12.dp,
+    innerSpacing: Dp = 6.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
@@ -189,8 +195,8 @@ fun BaseCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(contentPadding),
+            verticalArrangement = Arrangement.spacedBy(innerSpacing),
             content = content
         )
     }

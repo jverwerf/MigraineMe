@@ -86,9 +86,6 @@ fun ProfileScreen(
     var deleteBusy by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
 
-    // DEBUG: Rerun onboarding state (mirrors iOS rerunOnboardingSection).
-    var isResettingOnboarding by remember { mutableStateOf(false) }
-
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
     var aiProfileLoading by remember { mutableStateOf(false) }
@@ -477,41 +474,6 @@ fun ProfileScreen(
             }
         }
 
-        // ── DEBUG: Rerun Onboarding (matches iOS rerunOnboardingSection) ──
-        BaseCard {
-            Row(
-                Modifier.fillMaxWidth().clickable(enabled = !isResettingOnboarding) {
-                    val token = auth.accessToken
-                    if (token.isNullOrBlank()) return@clickable
-                    isResettingOnboarding = true
-                    scope.launch {
-                        try {
-                            withContext(Dispatchers.IO) { OnboardingPrefs.resetInSupabase(context) }
-                            SessionStore.clear(context.applicationContext)
-                            PremiumManager.reset()
-                            authVm.signOut()
-                            onLoggedOut()
-                        } finally {
-                            isResettingOnboarding = false
-                        }
-                    }
-                },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(Icons.Outlined.Refresh, null, tint = Color(0xFFFFB74D), modifier = Modifier.size(20.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Resets onboarding flag and signs you out (debug)", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                }
-                if (isResettingOnboarding) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
-                }
-            }
-        }
-
         // ── Delete Account (card style, matches iOS) ──
         BaseCard {
             Row(
@@ -678,7 +640,9 @@ private fun AiMigraineProfileCard(data: JsonObject) {
     val freeText = answers?.get("free_text")?.jsonPrimitive?.contentOrNull
 
     var expanded by remember { mutableStateOf(true) }
+    var showInfo by remember { mutableStateOf(false) }
 
+    Box(modifier = Modifier.fillMaxWidth()) {
     Card(
         colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
         shape = AppTheme.BaseCardShape,
@@ -827,15 +791,52 @@ private fun AiMigraineProfileCard(data: JsonObject) {
             }
         }
     }
+        IconButton(
+            onClick = { showInfo = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 10.dp, y = (-14).dp)
+                .size(34.dp)
+        ) {
+            Icon(Icons.Outlined.Info, contentDescription = "About your migraine profile",
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+        }
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Psychology, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Your migraine profile", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+            },
+            text = {
+                Text(
+                    "What you told us during the AI Setup questionnaire when you onboarded. At signup, your answers shaped the initial state of the app: which triggers, prodromes, medicines, reliefs, symptoms, and activities got added to your pool, the severity weight on each one, your starting LOW / MILD / HIGH gauge thresholds, your day-by-day decay curve, and your menstruation config if you tracked your cycle.\n\n" +
+                    "Trigger Areas are the broad categories you flagged as relevant (sleep, hormones, weather, diet, etc.) and Clinical Assessment captures any diagnosis you mentioned. Both are kept as a snapshot of what you said; they're useful as a reference for you and any clinician you share data with, but they don't actively change how the app behaves day-to-day.\n\n" +
+                    "The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The monthly AI Calibration card in Insights nudges those values over time as the app learns from your data.",
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
+    }
 }
 
 @Composable
 private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
     val premiumState by PremiumManager.state.collectAsState()
     val context = LocalContext.current
+    var showInfo by remember { mutableStateOf(false) }
 
     if (premiumState.isLoading) return
 
+    Box(modifier = Modifier.fillMaxWidth()) {
     Card(
         colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
         shape = AppTheme.BaseCardShape,
@@ -967,6 +968,41 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
             }
         }
     }
+        IconButton(
+            onClick = { showInfo = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 10.dp, y = (-14).dp)
+                .size(34.dp)
+        ) {
+            Icon(Icons.Outlined.Info, contentDescription = "About your subscription",
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+        }
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.WorkspacePremium, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Your subscription", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+            },
+            text = {
+                Text(
+                    "Free Plan covers the basics: full logging (wizard + Quick Log + Daily Check-In), today's risk score with the top 3 contributors, and all Monitor cards.\n\n" +
+                    "Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and monthly AI Calibration of your gauge.\n\n" +
+                    "Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.",
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
+    }
 }
 
 @Composable
@@ -1006,6 +1042,8 @@ private fun CompanionsProfileCard(
     companions: List<CompanionRow>,
     onManage: () -> Unit
 ) {
+    var showInfo by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxWidth()) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1092,6 +1130,39 @@ private fun CompanionsProfileCard(
                 }
             }
         }
+    }
+        IconButton(
+            onClick = { showInfo = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 10.dp, y = (-14).dp)
+                .size(34.dp)
+        ) {
+            Icon(Icons.Outlined.Info, contentDescription = "About AI Companions",
+                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+        }
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.SmartToy, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("AI Companions", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+            },
+            text = {
+                Text(
+                    "AI Companions are curated personas, each one focused on a specific angle of migraine care (nutrition, sleep, hormonal, stress, etc.). Subscribing to a companion does two things: their content shows up in your Articles \"For You\" feed (re-ranked toward whatever your subscribed companions cover), and they unlock the relevant article tags so you see the topics they care about across the rest of the library. Tap Manage to browse the full roster and follow or unfollow. There's no AI chat with them; that's Ask MigraineMe on the Home tab and works against your data, not these companions.",
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
     }
 }
 

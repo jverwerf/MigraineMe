@@ -123,20 +123,6 @@ fun MonitorEnvironmentScreen(
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            // Back navigation
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
-                }
-            }
-
             // Customize card
             HeroCard(
                 modifier = Modifier.clickable { navController.navigate(Routes.WEATHER_CONFIG) }
@@ -400,11 +386,12 @@ private fun weatherValueByKey(weather: WeatherDayData, key: String): Double? {
         "user_weather_daily::humidity_pct_mean" -> weather.humidityMean
         "user_weather_daily::wind_speed_mps_mean" -> weather.windSpeedMean
         "user_weather_daily::uv_index_max" -> weather.uvIndexMax
+        "user_weather_daily::is_thunderstorm_day" -> if (weather.isThunderstormDay) 1.0 else 0.0
         "user_location_daily::altitude_max_m" -> weather.altitudeMaxM
         "user_location_daily::altitude_change_m" -> weather.altitudeChangeM
         else -> null
     }
-    return v?.takeIf { it != 0.0 || key == "user_weather_daily::uv_index_max" || key == "user_location_daily::altitude_max_m" }
+    return v?.takeIf { it != 0.0 || key == "user_weather_daily::uv_index_max" || key == "user_weather_daily::is_thunderstorm_day" || key == "user_location_daily::altitude_max_m" }
 }
 
 private fun weatherCodeToCondition(code: Int): String {

@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -68,6 +69,13 @@ fun ThirdPartyConnectionsScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    var showInfo by remember { mutableStateOf(false) }
+
+    val connectionsInfoText = "Link your existing health platforms and wearables so MigraineMe can pull data automatically and you don't have to log everything manually.\n\n" +
+        "Apple Health / Health Connect: pulls health metrics from any app on your phone that's set up to share with it. If you log food in MyFitnessPal or Cronometer, sleep in Samsung Health, or activity from a Fitbit / Garmin / Apple Watch through their official apps, all of that lands in MigraineMe through here.\n\n" +
+        "Wearables (WHOOP, Oura, Polar, Garmin): direct OAuth integrations. We pull sleep duration and stages, sleep efficiency, recovery score, HRV, resting heart rate, skin temperature, blood oxygen, stress index, strain, and time in high heart-rate zones. Each wearable supports a slightly different subset; the Data Settings screen shows you exactly which metrics your connected source provides.\n\n" +
+        "Calendar: granted via the permissions step at onboarding rather than here. Once enabled, the Daily Check-In's \"From your calendar\" page suggests your day's events as triggers, reliefs, or activities.\n\n" +
+        "Tap any provider card to connect or disconnect. Connecting opens the provider's own login screen; disconnecting stops the data pull but keeps everything you've already imported."
 
     // WHOOP state
     val tokenStore = remember { WhoopTokenStore(context) }
@@ -1028,12 +1036,23 @@ fun ThirdPartyConnectionsScreen(
             .padding(horizontal = 16.dp)
     ) {
         // Connected Services section
-            Text(
-                "Connected Services",
-                color = AppTheme.AccentPurple,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Connected Services",
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                IconButton(
+                    onClick = { showInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(28.dp)
+                ) {
+                    Icon(Icons.Outlined.Info, contentDescription = "About Connections",
+                        tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                }
+            }
 
             // Health Connect Row — heart icon + label (matches iOS Apple Health style)
             Box(Modifier.spotlightTarget("health_connect_card")) {
@@ -1157,6 +1176,19 @@ fun ThirdPartyConnectionsScreen(
 
             Spacer(Modifier.height(32.dp))
         }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            containerColor = Color(0xFF1E0A2E),
+            title = {
+                Text("About Connections", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            },
+            text = { Text(connectionsInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
