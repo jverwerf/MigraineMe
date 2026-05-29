@@ -439,7 +439,7 @@ fun MonitorNutritionScreen(
     // UI
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            if (!perFoodNoteDismissed) {
+            if (!perFoodNoteDismissed && !TourManager.isActive()) {
                 BaseCard {
                     Row(verticalAlignment = Alignment.Top) {
                         Icon(Icons.Outlined.Info, contentDescription = null,

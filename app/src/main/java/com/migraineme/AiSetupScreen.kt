@@ -582,7 +582,7 @@ fun AiSetupScreen(
                         }
                     } else if (!storyLoading) {
                         Button(onClick = { currentPage = AiPage.Q1 }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(12.dp)) {
-                            Text("Skip to questions"); Spacer(Modifier.width(4.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+                            Text("OR Continue and answer manually"); Spacer(Modifier.width(4.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                         }
                     }
                 }

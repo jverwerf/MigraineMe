@@ -768,14 +768,14 @@ object DemoDataSeeder {
                 },
                 // Treatment effectiveness
                 buildJsonObject {
-                    put("user_id", userId); put("factor_name", "Ibuprofen")
+                    put("user_id", userId); put("factor_name", "Botox")
                     put("factor_type", "treatment"); put("lift_ratio", 2.8)
                     put("p_value", 0.009); put("best_lag_days", 0)
                     put("pct_migraine_windows", 80.0); put("pct_control_windows", 0.0)
                     put("sample_size", 14)
                 },
                 buildJsonObject {
-                    put("user_id", userId); put("factor_name", "Dark room")
+                    put("user_id", userId); put("factor_name", "Daily meditation")
                     put("factor_type", "treatment"); put("lift_ratio", 2.2)
                     put("p_value", 0.035); put("best_lag_days", 0)
                     put("pct_migraine_windows", 60.0); put("pct_control_windows", 0.0)
@@ -802,7 +802,7 @@ object DemoDataSeeder {
                     put("Neck stiffness", "Neck stiffness preceding your migraines suggests muscle tension building up. Gentle stretches and warm compress at first sign may reduce the headache severity that's coming.")
                 })
                 put("medicines", buildJsonObject {
-                    put("Ibuprofen",     "You've reported stomach side effects on Ibuprofen and your data shows declining relief over the last 30 days. Worth a doctor check-in about Naproxen or adding an H2 blocker to mitigate.")
+                    put("Ibuprofen",     "Ibuprofen shows declining relief over the last 30 days. The same dose isn't doing what it used to. Worth a doctor check-in about Naproxen or rotating with Acetaminophen.")
                     put("Sumatriptan",   "Sumatriptan gives you strong relief but with drowsiness and tingling. Rizatriptan or Eletriptan are same-class with cleaner SE profiles and may suit you better — worth discussing.")
                     put("Acetaminophen", "Acetaminophen has been giving you only mild relief. Combining it with Ibuprofen can be safely stacked for stronger acute relief; or discuss alternatives with your doctor.")
                 })
@@ -846,51 +846,51 @@ object DemoDataSeeder {
     private suspend fun seedTreatments(token: String, userId: String?, db: SupabaseDbService, today: LocalDate) {
         if (userId.isNullOrBlank()) { Log.e(TAG, "No userId for treatments"); return }
         val treatmentStart = today.minusDays(70).toString()
-        var ibuId: String? = null
+        var botoxId: String? = null
         try {
-            val ibu = db.insertTreatmentRegimen(
+            val botox = db.insertTreatmentRegimen(
                 accessToken = token,
                 kind = "drug",
-                name = "Ibuprofen",
-                amount = "400mg",
-                frequency = "PRN",
+                name = "Botox",
+                amount = "155 units",
+                frequency = "Every 12 weeks",
                 startDate = treatmentStart,
-                notes = "[demo] Acute attacks only"
+                notes = "[demo] Preventive treatment, 31-site PREEMPT protocol"
             )
-            ibuId = ibu.id
-            Log.d(TAG, "✓ Treatment regimen Ibuprofen id=${ibu.id}")
-        } catch (e: Exception) { Log.w(TAG, "Insert Ibuprofen regimen: ${e.message}") }
+            botoxId = botox.id
+            Log.d(TAG, "✓ Treatment regimen Botox id=${botox.id}")
+        } catch (e: Exception) { Log.w(TAG, "Insert Botox regimen: ${e.message}") }
 
         try {
-            val dark = db.insertTreatmentRegimen(
+            val meditation = db.insertTreatmentRegimen(
                 accessToken = token,
                 kind = "lifestyle",
-                name = "Dark room",
+                name = "Daily meditation",
                 amount = null,
-                frequency = "As needed",
+                frequency = "Daily 15 min",
                 startDate = treatmentStart,
-                notes = "[demo] At first prodrome sign"
+                notes = "[demo] Morning practice to manage stress baseline"
             )
-            Log.d(TAG, "✓ Treatment regimen Dark room id=${dark.id}")
-        } catch (e: Exception) { Log.w(TAG, "Insert Dark room regimen: ${e.message}") }
+            Log.d(TAG, "✓ Treatment regimen Daily meditation id=${meditation.id}")
+        } catch (e: Exception) { Log.w(TAG, "Insert Daily meditation regimen: ${e.message}") }
 
-        // Side-effect logs for Ibuprofen so the regimen detail screen's
+        // Side-effect logs for Botox so the regimen detail screen's
         // pills section has content. Recent dates only.
-        if (ibuId != null) {
+        if (botoxId != null) {
             val se1 = today.minusDays(3).toString()
             val se2 = today.minusDays(7).toString()
             val se3 = today.minusDays(11).toString()
             try {
-                db.insertTreatmentSideEffectLog(token, se1, listOf("Stomach upset"),
-                    "Mild after morning dose, settled with food", ibuId, "check_in")
+                db.insertTreatmentSideEffectLog(token, se1, listOf("Injection site soreness"),
+                    "Mild tenderness at the temple and forehead sites, eased by day 2", botoxId, "check_in")
             } catch (e: Exception) { Log.w(TAG, "Side-effect log 1: ${e.message}") }
             try {
-                db.insertTreatmentSideEffectLog(token, se2, listOf("Fatigue", "Brain fog"),
-                    "Felt foggy for a few hours after dosing", ibuId, "manual")
+                db.insertTreatmentSideEffectLog(token, se2, listOf("Neck stiffness", "Mild headache"),
+                    "Tight neck the day after injection, mild headache for 24 to 48 hours, both resolved", botoxId, "manual")
             } catch (e: Exception) { Log.w(TAG, "Side-effect log 2: ${e.message}") }
             try {
                 db.insertTreatmentSideEffectLog(token, se3, emptyList(),
-                    "No side effects this week", ibuId, "check_in")
+                    "No side effects this cycle", botoxId, "check_in")
             } catch (e: Exception) { Log.w(TAG, "Side-effect log 3: ${e.message}") }
         }
     }

@@ -60,6 +60,7 @@ fun ProfileScreen(
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
     onNavigateToCompanions: () -> Unit = {},
+    onNavigateOnboardingNoSeed: () -> Unit = {},
     onLoggedOut: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()
@@ -85,6 +86,10 @@ fun ProfileScreen(
     var deleteConfirmText by remember { mutableStateOf("") }
     var deleteBusy by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
+
+    // ── Debug state ──
+    var isResettingOnboardingNoSeed by remember { mutableStateOf(false) }
+    var isRerunningSim by remember { mutableStateOf(false) }
 
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
@@ -183,7 +188,7 @@ fun ProfileScreen(
         try {
             val result = withContext(Dispatchers.IO) {
                 val baseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
-                val fetchUrl = "$baseUrl/rest/v1/ai_setup_profiles?user_id=eq.$userId&select=answers,ai_config,frequency,duration,experience,trigger_areas,clinical_assessment,summary,gender,age_range,trajectory,seasonal_pattern,tracks_cycle"
+                val fetchUrl = "$baseUrl/rest/v1/ai_setup_profiles?user_id=eq.$userId&select=answers,ai_config,frequency,duration,experience,clinical_assessment,summary,gender,age_range,trajectory,tracks_cycle"
                 val conn = (URL(fetchUrl).openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("apikey", BuildConfig.SUPABASE_ANON_KEY)
@@ -474,6 +479,70 @@ fun ProfileScreen(
             }
         }
 
+        // ── Debug: Rerun Onboarding ──
+        BaseCard {
+            Row(
+                Modifier.fillMaxWidth().clickable(enabled = !isResettingOnboardingNoSeed) {
+                    val userId = auth.userId
+                    if (userId.isNullOrBlank()) return@clickable
+                    isResettingOnboardingNoSeed = true
+                    scope.launch {
+                        try {
+                            withContext(Dispatchers.IO) { OnboardingPrefs.resetInSupabase(context) }
+                            onNavigateOnboardingNoSeed()
+                        } finally {
+                            isResettingOnboardingNoSeed = false
+                        }
+                    }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(Icons.Outlined.RestartAlt, null, tint = Color(0xFF4FC3F7), modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Same flow, but never seeds or deletes any data. Safe on accounts with real entries.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                if (isResettingOnboardingNoSeed) {
+                    CircularProgressIndicator(Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
+                } else {
+                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+
+        // ── Debug: Rerun Sim ──
+        BaseCard {
+            Row(
+                Modifier.fillMaxWidth().clickable(enabled = !isRerunningSim) {
+                    isRerunningSim = true
+                    scope.launch {
+                        try {
+                            withContext(Dispatchers.IO) {
+                                DemoDataSeeder.clearDemoData(context)
+                                DemoDataSeeder.seedDemoData(context)
+                            }
+                        } finally {
+                            isRerunningSim = false
+                        }
+                    }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(Icons.Outlined.AutoAwesome, null, tint = Color(0xFFBA68C8), modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Rerun Sim", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Clears and reseeds 14 days of demo data", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                if (isRerunningSim) {
+                    CircularProgressIndicator(Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
+                } else {
+                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+
         // ── Delete Account (card style, matches iOS) ──
         BaseCard {
             Row(
@@ -630,11 +699,7 @@ private fun AiMigraineProfileCard(data: JsonObject) {
     val trajectory = data["trajectory"]?.jsonPrimitive?.contentOrNull
     val gender = data["gender"]?.jsonPrimitive?.contentOrNull
     val ageRange = data["age_range"]?.jsonPrimitive?.contentOrNull
-    val seasonalPattern = data["seasonal_pattern"]?.jsonPrimitive?.contentOrNull
     val tracksCycle = data["tracks_cycle"]?.jsonPrimitive?.booleanOrNull
-    val triggerAreas = try {
-        data["trigger_areas"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }
-    } catch (_: Exception) { null }
 
     val answers = try { data["answers"]?.jsonObject } catch (_: Exception) { null }
     val freeText = answers?.get("free_text")?.jsonPrimitive?.contentOrNull
@@ -700,7 +765,6 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                     val demoItems = listOfNotNull(
                         gender?.let { "Gender" to it },
                         ageRange?.let { "Age" to it },
-                        seasonalPattern?.let { "Seasonal" to it },
                         if (tracksCycle == true) "Cycle" to "Tracking" else null,
                     )
                     if (demoItems.isNotEmpty()) {
@@ -719,30 +783,6 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(value, color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
                                         Text(label, color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Trigger areas
-                    if (!triggerAreas.isNullOrEmpty()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Trigger areas", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                triggerAreas.forEach { area ->
-                                    Box(
-                                        Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(triggerAreaColor(area).copy(alpha = 0.15f))
-                                            .border(1.dp, triggerAreaColor(area).copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                                    ) {
-                                        Text(area, color = triggerAreaColor(area), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                                     }
                                 }
                             }
@@ -1018,19 +1058,6 @@ private fun ProfileStatChip(icon: ImageVector, text: String, modifier: Modifier 
         Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
         Text(text, color = Color.White, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
-}
-
-private fun triggerAreaColor(area: String): Color = when (area.lowercase()) {
-    "sleep" -> Color(0xFF7C4DFF)
-    "stress" -> Color(0xFFEF5350)
-    "weather" -> Color(0xFF4FC3F7)
-    "screen time" -> Color(0xFFFFB74D)
-    "diet" -> Color(0xFF81C784)
-    "exercise" -> Color(0xFFFF8A65)
-    "hormones" -> Color(0xFFCE93D8)
-    "environment" -> Color(0xFF4DD0E1)
-    "physical" -> Color(0xFFA1887F)
-    else -> Color(0xFFB97BFF)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

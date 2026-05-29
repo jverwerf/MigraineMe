@@ -227,6 +227,91 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                 }
             }
 
+            // ── Seasonal (hemisphere-aware, gated on ≥4 migraines) ──
+            if (migraines.size >= 4) {
+                val userLocations by vm.userLocations.collectAsState()
+                val medianLat: Double? = remember(userLocations) {
+                    val lats = userLocations.map { it.latitude }.sorted()
+                    if (lats.isEmpty()) null
+                    else if (lats.size % 2 == 0) (lats[lats.size / 2 - 1] + lats[lats.size / 2]) / 2.0
+                    else lats[lats.size / 2]
+                }
+                val southern = (medianLat ?: 0.0) < 0
+                val labels = if (southern)
+                    listOf("Summer", "Autumn", "Winter", "Spring")
+                else
+                    listOf("Winter", "Spring", "Summer", "Autumn")
+                val colors = if (southern)
+                    listOf(Color(0xFFFFB74D), Color(0xFFFF8A65), Color(0xFF4FC3F7), Color(0xFF81C784))
+                else
+                    listOf(Color(0xFF4FC3F7), Color(0xFF81C784), Color(0xFFFFB74D), Color(0xFFFF8A65))
+
+                val counts = remember(migraines) {
+                    val c = IntArray(4)
+                    migraines.forEach {
+                        val month = it.start.atZone(zone).toLocalDate().monthValue
+                        // Dec/Jan/Feb=0, Mar-May=1, Jun-Aug=2, Sep-Nov=3 (NH meteorological)
+                        c[(month % 12) / 3]++
+                    }
+                    c.toList()
+                }
+                val maxCount = counts.max().coerceAtLeast(1)
+                val total = counts.sum()
+
+                Spacer(Modifier.height(4.dp))
+                BaseCard {
+                    Text("Seasonal", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        Modifier.fillMaxWidth().height(120.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        counts.forEachIndexed { i, count ->
+                            val isMax = count == maxCount && count > 0
+                            val barColor = if (isMax) Color(0xFFE57373) else colors[i]
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text("$count", color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                Spacer(Modifier.height(2.dp))
+                                val barH = (count.toFloat() / maxCount * 80f).coerceAtLeast(4f)
+                                Box(
+                                    Modifier
+                                        .width(28.dp)
+                                        .height(barH.dp)
+                                        .padding(horizontal = 2.dp)
+                                ) {
+                                    Canvas(Modifier.fillMaxSize()) {
+                                        drawRoundRect(
+                                            barColor.copy(alpha = 0.8f),
+                                            cornerRadius = CornerRadius(4f),
+                                            size = size,
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Text(labels[i], color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                    val worstIdx = counts.indices.maxByOrNull { counts[it] }
+                    if (worstIdx != null && counts[worstIdx] > 0 && total > 0) {
+                        val pct = counts[worstIdx].toFloat() / total * 100f
+                        Spacer(Modifier.height(8.dp))
+                        Text("Most frequent: ${labels[worstIdx]} (${counts[worstIdx]} migraines, ${String.format("%.0f", pct)}%)",
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            }
+
             // ── Severity over time (monthly average) ──
             if (byMonth.size >= 3) {
                 val monthsWithSev = byMonth.entries.mapNotNull { (month, migs) ->

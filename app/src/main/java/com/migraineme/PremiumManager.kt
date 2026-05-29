@@ -369,6 +369,23 @@ object PremiumManager {
                 ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
                 ?: return@withContext
 
+            // Read-before-write: if this user has already received a trial,
+            // hydrate from the existing row and skip the upsert so reruns of
+            // onboarding can't extend or re-grant the 14 days.
+            val existing = loadTrialFromSupabase(accessToken, userId)
+            if (!existing.trialEnd.isNullOrBlank()) {
+                _state.update {
+                    it.copy(
+                        tier = if (existing.isTrialActive) PremiumTier.TRIAL else PremiumTier.FREE,
+                        trialDaysRemaining = existing.daysRemaining,
+                        trialEndDate = existing.trialEnd,
+                        isLoaded = true
+                    )
+                }
+                Log.d(TAG, "startOnboardingTrial: existing trial_end=${existing.trialEnd}, skipping upsert")
+                return@withContext
+            }
+
             val now = Instant.now()
             val trialEnd = now.plus(14, ChronoUnit.DAYS)
             val trialEndStr = trialEnd.toString()

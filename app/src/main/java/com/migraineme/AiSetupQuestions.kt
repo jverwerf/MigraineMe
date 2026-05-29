@@ -795,9 +795,16 @@ private fun AiPoolPage(
 
 @Composable
 fun AiQuestionsPageSymptomsCore(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+    val bucketed = remember(pool) {
+        val pain = pool.filter { (it.category ?: "").equals("pain_character", ignoreCase = true) }
+            .map { it.copy(category = "Pain Character") }
+        val accompanying = pool.filter { !(it.category ?: "").equals("pain_character", ignoreCase = true) }
+            .map { it.copy(category = "Accompanying Signs") }
+        pain + accompanying
+    }
     AiPoolPage(Icons.Outlined.MedicalServices, "Symptoms During an Attack",
         "Tap the migraine type you usually get under Pain Character, plus anything that tags along under Accompanying.",
-        10, 17, pool, selected, onToggle, AppTheme.AccentPink, PoolType.SYMPTOM,
+        10, 17, bucketed, selected, onToggle, AppTheme.AccentPink, PoolType.SYMPTOM,
         emptyMessage = "No symptoms in the pool yet.")
 }
 

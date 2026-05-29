@@ -156,9 +156,9 @@ private fun CertaintySelector(
     modifier: Modifier = Modifier,
 ) {
     val options = listOf(
-        DeterministicMapper.Certainty.EVERY_TIME to "Every time",
-        DeterministicMapper.Certainty.OFTEN to "Often",
-        DeterministicMapper.Certainty.SOMETIMES to "Sometimes",
+        DeterministicMapper.Certainty.SOMETIMES to "Low",
+        DeterministicMapper.Certainty.OFTEN to "Mild",
+        DeterministicMapper.Certainty.EVERY_TIME to "High",
     )
 
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -201,11 +201,10 @@ fun SingleCertaintySelect(
     modifier: Modifier = Modifier,
 ) {
     val options = listOf(
-        DeterministicMapper.Certainty.EVERY_TIME to "Every time",
-        DeterministicMapper.Certainty.OFTEN to "Often",
-        DeterministicMapper.Certainty.SOMETIMES to "Sometimes",
-        DeterministicMapper.Certainty.RARELY to "Rarely/not sure",
-        DeterministicMapper.Certainty.NO to "No",
+        DeterministicMapper.Certainty.NO to "None",
+        DeterministicMapper.Certainty.SOMETIMES to "Low",
+        DeterministicMapper.Certainty.OFTEN to "Mild",
+        DeterministicMapper.Certainty.EVERY_TIME to "High",
     )
 
     Row(

@@ -450,11 +450,10 @@ class ReportPdfGenerator(private val context: Context) {
             }
         }
 
-        // Demographics: gender, age, seasonal, cycle
+        // Demographics: gender, age, cycle
         val demoItems = listOfNotNull(
             d.profileGender?.let { "Gender: $it" },
             d.profileAgeRange?.let { "Age: $it" },
-            d.profileSeasonalPattern?.let { "Seasonal: $it" },
             if (d.profileTracksCycle) "Cycle: Tracking" else null,
         )
         if (demoItems.isNotEmpty()) {
@@ -462,17 +461,6 @@ class ReportPdfGenerator(private val context: Context) {
             val c2 = cv ?: return
             c2.drawText(demoItems.joinToString("  •  "), M + 12f, y + 12f, tp(BODY, 8f))
             y += 22f
-        }
-
-        // Trigger areas
-        if (d.profileTriggerAreas.isNotEmpty()) {
-            need(30f)
-            val c2 = cv ?: return
-            c2.drawText("Trigger areas", M + 12f, y + 12f, tp(TITLE, 9f, true))
-            y += 18f
-            val c3 = cv ?: return
-            c3.drawText(d.profileTriggerAreas.joinToString("  •  "), M + 12f, y + 10f, tp(BODY, 8f))
-            y += 18f
         }
 
         // Assessment

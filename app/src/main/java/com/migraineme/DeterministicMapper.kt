@@ -713,13 +713,12 @@ object DeterministicMapper {
                 "Anxiety"    -> out["Anxiety"] = trigManual("Anxiety", sev)
                 "Anger"      -> out["Anger"] = trigManual("Anger", sev)
                 "Let-down"   -> { out["Let-down"] = trigManual("Let-down", sev); out["Stress low"] = trigLow("Stress low", sev, d, cert) }
-                "Feeling low" -> out["Depression"] = trigManual("Depression", sev)
             }
         }
         if (a.screenTimeTriggers != Certainty.NO) {
             val sev = certaintyToSeverity(a.screenTimeTriggers)
             out["Screen time high"] = trigHigh("Screen time high", sev, d, a.screenTimeTriggers)
-            out["Computer/screen"] = trigManual("Computer/screen", sev)
+            out["Computer / screen"] = trigManual("Computer / screen", sev)
         }
         if (a.lateScreenTriggers != Certainty.NO) {
             out["Late screen time high"] = trigHigh("Late screen time high", certaintyToSeverity(a.lateScreenTriggers), d, a.lateScreenTriggers)
@@ -761,6 +760,12 @@ object DeterministicMapper {
                 certaintyToSeverity(fc), exposureLevel = exposureThreshold(fc), favorite = true)
         } else if ("Red wine" in a.specificDrinks) {
             out["Tyramine exposure high"] = TriggerSetting("Tyramine exposure high", "LOW", exposureLevel = 2)
+        }
+
+        val maxHistCert = a.histamineFoods.values.maxByOrNull { it.ordinal }
+        if (maxHistCert != null && maxHistCert != Certainty.NO) {
+            out["Histamine exposure high"] = TriggerSetting("Histamine exposure high",
+                certaintyToSeverity(maxHistCert), exposureLevel = exposureThreshold(maxHistCert), favorite = true)
         }
 
         if (a.glutenTriggers != Certainty.NO) {

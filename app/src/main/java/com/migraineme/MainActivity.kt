@@ -473,6 +473,20 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val communityState by communityVm.state.collectAsState()
     val communityUnreadCount = communityState.unreadCount
 
+    // Open the side drawer when the tour reaches the "Settings" step so the user
+    // sees the hamburger menu instead of a pushed Risk Model screen.
+    val tourState by TourManager.state.collectAsState()
+    LaunchedEffect(tourState.active, tourState.stepIndex, tourState.phase) {
+        if (tourState.active && tourState.phase == CoachPhase.TOUR) {
+            val step = tourSteps.getOrNull(tourState.stepIndex)
+            if (step?.title?.startsWith("Settings") == true) {
+                drawerState.open()
+            } else if (drawerState.isOpen) {
+                drawerState.close()
+            }
+        }
+    }
+
     // Refresh community unread count when authenticated
     LaunchedEffect(token) {
         if (!token.isNullOrBlank()) {
@@ -629,6 +643,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Help", Routes.HELP, Icons.Outlined.HelpOutline)
     )
 
+    Box(modifier = Modifier.fillMaxSize()) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -2150,6 +2165,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
                             onNavigateToCompanions = { nav.navigate("companions_manage") },
+                            onNavigateOnboardingNoSeed = {
+                                OnboardingMode.noSeed = true
+                                nav.navigate(Routes.ONBOARDING) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
                             onLoggedOut = {
                                 nav.navigate(Routes.LOGIN) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
@@ -2461,6 +2483,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable("subscribe") {
                         FreeTrialGiftScreen(
                             onContinue = {
+                                OnboardingMode.noSeed = false
                                 nav.navigate(Routes.HOME) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
@@ -2502,29 +2525,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                 }
 
-                    // Coach overlay for feature tour (floats on top of real screens)
-                    CoachOverlay(
-                        navigateTo = { route ->
-                            nav.navigate(route) {
-                                launchSingleTop = true
-                            }
-                        },
-                        onTourFinished = {
-                            onboardingTransitioning.value = true
-                            nav.navigate("${Routes.ONBOARDING}/setup") {
-                                popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        },
-                        onSetupFinished = {
-                            nav.navigate(Routes.AI_SETUP) {
-                                popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        },
-                        logVm = logVm,
-                        insightsVm = insightsVm,
-                    )
                 } // end Box wrapper
             }
         }
@@ -2545,6 +2545,32 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             }
             } // end wrapping Box
     }
+
+    // Coach overlay for feature tour — sits OUTSIDE the ModalNavigationDrawer so
+    // the tour card renders ON TOP of the drawer sheet (instead of being hidden by it).
+    CoachOverlay(
+        navigateTo = { route ->
+            nav.navigate(route) {
+                launchSingleTop = true
+            }
+        },
+        onTourFinished = {
+            onboardingTransitioning.value = true
+            nav.navigate("${Routes.ONBOARDING}/setup") {
+                popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                launchSingleTop = true
+            }
+        },
+        onSetupFinished = {
+            nav.navigate(Routes.AI_SETUP) {
+                popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                launchSingleTop = true
+            }
+        },
+        logVm = logVm,
+        insightsVm = insightsVm,
+    )
+    } // end outer Box wrapping drawer + overlay
 }
 
 private fun needsAttention(ev: JournalEvent): Boolean {

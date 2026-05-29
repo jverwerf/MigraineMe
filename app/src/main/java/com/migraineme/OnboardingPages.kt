@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -66,23 +67,65 @@ fun WelcomePage() {
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "MigraineMe",
-            modifier = Modifier.size((100 * scale).dp)
+            modifier = Modifier.size((76 * scale).dp)
         )
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(16.dp))
         Text("Welcome to MigraineMe", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
-        Text("Understand your triggers. Predict attacks before they happen.",
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 32.dp))
-        Text("Let's show you around and get things personalised.",
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 32.dp))
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(AppTheme.AccentPurple.copy(alpha = 0.12f))
+                .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 14.dp, vertical = 12.dp)
+        ) {
+            Text(
+                "Give us about 10 minutes to make the app truly yours. We'll show you it in action, ask a few questions about your migraines, hook up your wearables, and let you pick which data to collect. All tailored to you. Just once. From then on, the app does the listening.",
+                color = AppTheme.BodyTextColor,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(AppTheme.AccentPink.copy(alpha = 0.14f))
+                .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                Icons.Outlined.Info,
+                contentDescription = null,
+                tint = AppTheme.AccentPink,
+                modifier = Modifier.size(16.dp).padding(top = 1.dp)
+            )
+            Text(
+                "In an acute attack right now? Tap Skip and come back later. You can rerun onboarding from your Profile.",
+                color = AppTheme.BodyTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         Spacer(Modifier.weight(1f))
 
-        Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(horizontal = 8.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             FeatureBullet(Icons.Outlined.Speed, "Real-time migraine risk prediction")
-            FeatureBullet(Icons.Outlined.BarChart, "Pattern analysis across all your data")
+            FeatureBullet(Icons.Outlined.CalendarMonth, "7-day risk forecast")
+            FeatureBullet(Icons.Outlined.Bolt, "Auto-captured triggers, less logging")
+            FeatureBullet(Icons.Outlined.BarChart, "30+ migraine signals tracked automatically")
+            FeatureBullet(Icons.Outlined.EventNote, "Cycle-aware risk model")
+            FeatureBullet(Icons.Outlined.Medication, "Treatments scored against your data")
             FeatureBullet(Icons.Outlined.AutoAwesome, "AI-powered daily insights")
-            FeatureBullet(Icons.Outlined.FavoriteBorder, "Wearable & health data integration")
+            FeatureBullet(Icons.Outlined.Chat, "Chat with your data")
+            FeatureBullet(Icons.Outlined.Description, "Doctor-ready PDF in one tap")
+            FeatureBullet(Icons.Outlined.Watch, "Apple Health, WHOOP, Oura, Polar, Garmin")
         }
 
         Spacer(Modifier.weight(1f))
@@ -91,9 +134,17 @@ fun WelcomePage() {
 
 @Composable
 private fun FeatureBullet(icon: ImageVector, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(28.dp))
-        Text(text, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(AppTheme.AccentPurple.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(12.dp))
+        }
+        Text(text, color = Color.White, style = MaterialTheme.typography.bodySmall)
     }
 }
 

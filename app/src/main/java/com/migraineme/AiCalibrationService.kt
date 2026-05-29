@@ -184,6 +184,13 @@ object AiCalibrationService {
             answers.contraceptionEffect?.let { appendLine("- Contraception effect on migraines: $it") }
             answers.glutenSensitivity?.let { appendLine("- Gluten sensitivity: $it") }
             answers.tracksNutrition?.let { appendLine("- Tracks nutrition: $it") }
+            answers.stressChangeTriggers.let { c -> if (c != DeterministicMapper.Certainty.NO) appendLine("- Stress change is a trigger: ${DeterministicMapper.certaintyToSeverity(c)}") }
+            answers.weatherTriggers.let { c -> if (c != DeterministicMapper.Certainty.NO) appendLine("- Weather is a trigger: ${DeterministicMapper.certaintyToSeverity(c)}") }
+            if (answers.histamineFoods.isNotEmpty()) {
+                val items = answers.histamineFoods.filter { it.value != DeterministicMapper.Certainty.NO }
+                    .map { "${it.key} (${DeterministicMapper.certaintyToSeverity(it.value)})" }
+                if (items.isNotEmpty()) appendLine("- Histamine-triggering foods: ${items.joinToString(", ")}")
+            }
             answers.freeText?.let {
                 if (it.isNotBlank()) {
                     appendLine()
@@ -447,6 +454,7 @@ object AiCalibrationService {
         appendLine("Experience: ${profile.experience ?: "unknown"}, trajectory: ${profile.trajectory ?: "unknown"}")
         appendLine("Routine: ${profile.dailyRoutine ?: "unknown"}, seasonal: ${profile.seasonalPattern ?: "none"}")
         appendLine("Trigger delay: ${profile.triggerDelay ?: "unknown"}")
+        appendLine("Warning signs before attack: ${profile.warningSignsBefore ?: "unknown"}")
         appendLine()
 
         appendLine("=== CLINICAL ASSESSMENT (from neurologist) ===")

@@ -30,6 +30,16 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import androidx.compose.runtime.rememberCoroutineScope
 
+/**
+ * Process-scoped flag for the "Rerun Onboarding (no seed)" Profile button.
+ * When true, the onboarding flow skips ALL demo seeding AND deletion so a
+ * user with real data can re-walk the tour without touching their account.
+ * Set from ProfileScreen, cleared on onboarding completion / skip.
+ */
+object OnboardingMode {
+    var noSeed: Boolean = false
+}
+
 object OnboardingPrefs {
 
     /**
@@ -115,7 +125,9 @@ fun OnboardingScreen(
 
     val pages = PageId.entries
     var currentIdx by rememberSaveable { mutableStateOf(if (startAtSetup) pages.indexOf(PageId.SETUP_LANDING) else 0) }
-    val currentPage = pages[currentIdx]
+    // Clamp on read — two LaunchedEffects can race on permission grant and both
+    // increment currentIdx, which would otherwise crash on the next render.
+    val currentPage = pages[currentIdx.coerceIn(0, pages.size - 1)]
 
     // Auto-skip permission pages if already granted
     fun isPermissionGranted(page: PageId): Boolean = try {
@@ -177,9 +189,12 @@ fun OnboardingScreen(
 
     // ── Skip exit: clear demo data + mark complete in Supabase + navigate ──
     // Trial is intentionally NOT cleared — the user keeps their 14 days.
+    // No-seed mode never deletes anything (safe to use on accounts with real data).
     fun skipOnboarding(then: () -> Unit) {
         scope.launch(Dispatchers.IO) {
-            DemoDataSeeder.clearDemoData(appCtx, logVm, insightsVm)
+            if (!OnboardingMode.noSeed) {
+                DemoDataSeeder.clearDemoData(appCtx, logVm, insightsVm)
+            }
             OnboardingPrefs.setCompletedInSupabase(appCtx)
             kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
         }
@@ -198,22 +213,28 @@ fun OnboardingScreen(
         if (currentPage == PageId.LOADING_DATA && !seedingStarted && !startAtSetup) {
             seedingStarted = true
             hasNavigatedToTour = false
-            // Ensure userId is set before seeding
-            withContext(Dispatchers.IO) {
-                val token = SessionStore.getValidAccessToken(appCtx)
-                if (token != null) {
-                    var userId = SessionStore.readUserId(appCtx)
-                    if (userId.isNullOrBlank()) {
-                        userId = JwtUtils.extractUserIdFromAccessToken(token)
-                        if (!userId.isNullOrBlank()) {
-                            SessionStore.saveUserId(appCtx, userId)
+            if (OnboardingMode.noSeed) {
+                // No-seed mode: skip past the loading page straight to the tour.
+                hasNavigatedToTour = true
+                proceedWithTour { onStartTour() }
+            } else {
+                // Ensure userId is set before seeding
+                withContext(Dispatchers.IO) {
+                    val token = SessionStore.getValidAccessToken(appCtx)
+                    if (token != null) {
+                        var userId = SessionStore.readUserId(appCtx)
+                        if (userId.isNullOrBlank()) {
+                            userId = JwtUtils.extractUserIdFromAccessToken(token)
+                            if (!userId.isNullOrBlank()) {
+                                SessionStore.saveUserId(appCtx, userId)
+                            }
                         }
                     }
                 }
-            }
-            // Seed everything (including risk_score_live directly)
-            launch(Dispatchers.IO) {
-                DemoDataSeeder.seedDemoData(appCtx, logVm)
+                // Seed everything (including risk_score_live directly)
+                launch(Dispatchers.IO) {
+                    DemoDataSeeder.seedDemoData(appCtx, logVm)
+                }
             }
         }
     }
@@ -251,13 +272,13 @@ fun OnboardingScreen(
 
                 if (currentPage != PageId.HOW_IT_WORKS) {
                     AnimatedContent(
-                        targetState = currentIdx,
+                        targetState = currentIdx.coerceIn(0, pages.size - 1),
                         transitionSpec = {
                             if (targetState > initialState) slideInHorizontally { it } + fadeIn() togetherWith slideOutHorizontally { -it } + fadeOut()
                             else slideInHorizontally { -it } + fadeIn() togetherWith slideOutHorizontally { it } + fadeOut()
                         }, label = "page"
                     ) { idx ->
-                        when (pages[idx]) {
+                        when (pages[idx.coerceIn(0, pages.size - 1)]) {
                             PageId.WELCOME -> WelcomePage()
                             PageId.HOW_IT_WORKS -> Box(Modifier.fillMaxSize()) // placeholder, never visible
                             PageId.LOADING_DATA -> LoadingDataPage(
@@ -435,95 +456,96 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
     }
 
     Column(
-        Modifier.fillMaxSize().padding(horizontal = 32.dp),
+        Modifier.fillMaxSize().padding(horizontal = 28.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Pulsing gradient icon with circular-progress halo
-        Box(contentAlignment = Alignment.Center) {
-            if (!isComplete) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(108.dp),
-                    color = AppTheme.AccentPink,
-                    strokeWidth = 3.dp,
-                )
-            }
-            Box(
-                Modifier
-                    .size((80 * if (!isComplete) pulseScale else 1f).dp)
-                    .background(
-                        Brush.linearGradient(listOf(
-                            AppTheme.AccentPurple.copy(alpha = if (!isComplete) pulseAlpha else 0.8f),
-                            AppTheme.AccentPink.copy(alpha = if (!isComplete) pulseAlpha * 0.7f else 0.6f)
-                        )),
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+        Box(
+            Modifier.fillMaxHeight(0.4f).fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    if (isComplete) Icons.Outlined.CheckCircle else Icons.Outlined.CloudSync,
-                    null, tint = Color.White, modifier = Modifier.size(40.dp)
-                )
-            }
-        }
+                Box(contentAlignment = Alignment.Center) {
+                    if (!isComplete) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(80.dp),
+                            color = AppTheme.AccentPink,
+                            strokeWidth = 2.5.dp,
+                        )
+                    }
+                    Box(
+                        Modifier
+                            .size((60 * if (!isComplete) pulseScale else 1f).dp)
+                            .background(
+                                Brush.linearGradient(listOf(
+                                    AppTheme.AccentPurple.copy(alpha = if (!isComplete) pulseAlpha else 0.8f),
+                                    AppTheme.AccentPink.copy(alpha = if (!isComplete) pulseAlpha * 0.7f else 0.6f)
+                                )),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            if (isComplete) Icons.Outlined.CheckCircle else Icons.Outlined.CloudSync,
+                            null, tint = Color.White, modifier = Modifier.size(30.dp)
+                        )
+                    }
+                }
 
-        Spacer(Modifier.height(28.dp))
-
-        Text(
-            if (isComplete) "All set!" else "Getting things ready",
-            color = Color.White,
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(AppTheme.AccentPurple.copy(alpha = 0.12f))
-                .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-        ) {
-            Text(
-                if (isComplete) "Your dashboard is ready for the tour."
-                else "Hang tight — before we take you on the app tour, we're setting up your profile in the background.\n\nAfter the tour we'll ask you a few personal questions and get everything connected, so the app is fully integrated to learn from your data. We only need to do this once, so you'll never have to worry about it again.",
-                color = AppTheme.BodyTextColor,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        Spacer(Modifier.height(32.dp))
-
-        // Progress bar
-        Box(
-            Modifier.fillMaxWidth().height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(AppTheme.TrackColor)
-        ) {
-            Box(
-                Modifier.fillMaxWidth(animatedProgress).height(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(Brush.horizontalGradient(listOf(AppTheme.AccentPurple, AppTheme.AccentPink)))
-            )
-        }
-
-        if (!isComplete) {
-            Spacer(Modifier.height(20.dp))
-            AnimatedContent(
-                targetState = factIndex,
-                transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(300)) },
-                label = "fact"
-            ) { i ->
                 Text(
-                    LOADING_FACTS[i],
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    if (isComplete) "All set!" else "Getting things ready",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center
                 )
+
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AppTheme.AccentPurple.copy(alpha = 0.12f))
+                        .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        if (isComplete) "The app is ready for the tour."
+                        else "Setting up your profile in the background. After the tour we'll ask a few questions and connect your wearables. Just once.",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Box(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(5.dp)
+                        .clip(RoundedCornerShape(2.5.dp))
+                        .background(AppTheme.TrackColor)
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth(animatedProgress).height(5.dp)
+                            .clip(RoundedCornerShape(2.5.dp))
+                            .background(Brush.horizontalGradient(listOf(AppTheme.AccentPurple, AppTheme.AccentPink)))
+                    )
+                }
+
+                if (!isComplete) {
+                    AnimatedContent(
+                        targetState = factIndex,
+                        transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(300)) },
+                        label = "fact"
+                    ) { i ->
+                        Text(
+                            LOADING_FACTS[i],
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         }
     }
@@ -556,11 +578,13 @@ private fun SetupLandingPage() {
         Text("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes a few minutes.",
             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
         Spacer(Modifier.height(28.dp))
-        SetupStepPreview(Icons.Outlined.Link, "1. Connect", "Health Connect, WHOOP, Oura, Polar, Garmin")
-        Spacer(Modifier.height(10.dp))
-        SetupStepPreview(Icons.Outlined.Storage, "2. Configure", "Choose which data to collect")
-        Spacer(Modifier.height(10.dp))
-        SetupStepPreview(Icons.Outlined.AutoAwesome, "3. AI Personalisation", "Answer questions about your migraines, AI configures everything")
+        SetupStepPreview(Icons.Outlined.Lock, "1. Permissions", "Location, notifications, microphone, calendar")
+        Spacer(Modifier.height(8.dp))
+        SetupStepPreview(Icons.Outlined.Link, "2. Connect", "Health Connect, WHOOP, Oura, Polar, Garmin")
+        Spacer(Modifier.height(8.dp))
+        SetupStepPreview(Icons.Outlined.Storage, "3. Configure", "Choose which data to collect")
+        Spacer(Modifier.height(8.dp))
+        SetupStepPreview(Icons.Outlined.AutoAwesome, "4. AI Personalisation", "Answer questions about your migraines, AI configures everything")
     }
 }
 
