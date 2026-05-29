@@ -132,18 +132,14 @@ private suspend fun fetchSleepEntriesForDate(
                         val totalMin = (row.valueHours * 60).toInt()
                         "${totalMin / 60}h ${totalMin % 60}m"
                     }
-                    row.valueAt != null -> {
-                        try {
-                            row.valueAt.substringAfter("T").take(5)
-                        } catch (_: Exception) { row.valueAt }
-                    }
+                    row.valueAt != null -> TimeOfDay.formatHmma(row.valueAt) ?: "-"
                     row.valuePct != null -> "${row.valuePct.toInt()}%"
                     row.valueCount != null -> "${row.valueCount}"
                     row.valueSwsHm != null -> {
                         fun fmt(h: Double): String { val m = (h * 60).toInt(); return "${m / 60}h ${m % 60}m" }
                         "Deep ${fmt(row.valueSwsHm)} · REM ${fmt(row.valueRemHm ?: 0.0)} · Light ${fmt(row.valueLightHm ?: 0.0)}"
                     }
-                    else -> "—"
+                    else -> "-"
                 }
                 entries.add(SleepDataEntry(td.table, td.label, value, src))
             }
@@ -414,7 +410,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         selectedMetrics.forEachIndexed { index, metric ->
                             val entry = bestByMetric[metric]
-                            val value = entry?.value ?: "—"
+                            val value = entry?.value ?: "-"
                             val label = SleepCardConfig.labelFor(metric)
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))

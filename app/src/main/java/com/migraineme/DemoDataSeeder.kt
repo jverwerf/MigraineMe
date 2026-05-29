@@ -965,4 +965,121 @@ object DemoDataSeeder {
         if (isDemoCleared(context.applicationContext)) return
         clearDemoData(context)
     }
+
+    // ── Safety net: purge orphan demo rows on app launch ────────────────────
+
+    /**
+     * Idempotent cleanup that ONLY deletes rows with explicit demo markers
+     * (`source='demo'` or `notes LIKE '[demo]%'`). Unlike [clearDemoData], this
+     * never blanket-deletes by `user_id`, so it is safe to call from app launch
+     * even after the user has logged real data.
+     * Cheap-probes for `source='demo'` first and returns immediately if none
+     * found, so the common case is a single round-trip.
+     */
+    suspend fun purgeOrphanDemoRows(context: Context) {
+        val ctx = context.applicationContext
+        val token = SessionStore.getValidAccessToken(ctx) ?: return
+        val userId = SessionStore.readUserId(ctx) ?: JwtUtils.extractUserIdFromAccessToken(token) ?: return
+        val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+        val key = BuildConfig.SUPABASE_ANON_KEY
+
+        withContext(Dispatchers.IO) {
+            val client = HttpClient()
+            try {
+                // Probe: bail if no source='demo' rows exist
+                val probe = try {
+                    client.get("$base/rest/v1/sleep_duration_daily") {
+                        header("Authorization", "Bearer $token"); header("apikey", key)
+                        parameter("user_id", "eq.$userId"); parameter("source", "eq.demo")
+                        parameter("select", "user_id"); parameter("limit", "1")
+                    }
+                } catch (e: Exception) { Log.e(TAG, "purge probe failed: ${e.message}"); return@withContext }
+                val probeBody = probe.bodyAsText()
+                if (probeBody.trim() == "[]" || probeBody.isBlank()) return@withContext
+                Log.d(TAG, "═══ purgeOrphanDemoRows START (userId=$userId) ═══")
+
+                // Cascade [demo] migraines first (children → parent)
+                val demoMigraineIds = fetchIds(client, base, token, key, "migraines", userId, notesPrefix = "[demo]")
+                if (demoMigraineIds.isNotEmpty()) {
+                    val csv = demoMigraineIds.joinToString(",")
+                    for (child in listOf("activities","symptoms","prodromes","locations","triggers","reliefs","medicines")) {
+                        try {
+                            client.delete("$base/rest/v1/$child") {
+                                header("Authorization", "Bearer $token"); header("apikey", key)
+                                parameter("migraine_id", "in.($csv)")
+                            }
+                        } catch (e: Exception) { Log.e(TAG, "purge $child by mid failed: ${e.message}") }
+                    }
+                    try {
+                        client.delete("$base/rest/v1/migraines") {
+                            header("Authorization", "Bearer $token"); header("apikey", key)
+                            parameter("id", "in.($csv)")
+                        }
+                    } catch (e: Exception) { Log.e(TAG, "purge migraines failed: ${e.message}") }
+                }
+
+                // Cascade [demo] treatment regimens
+                val demoRegimenIds = fetchIds(client, base, token, key, "treatment_regimens", userId, notesPrefix = "[demo]")
+                if (demoRegimenIds.isNotEmpty()) {
+                    val csv = demoRegimenIds.joinToString(",")
+                    try {
+                        client.delete("$base/rest/v1/treatment_side_effect_logs") {
+                            header("Authorization", "Bearer $token"); header("apikey", key)
+                            parameter("regimen_id", "in.($csv)")
+                        }
+                    } catch (e: Exception) { Log.e(TAG, "purge treatment_side_effect_logs failed: ${e.message}") }
+                    try {
+                        client.delete("$base/rest/v1/treatment_regimens") {
+                            header("Authorization", "Bearer $token"); header("apikey", key)
+                            parameter("id", "in.($csv)")
+                        }
+                    } catch (e: Exception) { Log.e(TAG, "purge treatment_regimens failed: ${e.message}") }
+                }
+
+                // Standalone seeder triggers (not linked to a demo migraine)
+                try {
+                    client.delete("$base/rest/v1/triggers") {
+                        header("Authorization", "Bearer $token"); header("apikey", key)
+                        parameter("user_id", "eq.$userId"); parameter("notes", "eq.[demo]")
+                    }
+                } catch (e: Exception) { Log.e(TAG, "purge triggers by notes failed: ${e.message}") }
+
+                // source='demo' rows across all daily / log tables
+                val sourceDemoTables = listOf(
+                    "sleep_duration_daily","sleep_score_daily","sleep_efficiency_daily",
+                    "sleep_disturbances_daily","sleep_stages_daily",
+                    "fell_asleep_time_daily","woke_up_time_daily",
+                    "recovery_score_daily","resting_hr_daily","hrv_daily",
+                    "spo2_daily","skin_temp_daily","steps_daily","respiratory_rate_daily",
+                    "nutrition_daily","medicines","reliefs","nutrition_records"
+                )
+                for (t in sourceDemoTables) {
+                    try {
+                        client.delete("$base/rest/v1/$t") {
+                            header("Authorization", "Bearer $token"); header("apikey", key)
+                            parameter("user_id", "eq.$userId"); parameter("source", "eq.demo")
+                        }
+                    } catch (e: Exception) { Log.e(TAG, "purge $t failed: ${e.message}") }
+                }
+                Log.d(TAG, "═══ purgeOrphanDemoRows COMPLETE ═══")
+            } finally { client.close() }
+        }
+    }
+
+    private suspend fun fetchIds(
+        client: HttpClient, base: String, token: String, key: String,
+        table: String, userId: String, notesPrefix: String
+    ): List<String> {
+        return try {
+            val resp = client.get("$base/rest/v1/$table") {
+                header("Authorization", "Bearer $token"); header("apikey", key)
+                parameter("user_id", "eq.$userId")
+                parameter("notes", "like.$notesPrefix*")
+                parameter("select", "id")
+            }
+            val body = resp.bodyAsText()
+            val arr = Json.parseToJsonElement(body).jsonArray
+            arr.mapNotNull { it.jsonObject["id"]?.jsonPrimitive?.contentOrNull }
+        } catch (e: Exception) { Log.e(TAG, "fetchIds $table failed: ${e.message}"); emptyList() }
+    }
 }

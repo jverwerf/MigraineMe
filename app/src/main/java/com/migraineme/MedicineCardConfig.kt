@@ -70,11 +70,11 @@ fun parseMedicineAmount(raw: String?): Pair<Double, String>? {
  * dominant unit's sum. If unparseable entries also exist, appends a "+" marker.
  */
 fun formatAmountSum(parsed: List<Pair<Double, String>>, unparseable: Int): String {
-    if (parsed.isEmpty() && unparseable == 0) return "—"
+    if (parsed.isEmpty() && unparseable == 0) return "-"
     val byUnit = mutableMapOf<String, Double>()
     for ((v, u) in parsed) byUnit[u] = (byUnit[u] ?: 0.0) + v
     val sorted = byUnit.entries.sortedByDescending { it.value }
-    val top = sorted.firstOrNull() ?: return if (unparseable > 0) "${unparseable}×" else "—"
+    val top = sorted.firstOrNull() ?: return if (unparseable > 0) "${unparseable}×" else "-"
     val valStr = if (top.value % 1.0 == 0.0) top.value.toInt().toString()
                  else "%.1f".format(top.value)
     val extras = (sorted.size - 1) + (if (unparseable > 0) 1 else 0)

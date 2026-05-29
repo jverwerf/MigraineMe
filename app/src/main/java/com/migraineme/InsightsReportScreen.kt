@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -192,6 +193,35 @@ fun InsightsReportScreen(
     var profileTracksCycle by remember { mutableStateOf(false) }
     var profileTriggerAreas by remember { mutableStateOf<List<String>>(emptyList()) }
     var profileFreeText by remember { mutableStateOf<String?>(null) }
+
+    // Regimen-based treatments (matches Monitor → Treatments)
+    var regimenTreatments by remember { mutableStateOf<List<SupabaseDbService.TreatmentLeaderboardRow>>(emptyList()) }
+    var regimenNarratives by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var regimenSideEffects by remember { mutableStateOf<Map<String, List<SupabaseDbService.TreatmentSideEffectLogRow>>>(emptyMap()) }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val token = SessionStore.getValidAccessToken(ctx) ?: return@withContext
+                val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                val lb = db.getTreatmentLeaderboard(token)
+                regimenTreatments = lb
+                val narr = mutableMapOf<String, String>()
+                val se = mutableMapOf<String, List<SupabaseDbService.TreatmentSideEffectLogRow>>()
+                val today = java.time.LocalDate.now().toString()
+                for (row in lb) {
+                    runCatching { db.getTreatmentNarrative(token, row.regimenId)?.narrative }
+                        .getOrNull()?.let { narr[row.regimenId] = it }
+                    runCatching { db.getTreatmentSideEffectLogs(token, row.startDate, row.stopDate ?: today) }
+                        .getOrNull()?.let { if (it.isNotEmpty()) se[row.regimenId] = it }
+                }
+                regimenNarratives = narr
+                regimenSideEffects = se
+            } catch (e: Exception) {
+                android.util.Log.w("ReportScreen", "Failed to load regimens: ${e.message}")
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -595,6 +625,7 @@ fun InsightsReportScreen(
             Spacer(Modifier.height(12.dp))
 
             // ========== 1. FREQUENCY TRENDS (filtered) ==========
+            //   Order: Day of Week -> Weekly -> Monthly Frequency -> Monthly Duration -> Seasonal
             if (filteredSorted.size >= 2) {
                 val filteredByMonth = remember(filteredSorted) {
                     filteredSorted.groupBy {
@@ -607,57 +638,6 @@ fun InsightsReportScreen(
                         d.minusDays(d.dayOfWeek.value.toLong() - 1)
                     }.toSortedMap()
                 }
-
-                // Monthly
-                if (filteredByMonth.size >= 2) {
-                    BaseCard {
-                        Text("Monthly Frequency", color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Spacer(Modifier.height(8.dp))
-                        val months = filteredByMonth.keys.toList()
-                        val counts = months.map { filteredByMonth[it]?.size ?: 0 }
-                        val maxCount = counts.max().coerceAtLeast(1)
-                        val avgCount = counts.average().toFloat()
-                        MonthlyBarChart(months, counts, maxCount, avgCount,
-                            Modifier.fillMaxWidth().height(200.dp))
-
-                        if (counts.size >= 4) {
-                            val firstHalf = counts.take(counts.size / 2).average()
-                            val secondHalf = counts.drop(counts.size / 2).average()
-                            val trendText = when {
-                                secondHalf < firstHalf * 0.75 -> "↓ Improving — frequency decreasing"
-                                secondHalf > firstHalf * 1.25 -> "↑ Worsening — frequency increasing"
-                                else -> "→ Stable — consistent frequency"
-                            }
-                            val trendColor = when {
-                                secondHalf < firstHalf * 0.75 -> Color(0xFF81C784)
-                                secondHalf > firstHalf * 1.25 -> Color(0xFFE57373)
-                                else -> AppTheme.BodyTextColor
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            Text(trendText, color = trendColor,
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                        }
-                    }
-                }
-
-                // Weekly
-                if (filteredByWeek.size >= 3) {
-                    BaseCard {
-                        Text("Weekly Frequency", color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Spacer(Modifier.height(8.dp))
-                        val weeks = filteredByWeek.keys.toList()
-                        val weekCounts = weeks.map { filteredByWeek[it]?.size ?: 0 }
-                        val maxWk = weekCounts.max().coerceAtLeast(1)
-                        val avgWk = weekCounts.average().toFloat()
-                        WeeklyBarChart(weeks, weekCounts, maxWk, avgWk,
-                            Modifier.fillMaxWidth().height(160.dp))
-                    }
-                }
-
-                // Day of week (filtered)
                 val filteredDayOfWeek = remember(filteredSorted) {
                     val grouped = filteredSorted.groupBy {
                         it.start.atZone(zone).toLocalDate().dayOfWeek.value
@@ -673,6 +653,8 @@ fun InsightsReportScreen(
                         )
                     }
                 }
+
+                // 1. Day of Week
                 if (filteredDayOfWeek.any { it.count > 0 }) {
                     BaseCard {
                         Text("Day of Week", color = AppTheme.TitleColor,
@@ -706,44 +688,133 @@ fun InsightsReportScreen(
                     }
                 }
 
-                // Severity over time (monthly avg, ≥3 months gate) — mirrors iOS SeverityOverTimeChart
-                val monthsWithSev = remember(filteredSorted) {
-                    filteredByMonth.mapNotNull { (monthStart, items) ->
-                        val sevs = items.mapNotNull { it.severity }
-                        if (sevs.isEmpty()) null
-                        else Triple(monthStart, sevs.average().toFloat(), sevs.size)
-                    }
-                }
-                if (monthsWithSev.size >= 3) {
+                // 2. Weekly
+                if (filteredByWeek.size >= 3) {
                     BaseCard {
-                        Text("Average Severity", color = AppTheme.TitleColor,
+                        Text("Weekly Frequency", color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
-                        val sevFmt = DateTimeFormatter.ofPattern("MMM")
+                        val weeks = filteredByWeek.keys.toList()
+                        val weekCounts = weeks.map { filteredByWeek[it]?.size ?: 0 }
+                        val maxWk = weekCounts.max().coerceAtLeast(1)
+                        val avgWk = weekCounts.average().toFloat()
+                        WeeklyBarChart(weeks, weekCounts, maxWk, avgWk,
+                            Modifier.fillMaxWidth().height(160.dp))
+                    }
+                }
+
+                // 3. Monthly Frequency
+                if (filteredByMonth.size >= 2) {
+                    BaseCard {
+                        Text("Monthly Frequency", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(8.dp))
+                        val months = filteredByMonth.keys.toList()
+                        val counts = months.map { filteredByMonth[it]?.size ?: 0 }
+                        val maxCount = counts.max().coerceAtLeast(1)
+                        val avgCount = counts.average().toFloat()
+                        MonthlyBarChart(months, counts, maxCount, avgCount,
+                            Modifier.fillMaxWidth().height(200.dp))
+                    }
+                }
+
+                // 4. Monthly Duration (avg attack length per month, in hours)
+                val monthsWithDur = remember(filteredSorted) {
+                    filteredByMonth.mapNotNull { (monthStart, items) ->
+                        val durs = items.mapNotNull { m ->
+                            val end = m.end ?: return@mapNotNull null
+                            val hours = java.time.Duration.between(m.start, end).toMinutes() / 60.0
+                            if (hours <= 0 || hours >= 168) null else hours
+                        }
+                        if (durs.isEmpty()) null
+                        else Triple(monthStart, durs.average().toFloat(), durs.size)
+                    }
+                }
+                if (monthsWithDur.isNotEmpty()) {
+                    BaseCard {
+                        Text("Monthly Duration", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(8.dp))
+                        val maxAvg = monthsWithDur.maxOf { it.second }.coerceAtLeast(1f)
+                        val durFmt = DateTimeFormatter.ofPattern("MMM")
                         Row(
                             Modifier.fillMaxWidth().height(120.dp).horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.Bottom
                         ) {
-                            monthsWithSev.forEach { (monthStart, avg, _) ->
-                                val sevColor = when {
-                                    avg >= 7f -> Color(0xFFE57373)
-                                    avg >= 4f -> Color(0xFFFFB74D)
-                                    else -> Color(0xFF81C784)
-                                }
+                            monthsWithDur.forEach { (monthStart, avg, _) ->
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(String.format("%.1f", avg), color = sevColor,
+                                    Text(String.format("%.1fh", avg), color = AppTheme.AccentPink,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                     Spacer(Modifier.height(2.dp))
-                                    val barH = (avg / 10f * 80f).coerceAtLeast(4f)
+                                    val barH = (avg / maxAvg * 80f).coerceAtLeast(4f)
                                     Canvas(Modifier.width(24.dp).height(barH.dp)) {
-                                        drawRoundRect(AppTheme.AccentPink.copy(alpha = 0.6f), cornerRadius = CornerRadius(4f, 4f))
+                                        drawRoundRect(AppTheme.AccentPink.copy(alpha = 0.7f), cornerRadius = CornerRadius(4f, 4f))
                                     }
                                     Spacer(Modifier.height(2.dp))
-                                    Text(monthStart.format(sevFmt), color = AppTheme.SubtleTextColor,
+                                    Text(monthStart.format(durFmt), color = AppTheme.SubtleTextColor,
                                         style = MaterialTheme.typography.labelSmall)
                                 }
                             }
+                        }
+                    }
+                }
+
+                // 5. Seasonal (NH meteorological buckets)
+                val seasonalCounts = remember(filteredSorted) {
+                    val c = IntArray(4)
+                    filteredSorted.forEach {
+                        val month = it.start.atZone(zone).toLocalDate().monthValue
+                        c[(month % 12) / 3]++
+                    }
+                    c.toList()
+                }
+                if (seasonalCounts.sum() > 0) {
+                    val labels = listOf("Winter", "Spring", "Summer", "Autumn")
+                    val colors = listOf(
+                        Color(0xFF4FC3F7), Color(0xFF81C784),
+                        Color(0xFFFFB74D), Color(0xFFFF8A65),
+                    )
+                    val maxSeason = seasonalCounts.max().coerceAtLeast(1)
+                    val total = seasonalCounts.sum()
+                    BaseCard {
+                        Text("Seasonal", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            Modifier.fillMaxWidth().height(120.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.Bottom,
+                        ) {
+                            seasonalCounts.forEachIndexed { i, count ->
+                                val isMax = count == maxSeason && count > 0
+                                val barColor = if (isMax) Color(0xFFE57373) else colors[i]
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    Text("$count", color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    Spacer(Modifier.height(2.dp))
+                                    val barH = (count.toFloat() / maxSeason * 80f).coerceAtLeast(4f)
+                                    Canvas(Modifier.width(24.dp).height(barH.dp)) {
+                                        drawRoundRect(barColor.copy(alpha = 0.8f), cornerRadius = CornerRadius(4f, 4f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(labels[i], color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                        val worstIdx = seasonalCounts.indices.maxByOrNull { seasonalCounts[it] }
+                        if (worstIdx != null && seasonalCounts[worstIdx] > 0 && total > 0) {
+                            val pct = seasonalCounts[worstIdx].toFloat() / total * 100f
+                            Spacer(Modifier.height(8.dp))
+                            Text("Most frequent: ${labels[worstIdx]} (${seasonalCounts[worstIdx]} migraines, ${String.format("%.0f", pct)}%)",
+                                color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.labelSmall,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth())
                         }
                     }
                 }
@@ -774,6 +845,28 @@ fun InsightsReportScreen(
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                 }
+            }
+
+            // ========== 3a. TREATMENTS (regimen-based, matches Monitor → Treatments) ==========
+            val filteredRegimens = remember(regimenTreatments, filteredSorted) {
+                if (filteredSorted.isEmpty()) regimenTreatments
+                else {
+                    val dates = filteredSorted.map { it.start.atZone(zone).toLocalDate() }
+                    val winStart = dates.min()
+                    val winEnd = (dates.max()).plusDays(1)
+                    regimenTreatments.filter { r ->
+                        val s = runCatching { java.time.LocalDate.parse(r.startDate) }.getOrNull() ?: java.time.LocalDate.MIN
+                        val e = r.stopDate?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() } ?: java.time.LocalDate.MAX
+                        !s.isAfter(winEnd) && !e.isBefore(winStart)
+                    }
+                }
+            }
+            if (filteredRegimens.isNotEmpty()) {
+                ReportRegimenTreatmentsCard(
+                    rows = filteredRegimens,
+                    narratives = regimenNarratives,
+                    sideEffects = regimenSideEffects,
+                )
             }
 
             // ========== 3. WHAT WORKED (all time) ==========
@@ -1255,7 +1348,7 @@ private fun FilterCard(
                                     style = MaterialTheme.typography.bodySmall)
                             }
                         }
-                        Text("—", color = AppTheme.SubtleTextColor,
+                        Text("-", color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(top = 12.dp))
                         // To button
@@ -1669,10 +1762,10 @@ private fun DetailMigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "—"}/10",
+                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "-"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "—"}/10",
+                    Text("Severity: ${sel.severity ?: "-"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
@@ -1842,4 +1935,123 @@ private suspend fun captureTimelineGraph(
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Regimen-based treatments card (matches Monitor → Treatments)
+// ─────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ReportRegimenTreatmentsCard(
+    rows: List<SupabaseDbService.TreatmentLeaderboardRow>,
+    narratives: Map<String, String>,
+    sideEffects: Map<String, List<SupabaseDbService.TreatmentSideEffectLogRow>>,
+) {
+    val sorted = remember(rows) {
+        rows.sortedBy { it.pctChangeMmd ?: Double.POSITIVE_INFINITY }
+    }
+    val pink = androidx.compose.ui.graphics.Color(0xFFFF7BB0)
+
+    BaseCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Outlined.MedicalServices, null,
+                tint = androidx.compose.ui.graphics.Color(0xFF4DD0E1), modifier = Modifier.size(20.dp))
+            Text("Treatments", color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+        }
+        Spacer(Modifier.height(8.dp))
+        sorted.forEachIndexed { idx, r ->
+            RegimenRow(r, narratives[r.regimenId], sideEffects[r.regimenId] ?: emptyList(), pink)
+            if (idx < sorted.size - 1) {
+                Divider(color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.05f),
+                    modifier = Modifier.padding(vertical = 6.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegimenRow(
+    r: SupabaseDbService.TreatmentLeaderboardRow,
+    narrative: String?,
+    logs: List<SupabaseDbService.TreatmentSideEffectLogRow>,
+    pink: androidx.compose.ui.graphics.Color,
+) {
+    val band = r.band
+    val bandColor = regimenBandColor(band)
+    val bandLabel = regimenBandLabel(band)
+    val pctText = r.pctChangeMmd?.let { String.format("%+.0f%%", it) } ?: "—"
+    val dose = listOfNotNull(r.amount, r.frequency).joinToString(" · ")
+    val weeks = runCatching {
+        val s = java.time.LocalDate.parse(r.startDate)
+        java.time.temporal.ChronoUnit.WEEKS.between(s, java.time.LocalDate.now()).coerceAtLeast(0L).toInt()
+    }.getOrNull() ?: 0
+    val sub = listOfNotNull(r.kind, dose.ifBlank { null }, "$weeks wks").joinToString(" · ")
+
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(r.name, color = androidx.compose.ui.graphics.Color.White,
+                    fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                Text(sub, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
+                    style = MaterialTheme.typography.labelSmall)
+            }
+            if (band == "not_enough_data") {
+                Text("not enough data", color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
+                    style = MaterialTheme.typography.labelSmall)
+            } else {
+                val mag = r.pctChangeMmd?.let { minOf(Math.abs(it), 100.0) / 100.0 } ?: 0.0
+                Box(modifier = Modifier.width(54.dp).height(5.dp)
+                    .background(androidx.compose.ui.graphics.Color.White.copy(alpha = 0.08f),
+                        androidx.compose.foundation.shape.RoundedCornerShape(3.dp))) {
+                    Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(mag.toFloat())
+                        .background(bandColor, androidx.compose.foundation.shape.RoundedCornerShape(3.dp)))
+                }
+                Spacer(Modifier.width(8.dp))
+                Text(pctText, color = bandColor, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.width(44.dp), style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.End)
+            }
+        }
+        if (band != "not_enough_data") {
+            Text(bandLabel, color = bandColor, fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.labelSmall)
+        }
+        if (!narrative.isNullOrBlank()) {
+            Text(narrative, color = AppTheme.BodyTextColor,
+                style = MaterialTheme.typography.bodySmall, maxLines = 4,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        }
+        if (logs.isNotEmpty()) {
+            Text("Side effects", color = pink, fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.labelSmall)
+            logs.take(5).forEach { log ->
+                val pills = log.selectedSymptoms.joinToString(", ")
+                val line = log.notes?.takeIf { it.isNotBlank() } ?: pills
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("• ${log.logDate}",
+                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
+                        style = MaterialTheme.typography.labelSmall)
+                    Text(line, color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.labelSmall, maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}
+
+private fun regimenBandLabel(b: String): String = when (b) {
+    "working_well" -> "Working well"
+    "showing_progress" -> "Showing progress"
+    "some_effect" -> "Some effect"
+    "not_noticeable" -> "Not noticeable yet"
+    else -> "Not enough data"
+}
+
+private fun regimenBandColor(b: String): androidx.compose.ui.graphics.Color = when (b) {
+    "working_well" -> androidx.compose.ui.graphics.Color(0xFF6ED69E)
+    "showing_progress" -> androidx.compose.ui.graphics.Color(0xFFFFB454)
+    "some_effect" -> AppTheme.BodyTextColor
+    "not_noticeable" -> androidx.compose.ui.graphics.Color(0xFFE0492B)
+    else -> androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f)
+}
 

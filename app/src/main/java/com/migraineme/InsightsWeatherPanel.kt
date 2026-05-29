@@ -140,8 +140,8 @@ private fun HeaderRow() {
 private fun DataRow(day: String, temp: Double?, pressure: Double?, humidity: Double?) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Text(day, Modifier.weight(1.2f), style = MaterialTheme.typography.bodySmall)
-        Text(temp?.let { String.format("%.1f", it) } ?: "—", Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
-        Text(pressure?.let { String.format("%.0f", it) } ?: "—", Modifier.weight(1.0f), style = MaterialTheme.typography.bodySmall)
-        Text(humidity?.let { String.format("%.0f", it) } ?: "—", Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
+        Text(temp?.let { String.format("%.1f", it) } ?: "-", Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
+        Text(pressure?.let { String.format("%.0f", it) } ?: "-", Modifier.weight(1.0f), style = MaterialTheme.typography.bodySmall)
+        Text(humidity?.let { String.format("%.0f", it) } ?: "-", Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
     }
 }

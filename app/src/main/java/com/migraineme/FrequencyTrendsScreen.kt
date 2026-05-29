@@ -104,12 +104,12 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
     Column(Modifier.fillMaxWidth()) {
         run {
             // ── Day-of-week (moved earlier per spec) ──
-            if (dayOfWeek.isNotEmpty()) {
+            run {
                 BaseCard {
                     Text("Day of Week", color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(8.dp))
-                    val maxPct = dayOfWeek.maxOf { it.pct }.coerceAtLeast(1f)
+                    val maxPct = (dayOfWeek.maxOfOrNull { it.pct } ?: 1f).coerceAtLeast(1f)
                     Row(
                         Modifier.fillMaxWidth().height(120.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -159,7 +159,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
             }
 
             // ── Weekly bar chart (last 12 weeks) ──
-            if (byWeek.size >= 3) {
+            run {
                 Spacer(Modifier.height(4.dp))
                 BaseCard {
                     Text("Weekly (last 12 weeks)", color = AppTheme.TitleColor,
@@ -184,7 +184,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
             }
 
             // ── Monthly bar chart ──
-            if (byMonth.size >= 2) {
+            run {
                 Spacer(Modifier.height(4.dp))
                 BaseCard {
                     Text("Monthly", color = AppTheme.TitleColor,
@@ -193,16 +193,18 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
 
                     val months = byMonth.keys.toList()
                     val counts = months.map { byMonth[it]?.size ?: 0 }
-                    val maxCount = counts.max().coerceAtLeast(1)
-                    val avgCount = counts.average().toFloat()
+                    val maxCount = (counts.maxOrNull() ?: 1).coerceAtLeast(1)
+                    val avgCount = if (counts.isEmpty()) 0f else counts.average().toFloat()
 
-                    MonthlyBarChart(
-                        months = months,
-                        counts = counts,
-                        maxCount = maxCount,
-                        avgCount = avgCount,
-                        modifier = Modifier.fillMaxWidth().height(200.dp),
-                    )
+                    if (counts.isNotEmpty()) {
+                        MonthlyBarChart(
+                            months = months,
+                            counts = counts,
+                            maxCount = maxCount,
+                            avgCount = avgCount,
+                            modifier = Modifier.fillMaxWidth().height(200.dp),
+                        )
+                    }
 
                     // Trend indicator
                     if (counts.size >= 4) {
@@ -227,8 +229,8 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                 }
             }
 
-            // ── Seasonal (hemisphere-aware, gated on ≥4 migraines) ──
-            if (migraines.size >= 4) {
+            // ── Seasonal (hemisphere-aware) ──
+            run {
                 val userLocations by vm.userLocations.collectAsState()
                 val medianLat: Double? = remember(userLocations) {
                     val lats = userLocations.map { it.latitude }.sorted()
@@ -313,12 +315,12 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
             }
 
             // ── Severity over time (monthly average) ──
-            if (byMonth.size >= 3) {
+            run {
                 val monthsWithSev = byMonth.entries.mapNotNull { (month, migs) ->
                     val sevs = migs.mapNotNull { it.severity }
                     if (sevs.isEmpty()) null else Triple(month, sevs.average().toFloat(), sevs.size)
                 }
-                if (monthsWithSev.size >= 3) {
+                run {
                     Spacer(Modifier.height(4.dp))
                     BaseCard {
                         Row(verticalAlignment = Alignment.CenterVertically) {

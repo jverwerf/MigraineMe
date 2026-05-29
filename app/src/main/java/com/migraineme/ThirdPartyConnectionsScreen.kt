@@ -37,9 +37,6 @@ import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.BloodGlucoseRecord
-import androidx.health.connect.client.records.BloodPressureRecord
-import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
@@ -50,7 +47,6 @@ import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
-import androidx.health.connect.client.records.WeightRecord
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -131,7 +127,6 @@ fun ThirdPartyConnectionsScreen(
     val hrvPermissionGranted = remember { mutableStateOf(false) }
     val stepsPermissionGranted = remember { mutableStateOf(false) }
     val restingHrPermissionGranted = remember { mutableStateOf(false) }
-    val weightPermissionGranted = remember { mutableStateOf(false) }
     val spo2PermissionGranted = remember { mutableStateOf(false) }
 
     // Permission definitions
@@ -141,27 +136,22 @@ fun ThirdPartyConnectionsScreen(
     val hrvPermission = HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class)
     val stepsPermission = HealthPermission.getReadPermission(StepsRecord::class)
     val restingHrPermission = HealthPermission.getReadPermission(RestingHeartRateRecord::class)
-    val weightPermission = HealthPermission.getReadPermission(WeightRecord::class)
     val spo2Permission = HealthPermission.getReadPermission(OxygenSaturationRecord::class)
     val exercisePermission = HealthPermission.getReadPermission(ExerciseSessionRecord::class)
-    val bodyFatPermission = HealthPermission.getReadPermission(BodyFatRecord::class)
-    val bloodPressurePermission = HealthPermission.getReadPermission(BloodPressureRecord::class)
-    val bloodGlucosePermission = HealthPermission.getReadPermission(BloodGlucoseRecord::class)
     val respiratoryRatePermission = HealthPermission.getReadPermission(RespiratoryRateRecord::class)
     val bodyTempPermission = HealthPermission.getReadPermission(BodyTemperatureRecord::class)
 
     val allHealthConnectPermissions = setOf(
         nutritionPermission, menstruationPermission, sleepPermission, hrvPermission,
-        stepsPermission, restingHrPermission, weightPermission, spo2Permission,
-        exercisePermission, bodyFatPermission,
-        bloodPressurePermission, bloodGlucosePermission, respiratoryRatePermission, bodyTempPermission
+        stepsPermission, restingHrPermission, spo2Permission,
+        exercisePermission, respiratoryRatePermission, bodyTempPermission
     )
 
     val anyWearablePermissionGranted = remember {
         derivedStateOf {
             sleepPermissionGranted.value || hrvPermissionGranted.value ||
                     stepsPermissionGranted.value || restingHrPermissionGranted.value ||
-                    weightPermissionGranted.value || spo2PermissionGranted.value
+                    spo2PermissionGranted.value
         }
     }
 
@@ -197,7 +187,6 @@ fun ThirdPartyConnectionsScreen(
                         hrvPermissionGranted.value = hrvPermission in granted
                         stepsPermissionGranted.value = stepsPermission in granted
                         restingHrPermissionGranted.value = restingHrPermission in granted
-                        weightPermissionGranted.value = weightPermission in granted
                         spo2PermissionGranted.value = spo2Permission in granted
                     }
                 }
@@ -299,7 +288,6 @@ fun ThirdPartyConnectionsScreen(
         hrvPermissionGranted.value = granted.contains(hrvPermission)
         stepsPermissionGranted.value = granted.contains(stepsPermission)
         restingHrPermissionGranted.value = granted.contains(restingHrPermission)
-        weightPermissionGranted.value = granted.contains(weightPermission)
         spo2PermissionGranted.value = granted.contains(spo2Permission)
 
         scope.launch {
@@ -1006,7 +994,6 @@ fun ThirdPartyConnectionsScreen(
                     hrvPermissionGranted.value = false
                     stepsPermissionGranted.value = false
                     restingHrPermissionGranted.value = false
-                    weightPermissionGranted.value = false
                     spo2PermissionGranted.value = false
                     nutritionEnabled.value = false
                     menstruationEnabled.value = false
@@ -1024,7 +1011,7 @@ fun ThirdPartyConnectionsScreen(
             nutritionPermissionGranted.value && menstruationPermissionGranted.value &&
                     sleepPermissionGranted.value && hrvPermissionGranted.value &&
                     stepsPermissionGranted.value && restingHrPermissionGranted.value &&
-                    weightPermissionGranted.value && spo2PermissionGranted.value
+                    spo2PermissionGranted.value
         }
     }
 

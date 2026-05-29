@@ -78,9 +78,22 @@ fun MentalConfigScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Only show enabled metrics from registry
-    val availableMetrics = remember(settingsLoaded, enabledRegistryKeys) {
-        MetricRegistry.byGroup("mental").filter { it.key in enabledRegistryKeys }
+    // Only show enabled metrics from registry. The registry exposes a single
+    // bare "Noise" entry (day_mean_lmean) — replace it with explicit Avg / High
+    // / Low variants so the Customize chips match what the Cognitive card
+    // actually shows.
+    val availableMetrics: List<Pair<String, String>> = remember(settingsLoaded, enabledRegistryKeys) {
+        val base = MetricRegistry.byGroup("mental")
+            .filter { it.key in enabledRegistryKeys }
+            .filterNot { it.table == "ambient_noise_index_daily" }
+            .map { it.key to it.label }
+        val noiseEnabled = enabledRegistryKeys.any { it.startsWith("ambient_noise_index_daily") }
+        val noiseChips = if (noiseEnabled) listOf(
+            "ambient_noise_index_daily::day_mean_lmean" to "Noise Avg",
+            "ambient_noise_index_daily::day_max_lmax" to "Noise High",
+            "ambient_noise_index_daily::day_min_lmean" to "Noise Low",
+        ) else emptyList()
+        base + noiseChips
     }
 
     fun saveConfig() {
@@ -138,19 +151,19 @@ fun MentalConfigScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-                        for (metric in availableMetrics) {
-                            val isSelected = metric.key in selectedMetrics
-                            val label = metric.label
-                            val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metric.key) else -1
+                        for ((metricKey, metricLabel) in availableMetrics) {
+                            val isSelected = metricKey in selectedMetrics
+                            val label = metricLabel
+                            val slotIndex = if (isSelected) selectedMetrics.toList().indexOf(metricKey) else -1
                             val slotColor = if (slotIndex in slotColors.indices) slotColors[slotIndex] else AppTheme.AccentPurple
 
                             FilterChip(
                                 selected = isSelected,
                                 onClick = {
                                     selectedMetrics = if (isSelected) {
-                                        selectedMetrics.minus(metric.key)
+                                        selectedMetrics.minus(metricKey)
                                     } else if (selectedMetrics.size < 3) {
-                                        selectedMetrics.plus(metric.key)
+                                        selectedMetrics.plus(metricKey)
                                     } else {
                                         selectedMetrics
                                     }

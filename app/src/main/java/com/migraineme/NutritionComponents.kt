@@ -169,7 +169,7 @@ fun NutrientRow(label: String, value: Double?, unit: String) {
         Text(
             if (value != null && value > 0) {
                 if (value < 1) String.format("%.2f%s", value, unit) else String.format("%.1f%s", value, unit)
-            } else "—",
+            } else "-",
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
         )

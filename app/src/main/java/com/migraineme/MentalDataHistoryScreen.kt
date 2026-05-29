@@ -140,7 +140,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                     "stress_index_daily" to MentalCardConfig.METRIC_STRESS,
                     "screen_time_daily" to MentalCardConfig.METRIC_SCREEN_TIME,
                     "screen_time_late_night" to MentalCardConfig.METRIC_LATE_SCREEN_TIME,
-                    "ambient_noise_index_daily" to MentalCardConfig.METRIC_NOISE,
+                    "ambient_noise_index_daily" to MentalCardConfig.METRIC_NOISE_AVG,
                     "phone_brightness_daily" to MentalCardConfig.METRIC_BRIGHTNESS,
                     "phone_volume_daily" to MentalCardConfig.METRIC_VOLUME,
                     "phone_dark_mode_daily" to MentalCardConfig.METRIC_DARK_MODE,
@@ -168,7 +168,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     selectedMetrics.forEachIndexed { index, metric ->
                         val entry = bestByMetric[metric]
-                        val value = entry?.value ?: "—"
+                        val value = entry?.value ?: "-"
                         val label = MentalCardConfig.labelFor(metric)
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -191,7 +191,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                     }
                 }
 
-                // Show ALL metrics (not just ones with data), with "—" for missing
+                // Show ALL metrics (not just ones with data), with "-" for missing
                 val allMetricsExceptSelected = MentalCardConfig.ALL_MENTAL_METRICS
                     .filter { it !in selectedMetrics.toSet() }
 
@@ -202,7 +202,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                         entry = entry ?: MentalDataEntry(
                             table = table,
                             label = MentalCardConfig.labelFor(metric),
-                            value = "—",
+                            value = "-",
                             source = ""
                         )
                     )
@@ -383,15 +383,15 @@ private fun formatMentalEntryValue(table: String, obj: org.json.JSONObject): Str
     return when (table) {
         "stress_index_daily" -> {
             val v = obj.optDouble("value")
-            if (!v.isNaN()) String.format("%.0f", v) else "—"
+            if (!v.isNaN()) String.format("%.0f", v) else "-"
         }
         "screen_time_daily" -> {
             val v = obj.optDouble("total_hours")
-            if (!v.isNaN()) String.format("%.1fh", v) else "—"
+            if (!v.isNaN()) String.format("%.1fh", v) else "-"
         }
         "screen_time_late_night" -> {
             val v = obj.optDouble("value_hours")
-            if (!v.isNaN()) String.format("%.1fh", v) else "—"
+            if (!v.isNaN()) String.format("%.1fh", v) else "-"
         }
         "ambient_noise_index_daily" -> {
             val high = obj.optDouble("day_max_lmax")
@@ -403,24 +403,24 @@ private fun formatMentalEntryValue(table: String, obj: org.json.JSONObject): Str
                 parts.add("Avg: ${String.format("%.0f", avg)} dB")
                 if (!high.isNaN()) parts.add("High: ${String.format("%.0f", high)} dB")
                 parts.joinToString(" • ")
-            } else "—"
+            } else "-"
         }
         "phone_brightness_daily" -> {
             val v = obj.optDouble("value_mean")
-            if (!v.isNaN()) String.format("%.0f", v) else "—"
+            if (!v.isNaN()) String.format("%.0f", v) else "-"
         }
         "phone_volume_daily" -> {
             val v = obj.optDouble("value_mean_pct")
-            if (!v.isNaN()) "${v.toInt()}%" else "—"
+            if (!v.isNaN()) "${v.toInt()}%" else "-"
         }
         "phone_dark_mode_daily" -> {
             val v = obj.optDouble("value_hours")
-            if (!v.isNaN()) String.format("%.1fh", v) else "—"
+            if (!v.isNaN()) String.format("%.1fh", v) else "-"
         }
         "phone_unlock_daily" -> {
             val v = obj.optInt("value_count", -1)
-            if (v >= 0) "$v" else "—"
+            if (v >= 0) "$v" else "-"
         }
-        else -> "—"
+        else -> "-"
     }
 }

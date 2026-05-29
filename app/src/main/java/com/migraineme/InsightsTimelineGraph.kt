@@ -55,6 +55,17 @@ private val HighlightCol = Color(0xFFFF7BB0)
 private val PopupBg = Color(0xFF2A0C3C)
 private val AutoDotColor = Color(0xFFFFD54F)
 
+private fun noiseBandColor(v: Double): Color = when {
+    v >= 10.0 -> Color(0xFFEF5350)
+    v >= 8.0  -> Color(0xFFFFB74D)
+    v >= 6.0  -> Color(0xFFFFEB3B)
+    else      -> Color(0xFF81C784)
+}
+
+private fun isNoiseMetricKey(k: String): Boolean =
+    k == "noise" || k == "noise_avg" || k == "noise_high" || k == "noise_low"
+        || k == "mental:noise_avg" || k == "mental:noise_high" || k == "mental:noise_low"
+
 @Composable
 fun InsightsTimelineGraph(
     migraines: List<MigraineSpan>, events: List<EventMarker>, metricSeries: List<MetricSeries>,
@@ -217,9 +228,25 @@ private fun CoreCanvas(
                 metricSeries.forEach { series -> if (series.points.size < 2) return@forEach; val sorted = series.points.sortedBy { it.date }; val minV = sorted.minOf { it.value }; val maxV = sorted.maxOf { it.value }; val range = (maxV - minV).coerceAtLeast(0.01)
                     fun dateX(ds: String): Float { val ld = java.time.LocalDate.parse(ds); return xOf(ld.atStartOfDay(zone).toInstant().plusSeconds(43200)) }
                     fun valY(v: Double): Float { return metBot - ((v - minV) / range).toFloat().coerceIn(0f, 1f) * chartH * 0.85f }
-                    val path = Path(); sorted.forEachIndexed { i, pt -> if (i == 0) path.moveTo(dateX(pt.date), valY(pt.value)) else path.lineTo(dateX(pt.date), valY(pt.value)) }
-                    drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
-                    sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
+                    val isNoise = isNoiseMetricKey(series.key)
+                    if (isNoise) {
+                        for (i in 0 until sorted.size - 1) {
+                            val a = sorted[i]; val b = sorted[i + 1]
+                            val avgV = (a.value + b.value) / 2.0
+                            drawLine(noiseBandColor(avgV).copy(alpha = 0.9f),
+                                Offset(dateX(a.date), valY(a.value)), Offset(dateX(b.date), valY(b.value)),
+                                strokeWidth = 2.5f, cap = StrokeCap.Round)
+                        }
+                        sorted.forEach { pt ->
+                            val c = noiseBandColor(pt.value)
+                            drawCircle(c.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value)))
+                            drawCircle(c, 2.5f, Offset(dateX(pt.date), valY(pt.value)))
+                        }
+                    } else {
+                        val path = Path(); sorted.forEachIndexed { i, pt -> if (i == 0) path.moveTo(dateX(pt.date), valY(pt.value)) else path.lineTo(dateX(pt.date), valY(pt.value)) }
+                        drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
+                        sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
+                    }
                     val first = sorted.first(); drawContext.canvas.nativeCanvas.drawText("${series.label}: ${"%.1f".format(first.value)}${series.unit}", dateX(first.date) + 4f, valY(first.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true })
                     if (sorted.size > 2) { val last = sorted.last(); drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(last.value)}", dateX(last.date) - 12f, valY(last.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true }) }
                 }

@@ -873,6 +873,26 @@ class SupabaseDbService(
         return response.body()
     }
 
+    //  APP-LAUNCH PING
+    @Serializable
+    private data class RecordAppLaunchParam(val p_platform: String)
+
+    /**
+     * Increments user_activity_daily.launch_count for today and adds the
+     * platform to the merged platforms array. Idempotent within a day.
+     * Best-effort: swallows failures so a network blip never blocks startup.
+     */
+    suspend fun recordAppLaunch(accessToken: String, platform: String = "android") {
+        try {
+            client.post("$supabaseUrl/rest/v1/rpc/record_app_launch") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                contentType(ContentType.Application.Json)
+                setBody(RecordAppLaunchParam(platform))
+            }
+        } catch (_: Exception) {}
+    }
+
     //  TREATMENT NARRATIVE EDGE FUNCTION
     @Serializable
     data class TreatmentNarrativeRequest(val regimen_id: String, val force: Boolean = false)
@@ -2416,13 +2436,8 @@ class SupabaseDbService(
             "spo2_daily|value_pct" to "physical:spo2",
             "skin_temp_daily|value_celsius" to "physical:skin_temp",
             "respiratory_rate_daily|value_bpm" to "physical:respiratory_rate",
-            "stress_index_daily|value" to "physical:stress",
             "time_in_high_hr_zones_daily|value_minutes" to "physical:high_hr_zones",
             "steps_daily|value_count" to "physical:steps",
-            "weight_daily|value_kg" to "physical:weight",
-            "body_fat_daily|value_pct" to "physical:body_fat",
-            "blood_pressure_daily|value_systolic" to "physical:blood_pressure",
-            "blood_glucose_daily|value_mgdl" to "physical:blood_glucose",
             // Mental
             "screen_time_daily|total_hours" to "mental:screen_time",
             "screen_time_late_night|value_hours" to "mental:late_screen_time",

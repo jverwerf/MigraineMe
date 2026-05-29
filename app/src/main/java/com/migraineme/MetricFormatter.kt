@@ -175,7 +175,7 @@ object MetricFormatter {
      * Used when both values are available.
      */
     fun formatBloodPressure(systolic: Double?, diastolic: Double?): String {
-        if (systolic == null) return "—"
+        if (systolic == null) return "-"
         return if (diastolic != null) {
             "${systolic.toInt()}/${diastolic.toInt()}"
         } else {

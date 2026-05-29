@@ -77,14 +77,14 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
 
     fun resolveValue(key: String): String {
         val parts = key.split(":", limit = 2)
-        if (parts.size != 2) return "\u2014"
+        if (parts.size != 2) return "-"
         val (cat, metric) = parts
         return when (cat) {
-            "sleep" -> sleepSummary?.let { sleepMetricDisplayValue(it, metric) } ?: "\u2014"
-            "weather" -> weatherSummary?.let { getWeatherMetricValue(it, metric) } ?: "\u2014"
-            "physical" -> physicalSummary?.let { physicalMetricDisplayValue(it, metric) } ?: "\u2014"
-            "mental" -> mentalSummary?.displayValue(metric) ?: "\u2014"
-            else -> "\u2014"
+            "sleep" -> sleepSummary?.let { sleepMetricDisplayValue(it, metric) } ?: "-"
+            "weather" -> weatherSummary?.let { getWeatherMetricValue(it, metric) } ?: "-"
+            "physical" -> physicalSummary?.let { physicalMetricDisplayValue(it, metric) } ?: "-"
+            "mental" -> mentalSummary?.displayValue(metric) ?: "-"
+            else -> "-"
         }
     }
 
@@ -223,7 +223,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                 // Remaining favorites with real values — only show those that have data
                 val favKeys = favs.map { it.key }.toSet()
                 val remaining = pool.filter { it.key !in favKeys }
-                    .filter { resolveValue(it.key) != "—" }
+                    .filter { resolveValue(it.key) != "-" }
                 if (remaining.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
                     remaining.forEach { entry ->

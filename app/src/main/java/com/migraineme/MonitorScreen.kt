@@ -179,17 +179,17 @@ fun MonitorScreen(
     // Resolver for fav-of-fav values
     fun resolveFavValue(key: String): String {
         val parts = key.split(":", limit = 2)
-        if (parts.size != 2) return "\u2014"
+        if (parts.size != 2) return "-"
         val (cat, metric) = parts
         return when (cat) {
-            "sleep" -> sleepSummary?.let { sleepMetricDisplayValue(it, metric) } ?: "\u2014"
-            "weather" -> weatherSummary?.let { getWeatherMetricValue(it, metric) } ?: "\u2014"
-            "physical" -> physicalSummary?.let { physicalMetricDisplayValue(it, metric) } ?: "\u2014"
-            "mental" -> mentalSummary?.displayValue(metric) ?: "\u2014"
+            "sleep" -> sleepSummary?.let { sleepMetricDisplayValue(it, metric) } ?: "-"
+            "weather" -> weatherSummary?.let { getWeatherMetricValue(it, metric) } ?: "-"
+            "physical" -> physicalSummary?.let { physicalMetricDisplayValue(it, metric) } ?: "-"
+            "mental" -> mentalSummary?.displayValue(metric) ?: "-"
             "nutrition" -> {
-                if (nutritionItems.isEmpty()) return "\u2014"
+                if (nutritionItems.isEmpty()) return "-"
                 val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
-                if (total <= 0) return "\u2014"
+                if (total <= 0) return "-"
                 val registryKey = MetricRegistry.nutritionRegistryKey(metric)
                 val unit = MetricRegistry.unit(registryKey)
                 val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure", "histamine_exposure")
@@ -197,7 +197,7 @@ fun MonitorScreen(
                     when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" }
                 } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
             }
-            else -> "\u2014"
+            else -> "-"
         }
     }
     
@@ -562,15 +562,15 @@ private fun EnvironmentCard(
 
 internal fun getWeatherMetricValue(weather: WeatherSummary, metric: String): String {
     return when (metric) {
-        WeatherCardConfig.METRIC_TEMPERATURE -> weather.temperature.toString()
-        WeatherCardConfig.METRIC_PRESSURE -> weather.pressure.toString()
-        WeatherCardConfig.METRIC_HUMIDITY -> weather.humidity.toString()
-        WeatherCardConfig.METRIC_WIND_SPEED -> String.format("%.1f", weather.windSpeed)
-        WeatherCardConfig.METRIC_UV_INDEX -> weather.uvIndex.toString()
+        WeatherCardConfig.METRIC_TEMPERATURE -> if (weather.temperature != 0) weather.temperature.toString() else "-"
+        WeatherCardConfig.METRIC_PRESSURE -> if (weather.pressure != 0) weather.pressure.toString() else "-"
+        WeatherCardConfig.METRIC_HUMIDITY -> if (weather.humidity != 0) weather.humidity.toString() else "-"
+        WeatherCardConfig.METRIC_WIND_SPEED -> if (weather.windSpeed != 0.0) String.format("%.1f", weather.windSpeed) else "-"
+        WeatherCardConfig.METRIC_UV_INDEX -> if (weather.uvIndex != 0) weather.uvIndex.toString() else "-"
         WeatherCardConfig.METRIC_THUNDERSTORM -> if (weather.isThunderstormDay) "Yes" else "No"
-        WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM?.let { String.format("%.0f", it) } ?: "—"
-        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM?.let { String.format("%.0f", it) } ?: "—"
-        else -> "—"
+        WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM?.takeIf { it != 0.0 }?.let { String.format("%.0f", it) } ?: "-"
+        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM?.takeIf { it != 0.0 }?.let { String.format("%.0f", it) } ?: "-"
+        else -> "-"
     }
 }
 
@@ -611,19 +611,15 @@ private fun PhysicalHealthCard(
                     val label = PhysicalCardConfig.labelFor(metric)
                     val color = slotColors.getOrElse(index) { slotColors.last() }
                     val value = when (metric) {
-                        PhysicalCardConfig.METRIC_RECOVERY -> physical.recoveryScore?.let { "${it.toInt()}%" } ?: "—"
-                        PhysicalCardConfig.METRIC_HRV -> physical.hrv?.let { "${it.toInt()} ms" } ?: "—"
-                        PhysicalCardConfig.METRIC_RESTING_HR -> physical.restingHr?.let { "${it.toInt()} bpm" } ?: "—"
-                        PhysicalCardConfig.METRIC_SPO2 -> physical.spo2?.let { "${it.toInt()}%" } ?: "—"
-                        PhysicalCardConfig.METRIC_SKIN_TEMP -> physical.skinTemp?.let { String.format("%.1f°C", it) } ?: "—"
-                        PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> physical.respiratoryRate?.let { String.format("%.1f", it) } ?: "—"
-                        PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> physical.highHrZones?.let { "${it.toInt()} min" } ?: "—"
-                        PhysicalCardConfig.METRIC_STEPS -> physical.steps?.let { "%,d".format(it) } ?: "—"
-                        PhysicalCardConfig.METRIC_WEIGHT -> physical.weight?.let { String.format("%.1f kg", it) } ?: "—"
-                        PhysicalCardConfig.METRIC_BODY_FAT -> physical.bodyFat?.let { String.format("%.1f%%", it) } ?: "—"
-                        PhysicalCardConfig.METRIC_BLOOD_PRESSURE -> if (physical.bpSystolic != null) "${physical.bpSystolic}/${physical.bpDiastolic}" else "—"
-                        PhysicalCardConfig.METRIC_BLOOD_GLUCOSE -> physical.bloodGlucose?.let { String.format("%.0f", it) } ?: "—"
-                        else -> "—"
+                        PhysicalCardConfig.METRIC_RECOVERY -> physical.recoveryScore?.let { "${it.toInt()}%" } ?: "-"
+                        PhysicalCardConfig.METRIC_HRV -> physical.hrv?.let { "${it.toInt()} ms" } ?: "-"
+                        PhysicalCardConfig.METRIC_RESTING_HR -> physical.restingHr?.let { "${it.toInt()} bpm" } ?: "-"
+                        PhysicalCardConfig.METRIC_SPO2 -> physical.spo2?.let { "${it.toInt()}%" } ?: "-"
+                        PhysicalCardConfig.METRIC_SKIN_TEMP -> physical.skinTemp?.let { String.format("%.1f°C", it) } ?: "-"
+                        PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> physical.respiratoryRate?.let { String.format("%.1f", it) } ?: "-"
+                        PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> physical.highHrZones?.let { "${it.toInt()} min" } ?: "-"
+                        PhysicalCardConfig.METRIC_STEPS -> physical.steps?.let { "%,d".format(it) } ?: "-"
+                        else -> "-"
                     }
                     PhysicalMetric(label, value, color)
                 }
@@ -950,15 +946,15 @@ private fun SleepMetric(label: String, value: String, color: Color) {
 private fun getSleepSummaryMetricValue(sleep: SleepSummary, metric: String): String {
     return when (metric) {
         SleepCardConfig.METRIC_DURATION -> String.format("%.1fh", sleep.durationHours)
-        SleepCardConfig.METRIC_FELL_ASLEEP -> sleep.fellAsleepDisplay ?: "—"
-        SleepCardConfig.METRIC_WOKE_UP -> sleep.wokeUpDisplay ?: "—"
-        SleepCardConfig.METRIC_SCORE -> if (sleep.sleepScore > 0) "${sleep.sleepScore}%" else "—"
-        SleepCardConfig.METRIC_EFFICIENCY -> if (sleep.efficiency > 0) "${sleep.efficiency}%" else "—"
-        SleepCardConfig.METRIC_DISTURBANCES -> sleep.disturbances?.toString() ?: "—"
-        SleepCardConfig.METRIC_STAGES_DEEP -> sleep.stagesDeep?.let { formatSleepHM(it) } ?: "—"
-        SleepCardConfig.METRIC_STAGES_REM -> sleep.stagesRem?.let { formatSleepHM(it) } ?: "—"
-        SleepCardConfig.METRIC_STAGES_LIGHT -> sleep.stagesLight?.let { formatSleepHM(it) } ?: "—"
-        else -> "—"
+        SleepCardConfig.METRIC_FELL_ASLEEP -> sleep.fellAsleepDisplay ?: "-"
+        SleepCardConfig.METRIC_WOKE_UP -> sleep.wokeUpDisplay ?: "-"
+        SleepCardConfig.METRIC_SCORE -> if (sleep.sleepScore > 0) "${sleep.sleepScore}%" else "-"
+        SleepCardConfig.METRIC_EFFICIENCY -> if (sleep.efficiency > 0) "${sleep.efficiency}%" else "-"
+        SleepCardConfig.METRIC_DISTURBANCES -> sleep.disturbances?.toString() ?: "-"
+        SleepCardConfig.METRIC_STAGES_DEEP -> sleep.stagesDeep?.let { formatSleepHM(it) } ?: "-"
+        SleepCardConfig.METRIC_STAGES_REM -> sleep.stagesRem?.let { formatSleepHM(it) } ?: "-"
+        SleepCardConfig.METRIC_STAGES_LIGHT -> sleep.stagesLight?.let { formatSleepHM(it) } ?: "-"
+        else -> "-"
     }
 }
 
@@ -992,12 +988,7 @@ internal data class PhysicalSummary(
     val respiratoryRate: Double? = null,
     val stress: Double? = null,
     val highHrZones: Double? = null,
-    val steps: Int? = null,
-    val weight: Double? = null,
-    val bodyFat: Double? = null,
-    val bpSystolic: Int? = null,
-    val bpDiastolic: Int? = null,
-    val bloodGlucose: Double? = null
+    val steps: Int? = null
 )
 
 internal data class SleepSummary(
@@ -1161,7 +1152,6 @@ internal fun filterMentalDisplayMetrics(
 // "ambient_noise_samples" while the daily aggregate lives in "ambient_noise_index_daily" —
 // either being enabled means we have data to show.
 private fun mentalMetricSettingsKeys(metric: String): List<String> = when (metric) {
-    MentalCardConfig.METRIC_NOISE,
     MentalCardConfig.METRIC_NOISE_HIGH,
     MentalCardConfig.METRIC_NOISE_AVG,
     MentalCardConfig.METRIC_NOISE_LOW -> listOf("ambient_noise_index_daily", "ambient_noise_samples")
@@ -1300,37 +1290,10 @@ internal suspend fun loadPhysicalSummary(
     val stress = if (enabled("stress_index_daily")) fetchDouble("stress_index_daily", "value") else null
     val highHrZones = if (enabled("time_in_high_hr_zones_daily")) fetchDouble("time_in_high_hr_zones_daily", "value_minutes") else null
     val steps = if (enabled("steps_daily")) fetchInt("steps_daily", "value_count") else null
-    val weight = if (enabled("weight_daily")) fetchDouble("weight_daily", "value_kg") else null
-    val bodyFat = if (enabled("body_fat_daily")) fetchDouble("body_fat_daily", "value_pct") else null
-    val bloodGlucose = if (enabled("blood_glucose_daily")) fetchDouble("blood_glucose_daily", "value_mgdl") else null
-
-    // Blood pressure needs two columns
-    var bpSys: Int? = null
-    var bpDia: Int? = null
-    if (enabled("blood_pressure_daily")) {
-        try {
-            val url = "$base/rest/v1/blood_pressure_daily?user_id=eq.$userId&date=eq.$date&select=value_systolic,value_diastolic&limit=1"
-            val req = Request.Builder().url(url).get()
-                .addHeader("apikey", key).addHeader("Authorization", "Bearer $token").build()
-            val resp = client.newCall(req).execute()
-            val body = resp.body?.string()
-            if (resp.isSuccessful && !body.isNullOrBlank()) {
-                val arr = org.json.JSONArray(body)
-                if (arr.length() > 0) {
-                    val obj = arr.getJSONObject(0)
-                    val s = obj.optDouble("value_systolic")
-                    val d = obj.optDouble("value_diastolic")
-                    if (!s.isNaN()) bpSys = s.toInt()
-                    if (!d.isNaN()) bpDia = d.toInt()
-                }
-            }
-        } catch (_: Exception) {}
-    }
 
     // If nothing at all, return null
     if (recovery == null && hrv == null && rhr == null && spo2 == null && skinTemp == null &&
-        respiratoryRate == null && stress == null && highHrZones == null && steps == null &&
-        weight == null && bodyFat == null && bpSys == null && bloodGlucose == null) {
+        respiratoryRate == null && stress == null && highHrZones == null && steps == null) {
         return null
     }
 
@@ -1343,12 +1306,7 @@ internal suspend fun loadPhysicalSummary(
         respiratoryRate = respiratoryRate,
         stress = stress,
         highHrZones = highHrZones,
-        steps = steps,
-        weight = weight,
-        bodyFat = bodyFat,
-        bpSystolic = bpSys,
-        bpDiastolic = bpDia,
-        bloodGlucose = bloodGlucose
+        steps = steps
     )
 }
 
@@ -1496,22 +1454,26 @@ internal data class MentalSummary(
     val stress: Double?,
     val screenTimeHours: Double?,
     val lateScreenTimeHours: Double?,
-    val noiseIndex: Double?,
+    val noiseAvg: Double?,
+    val noiseHigh: Double?,
+    val noiseLow: Double?,
     val brightness: Double?,
     val volumePct: Double?,
     val darkModeHours: Double?,
     val unlockCount: Int?
 ) {
     fun displayValue(metric: String): String = when (metric) {
-        MentalCardConfig.METRIC_STRESS -> stress?.let { String.format("%.0f", it) } ?: "—"
-        MentalCardConfig.METRIC_SCREEN_TIME -> screenTimeHours?.let { String.format("%.1fh", it) } ?: "—"
-        MentalCardConfig.METRIC_LATE_SCREEN_TIME -> lateScreenTimeHours?.let { String.format("%.1fh", it) } ?: "—"
-        MentalCardConfig.METRIC_NOISE -> noiseIndex?.let { noiseLabel(it) } ?: "—"
-        MentalCardConfig.METRIC_BRIGHTNESS -> brightness?.let { String.format("%.0f", it) } ?: "—"
-        MentalCardConfig.METRIC_VOLUME -> volumePct?.let { "${it.toInt()}%" } ?: "—"
-        MentalCardConfig.METRIC_DARK_MODE -> darkModeHours?.let { String.format("%.1fh", it) } ?: "—"
-        MentalCardConfig.METRIC_UNLOCKS -> unlockCount?.let { "$it" } ?: "—"
-        else -> "—"
+        MentalCardConfig.METRIC_STRESS -> stress?.takeIf { it != 0.0 }?.let { String.format("%.0f", it) } ?: "-"
+        MentalCardConfig.METRIC_SCREEN_TIME -> screenTimeHours?.takeIf { it != 0.0 }?.let { String.format("%.1fh", it) } ?: "-"
+        MentalCardConfig.METRIC_LATE_SCREEN_TIME -> lateScreenTimeHours?.takeIf { it != 0.0 }?.let { String.format("%.1fh", it) } ?: "-"
+        MentalCardConfig.METRIC_NOISE_AVG -> noiseAvg?.takeIf { it != 0.0 }?.let { noiseLabel(it) } ?: "-"
+        MentalCardConfig.METRIC_NOISE_HIGH -> noiseHigh?.takeIf { it != 0.0 }?.let { noiseLabel(it) } ?: "-"
+        MentalCardConfig.METRIC_NOISE_LOW -> noiseLow?.takeIf { it != 0.0 }?.let { noiseLabel(it) } ?: "-"
+        MentalCardConfig.METRIC_BRIGHTNESS -> brightness?.takeIf { it != 0.0 }?.let { String.format("%.0f", it) } ?: "-"
+        MentalCardConfig.METRIC_VOLUME -> volumePct?.takeIf { it != 0.0 }?.let { "${it.toInt()}%" } ?: "-"
+        MentalCardConfig.METRIC_DARK_MODE -> darkModeHours?.takeIf { it != 0.0 }?.let { String.format("%.1fh", it) } ?: "-"
+        MentalCardConfig.METRIC_UNLOCKS -> unlockCount?.takeIf { it != 0 }?.let { "$it" } ?: "-"
+        else -> "-"
     }
 }
 
@@ -1623,9 +1585,15 @@ internal suspend fun loadMentalSummary(
         fetchDouble("screen_time_daily", "total_hours") ?: fetchDouble("screen_time_live", "value_hours")
     } else null
     val lateScreen = if (enabled("screen_time_late_night")) fetchDouble("screen_time_late_night", "value_hours") else null
-    val noise = if (enabled("ambient_noise_index_daily") || enabled("ambient_noise_samples")) {
+    val noiseAvg = if (enabled("ambient_noise_index_daily") || enabled("ambient_noise_samples")) {
         fetchDouble("ambient_noise_index_daily", "day_mean_lmean")
             ?: fetchSamplesAvg("ambient_noise_samples", "l_mean", "start_ts")
+    } else null
+    val noiseHigh = if (enabled("ambient_noise_index_daily") || enabled("ambient_noise_samples")) {
+        fetchDouble("ambient_noise_index_daily", "day_max_lmax")
+    } else null
+    val noiseLow = if (enabled("ambient_noise_index_daily") || enabled("ambient_noise_samples")) {
+        fetchDouble("ambient_noise_index_daily", "day_min_lmean")
     } else null
 
     // Phone behavior: try daily table first, fall back to live samples
@@ -1642,12 +1610,17 @@ internal suspend fun loadMentalSummary(
         fetchInt("phone_unlock_daily", "value_count") ?: fetchSamplesMax("phone_unlock_samples", "value_count")
     } else null
 
-    if (stress == null && screenTime == null && lateScreen == null && noise == null &&
+    if (stress == null && screenTime == null && lateScreen == null && noiseAvg == null &&
+        noiseHigh == null && noiseLow == null &&
         brightness == null && volume == null && darkMode == null && unlocks == null) {
         return null
     }
 
-    return MentalSummary(stress, screenTime, lateScreen, noise, brightness, volume, darkMode, unlocks)
+    return MentalSummary(
+        stress, screenTime, lateScreen,
+        noiseAvg, noiseHigh, noiseLow,
+        brightness, volume, darkMode, unlocks
+    )
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -129,8 +129,19 @@ object MetricRegistry {
     fun graphableByGroup(group: String): List<Metric> = byGroup(group)
 
     /** Default display metrics for a group (first 3) */
-    fun defaultDisplayKeys(group: String): List<String> =
-        byGroup(group).take(3).map { it.key }
+    fun defaultDisplayKeys(group: String): List<String> {
+        // Mental: the registry-derived top-3 is missing one of the noise
+        // variants (noise high/low aren't in the trigger templates), so use
+        // the curated default + Noise Avg to fill the third slot.
+        if (group == "mental") {
+            return listOf(
+                "stress_index_daily",
+                "screen_time_daily",
+                "ambient_noise_index_daily::day_mean_lmean",
+            )
+        }
+        return byGroup(group).take(3).map { it.key }
+    }
 
     // ── Data Settings integration ───────────────────────────────────────────
 
@@ -193,7 +204,9 @@ object MetricRegistry {
         "strain_daily" to "strain",
         "screen_time_daily" to "screen_time",
         "screen_time_late_night" to "late_screen_time",
-        "ambient_noise_index_daily::day_mean_lmean" to "noise",
+        "ambient_noise_index_daily::day_mean_lmean" to "noise_avg",
+        "ambient_noise_index_daily::day_max_lmax" to "noise_high",
+        "ambient_noise_index_daily::day_min_lmean" to "noise_low",
         "phone_brightness_daily" to "brightness",
         "phone_volume_daily" to "volume",
         "phone_dark_mode_daily" to "dark_mode",
@@ -216,11 +229,7 @@ object MetricRegistry {
         "skin_temp_daily" to "skin_temp",
         "respiratory_rate_daily" to "respiratory_rate",
         "time_in_high_hr_zones_daily" to "high_hr_zones",
-        "steps_daily" to "steps",
-        "weight_daily" to "weight",
-        "body_fat_daily" to "body_fat",
-        "blood_pressure_daily::systolic_mmhg" to "blood_pressure",
-        "blood_glucose_daily" to "blood_glucose"
+        "steps_daily" to "steps"
     )
 
     fun toLegacyKey(registryKey: String): String {
@@ -243,8 +252,7 @@ object MetricRegistry {
         "user_weather_daily",
         "user_location_daily",
         "nutrition_daily",
-        "ambient_noise_index_daily",  // has mean, but graph also uses max/min
-        "blood_pressure_daily"        // has systolic, display also uses diastolic
+        "ambient_noise_index_daily"  // has mean, but graph also uses max/min
     )
 
     fun isMultiColumnTable(table: String): Boolean = table in MULTI_COLUMN_TABLES
@@ -256,9 +264,6 @@ object MetricRegistry {
      * Returns extra columns to fetch alongside a metric's primary column.
      */
     fun companionColumns(table: String, column: String): List<String> = when {
-        // Blood pressure: always fetch diastolic alongside systolic
-        table == "blood_pressure_daily" && column == "systolic_mmhg" ->
-            listOf("value_diastolic")
         // Noise: graph shows high/low range alongside average
         table == "ambient_noise_index_daily" && column == "day_mean_lmean" ->
             listOf("day_max_lmax", "day_min_lmean")
@@ -304,10 +309,6 @@ object MetricRegistry {
         "stress_index_daily" to 8,
         "strain_daily" to 9,
         "steps_daily" to 10,
-        "weight_daily" to 11,
-        "body_fat_daily" to 12,
-        "blood_pressure_daily::systolic_mmhg" to 13,
-        "blood_glucose_daily" to 14,
         // Mental — defaults: Ambient Noise, Late Night Screen, Screen Time
         "ambient_noise_index_daily::day_mean_lmean" to 1,
         "screen_time_late_night" to 2,

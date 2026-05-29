@@ -513,6 +513,26 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 } catch (e: Exception) {
                     android.util.Log.w("MainActivity", "MetricRegistry init failed: ${e.message}")
                 }
+
+                // Safety net: if onboarding is already done but the seeder's
+                // cleanup didn't finish last time (app killed mid-flow, etc.),
+                // purge any leftover source='demo' / [demo] rows.
+                try {
+                    if (OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
+                        DemoDataSeeder.purgeOrphanDemoRows(appCtx)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("MainActivity", "purgeOrphanDemoRows failed: ${e.message}")
+                }
+
+                // Daily activity ping — fires once per LaunchedEffect(token) trigger,
+                // i.e. per cold launch / sign-in. Server-side upsert dedupes within a day.
+                try {
+                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                    db.recordAppLaunch(token, "android")
+                } catch (e: Exception) {
+                    android.util.Log.w("MainActivity", "recordAppLaunch failed: ${e.message}")
+                }
             }
         } else {
             PremiumManager.reset()
@@ -2164,7 +2184,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) },
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
-                            onNavigateToCompanions = { nav.navigate("companions_manage") },
                             onNavigateOnboardingNoSeed = {
                                 OnboardingMode.noSeed = true
                                 nav.navigate(Routes.ONBOARDING) {
@@ -2605,7 +2624,7 @@ private fun BottomBar(
         BottomItem(Routes.MONITOR, "Monitor", Icons.Outlined.Timeline),
         BottomItem(Routes.INSIGHTS, "Insights", Icons.Outlined.BarChart),
         BottomItem(Routes.HOME, "Home", Icons.Outlined.Home),
-        BottomItem(Routes.MIGRAINE, "Log", Icons.Outlined.Psychology),
+        BottomItem(Routes.MIGRAINE, "Log", SymptomIcons.MigraineStarburst),
         BottomItem(Routes.JOURNAL, "Journal", Icons.Outlined.History)
     )
 

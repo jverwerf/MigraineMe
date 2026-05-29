@@ -77,7 +77,7 @@ private suspend fun buildStatusText(ctx: Context, accessToken: String?): String 
     buildString {
         appendLine("Sleep sync status")
         appendLine("• WHOOP connected: ${if (whoopConnected) "Yes" else "No"}")
-        appendLine("• Latest Supabase date (whoop): ${latestDate ?: "—"}")
+        appendLine("• Latest Supabase date (whoop): ${latestDate ?: "-"}")
         appendLine("• Backfill window: $backfillWindow")
         append("• Daily 09:00 job: $jobState${if (jobCount > 1) " ($jobCount entries)" else ""}")
     }

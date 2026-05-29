@@ -12,9 +12,6 @@ import androidx.health.connect.client.changes.DeletionChange
 import androidx.health.connect.client.changes.UpsertionChange
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
-import androidx.health.connect.client.records.BloodGlucoseRecord
-import androidx.health.connect.client.records.BloodPressureRecord
-import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
@@ -24,7 +21,6 @@ import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
-import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.ChangesTokenRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -74,10 +70,6 @@ class HealthConnectChangesWorker(
             RestingHeartRateRecord::class to HealthConnectRecordTypes.RESTING_HR,
             StepsRecord::class to HealthConnectRecordTypes.STEPS,
             ExerciseSessionRecord::class to HealthConnectRecordTypes.EXERCISE,
-            WeightRecord::class to HealthConnectRecordTypes.WEIGHT,
-            BodyFatRecord::class to HealthConnectRecordTypes.BODY_FAT,
-            BloodPressureRecord::class to HealthConnectRecordTypes.BLOOD_PRESSURE,
-            BloodGlucoseRecord::class to HealthConnectRecordTypes.BLOOD_GLUCOSE,
             OxygenSaturationRecord::class to HealthConnectRecordTypes.SPO2,
             RespiratoryRateRecord::class to HealthConnectRecordTypes.RESPIRATORY_RATE,
             BodyTemperatureRecord::class to HealthConnectRecordTypes.SKIN_TEMP,
@@ -94,10 +86,6 @@ class HealthConnectChangesWorker(
             HealthConnectRecordTypes.RESTING_HR to "resting_hr_daily",
             HealthConnectRecordTypes.STEPS to "steps_daily",
             HealthConnectRecordTypes.EXERCISE to "time_in_high_hr_zones_daily",
-            HealthConnectRecordTypes.WEIGHT to "weight_daily",
-            HealthConnectRecordTypes.BODY_FAT to "body_fat_daily",
-            HealthConnectRecordTypes.BLOOD_PRESSURE to "blood_pressure_daily",
-            HealthConnectRecordTypes.BLOOD_GLUCOSE to "blood_glucose_daily",
             HealthConnectRecordTypes.SPO2 to "spo2_daily",
             HealthConnectRecordTypes.RESPIRATORY_RATE to "respiratory_rate_daily",
             HealthConnectRecordTypes.SKIN_TEMP to "skin_temp_daily",
@@ -427,31 +415,6 @@ class HealthConnectChangesWorker(
                 date to payload
             }
             
-            is WeightRecord -> {
-                val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
-                val payload = """{"value_kg":${record.weight.inKilograms}}"""
-                date to payload
-            }
-            
-            is BodyFatRecord -> {
-                val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
-                val payload = """{"value_pct":${record.percentage.value}}"""
-                date to payload
-            }
-            
-            is BloodPressureRecord -> {
-                val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
-                val payload = """{"systolic_mmhg":${record.systolic.inMillimetersOfMercury},"diastolic_mmhg":${record.diastolic.inMillimetersOfMercury}}"""
-                date to payload
-            }
-            
-            is BloodGlucoseRecord -> {
-                val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
-                val mealType = record.relationToMeal?.toString() ?: "GENERAL"
-                val payload = """{"value_mmol_l":${record.level.inMillimolesPerLiter},"meal_type":"$mealType"}"""
-                date to payload
-            }
-            
             is OxygenSaturationRecord -> {
                 val date = record.time.atZone(ZoneId.systemDefault()).toLocalDate().toString()
                 val payload = """{"value_pct":${record.percentage.value}}"""
@@ -506,10 +469,6 @@ class HealthConnectChangesWorker(
             HealthConnectRecordTypes.RESTING_HR -> state.restingHrToken
             HealthConnectRecordTypes.STEPS -> state.stepsToken
             HealthConnectRecordTypes.EXERCISE -> state.exerciseToken
-            HealthConnectRecordTypes.WEIGHT -> state.weightToken
-            HealthConnectRecordTypes.BODY_FAT -> state.bodyFatToken
-            HealthConnectRecordTypes.BLOOD_PRESSURE -> state.bloodPressureToken
-            HealthConnectRecordTypes.BLOOD_GLUCOSE -> state.bloodGlucoseToken
             HealthConnectRecordTypes.SPO2 -> state.spo2Token
             HealthConnectRecordTypes.RESPIRATORY_RATE -> state.respiratoryRateToken
             HealthConnectRecordTypes.SKIN_TEMP -> state.skinTempToken
@@ -524,10 +483,6 @@ class HealthConnectChangesWorker(
             HealthConnectRecordTypes.RESTING_HR -> state.copy(restingHrToken = token)
             HealthConnectRecordTypes.STEPS -> state.copy(stepsToken = token)
             HealthConnectRecordTypes.EXERCISE -> state.copy(exerciseToken = token)
-            HealthConnectRecordTypes.WEIGHT -> state.copy(weightToken = token)
-            HealthConnectRecordTypes.BODY_FAT -> state.copy(bodyFatToken = token)
-            HealthConnectRecordTypes.BLOOD_PRESSURE -> state.copy(bloodPressureToken = token)
-            HealthConnectRecordTypes.BLOOD_GLUCOSE -> state.copy(bloodGlucoseToken = token)
             HealthConnectRecordTypes.SPO2 -> state.copy(spo2Token = token)
             HealthConnectRecordTypes.RESPIRATORY_RATE -> state.copy(respiratoryRateToken = token)
             HealthConnectRecordTypes.SKIN_TEMP -> state.copy(skinTempToken = token)

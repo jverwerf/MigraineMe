@@ -56,11 +56,7 @@ data class PhysicalGraphDay(
     val stress: Double?,
     val strain: Double?,
     val highHrZones: Double?,
-    val steps: Double?,
-    val weight: Double?,
-    val bodyFat: Double?,
-    val bloodPressureSystolic: Double?,
-    val bloodGlucose: Double?
+    val steps: Double?
 )
 
 data class PhysicalGraphResult(
@@ -415,10 +411,6 @@ private fun getPhysicalDayValue(day: PhysicalGraphDay, metric: String): Float? {
         PhysicalCardConfig.METRIC_STRAIN -> day.strain?.toFloat()
         PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> day.highHrZones?.toFloat()
         PhysicalCardConfig.METRIC_STEPS -> day.steps?.toFloat()
-        PhysicalCardConfig.METRIC_WEIGHT -> day.weight?.toFloat()
-        PhysicalCardConfig.METRIC_BODY_FAT -> day.bodyFat?.toFloat()
-        PhysicalCardConfig.METRIC_BLOOD_PRESSURE -> day.bloodPressureSystolic?.toFloat()
-        PhysicalCardConfig.METRIC_BLOOD_GLUCOSE -> day.bloodGlucose?.toFloat()
         else -> null
     }
 }
@@ -462,12 +454,8 @@ private suspend fun loadPhysicalGraphData(
         // Fetch from direct REST for tables without fetch methods
         val client = okhttp3.OkHttpClient()
         val stepsList = fetchDailyDoubles(client, token, "steps_daily", userId, "value_count", fetchLimit)
-        val weightList = fetchDailyDoubles(client, token, "weight_daily", userId, "value_kg", fetchLimit)
-        val bodyFatList = fetchDailyDoubles(client, token, "body_fat_daily", userId, "value_pct", fetchLimit)
         val respRateList = fetchDailyDoubles(client, token, "respiratory_rate_daily", userId, "value_bpm", fetchLimit)
-        val glucoseList = fetchDailyDoubles(client, token, "blood_glucose_daily", userId, "value_mgdl", fetchLimit)
         val strainList = fetchDailyDoubles(client, token, "strain_daily", userId, "value_kilojoule", fetchLimit)
-        val bpList = fetchDailyBp(client, token, userId, fetchLimit)
 
         // Build maps by date
         val recoveryMap = recoveryList.associateBy { it.date }
@@ -478,12 +466,8 @@ private suspend fun loadPhysicalGraphData(
         val stressMap = stressList.associateBy { it.date }
         val highHrMap = highHrList.associateBy { it.date }
         val stepsMap = stepsList.associateBy { it.first }
-        val weightMap = weightList.associateBy { it.first }
-        val bodyFatMap = bodyFatList.associateBy { it.first }
         val respRateMap = respRateList.associateBy { it.first }
-        val glucoseMap = glucoseList.associateBy { it.first }
         val strainMap = strainList.associateBy { it.first }
-        val bpMap = bpList.associateBy { it.first }
 
         // Collect all dates that have any data
         val allDates = mutableSetOf<String>()
@@ -495,12 +479,8 @@ private suspend fun loadPhysicalGraphData(
         stressMap.keys.forEach { allDates.add(it) }
         highHrMap.keys.forEach { allDates.add(it) }
         stepsMap.keys.forEach { allDates.add(it) }
-        weightMap.keys.forEach { allDates.add(it) }
-        bodyFatMap.keys.forEach { allDates.add(it) }
         respRateMap.keys.forEach { allDates.add(it) }
-        glucoseMap.keys.forEach { allDates.add(it) }
         strainMap.keys.forEach { allDates.add(it) }
-        bpMap.keys.forEach { allDates.add(it) }
 
         val graphDays = allDates
             .filter { it >= startStr && it <= endStr }
@@ -517,11 +497,7 @@ private suspend fun loadPhysicalGraphData(
                     stress = stressMap[date]?.value,
                     strain = strainMap[date]?.second,
                     highHrZones = highHrMap[date]?.value_minutes,
-                    steps = stepsMap[date]?.second,
-                    weight = weightMap[date]?.second,
-                    bodyFat = bodyFatMap[date]?.second,
-                    bloodPressureSystolic = bpMap[date]?.second,
-                    bloodGlucose = glucoseMap[date]?.second
+                    steps = stepsMap[date]?.second
                 )
             }
 
@@ -570,28 +546,3 @@ private fun fetchDailyDoubles(
     } catch (_: Exception) { emptyList() }
 }
 
-/** Fetch blood pressure (systolic) date+value pairs via REST */
-private fun fetchDailyBp(
-    client: okhttp3.OkHttpClient,
-    token: String,
-    userId: String,
-    limit: Int
-): List<Pair<String, Double>> {
-    return try {
-        val url = "${BuildConfig.SUPABASE_URL}/rest/v1/blood_pressure_daily?user_id=eq.$userId&select=date,value_systolic&order=date.desc&limit=$limit"
-        val request = okhttp3.Request.Builder().url(url).get()
-            .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
-            .addHeader("Authorization", "Bearer $token").build()
-        val response = client.newCall(request).execute()
-        val body = response.body?.string()
-        if (response.isSuccessful && !body.isNullOrBlank()) {
-            val arr = org.json.JSONArray(body)
-            (0 until arr.length()).mapNotNull { i ->
-                val obj = arr.getJSONObject(i)
-                val date = obj.optString("date", "")
-                val value = obj.optDouble("value_systolic")
-                if (date.isNotBlank() && !value.isNaN()) Pair(date, value) else null
-            }
-        } else emptyList()
-    } catch (_: Exception) { emptyList() }
-}

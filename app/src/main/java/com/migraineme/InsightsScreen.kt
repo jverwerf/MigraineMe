@@ -800,10 +800,10 @@ private fun MigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "—"}/10",
+                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "-"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "—"}/10",
+                    Text("Severity: ${sel.severity ?: "-"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
@@ -847,7 +847,7 @@ internal fun EmptyInsightCard(
                     when (logType) {
                         "Triggers" -> drawTriggerBolt(color)
                         "Prodromes" -> drawProdromeEye(color)
-                        "Symptoms" -> drawMigraineStarburst(color)
+                        "Symptoms", "Migraines" -> drawMigraineStarburst(color)
                         "Medicines" -> drawMedicinePill(color)
                         "Reliefs" -> drawReliefLeaf(color)
                         "Activities" -> drawActivityPulse(color)
@@ -876,7 +876,7 @@ internal fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes
                     when (data.logType) {
                         "Triggers" -> drawTriggerBolt(color)
                         "Prodromes" -> drawProdromeEye(color)
-                        "Symptoms" -> drawMigraineStarburst(color)
+                        "Symptoms", "Migraines" -> drawMigraineStarburst(color)
                         "Medicines" -> drawMedicinePill(color)
                         "Reliefs" -> drawReliefLeaf(color)
                         "Activities" -> drawActivityPulse(color)

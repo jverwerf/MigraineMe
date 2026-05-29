@@ -34,8 +34,16 @@ object MetricDisplayStore {
         val csv = prefs.getString("display_$group", null)
         if (!csv.isNullOrBlank()) {
             val keys = csv.split(",").filter { it.isNotBlank() }
-            // Validate that saved keys still exist in MetricRegistry
-            val valid = keys.filter { MetricRegistry.get(it) != null }
+            // Validate that saved keys still exist in MetricRegistry.
+            // The noise High / Low columns share the registry entry of
+            // day_mean_lmean (the registry is built from trigger templates,
+            // and only one row exists per table::column), so allow them
+            // explicitly — they map to MentalCardConfig.METRIC_NOISE_HIGH/LOW.
+            val noiseSynthetic = setOf(
+                "ambient_noise_index_daily::day_max_lmax",
+                "ambient_noise_index_daily::day_min_lmean",
+            )
+            val valid = keys.filter { MetricRegistry.get(it) != null || it in noiseSynthetic }
             if (valid.isNotEmpty()) return valid.take(MAX_DISPLAY_METRICS)
         }
         // Fallback: first 3 metrics from the registry for this group
@@ -160,10 +168,6 @@ object MetricDisplayStore {
         "stress" to "stress_index_daily",
         "high_hr_zones" to "time_in_high_hr_zones_daily",
         "steps" to "steps_daily",
-        "weight" to "weight_daily",
-        "body_fat" to "body_fat_daily",
-        "blood_pressure" to "blood_pressure_daily",
-        "blood_glucose" to "blood_glucose_daily",
     )
 
     private val OLD_MENTAL_KEY_MAP = mapOf(

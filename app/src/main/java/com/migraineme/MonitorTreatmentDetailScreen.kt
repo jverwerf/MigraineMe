@@ -246,10 +246,10 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
             return@Column
         }
         val pct = e.pctChangeMmd
-        val pctText = if (pct != null) String.format("%+.0f%%", pct) else "—"
+        val pctText = if (pct != null) String.format("%+.0f%%", pct) else "-"
         Text(pctText, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.displayMedium)
         Spacer(Modifier.height(2.dp))
-        Text(BAND_LABELS[e.band] ?: "—", color = bandColor(e.band), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+        Text(BAND_LABELS[e.band] ?: "-", color = bandColor(e.band), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
         val b = e.baselineMmd; val r = e.rollingMmd
         if (b != null && r != null && b > 0) {
@@ -451,7 +451,7 @@ private fun MiniMetric(label: String, rolling: Double?, baseline: Double?, unit:
     ) {
         Text(label, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(rolling?.let { String.format("%.1f%s", it, unit) } ?: "—",
+            Text(rolling?.let { String.format("%.1f%s", it, unit) } ?: "-",
                 color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
             if (rolling != null && baseline != null && baseline > 0) {
                 val pct = (rolling - baseline) / baseline * 100
@@ -497,7 +497,7 @@ private fun triggerChangeLabel(t: SupabaseDbService.TreatmentTriggerShiftRow): P
         return when {
             t.rollingRank != null && t.baselineRank == null -> "new" to Color(0xFFE0492B)
             t.rollingRank == null && t.baselineRank != null -> "gone" to Color(0xFF6ED69E)
-            else -> "—" to Color.White.copy(alpha = 0.62f)
+            else -> "-" to Color.White.copy(alpha = 0.62f)
         }
     }
     return when {
@@ -610,7 +610,7 @@ private fun ConfoundersCard(
                             val n = (c.rollingValue ?: 0.0).toInt()
                             if (n == 1) "1 added" else "$n added"
                         }
-                        else -> "—"
+                        else -> "-"
                     }
                     val color = when (c.direction) {
                         "up" -> Color(0xFF6ED69E)

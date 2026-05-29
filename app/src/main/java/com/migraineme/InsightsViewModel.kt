@@ -621,10 +621,6 @@ class InsightsViewModel : ViewModel() {
             "stress_index_daily" to "stress",
             "time_in_high_hr_zones_daily" to "high_hr",
             "steps_daily" to "steps",
-            "weight_daily" to "weight",
-            "body_fat_daily" to "body_fat",
-            "blood_pressure_daily" to "bp_sys",
-            "blood_glucose_daily" to "glucose",
             "strain_daily" to "strain",
             // Physical prodromes
             "hrv_daily" to "hrv",
@@ -1110,12 +1106,8 @@ class InsightsViewModel : ViewModel() {
         map["stress"] = fetchAndParse(client, base, key, token, userId, "stress_index_daily", "value", cutoff)
         map["high_hr"] = fetchAndParse(client, base, key, token, userId, "time_in_high_hr_zones_daily", "value_minutes", cutoff)
         map["steps"] = fetchAndParseInt(client, base, key, token, userId, "steps_daily", "value_count", cutoff)
-        map["weight"] = fetchAndParse(client, base, key, token, userId, "weight_daily", "value_kg", cutoff)
-        map["body_fat"] = fetchAndParse(client, base, key, token, userId, "body_fat_daily", "value_pct", cutoff)
-        map["bp_sys"] = fetchAndParse(client, base, key, token, userId, "blood_pressure_daily", "value_systolic", cutoff)
-        map["glucose"] = fetchAndParse(client, base, key, token, userId, "blood_glucose_daily", "value_mgdl", cutoff)
 
-        //  Sleep metrics 
+        //  Sleep metrics
         map["sleep_dur"] = fetchAndParse(client, base, key, token, userId, "sleep_duration_daily", "value_hours", cutoff)
         map["sleep_score"] = fetchAndParse(client, base, key, token, userId, "sleep_score_daily", "value_pct", cutoff)
         map["sleep_eff"] = fetchAndParse(client, base, key, token, userId, "sleep_efficiency_daily", "value_pct", cutoff)
@@ -1173,13 +1165,9 @@ class InsightsViewModel : ViewModel() {
                 val o = arr.getJSONObject(i)
                 val date = o.optString("date", "").takeIf { it.length >= 10 } ?: continue
                 val ts = o.optString(col, "").takeIf { it.isNotBlank() } ?: continue
-                try {
-                    val inst = Instant.parse(ts)
-                    val zoned = inst.atZone(java.time.ZoneId.systemDefault())
-                    var hours = zoned.hour + zoned.minute / 60.0
-                    if (shiftPastNoon && hours < 12.0) hours += 24.0  // e.g. 00:30 -> 24.5
-                    list += DailyValue(date, hours)
-                } catch (_: Exception) { /* skip unparseable */ }
+                val raw = TimeOfDay.toHoursOfDay(ts) ?: continue
+                val hours = if (shiftPastNoon && raw < 12.0) raw + 24.0 else raw
+                list += DailyValue(date, hours)
             }
             return list
         }
@@ -1214,8 +1202,7 @@ class InsightsViewModel : ViewModel() {
         val sourceTables = listOf(
             "recovery_score_daily", "hrv_daily", "resting_hr_daily", "spo2_daily",
             "skin_temp_daily", "respiratory_rate_daily", "time_in_high_hr_zones_daily",
-            "steps_daily", "weight_daily", "body_fat_daily", "blood_pressure_daily",
-            "blood_glucose_daily", "sleep_duration_daily", "sleep_score_daily",
+            "steps_daily", "sleep_duration_daily", "sleep_score_daily",
             "sleep_efficiency_daily", "sleep_disturbances_daily", "sleep_stages_daily",
             "strain_daily", "screen_time_daily", "fell_asleep_time_daily",
             "woke_up_time_daily", "hydration_daily", "mindfulness_daily",

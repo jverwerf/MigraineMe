@@ -536,14 +536,19 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
                         }
                         Spacer(Modifier.height(8.dp))
                         val merged = s.dailyByMedicine + s.dailyByCategory
-                        MedicineStackedBarGraph(chartSelected.toList(), merged, Modifier.fillMaxWidth().height(160.dp))
+                        val medNames = s.all.map { it.name }
+                        val catNames = s.categories.map { it.category }
+                        MedicineStackedBarGraph(
+                            chartSelected.toList(), merged, Modifier.fillMaxWidth().height(160.dp),
+                            colorForName = { stableMedicineColor(it, medNames, catNames) }
+                        )
                         Spacer(Modifier.height(8.dp))
                         if (s.all.isNotEmpty()) {
                             Text("Medicines", color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall)
                             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                s.all.forEach { m -> ChartChip(m.name, Color(0xFF4FC3F7), chartSelected) }
+                                s.all.forEach { m -> ChartChip(m.name, stableMedicineColor(m.name, medNames, catNames), chartSelected) }
                             }
                         }
                         if (s.categories.isNotEmpty()) {
@@ -552,7 +557,7 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
                                 style = MaterialTheme.typography.labelSmall)
                             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                s.categories.forEach { c -> ChartChip(c.category, Color(0xFF81C784), chartSelected) }
+                                s.categories.forEach { c -> ChartChip(c.category, stableMedicineColor(c.category, medNames, catNames), chartSelected) }
                             }
                         }
                     }
@@ -791,12 +796,21 @@ fun MedicineDWMRow(name: String, category: String?, today: String, week: String,
     }
 }
 
-// Shared palette so chip-when-selected uses the same colour the graph
-// assigns to that series. Indexed by the order of selection.
+// Shared palette so chip + graph use the same colour for each medicine/category.
+// Index is stable per label (position in the medicines / categories list), so
+// re-ordering or de-selecting in the chart doesn't shuffle the chip colours.
 private val MEDICINE_CHART_PALETTE = listOf(
     Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784),
     Color(0xFFBA68C8), Color(0xFFFF8A65), Color(0xFF7986CB),
 )
+
+private fun stableMedicineColor(label: String, medicines: List<String>, categories: List<String>): Color {
+    val mIdx = medicines.indexOf(label)
+    if (mIdx >= 0) return MEDICINE_CHART_PALETTE[mIdx % MEDICINE_CHART_PALETTE.size]
+    val cIdx = categories.indexOf(label)
+    if (cIdx >= 0) return MEDICINE_CHART_PALETTE[(cIdx + medicines.size) % MEDICINE_CHART_PALETTE.size]
+    return Color(0xFF999999)
+}
 
 private fun medicineChartColor(label: String, selected: List<String>): Color? {
     val idx = selected.indexOf(label)
@@ -833,12 +847,14 @@ fun MedicineStackedBarGraph(
     selected: List<String>,
     seriesPerItem: Map<String, List<DailyAmount>>,
     modifier: Modifier = Modifier,
+    colorForName: ((String) -> Color)? = null,
 ) {
     val palette = MEDICINE_CHART_PALETTE
     val resolved = selected.mapIndexedNotNull { i, name ->
         val pts = seriesPerItem[name] ?: return@mapIndexedNotNull null
         if (pts.isEmpty()) return@mapIndexedNotNull null
-        Triple(name, palette[i % palette.size], pts)
+        val color = colorForName?.invoke(name) ?: palette[i % palette.size]
+        Triple(name, color, pts)
     }
     if (resolved.isEmpty()) {
         Box(modifier, contentAlignment = Alignment.Center) {
@@ -1298,7 +1314,10 @@ fun MedicineHistoryGraph(
         }
 
         val merged = d.dailyByMedicine + d.dailyByCategory
-        MedicineStackedBarGraph(chartSelected.toList(), merged, Modifier.fillMaxWidth().height(180.dp))
+        MedicineStackedBarGraph(
+            chartSelected.toList(), merged, Modifier.fillMaxWidth().height(180.dp),
+            colorForName = { stableMedicineColor(it, d.medicineNames, d.categoryNames) }
+        )
 
         Spacer(Modifier.height(10.dp))
         if (d.medicineNames.isNotEmpty()) {
@@ -1306,7 +1325,7 @@ fun MedicineHistoryGraph(
                 style = MaterialTheme.typography.labelSmall)
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                d.medicineNames.forEach { n -> ChartChip(n, Color(0xFF4FC3F7), chartSelected) }
+                d.medicineNames.forEach { n -> ChartChip(n, stableMedicineColor(n, d.medicineNames, d.categoryNames), chartSelected) }
             }
         }
         if (d.categoryNames.isNotEmpty()) {
@@ -1315,7 +1334,7 @@ fun MedicineHistoryGraph(
                 style = MaterialTheme.typography.labelSmall)
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                d.categoryNames.forEach { c -> ChartChip(c, Color(0xFF81C784), chartSelected) }
+                d.categoryNames.forEach { c -> ChartChip(c, stableMedicineColor(c, d.medicineNames, d.categoryNames), chartSelected) }
             }
         }
     }

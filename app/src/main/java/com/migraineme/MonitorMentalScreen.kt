@@ -199,7 +199,7 @@ fun MonitorMentalScreen(
                                 val value = mentalValueByKey(detail, key)
                                 val formatted = if (value != null && metric != null) {
                                     MetricFormatter.format(value, metric.unit, metric.column)
-                                } else "—"
+                                } else "-"
                                 val label = metric?.label ?: key
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
@@ -221,7 +221,7 @@ fun MonitorMentalScreen(
                                 val value = mentalValueByKey(detail, m.key)
                                 val formatted = if (value != null) {
                                     MetricFormatter.format(value, m.unit, m.column)
-                                } else "—"
+                                } else "-"
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,

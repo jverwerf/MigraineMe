@@ -393,7 +393,8 @@ private fun ListRow(item: TreatmentListRowItem, navController: NavController) {
             Text(item.metaLine, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         }
         Column(horizontalAlignment = Alignment.End) {
-            val pctText = item.pctChange?.let { String.format("%+.0f%%", it) } ?: "N/A"
+            val pctText = if (item.band == "not_enough_data") "N/A"
+                else item.pctChange?.let { String.format("%+.0f%%", it) } ?: "N/A"
             val color = bandPctColor(item.band)
             Text(pctText, color = color, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
             Surface(
@@ -589,11 +590,6 @@ private fun HomeRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
                 Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(mag.toFloat())
                     .background(color, RoundedCornerShape(3.dp)))
             }
-            Spacer(Modifier.width(8.dp))
-            Text(r.pctChangeMmd?.let { String.format("%+.0f%%", it) } ?: "—",
-                color = color, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.width(44.dp), style = MaterialTheme.typography.bodySmall,
-                textAlign = androidx.compose.ui.text.style.TextAlign.End)
         }
     }
 }

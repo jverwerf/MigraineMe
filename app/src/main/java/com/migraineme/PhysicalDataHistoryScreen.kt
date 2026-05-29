@@ -159,11 +159,7 @@ fun PhysicalDataHistoryScreen(
                     "skin_temp_daily" to PhysicalCardConfig.METRIC_SKIN_TEMP,
                     "respiratory_rate_daily" to PhysicalCardConfig.METRIC_RESPIRATORY_RATE,
                     "time_in_high_hr_zones_daily" to PhysicalCardConfig.METRIC_HIGH_HR_ZONES,
-                    "steps_daily" to PhysicalCardConfig.METRIC_STEPS,
-                    "weight_daily" to PhysicalCardConfig.METRIC_WEIGHT,
-                    "body_fat_daily" to PhysicalCardConfig.METRIC_BODY_FAT,
-                    "blood_pressure_daily" to PhysicalCardConfig.METRIC_BLOOD_PRESSURE,
-                    "blood_glucose_daily" to PhysicalCardConfig.METRIC_BLOOD_GLUCOSE
+                    "steps_daily" to PhysicalCardConfig.METRIC_STEPS
                 )
 
                 // Best value per metric (prefer non-manual first, fallback manual)
@@ -188,7 +184,7 @@ fun PhysicalDataHistoryScreen(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     selectedMetrics.forEachIndexed { index, metric ->
                         val entry = bestByMetric[metric]
-                        val value = entry?.value ?: "—"
+                        val value = entry?.value ?: "-"
                         val label = PhysicalCardConfig.labelFor(metric)
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -289,11 +285,7 @@ private suspend fun fetchPhysicalEntriesForDate(
         TableDef("respiratory_rate_daily", "Resp. Rate", "date,source,value_bpm"),
         TableDef("stress_index_daily", "Stress", "date,source,value"),
         TableDef("time_in_high_hr_zones_daily", "High HR Zones", "date,source,value_minutes"),
-        TableDef("steps_daily", "Steps", "date,source,value_count"),
-        TableDef("weight_daily", "Weight", "date,source,value_kg"),
-        TableDef("body_fat_daily", "Body Fat", "date,source,value_pct"),
-        TableDef("blood_pressure_daily", "Blood Pressure", "date,source,value_systolic,value_diastolic"),
-        TableDef("blood_glucose_daily", "Blood Glucose", "date,source,value_mgdl")
+        TableDef("steps_daily", "Steps", "date,source,value_count")
     )
 
     for (td in tables) {
@@ -325,57 +317,40 @@ private fun formatPhysicalEntryValue(table: String, obj: org.json.JSONObject): S
     return when (table) {
         "recovery_score_daily" -> {
             val v = obj.optDouble("value_pct")
-            if (!v.isNaN()) "${v.toInt()}%" else "—"
+            if (!v.isNaN()) "${v.toInt()}%" else "-"
         }
         "hrv_daily" -> {
             val v = obj.optDouble("value_rmssd_ms")
-            if (!v.isNaN()) "${v.toInt()} ms" else "—"
+            if (!v.isNaN()) "${v.toInt()} ms" else "-"
         }
         "resting_hr_daily" -> {
             val v = obj.optDouble("value_bpm")
-            if (!v.isNaN()) "${v.toInt()} bpm" else "—"
+            if (!v.isNaN()) "${v.toInt()} bpm" else "-"
         }
         "spo2_daily" -> {
             val v = obj.optDouble("value_pct")
-            if (!v.isNaN()) "${v.toInt()}%" else "—"
+            if (!v.isNaN()) "${v.toInt()}%" else "-"
         }
         "skin_temp_daily" -> {
             val v = obj.optDouble("value_celsius")
-            if (!v.isNaN()) String.format("%.1f°C", v) else "—"
+            if (!v.isNaN()) String.format("%.1f°C", v) else "-"
         }
         "respiratory_rate_daily" -> {
             val v = obj.optDouble("value_bpm")
-            if (!v.isNaN()) String.format("%.1f bpm", v) else "—"
+            if (!v.isNaN()) String.format("%.1f bpm", v) else "-"
         }
         "stress_index_daily" -> {
             val v = obj.optDouble("value")
-            if (!v.isNaN()) String.format("%.0f", v) else "—"
+            if (!v.isNaN()) String.format("%.0f", v) else "-"
         }
         "time_in_high_hr_zones_daily" -> {
             val v = obj.optDouble("value_minutes")
-            if (!v.isNaN()) "${v.toInt()} min" else "—"
+            if (!v.isNaN()) "${v.toInt()} min" else "-"
         }
         "steps_daily" -> {
             val v = obj.optInt("value_count", -1)
-            if (v >= 0) "%,d".format(v) else "—"
+            if (v >= 0) "%,d".format(v) else "-"
         }
-        "weight_daily" -> {
-            val v = obj.optDouble("value_kg")
-            if (!v.isNaN()) String.format("%.1f kg", v) else "—"
-        }
-        "body_fat_daily" -> {
-            val v = obj.optDouble("value_pct")
-            if (!v.isNaN()) String.format("%.1f%%", v) else "—"
-        }
-        "blood_pressure_daily" -> {
-            val sys = obj.optDouble("value_systolic")
-            val dia = obj.optDouble("value_diastolic")
-            if (!sys.isNaN() && !dia.isNaN()) "${sys.toInt()}/${dia.toInt()} mmHg" else "—"
-        }
-        "blood_glucose_daily" -> {
-            val v = obj.optDouble("value_mgdl")
-            if (!v.isNaN()) String.format("%.0f mg/dL", v) else "—"
-        }
-        else -> "—"
+        else -> "-"
     }
 }

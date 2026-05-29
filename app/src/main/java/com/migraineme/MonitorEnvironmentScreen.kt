@@ -240,7 +240,7 @@ fun MonitorEnvironmentScreen(
                                 val value = weatherValueByKey(todayWeather!!, key)
                                 val formatted = if (value != null && metric != null) {
                                     MetricFormatter.format(value, metric.unit, metric.column)
-                                } else "—"
+                                } else "-"
                                 val label = metric?.label ?: key
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -262,7 +262,7 @@ fun MonitorEnvironmentScreen(
                                 val value = weatherValueByKey(todayWeather!!, m.key)
                                 val formatted = if (value != null) {
                                     MetricFormatter.format(value, m.unit, m.column)
-                                } else "—"
+                                } else "-"
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween
@@ -330,7 +330,7 @@ fun MonitorEnvironmentScreen(
                                         val value = weatherValueByKey(day, key)
                                         val formatted = if (value != null && metric != null) {
                                             MetricFormatter.format(value, metric.unit, metric.column)
-                                        } else "—"
+                                        } else "-"
                                         Text(
                                             formatted,
                                             color = slotColors.getOrElse(index) { slotColors.last() },
@@ -347,29 +347,21 @@ fun MonitorEnvironmentScreen(
                     } // end PremiumGate
                 }
 
-                // History + Forecast Graph — premium only
+                // History + Forecast Graph — premium only.
+                // WeatherHistoryGraph already wraps itself in a BaseCard with
+                // its own title, so we render it directly (no outer wrapper)
+                // and forward the tap to the full-screen graph.
                 PremiumGate(
                     message = "Unlock Weather Trends",
                     subtitle = "Track environmental patterns over time",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
-                    BaseCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.FULL_GRAPH_WEATHER) },
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("History + Forecast", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        WeatherHistoryGraph(
-                            days = 21,
-                            endDate = LocalDate.now().plusDays(6),
-                            forecastStartDate = LocalDate.now().plusDays(1).toString(),
-                            onClick = { navController.navigate(Routes.FULL_GRAPH_WEATHER) }
-                        )
-                    }
+                    WeatherHistoryGraph(
+                        days = 21,
+                        endDate = LocalDate.now().plusDays(6),
+                        forecastStartDate = LocalDate.now().plusDays(1).toString(),
+                        onClick = { navController.navigate(Routes.FULL_GRAPH_WEATHER) }
+                    )
                 }
             } // end enabled check
         }

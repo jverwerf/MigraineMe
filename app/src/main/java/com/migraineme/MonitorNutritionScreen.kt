@@ -656,7 +656,7 @@ fun MonitorNutritionScreen(
                             } else {
                                 val formatted = if (total > 0) {
                                     if (total >= 10) "${total.toInt()} $unit" else "${String.format("%.1f", total)} $unit"
-                                } else "—"
+                                } else "-"
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween

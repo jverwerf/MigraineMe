@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,7 +47,8 @@ import androidx.navigation.NavController
 private const val MANAGE_ITEMS_HERO_INFO =
     "Your personal pools. These are the lists that drive everything you can pick in the migraine wizard, Quick Log, and Daily Check-In: every Trigger, Prodrome, Medicine, Relief, Migraine type, Location, Activity, Missed activity, and Treatment side effect you might ever tag on a log lives here.\n\n" +
     "Defaults are pre-loaded based on what you said in AI Setup, but every list is fully editable. You can add new items, remove ones you'll never log, and set the severity weight on each one (HIGH / MILD / LOW / NONE). The weight drives the risk gauge: a HIGH trigger pushes the bucket up much more than a LOW one, and NONE means the item exists in the pool but doesn't contribute to your score.\n\n" +
-    "Calendar opt-outs is the inverse list: events from your phone calendar that the app has tried to suggest and you've dismissed."
+    "Calendar opt-outs is the inverse list: events from your phone calendar that the app has tried to suggest and you've dismissed.\n\n" +
+    "AI Companions also live here: curators that each focus on a different angle of migraine care (sleep, hormones, food, weather, etc.). Follow the ones whose focus matches you and your Articles feed re-ranks toward what they cover."
 
 private val MANAGE_ITEM_INFO: Map<String, String> = mapOf(
     "Migraines" to "Migraine symptoms you can tag in the wizard or Quick Log: pain character, accompanying experiences (nausea, light sensitivity, etc.), and aura types. Add anything specific to your attacks. No severity weight; symptoms don't feed the gauge, they're for pattern tracking.",
@@ -59,6 +61,7 @@ private val MANAGE_ITEM_INFO: Map<String, String> = mapOf(
     "Missed Activities" to "Things you skipped because of a migraine: a workout, a meeting, a meal, social plans. Surfaces on \"How Did It Impact You\" on Insights.",
     "Treatment side effects" to "Symptoms you want flagged as caused by a treatment regimen. The Daily Check-In side-effects page uses this list, and the Treatments efficacy score weighs side effects against benefit.",
     "Calendar opt-outs" to "Event titles you've told the Daily Check-In calendar page to ignore. Anything in here won't be suggested again going forward.",
+    "AI Companions" to "Curators that flag relevant articles for your migraine profile. Each one focuses on a different angle (sleep, hormones, stress, food, weather, etc.). Subscribe to the ones that match you and they'll surface useful content in your Articles feed.",
 )
 
 @Composable
@@ -80,7 +83,7 @@ fun ManageItemsScreen(navController: NavController) {
                     )
                     Text("Manage Items", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     Text(
-                        "Add, remove, or organise your triggers, medicines, reliefs and symptoms",
+                        "Add, remove, or organise your triggers, medicines, reliefs, symptoms, AI companions, and more",
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
@@ -189,6 +192,15 @@ fun ManageItemsScreen(navController: NavController) {
                 onInfo = { showInfoFor = "Calendar opt-outs" }
             )
 
+            ManageItemRow(
+                title = "AI Companions",
+                subtitle = "Follow curators that flag relevant articles",
+                iconColor = AppTheme.AccentPurple,
+                materialIcon = Icons.Outlined.SmartToy,
+                onClick = { navController.navigate("companions_manage") },
+                onInfo = { showInfoFor = "AI Companions" }
+            )
+
             Spacer(Modifier.height(32.dp))
         }
     }
@@ -229,7 +241,8 @@ private fun ManageItemRow(
     title: String,
     subtitle: String,
     iconColor: Color,
-    drawIcon: DrawScope.(Color) -> Unit,
+    drawIcon: (DrawScope.(Color) -> Unit)? = null,
+    materialIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     enabled: Boolean = true,
     onClick: () -> Unit,
     onInfo: (() -> Unit)? = null
@@ -253,11 +266,20 @@ private fun ManageItemRow(
                         .border(1.5.dp, actualColor.copy(alpha = 0.3f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .drawBehind { drawIcon(actualColor) }
-                    )
+                    if (materialIcon != null) {
+                        Icon(
+                            materialIcon,
+                            contentDescription = null,
+                            tint = actualColor,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    } else if (drawIcon != null) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .drawBehind { drawIcon(actualColor) }
+                        )
+                    }
                 }
 
                 Spacer(Modifier.width(14.dp))

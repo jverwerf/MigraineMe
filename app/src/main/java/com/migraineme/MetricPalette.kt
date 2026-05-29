@@ -37,10 +37,6 @@ object MetricPalette {
         "stress_index_daily" to Color(0xFFE57373),
         "time_in_high_hr_zones_daily" to Color(0xFFFF7043),
         "steps_daily" to Color(0xFF66BB6A),
-        "weight_daily" to Color(0xFF78909C),
-        "body_fat_daily" to Color(0xFFBA68C8),
-        "blood_pressure_daily" to Color(0xFFEF5350),
-        "blood_glucose_daily" to Color(0xFFFFCA28),
 
         // ── Mental (from MentalCardConfig) ───────────────────────────────────
         "screen_time_daily" to Color(0xFF4FC3F7),

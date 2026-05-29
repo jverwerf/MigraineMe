@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -81,6 +82,13 @@ private val RISK_COLOR = Color(0xFFEF5350)
 private const val highT = 10f
 private const val mildT = 5f
 private const val lowT = 3f
+
+private fun noiseBandColor(v: Float): Color = when {
+    v >= 10f -> Color(0xFFEF5350)
+    v >= 8f  -> Color(0xFFFFB74D)
+    v >= 6f  -> Color(0xFFFFEB3B)
+    else     -> Color(0xFF81C784)
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -305,7 +313,30 @@ fun RiskHistoryGraph(
             // Canvas with tap-to-tooltip
             val n = daysWithData.size
             val hubTypeLabels = listOf("Migraine", "Symptoms", "Triggers", "Medicines", "Reliefs", "Prodromes", "Activities")
-            Box(Modifier.fillMaxWidth().height(180.dp)) {
+
+            // Y-axis labels (top/mid/bot). When >1 metrics selected the chart
+            // normalizes per-metric so the y-axis shows 0..1; otherwise it
+            // shows the actual range (0..maxR).
+            val axisMaxValue: Float = if (isNormalized) 1f else {
+                val mdv = daysWithData.maxOfOrNull { day ->
+                    selectedMetrics.mapNotNull { day.values[it] }.maxOrNull() ?: 0f
+                } ?: 0f
+                (maxOf(highT, mdv) * 1.15f).coerceAtLeast(12f)
+            }
+            fun fmtAxis(v: Float): String =
+                if (isNormalized) "%.1f".format(v) else if (v >= 10f) v.toInt().toString() else "%.1f".format(v)
+
+            Row(Modifier.fillMaxWidth().height(180.dp)) {
+                Column(
+                    Modifier.width(40.dp).fillMaxHeight().padding(vertical = 4.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(fmtAxis(axisMaxValue), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(fmtAxis(axisMaxValue / 2f), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(fmtAxis(0f), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+            Box(Modifier.weight(1f).fillMaxHeight()) {
                 val density = LocalDensity.current
                 Canvas(
                     Modifier
@@ -480,20 +511,32 @@ fun RiskHistoryGraph(
                         else -> Color(0xFF81C784)
                     }
                     val isRiskScore = metricKey == "risk:score"
+                    val isNoise = metricKey == "mental:noise_avg" || metricKey == "mental:noise_high" || metricKey == "mental:noise_low"
 
                     // Draw lines between consecutive points
                     if (points.size >= 2) {
                         for (i in 0 until points.size - 1) {
-                            val lineColor = if (isRiskScore) {
-                                val avgV = (points[i].third + points[i + 1].third) / 2f
-                                riskZoneColor(avgV).copy(alpha = 0.9f)
-                            } else chip.color.copy(alpha = 0.8f)
+                            val lineColor = when {
+                                isRiskScore -> {
+                                    val avgV = (points[i].third + points[i + 1].third) / 2f
+                                    riskZoneColor(avgV).copy(alpha = 0.9f)
+                                }
+                                isNoise -> {
+                                    val avgV = (points[i].third + points[i + 1].third) / 2f
+                                    noiseBandColor(avgV).copy(alpha = 0.9f)
+                                }
+                                else -> chip.color.copy(alpha = 0.8f)
+                            }
                             drawLine(lineColor, Offset(points[i].first, points[i].second), Offset(points[i + 1].first, points[i + 1].second), strokeWidth = 2.5f, cap = StrokeCap.Round)
                         }
                     }
                     // Draw dots for all points (including single day)
                     for ((x, y, v) in points) {
-                        val dotColor = if (isRiskScore) riskZoneColor(v) else chip.color
+                        val dotColor = when {
+                            isRiskScore -> riskZoneColor(v)
+                            isNoise -> noiseBandColor(v)
+                            else -> chip.color
+                        }
                         drawCircle(dotColor, radius = 3.5f, center = Offset(x, y))
                         // For single day or few points, draw a horizontal dashed guide line
                         if (n <= 3) {
@@ -631,7 +674,8 @@ fun RiskHistoryGraph(
                         }
                     }
                 }
-            } // end Box
+            } // end Box (chart canvas)
+            } // end Row (y-axis + chart)
 
             if (n >= 1) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = if (n == 1) Arrangement.Center else Arrangement.SpaceBetween) {
@@ -821,14 +865,22 @@ private suspend fun loadRiskGraphData(ctx: android.content.Context, days: Int, e
                 val body = resp.body?.string()
                 if (resp.isSuccessful && !body.isNullOrBlank()) {
                     val arr = org.json.JSONArray(body)
+                    val shiftPastNoon = table == "fell_asleep_time_daily"
                     for (i in 0 until arr.length()) {
                         val obj = arr.getJSONObject(i)
                         val d = obj.optString("date", "")
                         if (d.isBlank()) continue
                         for (col in columns) {
+                            val chipKey = tableColChipKey["$table|$col"] ?: continue
+                            if (col == "value_at") {
+                                val ts = obj.optString(col, "").takeIf { it.isNotBlank() } ?: continue
+                                val raw = TimeOfDay.toHoursOfDay(ts) ?: continue
+                                val hours = if (shiftPastNoon && raw < 12.0) raw + 24.0 else raw
+                                put(d, chipKey, hours.toFloat())
+                                continue
+                            }
                             val v = obj.optDouble(col)
                             if (!v.isNaN()) {
-                                val chipKey = tableColChipKey["$table|$col"] ?: continue
                                 put(d, chipKey, v.toFloat())
                             }
                         }

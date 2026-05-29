@@ -408,7 +408,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         selectedMetrics.forEachIndexed { index, metric ->
                             val entry = bestByMetric[metric]
-                            val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "—"
+                            val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "-"
                             val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -423,11 +423,11 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
-                    // Show ALL metrics with "—" for missing
+                    // Show ALL metrics with "-" for missing
                     WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
                         if (metric !in selectedMetrics) {
                             val entry = bestByMetric[metric]
-                            val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "—"
+                            val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "-"
                             val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),

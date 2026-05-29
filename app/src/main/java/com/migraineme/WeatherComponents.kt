@@ -27,7 +27,7 @@ fun WeatherMetricRow(label: String, value: Double?, unit: String) {
             if (value != null && value != 0.0) {
                 if (unit == "hPa") String.format("%.0f%s", value, unit)
                 else String.format("%.1f%s", value, unit)
-            } else "—",
+            } else "-",
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
         )

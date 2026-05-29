@@ -396,37 +396,10 @@ class HealthConnectPushWorker(
                 )
             }
 
-            HealthConnectRecordTypes.WEIGHT -> {
-                val valueKg = payload["value_kg"]?.jsonPrimitive?.double
-                    ?: return ProcessResult.PermanentFailure("Missing value_kg")
-                service.upsertWeight(accessToken, item.date, valueKg, item.healthConnectId)
-            }
-
-            HealthConnectRecordTypes.BODY_FAT -> {
-                val valuePct = payload["value_pct"]?.jsonPrimitive?.double
-                    ?: return ProcessResult.PermanentFailure("Missing value_pct")
-                service.upsertBodyFat(accessToken, item.date, valuePct, item.healthConnectId)
-            }
-
             HealthConnectRecordTypes.HYDRATION -> {
                 val valueMl = payload["value_ml"]?.jsonPrimitive?.double
                     ?: return ProcessResult.PermanentFailure("Missing value_ml")
                 service.upsertHydration(accessToken, item.date, valueMl, item.healthConnectId)
-            }
-
-            HealthConnectRecordTypes.BLOOD_PRESSURE -> {
-                val systolic = payload["systolic_mmhg"]?.jsonPrimitive?.double
-                    ?: return ProcessResult.PermanentFailure("Missing systolic_mmhg")
-                val diastolic = payload["diastolic_mmhg"]?.jsonPrimitive?.double
-                    ?: return ProcessResult.PermanentFailure("Missing diastolic_mmhg")
-                service.upsertBloodPressure(accessToken, item.date, systolic, diastolic, item.healthConnectId)
-            }
-
-            HealthConnectRecordTypes.BLOOD_GLUCOSE -> {
-                val valueMmol = payload["value_mmol_l"]?.jsonPrimitive?.double
-                    ?: return ProcessResult.PermanentFailure("Missing value_mmol_l")
-                val mealType = payload["meal_type"]?.jsonPrimitive?.content ?: "GENERAL"
-                service.upsertBloodGlucose(accessToken, item.date, valueMmol, mealType, item.healthConnectId)
             }
 
             HealthConnectRecordTypes.SPO2 -> {

@@ -193,11 +193,7 @@ class SupabaseHealthConnectService(context: Context) {
             HealthConnectRecordTypes.RESTING_HR -> "resting_hr_daily"
             HealthConnectRecordTypes.STEPS -> "steps_daily"
             HealthConnectRecordTypes.EXERCISE -> "time_in_high_hr_zones_daily"
-            HealthConnectRecordTypes.WEIGHT -> "weight_daily"
-            HealthConnectRecordTypes.BODY_FAT -> "body_fat_daily"
             HealthConnectRecordTypes.HYDRATION -> "hydration_daily"
-            HealthConnectRecordTypes.BLOOD_PRESSURE -> "blood_pressure_daily"
-            HealthConnectRecordTypes.BLOOD_GLUCOSE -> "blood_glucose_daily"
             HealthConnectRecordTypes.SPO2 -> "spo2_daily"
             HealthConnectRecordTypes.RESPIRATORY_RATE -> "respiratory_rate_daily"
             HealthConnectRecordTypes.SKIN_TEMP -> "skin_temp_daily"
@@ -593,38 +589,6 @@ class SupabaseHealthConnectService(context: Context) {
     }
 
     // ============================================================
-    // Weight
-    // ============================================================
-
-    @Serializable
-    private data class WeightRow(
-        val date: String,
-        val value_kg: Double,
-        val source: String = SOURCE,
-        val source_measure_id: String? = null
-    )
-
-    suspend fun upsertWeight(accessToken: String, date: String, valueKg: Double, sourceId: String): Boolean {
-        return upsertDailyCompat(accessToken, "weight_daily", WeightRow(date, valueKg, SOURCE, sourceId))
-    }
-
-    // ============================================================
-    // Body Fat
-    // ============================================================
-
-    @Serializable
-    private data class BodyFatRow(
-        val date: String,
-        val value_pct: Double,
-        val source: String = SOURCE,
-        val source_measure_id: String? = null
-    )
-
-    suspend fun upsertBodyFat(accessToken: String, date: String, valuePct: Double, sourceId: String): Boolean {
-        return upsertDailyCompat(accessToken, "body_fat_daily", BodyFatRow(date, valuePct, SOURCE, sourceId))
-    }
-
-    // ============================================================
     // Hydration
     // ============================================================
 
@@ -638,40 +602,6 @@ class SupabaseHealthConnectService(context: Context) {
 
     suspend fun upsertHydration(accessToken: String, date: String, valueMl: Double, sourceId: String): Boolean {
         return upsertDailyCompat(accessToken, "hydration_daily", HydrationRow(date, valueMl, SOURCE, sourceId))
-    }
-
-    // ============================================================
-    // Blood Pressure
-    // ============================================================
-
-    @Serializable
-    private data class BloodPressureRow(
-        val date: String,
-        val systolic_mmhg: Double,
-        val diastolic_mmhg: Double,
-        val source: String = SOURCE,
-        val source_measure_id: String? = null
-    )
-
-    suspend fun upsertBloodPressure(accessToken: String, date: String, systolic: Double, diastolic: Double, sourceId: String): Boolean {
-        return upsertDailyCompat(accessToken, "blood_pressure_daily", BloodPressureRow(date, systolic, diastolic, SOURCE, sourceId))
-    }
-
-    // ============================================================
-    // Blood Glucose
-    // ============================================================
-
-    @Serializable
-    private data class BloodGlucoseRow(
-        val date: String,
-        val value_mmol_l: Double,
-        val meal_type: String? = null,
-        val source: String = SOURCE,
-        val source_measure_id: String? = null
-    )
-
-    suspend fun upsertBloodGlucose(accessToken: String, date: String, valueMmol: Double, mealType: String, sourceId: String): Boolean {
-        return upsertDailyCompat(accessToken, "blood_glucose_daily", BloodGlucoseRow(date, valueMmol, mealType, SOURCE, sourceId))
     }
 
     // ============================================================

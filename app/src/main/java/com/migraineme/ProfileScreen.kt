@@ -59,7 +59,6 @@ fun ProfileScreen(
     onNavigateChangePassword: () -> Unit,
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
-    onNavigateToCompanions: () -> Unit = {},
     onNavigateOnboardingNoSeed: () -> Unit = {},
     onLoggedOut: () -> Unit = {},
 ) {
@@ -89,15 +88,11 @@ fun ProfileScreen(
 
     // ── Debug state ──
     var isResettingOnboardingNoSeed by remember { mutableStateOf(false) }
-    var isRerunningSim by remember { mutableStateOf(false) }
 
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
     var aiProfileLoading by remember { mutableStateOf(false) }
 
-    // ── AI Companions state ──
-    var subscribedCompanions by remember { mutableStateOf<List<CompanionRow>>(emptyList()) }
-    var companionsLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(auth.accessToken, auth.userId) {
         val token = auth.accessToken
@@ -212,56 +207,6 @@ fun ProfileScreen(
         } finally {
             aiProfileLoading = false
         }
-    }
-
-    // Load subscribed companions
-    LaunchedEffect(auth.accessToken) {
-        val token = auth.accessToken
-        if (token.isNullOrBlank()) return@LaunchedEffect
-        try {
-            val baseUrl = BuildConfig.SUPABASE_URL.trimEnd('/')
-            val anonKey = BuildConfig.SUPABASE_ANON_KEY
-            val result = withContext(Dispatchers.IO) {
-                // Fetch subscription companion_ids
-                val subsUrl = "$baseUrl/rest/v1/ai_companion_subscriptions?select=id,companion_id"
-                val subsConn = (URL(subsUrl).openConnection() as HttpURLConnection).apply {
-                    requestMethod = "GET"
-                    setRequestProperty("apikey", anonKey)
-                    setRequestProperty("Authorization", "Bearer $token")
-                    setRequestProperty("Accept", "application/json")
-                }
-                val subIds = try {
-                    val code = subsConn.responseCode
-                    if (code in 200..299) {
-                        val text = subsConn.inputStream.bufferedReader().readText()
-                        val arr = Json.parseToJsonElement(text).jsonArray
-                        arr.mapNotNull { it.jsonObject["companion_id"]?.jsonPrimitive?.contentOrNull }.toSet()
-                    } else emptySet()
-                } finally { subsConn.disconnect() }
-
-                if (subIds.isNotEmpty()) {
-                    // Fetch active companions
-                    val compsUrl = "$baseUrl/rest/v1/ai_companions?is_active=eq.true&select=id,name,slug,subtitle,migraine_type,triggers,interests,personality,tone_guide,avatar_url,is_active"
-                    val compsConn = (URL(compsUrl).openConnection() as HttpURLConnection).apply {
-                        requestMethod = "GET"
-                        setRequestProperty("apikey", anonKey)
-                        setRequestProperty("Authorization", "Bearer $token")
-                        setRequestProperty("Accept", "application/json")
-                    }
-                    try {
-                        val code = compsConn.responseCode
-                        if (code in 200..299) {
-                            val text = compsConn.inputStream.bufferedReader().readText()
-                            val companions: List<CompanionRow> = Json { ignoreUnknownKeys = true; explicitNulls = false }
-                                .decodeFromString(text)
-                            companions.filter { it.id in subIds }
-                        } else emptyList()
-                    } finally { compsConn.disconnect() }
-                } else emptyList()
-            }
-            subscribedCompanions = result
-        } catch (_: Throwable) {}
-        companionsLoaded = true
     }
 
     // Load avatar (original)
@@ -453,14 +398,6 @@ fun ProfileScreen(
             AiMigraineProfileCard(aiProfile!!)
         }
 
-        // ── AI Companions ──
-        if (companionsLoaded) {
-            CompanionsProfileCard(
-                companions = subscribedCompanions,
-                onManage = onNavigateToCompanions
-            )
-        }
-
         // ── Change Password (card style, matches iOS) ──
         if (canChangePassword.value) {
             BaseCard {
@@ -501,41 +438,9 @@ fun ProfileScreen(
                 Icon(Icons.Outlined.RestartAlt, null, tint = Color(0xFF4FC3F7), modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Same flow, but never seeds or deletes any data. Safe on accounts with real entries.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text("Restart the welcome setup", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
                 if (isResettingOnboardingNoSeed) {
-                    CircularProgressIndicator(Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
-                }
-            }
-        }
-
-        // ── Debug: Rerun Sim ──
-        BaseCard {
-            Row(
-                Modifier.fillMaxWidth().clickable(enabled = !isRerunningSim) {
-                    isRerunningSim = true
-                    scope.launch {
-                        try {
-                            withContext(Dispatchers.IO) {
-                                DemoDataSeeder.clearDemoData(context)
-                                DemoDataSeeder.seedDemoData(context)
-                            }
-                        } finally {
-                            isRerunningSim = false
-                        }
-                    }
-                },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(Icons.Outlined.AutoAwesome, null, tint = Color(0xFFBA68C8), modifier = Modifier.size(20.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Rerun Sim", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Clears and reseeds 14 days of demo data", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                }
-                if (isRerunningSim) {
                     CircularProgressIndicator(Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
                 } else {
                     Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
@@ -1057,139 +962,6 @@ private fun ProfileStatChip(icon: ImageVector, text: String, modifier: Modifier 
     ) {
         Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
         Text(text, color = Color.White, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// AI Companions Profile Card
-// ═══════════════════════════════════════════════════════════════════════════
-
-@Composable
-private fun CompanionsProfileCard(
-    companions: List<CompanionRow>,
-    onManage: () -> Unit
-) {
-    var showInfo by remember { mutableStateOf(false) }
-    Box(modifier = Modifier.fillMaxWidth()) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onManage),
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
-        shape = AppTheme.BaseCardShape,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.25f), AppTheme.AccentPink.copy(alpha = 0.15f)))
-        )
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.SmartToy, null,
-                        tint = AppTheme.AccentPurple,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        "AI Companions",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                }
-                Text(
-                    "Manage",
-                    color = AppTheme.AccentPurple,
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            if (companions.isEmpty()) {
-                Text(
-                    "Follow AI curators to get relevant articles flagged for you.",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    companions.forEach { companion ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            BotAvatar(companion.slug, 40)
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    companion.name.replace(" The AI", "").replace(" the AI", ""),
-                                    color = Color.White,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                                    maxLines = 1
-                                )
-                                val desc = buildString {
-                                    if (companion.triggers.isNotEmpty()) {
-                                        append(companion.triggers.joinToString(", "))
-                                    }
-                                    if (companion.interests.isNotEmpty()) {
-                                        if (isNotEmpty()) append(" · ")
-                                        append(companion.interests.take(3).joinToString(", "))
-                                    }
-                                }
-                                if (desc.isNotBlank()) {
-                                    Text(
-                                        desc,
-                                        color = AppTheme.SubtleTextColor,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-        IconButton(
-            onClick = { showInfo = true },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = 10.dp, y = (-14).dp)
-                .size(34.dp)
-        ) {
-            Icon(Icons.Outlined.Info, contentDescription = "About AI Companions",
-                tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
-        }
-    }
-
-    if (showInfo) {
-        AlertDialog(
-            onDismissRequest = { showInfo = false },
-            containerColor = Color(0xFF1E0A2E),
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.SmartToy, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("AI Companions", color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                }
-            },
-            text = {
-                Text(
-                    "AI Companions are curated personas, each one focused on a specific angle of migraine care (nutrition, sleep, hormonal, stress, etc.). Subscribing to a companion does two things: their content shows up in your Articles \"For You\" feed (re-ranked toward whatever your subscribed companions cover), and they unlock the relevant article tags so you see the topics they care about across the rest of the library. Tap Manage to browse the full roster and follow or unfollow. There's no AI chat with them; that's Ask MigraineMe on the Home tab and works against your data, not these companions.",
-                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
-        )
     }
 }
 

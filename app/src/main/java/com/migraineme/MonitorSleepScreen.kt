@@ -195,7 +195,7 @@ fun MonitorSleepScreen(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             displayKeys.forEachIndexed { index, key ->
                                 val metric = MetricRegistry.get(key)
-                                val formatted = sleepDisplayByKey(detail, key) ?: "—"
+                                val formatted = sleepDisplayByKey(detail, key) ?: "-"
                                 val label = metric?.label ?: key
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -214,16 +214,14 @@ fun MonitorSleepScreen(
                             Spacer(Modifier.height(4.dp))
 
                             remainingMetrics.forEach { m ->
-                                val formatted = sleepDisplayByKey(detail, m.key)
-                                if (formatted != null) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().height(24.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(m.label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
-                                        Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-                                    }
+                                val formatted = sleepDisplayByKey(detail, m.key) ?: "-"
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().height(24.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(m.label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                                 }
                             }
                         }
@@ -283,15 +281,7 @@ private fun sleepHoursMinutes(hm: Double): String {
     return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
 }
 
-private fun sleepTimeFromIso(isoString: String): String? {
-    return try {
-        val zdt = ZonedDateTime.parse(isoString)
-        val local = zdt.withZoneSameInstant(ZoneId.systemDefault())
-        local.format(DateTimeFormatter.ofPattern("h:mm a"))
-    } catch (_: Exception) {
-        try { isoString.take(5) } catch (_: Exception) { null }
-    }
-}
+private fun sleepTimeFromIso(isoString: String): String? = TimeOfDay.formatHmma(isoString)
 
 // ─── Data class ──────────────────────────────────────────────────────────────
 

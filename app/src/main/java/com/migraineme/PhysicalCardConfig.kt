@@ -13,17 +13,11 @@ object PhysicalCardConfig {
     const val METRIC_STRAIN = "strain"
     const val METRIC_HIGH_HR_ZONES = "high_hr_zones"
     const val METRIC_STEPS = "steps"
-    const val METRIC_WEIGHT = "weight"
-    const val METRIC_BODY_FAT = "body_fat"
-    const val METRIC_BLOOD_PRESSURE = "blood_pressure"
-    const val METRIC_BLOOD_GLUCOSE = "blood_glucose"
 
     val ALL_PHYSICAL_METRICS: List<String> = listOf(
         METRIC_RECOVERY, METRIC_HRV, METRIC_RESTING_HR,
         METRIC_SPO2, METRIC_SKIN_TEMP, METRIC_RESPIRATORY_RATE,
-        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
-        METRIC_WEIGHT, METRIC_BODY_FAT,
-        METRIC_BLOOD_PRESSURE, METRIC_BLOOD_GLUCOSE
+        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS
     )
 
     val DEFAULT_DISPLAY_METRICS: List<String> = listOf(
@@ -33,8 +27,7 @@ object PhysicalCardConfig {
     val GRAPHABLE_METRICS: List<String> = listOf(
         METRIC_RECOVERY, METRIC_HRV, METRIC_RESTING_HR,
         METRIC_SPO2, METRIC_SKIN_TEMP, METRIC_RESPIRATORY_RATE,
-        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS,
-        METRIC_WEIGHT, METRIC_BODY_FAT, METRIC_BLOOD_GLUCOSE
+        METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS
     )
 
     fun labelFor(metric: String): String = when (metric) {
@@ -47,10 +40,6 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> "Strain"
         METRIC_HIGH_HR_ZONES -> "High HR Zones"
         METRIC_STEPS -> "Steps"
-        METRIC_WEIGHT -> "Weight"
-        METRIC_BODY_FAT -> "Body Fat"
-        METRIC_BLOOD_PRESSURE -> "Blood Pressure"
-        METRIC_BLOOD_GLUCOSE -> "Blood Glucose"
         else -> metric
     }
 
@@ -64,10 +53,6 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> "kJ"
         METRIC_HIGH_HR_ZONES -> "min"
         METRIC_STEPS -> ""
-        METRIC_WEIGHT -> "kg"
-        METRIC_BODY_FAT -> "%"
-        METRIC_BLOOD_PRESSURE -> "mmHg"
-        METRIC_BLOOD_GLUCOSE -> "mg/dL"
         else -> ""
     }
 
@@ -81,10 +66,6 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> Color(0xFFFF8A80)
         METRIC_HIGH_HR_ZONES -> Color(0xFFFF7043)
         METRIC_STEPS -> Color(0xFF66BB6A)
-        METRIC_WEIGHT -> Color(0xFF78909C)
-        METRIC_BODY_FAT -> Color(0xFFBA68C8)
-        METRIC_BLOOD_PRESSURE -> Color(0xFFEF5350)
-        METRIC_BLOOD_GLUCOSE -> Color(0xFFFFCA28)
         else -> Color(0xFF81C784)
     }
 
@@ -99,10 +80,6 @@ object PhysicalCardConfig {
         METRIC_STRAIN -> "strain_daily"
         METRIC_HIGH_HR_ZONES -> "time_in_high_hr_zones_daily"
         METRIC_STEPS -> "steps_daily"
-        METRIC_WEIGHT -> "weight_daily"
-        METRIC_BODY_FAT -> "body_fat_daily"
-        METRIC_BLOOD_PRESSURE -> "blood_pressure_daily"
-        METRIC_BLOOD_GLUCOSE -> "blood_glucose_daily"
         else -> ""
     }
 }

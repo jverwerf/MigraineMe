@@ -150,25 +150,33 @@ object HubIcons {
         drawCircle(color, radius = w * 0.12f, center = Offset(w * 0.50f, h * 0.34f), style = Fill)
     }
 
-    /** Activity pulse / heartbeat icon */
+    /** Activity icon — running figure silhouette (mirrors iOS SF Symbol figure.run) */
     fun DrawScope.drawActivityPulse(color: Color) {
         val w = size.width; val h = size.height
-        val stroke = Stroke(w * 0.06f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        // Running figure simplified as a pulse line
-        val pulse = Path().apply {
-            moveTo(w * 0.04f, h * 0.55f)
-            lineTo(w * 0.25f, h * 0.55f)
-            lineTo(w * 0.32f, h * 0.30f)
-            lineTo(w * 0.42f, h * 0.75f)
-            lineTo(w * 0.52f, h * 0.15f)
-            lineTo(w * 0.62f, h * 0.65f)
-            lineTo(w * 0.70f, h * 0.45f)
-            lineTo(w * 0.78f, h * 0.55f)
-            lineTo(w * 0.96f, h * 0.55f)
-        }
-        drawPath(pulse, color, style = stroke)
-        // Small circle at peak
-        drawCircle(color, radius = w * 0.05f, center = Offset(w * 0.52f, h * 0.15f), style = Fill)
+        val stroke = w * 0.10f
+        // Head
+        drawCircle(color, radius = w * 0.10f, center = Offset(w * 0.66f, h * 0.16f))
+        // Torso (head → hip, leaning forward)
+        drawLine(color, Offset(w * 0.62f, h * 0.28f), Offset(w * 0.46f, h * 0.58f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
+        // Front arm (forward swing)
+        drawLine(color, Offset(w * 0.58f, h * 0.36f), Offset(w * 0.86f, h * 0.40f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
+        // Back arm (bent at elbow, swung back)
+        drawLine(color, Offset(w * 0.55f, h * 0.36f), Offset(w * 0.36f, h * 0.50f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color, Offset(w * 0.36f, h * 0.50f), Offset(w * 0.30f, h * 0.32f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
+        // Front leg (kicked forward, bent at knee)
+        drawLine(color, Offset(w * 0.46f, h * 0.58f), Offset(w * 0.74f, h * 0.78f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color, Offset(w * 0.74f, h * 0.78f), Offset(w * 0.86f, h * 0.94f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
+        // Back leg (pushing off, bent at knee)
+        drawLine(color, Offset(w * 0.46f, h * 0.58f), Offset(w * 0.24f, h * 0.78f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color, Offset(w * 0.24f, h * 0.78f), Offset(w * 0.12f, h * 0.66f),
+            strokeWidth = stroke, cap = StrokeCap.Round)
     }
 
     /** Missed activity icon – cancelled/crossed-out circle */

@@ -77,9 +77,14 @@ fun MonitorPhysicalScreen(
                         try {
                             val edge = EdgeFunctionsService()
                             val settings = edge.getMetricSettings(ctx)
-                            enabledRegistryKeys = MetricRegistry.enabledKeys(settings, "physical")
+                            val base = MetricRegistry.enabledKeys(settings, "physical")
+                            // strain_daily has no trigger-template row so it never lands in
+                            // the registry — include it explicitly when it's enabled (or no
+                            // setting exists, which defaults to enabled).
+                            val strainEnabled = settings.firstOrNull { it.metric == "strain_daily" }?.enabled ?: true
+                            enabledRegistryKeys = if (strainEnabled) base + "strain_daily" else base
                         } catch (_: Exception) {
-                            enabledRegistryKeys = MetricRegistry.byGroup("physical").map { it.key }.toSet()
+                            enabledRegistryKeys = MetricRegistry.byGroup("physical").map { it.key }.toSet() + "strain_daily"
                         }
                         settingsLoaded = true
                     }
@@ -183,7 +188,7 @@ fun MonitorPhysicalScreen(
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             displayKeys.forEachIndexed { index, key ->
-                                val formatted = physicalDisplayByKey(detail, key) ?: "—"
+                                val formatted = physicalDisplayByKey(detail, key) ?: "-"
                                 val label = MetricRegistry.get(key)?.label
                                     ?: PhysicalCardConfig.labelFor(PhysicalCardConfig.ALL_PHYSICAL_METRICS.firstOrNull { PhysicalCardConfig.metricToTable(it) == key } ?: key)
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -202,16 +207,14 @@ fun MonitorPhysicalScreen(
                             Spacer(Modifier.height(4.dp))
 
                             remainingMetrics.forEach { (tableKey, label) ->
-                                val formatted = physicalDisplayByKey(detail, tableKey)
-                                if (formatted != null) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().height(24.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
-                                        Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-                                    }
+                                val formatted = physicalDisplayByKey(detail, tableKey) ?: "-"
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().height(24.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                                 }
                             }
                         }
@@ -254,14 +257,6 @@ private fun physicalDisplayByKey(detail: PhysicalDetailData, key: String): Strin
         "strain_daily" -> detail.strain?.let { "%.0f kJ".format(it) }
         "time_in_high_hr_zones_daily" -> detail.highHrZonesMinutes?.let { "${it.toInt()} min" }
         "steps_daily" -> detail.steps?.let { "%,d".format(it) }
-        "weight_daily" -> detail.weight?.let { String.format("%.1f kg", it) }
-        "body_fat_daily" -> detail.bodyFat?.let { String.format("%.1f%%", it) }
-        "blood_pressure_daily::systolic_mmhg" -> {
-            if (detail.bloodPressureSystolic != null && detail.bloodPressureDiastolic != null)
-                "${detail.bloodPressureSystolic.toInt()}/${detail.bloodPressureDiastolic.toInt()}"
-            else null
-        }
-        "blood_glucose_daily" -> detail.bloodGlucose?.let { String.format("%.0f mg/dL", it) }
         else -> null
     }
 }
@@ -278,12 +273,7 @@ private data class PhysicalDetailData(
     val stress: Double?,
     val strain: Double?,
     val highHrZonesMinutes: Double?,
-    val steps: Int?,
-    val weight: Double?,
-    val bodyFat: Double?,
-    val bloodPressureSystolic: Double?,
-    val bloodPressureDiastolic: Double?,
-    val bloodGlucose: Double?
+    val steps: Int?
 )
 
 // ─── Data loading ────────────────────────────────────────────────────────────
@@ -307,36 +297,12 @@ private suspend fun loadPhysicalDetailData(
     val client = okhttp3.OkHttpClient()
 
     val steps = if (userId != null) fetchSingleDouble(client, token, "steps_daily", userId, date, "value_count")?.toInt() else null
-    val weight = if (userId != null) fetchSingleDouble(client, token, "weight_daily", userId, date, "value_kg") else null
-    val bodyFat = if (userId != null) fetchSingleDouble(client, token, "body_fat_daily", userId, date, "value_pct") else null
     val respiratoryRate = if (userId != null) fetchSingleDouble(client, token, "respiratory_rate_daily", userId, date, "value_bpm") else null
-    val bloodGlucose = if (userId != null) fetchSingleDouble(client, token, "blood_glucose_daily", userId, date, "value_mgdl") else null
     val strain = if (userId != null) fetchSingleDouble(client, token, "strain_daily", userId, date, "value_kilojoule") else null
 
-    var bpSystolic: Double? = null
-    var bpDiastolic: Double? = null
-    if (userId != null) {
-        try {
-            val url = "${BuildConfig.SUPABASE_URL}/rest/v1/blood_pressure_daily?user_id=eq.$userId&date=eq.$date&select=value_systolic,value_diastolic&limit=1"
-            val request = okhttp3.Request.Builder().url(url).get()
-                .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                .addHeader("Authorization", "Bearer $token").build()
-            val response = client.newCall(request).execute()
-            val body = response.body?.string()
-            if (response.isSuccessful && !body.isNullOrBlank()) {
-                val arr = org.json.JSONArray(body)
-                if (arr.length() > 0) {
-                    val obj = arr.getJSONObject(0)
-                    bpSystolic = obj.optDouble("value_systolic").takeIf { !it.isNaN() }
-                    bpDiastolic = obj.optDouble("value_diastolic").takeIf { !it.isNaN() }
-                }
-            }
-        } catch (_: Exception) {}
-    }
-
     if (recovery == null && hrv == null && rhr == null && spo2 == null && skinTemp == null &&
-        stress == null && highHr == null && steps == null && weight == null && bodyFat == null &&
-        respiratoryRate == null && bloodGlucose == null && bpSystolic == null && strain == null) {
+        stress == null && highHr == null && steps == null &&
+        respiratoryRate == null && strain == null) {
         return@withContext null
     }
 
@@ -350,12 +316,7 @@ private suspend fun loadPhysicalDetailData(
         stress = stress?.value,
         strain = strain,
         highHrZonesMinutes = highHr?.value_minutes,
-        steps = steps,
-        weight = weight,
-        bodyFat = bodyFat,
-        bloodPressureSystolic = bpSystolic,
-        bloodPressureDiastolic = bpDiastolic,
-        bloodGlucose = bloodGlucose
+        steps = steps
     )
 }
 

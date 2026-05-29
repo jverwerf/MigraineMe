@@ -1012,10 +1012,6 @@ object DeterministicMapper {
         enT("stress_index_daily", "Stress high", "Stress low")
         enT("steps_daily", "Steps high", "Steps low")
         enT("time_in_high_hr_zones_daily", "High HR zones high", "High HR zones low")
-        enT("blood_pressure_daily", "Blood pressure high", "Blood pressure low")
-        enT("blood_glucose_daily", "Blood glucose high", "Blood glucose low")
-        enT("body_fat_daily", "Body fat high", "Body fat low")
-        enT("weight_daily", "Weight high", "Weight low")
 
         enP("hrv_daily", "HRV high", "HRV low")
         enP("resting_hr_daily", "Resting HR high", "Resting HR low")

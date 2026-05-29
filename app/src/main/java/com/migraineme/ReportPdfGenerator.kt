@@ -511,9 +511,7 @@ class ReportPdfGenerator(private val context: Context) {
     // ===============================================================
 
     private fun drawFrequencyTrends(d: ReportData) {
-        val c = cv ?: return
         val zone = java.time.ZoneId.systemDefault()
-        // Group migraines by month
         val byMonth = d.filteredMigraines.groupBy {
             it.start.atZone(zone).toLocalDate().withDayOfMonth(1)
         }.toSortedMap()
@@ -521,89 +519,47 @@ class ReportPdfGenerator(private val context: Context) {
 
         heading("Frequency Trends", Color.parseColor("#64B5F6"))
 
-        val months = byMonth.keys.toList()
-        val counts = months.map { (byMonth[it]?.size ?: 0) }
-        val maxCount = counts.max().coerceAtLeast(1)
-        val avgCount = counts.average()
-
-        val barCount = months.size.coerceAtMost(12)
-        val displayMonths = months.takeLast(barCount)
-        val displayCounts = counts.takeLast(barCount)
-
-        val chartH = 120f
-        need(chartH + 60f)
-        card(chartH + 40f) { cv2, l, t, r, _ ->
-            val padL = l + 30f; val padR = r - 12f; val padT = t + 12f; val padB = t + chartH + 12f
-            val cw = padR - padL; val ch = padB - padT
-            val barW = (cw / barCount) * 0.7f
-            val gap = (cw / barCount) * 0.3f
-
-            // Avg line
-            val avgY = padB - (avgCount.toFloat() / maxCount) * ch
-            val dashPaint = Paint().apply { color = SUBTLE; strokeWidth = 1f; style = Paint.Style.STROKE; pathEffect = DashPathEffect(floatArrayOf(4f, 3f), 0f) }
-            cv2.drawLine(padL, avgY, padR, avgY, dashPaint)
-            cv2.drawText("avg ${String.format("%.1f", avgCount)}", padR + 2f, avgY + 4f, tp(SUBTLE, 7f))
-
-            // Bars
-            val fmt = java.time.format.DateTimeFormatter.ofPattern("MMM")
-            val fmtYear = java.time.format.DateTimeFormatter.ofPattern("yy")
-            for (i in displayCounts.indices) {
-                val x = padL + i * (barW + gap) + gap / 2f
-                val count = displayCounts[i]
-                val barH = (count.toFloat() / maxCount) * ch
-                val barTop = padB - barH
-
-                val barColor = if (count > avgCount * 1.5) Color.parseColor("#E57373")
-                    else if (count < avgCount * 0.5) Color.parseColor("#81C784")
-                    else Color.parseColor("#64B5F6")
-
-                cv2.drawRoundRect(x, barTop, x + barW, padB, 3f, 3f, fp(barColor, 180))
-
-                // Count on top
-                if (count > 0) {
-                    cv2.drawText("$count", x + barW / 2f, barTop - 3f, tp(Color.WHITE, 7f, true, Paint.Align.CENTER))
-                }
-
-                // Month label
-                cv2.drawText(displayMonths[i].format(fmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
-                // Year on first + whenever year changes
-                if (i == 0 || displayMonths[i].year != displayMonths[i - 1].year) {
-                    cv2.drawText("'${displayMonths[i].format(fmtYear)}", x + barW / 2f, padB + 18f, tp(SUBTLE, 5.5f, a = Paint.Align.CENTER))
-                }
-            }
-        }
-
-        // Summary stats row
-        need(55f)
-        val total = d.filteredMigraines.size
-        val monthSpan = byMonth.size
-        val perMonth = if (monthSpan > 0) total.toFloat() / monthSpan else 0f
-        val trendText = if (displayCounts.size >= 3) {
-            val firstHalf = displayCounts.take(displayCounts.size / 2).average()
-            val secondHalf = displayCounts.drop(displayCounts.size / 2).average()
-            when {
-                secondHalf < firstHalf * 0.8 -> "↓ Improving"
-                secondHalf > firstHalf * 1.2 -> "↑ Worsening"
-                else -> "→ Stable"
-            }
-        } else "—"
-
-        card(40f) { cv2, l, t, r, _ ->
-            val cw2 = (r - l) / 3f
-            listOf(
-                Triple(String.format("%.1f", perMonth), "Per Month", 0),
-                Triple("$total", "Total", 0),
-                Triple(trendText, "Trend", 0)
-            ).forEachIndexed { i, (v, lb, _) ->
-                val cx = l + i * cw2 + cw2 / 2f
-                cv2.drawText(v, cx, t + 16f, tp(Color.WHITE, 12f, true, Paint.Align.CENTER))
-                cv2.drawText(lb, cx, t + 28f, tp(SUBTLE, 8f, a = Paint.Align.CENTER))
-            }
-        }
-
-        // Weekly bars — span the full filtered range (was hardcoded last 12
-        // weeks, which clipped longer time ranges in the Full Report).
         val purple = Color.parseColor("#9575CD")
+        val pink = Color.parseColor("#FF7BB0")
+        val blue = Color.parseColor("#64B5F6")
+
+        // Compact heights so the whole section fits on a single page.
+        val chartH = 70f
+        // Reserve enough space upfront so the section stays on one page.
+        need(14f + chartH + 14f + chartH + 14f + chartH + 28f + 14f + chartH + 14f + chartH + 12f)
+
+        // ── 1. Day of Week ───────────────────────────────────────────────
+        val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        val dowCounts = IntArray(7)
+        for (m in d.filteredMigraines) {
+            val dow = m.start.atZone(zone).toLocalDate().dayOfWeek.value
+            dowCounts[dow - 1]++
+        }
+        val dowTotal = dowCounts.sum()
+        if (dowTotal > 0) {
+            val maxD = dowCounts.max().coerceAtLeast(1)
+            cv?.drawText("Day of Week", M + 12f, y + 10f, tp(purple, 10f, b = true))
+            y += 14f
+            card(chartH) { cv2, l, t, r, b ->
+                val padL = l + 4f; val padR = r - 4f; val padT = t + 4f; val padB = b - 12f
+                val cw = padR - padL; val ch = padB - padT
+                val cellW = cw / 7f
+                val barW = cellW * 0.7f
+                for (i in 0 until 7) {
+                    val count = dowCounts[i]
+                    val isMax = count == maxD && count > 0
+                    val barColor = if (isMax) SS else purple
+                    val x = padL + i * cellW + (cellW - barW) / 2f
+                    val barH = (count.toFloat() / maxD) * (ch - 10f)
+                    val barTop = padB - maxOf(3f, barH)
+                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 3f, 3f, fp(barColor, 204))
+                    cv2.drawText("$count", x + barW / 2f, barTop - 2f, tp(barColor, 6.5f, true, Paint.Align.CENTER))
+                    cv2.drawText(dayNames[i], x + barW / 2f, padB + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
+                }
+            }
+        }
+
+        // ── 2. Weekly bars (filtered range) ──────────────────────────────
         val today = java.time.LocalDate.now(zone)
         val mondayOf: (java.time.LocalDate) -> java.time.LocalDate = { ld ->
             ld.minusDays(ld.dayOfWeek.value.toLong() - 1)
@@ -624,110 +580,142 @@ class ReportPdfGenerator(private val context: Context) {
         if (weekCounts.sum() >= 3) {
             val maxW = weekCounts.max().coerceAtLeast(1)
             val weekFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM")
-
-            need(20f)
             val title = "Weekly (${weekStarts.size} week${if (weekStarts.size == 1) "" else "s"})"
             cv?.drawText(title, M + 12f, y + 10f, tp(purple, 10f, b = true))
-            y += 16f
-
-            card(120f) { cv2, l, t, r, b ->
-                val padL = l + 4f; val padR = r - 4f; val padT = t + 6f; val padB = b - 14f
+            y += 14f
+            card(chartH) { cv2, l, t, r, b ->
+                val padL = l + 4f; val padR = r - 4f; val padT = t + 4f; val padB = b - 12f
                 val cw = padR - padL; val ch = padB - padT
                 val cellW = cw / weekCounts.size
                 val barW = cellW * 0.7f
                 for (i in weekCounts.indices) {
                     val count = weekCounts[i]
                     val x = padL + i * cellW + (cellW - barW) / 2f
-                    val barH = (count.toFloat() / maxW) * (ch - 12f)
+                    val barH = (count.toFloat() / maxW) * (ch - 10f)
                     val barTop = padB - maxOf(2f, barH)
                     val color = if (count == 0) Color.WHITE else purple
                     val alpha = if (count == 0) 25 else 178
                     cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 3f, 3f, fp(color, alpha))
                     if (count > 0) {
-                        cv2.drawText("$count", x + barW / 2f, barTop - 2f, tp(purple, 6.5f, true, Paint.Align.CENTER))
+                        cv2.drawText("$count", x + barW / 2f, barTop - 2f, tp(purple, 6f, true, Paint.Align.CENTER))
                     }
                     if (i % 2 == 0) {
-                        cv2.drawText(weekStarts[i].format(weekFmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6f, a = Paint.Align.CENTER))
+                        cv2.drawText(weekStarts[i].format(weekFmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 5.5f, a = Paint.Align.CENTER))
                     }
                 }
             }
         }
 
-        // Day of Week bars (with worst day highlight) — mirrors DayOfWeekChart
-        val dayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        val dowCounts = IntArray(7)
-        for (m in d.filteredMigraines) {
-            val dow = m.start.atZone(zone).toLocalDate().dayOfWeek.value
-            dowCounts[dow - 1]++
-        }
-        val dowTotal = dowCounts.sum()
-        if (dowTotal > 0) {
-            val maxD = dowCounts.max().coerceAtLeast(1)
+        // ── 3. Monthly Frequency ─────────────────────────────────────────
+        val months = byMonth.keys.toList()
+        val counts = months.map { (byMonth[it]?.size ?: 0) }
+        val maxCount = counts.max().coerceAtLeast(1)
+        val avgCount = counts.average()
+        val barCount = months.size.coerceAtMost(12)
+        val displayMonths = months.takeLast(barCount)
+        val displayCounts = counts.takeLast(barCount)
 
-            need(20f)
-            cv?.drawText("Day of Week", M + 12f, y + 10f, tp(purple, 10f, b = true))
-            y += 16f
+        cv?.drawText("Monthly Frequency", M + 12f, y + 10f, tp(blue, 10f, b = true))
+        y += 14f
 
-            card(120f) { cv2, l, t, r, b ->
-                val padL = l + 4f; val padR = r - 4f; val padT = t + 6f; val padB = b - 14f
-                val cw = padR - padL; val ch = padB - padT
-                val cellW = cw / 7f
-                val barW = cellW * 0.7f
-                for (i in 0 until 7) {
-                    val count = dowCounts[i]
-                    val isMax = count == maxD && count > 0
-                    val barColor = if (isMax) SS else purple
-                    val x = padL + i * cellW + (cellW - barW) / 2f
-                    val barH = (count.toFloat() / maxD) * (ch - 12f)
-                    val barTop = padB - maxOf(4f, barH)
-                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 4f, 4f, fp(barColor, 204))
-                    cv2.drawText("$count", x + barW / 2f, barTop - 3f, tp(barColor, 7f, true, Paint.Align.CENTER))
-                    cv2.drawText(dayNames[i], x + barW / 2f, padB + 10f, tp(SUBTLE, 7f, a = Paint.Align.CENTER))
+        val monthlyChartH = chartH
+        card(monthlyChartH + 28f) { cv2, l, t, r, _ ->
+            val padL = l + 30f; val padR = r - 12f; val padT = t + 8f; val padB = t + monthlyChartH + 8f
+            val cw = padR - padL; val ch = padB - padT
+            val barW = (cw / barCount) * 0.7f
+            val gap = (cw / barCount) * 0.3f
+
+            val avgY = padB - (avgCount.toFloat() / maxCount) * ch
+            val dashPaint = Paint().apply { color = SUBTLE; strokeWidth = 1f; style = Paint.Style.STROKE; pathEffect = DashPathEffect(floatArrayOf(4f, 3f), 0f) }
+            cv2.drawLine(padL, avgY, padR, avgY, dashPaint)
+            cv2.drawText("avg ${String.format("%.1f", avgCount)}", padR + 2f, avgY + 4f, tp(SUBTLE, 7f))
+
+            val fmt = java.time.format.DateTimeFormatter.ofPattern("MMM")
+            val fmtYear = java.time.format.DateTimeFormatter.ofPattern("yy")
+            for (i in displayCounts.indices) {
+                val x = padL + i * (barW + gap) + gap / 2f
+                val count = displayCounts[i]
+                val barH = (count.toFloat() / maxCount) * ch
+                val barTop = padB - barH
+                val barColor = if (count > avgCount * 1.5) Color.parseColor("#E57373")
+                    else if (count < avgCount * 0.5) Color.parseColor("#81C784")
+                    else blue
+                cv2.drawRoundRect(x, barTop, x + barW, padB, 3f, 3f, fp(barColor, 180))
+                if (count > 0) {
+                    cv2.drawText("$count", x + barW / 2f, barTop - 3f, tp(Color.WHITE, 7f, true, Paint.Align.CENTER))
+                }
+                cv2.drawText(displayMonths[i].format(fmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
+                if (i == 0 || displayMonths[i].year != displayMonths[i - 1].year) {
+                    cv2.drawText("'${displayMonths[i].format(fmtYear)}", x + barW / 2f, padB + 18f, tp(SUBTLE, 5.5f, a = Paint.Align.CENTER))
                 }
             }
+        }
 
-            val worstIdx = dowCounts.indices.maxByOrNull { dowCounts[it] } ?: 0
-            if (dowCounts[worstIdx] > 0) {
-                val pct = (dowCounts[worstIdx].toFloat() / dowTotal * 100f).toInt()
-                need(14f)
-                cv?.drawText("Most frequent: ${dayNames[worstIdx]} (${dowCounts[worstIdx]} migraines, $pct%)",
-                    PW / 2f, y + 9f, tp(BODY, 8f, a = Paint.Align.CENTER))
-                y += 12f
+        // ── 4. Monthly Duration (avg attack length per month, hours) ─────
+        val monthsWithDur: List<Triple<java.time.LocalDate, Float, Int>> = months.mapNotNull { monthStart ->
+            val items = byMonth[monthStart] ?: return@mapNotNull null
+            val durs = items.mapNotNull { m ->
+                val end = m.end ?: return@mapNotNull null
+                val h = java.time.Duration.between(m.start, end).toMinutes() / 60.0
+                if (h <= 0 || h >= 168) null else h
             }
+            if (durs.isEmpty()) null
+            else Triple(monthStart, durs.average().toFloat(), durs.size)
         }
-
-        // Severity Over Time (monthly avg, ≥3 months gate) — mirrors SeverityOverTimeChart
-        val monthsWithSev: List<Triple<java.time.LocalDate, Float, Int>> = months.mapNotNull { monthStart ->
-            val sevs = (byMonth[monthStart] ?: emptyList()).mapNotNull { it.severity }
-            if (sevs.isEmpty()) null
-            else Triple(monthStart, sevs.average().toFloat(), sevs.size)
-        }
-        if (monthsWithSev.size >= 3) {
-            val pink = Color.parseColor("#FF7BB0")
-            val sevFmt = java.time.format.DateTimeFormatter.ofPattern("MMM")
-
-            need(20f)
-            cv?.drawText("Average Severity", M + 12f, y + 10f, tp(pink, 10f, b = true))
-            y += 16f
-
-            card(120f) { cv2, l, t, r, b ->
-                val padL = l + 4f; val padR = r - 4f; val padT = t + 6f; val padB = b - 14f
+        if (monthsWithDur.isNotEmpty()) {
+            val durFmt = java.time.format.DateTimeFormatter.ofPattern("MMM")
+            val maxAvg = monthsWithDur.maxOf { it.second }.coerceAtLeast(1f)
+            cv?.drawText("Monthly Duration", M + 12f, y + 10f, tp(pink, 10f, b = true))
+            y += 14f
+            card(chartH) { cv2, l, t, r, b ->
+                val padL = l + 4f; val padR = r - 4f; val padT = t + 4f; val padB = b - 12f
                 val cw = padR - padL; val ch = padB - padT
-                val cellW = cw / monthsWithSev.size
+                val cellW = cw / monthsWithDur.size
                 val barW = minOf(cellW * 0.7f, 24f)
-                for ((i, entry) in monthsWithSev.withIndex()) {
+                for ((i, entry) in monthsWithDur.withIndex()) {
                     val (monthStart, avg, _) = entry
-                    val sevColor = when {
-                        avg >= 7f -> SS
-                        avg >= 4f -> SMO
-                        else -> SM
-                    }
                     val x = padL + i * cellW + (cellW - barW) / 2f
-                    val barH = (avg / 10f) * (ch - 14f)
-                    val barTop = padB - maxOf(4f, barH)
-                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 4f, 4f, fp(pink, 153))
-                    cv2.drawText(String.format("%.1f", avg), x + barW / 2f, barTop - 3f, tp(sevColor, 7f, true, Paint.Align.CENTER))
-                    cv2.drawText(monthStart.format(sevFmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
+                    val barH = (avg / maxAvg) * (ch - 12f)
+                    val barTop = padB - maxOf(3f, barH)
+                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 3f, 3f, fp(pink, 178))
+                    cv2.drawText(String.format("%.1fh", avg), x + barW / 2f, barTop - 2f, tp(pink, 6.5f, true, Paint.Align.CENTER))
+                    cv2.drawText(monthStart.format(durFmt), x + barW / 2f, padB + 10f, tp(SUBTLE, 6f, a = Paint.Align.CENTER))
+                }
+            }
+        }
+
+        // ── 5. Seasonal (NH meteorological buckets) ──────────────────────
+        val seasonalCounts = IntArray(4)
+        for (m in d.filteredMigraines) {
+            val month = m.start.atZone(zone).toLocalDate().monthValue
+            seasonalCounts[(month % 12) / 3]++
+        }
+        val totalSeason = seasonalCounts.sum()
+        if (totalSeason > 0) {
+            val seasonLabels = listOf("Winter", "Spring", "Summer", "Autumn")
+            val seasonColors = listOf(
+                Color.parseColor("#4FC3F7"), Color.parseColor("#81C784"),
+                Color.parseColor("#FFB74D"), Color.parseColor("#FF8A65"),
+            )
+            val maxSeason = seasonalCounts.max().coerceAtLeast(1)
+
+            cv?.drawText("Seasonal", M + 12f, y + 10f, tp(purple, 10f, b = true))
+            y += 14f
+            card(chartH) { cv2, l, t, r, b ->
+                val padL = l + 4f; val padR = r - 4f; val padT = t + 4f; val padB = b - 12f
+                val cw = padR - padL; val ch = padB - padT
+                val cellW = cw / 4f
+                val barW = cellW * 0.6f
+                for (i in 0 until 4) {
+                    val count = seasonalCounts[i]
+                    val isMax = count == maxSeason && count > 0
+                    val barColor = if (isMax) SS else seasonColors[i]
+                    val x = padL + i * cellW + (cellW - barW) / 2f
+                    val barH = (count.toFloat() / maxSeason) * (ch - 12f)
+                    val barTop = padB - maxOf(3f, barH)
+                    cv2.drawRoundRect(RectF(x, barTop, x + barW, padB), 3f, 3f, fp(barColor, 204))
+                    cv2.drawText("$count", x + barW / 2f, barTop - 2f, tp(Color.WHITE, 6.5f, true, Paint.Align.CENTER))
+                    cv2.drawText(seasonLabels[i], x + barW / 2f, padB + 10f, tp(SUBTLE, 6.5f, a = Paint.Align.CENTER))
                 }
             }
         }
@@ -852,8 +840,24 @@ class ReportPdfGenerator(private val context: Context) {
         )
         y += 18f
 
-        val sorted = d.treatments.sortedBy { it.pctChangeMmd ?: Double.POSITIVE_INFINITY }
+        // Filter regimens to those overlapping the report window (from filteredMigraines).
+        val zone = java.time.ZoneId.systemDefault()
+        val filteredTreatments: List<SupabaseDbService.TreatmentLeaderboardRow> =
+            if (d.filteredMigraines.isEmpty()) d.treatments
+            else {
+                val migDates = d.filteredMigraines.map { it.start.atZone(zone).toLocalDate() }
+                val winStart = migDates.min()
+                val winEnd = (migDates.max()).plusDays(1)
+                d.treatments.filter { r ->
+                    val s = runCatching { java.time.LocalDate.parse(r.startDate) }.getOrNull() ?: java.time.LocalDate.MIN
+                    val e = r.stopDate?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() } ?: java.time.LocalDate.MAX
+                    !s.isAfter(winEnd) && !e.isBefore(winStart)
+                }
+            }
+
+        val sorted = filteredTreatments.sortedBy { it.pctChangeMmd ?: Double.POSITIVE_INFINITY }
         val maxPct = maxOf(50.0, sorted.mapNotNull { it.pctChangeMmd }.map { Math.abs(it) }.maxOrNull() ?: 50.0)
+        val pink = Color.parseColor("#FF7BB0")
 
         for (row in sorted) {
             val narrative = d.treatmentNarratives[row.regimenId]
@@ -865,13 +869,14 @@ class ReportPdfGenerator(private val context: Context) {
             val periodEnd = row.stopDate ?: "active"
             val sub = listOfNotNull(row.kind, dose.ifBlank { null }, "${row.startDate} → $periodEnd").joinToString(" · ")
 
-            // Pre-wrap narrative so the card height fits exactly the lines
-            // we'll draw (was fixed at 78f, which clipped longer narratives).
             val narrativeLines: List<String> = if (narrative != null) {
                 val paint = tp(BODY, 8.5f)
                 wrapText(narrative.take(400), paint, PW - 2 * M - 8f).take(5)
             } else emptyList()
-            val cardH: Float = if (narrativeLines.isEmpty()) 34f else 40f + narrativeLines.size * 11f + 6f
+            val seLogs = (d.treatmentSideEffects[row.regimenId] ?: emptyList()).take(8)
+            val narrBlockH = if (narrativeLines.isEmpty()) 0f else narrativeLines.size * 11f + 6f
+            val seBlockH = if (seLogs.isEmpty()) 0f else 14f + seLogs.size * 12f + 4f
+            val cardH: Float = 40f + narrBlockH + seBlockH
             need(cardH + 8f)
 
             card(cardH) { c, l, t, r, _ ->
@@ -880,7 +885,6 @@ class ReportPdfGenerator(private val context: Context) {
                 c.drawText(sub, l + 4f, t + 14f, tp(SUBTLE, 7.5f))
                 c.drawText(bandLabel, l + 4f, t + 26f, tp(bandCol, 8f, true))
 
-                // mini bar
                 val barLeft  = l + 110f
                 val barRight = r - 60f
                 val trackW = (barRight - barLeft).coerceAtLeast(20f)
@@ -888,42 +892,27 @@ class ReportPdfGenerator(private val context: Context) {
                 c.drawRoundRect(RectF(barLeft, t + 24f, barLeft + trackW, t + 28f), 2f, 2f, fp(Color.WHITE, 30))
                 c.drawRoundRect(RectF(barLeft, t + 24f, barLeft + trackW * mag, t + 28f), 2f, 2f, fp(bandCol, 220))
 
+                var ly = t + 40f
                 if (narrativeLines.isNotEmpty()) {
                     val paint = tp(BODY, 8.5f)
-                    var ly = t + 40f
                     for (line in narrativeLines) {
                         c.drawText(line, l + 4f, ly, paint)
                         ly += 11f
                     }
+                    ly += 6f
                 }
-            }
-        }
-
-        // Side-effects roundup — one card per regimen so the rows stay
-        // bordered/grouped instead of flat list bleed (matches iOS).
-        val pink = Color.parseColor("#FF7BB0")
-        val withSE = sorted.filter { (d.treatmentSideEffects[it.regimenId]?.size ?: 0) > 0 }
-        if (withSE.isNotEmpty()) {
-            need(20f)
-            heading("Reported side effects", pink)
-            for (row in withSE) {
-                val logs = d.treatmentSideEffects[row.regimenId] ?: continue
-                if (logs.isEmpty()) continue
-                val visibleLogs = logs.take(8)
-                val cardH = 22f + visibleLogs.size * 14f + 8f
-                card(cardH) { c, l, t, r, _ ->
-                    c.drawText(prettyLabel(row.name), l + 4f, t + 2f, tp(Color.WHITE, 9f, true))
-                    var ly = t + 18f
-                    for (log in visibleLogs) {
+                if (seLogs.isNotEmpty()) {
+                    c.drawText("Side effects:", l + 4f, ly, tp(pink, 8f, true))
+                    ly += 12f
+                    for (log in seLogs) {
                         val pills = log.selectedSymptoms.map { prettyLabel(it) }.joinToString(", ")
                         val line = log.notes?.takeIf { it.isNotBlank() } ?: pills
                         c.drawText("• ${log.logDate}", l + 4f, ly, tp(SUBTLE, 7.5f))
-                        // Clamp to one wrapped line so long sentences don't bleed past the card.
                         val bodyX = l + 70f
                         val avail = (r - bodyX - 4f).coerceAtLeast(40f)
                         val truncated = wrapText(line, tp(BODY, 8f), avail).firstOrNull() ?: line
                         c.drawText(truncated, bodyX, ly, tp(BODY, 8f))
-                        ly += 14f
+                        ly += 12f
                     }
                 }
             }
@@ -1613,6 +1602,17 @@ class ReportPdfGenerator(private val context: Context) {
     }
 
     // ======= Metrics =======
+    private fun noiseBandArgb(v: Double): Int = when {
+        v >= 10.0 -> Color.parseColor("#EF5350")
+        v >= 8.0  -> Color.parseColor("#FFB74D")
+        v >= 6.0  -> Color.parseColor("#FFEB3B")
+        else      -> Color.parseColor("#81C784")
+    }
+
+    private fun isNoiseMetricKey(k: String): Boolean =
+        k == "noise" || k == "noise_avg" || k == "noise_high" || k == "noise_low"
+            || k == "mental:noise_avg" || k == "mental:noise_high" || k == "mental:noise_low"
+
     private fun drawMetrics(d: ReportData) {
         heading("Health Metrics", Color.parseColor("#4DD0E1"))
         val zone = ZoneId.systemDefault()
@@ -1717,14 +1717,24 @@ class ReportPdfGenerator(private val context: Context) {
                 }
 
                 // Sparkline using date-based X
-                val path = Path()
-                sorted.forEachIndexed { i, dv ->
-                    val x = dateX(dv.date); val py = valY(dv.value)
-                    if (i == 0) path.moveTo(x, py) else path.lineTo(x, py)
+                val isNoise = isNoiseMetricKey(series.key)
+                if (isNoise) {
+                    for (i in 0 until sorted.size - 1) {
+                        val a = sorted[i]; val b = sorted[i + 1]
+                        val avgV = (a.value + b.value) / 2.0
+                        c.drawLine(dateX(a.date), valY(a.value), dateX(b.date), valY(b.value), sp(noiseBandArgb(avgV), 1.5f))
+                    }
+                    sorted.forEach { dv -> c.drawCircle(dateX(dv.date), valY(dv.value).toFloat(), 1.5f, fp(noiseBandArgb(dv.value))) }
+                } else {
+                    val path = Path()
+                    sorted.forEachIndexed { i, dv ->
+                        val x = dateX(dv.date); val py = valY(dv.value)
+                        if (i == 0) path.moveTo(x, py) else path.lineTo(x, py)
+                    }
+                    c.drawPath(path, sp(argb, 1.5f))
+                    // Data points
+                    sorted.forEach { dv -> c.drawCircle(dateX(dv.date), valY(dv.value).toFloat(), 1.5f, fp(argb)) }
                 }
-                c.drawPath(path, sp(argb, 1.5f))
-                // Data points
-                sorted.forEach { dv -> c.drawCircle(dateX(dv.date), valY(dv.value).toFloat(), 1.5f, fp(argb)) }
 
                 // Avg line
                 val avg = sorted.map { it.value }.average()
@@ -1946,9 +1956,9 @@ class ReportPdfGenerator(private val context: Context) {
             card(30f) { c, l, t, r, _ ->
                 c.drawText(mg.start.atZone(ZoneId.systemDefault()).format(fmt), l, t + 10f, tp(BODY, 7.5f))
                 val sc = when { (mg.severity ?: 0) <= 3 -> SM; (mg.severity ?: 0) <= 6 -> SMO; else -> SS }
-                c.drawText(mg.severity?.toString() ?: "—", l + (r - l) * 0.40f, t + 10f, tp(sc, 8f, true))
+                c.drawText(mg.severity?.toString() ?: "-", l + (r - l) * 0.40f, t + 10f, tp(sc, 8f, true))
                 c.drawText(mg.end?.let { String.format("%.1fh", (it.toEpochMilli() - mg.start.toEpochMilli()) / 3600000.0) } ?: "ongoing", l + (r - l) * 0.48f, t + 10f, tp(BODY, 7.5f))
-                c.drawText(mg.label?.take(30) ?: "—", l + (r - l) * 0.65f, t + 10f, tp(BODY, 7f))
+                c.drawText(mg.label?.take(30) ?: "-", l + (r - l) * 0.65f, t + 10f, tp(BODY, 7f))
             }
         }
     }

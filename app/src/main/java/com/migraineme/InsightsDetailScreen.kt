@@ -461,7 +461,7 @@ private fun FilterCard(
                                     style = MaterialTheme.typography.bodySmall)
                             }
                         }
-                        Text("—", color = AppTheme.SubtleTextColor,
+                        Text("-", color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(top = 12.dp))
                         // To button
@@ -735,10 +735,10 @@ private fun DetailMigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "—"}/10",
+                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "-"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "—"}/10",
+                    Text("Severity: ${sel.severity ?: "-"}/10",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }

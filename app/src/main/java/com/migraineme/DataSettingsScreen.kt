@@ -227,7 +227,7 @@ fun DataSettingsScreen(
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     DStatColumn("Sections", "${sections.size}")
-                    DStatColumn("Sources", if (sourceCount > 0) "$sourceCount" else "—")
+                    DStatColumn("Sources", if (sourceCount > 0) "$sourceCount" else "-")
                     DStatColumn("Wearables", if (connectedWearables.any { it == WearableSource.WHOOP }) "1" else "0")
                 }
             }

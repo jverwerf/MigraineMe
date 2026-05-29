@@ -53,7 +53,9 @@ data class SleepGraphDay(
     val disturbances: Int?,
     val stagesDeep: Double?,
     val stagesRem: Double?,
-    val stagesLight: Double?
+    val stagesLight: Double?,
+    val fellAsleepHours: Double? = null,
+    val wokeUpHours: Double? = null
 )
 
 data class SleepGraphResult(
@@ -404,6 +406,8 @@ private fun getSleepDayValue(day: SleepGraphDay, metric: String): Float? {
         SleepCardConfig.METRIC_STAGES_DEEP -> day.stagesDeep?.toFloat()
         SleepCardConfig.METRIC_STAGES_REM -> day.stagesRem?.toFloat()
         SleepCardConfig.METRIC_STAGES_LIGHT -> day.stagesLight?.toFloat()
+        SleepCardConfig.METRIC_FELL_ASLEEP -> day.fellAsleepHours?.toFloat()
+        SleepCardConfig.METRIC_WOKE_UP -> day.wokeUpHours?.toFloat()
         else -> null
     }
 }
@@ -434,11 +438,16 @@ private suspend fun loadSleepGraphData(
         val efficiencies = try { metrics.fetchSleepEfficiencyDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
         val disturbances = try { metrics.fetchSleepDisturbancesDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
         val stages = try { metrics.fetchSleepStagesDaily(token, fetchLimit) } catch (_: Exception) { emptyList() }
+        val userId = SessionStore.readUserId(ctx)
+        val fellAsleep = if (userId != null) fetchTimeOfDayHours(token, userId, "fell_asleep_time_daily", fetchLimit, shiftPastMidnight = true) else emptyList()
+        val wokeUp = if (userId != null) fetchTimeOfDayHours(token, userId, "woke_up_time_daily", fetchLimit, shiftPastMidnight = false) else emptyList()
 
         val scoreMap = scores.associateBy { it.date }
         val effMap = efficiencies.associateBy { it.date }
         val distMap = disturbances.associateBy { it.date }
         val stagesMap = stages.associateBy { it.date }
+        val fellAsleepMap = fellAsleep.toMap()
+        val wokeUpMap = wokeUp.toMap()
 
         // Build all days in the window, filter to date range
         val startStr = startDate.toString()
@@ -459,7 +468,9 @@ private suspend fun loadSleepGraphData(
                     disturbances = dist?.value_count,
                     stagesDeep = stg?.value_sws_hm,
                     stagesRem = stg?.value_rem_hm,
-                    stagesLight = stg?.value_light_hm
+                    stagesLight = stg?.value_light_hm,
+                    fellAsleepHours = fellAsleepMap[dur.date],
+                    wokeUpHours = wokeUpMap[dur.date]
                 )
             }.sortedBy { it.date }
 
@@ -478,5 +489,39 @@ private suspend fun loadSleepGraphData(
     } catch (_: Exception) {
         SleepGraphResult(emptyList(), emptyMap(), emptyMap())
     }
+}
+
+/**
+ * Fetch a time-of-day daily table (`value_at` column = ISO timestamp) and convert
+ * to hours-from-midnight. For fell-asleep entries logged after midnight (0-12h)
+ * we shift by +24 so the line stays continuous with same-evening bed-times.
+ */
+private fun fetchTimeOfDayHours(
+    token: String,
+    userId: String,
+    table: String,
+    limit: Int,
+    shiftPastMidnight: Boolean
+): List<Pair<String, Double>> {
+    return try {
+        val client = okhttp3.OkHttpClient()
+        val url = "${BuildConfig.SUPABASE_URL}/rest/v1/$table?user_id=eq.$userId&select=date,value_at&order=date.desc&limit=$limit"
+        val req = okhttp3.Request.Builder().url(url).get()
+            .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            .addHeader("Authorization", "Bearer $token").build()
+        val resp = client.newCall(req).execute()
+        val body = resp.body?.string() ?: return emptyList()
+        if (!resp.isSuccessful) return emptyList()
+        val arr = org.json.JSONArray(body)
+        (0 until arr.length()).mapNotNull { i ->
+            val obj = arr.getJSONObject(i)
+            val date = obj.optString("date", "")
+            val ts = obj.optString("value_at", "")
+            if (date.isBlank() || ts.isBlank()) return@mapNotNull null
+            val hours = TimeOfDay.toHoursOfDay(ts) ?: return@mapNotNull null
+            val shifted = if (shiftPastMidnight && hours < 12) hours + 24 else hours
+            date to shifted
+        }
+    } catch (_: Exception) { emptyList() }
 }
 

@@ -112,17 +112,17 @@ fun MonitorRiskScreen(
     // Resolve any namespaced key to display value
     fun resolveValue(key: String): String {
         val parts = key.split(":", limit = 2)
-        if (parts.size != 2) return "\u2014"
+        if (parts.size != 2) return "-"
         val (cat, metric) = parts
         return when (cat) {
-            "sleep" -> sleepSummary?.let { sleepMetricDisplayValue(it, metric) } ?: "\u2014"
-            "weather" -> weatherSummary?.let { getWeatherMetricValue(it, metric) } ?: "\u2014"
-            "physical" -> physicalSummary?.let { physicalMetricDisplayValue(it, metric) } ?: "\u2014"
-            "mental" -> mentalSummary?.displayValue(metric) ?: "\u2014"
+            "sleep" -> sleepSummary?.let { sleepMetricDisplayValue(it, metric) } ?: "-"
+            "weather" -> weatherSummary?.let { getWeatherMetricValue(it, metric) } ?: "-"
+            "physical" -> physicalSummary?.let { physicalMetricDisplayValue(it, metric) } ?: "-"
+            "mental" -> mentalSummary?.displayValue(metric) ?: "-"
             "nutrition" -> {
-                if (nutritionItems.isEmpty()) return "\u2014"
+                if (nutritionItems.isEmpty()) return "-"
                 val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
-                if (total <= 0) return "\u2014"
+                if (total <= 0) return "-"
                 val registryKey = MetricRegistry.nutritionRegistryKey(metric)
                 val unit = MetricRegistry.unit(registryKey)
                 val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure")
@@ -130,7 +130,7 @@ fun MonitorRiskScreen(
                     when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" }
                 } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
             }
-            else -> "\u2014"
+            else -> "-"
         }
     }
 
@@ -311,30 +311,26 @@ internal fun parseForecastFromJson(raw: String?): List<Int> {
 }
 
 internal fun sleepMetricDisplayValue(s: SleepSummary, metric: String): String = when (metric) {
-    SleepCardConfig.METRIC_DURATION -> "%.1fh".format(s.durationHours)
-    SleepCardConfig.METRIC_SCORE -> "${s.sleepScore}"
-    SleepCardConfig.METRIC_EFFICIENCY -> "${s.efficiency}%"
-    SleepCardConfig.METRIC_FELL_ASLEEP -> s.fellAsleepDisplay ?: "\u2014"
-    SleepCardConfig.METRIC_WOKE_UP -> s.wokeUpDisplay ?: "\u2014"
-    SleepCardConfig.METRIC_DISTURBANCES -> s.disturbances?.toString() ?: "\u2014"
-    SleepCardConfig.METRIC_STAGES_DEEP -> s.stagesDeep?.let { "%.1fh".format(it) } ?: "\u2014"
-    SleepCardConfig.METRIC_STAGES_REM -> s.stagesRem?.let { "%.1fh".format(it) } ?: "\u2014"
-    SleepCardConfig.METRIC_STAGES_LIGHT -> s.stagesLight?.let { "%.1fh".format(it) } ?: "\u2014"
-    else -> "\u2014"
+    SleepCardConfig.METRIC_DURATION -> if (s.durationHours > 0.0) "%.1fh".format(s.durationHours) else "-"
+    SleepCardConfig.METRIC_SCORE -> s.sleepScore.takeIf { it != 0 }?.let { "$it" } ?: "-"
+    SleepCardConfig.METRIC_EFFICIENCY -> s.efficiency.takeIf { it != 0 }?.let { "$it%" } ?: "-"
+    SleepCardConfig.METRIC_FELL_ASLEEP -> s.fellAsleepDisplay ?: "-"
+    SleepCardConfig.METRIC_WOKE_UP -> s.wokeUpDisplay ?: "-"
+    SleepCardConfig.METRIC_DISTURBANCES -> s.disturbances?.takeIf { it != 0 }?.toString() ?: "-"
+    SleepCardConfig.METRIC_STAGES_DEEP -> s.stagesDeep?.takeIf { it != 0.0 }?.let { "%.1fh".format(it) } ?: "-"
+    SleepCardConfig.METRIC_STAGES_REM -> s.stagesRem?.takeIf { it != 0.0 }?.let { "%.1fh".format(it) } ?: "-"
+    SleepCardConfig.METRIC_STAGES_LIGHT -> s.stagesLight?.takeIf { it != 0.0 }?.let { "%.1fh".format(it) } ?: "-"
+    else -> "-"
 }
 
 internal fun physicalMetricDisplayValue(p: PhysicalSummary, metric: String): String = when (metric) {
-    PhysicalCardConfig.METRIC_RECOVERY -> p.recoveryScore?.let { "${it.toInt()}%" } ?: "\u2014"
-    PhysicalCardConfig.METRIC_HRV -> p.hrv?.let { "${it.toInt()} ms" } ?: "\u2014"
-    PhysicalCardConfig.METRIC_RESTING_HR -> p.restingHr?.let { "${it.toInt()} bpm" } ?: "\u2014"
-    PhysicalCardConfig.METRIC_SPO2 -> p.spo2?.let { "${it.toInt()}%" } ?: "\u2014"
-    PhysicalCardConfig.METRIC_SKIN_TEMP -> p.skinTemp?.let { "%.1f\u00B0".format(it) } ?: "\u2014"
-    PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> p.respiratoryRate?.let { "%.1f".format(it) } ?: "\u2014"
-    PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> p.highHrZones?.let { "%.0f min".format(it) } ?: "\u2014"
-    PhysicalCardConfig.METRIC_STEPS -> p.steps?.toString() ?: "\u2014"
-    PhysicalCardConfig.METRIC_WEIGHT -> p.weight?.let { "%.1f kg".format(it) } ?: "\u2014"
-    PhysicalCardConfig.METRIC_BODY_FAT -> p.bodyFat?.let { "%.1f%%".format(it) } ?: "\u2014"
-    PhysicalCardConfig.METRIC_BLOOD_PRESSURE -> if (p.bpSystolic != null) "${p.bpSystolic}/${p.bpDiastolic}" else "\u2014"
-    PhysicalCardConfig.METRIC_BLOOD_GLUCOSE -> p.bloodGlucose?.let { "%.1f".format(it) } ?: "\u2014"
-    else -> "\u2014"
+    PhysicalCardConfig.METRIC_RECOVERY -> p.recoveryScore?.takeIf { it != 0.0 }?.let { "${it.toInt()}%" } ?: "-"
+    PhysicalCardConfig.METRIC_HRV -> p.hrv?.takeIf { it != 0.0 }?.let { "${it.toInt()} ms" } ?: "-"
+    PhysicalCardConfig.METRIC_RESTING_HR -> p.restingHr?.takeIf { it != 0.0 }?.let { "${it.toInt()} bpm" } ?: "-"
+    PhysicalCardConfig.METRIC_SPO2 -> p.spo2?.takeIf { it != 0.0 }?.let { "${it.toInt()}%" } ?: "-"
+    PhysicalCardConfig.METRIC_SKIN_TEMP -> p.skinTemp?.let { "%.1f\u00B0".format(it) } ?: "-"
+    PhysicalCardConfig.METRIC_RESPIRATORY_RATE -> p.respiratoryRate?.takeIf { it != 0.0 }?.let { "%.1f".format(it) } ?: "-"
+    PhysicalCardConfig.METRIC_HIGH_HR_ZONES -> p.highHrZones?.takeIf { it != 0.0 }?.let { "%.0f min".format(it) } ?: "-"
+    PhysicalCardConfig.METRIC_STEPS -> p.steps?.takeIf { it != 0 }?.toString() ?: "-"
+    else -> "-"
 }
