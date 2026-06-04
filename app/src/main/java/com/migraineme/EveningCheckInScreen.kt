@@ -550,6 +550,17 @@ fun EveningCheckInScreen(
                             "medicine" -> selectedMedicines.removeAll { it.label == label }
                             "relief" -> selectedReliefs.removeAll { it.label == label }
                         }
+                        // The match pills are rendered from aiParseResult, so drop
+                        // the item there too or the pill stays on screen after X.
+                        aiParseResult = aiParseResult?.let { r ->
+                            when (category) {
+                                "trigger" -> r.copy(triggers = r.triggers.filterNot { it.label == label })
+                                "prodrome" -> r.copy(prodromes = r.prodromes.filterNot { it.label == label })
+                                "medicine" -> r.copy(medicines = r.medicines.filterNot { it.label == label })
+                                "relief" -> r.copy(reliefs = r.reliefs.filterNot { it.label == label })
+                                else -> r
+                            }
+                        }
                     }
                 ) { runAiParse() }
                 CheckInPage.Triggers -> FavouritesPage("Any triggers today?", if (aiTriggerLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything that happened", triggerItems, selectedTriggers.map { it.label } + calendarLabelsForType("trigger"), Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
@@ -913,6 +924,12 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
             if (!spoken.isNullOrBlank()) {
                 val updated = if (noteText.isBlank()) spoken else "$noteText, $spoken"
                 onNoteChange(updated)
+                // Auto-parse spoken input so matches are highlighted and added to
+                // review without a separate "Find matches" tap. onNoteChange resets
+                // the previous parse state; re-parsing the full note here is
+                // idempotent (only non-duplicate items are added) so earlier voice
+                // items aren't lost when a second thing is spoken.
+                onParse()
             }
         }
     }

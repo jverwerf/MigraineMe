@@ -1,0 +1,39 @@
+Changes made on 2026-04-01 that apply to both Android and iOS
+=============================================================
+
+1. GARMIN CLIENT ID (app_config table)
+   - Updated GARMIN_CLIENT_ID from 658ce252-ad52-4276-9e6c-ba38f30eb547
+     to 6a20023c-9b52-47ca-a936-32483d36646d
+   - Updated in: local.properties (Android), app_config Supabase table (both)
+   - iOS: Check AppConfig.garminClientID or remote config equivalent
+
+2. GARMIN DEVICE NAME "null" FIX
+   - Android: GarminDeviceNameProvider.kt - formatLabel() and getLabel()
+     now treat literal string "null" as blank, showing "Garmin" instead of "Garmin null"
+   - iOS: DataSettingsScreen.swift - garminDeviceLabel() same fix applied
+
+3. DUPLICATE GARMIN TOKEN EXCHANGE FIX
+   - Android: ThirdPartyConnectionsScreen.kt - added garminExchangeInProgress guard
+     to prevent concurrent calls to tryCompleteGarminIfCallbackPresent()
+   - iOS: ConnectionsScreen.swift - added oauthExchangeInProgress Set<String> guard
+     to prevent concurrent connectOAuth() calls for the same provider
+
+4. HEALTHKIT/HEALTH CONNECT OVERWRITING GARMIN SLEEP SOURCE
+   - Bug: When Health Connect (Android) / HealthKit (iOS) permissions are granted,
+     enableDefaultMetrics(for: "healthkit") unconditionally overwrites sleep
+     preferred_source to "health_connect", even when Garmin is already set
+   - Android: ThirdPartyConnectionsScreen.kt - enableHealthConnectWearablesIfNeeded()
+     now checks if a wearable source is already set before overwriting
+   - iOS: ConnectionsScreen.swift - new enableDefaultHealthKitMetrics() wraps the
+     call and restores wearable sleep source if one was already set
+
+5. GARMIN WEBHOOK DEVICE NAME SAVE (server-side, both platforms)
+   - garmin-webhook/index.ts - added trySaveDeviceName() helper that extracts
+     deviceName from Garmin push payloads and saves to garmin_tokens.device_name
+   - Called from the dailies processing section
+   - Needs: supabase functions deploy garmin-webhook
+
+6. DB FIXES (already applied)
+   - app_config: GARMIN_CLIENT_ID updated
+   - metric_settings: sleep_duration_daily, fell_asleep_time_daily, woke_up_time_daily
+     restored to preferred_source="garmin" for user 26cb11cd
