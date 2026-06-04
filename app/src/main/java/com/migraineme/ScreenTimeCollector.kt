@@ -56,23 +56,23 @@ object ScreenTimeCollector {
 
             Log.d(TAG, "Querying screen time for $date ($startMillis to $endMillis)")
 
-            // Query usage stats for the day
-            val usageStatsList = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
+            // queryAndAggregateUsageStats merges the multiple raw buckets per package
+            // that queryUsageStats returns, so each app is counted once.
+            val aggregated = usageStatsManager.queryAndAggregateUsageStats(
                 startMillis,
                 endMillis
             )
 
-            if (usageStatsList.isNullOrEmpty()) {
+            if (aggregated.isNullOrEmpty()) {
                 Log.d(TAG, "No usage stats found for $date")
                 return ScreenTimeData(date, 0, 0)
             }
 
-            // Sum up total foreground time across all apps
+            // Sum up total foreground time across all apps (one entry per package)
             var totalTimeInForeground = 0L
             var appCount = 0
 
-            for (usageStats in usageStatsList) {
+            for ((_, usageStats) in aggregated) {
                 val timeInForeground = usageStats.totalTimeInForeground
                 if (timeInForeground > 0) {
                     totalTimeInForeground += timeInForeground
@@ -124,14 +124,14 @@ object ScreenTimeCollector {
 
             Log.d(TAG, "Querying late-night screen time for $date (22:00-06:00): $startMillis to $endMillis")
 
-            // INTERVAL_BEST gives us the finest granularity available
-            val usageStatsList = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_BEST,
+            // queryAndAggregateUsageStats merges the multiple raw buckets per package
+            // into one entry each, aggregated strictly between start/end millis.
+            val aggregated = usageStatsManager.queryAndAggregateUsageStats(
                 startMillis,
                 endMillis
             )
 
-            if (usageStatsList.isNullOrEmpty()) {
+            if (aggregated.isNullOrEmpty()) {
                 Log.d(TAG, "No late-night usage stats for $date")
                 return ScreenTimeData(date, 0, 0)
             }
@@ -139,7 +139,7 @@ object ScreenTimeCollector {
             var totalTimeInForeground = 0L
             var appCount = 0
 
-            for (usageStats in usageStatsList) {
+            for ((_, usageStats) in aggregated) {
                 val timeInForeground = usageStats.totalTimeInForeground
                 if (timeInForeground > 0) {
                     totalTimeInForeground += timeInForeground
