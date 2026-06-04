@@ -231,10 +231,13 @@ fun OnboardingScreen(
                         }
                     }
                 }
-                // Seed everything (including risk_score_live directly)
-                launch(Dispatchers.IO) {
+                // Seed everything (including risk_score_live directly).
+                // Track the Job on DemoDataSeeder so clearDemoData joins it
+                // before deleting (prevents late inserts from surviving).
+                val seedJob = launch(Dispatchers.IO) {
                     DemoDataSeeder.seedDemoData(appCtx, logVm)
                 }
+                DemoDataSeeder.setCurrentSeedJob(seedJob)
             }
         }
     }

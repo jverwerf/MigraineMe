@@ -38,6 +38,12 @@ object DemoDataSeeder {
         _progress.value = SeedProgress()
     }
 
+    /** Handle to the currently-running seed coroutine. clearDemoData joins
+     *  this before deleting, so late inserts from a still-running seedDemoData
+     *  can't survive the clear. */
+    @Volatile private var currentSeedJob: kotlinx.coroutines.Job? = null
+    fun setCurrentSeedJob(job: kotlinx.coroutines.Job?) { currentSeedJob = job }
+
     private const val PREFS = "demo_seeder"
     private fun isDemoCleared(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("cleared", false)
     private fun markCleared(c: Context) { c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("cleared", true).apply() }
@@ -908,6 +914,14 @@ object DemoDataSeeder {
         val base = BuildConfig.SUPABASE_URL.trimEnd('/'); val key = BuildConfig.SUPABASE_ANON_KEY
         val userId = SessionStore.readUserId(ctx) ?: JwtUtils.extractUserIdFromAccessToken(token)
         if (userId.isNullOrBlank()) { Log.e(TAG, "═══ clearDemoData SKIPPED — no userId ═══"); return }
+        // Wait for any in-flight seed coroutine before deleting; otherwise
+        // late inserts from seedDemoData survive the clear (real-world bug
+        // hit by fast users tapping through the tour).
+        currentSeedJob?.let {
+            Log.d(TAG, "clearDemoData: joining in-flight seed job before delete")
+            try { it.join() } catch (e: Exception) { Log.w(TAG, "seed-job join error: ${e.message}") }
+        }
+        currentSeedJob = null
         Log.d(TAG, "═══ clearDemoData START (userId=$userId) ═══")
 
         // All tables the seeder writes to — delete everything for this user

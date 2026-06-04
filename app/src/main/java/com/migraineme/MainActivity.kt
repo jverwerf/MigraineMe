@@ -578,6 +578,19 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 // This is the primary sync method - always works when app is open
                 // FCM-triggered syncs are secondary (only work when app is in foreground)
                 HealthConnectSyncManager.triggerSyncIfEnabled(appCtx)
+
+                // Foreground safety net: catches users whose onboarding finished
+                // but who keep the app suspended for days (cold-launch sweep in
+                // LaunchedEffect(token) won't re-fire for them).
+                scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    try {
+                        if (OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
+                            DemoDataSeeder.purgeOrphanDemoRows(appCtx)
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("MainActivity", "purgeOrphanDemoRows (resume) failed: ${e.message}")
+                    }
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(obs)
