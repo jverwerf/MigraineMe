@@ -14,3 +14,10 @@ captures/
 
 # macOS exFAT metadata
 **/._*
+
+# Local Claude Code settings
+.claude/
+
+# Build artifacts
+*.aab
+*.apk
