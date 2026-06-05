@@ -44,6 +44,19 @@ object DemoDataSeeder {
     @Volatile private var currentSeedJob: kotlinx.coroutines.Job? = null
     fun setCurrentSeedJob(job: kotlinx.coroutines.Job?) { currentSeedJob = job }
 
+    /**
+     * Stop any in-flight seeding without joining/clearing. Used when the user
+     * taps "Skip" on the loading page — they keep whatever partial demo data
+     * has already been written, and we stop adding more.
+     */
+    fun cancelSeedJob() {
+        currentSeedJob?.let {
+            Log.d(TAG, "cancelSeedJob: cancelling in-flight seed job")
+            it.cancel()
+        }
+        currentSeedJob = null
+    }
+
     private const val PREFS = "demo_seeder"
     private fun isDemoCleared(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("cleared", false)
     private fun markCleared(c: Context) { c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("cleared", true).apply() }

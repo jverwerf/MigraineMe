@@ -2204,6 +2204,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     launchSingleTop = true
                                 }
                             },
+                            onNavigateOnboardingWithSeed = {
+                                OnboardingMode.noSeed = false
+                                nav.navigate(Routes.ONBOARDING) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
                             onLoggedOut = {
                                 nav.navigate(Routes.LOGIN) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
@@ -2310,6 +2317,16 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     launchSingleTop = true
                                 }
                                 TourManager.startSetup()
+                            },
+                            onStartDataSettingsNoSeed = {
+                                // No-seed: skip seeding + demo tour, jump straight to the
+                                // Data Settings coach step → AI Setup. (setup phase last step)
+                                onboardingTransitioning.value = true
+                                nav.navigate(Routes.DATA) {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                                TourManager.startSetupAtDataSettings()
                             },
                             onTourSkipped = {
                                 nav.navigate("${Routes.ONBOARDING}/setup") {

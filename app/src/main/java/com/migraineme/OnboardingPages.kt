@@ -2,6 +2,7 @@ package com.migraineme
 
 import androidx.compose.animation.core.*
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -127,6 +128,77 @@ fun WelcomePage() {
             FeatureBullet(Icons.Outlined.Description, "Doctor-ready PDF in one tap")
             FeatureBullet(Icons.Outlined.Watch, "Apple Health, WHOOP, Oura, Polar, Garmin")
         }
+
+        Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+fun ChooseStartPage(onTakeTour: () -> Unit, onSetUpNow: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.weight(1f))
+
+        Text(
+            "How would you like to start?",
+            color = Color.White,
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "You can always rerun this later from your Profile.",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(Modifier.height(28.dp))
+
+        // ── Take the Tour (primary) ──
+        Button(
+            onClick = onTakeTour,
+            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth().height(52.dp)
+        ) {
+            Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Take the Tour", fontWeight = FontWeight.SemiBold)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "See the app in action with example data first. We'll prepare it now — this takes up to a minute.",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        // ── Set Up Profile Now (secondary) ──
+        OutlinedButton(
+            onClick = onSetUpNow,
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.6f)),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+            modifier = Modifier.fillMaxWidth().height(52.dp)
+        ) {
+            Icon(Icons.Outlined.Tune, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Set Up Profile Now", fontWeight = FontWeight.SemiBold)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Skip the demo and go straight to choosing which data to track.",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
 
         Spacer(Modifier.weight(1f))
     }

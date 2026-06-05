@@ -60,6 +60,7 @@ fun ProfileScreen(
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
     onNavigateOnboardingNoSeed: () -> Unit = {},
+    onNavigateOnboardingWithSeed: () -> Unit = {},
     onLoggedOut: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()
@@ -88,6 +89,7 @@ fun ProfileScreen(
 
     // ── Debug state ──
     var isResettingOnboardingNoSeed by remember { mutableStateOf(false) }
+    var isResettingOnboardingWithSeed by remember { mutableStateOf(false) }
 
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
@@ -437,10 +439,42 @@ fun ProfileScreen(
             ) {
                 Icon(Icons.Outlined.RestartAlt, null, tint = Color(0xFF4FC3F7), modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Restart the welcome setup", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text("Redo Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Re-run setup & recalibrate your profile", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
                 if (isResettingOnboardingNoSeed) {
+                    CircularProgressIndicator(Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
+                } else {
+                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+
+        // ── Debug: Rerun Onboarding (with seed) ──
+        BaseCard {
+            Row(
+                Modifier.fillMaxWidth().clickable(enabled = !isResettingOnboardingWithSeed) {
+                    val userId = auth.userId
+                    if (userId.isNullOrBlank()) return@clickable
+                    isResettingOnboardingWithSeed = true
+                    scope.launch {
+                        try {
+                            withContext(Dispatchers.IO) { OnboardingPrefs.resetInSupabase(context) }
+                            onNavigateOnboardingWithSeed()
+                        } finally {
+                            isResettingOnboardingWithSeed = false
+                        }
+                    }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(Icons.Outlined.RestartAlt, null, tint = Color(0xFFBA68C8), modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Run Full Onboarding (test)", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Temporary — walk the whole flow with demo data", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                if (isResettingOnboardingWithSeed) {
                     CircularProgressIndicator(Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
                 } else {
                     Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))

@@ -108,7 +108,7 @@ object OnboardingPrefs {
     }
 }
 
-private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BACKGROUND_LOCATION_PERMISSION, BATTERY_OPTIMIZATION }
+private enum class PageId { WELCOME, CHOOSE_START, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BACKGROUND_LOCATION_PERMISSION, BATTERY_OPTIMIZATION }
 
 @Composable
 fun OnboardingScreen(
@@ -118,6 +118,7 @@ fun OnboardingScreen(
     onComplete: () -> Unit,
     onStartTour: () -> Unit = {},
     onStartSetup: () -> Unit = {},
+    onStartDataSettingsNoSeed: () -> Unit = {},
     onTourSkipped: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
@@ -175,6 +176,7 @@ fun OnboardingScreen(
     var hasNavigatedToTour by rememberSaveable { mutableStateOf(false) }
     var howItWorksRevealed by rememberSaveable { mutableStateOf(false) }
     var trialStarted by rememberSaveable { mutableStateOf(false) }
+    var showSkipDataDialog by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     // ── Grant the 14-day onboarding trial once when entering onboarding ──
@@ -283,6 +285,16 @@ fun OnboardingScreen(
                     ) { idx ->
                         when (pages[idx.coerceIn(0, pages.size - 1)]) {
                             PageId.WELCOME -> WelcomePage()
+                            PageId.CHOOSE_START -> ChooseStartPage(
+                                onTakeTour = {
+                                    OnboardingMode.noSeed = false
+                                    currentIdx = pages.indexOf(PageId.HOW_IT_WORKS)
+                                },
+                                onSetUpNow = {
+                                    OnboardingMode.noSeed = true
+                                    proceedWithTour { onStartDataSettingsNoSeed() }
+                                }
+                            )
                             PageId.HOW_IT_WORKS -> Box(Modifier.fillMaxSize()) // placeholder, never visible
                             PageId.LOADING_DATA -> LoadingDataPage(
                                 progress = seedProgress.fraction,
@@ -303,8 +315,8 @@ fun OnboardingScreen(
             }
 
             // ── Bottom buttons ──
-            if (currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BACKGROUND_LOCATION_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
-                // Permission pages handle their own buttons
+            if (currentPage == PageId.CHOOSE_START || currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BACKGROUND_LOCATION_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
+                // These pages handle their own buttons
             } else if (currentPage == PageId.WELCOME || currentPage == PageId.HOW_IT_WORKS) {
                 Column(
                     Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
@@ -324,8 +336,18 @@ fun OnboardingScreen(
                             Text("Skip", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
                         }
                     } else {
+                        // No-seed onboarding skips the demo tour (it would showcase demo
+                        // insights that don't exist) and goes straight to Data Settings.
+                        val noSeed = OnboardingMode.noSeed
                         Button(
-                            onClick = { currentIdx = pages.indexOf(PageId.LOADING_DATA) },
+                            onClick = {
+                                // proceedWithTour marks onboarding complete in Supabase, then
+                                // navigates — matching the seeded path (which marks complete on
+                                // entering the tour). Without it the no-seed user would be sent
+                                // back to onboarding on next launch.
+                                if (noSeed) proceedWithTour { onStartDataSettingsNoSeed() }
+                                else currentIdx = pages.indexOf(PageId.LOADING_DATA)
+                            },
                             enabled = howItWorksRevealed,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AppTheme.AccentPink,
@@ -334,9 +356,17 @@ fun OnboardingScreen(
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth().height(52.dp)
                         ) {
-                            Text("Take the Tour", fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
+                            Text(if (noSeed) "Set Up My Data" else "Take the Tour", fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                         }
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            if (noSeed) "We'll take you straight to your data settings to choose what to track."
+                            else "We'll prepare your example data first — this takes up to a minute.",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             } else Row(
@@ -347,7 +377,7 @@ fun OnboardingScreen(
                 // Left
                 when (currentPage) {
                     PageId.LOADING_DATA -> {
-                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
+                        TextButton(onClick = { showSkipDataDialog = true }) {
                             Text("Skip", color = AppTheme.SubtleTextColor)
                         }
                     }
@@ -363,6 +393,7 @@ fun OnboardingScreen(
                 when (currentPage) {
                     PageId.HOW_IT_WORKS -> {}
                     PageId.WELCOME -> {}
+                    PageId.CHOOSE_START -> {}
                     PageId.LOCATION_PERMISSION -> {}
                     PageId.NOTIFICATION_PERMISSION -> {}
                     PageId.MICROPHONE_PERMISSION -> {}
@@ -403,6 +434,42 @@ fun OnboardingScreen(
                 }
             }
         }
+    }
+
+    // ── Skip-while-loading confirmation ──
+    if (showSkipDataDialog) {
+        AlertDialog(
+            onDismissRequest = { showSkipDataDialog = false },
+            containerColor = Color(0xFF2A003D),
+            shape = RoundedCornerShape(20.dp),
+            title = { Text("Skip loading?", color = Color.White, fontWeight = FontWeight.SemiBold) },
+            text = {
+                Text(
+                    "If you skip now, only limited demo data will be shown. The app will work perfectly fine — you'll just see fewer example insights in the tour.",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSkipDataDialog = false
+                    // Stop seeding, keep whatever partial demo data exists, and
+                    // advance to the next page (the tour) right away.
+                    DemoDataSeeder.cancelSeedJob()
+                    if (!hasNavigatedToTour) {
+                        hasNavigatedToTour = true
+                        proceedWithTour { onStartTour() }
+                    }
+                }) {
+                    Text("Skip anyway", color = AppTheme.AccentPink, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSkipDataDialog = false }) {
+                    Text("Keep loading", color = AppTheme.SubtleTextColor)
+                }
+            }
+        )
     }
 }
 
@@ -515,7 +582,7 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
                 ) {
                     Text(
                         if (isComplete) "The app is ready for the tour."
-                        else "Setting up your profile in the background. After the tour we'll ask a few questions and connect your wearables. Just once.",
+                        else "We're preparing your example data — this usually takes up to a minute. After the tour we'll ask a few quick questions and connect your wearables. Just once.",
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center
