@@ -2198,11 +2198,15 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
                             onNavigateOnboardingNoSeed = {
+                                // "Redo Onboarding": jump straight to the Data Settings
+                                // coach step → AI Setup, skipping welcome/tour entirely.
                                 OnboardingMode.noSeed = true
-                                nav.navigate(Routes.ONBOARDING) {
+                                onboardingTransitioning.value = true
+                                nav.navigate(Routes.DATA) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
                                 }
+                                TourManager.startSetupAtDataSettings()
                             },
                             onLoggedOut = {
                                 nav.navigate(Routes.LOGIN) {
