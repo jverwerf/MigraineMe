@@ -2204,13 +2204,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     launchSingleTop = true
                                 }
                             },
-                            onNavigateOnboardingWithSeed = {
-                                OnboardingMode.noSeed = false
-                                nav.navigate(Routes.ONBOARDING) {
-                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
-                                    launchSingleTop = true
-                                }
-                            },
                             onLoggedOut = {
                                 nav.navigate(Routes.LOGIN) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
