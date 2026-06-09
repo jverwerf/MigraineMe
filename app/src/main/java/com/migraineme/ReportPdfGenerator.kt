@@ -163,11 +163,13 @@ class ReportPdfGenerator(private val context: Context) {
             if (data.filteredMigraines.size >= 3) { Log.d(TAG, "generate: drawFrequencyTrends"); newPage(); drawFrequencyTrends(data) }
 
             // 6. What Happened (patterns + correlations)
-            val significant = data.correlationStats.filter { it.isSignificant() }
+            // Engine-gated rows carry a mode (comparison/prevalence); show them directly, falling
+            // back to isSignificant for older untagged rows.
+            val significant = data.correlationStats.filter { it.hasGateMode || it.isSignificant() }
             val treatments = data.correlationStats.filter { it.factorType == "treatment" && it.liftRatio > 1.2f }
             val treatmentInteractions = data.correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
             val interactions = significant.filter { it.factorType == "interaction" }
-            val singles = significant.filter { it.factorType != "interaction" && it.factorType != "treatment" && it.factorType != "treatment_interaction" }
+            val singles = significant.filter { it.factorType != "interaction" && it.factorType != "treatment" && it.factorType != "treatment_interaction" && it.symptomOutcome == null }
             if (interactions.isNotEmpty() || singles.isNotEmpty() || data.symptomOutcomes.isNotEmpty()) {
                 Log.d(TAG, "generate: drawCorrelations (${significant.size} significant)")
                 newPage(); drawCorrelations(singles, interactions)
@@ -769,7 +771,8 @@ class ReportPdfGenerator(private val context: Context) {
                     val namePaint = tp(Color.WHITE, 9f, true)
                     val name = ellipsize(stat.factorName, namePaint, maxNameW)
                     cv2.drawText(name, l + 4f, t + 2f, namePaint)
-                    cv2.drawText("${String.format("%.1f", stat.liftRatio)}×", r - 34f, t + 2f, tp(purple, 9f, true, Paint.Align.RIGHT))
+                    val singleBadge = if (stat.mode == "prevalence") "${stat.attackHits}/${stat.sampleSize}" else "${String.format("%.1f", stat.liftRatio)}×"
+                    cv2.drawText(singleBadge, r - 34f, t + 2f, tp(purple, 9f, true, Paint.Align.RIGHT))
                     val dotX = r - 2f
                     for (j in 2 downTo 0) {
                         val col = if (j < filled) purple else purpleDim
@@ -808,7 +811,8 @@ class ReportPdfGenerator(private val context: Context) {
                     cv2.drawText(ellipsize(stat.factorName, namePaint, maxW), l + 4f, t + 2f, namePaint)
                     cv2.drawText("+", l + 4f, t + 14f, tp(red, 8f))
                     cv2.drawText(ellipsize(stat.factorB ?: "?", namePaint, maxW), l + 14f, t + 14f, namePaint)
-                    cv2.drawText("${String.format("%.1f", stat.liftRatio)}×", r - 34f, t + 8f, tp(red, 9f, true, Paint.Align.RIGHT))
+                    val comboBadge = if (stat.mode == "prevalence") "${stat.attackHits}/${stat.sampleSize}" else "${String.format("%.1f", stat.liftRatio)}×"
+                    cv2.drawText(comboBadge, r - 34f, t + 8f, tp(red, 9f, true, Paint.Align.RIGHT))
                     val dotX = r - 2f
                     for (j in 2 downTo 0) {
                         val col = if (j < filled) purple else purpleDim

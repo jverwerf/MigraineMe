@@ -827,11 +827,11 @@ fun InsightsReportScreen(
             // were silently dropped before — same account showed different
             // top items between iOS and Android because of this filter.
             val previewTriggers = remember(correlationStats) {
-                correlationStats.filter { it.isSignificant() && (it.factorType == "trigger" || it.factorType == "metric") }
+                correlationStats.filter { (it.hasGateMode || it.isSignificant()) && it.symptomOutcome == null && (it.factorType == "trigger" || it.factorType == "metric") }
                     .sortedByDescending { it.liftRatio }.take(3)
             }
             val previewInteractions = remember(correlationStats) {
-                correlationStats.filter { it.isSignificant() && it.factorType == "interaction" }
+                correlationStats.filter { (it.hasGateMode || it.isSignificant()) && it.factorType == "interaction" }
                     .sortedByDescending { it.liftRatio }.take(3)
             }
             if (previewTriggers.isNotEmpty() || previewInteractions.isNotEmpty()) {

@@ -287,12 +287,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
         if (severities.isEmpty()) 5f else severities.average().toFloat()
     }
 
-    // Split correlations by type (all dynamic, no hardcoded labels)
+    // Split correlations by type (all dynamic, no hardcoded labels).
+    // Engine-gated rows carry a mode (comparison/prevalence) and are shown directly; fall back to
+    // isSignificant for older untagged rows.
     val significantCorrelations = remember(correlations) {
-        correlations.filter { it.isSignificant() }
+        correlations.filter { it.hasGateMode || it.isSignificant() }
     }
     val triggerCorrelations = remember(significantCorrelations) {
-        significantCorrelations.filter { it.factorType == "trigger" }
+        significantCorrelations.filter { it.factorType == "trigger" && it.symptomOutcome == null }
             .sortedByDescending { it.liftRatio }
     }
     val metricCorrelations = remember(significantCorrelations) {
@@ -1020,6 +1022,26 @@ internal fun LiftBadge(lift: Float) {
     }
 }
 
+/** Right-side badge for a correlation row. ALWAYS shows the attack count + %; comparison-mode
+ *  rows additionally show the "X× more likely" multiplier. (The "how often vs raises risk"
+ *  explanation lives in the card's (i) info sheet, not on every row.) */
+@Composable
+internal fun PatternBadge(stat: EdgeFunctionsService.CorrelationStat) {
+    val pct = stat.pctMigraineWindows.toInt()
+    val countLabel = "in ${stat.attackHits} of ${stat.sampleSize} ($pct%)"
+    if (stat.mode == "prevalence") {
+        Text(countLabel, color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
+    } else {
+        Column(horizontalAlignment = Alignment.End) {
+            LiftBadge(stat.liftRatio)
+            Spacer(Modifier.height(2.dp))
+            Text(countLabel, color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp))
+        }
+    }
+}
+
 /** Lag indicator */
 @Composable
 internal fun LagChip(lagDays: Int) {
@@ -1118,7 +1140,7 @@ internal fun CorrelationRow(stat: EdgeFunctionsService.CorrelationStat) {
                     }
                 }
             }
-            LiftBadge(stat.liftRatio)
+            PatternBadge(stat)
         }
         Spacer(Modifier.height(4.dp))
         Text(
@@ -1191,7 +1213,7 @@ private fun CorrelationRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
                 }
             }
         }
-        LiftBadge(stat.liftRatio)
+        PatternBadge(stat)
     }
 }
 
@@ -1673,7 +1695,7 @@ internal fun ThresholdDetailCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            LiftBadge(stat.liftRatio)
+                            PatternBadge(stat)
                             ConfidenceDots(stat.pValue)
                         }
 
@@ -2642,7 +2664,7 @@ object AccuracyInfoCopy {
 }
 
 object WhatHappenedInfoCopy {
-    const val text = "The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most often around your attacks. The ones at the top are those whose appearance makes an attack noticeably more likely in the day or two that follows.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up. Useful for knowing what to expect from a given attack.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list with how strong each finding is.\n\nFindings sharpen up as you log more data; sparse logging means weaker findings, consistent logging means the patterns get cleaner."
+    const val text = "The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"X× more likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list."
 }
 
 object WhatWorkedInfoCopy {

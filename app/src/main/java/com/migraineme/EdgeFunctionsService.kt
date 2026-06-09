@@ -1873,19 +1873,44 @@ class EdgeFunctionsService {
             }
         }
 
+        /** Which number to show, set by the engine's 3-step gate.
+         *  "comparison" -> real normal-day comparison -> show "X× more likely".
+         *  "prevalence" -> no fair comparison -> show "in X of attacks", no multiplier.
+         *  Defaults to "comparison" for rows written before mode tagging. */
+        val mode: String get() {
+            val v = lagDetails?.get("mode")
+            return when (v) {
+                is kotlinx.serialization.json.JsonPrimitive -> v.content
+                else -> "comparison"
+            }
+        }
+
+        /** Number of attacks this factor appeared in (for prevalence display). */
+        val attackHits: Int get() = Math.round(pctMigraineWindows / 100f * sampleSize)
+
+        /** True when the engine's 3-step gate tagged this row (new engine) — show it directly
+         *  instead of re-filtering by p. */
+        val hasGateMode: Boolean get() = lagDetails?.get("mode") is kotlinx.serialization.json.JsonPrimitive
+
         /** Human-readable description of this finding */
         fun toInsightText(): String = when (factorType) {
             "trigger" -> {
+                if (mode == "prevalence") {
+                    // No fair normal-day comparison — honest count, no multiplier.
+                    "${factorName} appeared in $attackHits of your $sampleSize attacks. " +
+                        "Not enough day-to-day data yet to say how much it changes your risk."
+                } else {
                 val lagText = if (bestLagDays == 0) "on the same day"
                     else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
                 val base = "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your migraines ($lagText). " +
-                    "That's ${String.format("%.1f", liftRatio)}x more than normal days."
+                    "That's ${String.format("%.1f", liftRatio)}x more likely than on your normal days."
                 val parts = mutableListOf(base)
                 val durStr = avgDurationHrs?.let { "avg ${String.format("%.0f", it)}hrs" }
                 val sevStr = avgSeverity?.let { "severity ${String.format("%.0f", it)}/10" }
                 val extras = listOfNotNull(durStr, sevStr)
                 if (extras.isNotEmpty()) parts.add("These migraines: ${extras.joinToString(", ")}.")
                 parts.joinToString(" ")
+                }
             }
             "metric" -> {
                 if (suggestedThreshold != null && currentThreshold != null &&
@@ -1912,9 +1937,14 @@ class EdgeFunctionsService {
                 }
             }
             "interaction" -> {
-                "${factorName} + ${factorB ?: "?"} together preceded " +
-                    "${pctMigraineWindows.toInt()}% of your migraines — " +
-                    "${String.format("%.1f", liftRatio)}x more likely than either alone."
+                if (mode == "prevalence") {
+                    "${factorName} + ${factorB ?: "?"} appeared together in $attackHits of your $sampleSize attacks. " +
+                        "Not enough day-to-day data yet to say how much they change your risk."
+                } else {
+                    "${factorName} + ${factorB ?: "?"} together preceded " +
+                        "${pctMigraineWindows.toInt()}% of your migraines — " +
+                        "${String.format("%.1f", liftRatio)}x more likely than either alone."
+                }
             }
             "treatment_interaction" -> {
                 val parts = mutableListOf("${factorName} + ${factorB ?: "?"} used together:")
