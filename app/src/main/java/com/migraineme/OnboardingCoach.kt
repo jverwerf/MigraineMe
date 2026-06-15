@@ -201,10 +201,19 @@ object TourManager {
         _state.update { TourState(active = true, phase = CoachPhase.TOUR, stepIndex = 0) }
     }
 
-    fun startSetup() {
+    fun startSetup(startIndex: Int = 0) {
         SpotlightState.clear()
-        _state.update { TourState(active = true, phase = CoachPhase.SETUP, stepIndex = 0) }
+        _state.update {
+            TourState(active = true, phase = CoachPhase.SETUP, stepIndex = startIndex.coerceIn(0, setupSteps.lastIndex))
+        }
     }
+
+    /**
+     * No-seed onboarding jumps straight to the final "Configure Data Collection"
+     * step, skipping the Connect Health / Connect Wearable steps. From there the
+     * existing flow ends the phase → onSetupFinished → AI Setup.
+     */
+    fun startSetupAtDataSettings() = startSetup(setupSteps.lastIndex)
 
     fun nextStep(): String? {
         val steps = currentSteps()
@@ -458,6 +467,9 @@ fun CoachOverlay(
                         // Setup wearable step keeps a fixed shorter card so the wearables below
                         // (WHOOP / Oura / Polar / Garmin) stay visible. Body text scrolls inside.
                         val isWearableStep = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 1
+                        // Data step overlays the data list and asks the user to scroll it —
+                        // keep the card translucent so the toggles behind stay visible.
+                        val isDataStepCard = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 2
                         val maxCardHeight = LocalConfiguration.current.screenHeightDp.dp * 0.4f
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -466,7 +478,7 @@ fun CoachOverlay(
                             // ── Card body with Back (bottom-left) + Next (bottom-right) overlapping ──
                             Box(modifier = Modifier.fillMaxWidth().padding(bottom = 28.dp)) {
                             Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A2E)),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E0A2E).copy(alpha = if (isDataStepCard) 0.8f else 1f)),
                                 shape = RoundedCornerShape(18.dp),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                                 modifier = Modifier.fillMaxWidth()

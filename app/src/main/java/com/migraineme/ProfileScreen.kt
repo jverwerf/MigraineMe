@@ -86,8 +86,6 @@ fun ProfileScreen(
     var deleteBusy by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
 
-    // ── Debug state ──
-    var isResettingOnboardingNoSeed by remember { mutableStateOf(false) }
 
     // ── AI Setup Profile state ──
     var aiProfile by remember { mutableStateOf<JsonObject?>(null) }
@@ -416,35 +414,19 @@ fun ProfileScreen(
             }
         }
 
-        // ── Debug: Rerun Onboarding ──
+        // ── Redo Onboarding → straight to Data Settings + recalibration ──
         BaseCard {
             Row(
-                Modifier.fillMaxWidth().clickable(enabled = !isResettingOnboardingNoSeed) {
-                    val userId = auth.userId
-                    if (userId.isNullOrBlank()) return@clickable
-                    isResettingOnboardingNoSeed = true
-                    scope.launch {
-                        try {
-                            withContext(Dispatchers.IO) { OnboardingPrefs.resetInSupabase(context) }
-                            onNavigateOnboardingNoSeed()
-                        } finally {
-                            isResettingOnboardingNoSeed = false
-                        }
-                    }
-                },
+                Modifier.fillMaxWidth().clickable { onNavigateOnboardingNoSeed() },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(Icons.Outlined.RestartAlt, null, tint = Color(0xFF4FC3F7), modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Rerun Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Restart the welcome setup", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text("Redo Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Review your data settings & recalibrate your profile", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
-                if (isResettingOnboardingNoSeed) {
-                    CircularProgressIndicator(Modifier.size(16.dp), color = AppTheme.SubtleTextColor, strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
-                }
+                Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
             }
         }
 
