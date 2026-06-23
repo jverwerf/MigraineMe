@@ -9,6 +9,9 @@ class MigraineMeApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
+        // Hydrate display-units prefs (°C/°F, m/ft) from storage before any
+        // screen or formatter reads them. See UnitsPrefs.
+        UnitsPrefs.init(this)
     }
 
     override val workManagerConfiguration: Configuration

@@ -31,6 +31,8 @@ fun InsightsWeatherPanel(
 ) {
     val ctx = LocalContext.current
     val state by vm.state.collectAsState()
+    // Observe units so the temp column recomposes when the preference flips.
+    val tempUnitPref by UnitsPrefs.tempUnit.collectAsState()
 
     val permLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -130,7 +132,7 @@ private fun getLastKnownLocationPreferGps(ctx: Context): Location? {
 private fun HeaderRow() {
     Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp)) {
         Text("Day", Modifier.weight(1.2f), style = MaterialTheme.typography.labelMedium)
-        Text("Temp °C", Modifier.weight(0.8f), style = MaterialTheme.typography.labelMedium)
+        Text("Temp ${UnitsPrefs.tempLabel()}", Modifier.weight(0.8f), style = MaterialTheme.typography.labelMedium)
         Text("Pressure hPa", Modifier.weight(1.0f), style = MaterialTheme.typography.labelMedium)
         Text("Humidity %", Modifier.weight(0.8f), style = MaterialTheme.typography.labelMedium)
     }
@@ -140,7 +142,7 @@ private fun HeaderRow() {
 private fun DataRow(day: String, temp: Double?, pressure: Double?, humidity: Double?) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Text(day, Modifier.weight(1.2f), style = MaterialTheme.typography.bodySmall)
-        Text(temp?.let { String.format("%.1f", it) } ?: "-", Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
+        Text(temp?.let { String.format("%.1f", UnitsPrefs.displayTemp(it)) } ?: "-", Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
         Text(pressure?.let { String.format("%.0f", it) } ?: "-", Modifier.weight(1.0f), style = MaterialTheme.typography.bodySmall)
         Text(humidity?.let { String.format("%.0f", it) } ?: "-", Modifier.weight(0.8f), style = MaterialTheme.typography.bodySmall)
     }

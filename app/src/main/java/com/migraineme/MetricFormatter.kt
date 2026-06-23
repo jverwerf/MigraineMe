@@ -42,8 +42,12 @@ object MetricFormatter {
         // Minutes
         unit == "min" -> "${value.toInt()} min"
 
-        // Temperature
-        unit == "°C" -> "%.1f°C".format(value)
+        // Temperature — honours the display-units preference (canonical is °C).
+        // Skin temperature is a deviation and never reaches this formatter; only
+        // absolute weather temps carry unit "°C" here. See UnitsPrefs.
+        unit == "°C" ->
+            if (UnitsPrefs.isImperialTemp()) "%.1f°F".format(UnitsPrefs.cToF(value))
+            else "%.1f°C".format(value)
 
         // Pressure
         unit == "hPa" -> "%.0f hPa".format(value)
@@ -58,8 +62,10 @@ object MetricFormatter {
         // Speed
         unit == "m/s" -> "%.1f m/s".format(value)
 
-        // Distance / altitude
-        unit == "m" -> "%.0f m".format(value)
+        // Distance / altitude — honours the display-units preference (canonical is m).
+        unit == "m" ->
+            if (UnitsPrefs.isImperialAlt()) "%.0f ft".format(UnitsPrefs.mToFt(value))
+            else "%.0f m".format(value)
 
         // Decibels
         unit == "dB" -> "%.0f dB".format(value)
@@ -92,7 +98,10 @@ object MetricFormatter {
             "%d:%02d".format(h, m)
         }
         unit == "hPa" -> "%.0f".format(value)
-        unit in listOf("m", "mg", "g", "mcg", "dB") -> "%.0f".format(value)
+        // Temperature / altitude axis labels follow the display-units preference.
+        unit == "°C" -> "%.0f".format(if (UnitsPrefs.isImperialTemp()) UnitsPrefs.cToF(value.toDouble()) else value.toDouble())
+        unit == "m" -> "%.0f".format(if (UnitsPrefs.isImperialAlt()) UnitsPrefs.mToFt(value.toDouble()) else value.toDouble())
+        unit in listOf("mg", "g", "mcg", "dB") -> "%.0f".format(value)
         unit.isBlank() && value >= 1000 -> "%,.0f".format(value)
         unit.isBlank() -> "%.0f".format(value)
         else -> "%.0f".format(value)

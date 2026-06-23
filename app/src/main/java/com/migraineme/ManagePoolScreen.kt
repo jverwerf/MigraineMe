@@ -859,12 +859,42 @@ private fun PoolItemRow(
                                     }
                                 }
                             } else {
-                                var textValue by remember(currentThreshold) {
-                                    mutableStateOf(currentThreshold?.let { formatThresholdForDisplay(it, item.unit) } ?: "")
+                                // Temperature / altitude triggers carry a convertible unit. The
+                                // threshold is STORED in canonical metric (°C / m); here we let the
+                                // user view + enter it in their preferred display unit, with an inline
+                                // toggle. The toggle drives the app-wide units preference, so flipping
+                                // it here also converts the weather card, graphs and history. See UnitsPrefs.
+                                val tempUnit by UnitsPrefs.tempUnit.collectAsState()
+                                val altUnit by UnitsPrefs.altUnit.collectAsState()
+                                val isTemp = item.unit == "°C"
+                                val isAlt = item.unit == "m"
+                                val imperial = when {
+                                    isTemp -> tempUnit == TempUnit.F
+                                    isAlt -> altUnit == AltUnit.FT
+                                    else -> false
+                                }
+                                fun toDisplay(v: Double): Double = when {
+                                    isTemp && imperial -> UnitsPrefs.cToF(v)
+                                    isAlt && imperial -> UnitsPrefs.mToFt(v)
+                                    else -> v
+                                }
+                                fun fromDisplay(v: Double): Double = when {
+                                    isTemp && imperial -> UnitsPrefs.fToC(v)
+                                    isAlt && imperial -> UnitsPrefs.ftToM(v)
+                                    else -> v
+                                }
+                                // Remount the field when the unit flips so the converted value shows.
+                                val fieldKey = when {
+                                    isTemp -> if (imperial) "F" else "C"
+                                    isAlt -> if (imperial) "ft" else "m"
+                                    else -> item.unit ?: ""
+                                }
+                                var textValue by remember(currentThreshold, fieldKey) {
+                                    mutableStateOf(currentThreshold?.let { formatThresholdForDisplay(toDisplay(it), item.unit) } ?: "")
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                     OutlinedTextField(
-                                        value = textValue, onValueChange = { newText -> textValue = newText; newText.toDoubleOrNull()?.let { config.onThresholdChange(item.id, it) } },
+                                        value = textValue, onValueChange = { newText -> textValue = newText; newText.toDoubleOrNull()?.let { config.onThresholdChange(item.id, fromDisplay(it)) } },
                                         singleLine = true,
                                         modifier = Modifier.width(80.dp),
                                         textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White, textAlign = TextAlign.End),
@@ -874,13 +904,59 @@ private fun PoolItemRow(
                                             cursorColor = config.iconColor
                                         )
                                     )
-                                    Text(when (item.unit) { "hours" -> "h"; "%" -> "%"; "count" -> ""; "time" -> ""; else -> item.unit ?: "" },
-                                        color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha), style = MaterialTheme.typography.labelSmall)
+                                    when {
+                                        isTemp -> ThresholdUnitToggle(
+                                            options = listOf("°C" to (tempUnit == TempUnit.C), "°F" to (tempUnit == TempUnit.F)),
+                                            accent = config.iconColor,
+                                            onSelect = { idx -> UnitsPrefs.setTempUnit(if (idx == 0) TempUnit.C else TempUnit.F) }
+                                        )
+                                        isAlt -> ThresholdUnitToggle(
+                                            options = listOf("m" to (altUnit == AltUnit.M), "ft" to (altUnit == AltUnit.FT)),
+                                            accent = config.iconColor,
+                                            onSelect = { idx -> UnitsPrefs.setAltUnit(if (idx == 0) AltUnit.M else AltUnit.FT) }
+                                        )
+                                        else -> Text(when (item.unit) { "hours" -> "h"; "%" -> "%"; "count" -> ""; "time" -> ""; else -> item.unit ?: "" },
+                                            color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha), style = MaterialTheme.typography.labelSmall)
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** Inline [°C][°F] / [m][ft] segmented toggle shown beside a convertible
+ *  trigger threshold. Tapping an option drives the app-wide units preference. */
+@Composable
+private fun ThresholdUnitToggle(
+    options: List<Pair<String, Boolean>>,
+    accent: Color,
+    onSelect: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .padding(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        options.forEachIndexed { idx, (label, active) ->
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(if (active) accent.copy(alpha = 0.9f) else Color.Transparent)
+                    .clickable { onSelect(idx) }
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    label,
+                    color = if (active) Color(0xFF06343B) else AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                )
             }
         }
     }

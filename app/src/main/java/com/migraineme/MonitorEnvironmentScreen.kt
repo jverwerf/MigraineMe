@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,11 @@ fun MonitorEnvironmentScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
+
+    // Observe display-units prefs so temperature/altitude (formatted via
+    // MetricFormatter below) recompose the instant the preference flips.
+    val tempUnitPref by UnitsPrefs.tempUnit.collectAsState()
+    val altUnitPref by UnitsPrefs.altUnit.collectAsState()
 
     val weatherService = remember { WeatherHistoryService(context) }
 

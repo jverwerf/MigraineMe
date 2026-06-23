@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -124,7 +125,8 @@ private suspend fun fetchWeatherEntriesForDate(
         for (row in rows) {
             val src = row.source ?: "api"
             row.tempMean?.let {
-                entries.add(WeatherDataEntry("user_weather_daily", "Temperature", String.format("%.1f", it), "°C", src))
+                // Temperature honours the display-units preference; storage stays °C.
+                entries.add(WeatherDataEntry("user_weather_daily", "Temperature", String.format("%.1f", UnitsPrefs.displayTemp(it)), UnitsPrefs.tempLabel(), src))
             }
             row.pressureMean?.let {
                 entries.add(WeatherDataEntry("user_weather_daily", "Pressure", String.format("%.0f", it), "hPa", src))
@@ -161,10 +163,10 @@ private suspend fun fetchWeatherEntriesForDate(
             val body = locResp.body<List<Map<String, Double?>>>()
             val row = body.firstOrNull()
             row?.get("altitude_max_m")?.let {
-                entries.add(WeatherDataEntry("user_location_daily", "Altitude", String.format("%.0f", it), "m", "device"))
+                entries.add(WeatherDataEntry("user_location_daily", "Altitude", String.format("%.0f", UnitsPrefs.displayAlt(it)), UnitsPrefs.altLabel(), "device"))
             }
             row?.get("altitude_change_m")?.let {
-                entries.add(WeatherDataEntry("user_location_daily", "Altitude Change", String.format("%.0f", it), "m", "device"))
+                entries.add(WeatherDataEntry("user_location_daily", "Altitude Change", String.format("%.0f", UnitsPrefs.displayAlt(it)), UnitsPrefs.altLabel(), "device"))
             }
         }
     } catch (e: Exception) {
@@ -256,7 +258,10 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
         }
     }
 
-    LaunchedEffect(selectedDateStr) { loadEntries() }
+    // Reload (and re-convert) when the date OR a display-units preference changes.
+    val tempUnitPref by UnitsPrefs.tempUnit.collectAsState()
+    val altUnitPref by UnitsPrefs.altUnit.collectAsState()
+    LaunchedEffect(selectedDateStr, tempUnitPref, altUnitPref) { loadEntries() }
 
     // Edit dialog — weather is a single row so we edit all fields at once
     if (showEditDialog) {
@@ -265,7 +270,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
             title = { Text("Edit Environment Data", color = AppTheme.TitleColor) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    WeatherEditField("Temperature (°C)", editTemp) { editTemp = it }
+                    WeatherEditField("Temperature (${UnitsPrefs.tempLabel()})", editTemp) { editTemp = it }
                     WeatherEditField("Pressure (hPa)", editPressure) { editPressure = it }
                     WeatherEditField("Humidity (%)", editHumidity) { editHumidity = it }
                     WeatherEditField("Wind Speed (m/s)", editWind) { editWind = it }
@@ -300,7 +305,9 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     scope.launch {
                         val token = SessionStore.readAccessToken(context) ?: return@launch
                         val fields = mutableMapOf<String, Any>()
-                        editTemp.toDoubleOrNull()?.let { fields["temp_c_mean"] = it }
+                        // The field is entered in the display unit (°F when Imperial);
+                        // storage is always °C, so convert back before upserting.
+                        editTemp.toDoubleOrNull()?.let { fields["temp_c_mean"] = if (UnitsPrefs.isImperialTemp()) UnitsPrefs.fToC(it) else it }
                         editPressure.toDoubleOrNull()?.let { fields["pressure_hpa_mean"] = it }
                         editHumidity.toDoubleOrNull()?.let { fields["humidity_pct_mean"] = it }
                         editWind.toDoubleOrNull()?.let { fields["wind_speed_mps_mean"] = it }

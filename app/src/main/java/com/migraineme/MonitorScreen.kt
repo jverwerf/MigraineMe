@@ -530,13 +530,18 @@ private fun EnvironmentCard(
             Text("No weather data", color = AppTheme.SubtleTextColor)
         } else {
             val weather = weatherSummary
+            // Observe units so the card recomposes when the preference flips.
+            val tempUnit by UnitsPrefs.tempUnit.collectAsState()
+            val altUnit by UnitsPrefs.altUnit.collectAsState()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
                     Text(
-                        "${weather.temperature}°C",
+                        if (UnitsPrefs.isImperialTemp())
+                            "${UnitsPrefs.cToF(weather.temperature.toDouble()).toInt()}°F"
+                        else "${weather.temperature}°C",
                         color = Color.White,
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                     )
@@ -547,7 +552,7 @@ private fun EnvironmentCard(
                     displayMetrics.take(3).forEachIndexed { index, metric ->
                         val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
                         val value = getWeatherMetricValue(weather, metric)
-                        val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
+                        val unit = weatherDisplayUnit(metric)
                         Text(
                             "$label: $value$unit",
                             color = slotColors.getOrElse(index) { slotColors.last() },
@@ -562,16 +567,26 @@ private fun EnvironmentCard(
 
 internal fun getWeatherMetricValue(weather: WeatherSummary, metric: String): String {
     return when (metric) {
-        WeatherCardConfig.METRIC_TEMPERATURE -> if (weather.temperature != 0) weather.temperature.toString() else "-"
+        // Temperature / altitude honour the display-units preference (canonical
+        // storage is °C / m). See UnitsPrefs.
+        WeatherCardConfig.METRIC_TEMPERATURE -> if (weather.temperature != 0)
+            (if (UnitsPrefs.isImperialTemp()) UnitsPrefs.cToF(weather.temperature.toDouble()).toInt() else weather.temperature).toString() else "-"
         WeatherCardConfig.METRIC_PRESSURE -> if (weather.pressure != 0) weather.pressure.toString() else "-"
         WeatherCardConfig.METRIC_HUMIDITY -> if (weather.humidity != 0) weather.humidity.toString() else "-"
         WeatherCardConfig.METRIC_WIND_SPEED -> if (weather.windSpeed != 0.0) String.format("%.1f", weather.windSpeed) else "-"
         WeatherCardConfig.METRIC_UV_INDEX -> if (weather.uvIndex != 0) weather.uvIndex.toString() else "-"
         WeatherCardConfig.METRIC_THUNDERSTORM -> if (weather.isThunderstormDay) "Yes" else "No"
-        WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM?.takeIf { it != 0.0 }?.let { String.format("%.0f", it) } ?: "-"
-        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM?.takeIf { it != 0.0 }?.let { String.format("%.0f", it) } ?: "-"
+        WeatherCardConfig.METRIC_ALTITUDE -> weather.altitudeMaxM?.takeIf { it != 0.0 }?.let { String.format("%.0f", UnitsPrefs.displayAlt(it)) } ?: "-"
+        WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> weather.altitudeChangeM?.takeIf { it != 0.0 }?.let { String.format("%.0f", UnitsPrefs.displayAlt(it)) } ?: "-"
         else -> "-"
     }
+}
+
+/** Weather metric unit label, flipped for temperature/altitude per the display-units preference. */
+internal fun weatherDisplayUnit(metric: String): String = when (metric) {
+    WeatherCardConfig.METRIC_TEMPERATURE -> UnitsPrefs.tempLabel()
+    WeatherCardConfig.METRIC_ALTITUDE, WeatherCardConfig.METRIC_ALTITUDE_CHANGE -> UnitsPrefs.altLabel()
+    else -> WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
 }
 
 @Composable
