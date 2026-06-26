@@ -451,7 +451,7 @@ fun MonitorNutritionScreen(
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                "We can only classify foods if your nutrition app writes per-item entries to Health Connect (with a food name). Apps that only send daily totals — like Cronometer — can't be classified automatically. Log trigger foods via the barcode/search above to get classification.",
+                                "We can only classify foods if your nutrition app writes per-item entries to Health Connect (with a food name). Apps that only send daily totals can't be classified automatically. Log trigger foods via the barcode/search above to get classification.",
                                 color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -549,6 +549,7 @@ fun MonitorNutritionScreen(
                         Text("✕", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.titleMedium, modifier = Modifier.clickable { searchResults = emptyList() })
                     }
                     Spacer(Modifier.height(8.dp))
+                    FoodRiskLegend()
                     searchResults.forEach { food ->
                         FoodSearchResultItem(
                             food = food,

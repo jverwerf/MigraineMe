@@ -1,19 +1,29 @@
 package com.migraineme
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -178,4 +188,76 @@ fun HistamineRiskBadge(color: Color, level: String) {
         Spacer(Modifier.width(1.dp))
         RiskBar(color, level)
     }
+}
+
+/**
+ * Legend shown above food search results: explains the compound icons
+ * (tyramine, alcohol, gluten, histamine) and what the bar heights mean.
+ */
+@Composable
+fun FoodRiskLegend() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(AppTheme.AccentPurple.copy(alpha = 0.07f))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            "What the icons mean",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            LegendCompound("Tyramine") { CheeseIcon(AppTheme.BodyTextColor, 12.dp) }
+            LegendCompound("Alcohol") { WineGlassIcon(AppTheme.BodyTextColor, 12.dp) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            LegendCompound("Gluten") { WheatIcon(AppTheme.BodyTextColor, 12.dp) }
+            LegendCompound("Histamine") { FlaskIcon(AppTheme.BodyTextColor, 12.dp) }
+        }
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Level", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            LegendLevel("low", "Low")
+            LegendLevel("medium", "Medium")
+            LegendLevel("high", "High")
+        }
+        Text(
+            "A taller, warmer bar means more of that compound in this food.",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
+}
+
+@Composable
+private fun LegendCompound(name: String, icon: @Composable () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        icon()
+        Text(name, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun LegendLevel(level: String, label: String) {
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        RiskBar(riskLevelColor(level), level, 11.dp)
+        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+/** Colour by severity level, matching iOS: green = low, amber = medium, red = high. */
+fun riskLevelColor(level: String): Color = when (level) {
+    "high" -> Color(0xFFE57373)
+    "medium" -> Color(0xFFFFB74D)
+    "low" -> Color(0xFF81C784)
+    else -> Color.Unspecified
 }

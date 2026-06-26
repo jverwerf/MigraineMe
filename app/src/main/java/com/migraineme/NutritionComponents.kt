@@ -67,22 +67,12 @@ fun FoodSearchResultItem(
                 }
                 // Risk badges — geometric icon + vertical bar
                 if (foodRisks != null) {
-                    val tColor = when (foodRisks.tyramine) {
-                        "high" -> RiskColors.TyramineHigh; "medium" -> RiskColors.TyramineMedium; "low" -> RiskColors.TyramineLow; else -> null
-                    }
-                    val aColor = when (foodRisks.alcohol) {
-                        "high" -> RiskColors.AlcoholHigh; "medium" -> RiskColors.AlcoholMedium; "low" -> RiskColors.AlcoholLow; else -> null
-                    }
-                    val gColor = when (foodRisks.gluten) {
-                        "high" -> RiskColors.GlutenHigh; "medium" -> RiskColors.GlutenMedium; "low" -> RiskColors.GlutenLow; else -> null
-                    }
-                    val hColor = when (foodRisks.histamine) {
-                        "high" -> RiskColors.HistamineHigh; "medium" -> RiskColors.HistamineMedium; "low" -> RiskColors.HistamineLow; else -> null
-                    }
-                    tColor?.let { TyramineRiskBadge(it, foodRisks.tyramine) }
-                    aColor?.let { AlcoholRiskBadge(it, foodRisks.alcohol) }
-                    gColor?.let { GlutenRiskBadge(it, foodRisks.gluten) }
-                    hColor?.let { HistamineRiskBadge(it, foodRisks.histamine) }
+                    // Colour by severity level (green/amber/red), matching iOS.
+                    // Each badge renders nothing when its level is "none".
+                    TyramineRiskBadge(riskLevelColor(foodRisks.tyramine), foodRisks.tyramine)
+                    AlcoholRiskBadge(riskLevelColor(foodRisks.alcohol), foodRisks.alcohol)
+                    GlutenRiskBadge(riskLevelColor(foodRisks.gluten), foodRisks.gluten)
+                    HistamineRiskBadge(riskLevelColor(foodRisks.histamine), foodRisks.histamine)
                 } else if (isClassifyingRisks) {
                     Spacer(Modifier.width(6.dp))
                     CircularProgressIndicator(
