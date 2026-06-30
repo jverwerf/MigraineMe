@@ -575,6 +575,65 @@ fun NotificationsCard(
             }
         }
 
+        HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+
+        // New insight alerts row — DB-backed preference (notification_settings.new_insight).
+        // Default ON; toggling writes to Supabase so the backend skips the push when off.
+        val scope = rememberCoroutineScope()
+        val edge = remember { EdgeFunctionsService() }
+        var newInsightLoaded by remember { mutableStateOf(false) }
+        var newInsightEnabled by remember { mutableStateOf(true) }
+        LaunchedEffect(Unit) {
+            val enabled = withContext(Dispatchers.IO) {
+                edge.getNotificationEnabled(appContext, "new_insight", default = true)
+            }
+            newInsightEnabled = enabled
+            newInsightLoaded = true
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 10.dp)
+            ) {
+                Text(
+                    "New insight alerts",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "Get notified when new insights and recommendations are ready",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Column(
+                modifier = Modifier.width(toggleColWidth),
+                horizontalAlignment = Alignment.End
+            ) {
+                Switch(
+                    checked = newInsightEnabled,
+                    enabled = newInsightLoaded,
+                    modifier = Modifier.scale(0.8f),
+                    onCheckedChange = { newValue ->
+                        newInsightEnabled = newValue
+                        scope.launch {
+                            val ok = withContext(Dispatchers.IO) {
+                                edge.upsertNotificationSetting(appContext, "new_insight", newValue)
+                            }
+                            if (!ok) newInsightEnabled = !newValue // revert on failure
+                        }
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                )
+            }
+        }
+
         // Permission sub-row (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionSubRow(

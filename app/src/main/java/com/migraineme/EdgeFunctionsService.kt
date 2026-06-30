@@ -66,6 +66,20 @@ class EdgeFunctionsService {
     )
 
     @Serializable
+    private data class NotificationSettingUpsertBody(
+        @SerialName("user_id") val userId: String,
+        val type: String,
+        val enabled: Boolean,
+        @SerialName("updated_at") val updatedAtIso: String
+    )
+
+    @Serializable
+    data class NotificationSettingResponse(
+        val type: String,
+        val enabled: Boolean
+    )
+
+    @Serializable
     private data class TriggerSettingUpsertBody(
         @SerialName("user_id") val userId: String,
         @SerialName("trigger_type") val triggerType: String,
@@ -443,6 +457,78 @@ class EdgeFunctionsService {
         } catch (e: Exception) {
             Log.e("EdgeFunctionsService", "getMetricSettings error: ${e.message}", e)
             emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Notification settings (per-user on/off toggles, e.g. "new_insight")
+    // Absence of a row means the notification is ON (opt-out model).
+    // ─────────────────────────────────────────────────────────────────────────
+
+    suspend fun getNotificationEnabled(context: Context, type: String, default: Boolean = true): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return default
+        val userId = SessionStore.readUserId(appCtx) ?: return default
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/notification_settings" +
+                    "?user_id=eq.$userId&type=eq.$type&select=type,enabled"
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+            if (res.status.value in 200..299) {
+                res.body<List<NotificationSettingResponse>>().firstOrNull()?.enabled ?: default
+            } else {
+                Log.e("EdgeFunctionsService", "getNotificationEnabled failed: ${res.status}")
+                default
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getNotificationEnabled error: ${e.message}", e)
+            default
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertNotificationSetting(context: Context, type: String, enabled: Boolean): Boolean {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
+        val userId = SessionStore.readUserId(appCtx) ?: return false
+
+        val body = NotificationSettingUpsertBody(
+            userId = userId,
+            type = type,
+            enabled = enabled,
+            updatedAtIso = Instant.now().toString()
+        )
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/notification_settings?on_conflict=user_id,type"
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("Prefer", "resolution=merge-duplicates")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+            val ok = res.status.value in 200..299
+            if (!ok) {
+                Log.e(
+                    "EdgeFunctionsService",
+                    "upsertNotificationSetting failed: ${res.status} - ${res.bodyAsText()}"
+                )
+            }
+            ok
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "upsertNotificationSetting exception", e)
+            false
         } finally {
             client.close()
         }

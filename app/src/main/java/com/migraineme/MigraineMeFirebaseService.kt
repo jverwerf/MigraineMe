@@ -20,6 +20,8 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
  * - sync_health_connect: Triggers Health Connect data sync
  * - evening_checkin: Shows notification prompting the user to do their evening check-in
  * - recalibration_ready: Sets flag so HomeScreen shows the recalibration banner
+ * - new_insight: New daily insight/recommendations ready — shows a notification and
+ *   sets a flag so the Insights tab shows a "new" indicator
  */
 class MigraineMeFirebaseService : FirebaseMessagingService() {
 
@@ -73,6 +75,15 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                     .edit()
                     .putBoolean("has_proposals", true)
                     .apply()
+            }
+            "new_insight" -> {
+                Log.d(TAG, "New daily insight ready — setting flag + showing notification")
+                applicationContext
+                    .getSharedPreferences("insights", android.content.Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("has_new_insight", true)
+                    .apply()
+                showNewInsightNotification()
             }
             else -> {
                 Log.w(TAG, "Unknown FCM message type: $type")
@@ -139,6 +150,38 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             .build()
 
         nm.notify(8020, notification)
+    }
+
+    private fun showNewInsightNotification() {
+        val channelId = "new_insight"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Create channel (no-op if already exists)
+        val channel = android.app.NotificationChannel(
+            channelId, "New Insights",
+            android.app.NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = "Alerts when new insights and recommendations are ready" }
+        nm.createNotificationChannel(channel)
+
+        // Tap opens the Insights tab
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.INSIGHTS)
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 0, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Daily gauge & recommendations ready")
+            .setContentText("Your risk gauge and new recommendations are ready. Tap to see them.")
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+
+        nm.notify(8021, notification)
     }
 
     private suspend fun saveFcmTokenToSupabase(fcmToken: String) {

@@ -711,6 +711,19 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         val backStack by nav.currentBackStackEntryAsState()
         val current = backStack?.destination?.route ?: Routes.LOGIN
 
+        // New-insight indicator on the Insights tab. The flag is set by the
+        // new_insight FCM message and cleared as soon as the user opens Insights.
+        var hasNewInsight by remember { mutableStateOf(false) }
+        LaunchedEffect(current) {
+            val prefs = ctx.getSharedPreferences("insights", android.content.Context.MODE_PRIVATE)
+            if (current == Routes.INSIGHTS) {
+                prefs.edit().putBoolean("has_new_insight", false).apply()
+                hasNewInsight = false
+            } else {
+                hasNewInsight = prefs.getBoolean("has_new_insight", false)
+            }
+        }
+
         // Tour hint state for nav bar pulse animations
         val topBarTourState by TourManager.state.collectAsState()
         val topBarTourHint = if (topBarTourState.active && topBarTourState.phase == CoachPhase.TOUR)
@@ -1042,7 +1055,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 },
                 bottomBar = {
                     if (current != Routes.LOGIN && current != Routes.SIGNUP && !isWizardFullscreen) {
-                        BottomBar(nav, attentionCount)
+                        BottomBar(nav, attentionCount, hasNewInsight)
                     }
                 }
             ) { inner ->
@@ -2643,7 +2656,8 @@ private fun needsAttention(ev: JournalEvent): Boolean {
 @Composable
 private fun BottomBar(
     nav: androidx.navigation.NavHostController,
-    journalBadgeCount: Int
+    journalBadgeCount: Int,
+    insightsHasNew: Boolean = false
 ) {
     data class BottomItem(val route: String, val label: String, val icon: ImageVector)
 
@@ -2690,6 +2704,7 @@ private fun BottomBar(
 
         items.forEach { item ->
             val showBadge = item.route == Routes.JOURNAL && journalBadgeCount > 0
+            val showInsightsDot = item.route == Routes.INSIGHTS && insightsHasNew
             val selected = currentRoute == item.route ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_DETAIL) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_TIMELINE) ||
@@ -2734,6 +2749,10 @@ private fun BottomBar(
                         }
                         if (showBadge) {
                             BadgedBox(badge = { Badge { Text(journalBadgeCount.toString()) } }) {
+                                Icon(item.icon, contentDescription = item.label)
+                            }
+                        } else if (showInsightsDot) {
+                            BadgedBox(badge = { Badge() }) {
                                 Icon(item.icon, contentDescription = item.label)
                             }
                         } else {
