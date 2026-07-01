@@ -122,6 +122,7 @@ object Routes {
     const val MENSTRUATION_SETTINGS = "menstruation_settings"
     const val COMMUNITY = "community"
     const val ARTICLE_DETAIL = "community/article"
+    const val BLOG_DETAIL = "community/blog"
     const val FORUM_POST_DETAIL = "community/forum"
     const val INSIGHTS = "insights"
     const val INSIGHTS_DETAIL = "insights_detail"
@@ -978,6 +979,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                             backStack?.arguments?.getString("logType") ?: "Breakdown"
                                         current?.startsWith("help_article") == true -> "Help"
                                         current?.startsWith(Routes.ARTICLE_DETAIL) == true -> "Article"
+                                        current?.startsWith(Routes.BLOG_DETAIL) == true -> "Blog"
                                         current?.startsWith(Routes.FORUM_POST_DETAIL) == true -> "Post"
                                         current?.startsWith("monitor_treatment_detail") == true -> "Treatment"
                                         else -> ""
@@ -1332,6 +1334,20 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                         ArticleDetailScreen(
                             articleId = articleId,
+                            vm = communityVm,
+                            accessToken = authState.accessToken,
+                            currentUserId = authState.userId,
+                            insightsVm = insightsVm,
+                            onBack = { nav.popBackStack() }
+                        )
+                    }
+                    composable("${Routes.BLOG_DETAIL}/{blogId}") { backStack ->
+                        val blogId = backStack.arguments?.getString("blogId") ?: return@composable
+                        val authState by authVm.state.collectAsState()
+                        val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                        val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                        BlogDetailScreen(
+                            blogId = blogId,
                             vm = communityVm,
                             accessToken = authState.accessToken,
                             currentUserId = authState.userId,

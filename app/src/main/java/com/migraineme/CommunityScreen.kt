@@ -98,7 +98,7 @@ fun CommunityScreen(
             // ── Top-level tab row: Articles / Forum (matches iOS: standalone, not in hero card) ──
             item("tabs") {
                 SegmentedTabRow(
-                    tabs = listOf("Articles", "Forum"),
+                    tabs = listOf("Articles", "Forum", "Blogs"),
                     selectedIndex = state.topTab,
                     onSelect = { vm.selectTopTab(it) },
                     modifier = Modifier.padding(vertical = 4.dp)
@@ -110,6 +110,7 @@ fun CommunityScreen(
                 when (state.topTab) {
                     0 -> ArticlesContent(vm, state, authState.accessToken, navController)
                     1 -> ForumContent(vm, state, authState.accessToken, authState.userId, navController)
+                    2 -> BlogsContent(vm, state, authState.accessToken, navController)
                 }
             }
 

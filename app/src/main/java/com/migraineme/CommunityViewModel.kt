@@ -54,6 +54,31 @@ data class ArticleRow(
     @SerialName("article_tags") val articleTags: List<ArticleTagJoin>? = null
 )
 
+// -- Blog models --
+
+@Serializable
+data class BlogRow(
+    val id: String,
+    val slug: String,
+    val title: String,
+    val excerpt: String? = null,
+    val tag: String? = null,
+    @SerialName("body_html") val bodyHtml: String? = null,
+    val faq: List<BlogFaq>? = null,
+    @SerialName("read_minutes") val readMinutes: Int? = null,
+    @SerialName("seo_description") val seoDescription: String? = null,
+    @SerialName("cover_image_url") val coverImageUrl: String? = null,
+    val author: String? = null,
+    val status: String? = null,
+    @SerialName("reply_count") val replyCount: Int = 0,
+    @SerialName("published_at") val publishedAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null
+)
+
+@Serializable
+data class BlogFaq(val q: String, val a: String)
+
 @Serializable
 data class ArticleTagJoin(
     val confidence: Double? = null,
@@ -232,12 +257,13 @@ data class CommunityNotificationRow(
 
 data class CommunityState(
     val articles: List<ArticleRow> = emptyList(),
+    val blogs: List<BlogRow> = emptyList(),
     val userMatchingTagIds: Set<String> = emptySet(),
     val favoriteIds: Set<String> = emptySet(),
     val commentCounts: Map<String, Int> = emptyMap(),
     val loading: Boolean = false,
     val error: String? = null,
-    val topTab: Int = 0,        // 0 = Articles, 1 = Forum
+    val topTab: Int = 0,        // 0 = Articles, 1 = Forum, 2 = Blogs
     val selectedTab: Int = 0,   // Article sub-tab: 0 = For You, 1 = Latest, 2 = Browse, 3 = Saved
     // Forum state
     val forumPosts: List<ForumPostRow> = emptyList(),
@@ -291,6 +317,7 @@ class CommunityViewModel : ViewModel() {
             try {
                 // Fetch everything in parallel
                 val articlesDeferred = async { fetchArticles(accessToken) }
+                val blogsDeferred = async { fetchBlogs(accessToken) }
                 val favoritesDeferred = async { fetchArticleFavorites(accessToken) }
                 val userLabelsDeferred = async { collectUserLabels(accessToken) }
                 val allTagsDeferred = async { fetchAllTags(accessToken) }
@@ -304,6 +331,7 @@ class CommunityViewModel : ViewModel() {
                 val starterDeferred = async { buildDiscussionStarter(accessToken) }
 
                 val articles = articlesDeferred.await()
+                val blogs = blogsDeferred.await()
                 val favoriteIds = favoritesDeferred.await()
                 val userLabels = userLabelsDeferred.await()
                 val allTags = allTagsDeferred.await()
@@ -326,6 +354,7 @@ class CommunityViewModel : ViewModel() {
 
                 _state.value = _state.value.copy(
                     articles = articles,
+                    blogs = blogs,
                     userMatchingTagIds = matchedTagIds,
                     favoriteIds = favoriteIds,
                     commentCounts = commentCounts,
@@ -851,6 +880,27 @@ class CommunityViewModel : ViewModel() {
             article.copy(
                 title = decodeHtml(article.title),
                 aiSummary = article.aiSummary?.let { decodeHtml(it) }
+            )
+        }
+    }
+
+    private suspend fun fetchBlogs(accessToken: String): List<BlogRow> {
+        val response = client.get("$supabaseUrl/rest/v1/blogs") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("status", "eq.published")
+            parameter("select", "id,slug,title,excerpt,tag,body_html,faq,read_minutes,seo_description,cover_image_url,author,status,reply_count,published_at,created_at,updated_at")
+            parameter("order", "published_at.desc.nullslast")
+            parameter("limit", "100")
+        }
+        if (response.status.value !in 200..299) {
+            Log.e(TAG, "fetchBlogs: ${response.status} ${response.bodyAsText()}")
+            return emptyList()
+        }
+        return response.body<List<BlogRow>>().map { blog ->
+            blog.copy(
+                title = decodeHtml(blog.title),
+                excerpt = blog.excerpt?.let { decodeHtml(it) }
             )
         }
     }
