@@ -475,6 +475,15 @@ fun PaywallScreen(
                 )
             }
 
+            // Subscription terms (clear auto-renewal disclosure)
+            Text(
+                "Subscription auto-renews at the price shown until cancelled. Cancel anytime in Play Store settings.",
+                color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
