@@ -446,6 +446,15 @@ fun ProfileScreen(
             }
         }
 
+        // ── Medical disclaimer (Google Play Health Content policy) ──
+        BaseCard {
+            Text(
+                "MigraineMe is for informational and self-tracking purposes only and is not a medical device. It does not diagnose, treat, cure, or prevent migraine or any other medical condition, and it does not provide medical advice. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment, and before making any decisions about your health.",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+
         // Delete account confirmation dialog
         if (showDeleteDialog) {
             AlertDialog(
