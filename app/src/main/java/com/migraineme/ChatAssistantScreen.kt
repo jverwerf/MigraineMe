@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -208,6 +209,41 @@ class ChatAssistantViewModel : ViewModel() {
         _state.update { it.copy(error = null) }
     }
 
+    /** Report an AI response (Google Play Generative AI policy: users must be able to flag offensive AI output). */
+    fun reportAiResponse(accessToken: String, messageText: String, reason: String) {
+        viewModelScope.launch {
+            try {
+                val base = BuildConfig.SUPABASE_URL.trimEnd('/')
+                val reportBody = JSONObject().apply {
+                    put("reason", reason)
+                    put("ai_message_text", messageText.take(4000))
+                }
+                client.post("$base/rest/v1/forum_reports") {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header(HttpHeaders.Authorization, "Bearer $accessToken")
+                    header("Prefer", "return=minimal")
+                    contentType(ContentType.Application.Json)
+                    setBody(reportBody.toString())
+                }
+
+                val emailBody = JSONObject().apply {
+                    put("to", "help@migraineme.app")
+                    put("subject", "AI response reported")
+                    put("html", "<h2>AI Response Report</h2><p><strong>Reason:</strong> $reason</p>" +
+                        "<p><strong>AI message:</strong></p><blockquote>${messageText.take(4000)}</blockquote>")
+                }
+                client.post("$base/functions/v1/send-email") {
+                    header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                    header(HttpHeaders.Authorization, "Bearer $accessToken")
+                    contentType(ContentType.Application.Json)
+                    setBody(emailBody.toString())
+                }
+            } catch (_: Exception) {
+                // Reporting is fire-and-forget; failures must not disturb the chat.
+            }
+        }
+    }
+
     fun clearRateLimited() {
         _state.update { it.copy(isRateLimited = false) }
     }
@@ -244,6 +280,19 @@ fun ChatAssistantScreen(
     val bgGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFF1A0028), Color(0xFF2A003D), Color(0xFF1A0028))
     )
+
+    var reportingMessage by remember { mutableStateOf<ChatMessage?>(null) }
+    reportingMessage?.let { msg ->
+        ReportDialog(
+            title = "Report AI response",
+            onDismiss = { reportingMessage = null },
+            onSubmit = { reason ->
+                SessionStore.readAccessToken(context)?.let { token ->
+                    viewModel.reportAiResponse(token, msg.content, reason)
+                }
+            }
+        )
+    }
 
     fun doSend() {
         if (inputText.isNotBlank() && !uiState.isLoading) {
@@ -311,7 +360,12 @@ fun ChatAssistantScreen(
                                 initialOffsetY = { it / 2 }
                             )
                         ) {
-                            ChatBubble(message)
+                            ChatBubble(
+                                message = message,
+                                onReport = if (message.role == "assistant") {
+                                    { reportingMessage = message }
+                                } else null
+                            )
                         }
                     }
 
@@ -537,12 +591,13 @@ private fun SuggestionChip(
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage) {
+private fun ChatBubble(message: ChatMessage, onReport: (() -> Unit)? = null) {
     val isUser = message.role == "user"
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Bottom
     ) {
         Surface(
             shape = RoundedCornerShape(
@@ -569,6 +624,16 @@ private fun ChatBubble(message: ChatMessage) {
                     vertical = 10.dp
                 )
             )
+        }
+        if (!isUser && onReport != null) {
+            IconButton(onClick = onReport, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    Icons.Outlined.Flag,
+                    contentDescription = "Report AI response",
+                    tint = Color.White.copy(alpha = 0.35f),
+                    modifier = Modifier.size(14.dp)
+                )
+            }
         }
     }
 }
