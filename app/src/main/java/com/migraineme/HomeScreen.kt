@@ -233,6 +233,9 @@ fun HomeScreenRoot(
                     infoText = RiskInfoCopy.text
                 )
 
+                // ── Medical disclaimer (dismissible, Google Play Health Content policy) ──
+                MedicalDisclaimerCard(prefKey = "home_dismissed")
+
                 // ── Ask MigraineMe — chat assistant (premium only) ──
                 PremiumGate(
                     message = "Unlock AI Chat",

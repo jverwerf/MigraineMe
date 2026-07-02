@@ -768,7 +768,43 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                // ── Medical disclaimer (dismissible, Google Play Health Content policy) ──
+                MedicalDisclaimerCard(prefKey = "insights_dismissed")
 
+
+        }
+    }
+}
+
+// ── Dismissible medical disclaimer box (health policy) ──
+@Composable
+fun MedicalDisclaimerCard(prefKey: String) {
+    val ctx = LocalContext.current
+    val prefs = remember { ctx.getSharedPreferences("medical_disclaimer", Context.MODE_PRIVATE) }
+    var dismissed by remember { mutableStateOf(prefs.getBoolean(prefKey, false)) }
+    if (dismissed) return
+    BaseCard(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.Top) {
+            Text(
+                "MigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. Risk estimates and insights are based on your own logged data and are not medical advice; always consult a qualified healthcare professional.",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                onClick = {
+                    prefs.edit().putBoolean(prefKey, true).apply()
+                    dismissed = true
+                },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Close,
+                    contentDescription = "Dismiss disclaimer",
+                    tint = AppTheme.SubtleTextColor,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }
