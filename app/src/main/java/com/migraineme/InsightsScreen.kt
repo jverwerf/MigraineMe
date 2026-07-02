@@ -350,6 +350,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val relEff by vm.reliefEffectiveness.collectAsState()
                 val recomputeStatus by vm.recomputeStatus.collectAsState()
 
+                // ── Medical disclaimer (Google Play Health Content policy) ──
+                Text(
+                    "MigraineMe is for informational and self-tracking purposes only and is not a medical device. These insights are not medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional.",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+
                 // ── 2. FULL REPORT ──
                 var showFullReportInfo by remember { mutableStateOf(false) }
                 Box(modifier = Modifier.fillMaxWidth()) {
