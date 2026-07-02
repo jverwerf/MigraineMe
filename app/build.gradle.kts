@@ -25,7 +25,9 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.migraineme"
+        // Default = original package. Build with -PnewPackage for the Play relaunch
+        // package (app.migraineme) after the com.migraineme suspension.
+        applicationId = if (project.hasProperty("newPackage")) "app.migraineme" else "com.migraineme"
         minSdk = 26
         targetSdk = 35
         versionCode = 50
