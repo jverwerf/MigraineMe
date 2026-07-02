@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Append the medical disclaimer to the Play store listing (all languages).
+"""Publish the compliant Play store listing.
+
+en-US gets the fully rewritten description from store/play_full_description.txt
+(removes the flagged prediction/forecast wording, adds the disclaimer); any
+other languages get the disclaimer appended.
 
 Run AFTER the app is reinstated (the API returns 403 "The app is suspended"
 until then):  ~/.playpub/bin/python scripts/update_listing_disclaimer.py
@@ -31,16 +35,27 @@ edit_id = svc.edits().insert(packageName=PACKAGE, body={}).execute()["id"]
 listings = svc.edits().listings().list(
     packageName=PACKAGE, editId=edit_id).execute().get("listings", [])
 
+REWRITE_PATH = os.path.join(os.path.dirname(__file__), "..", "store", "play_full_description.txt")
+with open(REWRITE_PATH) as f:
+    REWRITTEN_EN = f.read().strip()
+assert len(REWRITTEN_EN) <= 4000, "rewritten description exceeds Play's 4000-char cap"
+
 changed = False
 for l in listings:
     desc = l.get("fullDescription", "")
-    if "not a medical device" in desc:
-        print("%s: disclaimer already present, skipping" % l["language"])
-        continue
-    new_desc = (desc.rstrip() + "\n\n" + DISCLAIMER)
-    if len(new_desc) > 4000:
-        # Play caps fullDescription at 4000 chars; trim the body, keep the disclaimer.
-        new_desc = desc.rstrip()[: 4000 - len(DISCLAIMER) - 2] + "\n\n" + DISCLAIMER
+    if l["language"].startswith("en"):
+        if desc.strip() == REWRITTEN_EN:
+            print("%s: rewritten description already live, skipping" % l["language"])
+            continue
+        new_desc = REWRITTEN_EN
+    else:
+        if "not a medical device" in desc:
+            print("%s: disclaimer already present, skipping" % l["language"])
+            continue
+        new_desc = (desc.rstrip() + "\n\n" + DISCLAIMER)
+        if len(new_desc) > 4000:
+            # Play caps fullDescription at 4000 chars; trim the body, keep the disclaimer.
+            new_desc = desc.rstrip()[: 4000 - len(DISCLAIMER) - 2] + "\n\n" + DISCLAIMER
     l["fullDescription"] = new_desc
     svc.edits().listings().update(
         packageName=PACKAGE, editId=edit_id, language=l["language"], body=l).execute()
