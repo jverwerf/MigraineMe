@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -350,14 +351,6 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val relEff by vm.reliefEffectiveness.collectAsState()
                 val recomputeStatus by vm.recomputeStatus.collectAsState()
 
-                // ── Medical disclaimer (Google Play Health Content policy) ──
-                Text(
-                    "MigraineMe is for informational and self-tracking purposes only and is not a medical device. These insights are not medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional.",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)
-                )
-
                 // ── 2. FULL REPORT ──
                 var showFullReportInfo by remember { mutableStateOf(false) }
                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -414,7 +407,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(FullReportInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(FullReportInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer
@@ -483,7 +476,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(AiRecommendationsInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(AiRecommendationsInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer
@@ -532,7 +525,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(AccuracyInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(AccuracyInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer
@@ -608,7 +601,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(WhatHappenedInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(WhatHappenedInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer
@@ -665,7 +658,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(WhatWorkedInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(WhatWorkedInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer
@@ -711,7 +704,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(ContextInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(ContextInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer
@@ -768,7 +761,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(ImpactInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(ImpactInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer

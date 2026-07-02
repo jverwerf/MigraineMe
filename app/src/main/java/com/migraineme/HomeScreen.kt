@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -310,7 +311,7 @@ fun HomeScreenRoot(
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
-                            Text(AskMigraineMeInfoCopy.text, color = AppTheme.BodyTextColor,
+                            Text(AskMigraineMeInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                         },
                         containerColor = AppTheme.BaseCardContainer
@@ -498,7 +499,7 @@ private fun RiskHeroCard(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = {
-                Text(infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(infoText, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             },
             containerColor = AppTheme.BaseCardContainer
         )
@@ -756,7 +757,7 @@ private fun ActiveTriggersCard(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = {
-                Text(ActiveTriggersInfoCopy.text, color = AppTheme.BodyTextColor,
+                Text(ActiveTriggersInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium)
             },
             containerColor = AppTheme.BaseCardContainer
