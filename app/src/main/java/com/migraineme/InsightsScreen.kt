@@ -488,7 +488,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 var showAccuracyInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = "Unlock Accuracy",
-                    subtitle = "See how well your gauge predicts migraines",
+                    subtitle = "See how well your risk score lined up with your logged attacks",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -1488,7 +1488,7 @@ internal fun AccuracyPreviewCard(
             Column(Modifier.weight(1f)) {
                 Text("Accuracy", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("How well your gauge predicts migraines", color = AppTheme.SubtleTextColor,
+                Text("How well your risk score lined up with your attacks", color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall)
             }
             Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)

@@ -478,11 +478,11 @@ fun OnboardingScreen(
 // ═════════════════════════════════════════════════════════════════════════════
 
 private val LOADING_FACTS = listOf(
-    "MigraineMe predicts your attacks before they happen.",
+    "MigraineMe surfaces patterns in the data you log.",
     "Chat with your own data — ask MigraineMe anything.",
     "MigraineMe learns your patterns and recalibrates every month.",
-    "A 7-day risk forecast on your home screen.",
-    "HRV dips, pressure drops, sleep disruption — caught before you feel them.",
+    "A 7-day risk outlook on your home screen.",
+    "HRV, pressure and sleep changes tracked alongside your attacks.",
     "See which treatments are actually working — efficacy scored against your data.",
     "AI recommendations every month based on what your data actually shows.",
     "30+ migraine signals tracked automatically.",

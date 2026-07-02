@@ -537,7 +537,7 @@ private fun SevenDayOutlook(
         horizontalAlignment = Alignment.Start
     ) {
         Text(
-            "7-day forecast",
+            "7-day outlook",
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )

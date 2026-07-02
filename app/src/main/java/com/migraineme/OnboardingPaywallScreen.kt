@@ -289,7 +289,7 @@ fun OnboardingPaywallScreen(
                 // ── Features ──
                 val features = listOf(
                     Triple(Icons.Outlined.Analytics, "Full Insights & Spider Charts", "Treatment effectiveness and trigger patterns"),
-                    Triple(Icons.Outlined.Timeline, "7-Day Risk Forecast", "Know your migraine risk before it happens"),
+                    Triple(Icons.Outlined.Timeline, "7-Day Risk Outlook", "See your estimated risk for the week ahead"),
                     Triple(Icons.Outlined.Speed, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
                     Triple(Icons.Outlined.Psychology, "Smart Calibration", "Personalised risk model tuned to you"),
                     Triple(Icons.Outlined.Description, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
@@ -409,6 +409,15 @@ fun OnboardingPaywallScreen(
                 }) {
                     Text("Restore Purchases", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
+
+                // Subscription terms (clear auto-renewal disclosure)
+                Text(
+                    "Free for 14 days, then the price shown. Auto-renews until cancelled. Cancel anytime in Play Store settings.",
+                    color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)
+                )
 
                 Row(horizontalArrangement = Arrangement.Center) {
                     Text(

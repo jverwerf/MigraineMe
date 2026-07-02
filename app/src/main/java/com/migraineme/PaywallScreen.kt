@@ -342,10 +342,10 @@ fun PaywallScreen(
 
                 val features = listOf(
                     FeatureItem(Icons.Outlined.Analytics, "Full Insights & Spider Charts", "Treatment effectiveness, trigger patterns, and more"),
-                    FeatureItem(Icons.Outlined.Timeline, "7-Day Risk Forecast", "Know your migraine risk before it happens"),
+                    FeatureItem(Icons.Outlined.Timeline, "7-Day Risk Outlook", "See your estimated risk for the week ahead"),
                     FeatureItem(Icons.Outlined.Speed, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
                     FeatureItem(Icons.Outlined.History, "Full History & Journal", "Search and filter your complete migraine history"),
-                    FeatureItem(Icons.Outlined.Psychology, "Smart Calibration", "Personalised neurologist for your risk model"),
+                    FeatureItem(Icons.Outlined.Psychology, "Smart Calibration", "Personalised tuning of your risk model"),
                     FeatureItem(Icons.Outlined.Description, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
                     FeatureItem(Icons.Outlined.TrendingUp, "Monitor Dashboard Trends", "Sleep, physical, mental, and nutrition history"),
                     FeatureItem(Icons.Outlined.Restaurant, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk classification"),

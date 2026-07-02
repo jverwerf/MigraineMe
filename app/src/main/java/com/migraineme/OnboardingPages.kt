@@ -117,8 +117,8 @@ fun WelcomePage() {
         Spacer(Modifier.weight(1f))
 
         Column(Modifier.padding(horizontal = 8.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            FeatureBullet(Icons.Outlined.Speed, "Real-time migraine risk prediction")
-            FeatureBullet(Icons.Outlined.CalendarMonth, "7-day risk forecast")
+            FeatureBullet(Icons.Outlined.Speed, "Real-time risk score from your logged data")
+            FeatureBullet(Icons.Outlined.CalendarMonth, "7-day risk outlook")
             FeatureBullet(Icons.Outlined.Bolt, "Auto-captured triggers, less logging")
             FeatureBullet(Icons.Outlined.BarChart, "30+ migraine signals tracked automatically")
             FeatureBullet(Icons.Outlined.EventNote, "Cycle-aware risk model")
@@ -229,7 +229,7 @@ fun HowItWorksPage(
         Triple(Icons.Outlined.Sensors, "Connect", "Data flows in from your wearable, Health Connect and phone"),
         Triple(Icons.Outlined.Bolt, "Detect", "Sleep changes, weather shifts, and stress spikes get flagged automatically"),
         Triple(Icons.Outlined.Speed, "Score", "Everything adds up to your daily risk"),
-        Triple(Icons.Outlined.CalendarMonth, "Predict", "See what's coming 7 days ahead"),
+        Triple(Icons.Outlined.CalendarMonth, "Estimate", "See your risk outlook 7 days ahead"),
         Triple(Icons.Outlined.AutoAwesome, "Learn", "Gets smarter the more you use it"),
     )
     var revealedSteps by remember { mutableIntStateOf(if (alreadyRevealed) steps.size else 0) }

@@ -120,7 +120,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                GiftPerk(Icons.Outlined.AutoGraph, "7-day risk forecast")
+                GiftPerk(Icons.Outlined.AutoGraph, "7-day risk outlook")
                 GiftPerk(Icons.Outlined.Insights, "AI daily insights")
                 GiftPerk(Icons.Outlined.Chat, "Ask MigraineMe chat")
                 GiftPerk(Icons.Outlined.Description, "PDF reports for your doctor")
