@@ -26,26 +26,17 @@
     <!-- Health Connect - Sleep & Recovery -->
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
 
-    <!-- Health Connect - Heart & Vitals -->
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <!-- Health Connect - Heart & Vitals (minimum scope: only record types the app reads) -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
     <uses-permission android:name="android.permission.health.READ_RESPIRATORY_RATE" />
     <uses-permission android:name="android.permission.health.READ_BODY_TEMPERATURE" />
-    <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
-    <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />
 
     <!-- Health Connect - Activity & Fitness -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
-    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
-    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
-
-    <!-- Health Connect - Body Measurements -->
-    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
-    <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
 
     <!-- Suppress library-injected permissions not used by this app -->
     <uses-permission android:name="android.permission.health.READ_HEIGHT" tools:node="remove" />
