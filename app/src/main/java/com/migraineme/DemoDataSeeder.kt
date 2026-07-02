@@ -821,9 +821,9 @@ object DemoDataSeeder {
                     put("Neck stiffness", "Neck stiffness preceding your migraines suggests muscle tension building up. Gentle stretches and warm compress at first sign may reduce the headache severity that's coming.")
                 })
                 put("medicines", buildJsonObject {
-                    put("Ibuprofen",     "Ibuprofen shows declining relief over the last 30 days. The same dose isn't doing what it used to. Worth a doctor check-in about Naproxen or rotating with Acetaminophen.")
-                    put("Sumatriptan",   "Sumatriptan gives you strong relief but with drowsiness and tingling. Rizatriptan or Eletriptan are same-class with cleaner SE profiles and may suit you better — worth discussing.")
-                    put("Acetaminophen", "Acetaminophen has been giving you only mild relief. Combining it with Ibuprofen can be safely stacked for stronger acute relief; or discuss alternatives with your doctor.")
+                    put("Ibuprofen",     "Ibuprofen shows declining relief over the last 30 days. The same dose isn't doing what it used to. Worth a doctor check-in about whether an alternative would suit you better.")
+                    put("Sumatriptan",   "Sumatriptan gives you strong relief but with drowsiness and tingling. Your doctor can advise whether a same-class alternative with a cleaner side-effect profile would suit you better.")
+                    put("Acetaminophen", "Acetaminophen has been giving you only mild relief. Some people ask their doctor whether combining it with an NSAID is right for them, so check with yours.")
                 })
                 put("reliefs", buildJsonObject {
                     put("Dark room", "Dark room has been your most reliable non-drug relief. Pre-emptively darkening your space when you spot prodrome signs may shorten or abort the next migraine.")
