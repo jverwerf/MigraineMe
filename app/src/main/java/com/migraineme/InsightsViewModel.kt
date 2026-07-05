@@ -1121,11 +1121,15 @@ class InsightsViewModel : ViewModel() {
             map["sleep_light"] = parseDoubleCol(stagesArr, "value_light_hm")
         }
 
-        //  Screen time (only total from screen_time_daily; other phone metrics from their own tables below) 
+        //  Screen time (only total from screen_time_daily; other phone metrics from their own tables below)
+        // Table stores total_hours (the old value_minutes column is gone;
+        // querying it 42703'd and silently dropped the report graph). The
+        // screen_time MetricDef unit is minutes, so convert.
         val screenArr = fetchArr(client, base, key, token, userId, "screen_time_daily",
-            "date,value_minutes", cutoff)
+            "date,total_hours", cutoff)
         if (screenArr != null) {
-            map["screen_time"] = parseDoubleCol(screenArr, "value_minutes")
+            map["screen_time"] = parseDoubleCol(screenArr, "total_hours")
+                .map { it.copy(value = it.value * 60.0) }
         }
 
         //  Nutrition / Diet 
