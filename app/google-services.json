@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "630053958216-3r2526t9nq2b24l1qk0e9f0ku2qqjm4k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.migraineme",
+            "certificate_hash": "84cf6a94a1719e5a08b1f6ab4a73d2dcc2964b90"
+          }
+        },
+        {
+          "client_id": "630053958216-ag3645iqq3pfuhdde197rkv2goqvnnda.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.migraineme",
+            "certificate_hash": "d91f683b7e13b5e1b03991f1f53904b2363c2414"
+          }
+        },
+        {
           "client_id": "630053958216-5v26ghd1rnidjisdrsfa5a6bpgba3pi2.apps.googleusercontent.com",
           "client_type": 3
         }

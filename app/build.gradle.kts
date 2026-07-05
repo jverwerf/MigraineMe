@@ -30,7 +30,7 @@ android {
         applicationId = if (project.hasProperty("newPackage")) "app.migraineme" else "com.migraineme"
         minSdk = 26
         targetSdk = 35
-        versionCode = 50
+        versionCode = 51
         versionName = "5.0.3"
 
         // ── All keys loaded from local.properties ──
@@ -42,8 +42,9 @@ android {
             "\"${localProp("GOOGLE_WEB_CLIENT_ID")}\"")
         buildConfigField("String", "USDA_API_KEY",
             "\"${localProp("USDA_API_KEY")}\"")
+        // New-package builds use the relaunch RevenueCat app's key.
         buildConfigField("String", "REVENUECAT_API_KEY",
-            "\"${localProp("REVENUECAT_API_KEY")}\"")
+            "\"${localProp(if (project.hasProperty("newPackage")) "REVENUECAT_API_KEY_NEW" else "REVENUECAT_API_KEY")}\"")
         buildConfigField("String", "WHOOP_CLIENT_ID",
             "\"${localProp("WHOOP_CLIENT_ID")}\"")
         buildConfigField("String", "OURA_CLIENT_ID",
