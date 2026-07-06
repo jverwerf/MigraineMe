@@ -634,6 +634,61 @@ fun NotificationsCard(
             }
         }
 
+        // AI companion / community activity push — DB-backed (notification_settings.community).
+        // Default ON; toggling writes to Supabase so the backend trigger skips the push when off.
+        var communityLoaded by remember { mutableStateOf(false) }
+        var communityEnabled by remember { mutableStateOf(true) }
+        LaunchedEffect(Unit) {
+            val enabled = withContext(Dispatchers.IO) {
+                edge.getNotificationEnabled(appContext, "community", default = true)
+            }
+            communityEnabled = enabled
+            communityLoaded = true
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 10.dp)
+            ) {
+                Text(
+                    "AI companion",
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "Get notified when an AI companion adds to your community feed",
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Column(
+                modifier = Modifier.width(toggleColWidth),
+                horizontalAlignment = Alignment.End
+            ) {
+                Switch(
+                    checked = communityEnabled,
+                    enabled = communityLoaded,
+                    modifier = Modifier.scale(0.8f),
+                    onCheckedChange = { newValue ->
+                        communityEnabled = newValue
+                        scope.launch {
+                            val ok = withContext(Dispatchers.IO) {
+                                edge.upsertNotificationSetting(appContext, "community", newValue)
+                            }
+                            if (!ok) communityEnabled = !newValue // revert on failure
+                        }
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                )
+            }
+        }
+
         // Permission sub-row (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionSubRow(
