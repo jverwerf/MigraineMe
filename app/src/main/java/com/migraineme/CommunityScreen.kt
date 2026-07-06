@@ -326,8 +326,7 @@ private fun ForumContent(
     currentUserId: String?,
     navController: androidx.navigation.NavController
 ) {
-    val pinnedIds = PinnedTopics.all.map { it.id }.toSet()
-    val regularPosts = state.forumPosts.filter { it.id !in pinnedIds }
+    val regularPosts = state.forumPosts
     var reportingPost by remember { mutableStateOf<ForumPostRow?>(null) }
 
     reportingPost?.let { post ->
@@ -341,29 +340,6 @@ private fun ForumContent(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-        // ── Discussion starter (contextual prompt based on user's top trigger) ──
-        state.discussionStarter?.let { starter ->
-            DiscussionStarterCard(
-                starter = starter,
-                onTap = {
-                    starter.pinnedTopicId?.let { id ->
-                        navController.navigate("${Routes.COMMUNITY}/forum/$id")
-                    }
-                }
-            )
-        }
-
-        // ── Pinned topics — heart = me too + follow ──
-        PinnedTopics.all.forEach { topic ->
-            PinnedTopicCard(
-                topic = topic,
-                isMeToo = topic.id in state.myMeTooIds,
-                meTooCount = state.meTooCountMap[topic.id] ?: 0,
-                onOpen = { navController.navigate("${Routes.COMMUNITY}/forum/${topic.id}") },
-                onToggleMeToo = { accessToken?.let { vm.toggleMeToo(it, topic.id) } }
-            )
-        }
 
         // ── Loading ──
         if (state.loading && state.forumPosts.isEmpty()) {
