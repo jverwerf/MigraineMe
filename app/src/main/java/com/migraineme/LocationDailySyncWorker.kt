@@ -166,8 +166,12 @@ class LocationDailySyncWorker(
     private data class AltitudeAgg(val max: Double, val min: Double)
 
     /**
-     * Fetch all hourly altitude readings for a given date and compute max/min.
-     * Uses the hourly table to get running aggregation.
+     * Compute altitude max/min/change from foreground location captures over a
+     * 2-day window (today + yesterday). Background location was removed for
+     * Google Play policy, so captures now only happen on app open / login /
+     * toggle. Widening to 2 days lets the altitude-change trigger still detect
+     * elevation shifts (e.g. travel) from those foreground samples, instead of
+     * the old intra-day max-min that depended on hourly background capture.
      */
     private suspend fun fetchTodayAltitudeAgg(
         svc: SupabasePersonalService,
@@ -175,7 +179,9 @@ class LocationDailySyncWorker(
         date: String
     ): AltitudeAgg? {
         return try {
-            val altitudes = svc.fetchHourlyAltitudesForDate(accessToken, date)
+            val yesterday = LocalDate.parse(date).minusDays(1).toString()
+            val altitudes = svc.fetchHourlyAltitudesForDate(accessToken, date) +
+                svc.fetchHourlyAltitudesForDate(accessToken, yesterday)
             if (altitudes.isEmpty()) return null
             AltitudeAgg(max = altitudes.max(), min = altitudes.min())
         } catch (e: Exception) {

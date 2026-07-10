@@ -69,7 +69,6 @@ fun DataSettingsScreen(
     // Dialog states
     var showScreenTimePermissionDialog by remember { mutableStateOf(false) }
     var showBatteryOptDialog by remember { mutableStateOf(false) }
-    var showBackgroundLocationDialog by remember { mutableStateOf(false) }
 
     // Refresh trigger
     var refreshTick by remember { mutableIntStateOf(0) }
@@ -108,21 +107,10 @@ fun DataSettingsScreen(
         ActivityResultContracts.RequestPermission()
     ) { refreshTick++ }
 
-    val backgroundLocationLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { refreshTick++ }
-
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-
-        if ((fineGranted || coarseGranted) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (!DataSettingsPermissionHelper.hasBackgroundLocationPermission(appContext)) {
-                backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            }
-        }
+    ) { _ ->
+        // Foreground location only — background location was removed per Google Play policy.
         refreshTick++
     }
 
@@ -362,11 +350,6 @@ fun DataSettingsScreen(
                                 requestMicPermission(activity, appContext, micPermissionLauncher)
                             },
                             onRequestBatteryExemption = { showBatteryOptDialog = true },
-                            onRequestBackgroundLocation = {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                    backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                                }
-                            },
                             onRequestScreenTimePermission = {
                                 ScreenTimePermissionHelper.openUsageAccessSettings(appContext)
                             },
@@ -462,16 +445,6 @@ fun DataSettingsScreen(
                 BatteryOptimizationHelper.requestBatteryOptimizationExemption(appContext)
                 BatteryOptimizationHelper.markAsAsked(appContext)
                 showBatteryOptDialog = false
-            }
-        )
-    }
-
-    if (showBackgroundLocationDialog) {
-        BackgroundLocationDialog(
-            onDismiss = { showBackgroundLocationDialog = false },
-            onOpenSettings = {
-                showBackgroundLocationDialog = false
-                openAppSettings(appContext)
             }
         )
     }

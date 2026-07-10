@@ -43,7 +43,6 @@ fun DataSettingsRow(
     onSourceChange: (metric: String, newSource: String, currentEnabled: Boolean) -> Unit,
     onRequestMicPermission: () -> Unit,
     onRequestBatteryExemption: () -> Unit,
-    onRequestBackgroundLocation: () -> Unit,
     onRequestScreenTimePermission: () -> Unit,
     onRequestLocationPermission: () -> Unit
 ) {
@@ -81,9 +80,6 @@ fun DataSettingsRow(
     }
     val locationPermissionGranted = remember(permissionTick) {
         DataSettingsPermissionHelper.hasLocationPermission(appContext)
-    }
-    val backgroundLocationGranted = remember(permissionTick) {
-        DataSettingsPermissionHelper.hasBackgroundLocationPermission(appContext)
     }
     val micPermissionGranted = remember(permissionTick) {
         if (isAmbientNoiseRow) DataSettingsPermissionHelper.hasMicrophonePermission(appContext) else true
@@ -458,16 +454,6 @@ fun DataSettingsRow(
                 toggleColWidth = toggleColWidth,
                 onRequestMicPermission = onRequestMicPermission,
                 onRequestBatteryExemption = onRequestBatteryExemption
-            )
-        }
-
-        if (isLocationRow) {
-            LocationPermissionRow(
-                alpha = alpha,
-                backgroundLocationGranted = backgroundLocationGranted,
-                providerColWidth = 0.dp,
-                toggleColWidth = toggleColWidth,
-                onRequestBackgroundLocation = onRequestBackgroundLocation
             )
         }
 

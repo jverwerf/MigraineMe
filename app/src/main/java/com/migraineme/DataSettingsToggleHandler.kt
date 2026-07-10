@@ -48,7 +48,6 @@ object DataSettingsToggleHandler {
     enum class PermissionType {
         SCREEN_TIME,
         LOCATION,
-        BACKGROUND_LOCATION,
         MICROPHONE,
         BATTERY_OPTIMIZATION,
         HEALTH_CONNECT_NUTRITION,

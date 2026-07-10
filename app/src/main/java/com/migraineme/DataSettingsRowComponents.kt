@@ -285,38 +285,6 @@ fun AmbientNoisePermissionRows(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Location Permission Row
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-fun LocationPermissionRow(
-    alpha: Float,
-    backgroundLocationGranted: Boolean,
-    providerColWidth: androidx.compose.ui.unit.Dp,
-    toggleColWidth: androidx.compose.ui.unit.Dp,
-    onRequestBackgroundLocation: () -> Unit
-) {
-    PermissionSubRow(
-        label = "Background location (Allow all the time)",
-        isGranted = backgroundLocationGranted,
-        alpha = alpha,
-        providerColWidth = providerColWidth,
-        toggleColWidth = toggleColWidth,
-        onRequestPermission = onRequestBackgroundLocation
-    )
-
-    // Warning text when not granted
-    if (!backgroundLocationGranted) {
-        Text(
-            "Required: Enable \"Allow all the time\" for the app to collect weather data and work properly in the background.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen Time Permission Row
 // ─────────────────────────────────────────────────────────────────────────────
 

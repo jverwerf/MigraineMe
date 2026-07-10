@@ -108,7 +108,7 @@ object OnboardingPrefs {
     }
 }
 
-private enum class PageId { WELCOME, CHOOSE_START, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BACKGROUND_LOCATION_PERMISSION, BATTERY_OPTIMIZATION }
+private enum class PageId { WELCOME, CHOOSE_START, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BATTERY_OPTIMIZATION }
 
 @Composable
 fun OnboardingScreen(
@@ -147,8 +147,6 @@ fun OnboardingScreen(
                 val appOps = appCtx.getSystemService(android.content.Context.APP_OPS_SERVICE) as android.app.AppOpsManager
                 appOps.unsafeCheckOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), appCtx.packageName) == android.app.AppOpsManager.MODE_ALLOWED
             }
-            PageId.BACKGROUND_LOCATION_PERMISSION ->
-                appCtx.checkSelfPermission(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
             PageId.BATTERY_OPTIMIZATION ->
                 (appCtx.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager).isIgnoringBatteryOptimizations(appCtx.packageName)
             else -> false
@@ -306,7 +304,6 @@ fun OnboardingScreen(
                             PageId.MICROPHONE_PERMISSION -> MicrophonePermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.CALENDAR_PERMISSION -> CalendarPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.SCREEN_TIME_PERMISSION -> ScreenTimePermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
-                            PageId.BACKGROUND_LOCATION_PERMISSION -> BackgroundLocationPermissionPage(onGrant = { currentIdx++ }, onSkip = { currentIdx++ })
                             PageId.BATTERY_OPTIMIZATION -> BatteryOptimizationPage(onGrant = { onStartSetup() }, onSkip = { onStartSetup() })
                             PageId.SETUP_LANDING -> SetupLandingPage()
                         }
@@ -315,7 +312,7 @@ fun OnboardingScreen(
             }
 
             // ── Bottom buttons ──
-            if (currentPage == PageId.CHOOSE_START || currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BACKGROUND_LOCATION_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
+            if (currentPage == PageId.CHOOSE_START || currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
                 // These pages handle their own buttons
             } else if (currentPage == PageId.WELCOME || currentPage == PageId.HOW_IT_WORKS) {
                 Column(
@@ -399,7 +396,6 @@ fun OnboardingScreen(
                     PageId.MICROPHONE_PERMISSION -> {}
                     PageId.CALENDAR_PERMISSION -> {}
                     PageId.SCREEN_TIME_PERMISSION -> {}
-                    PageId.BACKGROUND_LOCATION_PERMISSION -> {}
                     PageId.BATTERY_OPTIMIZATION -> {}
                     PageId.LOADING_DATA -> {
                         val canStart = dataReady && seedingStarted && !hasNavigatedToTour

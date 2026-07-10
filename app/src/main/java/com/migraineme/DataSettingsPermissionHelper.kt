@@ -41,17 +41,6 @@ object DataSettingsPermissionHelper {
         return fine || coarse
     }
 
-    fun hasBackgroundLocationPermission(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true // Not needed on Android 9 and below
-        }
-    }
-
     // ─────────────────────────────────────────────────────────────────────────
     // Calendar Permission
     // ─────────────────────────────────────────────────────────────────────────
@@ -174,7 +163,6 @@ object DataSettingsPermissionHelper {
                 }
                 "user_location_daily" -> {
                     if (!hasLocationPermission(context)) add("Location")
-                    if (!hasBackgroundLocationPermission(context)) add("Background location")
                 }
                 "ambient_noise_samples" -> {
                     if (!hasMicrophonePermission(context)) add("Microphone")

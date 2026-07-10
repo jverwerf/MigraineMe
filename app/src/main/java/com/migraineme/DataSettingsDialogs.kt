@@ -17,41 +17,6 @@ import androidx.compose.runtime.Composable
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Background Location Dialog
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-fun BackgroundLocationDialog(
-    onDismiss: () -> Unit,
-    onOpenSettings: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Background Location Required") },
-        text = {
-            Text(
-                "You'll be taken to the app permissions page where you'll see all permissions (Location, Health Connect, etc.).\n\n" +
-                "To enable background location:\n" +
-                "1. Tap \"Permissions\"\n" +
-                "2. Tap \"Location\"\n" +
-                "3. Select \"Allow all the time\"\n\n" +
-                "This allows hourly location updates for accurate weather-based migraine insights."
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onOpenSettings) {
-                Text("Open Settings")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Microphone Permission Dialog (if not already defined elsewhere)
 // ─────────────────────────────────────────────────────────────────────────────
 
