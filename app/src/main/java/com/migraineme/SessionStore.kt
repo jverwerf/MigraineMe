@@ -100,6 +100,24 @@ object SessionStore {
     }
 
     /**
+     * Mark the one-time "trial just ended" takeover as seen for this user
+     */
+    fun saveTrialEndedSeen(context: Context, userId: String) {
+        context.getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean("trial_ended_seen_$userId", true)
+            .apply()
+    }
+
+    /**
+     * Read whether the "trial just ended" takeover was already shown for this user
+     */
+    fun readTrialEndedSeen(context: Context, userId: String): Boolean {
+        return context.getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getBoolean("trial_ended_seen_$userId", false)
+    }
+
+    /**
      * New canonical session writer.
      *
      * Note: first three params match your old call sites (context, token, userId),

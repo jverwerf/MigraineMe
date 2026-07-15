@@ -120,15 +120,15 @@ fun OnboardingPaywallScreen(
             PackageInfo(
                 identifier = "annual",
                 productId = "migraineme_premium_annual",
-                price = "£59.99/year",
-                pricePerMonth = "£5.00",
+                price = "£39.99/year",
+                pricePerMonth = "£3.33",
                 isAnnual = true,
                 rcPackage = null
             ),
             PackageInfo(
                 identifier = "monthly",
                 productId = "migraineme_premium_monthly",
-                price = "£6.99/month",
+                price = "£4.99/month",
                 pricePerMonth = null,
                 isAnnual = false,
                 rcPackage = null

@@ -540,6 +540,32 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         }
     }
 
+    // ── One-time "trial just ended" paywall takeover ──
+    // Fires once per user, only after premium state has fully loaded as FREE with a
+    // recorded trial end (i.e. the trial actually expired), while the user is logged
+    // in and past the login/onboarding flow. Never fires while state is loading and
+    // never for TRIAL/PREMIUM tiers.
+    LaunchedEffect(token) {
+        if (token.isNullOrBlank()) return@LaunchedEffect
+        val preAppRoutes = setOf(
+            Routes.LOGIN, Routes.SIGNUP, Routes.LOGOUT,
+            Routes.ONBOARDING, "${Routes.ONBOARDING}/setup", Routes.AI_SETUP,
+            "backfill_loading", "subscribe", Routes.PAYWALL, "paywall_trial_ended"
+        )
+        kotlinx.coroutines.flow.combine(
+            PremiumManager.state,
+            nav.currentBackStackEntryFlow
+        ) { s, entry -> s to entry.destination.route }.collect { (s, route) ->
+            if (!s.isLoaded) return@collect
+            if (s.tier != PremiumTier.FREE || s.trialEndDate == null) return@collect
+            if (route == null || route in preAppRoutes) return@collect
+            val userId = SessionStore.readUserId(appCtx) ?: return@collect
+            if (SessionStore.readTrialEndedSeen(appCtx, userId)) return@collect
+            SessionStore.saveTrialEndedSeen(appCtx, userId)
+            nav.navigate("paywall_trial_ended")
+        }
+    }
+
     var lastPreloadedToken by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
@@ -825,6 +851,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current?.startsWith(Routes.ARTICLE_DETAIL) == true ||
             current?.startsWith(Routes.FORUM_POST_DETAIL) == true ||
             current == Routes.PAYWALL ||
+            current == "paywall_trial_ended" ||
             current == Routes.CHAT_ASSISTANT
 
         // Wizard fullscreen: hide top bar + bottom nav for immersive logging
@@ -840,7 +867,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             Routes.MANAGE_LOCATIONS, Routes.MANAGE_ACTIVITIES, Routes.MANAGE_MISSED_ACTIVITIES,
             Routes.ONBOARDING, Routes.AI_SETUP, "${Routes.ONBOARDING}/setup",
             Routes.EVENING_CHECKIN, "backfill_loading", "subscribe",
-            Routes.PAYWALL, Routes.CHAT_ASSISTANT
+            Routes.PAYWALL, "paywall_trial_ended", Routes.CHAT_ASSISTANT
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -2569,6 +2596,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.PAYWALL) {
                         PaywallScreen(navController = nav)
+                    }
+
+                    composable("paywall_trial_ended") {
+                        PaywallScreen(
+                            navController = nav,
+                            headerTitle = "Your free trial just ended",
+                            headerSubtitle = "Keep your risk forecast, insights and AI assistant. Pick a plan to continue where you left off."
+                        )
                     }
 
                     composable(Routes.MENSTRUATION_SETTINGS) {

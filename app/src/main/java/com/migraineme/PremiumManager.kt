@@ -281,8 +281,10 @@ object PremiumManager {
                         productId = pkg.product.id,
                         price = pkg.product.price.formatted,
                         pricePerMonth = if (pkg.identifier.contains("annual", ignoreCase = true)) {
-                            val annual = pkg.product.price.amountMicros / 1_000_000.0
-                            String.format("%.2f", annual / 12.0)
+                            val perMonth = pkg.product.price.amountMicros / 1_000_000.0 / 12.0
+                            java.text.NumberFormat.getCurrencyInstance().apply {
+                                currency = java.util.Currency.getInstance(pkg.product.price.currencyCode)
+                            }.format(perMonth)
                         } else {
                             null
                         },

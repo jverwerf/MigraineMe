@@ -51,7 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://www.andlane.co.uk/migraineme-recover"
+private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://migraineme.app/reset-password"
 private const val LOG_TAG = "LoginScreen"
 
 @Composable

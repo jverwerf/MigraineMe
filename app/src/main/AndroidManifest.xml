@@ -75,6 +75,14 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
 
+        <!-- Branded small icon + tint for FCM notification-payload pushes -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
+
         <!-- WorkManager foreground service must declare a type on targetSdk 34+ -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

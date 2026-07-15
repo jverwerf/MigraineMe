@@ -2,6 +2,7 @@
 package com.migraineme
 
 import android.app.Activity
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -44,7 +46,9 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun PaywallScreen(
     navController: NavController,
-    onDismiss: (() -> Unit)? = null
+    onDismiss: (() -> Unit)? = null,
+    headerTitle: String? = null,
+    headerSubtitle: String? = null
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -70,15 +74,15 @@ fun PaywallScreen(
             PackageInfo(
                 identifier = "annual",
                 productId = "migraineme_premium_annual",
-                price = "£59.99/year",
-                pricePerMonth = "£5.00",
+                price = "£39.99/year",
+                pricePerMonth = "£3.33",
                 isAnnual = true,
                 rcPackage = null
             ),
             PackageInfo(
                 identifier = "monthly",
                 productId = "migraineme_premium_monthly",
-                price = "£6.99/month",
+                price = "£4.99/month",
                 pricePerMonth = null,
                 isAnnual = false,
                 rcPackage = null
@@ -127,7 +131,12 @@ fun PaywallScreen(
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
-        ScrollableScreenContent(scrollState = scroll) {
+        ScrollableScreenContent(
+            scrollState = scroll,
+            // Takeover leads with logo + headline at the top of the screen;
+            // the default reveal height parks content halfway down the page.
+            logoRevealHeight = if (headerTitle != null || headerSubtitle != null) 8.dp else AppTheme.LogoRevealHeight
+        ) {
 
             // Back button
             Row(
@@ -140,6 +149,38 @@ fun PaywallScreen(
                         "Back",
                         tint = Color.White
                     )
+                }
+            }
+
+            // ── Optional takeover header ──
+            if (headerTitle != null || headerSubtitle != null) {
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(84.dp)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    if (headerTitle != null) {
+                        Text(
+                            headerTitle,
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    if (headerSubtitle != null) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            headerSubtitle,
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
