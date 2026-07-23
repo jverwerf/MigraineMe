@@ -30,8 +30,8 @@ android {
         applicationId = if (project.hasProperty("newPackage")) "app.migraineme" else "com.migraineme"
         minSdk = 26
         targetSdk = 35
-        versionCode = 53
-        versionName = "5.0.5"
+        versionCode = 54
+        versionName = "5.0.6"
 
         // ── All keys loaded from local.properties ──
         buildConfigField("String", "SUPABASE_URL",
@@ -164,6 +164,7 @@ dependencies {
 
     // RevenueCat (pulls Google Play Billing Library transitively — don't add an explicit
     // billing dep, it causes a classpath clash that makes getOfferings() hang)
-    implementation("com.revenuecat.purchases:purchases:8.25.0")
-    implementation("com.revenuecat.purchases:purchases-ui:8.25.0")
+    // 9.x bundles Play Billing Library 8.0.0, required by Google Play from Aug 31 2026.
+    implementation("com.revenuecat.purchases:purchases:9.29.1")
+    implementation("com.revenuecat.purchases:purchases-ui:9.29.1")
 }
