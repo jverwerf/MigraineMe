@@ -11,6 +11,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -19,6 +20,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+/**
+ * Thrown when the Supabase auth endpoint returns a non-2xx status. [message] is already a
+ * user-friendly, safe-to-display string — the caller can surface it directly.
+ *
+ * This exists because the Ktor client is not configured with expectSuccess, so on its own a
+ * 5xx/4xx would be deserialised into a SessionResponse with null tokens and then read as a
+ * misleading "no access token" error. Validating the status here makes server failures loud
+ * and legible instead.
+ */
+class AuthServerException(message: String) : Exception(message)
 
 object SupabaseAuthService {
     private val baseUrl: String = BuildConfig.SUPABASE_URL
@@ -85,13 +99,37 @@ object SupabaseAuthService {
         val email: String
     )
 
+    /**
+     * Validates the HTTP status of an auth response and either deserialises the session or
+     * throws an [AuthServerException] carrying a friendly message. Keeps a server hiccup from
+     * masquerading as a "no access token" client-side error.
+     */
+    private suspend fun HttpResponse.toSessionOrThrow(): SessionResponse {
+        if (status.value in 200..299) return body()
+        val raw = runCatching { bodyAsText() }.getOrDefault("")
+        android.util.Log.w("SupabaseAuth", "auth ${status.value} error: $raw")
+        val serverMsg = runCatching {
+            val obj = Json { ignoreUnknownKeys = true; isLenient = true }
+                .parseToJsonElement(raw).jsonObject
+            (obj["msg"] ?: obj["error_description"] ?: obj["error_code"] ?: obj["error"])
+                ?.jsonPrimitive?.content
+        }.getOrNull()?.takeIf { it.isNotBlank() }
+        val friendly = when (status.value) {
+            in 500..599 -> "Our servers are having a moment. Please try again in a minute."
+            429 -> "Too many attempts. Please wait a moment and try again."
+            400, 401, 403 -> serverMsg ?: "Sign-in failed. Please check your details and try again."
+            else -> serverMsg ?: "Sign-in failed. Please try again."
+        }
+        throw AuthServerException(friendly)
+    }
+
     suspend fun signInWithEmail(email: String, password: String): SessionResponse {
         val url = "$baseUrl/auth/v1/token?grant_type=password"
         return client.post(url) {
             header("apikey", anonKey)
             contentType(ContentType.Application.Json)
             setBody(PasswordGrantRequest(email, password))
-        }.body()
+        }.toSessionOrThrow()
     }
 
     suspend fun signUpWithEmail(email: String, password: String): SessionResponse {
@@ -124,7 +162,7 @@ object SupabaseAuthService {
                     nonce = nonce
                 )
             )
-        }.body()
+        }.toSessionOrThrow()
     }
 
     /**

@@ -218,13 +218,16 @@ fun LoginScreen(
                 ses.accessToken?.let {
                     handleSuccessfulSession(token = it, refreshToken = ses.refreshToken, expiresIn = ses.expiresIn,
                         displayNameHint = googleCred?.displayName, avatarUrlHint = googleCred?.profilePictureUri?.toString(), providerHint = "google")
-                } ?: run { error = "Supabase returned no access token." }
+                } ?: run { error = "Sign-in didn't complete. Please try again." }
             } catch (e: GetCredentialException) {
                 Log.e(LOG_TAG, "GetCredentialException: ${e.type} - ${e.message}", e)
                 error = "Credential error: ${e.type} - ${e.message}"
+            } catch (e: AuthServerException) {
+                Log.e(LOG_TAG, "Supabase auth error: ${e.message}", e)
+                error = e.message
             } catch (t: Throwable) {
                 Log.e(LOG_TAG, "Google sign-in error: ${t.javaClass.simpleName} - ${t.message}", t)
-                error = "${t.javaClass.simpleName}: ${t.message}"
+                error = "Something went wrong. Please try again."
             } finally {
                 busy = false
             }
@@ -350,7 +353,7 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         AuthButton(
-                            onClick = { showEmailForm = true },
+                            onClick = { showEmailForm = true; error = null },
                             enabled = !busy,
                             icon = {
                                 Icon(Icons.Default.Email, contentDescription = "Email",
