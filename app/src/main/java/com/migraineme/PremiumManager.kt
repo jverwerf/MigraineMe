@@ -265,11 +265,25 @@ object PremiumManager {
     // Purchase Flow
     // ═══════════════════════════════════════════════════════════
 
-    fun getOfferings(onResult: (List<PackageInfo>) -> Unit) {
+    /**
+     * Outcome of loading the store's purchasable plans.
+     *
+     * [Unavailable] is deliberately a distinct case rather than an empty list. Callers
+     * must never substitute hardcoded prices for it: doing so produces a paywall that
+     * looks sellable but whose buy button cannot work, which is exactly how a Play
+     * misconfiguration went unnoticed for two weeks.
+     */
+    sealed class OfferingsResult {
+        data class Available(val packages: List<PackageInfo>) : OfferingsResult()
+        /** [reason] is diagnostic, for logs and support. Show users a fixed message. */
+        data class Unavailable(val reason: String) : OfferingsResult()
+    }
+
+    fun getOfferings(onResult: (OfferingsResult) -> Unit) {
         Log.d(TAG, "getOfferings() called — isConfigured=${Purchases.isConfigured}")
         if (!Purchases.isConfigured) {
             Log.w(TAG, "getOfferings: RevenueCat not configured")
-            onResult(emptyList())
+            onResult(OfferingsResult.Unavailable("RevenueCat not configured"))
             return
         }
 
@@ -292,11 +306,23 @@ object PremiumManager {
                         rcPackage = pkg
                     )
                 } ?: emptyList()
-                onResult(packages)
+
+                if (packages.isEmpty()) {
+                    // Google Play returned no product details for the configured products.
+                    // Usually means the subscription is not on sale in this user's country.
+                    Log.e(
+                        TAG,
+                        "getOfferings: store returned no purchasable packages " +
+                            "(current offering=${offerings.current?.identifier})"
+                    )
+                    onResult(OfferingsResult.Unavailable("Store returned no purchasable packages"))
+                } else {
+                    onResult(OfferingsResult.Available(packages))
+                }
             }
             override fun onError(error: PurchasesError) {
                 Log.e(TAG, "Failed to get offerings: ${error.message}")
-                onResult(emptyList())
+                onResult(OfferingsResult.Unavailable(error.message))
             }
         })
     }
@@ -309,8 +335,10 @@ object PremiumManager {
     ) {
         Log.d(TAG, "purchase() called — isConfigured=${Purchases.isConfigured}, rcPackage=${packageInfo.rcPackage != null}, productId=${packageInfo.productId}")
         if (!Purchases.isConfigured || packageInfo.rcPackage == null) {
+            // Should be unreachable: the paywalls only offer packages that came back
+            // from getOfferings as Available, so every one of them has a real rcPackage.
             Log.e(TAG, "Purchase blocked — isConfigured=${Purchases.isConfigured}, rcPackage=${packageInfo.rcPackage != null}")
-            onError("Billing not configured")
+            onError("Subscriptions aren't available right now. Please try again in a moment.")
             return
         }
 
@@ -339,7 +367,7 @@ object PremiumManager {
         onError: (String) -> Unit
     ) {
         if (!Purchases.isConfigured) {
-            onError("Billing not configured")
+            onError("The store isn't ready yet. Please try again in a moment.")
             return
         }
 

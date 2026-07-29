@@ -115,32 +115,27 @@ fun OnboardingPaywallScreen(
         return
     }
 
-    val fallbackPackages = remember {
-        listOf(
-            PackageInfo(
-                identifier = "annual",
-                productId = "migraineme_premium_annual",
-                price = "£39.99/year",
-                pricePerMonth = "£3.33",
-                isAnnual = true,
-                rcPackage = null
-            ),
-            PackageInfo(
-                identifier = "monthly",
-                productId = "migraineme_premium_monthly",
-                price = "£4.99/month",
-                pricePerMonth = null,
-                isAnnual = false,
-                rcPackage = null
-            )
-        )
-    }
+    // Load the real plans from the store. If they can't be loaded we show a notice
+    // rather than inventing prices — see StoreUnavailableNotice for why.
+    var unavailableReason by remember { mutableStateOf<String?>(null) }
+    var reloadKey by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(reloadKey) {
+        loading = true
+        unavailableReason = null
         PremiumManager.getOfferings { result ->
-            val displayPackages = result.ifEmpty { fallbackPackages }
-            packages = displayPackages
-            selectedPackage = displayPackages.firstOrNull { it.isAnnual } ?: displayPackages.firstOrNull()
+            when (result) {
+                is PremiumManager.OfferingsResult.Available -> {
+                    packages = result.packages
+                    selectedPackage = result.packages.firstOrNull { it.isAnnual }
+                        ?: result.packages.firstOrNull()
+                }
+                is PremiumManager.OfferingsResult.Unavailable -> {
+                    packages = emptyList()
+                    selectedPackage = null
+                    unavailableReason = result.reason
+                }
+            }
             loading = false
         }
     }
@@ -207,6 +202,8 @@ fun OnboardingPaywallScreen(
                 // ── Plan selection ──
                 if (loading) {
                     CircularProgressIndicator(color = AppTheme.AccentPurple, modifier = Modifier.size(32.dp))
+                } else if (unavailableReason != null) {
+                    StoreUnavailableNotice(onRetry = { reloadKey++ })
                 } else {
                     packages.sortedByDescending { it.isAnnual }.forEach { pkg ->
                         val isSelected = selectedPackage?.identifier == pkg.identifier
