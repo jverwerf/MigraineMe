@@ -159,6 +159,10 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging-ktx")
 
+    // Meta app events — install and in-app event attribution for the Meta ad
+    // campaigns. facebook-core only: we do not use Facebook Login or sharing.
+    implementation("com.facebook.android:facebook-core:18.0.3")
+
     // Coil — async image loading for Compose
     implementation("io.coil-kt:coil-compose:2.5.0")
 

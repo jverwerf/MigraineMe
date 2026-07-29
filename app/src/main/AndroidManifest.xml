@@ -75,6 +75,15 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
 
+        <!-- Meta app events: install and in-app event attribution for the ad
+             campaigns. The SDK auto-initialises off these two entries. -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
+
         <!-- Branded small icon + tint for FCM notification-payload pushes -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"

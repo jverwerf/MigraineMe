@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">MigraineMe</string>
+
+    <!-- Meta app events. Neither value is a secret: both ship inside the APK by
+         design and are read straight off the Meta app dashboard. -->
+    <string name="facebook_app_id" translatable="false">983159697661432</string>
+    <string name="facebook_client_token" translatable="false">24c774e9114637f3f367ad9a6172d561</string>
 </resources>
