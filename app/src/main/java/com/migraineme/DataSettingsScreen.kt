@@ -232,7 +232,7 @@ fun DataSettingsScreen(
                     Text(
                         "Toggle the metrics MigraineMe collects each day. " +
                         "Enabled metrics feed into your daily risk score and AI insights. " +
-                        "Some metrics need a wearable (WHOOP / Health Connect) or phone permissions — the row will guide you.",
+                        "Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.",
                         color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall
                     )
                 }

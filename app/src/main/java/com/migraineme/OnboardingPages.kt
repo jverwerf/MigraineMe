@@ -126,7 +126,7 @@ fun WelcomePage() {
             FeatureBullet(Icons.Outlined.AutoAwesome, "AI-powered daily insights")
             FeatureBullet(Icons.Outlined.Chat, "Chat with your data")
             FeatureBullet(Icons.Outlined.Description, "Doctor-ready PDF in one tap")
-            FeatureBullet(Icons.Outlined.Watch, "Apple Health, WHOOP, Oura, Polar, Garmin")
+            FeatureBullet(Icons.Outlined.Watch, "Apple Health, Oura, Polar, Garmin")
         }
 
         Spacer(Modifier.weight(1f))

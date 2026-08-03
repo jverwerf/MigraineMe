@@ -145,7 +145,7 @@ val setupSteps = listOf(
         "Tap Connect on the Health Connect card above.",
         interactive = true, spotlightKey = "health_connect_card", bottomCard = true),
     TourStep(Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Watch, "Connect Your Wearable",
-        "We support WHOOP, Oura, Polar, and Garmin. Connect yours to automatically import sleep, recovery, HRV, skin temp, and more.\n\nFor Garmin, the Pair code unlocks our companion app inside Garmin's Connect IQ store so it can run on your watch.",
+        "We support Oura, Polar, and Garmin. Connect yours to automatically import sleep, recovery, HRV, skin temp, and more.\n\nFor Garmin, the Pair code unlocks our companion app inside Garmin's Connect IQ store so it can run on your watch.",
         "Tap Connect on your wearable below.",
         interactive = true, spotlightKey = "wearables_group"),
     TourStep(Routes.DATA, Icons.Outlined.Storage, "Configure Data Collection",

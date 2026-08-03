@@ -3,7 +3,7 @@ Automated migraine tracking with personal insights from your own data.
 
 MigraineMe breaks away from the classic migraine diary. Instead of only looking backwards at the day a migraine already took from you, it helps you understand your personal patterns as they build. Every morning it shows you a personal risk estimate for the day, based on the triggers and early signs you have logged. Bad sleep, a pressure drop, low magnesium, long screens last night.
 
-It works because it watches the things that actually matter. Connect HealthKit, Health Connect, Garmin, Whoop, Oura or Polar and your sleep, heart rate, stress and recovery come in automatically. Live weather is pulled to your location because pressure swings are one of the most commonly reported migraine triggers. Link your favorite food tracking app or scan your food and commonly reported dietary triggers get flagged for you: caffeine, tyramine, gluten. No more guessing about the aged cheese.
+It works because it watches the things that actually matter. Connect HealthKit, Health Connect, Garmin, Oura or Polar and your sleep, heart rate, stress and recovery come in automatically. Live weather is pulled to your location because pressure swings are one of the most commonly reported migraine triggers. Link your favorite food tracking app or scan your food and commonly reported dietary triggers get flagged for you: caffeine, tyramine, gluten. No more guessing about the aged cheese.
 
 Smart logging. Almost everything is tracked for you in the background. The rest takes seconds. Talk to the app, type a quick message, or tap from your own list of prodromes, triggers, medicines and reliefs. Tell it "woke up with neck stiffness and took 100mg sumatriptan" and it sorts the rest.
 

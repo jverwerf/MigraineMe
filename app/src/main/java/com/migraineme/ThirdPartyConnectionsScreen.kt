@@ -69,7 +69,7 @@ fun ThirdPartyConnectionsScreen(
 
     val connectionsInfoText = "Link your existing health platforms and wearables so MigraineMe can pull data automatically and you don't have to log everything manually.\n\n" +
         "Apple Health / Health Connect: pulls health metrics from any app on your phone that's set up to share with it. If you log food in MyFitnessPal or Cronometer, sleep in Samsung Health, or activity from a Fitbit / Garmin / Apple Watch through their official apps, all of that lands in MigraineMe through here.\n\n" +
-        "Wearables (WHOOP, Oura, Polar, Garmin): direct OAuth integrations. We pull sleep duration and stages, sleep efficiency, recovery score, HRV, resting heart rate, skin temperature, blood oxygen, stress index, strain, and time in high heart-rate zones. Each wearable supports a slightly different subset; the Data Settings screen shows you exactly which metrics your connected source provides.\n\n" +
+        "Wearables (Oura, Polar, Garmin): direct OAuth integrations. We pull sleep duration and stages, sleep efficiency, recovery score, HRV, resting heart rate, skin temperature, blood oxygen, stress index, strain, and time in high heart-rate zones. Each wearable supports a slightly different subset; the Data Settings screen shows you exactly which metrics your connected source provides.\n\n" +
         "Calendar: granted via the permissions step at onboarding rather than here. Once enabled, the Daily Check-In's \"From your calendar\" page suggests your day's events as triggers, reliefs, or activities.\n\n" +
         "Tap any provider card to connect or disconnect. Connecting opens the provider's own login screen; disconnecting stops the data pull but keeps everything you've already imported."
 
@@ -1062,6 +1062,12 @@ fun ThirdPartyConnectionsScreen(
 
             // WHOOP Row
             Column(Modifier.spotlightTarget("wearables_group")) {
+            // WHOOP intentionally hidden unless already connected (WHOOP never
+            // responded to our API access request). The auth service, access gate,
+            // token sync, and disconnect flows all stay wired in code; connected
+            // users keep the row so they can disconnect. To re-enable for
+            // everyone, remove this hasWhoop gate.
+            if (hasWhoop.value) {
             Box(Modifier.spotlightTarget("whoop_card")) {
                 ConnectionRowLogoOnly(
                     logoResId = whoopLogoResId,
@@ -1099,6 +1105,7 @@ fun ThirdPartyConnectionsScreen(
             }
 
             Spacer(Modifier.height(12.dp))
+            }
 
             // Oura Row
             ConnectionRowLogoOnly(

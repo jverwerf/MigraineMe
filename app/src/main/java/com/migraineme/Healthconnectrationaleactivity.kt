@@ -105,7 +105,7 @@ private fun RationaleScreen(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                "Used to read nutrition, sleep, heart rate, HRV, steps, menstruation, and other health data from apps like Cronometer, WHOOP, Samsung Health, etc.",
+                "Used to read nutrition, sleep, heart rate, HRV, steps, menstruation, and other health data from apps like Cronometer, Fitbit, Samsung Health, etc.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
