@@ -19,13 +19,21 @@ class ProdromeViewModel : ViewModel() {
     private val _frequent = MutableStateFlow<List<SupabaseDbService.ProdromePrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.ProdromePrefRow>> = _frequent
 
-    /** Map of prodrome type → days ago (0=today, 1=yesterday, 2=two days, 3=three days). Lowest value wins if logged multiple times. */
-    private val _recentDaysAgo = MutableStateFlow<Map<String, Int>>(emptyMap())
-    val recentDaysAgo: StateFlow<Map<String, Int>> = _recentDaysAgo
+    /**
+     * Prodrome suggestions for the reference date they were computed for.
+     * Days ago is 0=same day … 3=three days out; lowest value wins per type.
+     */
+    private val _recent = MutableStateFlow(RecentPicks())
+    val recent: StateFlow<RecentPicks> = _recent
 
-    /** Map of prodrome type → most recent start_at ISO string. */
-    private val _recentStartAts = MutableStateFlow<Map<String, String>>(emptyMap())
-    val recentStartAts: StateFlow<Map<String, String>> = _recentStartAts
+    /** Bumped per load so a slow response can never overwrite a newer one. */
+    private var recentLoadId = 0
+
+    /** Clear cached recent prodrome data (call on wizard exit / draft clear). */
+    fun clearRecent() {
+        recentLoadId++
+        _recent.value = RecentPicks()
+    }
 
     private fun safeSortPrefs(prefs: List<SupabaseDbService.ProdromePrefRow>) =
         prefs.sortedBy { it.position }
@@ -46,11 +54,18 @@ class ProdromeViewModel : ViewModel() {
     }
 
     fun loadRecent(accessToken: String, referenceDate: String? = null) {
+        val loadId = ++recentLoadId
+        // Drop the previous date's results up front. Until this load lands there
+        // are no suggestions, which is the only honest answer while in flight.
+        _recent.value = RecentPicks()
         viewModelScope.launch {
-            try {
-                val refDate = referenceDate?.let {
-                    try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
-                } ?: java.time.LocalDate.now()
+            // No migraine date set → don't suggest prodromes from any date.
+            // Never fall back to today: that is how a backdated log ends up
+            // carrying this week's entries.
+            val refDate = referenceDate?.take(10)?.let {
+                try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
+            } ?: return@launch
+            val picks = try {
                 val rows = db.getRecentProdromes(accessToken, daysBack = 3, referenceDate = refDate.toString())
                 val map = mutableMapOf<String, Int>()
                 val isoMap = mutableMapOf<String, String>()
@@ -69,13 +84,12 @@ class ProdromeViewModel : ViewModel() {
                         }
                     }
                 }
-                _recentDaysAgo.value = map
-                _recentStartAts.value = isoMap
+                RecentPicks(refDate.toString(), map, isoMap)
             } catch (e: Exception) {
                 e.printStackTrace()
-                _recentDaysAgo.value = emptyMap()
-                _recentStartAts.value = emptyMap()
+                RecentPicks()
             }
+            if (loadId == recentLoadId) _recent.value = picks
         }
     }
 

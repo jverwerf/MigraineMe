@@ -16,13 +16,21 @@ class ActivityViewModel : ViewModel() {
     private val _frequent = MutableStateFlow<List<SupabaseDbService.ActivityPrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.ActivityPrefRow>> = _frequent
 
-    /** Map of activity type (lowercase) → days ago. */
-    private val _recentDaysAgo = MutableStateFlow<Map<String, Int>>(emptyMap())
-    val recentDaysAgo: StateFlow<Map<String, Int>> = _recentDaysAgo
+    /**
+     * Activity suggestions (type lowercase) for the reference date they were
+     * computed for. Days ago is 0=same day … 3=three days out.
+     */
+    private val _recent = MutableStateFlow(RecentPicks())
+    val recent: StateFlow<RecentPicks> = _recent
 
-    /** Map of activity type (lowercase) → most recent start_at ISO. */
-    private val _recentStartAts = MutableStateFlow<Map<String, String>>(emptyMap())
-    val recentStartAts: StateFlow<Map<String, String>> = _recentStartAts
+    /** Bumped per load so a slow response can never overwrite a newer one. */
+    private var recentLoadId = 0
+
+    /** Clear cached recent activity data (call on wizard exit / draft clear). */
+    fun clearRecent() {
+        recentLoadId++
+        _recent.value = RecentPicks()
+    }
 
     fun loadAll(accessToken: String) {
         viewModelScope.launch {
@@ -34,11 +42,18 @@ class ActivityViewModel : ViewModel() {
     }
 
     fun loadRecent(accessToken: String, referenceDate: String? = null) {
+        val loadId = ++recentLoadId
+        // Drop the previous date's results up front. Until this load lands there
+        // are no suggestions, which is the only honest answer while in flight.
+        _recent.value = RecentPicks()
         viewModelScope.launch {
-            try {
-                val refDate = referenceDate?.let {
-                    try { java.time.LocalDate.parse(it.substring(0, 10)) } catch (_: Exception) { null }
-                } ?: java.time.LocalDate.now()
+            // No migraine date set → don't suggest activities from any date.
+            // Never fall back to today: that is how a backdated log ends up
+            // carrying this week's entries.
+            val refDate = referenceDate?.take(10)?.let {
+                try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
+            } ?: return@launch
+            val picks = try {
                 val rows = db.getRecentActivities(accessToken, daysBack = 3, referenceDate = refDate.toString())
                 val daysMap = mutableMapOf<String, Int>()
                 val isoMap = mutableMapOf<String, String>()
@@ -57,13 +72,12 @@ class ActivityViewModel : ViewModel() {
                         }
                     }
                 }
-                _recentDaysAgo.value = daysMap
-                _recentStartAts.value = isoMap
+                RecentPicks(refDate.toString(), daysMap, isoMap)
             } catch (e: Exception) {
                 e.printStackTrace()
-                _recentDaysAgo.value = emptyMap()
-                _recentStartAts.value = emptyMap()
+                RecentPicks()
             }
+            if (loadId == recentLoadId) _recent.value = picks
         }
     }
 

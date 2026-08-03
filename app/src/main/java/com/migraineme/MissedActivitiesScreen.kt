@@ -47,19 +47,21 @@ fun MissedActivitiesScreen(
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(authState.accessToken) {
+    // Day key of the migraine start the draft currently claims. The suggestions
+    // are relative to it, so a date change has to re-run the load.
+    val currentRefDate = draft.migraine?.beganAtIso?.take(10)
+
+    LaunchedEffect(authState.accessToken, currentRefDate) {
         authState.accessToken?.let {
             vm.loadAll(it)
-            val refDate = draft.migraine?.beganAtIso?.take(10)
-            vm.loadUpcoming(it, referenceDate = refDate)
+            vm.loadUpcoming(it, referenceDate = currentRefDate)
         }
     }
 
-    // Auto-suggest: any activity logged today through today+7 is something
-    // the user likely won't make while sick. Tracked below after the
-    // rebuildDraftWithMissed helper is defined.
+    // Auto-suggest: any activity scheduled on the migraine's start date through
+    // +7 days is something the user likely won't make while sick. Tracked below
+    // after the rebuildDraftWithMissed helper is defined.
     val upcoming by vm.upcoming.collectAsState()
-    var hasAutoSuggested by remember { mutableStateOf(false) }
 
     fun rebuildDraftWithMissed(missed: List<MissedActivityDraft>) {
         val d = draft
@@ -84,18 +86,25 @@ fun MissedActivitiesScreen(
         }
     }
 
-    LaunchedEffect(upcoming) {
-        if (!hasAutoSuggested && upcoming.isNotEmpty()) {
-            val currentLabels = draft.missedActivities.map { it.type }.toSet()
-            val toAdd = upcoming.filter { it !in currentLabels }
-            if (toAdd.isNotEmpty()) {
-                val starts = vm.upcomingStartAts.value
-                rebuildDraftWithMissed(draft.missedActivities + toAdd.map { label ->
-                    MissedActivityDraft(type = label, startAtIso = starts[label])
-                })
-            }
-            hasAutoSuggested = true
+    // The suggestions must be stamped with the SAME day as the draft, so a load
+    // still in flight or left over from an earlier date is never applied here.
+    LaunchedEffect(upcoming, currentRefDate) {
+        if (currentRefDate == null) return@LaunchedEffect
+        if (upcoming.refDate != currentRefDate) return@LaunchedEffect
+        if (logVm.autoSelectedRefDate("missed") == currentRefDate) return@LaunchedEffect
+
+        // Anything auto-added under a previous date belongs to that date's
+        // window, so drop it instead of leaving it on this log.
+        val previouslyAdded = logVm.autoSelectedTypes("missed")
+        val kept = draft.missedActivities.filter { it.type !in previouslyAdded }
+        val currentLabels = kept.map { it.type }.toSet()
+        val toAdd = upcoming.types.filter { it !in currentLabels }
+        if (toAdd.isNotEmpty() || kept.size != draft.missedActivities.size) {
+            rebuildDraftWithMissed(kept + toAdd.map { label ->
+                MissedActivityDraft(type = label, startAtIso = upcoming.startAts[label])
+            })
         }
+        logVm.recordAutoSelect("missed", currentRefDate, toAdd.toSet())
     }
 
     val frequentLabels = remember(frequent) { frequent.mapNotNull { it.missedActivity?.label }.toSet() }

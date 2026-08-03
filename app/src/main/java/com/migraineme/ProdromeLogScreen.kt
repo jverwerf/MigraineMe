@@ -76,27 +76,18 @@ fun ProdromeLogScreen(
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    // Track which reference date the recent data was loaded for
-    var recentLoadedForDate by remember { mutableStateOf<String?>(null) }
-
     LaunchedEffect(authState.accessToken, draft.migraine?.beganAtIso) {
         authState.accessToken?.let {
             vm.loadAll(it)
-            val refDate = draft.migraine?.beganAtIso
-            vm.loadRecent(it, refDate)
-            recentLoadedForDate = refDate
+            vm.loadRecent(it, draft.migraine?.beganAtIso)
         }
     }
 
-    // Recent prodromes: type → days ago
-    val recentDaysAgo by vm.recentDaysAgo.collectAsState()
-    val recentStartAts by vm.recentStartAts.collectAsState()
-    var hasAutoSelected by remember { mutableStateOf(false) }
+    // Recent prodromes, carrying the reference date they were computed for.
+    val recent by vm.recent.collectAsState()
 
-    // Reset auto-select when migraine date changes
-    LaunchedEffect(draft.migraine?.beganAtIso) {
-        hasAutoSelected = false
-    }
+    // Day key of the migraine start the draft currently claims.
+    val currentRefDate = draft.migraine?.beganAtIso?.take(10)
 
     // ── Rebuild helpers ──
     fun rebuildDraftWithProdromes(prodromes: List<ProdromeDraft>) {
@@ -107,23 +98,26 @@ fun ProdromeLogScreen(
     var showAddTimeDialog by remember { mutableStateOf(false) }
     var pendingLabel by remember { mutableStateOf<String?>(null) }
 
-    // ── Auto-select recent prodromes (once, on first load — wizard only) ──
-    // Only auto-select when user has explicitly set a migraine date
-    // AND the recent data was loaded for the CURRENT date (not stale from a previous migraine)
-    LaunchedEffect(recentDaysAgo, pool, recentLoadedForDate) {
-        val currentDate = draft.migraine?.beganAtIso
-        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty()
-            && currentDate != null && recentLoadedForDate == currentDate) {
-            val currentLabels = draft.prodromes.map { it.type }.toSet()
-            val poolLabelsSet = pool.map { it.label }.toSet()
-            val toAdd = recentDaysAgo.keys
-                .filter { it in poolLabelsSet && it !in currentLabels }
-            if (toAdd.isNotEmpty()) {
-                val newProdromes = draft.prodromes + toAdd.map { ProdromeDraft(it, startAtIso = recentStartAts[it]) }
-                rebuildDraftWithProdromes(newProdromes)
-            }
-            hasAutoSelected = true
+    // ── Auto-select recent prodromes (once per reference date — wizard only) ──
+    // The suggestions must be stamped with the SAME day as the draft, so a load
+    // still in flight or left over from an earlier date is never applied here.
+    LaunchedEffect(recent, pool, currentRefDate, quickLogMode) {
+        if (quickLogMode || currentRefDate == null) return@LaunchedEffect
+        if (recent.refDate != currentRefDate || pool.isEmpty()) return@LaunchedEffect
+        if (logVm.autoSelectedRefDate("prodromes") == currentRefDate) return@LaunchedEffect
+
+        // Anything auto-added under a previous date carries that date's
+        // timestamp, so drop it instead of leaving it on this log.
+        val previouslyAdded = logVm.autoSelectedTypes("prodromes")
+        val kept = draft.prodromes.filter { it.type !in previouslyAdded }
+        val poolLabelsSet = pool.map { it.label }.toSet()
+        val currentLabels = kept.map { it.type }.toSet()
+        val toAdd = recent.daysAgo.keys
+            .filter { it in poolLabelsSet && it !in currentLabels }
+        if (toAdd.isNotEmpty() || kept.size != draft.prodromes.size) {
+            rebuildDraftWithProdromes(kept + toAdd.map { ProdromeDraft(it, startAtIso = recent.startAts[it]) })
         }
+        logVm.recordAutoSelect("prodromes", currentRefDate, toAdd.toSet())
     }
 
     // ── Time dialog: edit existing ──
@@ -322,7 +316,7 @@ fun ProdromeLogScreen(
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { prod ->
-                            ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recentDaysAgo[prod.label]) {
+                            ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recent.daysAgo[prod.label]) {
                                 onProdromeTap(prod.label)
                             }
                         }
@@ -337,7 +331,7 @@ fun ProdromeLogScreen(
                         Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { prod ->
-                                ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recentDaysAgo[prod.label]) {
+                                ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recent.daysAgo[prod.label]) {
                                     onProdromeTap(prod.label)
                                 }
                             }

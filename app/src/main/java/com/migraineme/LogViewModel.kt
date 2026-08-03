@@ -301,7 +301,36 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun clearDraft() { _draft.value = Draft(); _editMigraineId.value = null }
+    fun clearDraft() {
+        _draft.value = Draft()
+        _editMigraineId.value = null
+        autoSelectedFor.clear()
+        autoAdded.clear()
+    }
+
+    // ── Auto-select bookkeeping ──
+    //
+    // Wizard steps pre-select recent entries for the migraine's start date. This
+    // has to be remembered next to the draft, NOT in the step's `remember`
+    // state: navigating away from a step drops its composition, and on the way
+    // back the step would no longer recognise its own earlier picks. That is how
+    // suggestions for a date the user has since changed stay on the log.
+    //
+    // Keyed by step ("triggers", "prodromes", "activities", "missed").
+
+    private val autoSelectedFor = mutableMapOf<String, String>()
+    private val autoAdded = mutableMapOf<String, Set<String>>()
+
+    /** Reference date this step last auto-selected for, or null if it hasn't. */
+    fun autoSelectedRefDate(step: String): String? = autoSelectedFor[step]
+
+    /** Entry types this step auto-selected for [autoSelectedRefDate]. */
+    fun autoSelectedTypes(step: String): Set<String> = autoAdded[step] ?: emptySet()
+
+    fun recordAutoSelect(step: String, refDate: String, added: Set<String>) {
+        autoSelectedFor[step] = refDate
+        autoAdded[step] = added
+    }
 
     // Direct list replacements – preserves editMigraineId and existingIds on other lists
     fun replaceTriggers(triggers: List<TriggerDraft>) {

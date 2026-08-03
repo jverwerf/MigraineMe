@@ -16,30 +16,43 @@ class MissedActivityViewModel : ViewModel() {
     private val _frequent = MutableStateFlow<List<SupabaseDbService.MissedActivityPrefRow>>(emptyList())
     val frequent: StateFlow<List<SupabaseDbService.MissedActivityPrefRow>> = _frequent
 
-    /** Activities scheduled today through today+7 — used by the migraine
+    /** Activities scheduled on the migraine's start date through +7 days, tagged
+     *  with the reference date they were computed for — used by the migraine
      *  wizard's MissedActivitiesStep to auto-suggest as missed. */
-    private val _upcoming = MutableStateFlow<List<String>>(emptyList())
-    val upcoming: StateFlow<List<String>> = _upcoming
-    private val _upcomingStartAts = MutableStateFlow<Map<String, String>>(emptyMap())
-    val upcomingStartAts: StateFlow<Map<String, String>> = _upcomingStartAts
+    private val _upcoming = MutableStateFlow(UpcomingPicks())
+    val upcoming: StateFlow<UpcomingPicks> = _upcoming
+
+    /** Bumped per load so a slow response can never overwrite a newer one. */
+    private var upcomingLoadId = 0
+
+    /** Clear cached upcoming data (call on wizard exit / draft clear). */
+    fun clearUpcoming() {
+        upcomingLoadId++
+        _upcoming.value = UpcomingPicks()
+    }
 
     fun loadUpcoming(accessToken: String, referenceDate: String? = null) {
+        val loadId = ++upcomingLoadId
+        _upcoming.value = UpcomingPicks()
         viewModelScope.launch {
-            try {
-                val rows = db.getUpcomingActivities(accessToken, daysAhead = 7, referenceDate = referenceDate)
+            // No migraine date set → no suggestions. Never fall back to today.
+            val refDate = referenceDate?.take(10)?.let {
+                try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
+            } ?: return@launch
+            val picks = try {
+                val rows = db.getUpcomingActivities(accessToken, daysAhead = 7, referenceDate = refDate.toString())
                 val seen = linkedMapOf<String, String>()
                 for (r in rows) {
                     val t = r.type ?: continue
                     val s = r.startAt ?: continue
                     if (!seen.containsKey(t)) seen[t] = s
                 }
-                _upcoming.value = seen.keys.toList()
-                _upcomingStartAts.value = seen
+                UpcomingPicks(refDate.toString(), seen.keys.toList(), seen)
             } catch (e: Exception) {
                 e.printStackTrace()
-                _upcoming.value = emptyList()
-                _upcomingStartAts.value = emptyMap()
+                UpcomingPicks()
             }
+            if (loadId == upcomingLoadId) _upcoming.value = picks
         }
     }
 

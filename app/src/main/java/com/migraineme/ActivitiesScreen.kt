@@ -52,56 +52,51 @@ fun ActivitiesScreen(
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    // Track which reference date the recent data was loaded for
-    var recentLoadedForDate by remember { mutableStateOf<String?>(null) }
-
     LaunchedEffect(authState.accessToken, draft.migraine?.beganAtIso) {
         authState.accessToken?.let {
             vm.loadAll(it)
-            val refDate = draft.migraine?.beganAtIso
-            vm.loadRecent(it, refDate)
-            recentLoadedForDate = refDate
+            vm.loadRecent(it, draft.migraine?.beganAtIso)
         }
     }
 
-    // Recent activities: type (lowercase) → days ago / start_at
-    val recentDaysAgo by vm.recentDaysAgo.collectAsState()
-    val recentStartAts by vm.recentStartAts.collectAsState()
-    var hasAutoSelected by remember { mutableStateOf(false) }
+    // Recent activities (keyed by lowercase activity_type), carrying the
+    // reference date they were computed for.
+    val recent by vm.recent.collectAsState()
 
-    // Reset auto-select when migraine date changes
-    LaunchedEffect(draft.migraine?.beganAtIso) {
-        hasAutoSelected = false
-    }
+    // Day key of the migraine start the draft currently claims.
+    val currentRefDate = draft.migraine?.beganAtIso?.take(10)
 
     fun rebuildDraftWithActivities(acts: List<ActivityDraft>) {
         logVm.replaceActivities(acts)
     }
 
-    // ── Auto-select recent activities (once, on first load — wizard only) ──
-    // Recent data uses lowercase activity_type; pool uses title case labels
-    // Only auto-select when user has explicitly set a migraine date
-    // AND the recent data was loaded for the CURRENT date (not stale from a previous migraine)
-    LaunchedEffect(recentDaysAgo, pool, recentLoadedForDate) {
-        val currentDate = draft.migraine?.beganAtIso
-        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty()
-            && currentDate != null && recentLoadedForDate == currentDate) {
-            val currentLabels = draft.activities.map { it.type.lowercase() }.toSet()
-            // Build lowercase → title case mapping from pool
-            val poolLabelMap = pool.associate { it.label.lowercase() to it.label }
-            val toAdd = recentDaysAgo.keys
-                .filter { it in poolLabelMap && it !in currentLabels }
-            if (toAdd.isNotEmpty()) {
-                val newActs = draft.activities + toAdd.map { key ->
-                    ActivityDraft(
-                        type = poolLabelMap[key] ?: key,
-                        startAtIso = recentStartAts[key]
-                    )
-                }
-                rebuildDraftWithActivities(newActs)
-            }
-            hasAutoSelected = true
+    // ── Auto-select recent activities (once per reference date — wizard only) ──
+    // Recent data uses lowercase activity_type; pool uses title case labels.
+    // The suggestions must be stamped with the SAME day as the draft, so a load
+    // still in flight or left over from an earlier date is never applied here.
+    LaunchedEffect(recent, pool, currentRefDate, quickLogMode) {
+        if (quickLogMode || currentRefDate == null) return@LaunchedEffect
+        if (recent.refDate != currentRefDate || pool.isEmpty()) return@LaunchedEffect
+        if (logVm.autoSelectedRefDate("activities") == currentRefDate) return@LaunchedEffect
+
+        // Anything auto-added under a previous date carries that date's
+        // timestamp, so drop it instead of leaving it on this log.
+        val previouslyAdded = logVm.autoSelectedTypes("activities")
+        val kept = draft.activities.filter { it.type.lowercase() !in previouslyAdded }
+        val currentLabels = kept.map { it.type.lowercase() }.toSet()
+        // Build lowercase → title case mapping from pool
+        val poolLabelMap = pool.associate { it.label.lowercase() to it.label }
+        val toAdd = recent.daysAgo.keys
+            .filter { it in poolLabelMap && it !in currentLabels }
+        if (toAdd.isNotEmpty() || kept.size != draft.activities.size) {
+            rebuildDraftWithActivities(kept + toAdd.map { key ->
+                ActivityDraft(
+                    type = poolLabelMap[key] ?: key,
+                    startAtIso = recent.startAts[key]
+                )
+            })
         }
+        logVm.recordAutoSelect("activities", currentRefDate, toAdd.toSet())
     }
 
     // ── Time dialog: add new ──
@@ -172,9 +167,9 @@ fun ActivitiesScreen(
     val grouped = remember(pool) { pool.groupBy { it.category ?: "Other" }.toSortedMap() }
 
     // Build daysAgo lookup keyed by title-case label (matching pool)
-    val daysAgoByLabel = remember(recentDaysAgo, pool) {
+    val daysAgoByLabel = remember(recent, pool) {
         val poolLabelMap = pool.associate { it.label.lowercase() to it.label }
-        recentDaysAgo.mapKeys { (k, _) -> poolLabelMap[k] ?: k }
+        recent.daysAgo.mapKeys { (k, _) -> poolLabelMap[k] ?: k }
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->

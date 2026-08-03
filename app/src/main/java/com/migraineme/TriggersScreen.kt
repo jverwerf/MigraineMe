@@ -78,50 +78,45 @@ fun TriggersScreen(
     val draft by logVm.draft.collectAsState()
     val scrollState = rememberScrollState()
 
-    // Track which reference date the recent data was loaded for
-    var recentLoadedForDate by remember { mutableStateOf<String?>(null) }
-
     LaunchedEffect(authState.accessToken, draft.migraine?.beganAtIso) {
         authState.accessToken?.let { token ->
             vm.loadAll(token)
-            val refDate = draft.migraine?.beganAtIso
-            vm.loadRecent(token, refDate)
-            recentLoadedForDate = refDate
+            vm.loadRecent(token, draft.migraine?.beganAtIso)
         }
     }
 
-    // Recent triggers: type → days ago
-    val recentDaysAgo by vm.recentDaysAgo.collectAsState()
-    val recentStartAts by vm.recentStartAts.collectAsState()
-    var hasAutoSelected by remember { mutableStateOf(false) }
+    // Recent triggers, carrying the reference date they were computed for.
+    val recent by vm.recent.collectAsState()
 
-    // Reset auto-select when migraine date changes
-    LaunchedEffect(draft.migraine?.beganAtIso) {
-        hasAutoSelected = false
-    }
+    // Day key of the migraine start the draft currently claims.
+    val currentRefDate = draft.migraine?.beganAtIso?.take(10)
 
     // ── Rebuild helpers ──
     fun rebuildDraftWithTriggers(triggers: List<TriggerDraft>) {
         logVm.replaceTriggers(triggers)
     }
 
-    // ── Auto-select recent triggers (once, on first load — wizard only) ──
-    // Only auto-select when user has explicitly set a migraine date
-    // AND the recent data was loaded for the CURRENT date (not stale from a previous migraine)
-    LaunchedEffect(recentDaysAgo, pool, recentLoadedForDate) {
-        val currentDate = draft.migraine?.beganAtIso
-        if (!quickLogMode && !hasAutoSelected && recentDaysAgo.isNotEmpty() && pool.isNotEmpty()
-            && currentDate != null && recentLoadedForDate == currentDate) {
-            val currentLabels = draft.triggers.map { it.type }.toSet()
-            val poolLabelsSet = pool.map { it.label }.toSet()
-            val toAdd = recentDaysAgo.keys
-                .filter { it in poolLabelsSet && it !in currentLabels }
-            if (toAdd.isNotEmpty()) {
-                val newTriggers = draft.triggers + toAdd.map { TriggerDraft(it, startAtIso = recentStartAts[it]) }
-                rebuildDraftWithTriggers(newTriggers)
-            }
-            hasAutoSelected = true
+    // ── Auto-select recent triggers (once per reference date — wizard only) ──
+    // The suggestions must be stamped with the SAME day as the draft. Anything
+    // else (a load still in flight, leftovers from an earlier wizard run on this
+    // activity-scoped ViewModel) is ignored rather than applied to this log.
+    LaunchedEffect(recent, pool, currentRefDate, quickLogMode) {
+        if (quickLogMode || currentRefDate == null) return@LaunchedEffect
+        if (recent.refDate != currentRefDate || pool.isEmpty()) return@LaunchedEffect
+        if (logVm.autoSelectedRefDate("triggers") == currentRefDate) return@LaunchedEffect
+
+        // Anything auto-added under a previous date carries that date's
+        // timestamp, so drop it instead of leaving it on this log.
+        val previouslyAdded = logVm.autoSelectedTypes("triggers")
+        val kept = draft.triggers.filter { it.type !in previouslyAdded }
+        val poolLabelsSet = pool.map { it.label }.toSet()
+        val currentLabels = kept.map { it.type }.toSet()
+        val toAdd = recent.daysAgo.keys
+            .filter { it in poolLabelsSet && it !in currentLabels }
+        if (toAdd.isNotEmpty() || kept.size != draft.triggers.size) {
+            rebuildDraftWithTriggers(kept + toAdd.map { TriggerDraft(it, startAtIso = recent.startAts[it]) })
         }
+        logVm.recordAutoSelect("triggers", currentRefDate, toAdd.toSet())
     }
 
     // ── Time dialog: add new ──
@@ -316,7 +311,7 @@ fun TriggersScreen(
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         pool.filter { it.label in frequentLabels }.forEach { trig ->
-                            TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recentDaysAgo[trig.label]) {
+                            TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recent.daysAgo[trig.label]) {
                                 onTriggerTap(trig.label)
                             }
                         }
@@ -332,7 +327,7 @@ fun TriggersScreen(
                         Text(prettyLabel(category), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             nonFreqItems.forEach { trig ->
-                                TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recentDaysAgo[trig.label]) {
+                                TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recent.daysAgo[trig.label]) {
                                     onTriggerTap(trig.label)
                                 }
                             }

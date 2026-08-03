@@ -22,18 +22,20 @@ class TriggerViewModel : ViewModel() {
     private val _hidden = MutableStateFlow<List<SupabaseDbService.TriggerPrefRow>>(emptyList())
     val hidden: StateFlow<List<SupabaseDbService.TriggerPrefRow>> = _hidden
 
-    /** Map of trigger type → days ago (0=today, 1=yesterday, 2=two days, 3=three days). Lowest value wins. */
-    private val _recentDaysAgo = MutableStateFlow<Map<String, Int>>(emptyMap())
-    val recentDaysAgo: StateFlow<Map<String, Int>> = _recentDaysAgo
+    /**
+     * Trigger suggestions for the reference date they were computed for.
+     * Days ago is 0=same day … 3=three days out; lowest value wins per type.
+     */
+    private val _recent = MutableStateFlow(RecentPicks())
+    val recent: StateFlow<RecentPicks> = _recent
 
-    /** Map of trigger type → most recent start_at ISO string. */
-    private val _recentStartAts = MutableStateFlow<Map<String, String>>(emptyMap())
-    val recentStartAts: StateFlow<Map<String, String>> = _recentStartAts
+    /** Bumped per load so a slow response can never overwrite a newer one. */
+    private var recentLoadId = 0
 
     /** Clear cached recent trigger data (call on wizard exit / draft clear). */
     fun clearRecent() {
-        _recentDaysAgo.value = emptyMap()
-        _recentStartAts.value = emptyMap()
+        recentLoadId++
+        _recent.value = RecentPicks()
     }
 
     private fun safeSortPrefs(prefs: List<SupabaseDbService.TriggerPrefRow>) =
@@ -57,21 +59,16 @@ class TriggerViewModel : ViewModel() {
     }
 
     fun loadRecent(accessToken: String, referenceDate: String? = null) {
+        val loadId = ++recentLoadId
+        // Drop the previous date's results up front. Until this load lands there
+        // are no suggestions, which is the only honest answer while in flight.
+        _recent.value = RecentPicks()
         viewModelScope.launch {
-            try {
-                // No migraine date set → don't suggest triggers from any date
-                if (referenceDate.isNullOrBlank()) {
-                    _recentDaysAgo.value = emptyMap()
-                    _recentStartAts.value = emptyMap()
-                    return@launch
-                }
-                val refDate = try {
-                    java.time.LocalDate.parse(referenceDate.substring(0, 10))
-                } catch (_: Exception) {
-                    _recentDaysAgo.value = emptyMap()
-                    _recentStartAts.value = emptyMap()
-                    return@launch
-                }
+            // No migraine date set → don't suggest triggers from any date
+            val refDate = referenceDate?.take(10)?.let {
+                try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
+            } ?: return@launch
+            val picks = try {
                 val rows = db.getRecentTriggers(accessToken, daysBack = 3, referenceDate = refDate.toString())
                 val map = mutableMapOf<String, Int>()
                 val isoMap = mutableMapOf<String, String>()
@@ -90,13 +87,12 @@ class TriggerViewModel : ViewModel() {
                         }
                     }
                 }
-                _recentDaysAgo.value = map
-                _recentStartAts.value = isoMap
+                RecentPicks(refDate.toString(), map, isoMap)
             } catch (e: Exception) {
                 e.printStackTrace()
-                _recentDaysAgo.value = emptyMap()
-                _recentStartAts.value = emptyMap()
+                RecentPicks()
             }
+            if (loadId == recentLoadId) _recent.value = picks
         }
     }
 
