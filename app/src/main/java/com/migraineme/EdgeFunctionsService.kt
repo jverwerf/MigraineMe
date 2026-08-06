@@ -70,13 +70,19 @@ class EdgeFunctionsService {
         @SerialName("user_id") val userId: String,
         val type: String,
         val enabled: Boolean,
+        // Only meaningful for "daily_gauge": LOW / MILD / HIGH. Null elsewhere.
+        val threshold: String? = null,
+        // Only meaningful for "ongoing_migraine": days between reminders.
+        @SerialName("interval_days") val intervalDays: Int? = null,
         @SerialName("updated_at") val updatedAtIso: String
     )
 
     @Serializable
     data class NotificationSettingResponse(
         val type: String,
-        val enabled: Boolean
+        val enabled: Boolean,
+        val threshold: String? = null,
+        @SerialName("interval_days") val intervalDays: Int? = null
     )
 
     @Serializable
@@ -495,7 +501,46 @@ class EdgeFunctionsService {
         }
     }
 
-    suspend fun upsertNotificationSetting(context: Context, type: String, enabled: Boolean): Boolean {
+    /**
+     * Reads the full preference row, including the gauge alert threshold.
+     * Returns null when there is no row, which the caller should read as
+     * "never configured" rather than "off".
+     */
+    suspend fun getNotificationSetting(context: Context, type: String): NotificationSettingResponse? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+        val userId = SessionStore.readUserId(appCtx) ?: return null
+
+        val client = buildClient()
+        return try {
+            val url =
+                "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/notification_settings" +
+                    "?user_id=eq.$userId&type=eq.$type&select=type,enabled,threshold,interval_days"
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+            if (res.status.value in 200..299) {
+                res.body<List<NotificationSettingResponse>>().firstOrNull()
+            } else {
+                Log.e("EdgeFunctionsService", "getNotificationSetting failed: ${res.status}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getNotificationSetting error: ${e.message}", e)
+            null
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun upsertNotificationSetting(
+        context: Context,
+        type: String,
+        enabled: Boolean,
+        threshold: String? = null,
+        intervalDays: Int? = null
+    ): Boolean {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return false
         val userId = SessionStore.readUserId(appCtx) ?: return false
@@ -504,6 +549,8 @@ class EdgeFunctionsService {
             userId = userId,
             type = type,
             enabled = enabled,
+            threshold = threshold,
+            intervalDays = intervalDays,
             updatedAtIso = Instant.now().toString()
         )
 
@@ -2140,7 +2187,7 @@ class EdgeFunctionsService {
      * Read top significant correlations from PostgREST.
      * Filters out symptom-aware rows so they don't crowd out the existing top-50 by lift.
      */
-    suspend fun getTopCorrelations(context: Context, limit: Int = 50): List<CorrelationStat> {
+    suspend fun getTopCorrelations(context: Context, limit: Int = 80): List<CorrelationStat> {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
 
@@ -2184,6 +2231,37 @@ class EdgeFunctionsService {
         @SerialName("avg_duration_hours") val avgDurationHours: Float? = null,
         @SerialName("sample_size") val sampleSize: Int = 0,
     )
+
+    /**
+     * Aura findings computed server-side: side match against pain, whether the
+     * aura stays in one place, how aura length relates to attack severity and
+     * length, the trend over time, and prolonged (>60 min) auras.
+     */
+    @Serializable
+    data class AuraInsight(
+        val kind: String,
+        val headline: String,
+        val detail: String? = null,
+        @SerialName("sample_size") val sampleSize: Int = 0,
+    )
+
+    suspend fun getAuraInsights(context: Context): List<AuraInsight> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/aura_insights" +
+                "?select=kind,headline,detail,sample_size"
+            val res = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+            }
+            if (res.status.value in 200..299) res.body<List<AuraInsight>>()
+            else { Log.w("EdgeFunctionsService", "getAuraInsights failed: ${res.status.value}"); emptyList() }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getAuraInsights exception", e); emptyList()
+        } finally { client.close() }
+    }
 
     /** Phase 2a: per-symptom stats for the current user. */
     suspend fun getSymptomStats(context: Context): List<SymptomStat> {
@@ -2312,6 +2390,40 @@ class EdgeFunctionsService {
         } catch (t: Throwable) {
             Log.e("EdgeFunctionsService", "createWatchPairCode exception", t)
             null
+        } finally {
+            client.close()
+        }
+    }
+
+    // Flipped pairing: claim the 6-digit code the WATCH is showing. Returns
+    // null on success, or a short user-facing error message.
+    suspend fun claimWatchPairCode(context: Context, code: String): String? {
+        val digits = code.filter { it.isDigit() }.take(6)
+        if (digits.length != 6) return "Enter the 6-digit code from the watch."
+        val supaAccessToken = SessionStore.getValidAccessToken(context.applicationContext)
+            ?: return "Not signed in."
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/watch-pair-claim"
+            val res = client.post(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody("""{"code":"$digits"}""")
+            }
+            when (res.status.value) {
+                in 200..299 -> null
+                404 -> "Code not recognised. Check the digits on the watch."
+                409 -> "That code was already used. Get a new one on the watch."
+                410 -> "That code expired. Tap the watch for a new one."
+                else -> {
+                    Log.e("EdgeFunctionsService", "claimWatchPairCode failed: ${res.status.value}")
+                    "Couldn't link the watch (${res.status.value})."
+                }
+            }
+        } catch (t: Throwable) {
+            Log.e("EdgeFunctionsService", "claimWatchPairCode exception", t)
+            "Couldn't reach the server."
         } finally {
             client.close()
         }

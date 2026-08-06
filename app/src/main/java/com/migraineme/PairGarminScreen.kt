@@ -43,6 +43,13 @@ fun GarminConnectionCard(
     var loading by remember { mutableStateOf(false) }
     var now by remember { mutableStateOf(Instant.now()) }
 
+    // Flipped pairing: the watch shows a code, the user types it here.
+    var showPairEntry by remember { mutableStateOf(false) }
+    var entryCode by remember { mutableStateOf("") }
+    var claiming by remember { mutableStateOf(false) }
+    var claimed by remember { mutableStateOf(false) }
+    var claimError by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(Unit) { while (true) { now = Instant.now(); delay(1000) } }
 
     suspend fun loadCode() {
@@ -92,8 +99,7 @@ fun GarminConnectionCard(
                         color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
                 Button(
-                    onClick = { scope.launch { loadCode() } },
-                    enabled = !loading,
+                    onClick = { showPairEntry = !showPairEntry },
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = accent),
                     contentPadding = PaddingValues(vertical = 8.dp),
@@ -102,8 +108,89 @@ fun GarminConnectionCard(
                     Icon(Icons.Outlined.Watch, contentDescription = null,
                         modifier = Modifier.size(16.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (code == null) "Pair code" else "New code",
-                        color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text("Pair watch", color = Color.White, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+
+        // Flipped pairing: type the code the WATCH is showing.
+        if (showPairEntry) {
+            Spacer(Modifier.height(8.dp))
+            if (claimed) {
+                Text(
+                    "✓ Watch paired",
+                    color = Color(0xFF81C784), fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            } else {
+                Text(
+                    "Open MigraineMe on your watch, tap Pair, and enter the code it shows:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.62f),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = entryCode,
+                        onValueChange = { new ->
+                            entryCode = new.filter { it.isDigit() }.take(6)
+                            claimError = null
+                        },
+                        placeholder = { Text("123456", fontFamily = FontFamily.Monospace) },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.titleLarge.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        ),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword
+                        ),
+                        modifier = Modifier.width(150.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                claiming = true
+                                claimError = null
+                                val err = edgeFunctions.claimWatchPairCode(context, entryCode)
+                                claiming = false
+                                if (err == null) { claimed = true; entryCode = "" }
+                                else { claimError = err }
+                            }
+                        },
+                        enabled = entryCode.length == 6 && !claiming,
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = accent)
+                    ) {
+                        Text(if (claiming) "…" else "Link",
+                            color = Color.White, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+                claimError?.let {
+                    Spacer(Modifier.height(4.dp))
+                    Text(it, color = Color.Red, style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+                Spacer(Modifier.height(6.dp))
+                // Legacy watch builds show no code and ask the user to type
+                // one on the watch instead — mint it here for them.
+                TextButton(onClick = { scope.launch { loadCode() } }, enabled = !loading) {
+                    Text(
+                        if (loading) "Getting code…"
+                        else "Watch asks you to type a code instead? Tap here",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.62f)
+                    )
                 }
             }
         }
