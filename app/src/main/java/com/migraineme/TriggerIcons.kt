@@ -1183,4 +1183,24 @@ object TriggerIcons {
     ) }
 
     fun forKey(key: String?): ImageVector? = ALL_ICONS.find { it.key == key }?.icon
+
+
+    /** Brainy mascot drawable for this icon_key, or null if no art exists. */
+    fun drawableForKey(key: String?): Int? =
+        BrainyLogManifest.drawableFor(null, key, null, "trigger")
+
+    /** Key for a resolved vector (identity match), used to bridge label-based lookups to Brainy art. */
+    private fun keyForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): String? =
+        v?.let { vec -> ALL_ICONS.find { it.icon === vec }?.key }
+
+    fun drawableForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): Int? =
+        drawableForKey(keyForVector(v))
+
+    /**
+     * Brainy art for a label with no icon_key. Triggers had key-only lookup, which
+     * is why Insights rows for metric-derived factors ("Weather change", "Poor
+     * sleep") — names that are in no pool and so carry no key — drew nothing.
+     */
+    fun drawableForLabel(label: String, iconKey: String? = null): Int? =
+        BrainyLogManifest.drawableFor(label, iconKey, null, "trigger")
 }

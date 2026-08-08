@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,16 +22,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -171,6 +178,16 @@ fun HomeScreenRoot(
     } else {
         val scrollState = rememberScrollState()
 
+        // While the tour's Home card is up, auto-scroll so the risk gauge is visible.
+        val tourState by TourManager.state.collectAsState()
+        var riskCardY by remember { mutableStateOf(0) }
+        LaunchedEffect(tourState.active, tourState.stepIndex, riskCardY) {
+            if (tourState.active && tourState.phase == CoachPhase.TOUR && tourState.stepIndex == 0 && riskCardY > 0) {
+                kotlinx.coroutines.delay(400)
+                scrollState.animateScrollTo((riskCardY - 12).coerceAtLeast(0))
+            }
+        }
+
         // ── Premium state ──
         val premiumState by PremiumManager.state.collectAsState()
 
@@ -184,6 +201,15 @@ fun HomeScreenRoot(
         val displayZone = dayData?.zone ?: state.riskZone
         val displayPercent = dayData?.percent ?: state.riskPercent
         val displayTriggers = dayData?.topTriggers ?: state.triggersAtRisk
+
+        // Last visible card carries the Brainy watermark, same rule as Insights detail screens.
+        val contributorsVisible = displayTriggers.isNotEmpty()
+        val insightVisible = selectedDay == 0 && !state.dailyInsight.isNullOrBlank()
+        val watermarkOn = when {
+            contributorsVisible -> "contributors"
+            insightVisible -> "insight"
+            else -> "ask"
+        }
 
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll) {
@@ -206,6 +232,7 @@ fun HomeScreenRoot(
                     onLogComplete = { vm.loadRisk(appCtx) }
                 )
 
+                Box(Modifier.onGloballyPositioned { riskCardY = it.positionInParent().y.toInt() }) {
                 RiskHeroCard(
                     riskPercent = displayPercent,
                     riskScore = displayScore,
@@ -232,9 +259,12 @@ fun HomeScreenRoot(
                     },
                     infoText = RiskInfoCopy.text
                 )
+                }
 
-                // ── Medical disclaimer (dismissible, Google Play Health Content policy) ──
-                MedicalDisclaimerCard(prefKey = "home_dismissed")
+                // ── Android silently revoked location — weather/risk are dead
+                //    until it's restored. Only shows when the user still has the
+                //    location metric ON server-side. ──
+                LocationPermissionBanner()
 
                 // ── Ask MigraineMe — chat assistant (premium only) ──
                 PremiumGate(
@@ -254,35 +284,44 @@ fun HomeScreenRoot(
                             border = AppTheme.BaseCardBorder,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        "Ask MigraineMe",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 15.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                    Text(
-                                        "Chat with your health data",
-                                        color = Color.White.copy(alpha = 0.55f),
-                                        fontSize = 12.sp,
-                                        textAlign = TextAlign.Center
-                                    )
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                if (watermarkOn == "ask") {
+                                    Box(Modifier.matchParentSize()) {
+                                        Image(
+                                            painter = painterResource(R.drawable.brainy_risk),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(120.dp)
+                                                .align(Alignment.BottomEnd)
+                                                .offset(x = 18.dp, y = 24.dp)
+                                                .alpha(0.14f)
+                                                .graphicsLayer(scaleX = -1f)
+                                        )
+                                    }
                                 }
-                                Text(
-                                    "\u2726",
-                                    fontSize = 20.sp,
-                                    color = AppTheme.AccentPurple,
-                                    modifier = Modifier.align(Alignment.CenterStart)
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BrainyBlobIcon(resId = R.drawable.brainy_ask_small)
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            "Ask MigraineMe",
+                                            color = AppTheme.TitleColor,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                                        )
+                                        Text(
+                                            "Chat with your health data",
+                                            color = AppTheme.SubtleTextColor,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                                }
                             }
                         }
                         IconButton(
@@ -322,13 +361,22 @@ fun HomeScreenRoot(
                 }
 
                 // ── AI Daily Insight — premium only, today only ──
-                if (selectedDay == 0 && !state.dailyInsight.isNullOrBlank()) {
+                if (insightVisible) {
+                    // ── Well done — the one card that is purely on the user's side.
+                    // Deliberately NOT premium-gated: encouragement should not be paywalled.
+                    state.positives.firstOrNull()?.let { praise ->
+                        WellDoneCard(text = praise)
+                    }
+
                     PremiumGate(
                         message = "Unlock Daily Insights",
                         subtitle = "Personalised advice based on your data",
                         onUpgrade = onNavigateToPaywall
                     ) {
-                        AiInsightCard(insight = state.dailyInsight!!)
+                        AiInsightCard(
+                            insight = state.dailyInsight!!,
+                            watermark = watermarkOn == "insight"
+                        )
                     }
                 }
 
@@ -341,9 +389,13 @@ fun HomeScreenRoot(
                     ActiveTriggersCard(
                         triggers = displayTriggers.take(3),
                         gaugeMax = state.gaugeMaxScore,
-                        onTap = onNavigateToRiskDetail
+                        onTap = onNavigateToRiskDetail,
+                        watermark = watermarkOn == "contributors"
                     )
                 }
+
+                // ── Medical disclaimer (dismissible, Google Play Health Content policy) ──
+                MedicalDisclaimerCard(prefKey = "home_dismissed")
             }
         }
     }
@@ -404,6 +456,31 @@ private fun RiskHeroCard(
             }
         }
 
+        // Score + zone sit inside the gauge arc to keep the card compact
+        val gaugeWithScore: @Composable () -> Unit = {
+            Box(contentAlignment = Alignment.BottomCenter) {
+                RiskGauge(
+                    percent = clamped,
+                    diameter = 200.dp,
+                    stroke = 15.dp,
+                    trackColor = AppTheme.TrackColor,
+                    progressColor = AppTheme.AccentPurple
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "%.1f".format(riskScore),
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        riskZone.label,
+                        color = zoneColor,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+        }
+
         if (showDayArrows) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -421,13 +498,7 @@ private fun RiskHeroCard(
                     )
                 }
 
-                RiskGauge(
-                    percent = clamped,
-                    diameter = 220.dp,
-                    stroke = 16.dp,
-                    trackColor = AppTheme.TrackColor,
-                    progressColor = AppTheme.AccentPurple
-                )
+                gaugeWithScore()
 
                 IconButton(
                     onClick = { if (selectedDay < maxDay) onDaySelected(selectedDay + 1) },
@@ -441,28 +512,8 @@ private fun RiskHeroCard(
                 }
             }
         } else {
-            RiskGauge(
-                percent = clamped,
-                diameter = 220.dp,
-                stroke = 16.dp,
-                trackColor = AppTheme.TrackColor,
-                progressColor = AppTheme.AccentPurple
-            )
+            gaugeWithScore()
         }
-
-        // Score display
-        Text(
-            "%.1f".format(riskScore),
-            color = Color.White,
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-        )
-
-        // Zone label
-        Text(
-            riskZone.label,
-            color = zoneColor,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
 
         SevenDayOutlook(
             values = forecast,
@@ -471,6 +522,13 @@ private fun RiskHeroCard(
             onDaySelected = onDaySelected
         )
     }
+        Box(
+            Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 12.dp)
+        ) {
+            BrainyBlobIcon(resId = R.drawable.brainy_risk_small)
+        }
         if (infoText != null) {
             IconButton(
                 onClick = { showInfo = true },
@@ -516,7 +574,7 @@ object RiskInfoCopy {
 }
 
 object AskMigraineMeInfoCopy {
-    const val text = "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines and reliefs. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP."
+    const val text = "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP."
 }
 
 @Composable
@@ -534,14 +592,8 @@ private fun SevenDayOutlook(
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "7-day outlook",
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelMedium
-        )
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -584,6 +636,12 @@ private fun SevenDayOutlook(
                 }
             }
         }
+
+        Text(
+            "7-day outlook",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelMedium
+        )
     }
 }
 
@@ -622,14 +680,15 @@ private fun MiniGauge(
 private fun ActiveTriggersCard(
     triggers: List<TriggerScore>,
     gaugeMax: Double = 10.0,
-    onTap: () -> Unit = {}
+    onTap: () -> Unit = {},
+    watermark: Boolean = false
 ) {
     if (triggers.isEmpty()) return
 
     var showInfo by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-    BaseCard(modifier = Modifier.fillMaxWidth().clickable { onTap() }) {
+    Box(modifier = Modifier.fillMaxWidth().clickable { onTap() }) {
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_risk, flipWatermark = true) {
         Text(
             "Top contributors",
             color = AppTheme.TitleColor,
@@ -773,11 +832,61 @@ object ActiveTriggersInfoCopy {
 }
 
 @Composable
-private fun AiInsightCard(insight: String) {
+private fun WellDoneCard(text: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AppTheme.BaseCardShape,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF81C784).copy(alpha = 0.10f)),
+        elevation = CardDefaults.cardElevation(0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF81C784).copy(alpha = 0.25f))
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.CheckCircle,
+                contentDescription = null,
+                tint = Color(0xFF81C784),
+                modifier = Modifier.size(20.dp)
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "Well done",
+                    color = Color(0xFF81C784),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    text,
+                    color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AiInsightCard(insight: String, watermark: Boolean = false) {
     Card(
         colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
         shape = RoundedCornerShape(12.dp)
     ) {
+        Box(Modifier.fillMaxWidth()) {
+        if (watermark) {
+            Box(Modifier.matchParentSize()) {
+                Image(
+                    painter = painterResource(R.drawable.brainy_risk),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 18.dp, y = 24.dp)
+                        .alpha(0.14f)
+                        .graphicsLayer(scaleX = -1f)
+                )
+            }
+        }
         Row(
             Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -800,6 +909,7 @@ private fun AiInsightCard(insight: String) {
                     style = MaterialTheme.typography.bodySmall
                 )
             }
+        }
         }
     }
 }

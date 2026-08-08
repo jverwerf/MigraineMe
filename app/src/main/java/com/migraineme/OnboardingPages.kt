@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.*
@@ -36,7 +37,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -56,151 +59,159 @@ fun OnboardingScrollPage(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun WelcomePage() {
+fun WelcomePage(
+    onTakeFullTour: () -> Unit,
+    onSetUpProfile: () -> Unit,
+    onGoToApp: () -> Unit,
+) {
     Column(
-        Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+        Modifier.fillMaxSize().padding(horizontal = 20.dp).verticalScroll(rememberScrollState())
     ) {
-        Spacer(Modifier.weight(1f))
+        // Fixed top gap keeps the sky background visible above the content.
+        Spacer(Modifier.height(130.dp))
 
-        val anim = rememberInfiniteTransition(label = "pulse")
-        val scale by anim.animateFloat(0.95f, 1.05f, infiniteRepeatable(tween(2000), RepeatMode.Reverse), label = "s")
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "MigraineMe",
-            modifier = Modifier.size((76 * scale).dp)
+        Text(
+            "Welcome to MigraineMe",
+            color = Color.White,
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(Modifier.height(16.dp))
-        Text("Welcome to MigraineMe", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
-        Spacer(Modifier.height(12.dp))
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(AppTheme.AccentPurple.copy(alpha = 0.12f))
-                .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            Text(
-                "Give us about 10 minutes to make the app truly yours. We'll show you it in action, ask a few questions about your migraines, hook up your wearables, and let you pick which data to collect. All tailored to you. Just once. From then on, the app does the listening.",
-                color = AppTheme.BodyTextColor,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Start
-            )
-        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "How would you like to start?",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(Modifier.height(16.dp))
 
+        // Acute-attack escape hatch: sits above everything and is itself
+        // the shortcut to the app — mid-attack users shouldn't have to read
+        // two cards to find the exit.
         Row(
             modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
                 .background(AppTheme.AccentPink.copy(alpha = 0.14f))
-                .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.35f), RoundedCornerShape(18.dp))
+                .clickable { onGoToApp() }
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Outlined.Info,
-                contentDescription = null,
-                tint = AppTheme.AccentPink,
-                modifier = Modifier.size(16.dp).padding(top = 1.dp)
-            )
+            Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
             Text(
-                "In an acute attack right now? Tap Skip and come back later. You can rerun onboarding from your Profile.",
+                "In an acute attack right now? Go straight to the app",
                 color = AppTheme.BodyTextColor,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        HeroCard {
+            Column(Modifier.padding(20.dp)) {
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(AppTheme.AccentPink.copy(alpha = 0.14f))
+                        .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.35f), RoundedCornerShape(50))
+                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        "RECOMMENDED",
+                        color = AppTheme.AccentPink,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                NumberedPoint(1, "See every screen already filled with example data, so nothing is empty or abstract.")
+                Spacer(Modifier.height(8.dp))
+                NumberedPoint(2, "Learn what the risk gauge, insights and auto-tracking actually do for you.")
+                Spacer(Modifier.height(8.dp))
+                NumberedPoint(3, "Takes about 5 minutes. You can leave the tour at any point.")
+                Spacer(Modifier.height(8.dp))
+                NumberedPoint(4, "Ends with setting up your profile — easier once you've seen what everything does.")
+                Spacer(Modifier.height(14.dp))
+                Button(
+                    onClick = onTakeFullTour,
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Take the Full Tour", fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        HeroCard {
+            Column(Modifier.padding(20.dp)) {
+                NumberedPoint(1, "Connect your wearable and Health Connect.")
+                Spacer(Modifier.height(8.dp))
+                NumberedPoint(2, "Choose which data to track — your triggers come pre-filled from your answers.")
+                Spacer(Modifier.height(8.dp))
+                NumberedPoint(3, "AI personalises your risk model from a few quick questions.")
+                Spacer(Modifier.height(14.dp))
+                OutlinedButton(
+                    onClick = onSetUpProfile,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.6f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Icon(Icons.Outlined.Tune, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Set Up My Profile", fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        TextButton(onClick = onGoToApp, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+            Text(
+                "Go to the app",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    textDecoration = TextDecoration.Underline
+                )
             )
         }
+        Text(
+            "Empty Home screen for now. Rerun setup anytime from Profile.",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
 
-        Spacer(Modifier.weight(1f))
-
-        Column(Modifier.padding(horizontal = 8.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            FeatureBullet(Icons.Outlined.Speed, "Real-time risk score from your logged data")
-            FeatureBullet(Icons.Outlined.CalendarMonth, "7-day risk outlook")
-            FeatureBullet(Icons.Outlined.Bolt, "Auto-captured triggers, less logging")
-            FeatureBullet(Icons.Outlined.BarChart, "30+ migraine signals tracked automatically")
-            FeatureBullet(Icons.Outlined.EventNote, "Cycle-aware risk model")
-            FeatureBullet(Icons.Outlined.Medication, "Treatments scored against your data")
-            FeatureBullet(Icons.Outlined.AutoAwesome, "AI-powered daily insights")
-            FeatureBullet(Icons.Outlined.Chat, "Chat with your data")
-            FeatureBullet(Icons.Outlined.Description, "Doctor-ready PDF in one tap")
-            FeatureBullet(Icons.Outlined.Watch, "Apple Health, Oura, Polar, Garmin")
-        }
-
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
-fun ChooseStartPage(onTakeTour: () -> Unit, onSetUpNow: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 24.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.weight(1f))
-
-        Text(
-            "How would you like to start?",
-            color = Color.White,
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "You can always rerun this later from your Profile.",
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(28.dp))
-
-        // ── Take the Tour (primary) ──
-        Button(
-            onClick = onTakeTour,
-            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth().height(52.dp)
+private fun NumberedPoint(n: Int, text: String) {
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(AppTheme.AccentPurple.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Take the Tour", fontWeight = FontWeight.SemiBold)
+            Text("$n", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
         }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "See the app in action with example data first. We'll prepare it now — this takes up to a minute.",
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        // ── Set Up Profile Now (secondary) ──
-        OutlinedButton(
-            onClick = onSetUpNow,
-            shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.6f)),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-            modifier = Modifier.fillMaxWidth().height(52.dp)
-        ) {
-            Icon(Icons.Outlined.Tune, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Set Up Profile Now", fontWeight = FontWeight.SemiBold)
-        }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Skip the demo and go straight to choosing which data to track.",
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-
-        Spacer(Modifier.weight(1f))
+        Text(text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
     }
 }
 
@@ -226,11 +237,11 @@ fun HowItWorksPage(
     onAllRevealed: () -> Unit = {}
 ) {
     val steps = listOf(
-        Triple(Icons.Outlined.Sensors, "Connect", "Data flows in from your wearable, Health Connect and phone"),
-        Triple(Icons.Outlined.Bolt, "Detect", "Sleep changes, weather shifts, and stress spikes get flagged automatically"),
-        Triple(Icons.Outlined.Speed, "Score", "Everything adds up to your daily risk"),
-        Triple(Icons.Outlined.CalendarMonth, "Estimate", "See your risk outlook 7 days ahead"),
-        Triple(Icons.Outlined.AutoAwesome, "Learn", "Gets smarter the more you use it"),
+        Triple(R.drawable.brainy_physical_small, "Connect", "Data flows in from your wearable, Health Connect and phone"),
+        Triple(R.drawable.brainy_detective_small, "Detect", "Sleep changes, weather shifts, and stress spikes get flagged automatically"),
+        Triple(R.drawable.brainy_risk_small, "Score", "Everything adds up to your daily risk"),
+        Triple(R.drawable.brainy_archer_small, "Estimate", "See your risk outlook 7 days ahead"),
+        Triple(R.drawable.brainy_gardener_small, "Learn", "Gets smarter the more you use it"),
     )
     var revealedSteps by remember { mutableIntStateOf(if (alreadyRevealed) steps.size else 0) }
     var hasAnimated by remember { mutableStateOf(alreadyRevealed) }
@@ -246,23 +257,31 @@ fun HowItWorksPage(
         Text("How It Works", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(24.dp))
         Column {
-            steps.forEachIndexed { index, (icon, title, subtitle) ->
+            steps.forEachIndexed { index, (brainyRes, title, subtitle) ->
                 val isActive = index < revealedSteps
                 val stepAlpha by animateFloatAsState(if (isActive) 1f else 0.15f, tween(600, easing = FastOutSlowInEasing), label = "a$index")
                 val stepScale by animateFloatAsState(if (index == revealedSteps - 1 && !alreadyRevealed && revealedSteps <= steps.size) 1.04f else 1f, spring(dampingRatio = 0.5f, stiffness = 300f), label = "s$index")
                 val offsetX by animateDpAsState(if (isActive) 0.dp else 40.dp, tween(500, easing = FastOutSlowInEasing), label = "x$index")
                 Row(Modifier.fillMaxWidth().offset(x = offsetX).graphicsLayer { alpha = stepAlpha; scaleX = stepScale; scaleY = stepScale },
                     horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
-                    // Timeline: circle + connector line
+                    // Timeline: Brainy node + connector line
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(contentAlignment = Alignment.Center) {
                             Box(Modifier.size(44.dp)
-                                .background(if (isActive) AppTheme.AccentPurple else Color.White.copy(alpha = 0.1f), CircleShape))
+                                .background(
+                                    if (isActive) Brush.linearGradient(listOf(Color(0x57CE93D8), Color(0x24B388FF)))
+                                    else Brush.linearGradient(listOf(Color.White.copy(alpha = 0.1f), Color.White.copy(alpha = 0.1f))),
+                                    CircleShape
+                                ))
                             if (isActive) {
                                 Box(Modifier.size(52.dp)
                                     .border(2.dp, AppTheme.AccentPurple.copy(alpha = 0.4f), CircleShape))
                             }
-                            Icon(icon, null, tint = if (isActive) Color.White else AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                            Image(
+                                painter = painterResource(id = brainyRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp)
+                            )
                         }
                         if (index < steps.size - 1) {
                             val lineColor = if (index < revealedSteps - 1) AppTheme.AccentPurple.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.08f)

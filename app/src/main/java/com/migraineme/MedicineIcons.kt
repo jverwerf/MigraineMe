@@ -273,4 +273,21 @@ object MedicineIcons {
 
     /** Look up icon by category name */
     fun forKey(key: String?): ImageVector? = ALL_ICONS.find { it.key == key }?.icon
+
+    /** Cartoon-style category icon (object art, not Brainy — every drug in a category
+     *  shares its icon, so a repeated character adds noise; Jordy 2026-08-05).
+     *  Accepts category display names ("Anti-Nausea", "CGRP") or drug names/labels
+     *  ("Atogepant (Qulipta)") — parentheticals stripped, snake_case normalised.
+     *  The category list and the per-drug table live in BrainyLogManifest now. */
+    fun drawableForKey(key: String?): Int? =
+        BrainyLogManifest.drawableFor(null, key, null, "medicine")
+
+    fun drawableForLabel(label: String, iconKey: String? = null, category: String? = null): Int? =
+        BrainyLogManifest.drawableFor(label, iconKey, category, "medicine")
+
+    private fun keyForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): String? =
+        v?.let { vec -> ALL_ICONS.find { it.icon === vec }?.key }
+
+    fun drawableForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): Int? =
+        drawableForKey(keyForVector(v))
 }

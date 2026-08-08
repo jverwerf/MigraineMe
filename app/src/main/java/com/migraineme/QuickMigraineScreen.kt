@@ -55,6 +55,21 @@ fun QuickMigraineScreen(
     var notes by rememberSaveable { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
 
+    // Aura detail: captured via the sheet when the Aura symptom is picked
+    val auraZones = remember { mutableStateListOf<String>() }
+    var auraDuration by remember { mutableStateOf<Int?>(null) }
+    var showAuraSheet by remember { mutableStateOf(false) }
+
+    fun onPick(label: String) {
+        selectedSymptom = label
+        if (isAuraSymptomLabel(label)) {
+            showAuraSheet = true
+        } else {
+            auraZones.clear()
+            auraDuration = null
+        }
+    }
+
     fun save() {
         val token = authState.accessToken ?: return
         val item = selectedSymptom ?: return
@@ -70,7 +85,9 @@ fun QuickMigraineScreen(
                     startAt = nowIso,
                     endAt = nowIso,
                     notes = notes.ifBlank { null },
-                    painLocations = null
+                    painLocations = null,
+                    auraLocations = auraZones.toList().takeIf { it.isNotEmpty() },
+                    auraDurationMinutes = auraDuration
                 )
                 launch(Dispatchers.IO) {
                     try { EdgeFunctionsService().triggerCorrelationCompute(context) }
@@ -134,21 +151,36 @@ fun QuickMigraineScreen(
                     val allRows = painCharacter + accompanying
                     val iconKey = allRows.firstOrNull { it.label == sel }?.iconKey
                     val icon = SymptomIcons.forLabel(sel, iconKey)
+                    val brainyId = SymptomIcons.drawableForLabel(sel, iconKey)
                     Row(
                         Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(AppTheme.AccentPink.copy(alpha = 0.15f))
                             .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                            .clickable(enabled = isAuraSymptomLabel(sel)) { showAuraSheet = true }
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (icon != null) {
-                            Icon(icon, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(18.dp))
+                        if (brainyId != null || icon != null) {
+                            LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 24.dp else 18.dp, tint = AppTheme.AccentPink)
                             Spacer(Modifier.width(10.dp))
                         }
-                        Text(sel, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Column {
+                            Text(sel, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                            if (isAuraSymptomLabel(sel) && (auraZones.isNotEmpty() || auraDuration != null)) {
+                                val parts = buildList {
+                                    if (auraZones.isNotEmpty()) add("${auraZones.size} area${if (auraZones.size > 1) "s" else ""}")
+                                    auraDuration?.let { add(formatAuraDuration(it)) }
+                                }
+                                Text(
+                                    parts.joinToString(" · ") + " — tap to edit",
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
                         Spacer(Modifier.weight(1f))
-                        IconButton(onClick = { selectedSymptom = null }, modifier = Modifier.size(24.dp)) {
+                        IconButton(onClick = { selectedSymptom = null; auraZones.clear(); auraDuration = null }, modifier = Modifier.size(24.dp)) {
                             Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.AccentPink.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
                         }
                     }
@@ -162,7 +194,7 @@ fun QuickMigraineScreen(
                             iconKey = s.iconKey,
                             selected = selectedSymptom == s.label,
                             color = AppTheme.AccentPink
-                        ) { selectedSymptom = s.label }
+                        ) { onPick(s.label) }
                     }
                     HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                 }
@@ -171,7 +203,7 @@ fun QuickMigraineScreen(
                     SectionHeader("Pain character")
                     painNonFav.forEach { s ->
                         SymptomRow(s.label, s.iconKey, selectedSymptom == s.label, AppTheme.AccentPink) {
-                            selectedSymptom = s.label
+                            onPick(s.label)
                         }
                     }
                 }
@@ -188,7 +220,7 @@ fun QuickMigraineScreen(
                         )
                         items.forEach { s ->
                             SymptomRow(s.label, s.iconKey, selectedSymptom == s.label, AppTheme.AccentPink) {
-                                selectedSymptom = s.label
+                                onPick(s.label)
                             }
                         }
                     }
@@ -253,6 +285,25 @@ fun QuickMigraineScreen(
             Spacer(Modifier.height(32.dp))
         }
     }
+
+    if (showAuraSheet) {
+        AuraDetailSheet(
+            initialZones = auraZones.toList(),
+            initialDurationMinutes = auraDuration,
+            onSave = { zones, dur, _ ->
+                auraZones.clear(); auraZones.addAll(zones)
+                auraDuration = dur
+                showAuraSheet = false
+            },
+            onRemove = {
+                auraZones.clear()
+                auraDuration = null
+                selectedSymptom = null
+                showAuraSheet = false
+            },
+            onDismiss = { showAuraSheet = false }
+        )
+    }
 }
 
 @Composable
@@ -274,6 +325,7 @@ private fun SymptomRow(
     onClick: () -> Unit
 ) {
     val icon = SymptomIcons.forLabel(label, iconKey)
+    val brainyId = SymptomIcons.drawableForLabel(label, iconKey)
     val bg = if (selected) color.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.04f)
     Row(
         Modifier.fillMaxWidth()
@@ -283,13 +335,8 @@ private fun SymptomRow(
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (icon != null) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = if (selected) color else AppTheme.SubtleTextColor,
-                modifier = Modifier.size(18.dp)
-            )
+        if (brainyId != null || icon != null) {
+            LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 24.dp else 18.dp, tint = if (selected) color else AppTheme.SubtleTextColor)
             Spacer(Modifier.width(10.dp))
         }
         Text(label, color = Color.White, style = MaterialTheme.typography.bodyMedium)

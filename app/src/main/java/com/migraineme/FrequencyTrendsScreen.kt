@@ -31,6 +31,31 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+// Ramps for Frequency Trends charts. Mirrors the PDF's shadeFor()
+// (build-report-html/render.ts): within each chart, bars are shaded by value
+// relative to that chart's own maximum (light -> dark), and the palette
+// alternates chart-by-chart in page order: Day of Week = purple,
+// Monthly = pink, Weekly = purple, Seasonal = pink, Duration = purple,
+// Severity = pink.
+internal val FrequencyPurpleRamp = listOf(
+    Color(0xFFE3D7F4), Color(0xFFCDB9EA), Color(0xFFB39DDB),
+    Color(0xFF9575CD), Color(0xFF7E57C2), Color(0xFF5E35B1),
+)
+
+internal val FrequencyPinkRamp = listOf(
+    Color(0xFFFBD9E7), Color(0xFFF9B8D2), Color(0xFFFF97C0),
+    Color(0xFFFF7BB0), Color(0xFFE85A97), Color(0xFFC2417B),
+)
+
+internal fun frequencyBarColor(
+    value: Float,
+    chartMax: Float,
+    ramp: List<Color> = FrequencyPurpleRamp,
+): Color {
+    val idx = ((value / chartMax.coerceAtLeast(1f)) * 6f).toInt().coerceIn(0, 5)
+    return ramp[idx]
+}
+
 @Composable
 fun FrequencyTrendsScreen(
     onBack: () -> Unit = {},
@@ -124,8 +149,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                 Spacer(Modifier.height(2.dp))
                                 val barH = (stat.pct / maxPct * 80f).coerceAtLeast(4f)
-                                val barColor = if (stat.pct > maxPct * 0.8f) Color(0xFFE57373)
-                                    else AppTheme.AccentPurple
+                                val barColor = frequencyBarColor(stat.pct, maxPct)
                                 Box(
                                     Modifier
                                         .width(24.dp)
@@ -243,10 +267,6 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                     listOf("Summer", "Autumn", "Winter", "Spring")
                 else
                     listOf("Winter", "Spring", "Summer", "Autumn")
-                val colors = if (southern)
-                    listOf(Color(0xFFFFB74D), Color(0xFFFF8A65), Color(0xFF4FC3F7), Color(0xFF81C784))
-                else
-                    listOf(Color(0xFF4FC3F7), Color(0xFF81C784), Color(0xFFFFB74D), Color(0xFFFF8A65))
 
                 val counts = remember(migraines) {
                     val c = IntArray(4)
@@ -271,8 +291,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                         verticalAlignment = Alignment.Bottom,
                     ) {
                         counts.forEachIndexed { i, count ->
-                            val isMax = count == maxCount && count > 0
-                            val barColor = if (isMax) Color(0xFFE57373) else colors[i]
+                            val barColor = frequencyBarColor(count.toFloat(), maxCount.toFloat(), FrequencyPinkRamp)
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.weight(1f),
@@ -412,12 +431,8 @@ internal fun MonthlyBarChart(
             val barH = (count.toFloat() / maxCount) * ch
             val barTop = padT + ch - barH
 
-            val barColor = when {
-                count > avgCount * 1.5f -> Color(0xFFE57373)
-                count < avgCount * 0.5f && count > 0 -> Color(0xFF81C784)
-                count == 0 -> Color.White.copy(alpha = 0.1f)
-                else -> AppTheme.AccentPurple
-            }
+            val barColor = if (count == 0) Color.White.copy(alpha = 0.1f)
+                else frequencyBarColor(count.toFloat(), maxCount.toFloat(), FrequencyPinkRamp)
 
             drawRoundRect(
                 barColor.copy(alpha = if (count == 0) 0.15f else 0.8f),
@@ -496,7 +511,8 @@ internal fun WeeklyBarChart(
             val count = counts[i]
             val barH = (count.toFloat() / maxCount) * ch
 
-            val barColor = if (count == 0) Color.White.copy(alpha = 0.1f) else AppTheme.AccentPurple
+            val barColor = if (count == 0) Color.White.copy(alpha = 0.1f)
+                else frequencyBarColor(count.toFloat(), maxCount.toFloat())
 
             drawRoundRect(
                 barColor.copy(alpha = if (count == 0) 0.15f else 0.7f),
@@ -535,6 +551,7 @@ private fun SeverityMonthlyBars(data: List<Triple<LocalDate, Float, Int>>) {
     // Mirrors iOS SeverityOverTimeChart (InsightsSubScreens.swift L1236-1249):
     // horizontally-scrolling row of bars, value-on-top coloured by severity.
     val fmt = DateTimeFormatter.ofPattern("MMM")
+    val maxAvg = data.maxOfOrNull { it.second } ?: 1f
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -564,7 +581,7 @@ private fun SeverityMonthlyBars(data: List<Triple<LocalDate, Float, Int>>) {
                         .width(24.dp)
                         .height(barHeight)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(AppTheme.AccentPink.copy(alpha = 0.6f)),
+                        .background(frequencyBarColor(avg, maxAvg, FrequencyPinkRamp).copy(alpha = 0.6f)),
                 )
                 Text(
                     month.format(fmt),

@@ -252,36 +252,36 @@ fun AiSetupResultsScreen(
 
         // ── Medicines ──
         if (medicines.isNotEmpty()) {
-            CollapsibleSection("Medicines", Icons.Outlined.Medication, Color(0xFF4FC3F7), "${medicines.size} in quick-log") {
-                medicines.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = medicineIcon(item.label), iconTint = Color(0xFF4FC3F7)) { medicines = medicines.filter { it.label != item.label } } }
+            CollapsibleSection("Medicines", Icons.Outlined.Medication, Color(0xFF4FC3F7), "${medicines.count { it.favorite }} in quick-log") {
+                medicines.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = medicineIcon(item.label), iconTint = Color(0xFF4FC3F7), favorite = item.favorite, onToggleFavorite = { medicines = medicines.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { medicines = medicines.filter { it.label != item.label } } }
             }
         }
 
         // ── Symptoms ──
         if (symptoms.isNotEmpty()) {
-            CollapsibleSection("Symptoms", Icons.Outlined.Healing, AppTheme.AccentPink, "${symptoms.size} in quick-log") {
-                symptoms.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = symptomIcon(item.label), iconTint = AppTheme.AccentPink) { symptoms = symptoms.filter { it.label != item.label } } }
+            CollapsibleSection("Symptoms", Icons.Outlined.Healing, AppTheme.AccentPink, "${symptoms.count { it.favorite }} in quick-log") {
+                symptoms.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = symptomIcon(item.label), iconTint = AppTheme.AccentPink, favorite = item.favorite, onToggleFavorite = { symptoms = symptoms.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { symptoms = symptoms.filter { it.label != item.label } } }
             }
         }
 
         // ── Reliefs ──
         if (reliefs.isNotEmpty()) {
-            CollapsibleSection("Reliefs", Icons.Outlined.Spa, Color(0xFF81C784), "${reliefs.size} in quick-log") {
-                reliefs.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = reliefIcon(item.label), iconTint = Color(0xFF81C784)) { reliefs = reliefs.filter { it.label != item.label } } }
+            CollapsibleSection("Reliefs", Icons.Outlined.Spa, Color(0xFF81C784), "${reliefs.count { it.favorite }} in quick-log") {
+                reliefs.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = reliefIcon(item.label), iconTint = Color(0xFF81C784), favorite = item.favorite, onToggleFavorite = { reliefs = reliefs.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { reliefs = reliefs.filter { it.label != item.label } } }
             }
         }
 
         // ── Activities ──
         if (activities.isNotEmpty()) {
-            CollapsibleSection("Activities", Icons.Outlined.DirectionsRun, Color(0xFFFF8A65), "${activities.size} in quick-log") {
-                activities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = activityIcon(item.label), iconTint = Color(0xFFFF8A65)) { activities = activities.filter { it.label != item.label } } }
+            CollapsibleSection("Activities", Icons.Outlined.DirectionsRun, Color(0xFFFF8A65), "${activities.count { it.favorite }} in quick-log") {
+                activities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = activityIcon(item.label), iconTint = Color(0xFFFF8A65), favorite = item.favorite, onToggleFavorite = { activities = activities.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { activities = activities.filter { it.label != item.label } } }
             }
         }
 
         // ── Missed Activities ──
         if (missedActivities.isNotEmpty()) {
-            CollapsibleSection("Missed Activities", Icons.Outlined.EventBusy, Color(0xFFFF7043), "${missedActivities.size} in quick-log") {
-                missedActivities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = missedActivityIcon(item.label), iconTint = Color(0xFFFF7043)) { missedActivities = missedActivities.filter { it.label != item.label } } }
+            CollapsibleSection("Missed Activities", Icons.Outlined.EventBusy, Color(0xFFFF7043), "${missedActivities.count { it.favorite }} in quick-log") {
+                missedActivities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = missedActivityIcon(item.label), iconTint = Color(0xFFFF7043), favorite = item.favorite, onToggleFavorite = { missedActivities = missedActivities.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { missedActivities = missedActivities.filter { it.label != item.label } } }
             }
         }
 
@@ -346,7 +346,42 @@ fun AiSetupResultsScreen(
                                 val barHeight = (frac * 30).dp.coerceAtLeast(3.dp)
                                 val zoneColor = if (v <= 0.0) color.copy(alpha = 0.08f) else color
                                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("${"%.1f".format(v)}", color = if (v > 0) Color.White else AppTheme.SubtleTextColor.copy(alpha = 0.4f), style = MaterialTheme.typography.labelSmall)
+                                    // Each day's weight is tap-to-edit, like every other
+                                    // AI-suggested value on this screen.
+                                    var editingDay by remember { mutableStateOf(false) }
+                                    var dayText by remember(v) { mutableStateOf("%.1f".format(v)) }
+                                    if (editingDay) {
+                                        OutlinedTextField(
+                                            value = dayText,
+                                            onValueChange = { new -> if (new.isEmpty() || new.all { c -> c.isDigit() || c == '.' }) dayText = new },
+                                            modifier = Modifier.fillMaxWidth().height(38.dp),
+                                            textStyle = MaterialTheme.typography.labelSmall.copy(color = Color.White, textAlign = TextAlign.Center),
+                                            singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = color, unfocusedBorderColor = color.copy(alpha = 0.3f)),
+                                        )
+                                        IconButton(onClick = {
+                                            dayText.toDoubleOrNull()?.let { nv ->
+                                                decayWeights = decayWeights.toMutableList().also { list ->
+                                                    val cur = list[idx]
+                                                    list[idx] = when (i) {
+                                                        0 -> cur.copy(day0 = nv); 1 -> cur.copy(day1 = nv)
+                                                        2 -> cur.copy(day2 = nv); 3 -> cur.copy(day3 = nv)
+                                                        4 -> cur.copy(day4 = nv); 5 -> cur.copy(day5 = nv)
+                                                        else -> cur.copy(day6 = nv)
+                                                    }
+                                                }
+                                            }
+                                            editingDay = false
+                                        }, modifier = Modifier.size(18.dp)) {
+                                            Icon(Icons.Filled.Check, null, tint = color, modifier = Modifier.size(11.dp))
+                                        }
+                                    } else {
+                                        Text("${"%.1f".format(v)}",
+                                            color = if (v > 0) Color.White else AppTheme.SubtleTextColor.copy(alpha = 0.4f),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.clickable { editingDay = true })
+                                    }
                                     Spacer(Modifier.height(2.dp))
                                     Box(Modifier.fillMaxWidth().height(barHeight).clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp)).background(zoneColor.copy(alpha = 0.7f)))
                                     Text(labels[i], color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
@@ -382,13 +417,54 @@ fun AiSetupResultsScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
                             Text("Cycle Length", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                            Text("${mc.avgCycleLength} days", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                            // Tap to edit — every AI-suggested value on this screen is adjustable.
+                            var editingCycle by remember { mutableStateOf(false) }
+                            var cycleText by remember(mc.avgCycleLength) { mutableStateOf(mc.avgCycleLength.toString()) }
+                            if (editingCycle) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    OutlinedTextField(
+                                        value = cycleText,
+                                        onValueChange = { new -> if (new.isEmpty() || new.all { it.isDigit() }) cycleText = new },
+                                        modifier = Modifier.width(64.dp).height(40.dp),
+                                        textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White, textAlign = TextAlign.Center),
+                                        singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = AppTheme.AccentPurple,
+                                            unfocusedBorderColor = AppTheme.AccentPurple.copy(alpha = 0.3f)),
+                                    )
+                                    IconButton(onClick = {
+                                        cycleText.toIntOrNull()?.takeIf { it in 15..60 }?.let { v ->
+                                            menstruationConfig = mc.copy(avgCycleLength = v)
+                                        }
+                                        editingCycle = false
+                                    }, modifier = Modifier.size(24.dp)) {
+                                        Icon(Icons.Filled.Check, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
+                                    }
+                                }
+                            } else {
+                                Text("${mc.avgCycleLength} days", color = Color.White,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                    modifier = Modifier.clickable { editingCycle = true })
+                            }
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text("Severity", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             val sevColor = when (mc.severity) { "HIGH" -> Color(0xFFEF5350); "MILD" -> Color(0xFFFFB74D); else -> Color(0xFF81C784) }
-                            Box(Modifier.background(sevColor.copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                Text(mc.severity, color = sevColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            var showMcSeverity by remember { mutableStateOf(false) }
+                            Box {
+                                Box(Modifier
+                                    .clickable { showMcSeverity = true }
+                                    .background(sevColor.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                    Text(mc.severity, color = sevColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                }
+                                DropdownMenu(expanded = showMcSeverity, onDismissRequest = { showMcSeverity = false }) {
+                                    listOf("HIGH", "MILD", "LOW").forEach { sev ->
+                                        DropdownMenuItem(text = { Text(sev) }, onClick = {
+                                            menstruationConfig = mc.copy(severity = sev); showMcSeverity = false
+                                        })
+                                    }
+                                }
                             }
                         }
                     }
@@ -490,10 +566,14 @@ private fun SeverityGroup(severity: String, color: Color, items: List<TDI>, icon
     Spacer(Modifier.height(4.dp))
     items.forEach { item ->
         val icon = iconResolver?.invoke(item.label)
+        // Label-first so the manifest rules resolve metric labels (e.g. "Sleep score
+        // low", "Bedtime late", "Brightness high") that have no Material icon and
+        // were otherwise rendering as bare text rows.
+        val brainyId = brainyForLogKey(null, item.label) ?: brainyForLogVector(icon)
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(color.copy(alpha = 0.08f)).padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (icon != null) {
-                Icon(icon, null, tint = color.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 22.dp else 16.dp, tint = color.copy(alpha = 0.7f))
             }
             if (item.favorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
             Column(Modifier.weight(1f)) {
@@ -544,10 +624,14 @@ private fun EditableSeverityGroup(severity: String, color: Color, items: List<TD
     Spacer(Modifier.height(4.dp))
     items.forEach { item ->
         val icon = iconResolver?.invoke(item.label)
+        // Label-first so the manifest rules resolve metric labels (e.g. "Sleep score
+        // low", "Bedtime late", "Brightness high") that have no Material icon and
+        // were otherwise rendering as bare text rows.
+        val brainyId = brainyForLogKey(null, item.label) ?: brainyForLogVector(icon)
         var showSeverityMenu by remember { mutableStateOf(false) }
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(color.copy(alpha = 0.08f)).padding(start = 10.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (icon != null) Icon(icon, null, tint = color.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+            if (brainyId != null || icon != null) LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 22.dp else 16.dp, tint = color.copy(alpha = 0.7f))
             if (item.favorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
             Column(Modifier.weight(1f)) {
                 Text(item.label, color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -592,12 +676,29 @@ private fun EditableSeverityGroup(severity: String, color: Color, items: List<TD
 }
 
 @Composable
-private fun DeletableFavoriteChip(label: String, reasoning: String, icon: ImageVector? = null, iconTint: Color = Color.White, onDelete: () -> Unit) {
+private fun DeletableFavoriteChip(label: String, reasoning: String, icon: ImageVector? = null, iconTint: Color = Color.White, favorite: Boolean = true, onToggleFavorite: (() -> Unit)? = null, onDelete: () -> Unit) {
     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(AppTheme.AccentPurple.copy(alpha = 0.08f)).padding(start = 10.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (icon != null) {
-            Icon(icon, null, tint = iconTint.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
-        } else {
+        // Brainy art first (label rules cover medicines, symptoms, reliefs,
+        // activities…), Material icon next, star only as a last resort.
+        val brainy = brainyForLogKey(null, label) ?: brainyForLogVector(icon)
+        if (brainy != null || icon != null) {
+            LogIconImage(drawableId = brainy, fallback = icon,
+                size = if (brainy != null) 22.dp else 18.dp, tint = iconTint.copy(alpha = 0.7f))
+        }
+        // Quick-log membership is adjustable in place — tap the star instead of
+        // having to delete the item and re-add it later from Manage Items.
+        if (onToggleFavorite != null) {
+            Text(
+                if (favorite) "★" else "☆",
+                color = if (favorite) Color(0xFFFFD54F) else AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable { onToggleFavorite() }
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            )
+        } else if (brainy == null && icon == null) {
             Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
         }
         Column(Modifier.weight(1f)) {

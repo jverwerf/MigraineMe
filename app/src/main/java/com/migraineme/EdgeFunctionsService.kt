@@ -19,6 +19,10 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.time.Instant
 
 class EdgeFunctionsService {
@@ -2263,6 +2267,55 @@ class EdgeFunctionsService {
         } finally { client.close() }
     }
 
+    /**
+     * The full report as HTML, built server-side by `build-report-html`.
+     *
+     * The document's layout and its data assembly both live in that function,
+     * so every surface prints the same report. Returns null when the call
+     * fails; the caller shows the failure rather than a half-built PDF.
+     */
+    suspend fun getReportHtml(
+        context: Context,
+        timeframeLabel: String,
+        from: String? = null,
+        to: String? = null,
+        metricKeys: List<String> = emptyList(),
+        episodeIds: List<String>? = null,
+        disabledMetricKeys: List<String>? = null,
+        filterSummary: String? = null,
+    ): String? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+        val client = buildClient()
+        return try {
+            val body = buildJsonObject {
+                put("timeframeLabel", timeframeLabel)
+                filterSummary?.let { put("filterSummary", it) }
+                from?.let { put("from", it) }
+                to?.let { put("to", it) }
+                episodeIds?.let { ids ->
+                    put("episodeIds", buildJsonArray { ids.forEach { add(it) } })
+                }
+                if (metricKeys.isNotEmpty()) {
+                    put("metricKeys", buildJsonArray { metricKeys.forEach { add(it) } })
+                }
+                disabledMetricKeys?.let { keys ->
+                    put("disabledMetricKeys", buildJsonArray { keys.forEach { add(it) } })
+                }
+            }
+            val res = client.post("${BuildConfig.SUPABASE_URL.trimEnd('/')}/functions/v1/build-report-html") {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+            if (res.status.value in 200..299) res.bodyAsText()
+            else { Log.w("EdgeFunctionsService", "getReportHtml failed: ${res.status.value}"); null }
+        } catch (e: Exception) {
+            Log.e("EdgeFunctionsService", "getReportHtml exception", e); null
+        } finally { client.close() }
+    }
+
     /** Phase 2a: per-symptom stats for the current user. */
     suspend fun getSymptomStats(context: Context): List<SymptomStat> {
         val appCtx = context.applicationContext
@@ -2309,6 +2362,73 @@ class EdgeFunctionsService {
     }
 
     /** Phase 2c: treatment × symptom segment rows. */
+    @Serializable
+    data class TreatmentTimingStat(
+        @SerialName("treatment_name") val treatmentName: String,
+        @SerialName("cutoff_minutes") val cutoffMinutes: Int,
+        @SerialName("early_count") val earlyCount: Int,
+        @SerialName("early_avg_peak") val earlyAvgPeak: Float,
+        @SerialName("late_count") val lateCount: Int,
+        @SerialName("late_avg_peak") val lateAvgPeak: Float,
+    )
+
+    /**
+     * Early-vs-late treatment comparison. A row only exists when the engine's
+     * gate passed (>=3 attacks a side, >=1.5 point gap), so anything returned
+     * here is safe to render as-is.
+     */
+    @Serializable
+    data class PainMigrationStat(
+        @SerialName("attacks_analysed") val attacksAnalysed: Int,
+        @SerialName("onset_locations") val onsetLocations: List<String> = emptyList(),
+        @SerialName("spread_locations") val spreadLocations: List<String> = emptyList(),
+        @SerialName("median_minutes_to_peak") val medianMinutesToPeak: Int? = null,
+    )
+
+    /**
+     * Where the pain starts and spreads. Null unless >= 3 timelined attacks
+     * agreed, so anything returned is a real pattern, not one anecdote.
+     */
+    suspend fun getPainMigration(context: Context): PainMigrationStat? {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return null
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/pain_migration_stats" +
+                "?select=attacks_analysed,onset_locations,spread_locations,median_minutes_to_peak&limit=1"
+            val r = client.get(url) {
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            }
+            if (r.status.value in 200..299) r.body<List<PainMigrationStat>>().firstOrNull() else null
+        } catch (e: Exception) {
+            println("getPainMigration failed: ${e.message}")
+            null
+        } finally {
+            client.close()
+        }
+    }
+
+    suspend fun getTreatmentTiming(context: Context): List<TreatmentTimingStat> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/treatment_timing_stats" +
+                "?select=treatment_name,cutoff_minutes,early_count,early_avg_peak,late_count,late_avg_peak"
+            val r = client.get(url) {
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            }
+            if (r.status.value in 200..299) r.body() else emptyList()
+        } catch (e: Exception) {
+            println("getTreatmentTiming failed: ${e.message}")
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
     suspend fun getSymptomSegments(context: Context, limit: Int = 200): List<CorrelationStat> {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()

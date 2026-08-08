@@ -391,6 +391,7 @@ private fun SymptomRow(
     onDelete: () -> Unit
 ) {
     val icon = SymptomIcons.forLabel(label, iconKey)
+    val brainyId = SymptomIcons.drawableForLabel(label, iconKey)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -407,8 +408,8 @@ private fun SymptomRow(
                 .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (icon != null) {
-                Icon(icon, contentDescription = null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 26.dp else 20.dp, tint = AppTheme.SubtleTextColor)
             } else {
                 Text(
                     label.take(2).uppercase(),

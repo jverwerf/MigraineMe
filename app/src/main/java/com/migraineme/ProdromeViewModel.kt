@@ -159,5 +159,16 @@ class ProdromeViewModel : ViewModel() {
             }
         }
     }
+
+    fun setAlertEnabled(accessToken: String, prodromeId: String, enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                db.updateProdromePoolItem(accessToken, prodromeId, alertEnabled = enabled)
+                loadAll(accessToken)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }
 

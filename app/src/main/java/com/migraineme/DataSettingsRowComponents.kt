@@ -76,6 +76,142 @@ fun WearableSourceSelector(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Gauge Alert Level Selector
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * How high today's risk has to climb before we push a notification.
+ *
+ * Mirrors the RiskZone names used on the gauge itself, plus an OFF option, so
+ * the setting reads in the same language as the thing it controls. Stored in
+ * notification_settings as enabled + threshold; an absent row means MILD.
+ */
+enum class GaugeAlertLevel(
+    val label: String,
+    val dbValue: String?,
+    val description: String
+) {
+    OFF("Off", null, "No alerts when your risk changes"),
+    LOW("Low", "LOW", "Alert me on any day above negligible risk"),
+    MILD("Mild", "MILD", "Alert me on mild and high risk days"),
+    HIGH("High", "HIGH", "Alert me on high risk days only");
+
+    companion object {
+        /** Interprets a notification_settings row. Null row = never configured = MILD. */
+        fun from(enabled: Boolean?, threshold: String?): GaugeAlertLevel {
+            if (enabled == false) return OFF
+            return entries.firstOrNull { it.dbValue == threshold?.uppercase() } ?: MILD
+        }
+    }
+}
+
+@Composable
+fun GaugeAlertLevelSelector(
+    selected: GaugeAlertLevel,
+    enabled: Boolean,
+    onSelected: (GaugeAlertLevel) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        SourceBadge(
+            label = selected.label,
+            hasMultiple = true,
+            enabled = enabled,
+            onClick = { if (enabled) expanded = true },
+            tint = AppTheme.AccentPurple
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
+        ) {
+            GaugeAlertLevel.entries.forEach { level ->
+                DropdownMenuItem(
+                    text = { Text(level.label, color = Color.White) },
+                    onClick = {
+                        expanded = false
+                        onSelected(level)
+                    }
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ongoing Migraine Reminder Selector
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * How often to be reminded that a logged migraine still has no end time.
+ *
+ * Stored in notification_settings as enabled + interval_days. Absent row means
+ * ON at 3 days. The backend stops after a few unanswered reminders, so picking
+ * a short interval can't turn into endless nagging.
+ */
+enum class OngoingReminderInterval(val label: String, val days: Int?) {
+    OFF("Off", null),
+    ONE("1 day", 1),
+    TWO("2 days", 2),
+    THREE("3 days", 3),
+    FIVE("5 days", 5),
+    SEVEN("7 days", 7);
+
+    val description: String
+        get() = when (this) {
+            OFF -> "No reminders about migraines you haven't closed"
+            else -> "Remind me every $label while a migraine is still open"
+        }
+
+    companion object {
+        val DEFAULT = THREE
+
+        /** Interprets a notification_settings row. Null row = never configured = 3 days. */
+        fun from(enabled: Boolean?, intervalDays: Int?): OngoingReminderInterval {
+            if (enabled == false) return OFF
+            return entries.firstOrNull { it.days != null && it.days == intervalDays } ?: DEFAULT
+        }
+    }
+}
+
+@Composable
+fun OngoingReminderSelector(
+    selected: OngoingReminderInterval,
+    enabled: Boolean,
+    onSelected: (OngoingReminderInterval) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        SourceBadge(
+            label = selected.label,
+            hasMultiple = true,
+            enabled = enabled,
+            onClick = { if (enabled) expanded = true },
+            tint = AppTheme.AccentPurple
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
+        ) {
+            OngoingReminderInterval.entries.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option.label, color = Color.White) },
+                    onClick = {
+                        expanded = false
+                        onSelected(option)
+                    }
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Phone Source Selector
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -165,9 +301,13 @@ fun SourceBadge(
     label: String,
     hasMultiple: Boolean,
     enabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    // Green by default — the data-source pills across the rest of the screen.
+    // The Notifications card passes the purple accent so its pickers read in
+    // the same colour language as the switches sitting next to them.
+    tint: Color = Color(0xFF81C784)
 ) {
-    val badgeColor = Color(0xFF81C784)
+    val badgeColor = tint
     Row(
         modifier = Modifier
             .background(badgeColor.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
@@ -446,7 +586,11 @@ fun openAppSettings(context: android.content.Context) {
 @Composable
 fun NotificationsCard(
     onRequestNotificationPermission: () -> Unit,
-    refreshTick: Int
+    refreshTick: Int,
+    // Non-blank while the user is searching the Data screen: each row survives
+    // only if its label or description contains the query, and the whole card
+    // disappears when nothing in it matches.
+    searchQuery: String = ""
 ) {
     val context = LocalContext.current
     val appContext = context.applicationContext
@@ -477,6 +621,25 @@ fun NotificationsCard(
 
     val toggleColWidth = 56.dp
 
+    // Search filtering. A blank query shows the whole card; a query matching the
+    // card title keeps every row; otherwise each row is tested on its own text.
+    val q = searchQuery.trim()
+    val titleHit = q.isBlank() || "Notifications".contains(q, ignoreCase = true)
+    fun hit(vararg text: String) = titleHit || text.any { it.contains(q, ignoreCase = true) }
+
+    val showEvening = hit("Evening check-in", "Daily reminder at 8pm to log your day")
+    val showGauge = hit("Daily risk alerts", "risk changes", "risk days")
+    val showOngoing = hit("Ongoing migraine reminder", "migraine is still open")
+    val showTriggerAlerts = hit("Trigger alerts", "When an item you follow becomes a trigger for the day")
+    val showRecs = hit("Recommendation alerts", "Get notified each morning when your new recommendations are ready")
+    val showCompanion = hit("AI companion", "Get notified when an AI companion adds to your community feed")
+    val showPermission = hit("Notification permission")
+    if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showCompanion && !showPermission) return
+
+    // Dividers only make sense on the full card — a filtered result list would
+    // otherwise start or end with a stray rule.
+    val showDividers = q.isBlank()
+
     BaseCard {
         // Section header — same style as other data sections
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -497,58 +660,248 @@ fun NotificationsCard(
         HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
 
         // Evening check-in row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 10.dp)
+        if (showEvening) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "Evening check-in",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    "Daily reminder at 8pm to log your day",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
+                    Text(
+                        "Evening check-in",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Daily reminder at 8pm to log your day",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
-            Column(
-                modifier = Modifier.width(toggleColWidth),
-                horizontalAlignment = Alignment.End
-            ) {
-                Switch(
-                    checked = notificationPermissionGranted && eveningCheckinEnabled,
-                    modifier = Modifier.scale(0.8f),
-                    onCheckedChange = { newValue ->
-                        if (newValue) {
-                            if (!notificationPermissionGranted) {
-                                onRequestNotificationPermission()
-                            } else if (!eveningCheckinEnabled) {
-                                // Channel disabled by user — open app notification settings
+                Column(
+                    modifier = Modifier.width(toggleColWidth),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Switch(
+                        checked = notificationPermissionGranted && eveningCheckinEnabled,
+                        modifier = Modifier.scale(0.8f),
+                        onCheckedChange = { newValue ->
+                            if (newValue) {
+                                if (!notificationPermissionGranted) {
+                                    onRequestNotificationPermission()
+                                } else if (!eveningCheckinEnabled) {
+                                    // Channel disabled by user — open app notification settings
+                                    openNotificationSettings(appContext)
+                                }
+                            } else {
+                                // Turn off — open notification settings so user can disable the channel
                                 openNotificationSettings(appContext)
                             }
-                        } else {
-                            // Turn off — open notification settings so user can disable the channel
-                            openNotificationSettings(appContext)
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
+            }
+        }
+
+        if (showDividers) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        }
+
+        val scope = rememberCoroutineScope()
+        val edge = remember { EdgeFunctionsService() }
+
+        // Daily risk gauge row — DB-backed (notification_settings.daily_gauge).
+        // Unlike the other rows this is not a toggle but a threshold: the backend
+        // pushes when today's gauge first reaches the chosen zone, and again if it
+        // climbs higher during the day. Absent row = ON at MILD.
+        var gaugeLoaded by remember { mutableStateOf(false) }
+        var gaugeThreshold by remember { mutableStateOf(GaugeAlertLevel.MILD) }
+        LaunchedEffect(Unit) {
+            val row = withContext(Dispatchers.IO) {
+                edge.getNotificationSetting(appContext, "daily_gauge")
+            }
+            gaugeThreshold = GaugeAlertLevel.from(row?.enabled, row?.threshold)
+            gaugeLoaded = true
+        }
+
+        if (showGauge) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
+                    Text(
+                        "Daily risk alerts",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        gaugeThreshold.description,
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                GaugeAlertLevelSelector(
+                    selected = gaugeThreshold,
+                    enabled = gaugeLoaded,
+                    onSelected = { level ->
+                        val previous = gaugeThreshold
+                        gaugeThreshold = level
+                        scope.launch {
+                            val ok = withContext(Dispatchers.IO) {
+                                edge.upsertNotificationSetting(
+                                    appContext,
+                                    "daily_gauge",
+                                    enabled = level != GaugeAlertLevel.OFF,
+                                    threshold = level.dbValue
+                                )
+                            }
+                            if (!ok) gaugeThreshold = previous // revert on failure
                         }
-                    },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    }
                 )
             }
         }
 
-        HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        if (showDividers) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        }
 
-        // New insight alerts row — DB-backed preference (notification_settings.new_insight).
+        // Ongoing migraine reminder row — DB-backed (notification_settings.ongoing_migraine).
+        // Interval picker, not a toggle: the backend nudges every N days while a
+        // logged migraine still has no end time. Absent row = ON at 3 days.
+        var ongoingLoaded by remember { mutableStateOf(false) }
+        var ongoingInterval by remember { mutableStateOf(OngoingReminderInterval.DEFAULT) }
+        LaunchedEffect(Unit) {
+            val row = withContext(Dispatchers.IO) {
+                edge.getNotificationSetting(appContext, "ongoing_migraine")
+            }
+            ongoingInterval = OngoingReminderInterval.from(row?.enabled, row?.intervalDays)
+            ongoingLoaded = true
+        }
+
+        if (showOngoing) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
+                    Text(
+                        "Ongoing migraine reminder",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        ongoingInterval.description,
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                OngoingReminderSelector(
+                    selected = ongoingInterval,
+                    enabled = ongoingLoaded,
+                    onSelected = { option ->
+                        val previous = ongoingInterval
+                        ongoingInterval = option
+                        scope.launch {
+                            val ok = withContext(Dispatchers.IO) {
+                                edge.upsertNotificationSetting(
+                                    appContext,
+                                    "ongoing_migraine",
+                                    enabled = option != OngoingReminderInterval.OFF,
+                                    intervalDays = option.days
+                                )
+                            }
+                            if (!ok) ongoingInterval = previous // revert on failure
+                        }
+                    }
+                )
+            }
+        }
+
+        if (showDividers) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        }
+
+        // Trigger alerts row — DB-backed preference (notification_settings.trigger_alert).
+        // Master toggle for the per-item bells on the trigger/prodrome pools.
         // Default ON; toggling writes to Supabase so the backend skips the push when off.
-        val scope = rememberCoroutineScope()
-        val edge = remember { EdgeFunctionsService() }
+        var triggerAlertLoaded by remember { mutableStateOf(false) }
+        var triggerAlertEnabled by remember { mutableStateOf(true) }
+        LaunchedEffect(Unit) {
+            val enabled = withContext(Dispatchers.IO) {
+                edge.getNotificationEnabled(appContext, "trigger_alert", default = true)
+            }
+            triggerAlertEnabled = enabled
+            triggerAlertLoaded = true
+        }
+
+        if (showTriggerAlerts) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
+                    Text(
+                        "Trigger alerts",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "When an item you follow becomes a trigger for the day",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.width(toggleColWidth),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Switch(
+                        checked = triggerAlertEnabled,
+                        enabled = triggerAlertLoaded,
+                        modifier = Modifier.scale(0.8f),
+                        onCheckedChange = { newValue ->
+                            triggerAlertEnabled = newValue
+                            scope.launch {
+                                val ok = withContext(Dispatchers.IO) {
+                                    edge.upsertNotificationSetting(appContext, "trigger_alert", newValue)
+                                }
+                                if (!ok) triggerAlertEnabled = !newValue // revert on failure
+                            }
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
+            }
+        }
+
+        if (showDividers) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        }
+
+        // Recommendation alerts row — DB-backed preference (notification_settings.new_insight).
+        // Default ON; toggling writes to Supabase so the backend skips the push when off.
         var newInsightLoaded by remember { mutableStateOf(false) }
         var newInsightEnabled by remember { mutableStateOf(true) }
         LaunchedEffect(Unit) {
@@ -559,6 +912,63 @@ fun NotificationsCard(
             newInsightLoaded = true
         }
 
+        if (showRecs) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
+                    Text(
+                        "Recommendation alerts",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Get notified each morning when your new recommendations are ready",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.width(toggleColWidth),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Switch(
+                        checked = newInsightEnabled,
+                        enabled = newInsightLoaded,
+                        modifier = Modifier.scale(0.8f),
+                        onCheckedChange = { newValue ->
+                            newInsightEnabled = newValue
+                            scope.launch {
+                                val ok = withContext(Dispatchers.IO) {
+                                    edge.upsertNotificationSetting(appContext, "new_insight", newValue)
+                                }
+                                if (!ok) newInsightEnabled = !newValue // revert on failure
+                            }
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
+            }
+        }
+
+        // Device check-ins — DB-backed preference (notification_settings.device_relief_outcome).
+        // Default ON; the 2h outcome worker checks this before posting.
+        var deviceOutcomeLoaded by remember { mutableStateOf(false) }
+        var deviceOutcomeEnabled by remember { mutableStateOf(true) }
+        LaunchedEffect(Unit) {
+            val enabled = withContext(Dispatchers.IO) {
+                edge.getNotificationEnabled(appContext, "device_relief_outcome", default = true)
+            }
+            deviceOutcomeEnabled = enabled
+            deviceOutcomeLoaded = true
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -569,12 +979,12 @@ fun NotificationsCard(
                     .padding(end = 10.dp)
             ) {
                 Text(
-                    "New insight alerts",
+                    "Device check-ins",
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    "Get notified when new insights and recommendations are ready",
+                    "Ask how a neuromodulation device session went, 2 hours after you log it",
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -585,16 +995,16 @@ fun NotificationsCard(
                 horizontalAlignment = Alignment.End
             ) {
                 Switch(
-                    checked = newInsightEnabled,
-                    enabled = newInsightLoaded,
+                    checked = deviceOutcomeEnabled,
+                    enabled = deviceOutcomeLoaded,
                     modifier = Modifier.scale(0.8f),
                     onCheckedChange = { newValue ->
-                        newInsightEnabled = newValue
+                        deviceOutcomeEnabled = newValue
                         scope.launch {
                             val ok = withContext(Dispatchers.IO) {
-                                edge.upsertNotificationSetting(appContext, "new_insight", newValue)
+                                edge.upsertNotificationSetting(appContext, "device_relief_outcome", newValue)
                             }
-                            if (!ok) newInsightEnabled = !newValue // revert on failure
+                            if (!ok) deviceOutcomeEnabled = !newValue // revert on failure
                         }
                     },
                     colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
@@ -614,51 +1024,53 @@ fun NotificationsCard(
             communityLoaded = true
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 10.dp)
+        if (showCompanion) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "AI companion",
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    "Get notified when an AI companion adds to your community feed",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
+                    Text(
+                        "AI companion",
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Get notified when an AI companion adds to your community feed",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
-            Column(
-                modifier = Modifier.width(toggleColWidth),
-                horizontalAlignment = Alignment.End
-            ) {
-                Switch(
-                    checked = communityEnabled,
-                    enabled = communityLoaded,
-                    modifier = Modifier.scale(0.8f),
-                    onCheckedChange = { newValue ->
-                        communityEnabled = newValue
-                        scope.launch {
-                            val ok = withContext(Dispatchers.IO) {
-                                edge.upsertNotificationSetting(appContext, "community", newValue)
+                Column(
+                    modifier = Modifier.width(toggleColWidth),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Switch(
+                        checked = communityEnabled,
+                        enabled = communityLoaded,
+                        modifier = Modifier.scale(0.8f),
+                        onCheckedChange = { newValue ->
+                            communityEnabled = newValue
+                            scope.launch {
+                                val ok = withContext(Dispatchers.IO) {
+                                    edge.upsertNotificationSetting(appContext, "community", newValue)
+                                }
+                                if (!ok) communityEnabled = !newValue // revert on failure
                             }
-                            if (!ok) communityEnabled = !newValue // revert on failure
-                        }
-                    },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
-                )
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
             }
         }
 
         // Permission sub-row (Android 13+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (showPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionSubRow(
                 label = "Notification permission",
                 isGranted = notificationPermissionGranted,
@@ -670,7 +1082,7 @@ fun NotificationsCard(
         }
 
         // Channel warning
-        if (notificationPermissionGranted && !eveningCheckinEnabled) {
+        if (showEvening && notificationPermissionGranted && !eveningCheckinEnabled) {
             Text(
                 "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings.",
                 style = MaterialTheme.typography.bodySmall,
@@ -687,6 +1099,8 @@ fun CalendarCard(
     onRequestCalendarPermission: () -> Unit,
     onToggleData: (enabled: Boolean) -> Unit,
     refreshTick: Int,
+    // See NotificationsCard — non-blank while searching the Data screen.
+    searchQuery: String = "",
 ) {
     val context = LocalContext.current
     val appContext = context.applicationContext
@@ -697,6 +1111,14 @@ fun CalendarCard(
     val dataEnabled = metricSettings["calendar_events"]?.enabled == true
 
     val toggleColWidth = 56.dp
+
+    val q = searchQuery.trim()
+    val titleHit = q.isBlank() || "Calendar".contains(q, ignoreCase = true)
+    fun hit(vararg text: String) = titleHit || text.any { it.contains(q, ignoreCase = true) }
+
+    val showEvents = hit("Calendar events", "Map your events to activities, reliefs, and triggers")
+    val showPermission = hit("Calendar permission")
+    if (!showEvents && !showPermission) return
 
     BaseCard {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -715,35 +1137,39 @@ fun CalendarCard(
         HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
 
         // Data toggle row
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
-                Text("Calendar events", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    "Map your events to activities, reliefs, and triggers",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Column(modifier = Modifier.width(toggleColWidth), horizontalAlignment = Alignment.End) {
-                Switch(
-                    checked = dataEnabled && permissionGranted,
-                    enabled = permissionGranted,
-                    modifier = Modifier.scale(0.8f),
-                    onCheckedChange = { newValue -> onToggleData(newValue) },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
-                )
+        if (showEvents) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                    Text("Calendar events", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Map your events to activities, reliefs, and triggers",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Column(modifier = Modifier.width(toggleColWidth), horizontalAlignment = Alignment.End) {
+                    Switch(
+                        checked = dataEnabled && permissionGranted,
+                        enabled = permissionGranted,
+                        modifier = Modifier.scale(0.8f),
+                        onCheckedChange = { newValue -> onToggleData(newValue) },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
+                    )
+                }
             }
         }
 
         // Permission sub-row
-        PermissionSubRow(
-            label = "Calendar permission",
-            isGranted = permissionGranted,
-            alpha = 1.0f,
-            providerColWidth = 0.dp,
-            toggleColWidth = toggleColWidth,
-            onRequestPermission = onRequestCalendarPermission
-        )
+        if (showPermission) {
+            PermissionSubRow(
+                label = "Calendar permission",
+                isGranted = permissionGranted,
+                alpha = 1.0f,
+                providerColWidth = 0.dp,
+                toggleColWidth = toggleColWidth,
+                onRequestPermission = onRequestCalendarPermission
+            )
+        }
     }
 }
 

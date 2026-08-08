@@ -38,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -115,6 +116,9 @@ fun EditMigraineScreen(
     var beganAt by remember { mutableStateOf<String?>(null) }
     var endedAt by remember { mutableStateOf<String?>(null) }
     var notes by remember { mutableStateOf(TextFieldValue("")) }
+    val auraZones = remember { mutableStateListOf<String>() }
+    var auraDuration by remember { mutableStateOf<Int?>(null) }
+    var showAuraSheet by remember { mutableStateOf(false) }
 
     // Queues for adds and deletes
     var addTriggers by remember { mutableStateOf(listOf<PendingTrigger>()) }
@@ -182,6 +186,8 @@ fun EditMigraineScreen(
             beganAt = it.startAt
             endedAt = it.endAt
             notes = TextFieldValue(it.notes ?: "")
+            auraZones.clear(); auraZones.addAll(it.auraLocations ?: emptyList())
+            auraDuration = it.auraDurationMinutes
             addTriggers = emptyList(); addMeds = emptyList(); addRels = emptyList()
             deleteTriggerIds = emptySet(); deleteMedicineIds = emptySet(); deleteReliefIds = emptySet()
         }
@@ -245,7 +251,10 @@ fun EditMigraineScreen(
                                             severity = severity.toInt(),
                                             startAt = beganAt,
                                             endAt = endedAt,
-                                            notes = notes.text
+                                            notes = notes.text,
+                                            setAura = true,
+                                            auraLocations = auraZones.toList(),
+                                            auraDurationMinutes = auraDuration
                                         )
                                         // Deletes
                                         deleteTriggerIds.forEach { runCatching { db.deleteTrigger(token, it) } }
@@ -335,6 +344,9 @@ fun EditMigraineScreen(
                 endBeforeStart = endBeforeStart,
                 notes = notes,
                 setNotes = { notes = it },
+                auraZones = auraZones.toList(),
+                auraDuration = auraDuration,
+                onEditAura = { showAuraSheet = true },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(inner)
@@ -440,6 +452,24 @@ fun EditMigraineScreen(
             }
         )
     }
+
+    if (showAuraSheet) {
+        AuraDetailSheet(
+            initialZones = auraZones.toList(),
+            initialDurationMinutes = auraDuration,
+            onSave = { zones, dur, _ ->
+                auraZones.clear(); auraZones.addAll(zones)
+                auraDuration = dur
+                showAuraSheet = false
+            },
+            onRemove = {
+                auraZones.clear()
+                auraDuration = null
+                showAuraSheet = false
+            },
+            onDismiss = { showAuraSheet = false }
+        )
+    }
 }
 
 /* -------------------- Pages -------------------- */
@@ -461,6 +491,9 @@ private fun CorePage(
     endBeforeStart: Boolean,
     notes: TextFieldValue,
     setNotes: (TextFieldValue) -> Unit,
+    auraZones: List<String>,
+    auraDuration: Int?,
+    onEditAura: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -523,6 +556,23 @@ private fun CorePage(
                 Text("Current: ${formatIsoDdMmYyHm(endedAt)}")
                 if (endBeforeStart) {
                     Text("End time cannot be before start time", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Aura", style = MaterialTheme.typography.bodyMedium)
+                val summary = buildList {
+                    if (auraZones.isNotEmpty()) add("${auraZones.size} visual area${if (auraZones.size > 1) "s" else ""}")
+                    auraDuration?.let { add(formatAuraDuration(it)) }
+                }
+                Text(
+                    if (summary.isEmpty()) "None logged" else summary.joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+                OutlinedButton(onClick = onEditAura) {
+                    Text(if (auraZones.isEmpty() && auraDuration == null) "Add aura details" else "Edit aura details")
                 }
             }
         }

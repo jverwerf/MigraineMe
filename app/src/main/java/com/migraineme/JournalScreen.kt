@@ -397,9 +397,32 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             event.row.severity?.let { JournalDetail("Severity", "$it / 10") }
                             event.row.type?.let { JournalDetail("Type", it.replaceFirstChar { c -> c.uppercase() }) }
+                            // Only the symptoms the user actually rated — Type
+                            // above already lists them all.
+                            val ratedSymptoms = event.linked.postdromes.filter { it.severity != null }
+                            if (ratedSymptoms.isNotEmpty()) {
+                                JournalDetail(
+                                    "Symptom intensity",
+                                    ratedSymptoms.joinToString(", ") { "${it.type ?: "?"} (${it.severity!!.lowercase()})" }
+                                )
+                            }
                             if (!event.row.endAt.isNullOrBlank()) JournalDetail("End", formatTimestamp(event.row.endAt!!))
-                            if (event.row.painLocations?.isNotEmpty() == true)
-                                JournalDetail("Pain location", event.row.painLocations!!.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
+                            if (event.linked.painPoints.isNotEmpty()) {
+                                // Timestamped pain timeline: rows sharing start_at
+                                // are one entry (same moment/severity, N locations).
+                                event.linked.painPoints.groupBy { it.startAt }.toSortedMap().entries.forEachIndexed { i, (startAt, rows) ->
+                                    val sev = rows.mapNotNull { it.severity }.maxOrNull()
+                                    val locs = rows.joinToString(", ") { ALL_PAIN_POINTS_MAP[it.locationId] ?: it.locationId }
+                                    JournalDetail(
+                                        if (i == 0) "Pain" else "Then",
+                                        "${formatTimestamp(startAt)}${sev?.let { " • $it/10" } ?: ""} • $locs"
+                                    )
+                                }
+                            } else if (event.row.painLocations?.isNotEmpty() == true)
+                                JournalDetail("Pain location", event.row.painLocations!!.joinToString(", ") { ALL_PAIN_POINTS_MAP[it] ?: it.replaceFirstChar { c -> c.uppercase() } })
+                            if (event.row.auraLocations?.isNotEmpty() == true)
+                                JournalDetail("Aura", event.row.auraLocations!!.joinToString(", ") { AuraZones.label(it) })
+                            event.row.auraDurationMinutes?.let { JournalDetail("Aura duration", formatAuraDuration(it)) }
                             if (!event.row.notes.isNullOrBlank()) JournalDetail("Notes", event.row.notes!!)
                             val linked = event.linked
                             if (linked.triggers.isNotEmpty()) JournalDetail("Triggers", linked.triggers.mapNotNull { it.type }.joinToString(", ") { triggerLabelMap[it] ?: it.replace("_", " ").replaceFirstChar { c -> c.uppercase() } })

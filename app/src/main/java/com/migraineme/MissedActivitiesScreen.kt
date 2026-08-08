@@ -63,18 +63,13 @@ fun MissedActivitiesScreen(
     // after the rebuildDraftWithMissed helper is defined.
     val upcoming by vm.upcoming.collectAsState()
 
+    // Only the missed-activity list changes here. This used to clearDraft() and
+    // rebuild the whole draft field by field, which silently dropped
+    // editMigraineId (turning an edit into a duplicate insert), every
+    // existingId (re-inserting all linked rows as copies), symptom
+    // severities/times and aura. Replace just the one list instead.
     fun rebuildDraftWithMissed(missed: List<MissedActivityDraft>) {
-        val d = draft
-        logVm.clearDraft()
-        d.migraine?.let { logVm.setMigraineDraft(it.type, it.severity, it.beganAtIso, it.endedAtIso, it.note, symptoms = it.symptoms) }
-        if (d.painLocations.isNotEmpty()) logVm.setPainLocationsDraft(d.painLocations)
-        d.prodromes.forEach { logVm.addProdromeDraft(it.type, it.startAtIso, it.note) }
-        d.triggers.forEach { logVm.addTriggerDraft(it.type, it.startAtIso, it.note) }
-        d.meds.forEach { m -> logVm.addMedicineDraft(m.name ?: "", m.amount, m.notes, m.startAtIso, m.reliefScale) }
-        d.rels.forEach { logVm.addReliefDraft(it.type, it.notes, it.startAtIso, it.endAtIso, it.reliefScale) }
-        d.locations.forEach { logVm.addLocationDraft(it.type, it.startAtIso, it.note) }
-        d.activities.forEach { logVm.addActivityDraft(it.type, it.startAtIso, it.note) }
-        missed.forEach { logVm.addMissedActivityDraft(it.type, it.startAtIso, it.note) }
+        logVm.replaceMissedActivities(missed)
     }
 
     fun onTap(label: String) {
@@ -109,7 +104,14 @@ fun MissedActivitiesScreen(
 
     val frequentLabels = remember(frequent) { frequent.mapNotNull { it.missedActivity?.label }.toSet() }
     val selectedLabels = remember(draft.missedActivities) { draft.missedActivities.map { it.type }.toSet() }
-    val grouped = remember(pool) { pool.groupBy { it.category ?: "Other" }.toSortedMap() }
+    // Wizard search — live-filters the pool grid below
+    var wizardSearch by remember { mutableStateOf("") }
+    val searchPool = remember(pool, wizardSearch) {
+        if (wizardSearch.isBlank()) pool
+        else pool.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+    }
+
+    val grouped = remember(searchPool) { searchPool.groupBy { it.category ?: "Other" }.toSortedMap() }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -151,6 +153,8 @@ fun MissedActivitiesScreen(
                 }
             }
 
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.REVIEW) })
+
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Missed Activities", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
@@ -159,11 +163,13 @@ fun MissedActivitiesScreen(
                 }
             }
 
+            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFEF9A9A))
+
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        pool.filter { it.label in frequentLabels }.forEach { ma ->
+                        searchPool.filter { it.label in frequentLabels }.forEach { ma ->
                             MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) }
                         }
                     }
@@ -202,6 +208,7 @@ fun MissedActivitiesScreen(
 private fun MissedCircleButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
     val accent = Color(0xFFEF9A9A)
     val icon = MissedActivityIcons.forLabel(label, iconKey)
+    val brainyId = MissedActivityIcons.drawableForLabel(label, iconKey)
     val bg = if (isSelected) accent.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val border = if (isSelected) accent.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     Column(
@@ -209,8 +216,8 @@ private fun MissedCircleButton(label: String, isSelected: Boolean, iconKey: Stri
         modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)
     ) {
         Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(1.5.dp, border, CircleShape), contentAlignment = Alignment.Center) {
-            if (icon != null) {
-                Icon(imageVector = icon, contentDescription = label, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor, modifier = Modifier.size(24.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor)
             } else {
                 Text(label.take(2).uppercase(), color = if (isSelected) Color.White else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))

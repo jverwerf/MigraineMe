@@ -1,14 +1,19 @@
 package com.migraineme
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -22,6 +27,7 @@ fun InsightsPatternsScreen(
     vm: InsightsViewModel = viewModel()
 ) {
     val correlationStats by vm.correlationStats.collectAsState()
+    val triggerIconKeys by vm.triggerIconKeys.collectAsState()
     val correlationsLoading by vm.correlationsLoading.collectAsState()
     val symptomOutcomes by vm.symptomOutcomes.collectAsState()
 
@@ -58,7 +64,8 @@ fun InsightsPatternsScreen(
             }
 
             if (allPatterns.isNotEmpty() || interactionCorrelations.isNotEmpty()) {
-                TopPatternsCard(triggerCorrelations, metricCorrelations, interactionCorrelations)
+                TopPatternsCard(triggerCorrelations, metricCorrelations, interactionCorrelations, triggerIconKeys,
+                    watermarkOnLast = symptomOutcomes.isEmpty())
             }
 
             // Per-trigger symptom profile (Phase 2b)
@@ -91,38 +98,64 @@ private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.Correlatio
             .map { (name, list) -> name to list.sortedByDescending { it.liftRatio } }
             .sortedByDescending { it.second.firstOrNull()?.liftRatio ?: 0f }
     }
-    BaseCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Spacer(Modifier.width(2.dp))
-            Column {
+    val tileShape = RoundedCornerShape(18.dp)
+    var sortMode by remember { mutableStateOf("Strongest effect") }
+    val sortedGroups = remember(grouped, sortMode) {
+        when (sortMode) {
+            "Most affected days" -> grouped.sortedByDescending { it.second.maxOfOrNull { s -> s.pctMigraineWindows } ?: 0f }
+            "A to Z" -> grouped.sortedBy { it.first.lowercase() }
+            "Newest" -> grouped.sortedByDescending { it.second.maxOfOrNull { s -> s.updatedAt } ?: "" }
+            "Oldest" -> grouped.sortedBy { it.second.minOfOrNull { s -> s.updatedAt } ?: "" }
+            else -> grouped
+        }
+    }
+    BrainyWatermarkCard {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
                 Text("What These Triggers Do to You", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Text("The symptoms that tend to follow each trigger",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
+            SortChipMenu(sortMode,
+                listOf("Strongest effect", "Most affected days", "A to Z", "Newest", "Oldest")) { sortMode = it }
         }
-        Spacer(Modifier.height(8.dp))
-        grouped.take(6).forEach { (trigger, list) ->
-            Column(Modifier.padding(vertical = 4.dp)) {
-                Text(trigger, color = Color.White,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+        Spacer(Modifier.height(6.dp))
+        sortedGroups.take(6).forEach { (trigger, list) ->
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(tileShape)
+                    .background(Color.White.copy(alpha = 0.035f))
+                    .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
+                    .padding(horizontal = 16.dp, vertical = 13.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyRowIcon(trigger, size = 20.dp)
+                    Text(trigger, color = Color(0xFFF3EAFB),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                }
                 list.take(4).forEach { stat ->
                     val condPct = stat.pctMigraineWindows
                     val baselinePct = stat.pctControlWindows
-                    Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("→ ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                        Text(prettyLabel(stat.symptomOutcome), color = Color.White,
+                    Row(Modifier.fillMaxWidth().padding(top = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                        BrainyRowIcon(stat.symptomOutcome, size = 16.dp, gap = 5.dp)
+                        Text(prettyLabel(stat.symptomOutcome), color = Color(0xFFDDD2EA),
                             style = MaterialTheme.typography.bodySmall, maxLines = 1,
                             modifier = Modifier.weight(1f))
                         Text(String.format("%.1f×", stat.liftRatio),
-                            color = if (stat.liftRatio >= 2f) Color(0xFFE57373) else if (stat.liftRatio >= 1.5f) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
+                            color = if (stat.liftRatio >= 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                        Spacer(Modifier.width(6.dp))
-                        Text("${condPct.toInt()}% vs ${baselinePct.toInt()}%",
+                        Spacer(Modifier.width(8.dp))
+                        Text("${condPct.toInt()}% vs ${baselinePct.toInt()}% of days",
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
+            Spacer(Modifier.height(6.dp))
         }
+        Text("Percentages compare days after the trigger with your ordinary days.",
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.labelSmall)
     }
 }

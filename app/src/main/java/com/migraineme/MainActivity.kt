@@ -51,6 +51,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,6 +60,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -74,6 +76,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -109,6 +112,7 @@ import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.request.get
@@ -132,6 +136,8 @@ object Routes {
     const val INSIGHTS_BREAKDOWN = "insights_breakdown"
         const val INSIGHTS_PATTERNS = "insights_patterns"
         const val INSIGHTS_TREATMENTS = "insights_treatments"
+        const val INSIGHTS_WHATS_HELPING = "insights_whats_helping"
+        const val INSIGHTS_WHAT_CHANGED = "insights_what_changed"
         const val INSIGHTS_CONTEXT = "insights_context"
         const val INSIGHTS_IMPACT = "insights_impact"
         const val INSIGHTS_THRESHOLDS = "insights_thresholds"
@@ -518,8 +524,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 // Safety net: if onboarding is already done but the seeder's
                 // cleanup didn't finish last time (app killed mid-flow, etc.),
                 // purge any leftover source='demo' / [demo] rows.
+                // Guard: onboarding_completed flips true at tour START, and this
+                // effect re-fires on every token refresh — without the tour check
+                // a refresh purges the demo data out from under the running tour.
                 try {
-                    if (OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
+                    if (!TourManager.isActive() && OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
                         DemoDataSeeder.purgeOrphanDemoRows(appCtx)
                     }
                 } catch (e: Exception) {
@@ -609,9 +618,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 // Foreground safety net: catches users whose onboarding finished
                 // but who keep the app suspended for days (cold-launch sweep in
                 // LaunchedEffect(token) won't re-fire for them).
+                // Guard: onboarding_completed flips true at tour START and the tour
+                // runs over the live app, so every resume during the tour would
+                // otherwise purge the demo data out from under it.
                 scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     try {
-                        if (OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
+                        if (!TourManager.isActive() && OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
                             DemoDataSeeder.purgeOrphanDemoRows(appCtx)
                         }
                     } catch (e: Exception) {
@@ -707,30 +719,74 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                Text(
-                    "Settings",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)
-                )
-                drawerItems.forEach { item ->
-                    NavigationDrawerItem(
-                        label = { Text(item.title) },
-                        selected = false,
-                        onClick = {
-                            val ts = TourManager.state.value
-                            if (ts.active && ts.phase == CoachPhase.TOUR) {
-                                val currentStep = tourSteps.getOrNull(ts.stepIndex)
-                                if (currentStep?.route != item.route) {
-                                    scope.launch { drawerState.close() }
-                                    return@NavigationDrawerItem
-                                }
-                            }
-                            scope.launch { drawerState.close() }
-                            nav.navigate(item.route) { launchSingleTop = true }
-                        },
-                        icon = { Icon(item.icon, contentDescription = item.title) }
+            // Read the route here (not in the parent scope) so navigation only
+            // recomposes the drawer, not the whole scaffold.
+            val drawerBackStack by nav.currentBackStackEntryAsState()
+            val drawerRoute = drawerBackStack?.destination?.route
+
+            ModalDrawerSheet(
+                drawerContainerColor = Color(0xFF1E0A2E),
+                drawerContentColor = Color.White,
+                drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color(0xFF2A0C3C), Color(0xFF1A0029))
+                            )
+                        )
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+                        Text(
+                            "Settings",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                            color = AppTheme.TitleColor
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Your account and app preferences",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = AppTheme.SubtleTextColor
+                        )
+                    }
+                    HorizontalDivider(
+                        color = Color.White.copy(alpha = 0.08f),
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
+                    Spacer(Modifier.height(12.dp))
+                    drawerItems.forEach { item ->
+                        val isLogout = item.route == Routes.LOGOUT
+                        val accent = if (isLogout) AppTheme.AccentPink else AppTheme.AccentPurple
+                        NavigationDrawerItem(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 3.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = NavigationDrawerItemDefaults.colors(
+                                selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.20f),
+                                selectedTextColor = AppTheme.TitleColor,
+                                selectedIconColor = AppTheme.AccentPurple,
+                                unselectedContainerColor = Color.White.copy(alpha = 0.04f),
+                                unselectedTextColor = if (isLogout) AppTheme.AccentPink else AppTheme.BodyTextColor,
+                                unselectedIconColor = accent
+                            ),
+                            label = { Text(item.title) },
+                            selected = drawerRoute == item.route,
+                            onClick = {
+                                val ts = TourManager.state.value
+                                if (ts.active && ts.phase == CoachPhase.TOUR) {
+                                    val currentStep = tourSteps.getOrNull(ts.stepIndex)
+                                    if (currentStep?.route != item.route) {
+                                        scope.launch { drawerState.close() }
+                                        return@NavigationDrawerItem
+                                    }
+                                }
+                                scope.launch { drawerState.close() }
+                                nav.navigate(item.route) { launchSingleTop = true }
+                            },
+                            icon = { Icon(item.icon, contentDescription = item.title) }
+                        )
+                    }
                 }
             }
         }
@@ -776,6 +832,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.INSIGHTS_REPORT ||
             current == Routes.INSIGHTS_PATTERNS ||
             current == Routes.INSIGHTS_TREATMENTS ||
+            current == Routes.INSIGHTS_WHATS_HELPING ||
+            current == Routes.INSIGHTS_WHAT_CHANGED ||
             current == Routes.INSIGHTS_CONTEXT ||
             current == Routes.INSIGHTS_IMPACT ||
             current == Routes.INSIGHTS_THRESHOLDS ||
@@ -915,6 +973,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.INSIGHTS_REPORT -> "Full Report"
                                     Routes.INSIGHTS_PATTERNS -> "What Happened"
                                     Routes.INSIGHTS_TREATMENTS -> "What Worked"
+                                    Routes.INSIGHTS_WHATS_HELPING -> "What's Helping"
+                                    Routes.INSIGHTS_WHAT_CHANGED -> "What changed"
                                     Routes.INSIGHTS_CONTEXT -> "What Were You Doing"
                                     Routes.INSIGHTS_IMPACT -> "How Did It Impact You"
                                     Routes.INSIGHTS_THRESHOLDS -> "Accuracy"
@@ -1301,6 +1361,26 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             InsightsTreatmentsScreen(navController = nav, vm = insightsVm)
                         }
                     }
+                    composable(Routes.INSIGHTS_WHATS_HELPING) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsWhatsHelpingScreen(vm = insightsVm)
+                        }
+                    }
+                    composable(Routes.INSIGHTS_WHAT_CHANGED) {
+                        val pState by PremiumManager.state.collectAsState()
+                        if (!pState.isLoading && !pState.isPremium) {
+                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
+                        } else {
+                            val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
+                            val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
+                            InsightsWhatChangedScreen(vm = insightsVm)
+                        }
+                    }
                     composable(Routes.INSIGHTS_CONTEXT) {
                         val pState by PremiumManager.state.collectAsState()
                         if (!pState.isLoading && !pState.isPremium) {
@@ -1684,6 +1764,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     prediction = PredictionValue.fromString(row.predictionValue),
                                     isAutomatable = autoKey != null,
                                     isAutomated = setting?.enabled ?: row.enabledByDefault,
+                                    alertEnabled = row.alertEnabled ?: false,
                                     threshold = setting?.threshold,
                                     defaultThreshold = row.defaultThreshold,
                                     unit = row.unit,
@@ -1723,6 +1804,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 },
                                 onSetPrediction = { id, pv ->
                                     authState.accessToken?.let { triggerVm.setPrediction(it, id, pv.name) }
+                                },
+                                onToggleAlert = { id, value ->
+                                    authState.accessToken?.let { triggerVm.setAlertEnabled(it, id, value) }
                                 },
                                 onToggleAutomation = { id, enabled ->
                                     val label = pool.find { it.id == id }?.label ?: return@PoolConfig
@@ -1851,11 +1935,11 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 iconColor = Color(0xFF81C784),
                                 drawHeroIcon = { HubIcons.run { drawReliefLeaf(it) } },
                                 items = items,
-                                infoText = "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment.\n\n" +
+                                infoText = "Your full relief pool: anything non-medicine that helps you cope with an attack. Lying down, cold packs, dark rooms, hot showers, hydration, specific stretches, breathing exercises, even removing yourself from a trigger environment. Neuromodulation devices you use (CEFALY, Nerivio, gammaCore and similar) belong here too - log a session each time you treat and Insights will score how well each device works for you.\n\n" +
                                     "For each relief:\n• Tap the star to pin it as a favourite. Favourites show up first in Quick Log so your go-to reliefs are one tap away.\n• Tap the trash icon to remove one entirely. Past entries you logged with it stay intact.\n\n" +
                                     "Use the + button to add anything specific to you (e.g. \"walk outside\", \"shower head pressure on neck\", \"lavender essential oil\"). The more specific you make these, the more useful the Insights become.\n\n" +
                                     "No severity weight on reliefs because they don't feed the gauge. The Insights screen scores how well each one actually worked by tracking the severity and duration of attacks where you used it (What Worked card). The more you log them tied to migraines, the sharper that score gets.",
-                                categories = listOf("Breathing", "Cold/Heat", "Darkness", "Hydration", "Massage", "Meditation", "Movement", "Rest", "Supplement", "Other"),
+                                categories = listOf("Breathing", "Cold/Heat", "Darkness", "Device", "Hydration", "Massage", "Meditation", "Movement", "Rest", "Supplement", "Other"),
                                 iconResolver = { key, label -> ReliefIcons.forLabel(label, key) },
                                 pickerIcons = ReliefIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ ->
@@ -1922,6 +2006,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     prediction = PredictionValue.fromString(row.predictionValue),
                                     isAutomatable = autoKey != null,
                                     isAutomated = setting?.enabled ?: row.enabledByDefault,
+                                    alertEnabled = row.alertEnabled ?: false,
                                     threshold = setting?.threshold,
                                     defaultThreshold = row.defaultThreshold,
                                     unit = row.unit,
@@ -1961,6 +2046,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 },
                                 onSetPrediction = { id, pv ->
                                     authState.accessToken?.let { prodromeVm.setPrediction(it, id, pv.name) }
+                                },
+                                onToggleAlert = { id, value ->
+                                    authState.accessToken?.let { prodromeVm.setAlertEnabled(it, id, value) }
                                 },
                                 onSetCategory = { id, category ->
                                     authState.accessToken?.let { prodromeVm.setCategory(it, id, category) }
@@ -2583,6 +2671,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     // ── Free trial gift (replaces post-onboarding paywall) ──
                     composable("subscribe") {
+                        // End of the flow — mark onboarding complete here (matching
+                        // iOS). The DB trigger purges demo rows on this write, which
+                        // is exactly what we want now that the tour is over.
+                        LaunchedEffect(Unit) {
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                OnboardingPrefs.setCompletedInSupabase(appCtx)
+                            }
+                        }
                         FreeTrialGiftScreen(
                             onContinue = {
                                 OnboardingMode.noSeed = false

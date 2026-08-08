@@ -169,36 +169,34 @@ fun MigraineHubScreen(navController: NavController) {
                 HeroCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { navController.navigate(Routes.TIMING) }
+                        .clickable { navController.navigate(Routes.TIMING) },
+                    watermarkRes = R.drawable.brainy_migraines,
+                    flipWatermark = true
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .drawBehind { drawMigraineIcon(Color(0xFFE091C8)) }
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            "Log Migraine",
+                            color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                        )
 
-                    Spacer(Modifier.height(8.dp))
+                        Text(
+                            "A guided entry of the whole attack. Skipping steps is fine, share as much as you care to.",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
 
-                    Text(
-                        "Log Migraine",
-                        color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
+                        Spacer(Modifier.height(6.dp))
 
-                    Text(
-                        "Timing → Symptoms → Pain → Prodromes → Triggers → Medicines → Reliefs → Locations → Activities → Postdromes → Missed activities → Notes → Review",
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Text(
-                        "Tap to start →",
-                        color = AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
+                        Text(
+                            "Tap to start",
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                    }
                 }
                 IconButton(
                     onClick = { showLogMigraineInfo = true },

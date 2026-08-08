@@ -153,9 +153,9 @@ fun PaywallScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.logo),
+                        painter = painterResource(id = R.drawable.brainy_premium),
                         contentDescription = null,
-                        modifier = Modifier.size(84.dp)
+                        modifier = Modifier.size(130.dp)
                     )
                     Spacer(Modifier.height(12.dp))
                     if (headerTitle != null) {
@@ -184,6 +184,15 @@ fun PaywallScreen(
                     Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // The takeover header already leads with the pose; don't repeat it here.
+                    if (headerTitle == null && headerSubtitle == null) {
+                        Image(
+                            painter = painterResource(id = R.drawable.brainy_premium),
+                            contentDescription = null,
+                            modifier = Modifier.size(130.dp)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                    }
                     Box(
                         modifier = Modifier
                             .background(
@@ -370,7 +379,8 @@ fun PaywallScreen(
             }
 
             // ── Features card ──
-            BaseCard {
+            // Last card on the page, so it carries the watermark (see MaybeWatermarkCard).
+            BrainyWatermarkCard(resId = R.drawable.brainy_recs, flipWatermark = true) {
                 Text(
                     "What you get",
                     color = AppTheme.TitleColor,
@@ -378,28 +388,23 @@ fun PaywallScreen(
                 )
 
                 val features = listOf(
-                    FeatureItem(Icons.Outlined.Analytics, "Full Insights & Spider Charts", "Treatment effectiveness, trigger patterns, and more"),
-                    FeatureItem(Icons.Outlined.Timeline, "7-Day Risk Outlook", "See your estimated risk for the week ahead"),
-                    FeatureItem(Icons.Outlined.Speed, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
-                    FeatureItem(Icons.Outlined.History, "Full History & Journal", "Search and filter your complete migraine history"),
-                    FeatureItem(Icons.Outlined.Psychology, "Smart Calibration", "Personalised tuning of your risk model"),
-                    FeatureItem(Icons.Outlined.Description, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
-                    FeatureItem(Icons.Outlined.TrendingUp, "Monitor Dashboard Trends", "Sleep, physical, mental, and nutrition history"),
-                    FeatureItem(Icons.Outlined.Restaurant, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk classification"),
+                    FeatureItem(R.drawable.brainy_detective_small, "Full Insights & Spider Charts", "Treatment effectiveness, trigger patterns, and more"),
+                    FeatureItem(R.drawable.brainy_risk_small, "7-Day Risk Outlook", "See your estimated risk for the week ahead"),
+                    FeatureItem(R.drawable.brainy_trigger_small, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
+                    FeatureItem(R.drawable.brainy_migraines_small, "Full History & Journal", "Search and filter your complete migraine history"),
+                    FeatureItem(R.drawable.brainy_archer_small, "Smart Calibration", "Personalised tuning of your risk model"),
+                    FeatureItem(R.drawable.brainy_briefcase_small, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
+                    FeatureItem(R.drawable.brainy_treatments_small, "Monitor Dashboard Trends", "Sleep, physical, mental, and nutrition history"),
+                    FeatureItem(R.drawable.brainy_diet_small, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk classification"),
                 )
 
                 features.forEach { feat ->
                     Row(
-                        verticalAlignment = Alignment.Top,
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            feat.icon,
-                            contentDescription = null,
-                            tint = AppTheme.AccentPurple,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(12.dp))
+                        BrainyBlobIcon(resId = feat.resId)
+                        Spacer(Modifier.width(10.dp))
                         Column {
                             Text(
                                 feat.title,
@@ -571,7 +576,7 @@ fun PaywallScreen(
 }
 
 private data class FeatureItem(
-    val icon: ImageVector,
+    @androidx.annotation.DrawableRes val resId: Int,
     val title: String,
     val subtitle: String
 )

@@ -1,6 +1,7 @@
 package com.migraineme
 
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -20,6 +21,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,10 +33,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
@@ -365,17 +369,19 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
     var showInfo by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        BaseCard(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+        MonitorBrainyCard(
+            modifier = Modifier.fillMaxWidth().clickable { onClick() },
+            resId = R.drawable.brainy_medicines,
+            flipWatermark = true
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.MedicalServices, contentDescription = null,
-                    tint = accent, modifier = Modifier.size(24.dp))
+                MonitorBlobIcon(resId = R.drawable.brainy_medicines_small)
                 Spacer(Modifier.width(10.dp))
                 Text("Medicines", color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f))
-                Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
             }
-            Spacer(Modifier.height(8.dp))
 
             when {
                 isLoading -> Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
@@ -384,7 +390,7 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
                 else -> {
                     val favs = MedicineCardConfig.loadFavourites(ctx)
                     val slots = resolveMedicineCardSlots(favourites = favs, allEntries = summary.all)
-                    MedicineDwmGrid(
+                    MedicineHubTable(
                         medicines = slots,
                         categories = summary.categories.take(4),
                     )
@@ -410,8 +416,7 @@ fun MonitorMedicineCard(summary: MedicineSummary, isLoading: Boolean, onClick: (
             confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.MedicalServices, contentDescription = null,
-                        tint = accent, modifier = Modifier.size(20.dp))
+                    Image(painterResource(R.drawable.brainy_medicines_small), contentDescription = null, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("About Medicines", color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -497,7 +502,7 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
                 }
                 else -> {
                     // 2. Combined breakdown (per medicine + per category in one card)
-                    BaseCard {
+                    BrainyWatermarkCard(resId = R.drawable.brainy_medicines, flipWatermark = true) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Breakdown", color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
@@ -600,6 +605,68 @@ private val MEDICINE_VALUE_COL_WIDTH = 56.dp
  * width = max(width of every value+header in that column), and every header letter
  * (D/W/M) sits directly above the right edge of its column values.
  */
+/** Hub-card table: full Day/Week/Month headers, one row per medicine with a
+ *  quiet category chip, thin separators, then a By category section. */
+@Composable
+private fun MedicineHubTable(
+    medicines: List<MedicineSummaryEntry>,
+    categories: List<MedicineCategorySummary>,
+) {
+    val colors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
+    val colWidth = 62.dp
+
+    @Composable
+    fun HeaderRow() {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.weight(1f))
+            listOf("Day", "Week", "Month").forEachIndexed { i, h ->
+                Text(h, color = colors[i], textAlign = TextAlign.End,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.width(colWidth))
+            }
+        }
+    }
+
+    @Composable
+    fun ValueRow(name: String, category: String?, values: List<String>) {
+        HorizontalDivider(color = Color.White.copy(alpha = 0.055f))
+        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                Text(name, color = AppTheme.TitleColor, maxLines = 1,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                if (category != null) {
+                    Spacer(Modifier.width(5.dp))
+                    Text(category, color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier
+                            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(7.dp))
+                            .padding(horizontal = 6.dp))
+                }
+            }
+            values.forEachIndexed { i, v ->
+                Text(v, color = colors.getOrElse(i) { colors.last() }, textAlign = TextAlign.End, maxLines = 1,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.width(colWidth))
+            }
+        }
+    }
+
+    Column {
+        HeaderRow()
+        medicines.forEach { m ->
+            ValueRow(m.name, m.category, listOf(m.amountToday, m.amountWeek, m.amountMonth))
+        }
+        if (categories.isNotEmpty()) {
+            Spacer(Modifier.height(6.dp))
+            Text("BY CATEGORY", color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp))
+            categories.forEach { c ->
+                ValueRow(c.category, null, listOf(c.amountToday, c.amountWeek, c.amountMonth))
+            }
+        }
+    }
+}
+
 @Composable
 private fun MedicineDwmGrid(
     medicines: List<MedicineSummaryEntry>,

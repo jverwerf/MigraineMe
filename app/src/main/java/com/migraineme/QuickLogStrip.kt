@@ -140,6 +140,8 @@ fun QuickLogStrip(
     var saving by remember { mutableStateOf(false) }
     var savedLabel by remember { mutableStateOf<String?>(null) }
     var showInfo by remember { mutableStateOf(false) }
+    // Aura favorite tapped: collect visual-field zones + duration before saving
+    var pendingAuraLabel by remember { mutableStateOf<String?>(null) }
 
     val infoText = "Tap any icon to log something in one tap with the timestamp set to right now. Use it mid-attack or whenever you don't have the bandwidth for a full log.\n\nIf you've starred favourites in your pools (your usual triggers, rescue medicines, etc.), the button opens a quick sheet of those so you can pick the specific one and confirm. No favourites set, or no time to choose? Tap \"Skip, just log Migraine\" (or \"Trigger\" / \"Medicine\" / etc.) and it saves immediately with a generic label.\n\nYou'll notice postdrome isn't here. That's on purpose: postdromes are the recovery symptoms that belong to a specific migraine, so we want them linked to an attack rather than floating on their own. We'll prompt you for them in your daily check-in whenever you have an open migraine, and you can also log them via the full wizard or by editing the migraine afterwards.\n\nFor a full attack log with timing, symptoms, pain location, prodromes and medicines, use the Log tab. Quick log is the shortcut for when you can't deal with all of that."
 
@@ -159,7 +161,7 @@ fun QuickLogStrip(
         QuickLogCategory.RELIEF -> reliefFavs
     }
 
-    fun doSave(cat: QuickLogCategory, label: String?) {
+    fun doSave(cat: QuickLogCategory, label: String?, auraLocations: List<String>? = null, auraDurationMinutes: Int? = null) {
         val token = authState.accessToken ?: return
         saving = true
         scope.launch {
@@ -174,7 +176,9 @@ fun QuickLogStrip(
                             severity = 5,
                             startAt = now,
                             endAt = null,
-                            notes = null
+                            notes = null,
+                            auraLocations = auraLocations?.takeIf { it.isNotEmpty() },
+                            auraDurationMinutes = auraDurationMinutes
                         )
                         QuickLogCategory.TRIGGER -> db.insertTrigger(
                             accessToken = token,
@@ -198,13 +202,16 @@ fun QuickLogStrip(
                             startAt = now,
                             notes = null
                         )
-                        QuickLogCategory.RELIEF -> db.insertRelief(
-                            accessToken = token,
-                            migraineId = null,
-                            type = label ?: "Unknown",
-                            startAt = now,
-                            notes = null
-                        )
+                        QuickLogCategory.RELIEF -> {
+                            val row = db.insertRelief(
+                                accessToken = token,
+                                migraineId = null,
+                                type = label ?: "Unknown",
+                                startAt = now,
+                                notes = null
+                            )
+                            DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, label)
+                        }
                     }
                     // Trigger correlation recompute for migraines
                     if (cat == QuickLogCategory.MIGRAINE) {
@@ -306,9 +313,27 @@ fun QuickLogStrip(
             category = cat,
             favorites = favs,
             saving = saving,
-            onSelect = { label -> doSave(cat, label) },
+            onSelect = { label ->
+                if (cat == QuickLogCategory.MIGRAINE && isAuraSymptomLabel(label)) {
+                    // Aura gets its detail sheet before saving
+                    activeCategory = null
+                    pendingAuraLabel = label
+                } else {
+                    doSave(cat, label)
+                }
+            },
             onSkip = { doSave(cat, cat.label) },
             onDismiss = { activeCategory = null }
+        )
+    }
+
+    pendingAuraLabel?.let { auraLabel ->
+        AuraDetailSheet(
+            onSave = { zones, dur, _ ->
+                pendingAuraLabel = null
+                doSave(QuickLogCategory.MIGRAINE, auraLabel, auraLocations = zones, auraDurationMinutes = dur)
+            },
+            onDismiss = { pendingAuraLabel = null }
         )
     }
 
@@ -501,6 +526,13 @@ private fun FavoriteCircleButton(
         QuickLogCategory.RELIEF -> ReliefIcons.forKey(iconKey) ?: ReliefIcons.forKey(label.lowercase())
         QuickLogCategory.MIGRAINE -> SymptomIcons.forLabel(label, iconKey)
     }
+    val brainyId: Int? = when (category) {
+        QuickLogCategory.TRIGGER -> TriggerIcons.drawableForVector(icon)
+        QuickLogCategory.PRODROME -> ProdromeIcons.drawableForVector(icon)
+        QuickLogCategory.MEDICINE -> MedicineIcons.drawableForVector(icon)
+        QuickLogCategory.RELIEF -> ReliefIcons.drawableForVector(icon)
+        QuickLogCategory.MIGRAINE -> SymptomIcons.drawableForVector(icon)
+    }
 
     val bg = category.color.copy(alpha = 0.15f)
     val border = category.color.copy(alpha = 0.40f)
@@ -526,8 +558,8 @@ private fun FavoriteCircleButton(
                 .border(1.5.dp, border, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (icon != null) {
-                Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(24.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = iconTint)
             } else {
                 Text(
                     label.take(2).uppercase(),

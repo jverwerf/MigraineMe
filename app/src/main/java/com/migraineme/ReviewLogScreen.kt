@@ -88,15 +88,37 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                 }
             }
 
-            // Pain Locations
-            if (draft.painLocations.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = "Pain Locations (${draft.painLocations.size})", iconTint = AppTheme.AccentPink) {
-                    val labels = draft.painLocations.mapNotNull { ALL_PAIN_POINTS_MAP[it] }
-                    Text(
-                        labels.joinToString(" • "),
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+            // Pain (timestamped entries)
+            val painEntriesWithLocs = draft.painEntries.filter { it.locations.isNotEmpty() }
+            if (painEntriesWithLocs.isNotEmpty()) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = "Pain (${painEntriesWithLocs.size})", iconTint = AppTheme.AccentPink) {
+                    painEntriesWithLocs.forEach { entry ->
+                        Text(
+                            entry.startAtIso?.let { formatIsoDdMmYyHm(it) } ?: "At attack start",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        val labels = entry.locations.mapNotNull { ALL_PAIN_POINTS_MAP[it] }
+                        Text(
+                            "${entry.severity}/10 • " + labels.joinToString(" • "),
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            // Aura
+            if (draft.auraLocations.isNotEmpty() || draft.auraDurationMinutes != null) {
+                ReviewSection(drawIcon = { HubIcons.run { drawProdromeEye(it) } }, title = "Aura", iconTint = AppTheme.AccentPurple) {
+                    if (draft.auraLocations.isNotEmpty()) {
+                        Text(
+                            draft.auraLocations.joinToString(" • ") { AuraZones.label(it) },
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    draft.auraDurationMinutes?.let { ReviewRow("Duration", formatAuraDuration(it)) }
                 }
             }
 
@@ -190,8 +212,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                                 endedAtIso = migraine.endedAtIso,
                                 note = migraine.note,
                                 meds = draft.meds,
-                                rels = draft.rels,
-                                painLocations = draft.painLocations
+                                rels = draft.rels
                             )
                         } else {
                             vm.addFull(
@@ -202,8 +223,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                                 endedAtIso = migraine.endedAtIso,
                                 note = migraine.note,
                                 meds = draft.meds,
-                                rels = draft.rels,
-                                painLocations = draft.painLocations
+                                rels = draft.rels
                             )
                         }
                     }

@@ -22,14 +22,14 @@ fun localProp(key: String): String {
 
 android {
     namespace = "com.migraineme"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         // Default = original package. Build with -PnewPackage for the Play relaunch
         // package (app.migraineme) after the com.migraineme suspension.
         applicationId = if (project.hasProperty("newPackage")) "app.migraineme" else "com.migraineme"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 57
         versionName = "5.0.9"
 

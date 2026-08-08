@@ -7,7 +7,12 @@
 // Deploy: supabase functions deploy ai-setup --no-verify-jwt
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-const MODEL = "gpt-4o-mini";
+// Default model. Per-context overrides below — onboarding_parser uses a smarter model
+// because it runs ONCE per user and needs richer inference (vague stories → pool labels).
+const DEFAULT_MODEL = "gpt-4o-mini";
+const MODEL_BY_CONTEXT: Record<string, string> = {
+  onboarding_parser: "gpt-4o",
+};
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
@@ -88,6 +93,22 @@ Extract ALL of the following:
 10. **symptoms_inferred**: list of booleans, same length.
 11. **items**: Triggers, prodromes, medicines, reliefs, activities, locations, missed activities. Match EXACTLY from pools.
 12. **items_inferred**: list of booleans, same length, true for contextual inferences.
+13. **aura_locations**: where in the VISUAL FIELD an aura appeared. Only fill this when the user describes a visual aura. Zone ids only, from the fixed list below.
+14. **aura_duration_minutes**: how long the AURA phase lasted, in whole minutes. This is NOT the attack duration — only use a number the user ties to the aura/visual disturbance itself.
+
+AURA GUIDANCE:
+Aura zone ids are "<eye>_<row>_<column>" where eye is left|right, row is top|center|bottom, column is left|center|right.
+The full set is: left_top_left, left_top_center, left_top_right, left_center_left, left_center_center, left_center_right, left_bottom_left, left_bottom_center, left_bottom_right, and the same nine with a "right_" prefix.
+Zones are from the PATIENT'S own point of view, exactly as they describe seeing it.
+- "zigzags in the top left of my left eye" -> ["left_top_left"]
+- "flashing in the corner of my right eye, lower outside" -> ["right_bottom_right"]
+- "blind spot in the middle of my vision" -> ["left_center_center", "right_center_center"]
+- "aura across the whole left side of my vision" -> the three left-column zones of BOTH eyes
+- "aura in my left eye" with no position -> ["left_center_center"]
+- "shimmering for about 20 minutes before the headache" -> aura_duration_minutes: 20
+- "aura lasted half an hour" -> aura_duration_minutes: 30
+- Aura mentioned with no location detail at all -> aura_locations: [], and still include the "Aura" symptom if it exists in the symptom pool.
+- No aura mentioned -> aura_locations: [] and aura_duration_minutes: null. Never invent an aura.
 
 PAIN LOCATION GUIDANCE:
 - "left side" → Left Temple, possibly Left Eye, Left Brow
@@ -103,6 +124,30 @@ INFERENCE EXAMPLES:
 - "took some tablets" → look for medicine matches in pool
 - "busy day at work" → Stress, Screen time (if in trigger pool)
 
+POOL INFERENCE (be aggressive — these are the most-missed):
+Lifestyle phrasing maps to specific pool entries. The deterministic parser already does direct keyword matching, so focus on indirect/lifestyle inferences. Only return labels that EXIST in the pools provided in user_message.
+
+- "went for a run / jog / gym / cycled / yoga / workout" → activity with matching pool label (Running, Gym, Cycling, Yoga, etc.); add trigger "Overexertion" if intensity implied
+- "worked all day / at the office / on calls / stared at screens" → activity: Work; location: Office (if in pool); trigger: Screen time (if in pool); trigger: Stress (if context suggests)
+- "lay in a dark room / closed the curtains / blackout" → relief: Dark room; location: Home / Bedroom (if in pool)
+- "ice pack / cold compress / frozen peas on my head" → relief: Ice / Cold compress (whichever exists)
+- "took ibuprofen / advil / nurofen / paracetamol / tylenol / sumatriptan / imigran / triptan / Excedrin / aspirin" → medicine using the EXACT pool label (brand or generic — match whatever is in the pool)
+- "drank lots of water and rested" → relief: Water; relief: Rest
+- "couldn't make it to work / cancelled the gym / skipped dinner with friends / missed yoga class" → missed_activity with matching pool label (Work, Exercise, Social events, etc.)
+- "glass of red wine at dinner" → trigger: Red wine AND/OR Alcohol; activity: Dinner / Socialising (if in pool)
+- "had pizza / takeaway / processed food / fast food" → trigger: Processed food; trigger: Cheese (if pizza); trigger: Tyramine
+- "argument with partner / stressful meeting / on deadline" → trigger: Stress (if not already deterministic); trigger: Emotional stress
+- "didn't sleep well / kept waking up / only got 4 hours / insomnia last night" → trigger: Poor sleep / Sleep duration low (whichever exists)
+- "period started today / on my period / hormonal" → trigger: Menstruation / Hormonal change
+- "flew to X / long drive / road trip / jet lagged" → trigger: Travel; activity: Travel
+- "humid out / pressure dropping / storm coming / sudden weather change" → trigger: Weather change / Pressure low
+- "skipped breakfast / forgot to eat / haven't eaten all day / fasting" → trigger: Skipped meal; trigger: Dehydration
+- "felt dizzy / nauseous / fatigued / yawning / neck stiff BEFORE it hit" → prodrome (NOT symptom — pre-attack signs go in prodromes)
+- "throbbing / nausea / light sensitivity DURING the migraine" → symptoms field (NOT prodromes)
+- "lots of caffeine today / 4 coffees / energy drink" → trigger: Caffeine
+
+When in doubt about a pool match: include it if reasonable. False positives are cheap (user unchecks); false negatives are the bug.
+
 RULES:
 - ONLY return labels whose EXACT text exists in the provided pools/lists.
 - Be thorough — flag anything likely or plausible.
@@ -114,10 +159,11 @@ RULES:
   "ended_at": null, "ended_at_inferred": false,
   "pain_locations": ["Left Temple", "Left Eye"], "pain_locations_inferred": [false, true],
   "symptoms": ["Throbbing", "Nausea"], "symptoms_inferred": [false, true],
+  "aura_locations": ["left_top_left"], "aura_duration_minutes": 20,
   "items": [
     {"label": "Alcohol", "category": "trigger", "inferred": false, "start_at": "2025-01-15T19:00:00+00:00"},
     {"label": "Ibuprofen", "category": "medicine", "inferred": false, "start_at": "2025-01-15T12:00:00+00:00", "amount": "2 tablets", "relief_scale": "HIGH", "side_effect_scale": "NONE", "side_effect_notes": null},
-    {"label": "Dark room", "category": "relief", "inferred": false, "start_at": "2025-01-15T14:00:00+00:00", "end_at": "2025-01-15T15:00:00+00:00", "relief_scale": "MODERATE", "side_effect_scale": "NONE", "side_effect_notes": null},
+    {"label": "Dark room", "category": "relief", "inferred": false, "start_at": "2025-01-15T14:00:00+00:00", "end_at": "2025-01-15T15:00:00+00:00", "relief_scale": "MILD", "side_effect_scale": "NONE", "side_effect_notes": null},
     {"label": "Stress", "category": "trigger", "inferred": true, "start_at": null}
   ]
 }
@@ -126,9 +172,9 @@ EVERY ITEM MUST INCLUDE ALL RELEVANT FIELDS — use your best guess when not exp
 - ALL items: "start_at" (ISO datetime, best guess from context, null only if completely unknowable)
 - Triggers, prodromes, locations, missed_activities: "start_at"
 - Activities: "start_at", "end_at"
-- Medicines: "start_at", "amount" (dosage/count — best guess e.g. "1" if not stated), "relief_scale" (NONE/LOW/MODERATE/HIGH — best guess from context), "side_effect_scale" (NONE/LOW/MODERATE/HIGH), "side_effect_notes"
-- Reliefs: "start_at", "end_at", "relief_scale" (NONE/LOW/MODERATE/HIGH — best guess), "side_effect_scale", "side_effect_notes"
-- Default relief_scale to "NONE" only if there's genuinely no information. If they took medicine for a migraine and it's common (ibuprofen, sumatriptan), guess "MODERATE".
+- Medicines: "start_at", "amount" (dosage/count — best guess e.g. "1" if not stated), "relief_scale" (NONE/LOW/MILD/HIGH — best guess from context), "side_effect_scale" (NONE/SOFT/MODERATE/SEVERE), "side_effect_notes"
+- Reliefs: "start_at", "end_at", "relief_scale" (NONE/LOW/MILD/HIGH — best guess), "side_effect_scale", "side_effect_notes"
+- Default relief_scale to "NONE" only if there's genuinely no information. If they took medicine for a migraine and it's common (ibuprofen, sumatriptan), guess "MILD".
 - Default side_effect_scale to "NONE" unless side effects mentioned.`,
   log_parser_evening: `You are a migraine specialist AI. The user is doing their evening check-in, describing their day. Extract ALL relevant items with as much detail as possible.
 
@@ -140,16 +186,30 @@ For each item, extract:
 - **inferred**: true if you're guessing from context, false if explicitly mentioned
 - **start_at**: ISO datetime if mentioned or inferable. null if unknown.
 - **amount**: for medicines only — dosage or count. null if unknown.
-- **relief_scale**: NONE, LOW, MODERATE, or HIGH — how much it helped. NONE if not mentioned.
-- **side_effect_scale**: NONE, LOW, MODERATE, or HIGH — for medicines and reliefs. NONE if not mentioned.
+- **relief_scale**: NONE, LOW, MILD, or HIGH — how much it helped. NONE if not mentioned.
+- **side_effect_scale**: NONE, SOFT, MODERATE, or SEVERE — for medicines and reliefs. NONE if not mentioned.
 - **side_effect_notes**: description of side effects. null if none.
+
+Item categories: trigger, prodrome, medicine, relief, activity (things they did today, from the ACTIVITY pool), postdrome (lingering after-effects of a finished attack, from the POSTDROME pool), treatment_side_effect (side effects of an ongoing preventive treatment — include "regimen_name" matching one of the ACTIVE TREATMENT regimens).
+
+OPEN MIGRAINE: when the user_message says "OPEN MIGRAINE: yes", the user has an ongoing migraine and you should ALSO extract updates to it:
+- Items with category "symptom" for during-attack symptoms happening NOW (from the SYMPTOM pool) — e.g. "still nauseous", "throbbing got worse".
+- "pain_now": {"locations": [...], "severity": 1-10, "start_at": ...} when they describe where the head pain is now (labels from PAIN LOCATION options). Only when they describe current/changed pain, not a past attack summary.
+- "aura_locations" (ids from AURA ZONE ids) + "aura_duration_minutes" when they describe aura appearing or returning today.
+- "migraine_ended": true + "migraine_ended_at" (ISO) when they say the migraine is over ("it's gone now", "cleared up around 5"). Do NOT set it for mere improvement ("a bit better").
+When "OPEN MIGRAINE: no", never emit these fields; put after-effect mentions in postdrome only if a POSTDROME pool is provided.
 
 INFERENCE EXAMPLES:
 - "had red wine at dinner" → trigger: Alcohol, start_at: ~19:00, inferred: false
 - "took 2 ibuprofen at lunch, helped a lot" → medicine: Ibuprofen, amount: "2", start_at: ~12:00, relief_scale: HIGH
-- "lay in dark room for an hour, took edge off" → relief: Dark room, relief_scale: MODERATE
+- "lay in dark room for an hour, took edge off" → relief: Dark room, relief_scale: MILD
 - "sumatriptan made me drowsy" → medicine: Sumatriptan, side_effect_scale: MODERATE, side_effect_notes: "drowsy"
 - "busy day at work" → trigger: Stress (inferred), trigger: Screen time (inferred)
+- "went for a run this morning" → activity: Running, start_at: ~08:00
+- "still foggy from yesterday's migraine" (no open migraine) → postdrome: Brain fog
+- "the pain moved to my left temple, about a 7" (open migraine) → pain_now: {"locations": ["Left Temple"], "severity": 7}
+- "zigzags came back in my right eye for 20 minutes" (open migraine) → aura_locations: ["right_center_center"], aura_duration_minutes: 20
+- "headache finally cleared around 5pm" (open migraine) → migraine_ended: true, migraine_ended_at: today 17:00
 
 RULES:
 - ONLY return labels whose EXACT text exists in the provided pools.
@@ -158,61 +218,142 @@ RULES:
 {
   "items": [
     {"label": "Ibuprofen", "category": "medicine", "inferred": false, "start_at": "2025-01-15T12:00:00+00:00", "amount": "2", "relief_scale": "HIGH", "side_effect_scale": "NONE", "side_effect_notes": null},
-    {"label": "Stress", "category": "trigger", "inferred": true, "start_at": null, "amount": null, "relief_scale": null, "side_effect_scale": null, "side_effect_notes": null}
-  ]
-}`,
-  onboarding_parser: `You are helping a migraine patient set up their tracking app. They've described their migraine history in natural language. Extract everything you can.
+    {"label": "Stress", "category": "trigger", "inferred": true, "start_at": null, "amount": null, "relief_scale": null, "side_effect_scale": null, "side_effect_notes": null},
+    {"label": "Nausea", "category": "symptom", "inferred": false},
+    {"label": "Brain fog", "category": "postdrome", "inferred": false},
+    {"label": "Fatigue", "category": "treatment_side_effect", "regimen_name": "Propranolol", "inferred": false}
+  ],
+  "pain_now": {"locations": ["Left Temple"], "severity": 7, "start_at": null},
+  "aura_locations": ["right_center_center"], "aura_duration_minutes": 20,
+  "migraine_ended": false, "migraine_ended_at": null
+}
+Omit pain_now / aura_locations / migraine_ended keys entirely when not described.`,
+  onboarding_parser: `You are helping a migraine patient set up their tracking app. They've described their migraine history in natural language. Extract every field you can confidently infer from their story.
 
-ADD anything the deterministic parser missed. Only use values from the EXACT option lists provided.
+A deterministic parser has already found some items (listed in user_message under "Already found by deterministic parser"). Treat those as confirmed and ADD everything else by re-reading the user's story carefully.
 
-=== QUESTIONNAIRE FIELDS (use EXACT option values or null) ===
-gender: "Female", "Male", "Prefer not to say"
-age_range: "18-25", "26-35", "36-45", "46-55", "56+"
-frequency: "A few per year", "Every 1-2 months", "1-3 per month", "Weekly", "Chronic"
-duration: "< 4 hours", "4-12 hours", "12-24 hours", "1-3 days", "3+ days"
-experience: "New / recent", "1-5 years", "5-10 years", "10+ years"
-trajectory: "Getting worse", "Getting better", "About the same", "Just started"
-warning_before: "Yes, always", "Sometimes", "Rarely", "Never"
-trigger_delay: "Within hours", "Next day", "Within 2-3 days", "Up to a week", "Not sure"
-daily_routine: "Regular 9-5", "Shift work / rotating", "Irregular / freelance", "Student", "Stay at home"
-seasonal_pattern: "Worse in winter", "Worse in summer", "Worse in spring", "No pattern", "Not sure"
-sleep_hours: "< 5h", "5-6h", "6-7h", "7-8h", "8-9h", "9+h"
-sleep_quality: "Good", "OK", "Poor", "Varies a lot"
-stress_level: "Low", "Moderate", "High", "Very high"
-screen_time_daily: "< 2h", "2-4h", "4-8h", "8-12h", "12h+"
-caffeine_intake: "None", "1-2 cups", "3-4 cups", "5+ cups"
-alcohol_frequency: "Never", "Occasionally", "Weekly", "Daily"
-exercise_frequency: "Daily", "Few times/week", "Weekly", "Rarely", "Never"
-tracks_cycle: "Yes", "No", "Not applicable"
+=== ANSWER RULES ===
+- Use ONLY values from the EXACT option lists below. Never invent strings, never approximate.
+- If the story gives no signal for a field, OMIT the key (or set to null). Do not guess.
+- For map fields, include ONLY the keys you confidently inferred — do not list every option with "NO".
+- For array fields, include only items you have evidence for.
+- Pool labels (triggers/prodromes/symptoms/medicines/reliefs/activities/missed_activities) must match EXACTLY from the lists provided in user_message — never invent labels.
+- Conditional questions: only fill them when the parent makes sense (e.g. contraception_effect only if uses_contraception="Yes"; cycle_migraine_timing only if cycle_patterns contains "Around my period"; gluten_triggers only if gluten_sensitivity is "Yes, diagnosed" or "I suspect so").
 
-Respond with ONLY valid JSON, no markdown:
-{
-  "gender": "..." or null,
-  "age_range": "..." or null,
-  "frequency": "..." or null,
-  "duration": "..." or null,
-  "experience": "..." or null,
-  "trajectory": "..." or null,
-  "warning_before": "..." or null,
-  "trigger_delay": "..." or null,
-  "daily_routine": "..." or null,
-  "seasonal_pattern": "..." or null,
-  "sleep_hours": "..." or null,
-  "sleep_quality": "..." or null,
-  "stress_level": "..." or null,
-  "screen_time_daily": "..." or null,
-  "caffeine_intake": "..." or null,
-  "alcohol_frequency": "..." or null,
-  "exercise_frequency": "..." or null,
-  "tracks_cycle": "..." or null,
-  "triggers": ["exact label", ...],
-  "prodromes": ["exact label", ...],
-  "symptoms": ["exact label", ...],
-  "medicines": ["exact label", ...],
-  "reliefs": ["exact label", ...],
-  "activities": ["exact label", ...],
-  "missed_activities": ["exact label", ...]
-}`,
+=== CERTAINTY ENUM (use these exact strings) ===
+- "EVERY_TIME" — user says it always happens / strongly affirmed
+- "OFTEN"      — user mentions clearly / strongly implied
+- "SOMETIMES"  — user mentions casually / hedged
+- "RARELY"     — user mentions but downplays
+- "NO"         — user explicitly denies (use sparingly — usually just omit the key instead)
+
+=== SCHEMA ===
+
+Migraine basics:
+- gender: "Female" | "Male" | "Prefer not to say"
+- age_range: "18-25" | "26-35" | "36-45" | "46-55" | "56+"
+- frequency: "A few per year" | "Every 1-2 months" | "1-3 per month" | "Weekly" | "Chronic"
+- duration: "< 4 hours" | "4-12 hours" | "12-24 hours" | "1-3 days" | "3+ days"
+- experience: "New / recent" | "1-5 years" | "5-10 years" | "10+ years"
+- trajectory: "Getting worse" | "Getting better" | "About the same" | "Just started"
+- warning_before: "Yes, always" | "Sometimes" | "Rarely" | "Never"
+- trigger_delay: "Within hours" | "Next day" | "Within 2-3 days" | "Up to a week" | "Not sure"
+- daily_routine: "Regular 9-5" | "Shift work / rotating" | "Irregular / freelance" | "Student" | "Stay at home"
+- seasonal_pattern: "Worse in winter" | "Worse in summer" | "Worse in spring" | "No pattern" | "Not sure"
+
+Sleep:
+- sleep_hours: "< 5h" | "5-6h" | "6-7h" | "7-8h" | "8-9h" | "9+h"
+- sleep_quality: "Good" | "OK" | "Poor" | "Varies a lot"
+- poor_quality_triggers: <certainty>
+- too_little_sleep_triggers: <certainty>
+- oversleep_triggers: <certainty>
+- sleep_issues: array, subset of ["Irregular schedule", "Sleep apnea", "Jet lag", "None of these"]
+
+Stress & screen:
+- stress_level: "Low" | "Moderate" | "High" | "Very high"
+- stress_change_triggers: <certainty>
+- emotional_patterns: map, keys from ["Spike in stress", "Anxiety", "Anger", "Let-down", "Feeling low"] → <certainty>
+- screen_time_daily: "< 2h" | "2-4h" | "4-8h" | "8-12h" | "12h+"
+- screen_time_triggers: <certainty>
+- late_screen_triggers: <certainty>
+
+Diet & substances:
+- caffeine_intake: "None" | "1-2 cups" | "3-4 cups" | "5+ cups"
+- caffeine_direction: "Too much triggers it" | "Missing caffeine triggers it" | "Both ways" | "Not sure" | "No"
+- caffeine_certainty: <certainty>
+- alcohol_frequency: "Never" | "Occasionally" | "Weekly" | "Daily"
+- alcohol_triggers: <certainty>
+- specific_drinks: array, subset of ["Red wine", "Beer", "White wine", "Spirits", "Any alcohol"]
+- tyramine_foods: map, keys from ["Aged cheese", "Chocolate", "Cured meats", "Fermented foods"] → <certainty>
+- gluten_sensitivity: "Yes, diagnosed" | "I suspect so" | "No" | "Not sure"
+- gluten_triggers: <certainty>
+- eating_patterns: map, keys from ["Skipping meals", "Sugar", "Salty food", "Overeating", "Dehydration"] → <certainty>
+- water_intake: "< 1L" | "1-2L" | "2-3L" | "3L+"
+- tracks_nutrition: "Yes, regularly" | "Sometimes" | "No"
+
+Weather, environment, physical:
+- weather_triggers: <certainty>
+- specific_weather: map, keys from ["Pressure changes", "Hot weather", "Cold weather", "Humidity", "Dry air", "Wind", "Sunshine", "Thunderstorms", "Not sure which"] → <certainty>
+- environment_sensitivities: map, keys from ["Fluorescent lights", "Strong smells", "Loud noise", "Smoke", "Altitude"] → <certainty>
+- physical_factors: map, keys from ["Allergies", "Being ill", "Low blood sugar", "Medication change", "Motion sickness", "Tobacco", "Sexual activity"] → <certainty>
+
+Exercise & hormones:
+- exercise_frequency: "Daily" | "Few times/week" | "Weekly" | "Rarely" | "Never"
+- exercise_triggers: <certainty>
+- exercise_pattern: array, subset of ["During or after intense exercise", "When I haven't exercised"]
+- tracks_cycle: "Yes" | "No" | "Not applicable"
+- cycle_patterns: map, keys from ["Around my period", "Around ovulation"] → <certainty>
+- cycle_length: "< 25 days" | "25-28 days" | "28-32 days" | "32-35 days" | "> 35 days" | "Irregular"
+- cycle_migraine_timing: array, subset of ["1-2 days before", "3-5 days before", "During my period", "1-2 days after"]
+- last_period_date: ISO date string "YYYY-MM-DD" (only if the user gave an explicit date — otherwise omit)
+- uses_contraception: "Yes" | "No"
+- contraception_effect: "Worse — every time" | "Worse — sometimes" | "No change" | "Actually helps"  (note the em-dash —, not a hyphen)
+
+Prodromes (early warning signs):
+- physical_prodromes: map, keys from ["Neck stiffness", "Yawning", "Urination", "Stuffy nose", "Watery eyes", "Muscle tension"] → <certainty>
+- mood_prodromes: map, keys from ["Concentrating", "Words", "Irritability", "Mood swings", "Feeling low", "Unusually happy", "Food cravings", "Loss of appetite"] → <certainty>
+- sensory_prodromes: map, keys from ["Light", "Sound", "Smell", "Tingling", "Numbness"] → <certainty>
+
+Pool labels (use EXACT labels from the lists in user_message — be generous, include anything mentioned or strongly implied):
+- triggers: string[]
+- prodromes: string[]
+- symptoms: string[]
+- medicines: string[]
+- reliefs: string[]
+- activities: string[]
+- missed_activities: string[]
+
+=== INFERENCE EXAMPLES ===
+- "I get migraines around my period" → tracks_cycle="Yes", cycle_patterns={"Around my period":"OFTEN"}
+- "Red wine always sets it off" → alcohol_triggers="EVERY_TIME", specific_drinks=["Red wine"]; also triggers should include "Red wine" or "Alcohol" if present in pool
+- "Bright lights bother me when I have one" → sensory_prodromes={"Light":"OFTEN"}; "Fluorescent lights bother me even on a normal day" → environment_sensitivities={"Fluorescent lights":"OFTEN"}
+- "I notice neck stiffness and yawning before a migraine" → physical_prodromes={"Neck stiffness":"OFTEN", "Yawning":"OFTEN"}
+- "Storms / barometric pressure trigger them" → weather_triggers="OFTEN", specific_weather={"Pressure changes":"OFTEN", "Thunderstorms":"SOMETIMES"}
+- "Skipping meals is bad for me" → eating_patterns={"Skipping meals":"OFTEN"}
+- "I'm on the pill and they got worse" → uses_contraception="Yes", contraception_effect="Worse — sometimes" (or "Worse — every time" if strongly stated)
+- "Aged cheese gives me one" → tyramine_foods={"Aged cheese":"EVERY_TIME"}
+- "I work night shifts" → daily_routine="Shift work / rotating", sleep_issues=["Irregular schedule"]
+
+=== POOL INFERENCE (be GENEROUS — these are the most-missed) ===
+Pool labels live in user_message under "TRIGGERS:", "PRODROMES:", "SYMPTOMS:", "MEDICINES:", "RELIEFS:", "ACTIVITIES:", "MISSED_ACTIVITIES:". Lifestyle phrasing maps to specific pool entries — infer aggressively but only return labels that EXIST in those pools (case-insensitive match is OK; the client will canonicalise).
+
+- "I go to the gym most days" / "I work out a lot" → exercise_frequency, AND activities should include the matching pool entries (e.g. "Gym", "Exercise", "Workout", "Weights", "Cardio" — whichever exist in the ACTIVITIES pool)
+- "I run / cycle / swim / do yoga / play football" → activities should include matching pool entries ("Running", "Cycling", "Swimming", "Yoga", "Football", etc.)
+- "I work at a desk all day" / "office job" / "stare at screens" → activities include desk/computer/screen entries if present; triggers include "Screen time" if present; daily_routine="Regular 9-5"
+- "Stressful job" / "high-pressure work" → triggers include "Stress" if present; activities include "Work"; stress_level="High"
+- "I always lie down in a dark room" / "I rest until it passes" → reliefs include "Dark room", "Lie down", "Rest", "Sleep" — whichever match the RELIEFS pool
+- "I take ibuprofen / paracetamol / sumatriptan / triptan / Excedrin / aspirin" → medicines include those exact labels from the MEDICINES pool
+- "Cold compress / ice pack on my head" → reliefs include "Cold compress" or "Ice pack" if present
+- "Caffeine / coffee helps" → reliefs include "Caffeine" if present
+- "Migraines make me cancel plans / miss work / skip social events / call in sick" → missed_activities include "Work", "Social events", "Exercise", "Family time" — whichever match
+- "I'm a parent / kids / family" → activities/missed_activities may include "Family time", "Childcare" if present
+- "I travel a lot for work" / "long flights" → triggers include "Travel", "Altitude change" if present; activities/missed_activities may include "Travel"
+- "Lots of housework / DIY / painting" → activities include those; triggers may include "Strong smells" or "Overexertion"
+- "I drink lots of water / I'm bad at staying hydrated" → triggers may include "Dehydration"; eating_patterns may include "Dehydration"
+
+When in doubt about a pool match: include it if the user's phrasing reasonably implies it. False positives are cheap (user unchecks); false negatives are the bug we're fixing.
+
+Respond with ONLY valid JSON (no markdown fences, no preamble). Omit any key you cannot confidently infer.`,
   evening_checkin: `You are a migraine specialist AI. The user describes their day in natural language. Your job is to figure out which items from their personal pools are LIKELY relevant — even if not explicitly mentioned.
 
 Think like a neurologist and infer what the situation implies:
@@ -363,7 +504,7 @@ Deno.serve(async (req)=>{
       });
     }
     // ── Parse request ──
-    const { context_type, user_message } = await req.json();
+    const { context_type, user_message, app_id } = await req.json();
     if (!context_type || !user_message) {
       return new Response(JSON.stringify({
         error: "Missing context_type or user_message"
@@ -386,6 +527,30 @@ Deno.serve(async (req)=>{
           "Content-Type": "application/json"
         }
       });
+    }
+    // Per-app prompt override — when the client supplies app_id, look up
+    // app_config.ai_prompts.ai_setup and use that disease-specific prompt
+    // instead of the embedded migraine one. Only the 'ai_setup' context_type
+    // is overridable today (log_parser et al. are largely disease-agnostic);
+    // adding more keys to ai_prompts later is a config-only change.
+    if (app_id && typeof app_id === "string" && context_type === "ai_setup") {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+        const lookupUrl = `${supabaseUrl}/rest/v1/app_config?app_id=eq.${encodeURIComponent(app_id)}&select=ai_prompts`;
+        const r = await fetch(lookupUrl, {
+          headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+        });
+        if (r.ok) {
+          const rows = await r.json();
+          const override = rows?.[0]?.ai_prompts?.ai_setup;
+          if (typeof override === "string" && override.length > 0) {
+            system_prompt = override;
+          }
+        }
+      } catch (e) {
+        console.warn(`[ai-setup] app_config override lookup failed: ${e}; using migraine default`);
+      }
     }
     // For calibration_call3, fetch companion roster server-side and append to system prompt
     if (context_type === "calibration_call3") {
@@ -433,7 +598,8 @@ Deno.serve(async (req)=>{
       });
     }
     // ── Call OpenAI ──
-    console.log(`AI setup [${context_type}] for ${user.id} — usr: ${user_message.length}c`);
+    const model = MODEL_BY_CONTEXT[context_type] ?? DEFAULT_MODEL;
+    console.log(`AI setup [${context_type}] for ${user.id} — model: ${model} — usr: ${user_message.length}c`);
     const openaiRes = await fetch(OPENAI_URL, {
       method: "POST",
       headers: {
@@ -441,7 +607,7 @@ Deno.serve(async (req)=>{
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         max_tokens: 8000,
         temperature: 0.3,
         messages: [
@@ -482,10 +648,13 @@ Deno.serve(async (req)=>{
         }
       });
     }
-    // Log cost
+    // Log cost (per-1M token pricing as of 2025-Q4: mini $0.15/$0.60, 4o $2.50/$10.00)
     const u = data.usage;
     if (u) {
-      const cost = (u.prompt_tokens * 0.15 + u.completion_tokens * 0.6) / 1_000_000;
+      const isPremium = model === "gpt-4o";
+      const inRate = isPremium ? 2.50 : 0.15;
+      const outRate = isPremium ? 10.00 : 0.60;
+      const cost = (u.prompt_tokens * inRate + u.completion_tokens * outRate) / 1_000_000;
       console.log(`Done [${context_type}] ${user.id} — in:${u.prompt_tokens} out:${u.completion_tokens} $${cost.toFixed(6)}`);
     }
     // Clean and validate

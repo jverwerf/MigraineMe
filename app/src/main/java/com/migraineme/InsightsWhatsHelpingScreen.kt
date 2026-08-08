@@ -1,0 +1,165 @@
+package com.migraineme
+
+// What's Helping — Well Done positive layer
+// (docs/well-done-layer-spec.md in the migraineme-ios repo).
+// Two sections: consistent habits present on migraine-free days (direct
+// rows, factor_type well_done) and the improvers that make them steady
+// (chains, factor_type well_done_chain, factorB = target). Positive
+// framing only: leads with "% of your migraine-free days", never a
+// multiplier, no warnings, no risk language.
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+private val WD_GREEN = Color(0xFF81C784)
+
+@Composable
+fun InsightsWhatsHelpingScreen(
+    vm: InsightsViewModel = viewModel()
+) {
+    val correlationStats by vm.correlationStats.collectAsState()
+    val correlationsLoading by vm.correlationsLoading.collectAsState()
+
+    val wellDone = remember(correlationStats) {
+        correlationStats.filter { it.factorType == "well_done" }
+            .sortedByDescending { it.liftRatio }
+    }
+    val chains = remember(correlationStats) {
+        correlationStats.filter { it.factorType == "well_done_chain" }
+            .sortedByDescending { it.liftRatio }
+    }
+
+    val scrollState = rememberScrollState()
+
+    ScrollFadeContainer(scrollState = scrollState) { scroll ->
+        ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+
+            if (correlationsLoading) {
+                BaseCard {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
+                        Spacer(Modifier.width(12.dp))
+                        Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+
+            if (wellDone.isNotEmpty()) {
+                MaybeWatermarkCard(watermark = chains.isEmpty(), resId = R.drawable.brainy_gardener, flipWatermark = true) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BrainyBlobIcon(R.drawable.brainy_gardener_small)
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text("Well Done", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text("Habits that show up on your migraine-free days",
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    wellDone.take(10).forEach { stat -> WellDoneDirectRow(stat) }
+                }
+            }
+
+            if (chains.isNotEmpty()) {
+                BrainyWatermarkCard(resId = R.drawable.brainy_gardener, flipWatermark = true) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BrainyBlobIcon(R.drawable.brainy_runner_small)
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text("What Drives It", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text("What makes those habits happen",
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    chains.take(10).forEach { stat -> WellDoneChainRow(stat) }
+                }
+            }
+
+            if (!correlationsLoading && wellDone.isEmpty() && chains.isEmpty()) {
+                BaseCard {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Canvas(Modifier.size(36.dp)) { HubIcons.run { drawShieldCheck(WD_GREEN) } }
+                        Spacer(Modifier.height(8.dp))
+                        Text("Nothing to show yet", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(4.dp))
+                        Text("Keep logging — as your sleep, stress and habit data builds up, the things you're doing right show up here.",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConfidenceDotsGreen(pValue: Float) {
+    val filled = when {
+        pValue < 0.01f -> 3
+        pValue < 0.05f -> 2
+        else -> 1
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+        repeat(3) { i ->
+            Box(
+                Modifier.size(5.dp).clip(CircleShape)
+                    .background(if (i < filled) WD_GREEN else Color.White.copy(alpha = 0.18f))
+            )
+        }
+    }
+}
+
+@Composable
+internal fun WellDoneDirectRow(stat: EdgeFunctionsService.CorrelationStat) {
+    Column(Modifier.padding(vertical = 4.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            BrainyRowIcon(stat.factorName)
+            Text(prettyLabel(stat.factorName), color = Color.White,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            ConfidenceDotsGreen(stat.pValue)
+        }
+        Text("On ${stat.pctControlWindows.toInt()}% of your migraine-free days.",
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable
+internal fun WellDoneChainRow(stat: EdgeFunctionsService.CorrelationStat) {
+    Column(Modifier.padding(vertical = 4.dp)) {
+        // A chain is two things, so it carries two icons: the habit that
+        // drives it, then the metric it keeps steady.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            BrainyRowIcon(stat.factorName)
+            Text("${prettyLabel(stat.factorName)} → ", color = Color.White,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+            BrainyRowIcon(stat.factorB)
+            Text("steady ${prettyLabel(stat.factorB ?: "").lowercase()}",
+                color = Color.White,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            ConfidenceDotsGreen(stat.pValue)
+        }
+        Text("Steady ${stat.pctControlWindows.toInt()}% of the time with it, ${stat.pctMigraineWindows.toInt()}% without.",
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    }
+}

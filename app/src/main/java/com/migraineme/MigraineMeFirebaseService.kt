@@ -20,8 +20,14 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
  * - sync_health_connect: Triggers Health Connect data sync
  * - evening_checkin: Shows notification prompting the user to do their evening check-in
  * - recalibration_ready: Sets flag so HomeScreen shows the recalibration banner
- * - new_insight: New daily insight/recommendations ready — shows a notification and
+ * - new_insight: New daily recommendations ready — shows a notification and
  *   sets a flag so the Insights tab shows a "new" indicator
+ * - daily_gauge: Today's risk gauge reached the user's alert threshold (or climbed
+ *   to a higher zone since the last alert) — shows a notification naming the zone
+ * - ongoing_migraine: A logged migraine still has no end time — nudges the user
+ *   to go back and close it
+ * - trigger_alert: A trigger or prodrome the user follows auto-fired for today
+ *   (threshold or 2SD from baseline) — shows a notification naming the item
  */
 class MigraineMeFirebaseService : FirebaseMessagingService() {
 
@@ -84,6 +90,32 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                     .putBoolean("has_new_insight", true)
                     .apply()
                 showNewInsightNotification()
+            }
+            "ongoing_migraine" -> {
+                Log.d(TAG, "Ongoing migraine reminder")
+                showOngoingMigraineNotification(
+                    daysOpen = message.data["days_open"]?.toIntOrNull(),
+                    finalReminder = message.data["final_reminder"] == "1"
+                )
+            }
+            "daily_gauge" -> {
+                val zone = message.data["zone"] ?: return
+                Log.d(TAG, "Gauge alert: zone=$zone")
+                showGaugeNotification(
+                    zone = zone,
+                    percent = message.data["percent"]?.toIntOrNull(),
+                    topTrigger = message.data["top_trigger"].orEmpty(),
+                    escalated = message.data["escalated"] == "1"
+                )
+            }
+            "trigger_alert" -> {
+                val label = message.data["label"].orEmpty()
+                Log.d(TAG, "Trigger alert: label=$label")
+                showTriggerAlertNotification(
+                    label = label,
+                    notes = message.data["notes"].orEmpty(),
+                    itemType = message.data["item_type"].orEmpty()
+                )
             }
             else -> {
                 Log.w(TAG, "Unknown FCM message type: $type")
@@ -175,13 +207,171 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Daily gauge & recommendations ready")
-            .setContentText("Your risk gauge and new recommendations are ready. Tap to see them.")
+            .setContentTitle("New recommendations ready")
+            .setContentText("Your recommendations for today are ready. Tap to see them.")
             .setContentIntent(pi)
             .setAutoCancel(true)
             .build()
 
         nm.notify(8021, notification)
+    }
+
+    /**
+     * Today's risk gauge crossed the user's alert threshold.
+     *
+     * Fires at most once per zone per day, so a day can produce a "Mild" alert
+     * in the morning and a "High" one later if things escalate. The zone and
+     * percent come from the push payload so the notification can state the real
+     * number rather than a vague "your gauge is ready".
+     */
+    private fun showGaugeNotification(
+        zone: String,
+        percent: Int?,
+        topTrigger: String,
+        escalated: Boolean
+    ) {
+        val channelId = "daily_gauge"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Create channel (no-op if already exists)
+        val channel = android.app.NotificationChannel(
+            channelId, "Daily Risk Gauge",
+            android.app.NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = "Alerts when today's migraine risk reaches your chosen level" }
+        nm.createNotificationChannel(channel)
+
+        // Tap opens Home, where the gauge lives
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.HOME)
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 1, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val zoneLabel = when (zone.uppercase()) {
+            "HIGH" -> "High"
+            "MILD" -> "Mild"
+            "LOW" -> "Low"
+            else -> return  // NONE never alerts
+        }
+
+        val title = if (escalated) "Risk just went up: $zoneLabel" else "Today's risk: $zoneLabel"
+        val body = buildString {
+            if (percent != null) append("Your gauge is at $percent%. ")
+            if (topTrigger.isNotBlank()) append("Biggest factor: $topTrigger. ")
+            append("Tap to see what's driving it.")
+        }
+
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+
+        nm.notify(8022, notification)
+    }
+
+    /**
+     * A logged migraine still has no end time.
+     *
+     * Repeats on the user's chosen interval until they close it, then stops
+     * after a few unanswered nudges (the backend decides that and flags the
+     * last one, so the copy can sign off rather than trail away).
+     */
+    private fun showOngoingMigraineNotification(daysOpen: Int?, finalReminder: Boolean) {
+        val channelId = "ongoing_migraine"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Create channel (no-op if already exists)
+        val channel = android.app.NotificationChannel(
+            channelId, "Ongoing Migraine",
+            android.app.NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = "Reminders to close a migraine you logged but never ended" }
+        nm.createNotificationChannel(channel)
+
+        // Tap opens the journal, where the open migraine can be edited
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.JOURNAL)
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 2, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val body = buildString {
+            if (daysOpen != null) {
+                append("You logged a migraine $daysOpen ")
+                append(if (daysOpen == 1) "day" else "days")
+                append(" ago and it's still open. ")
+            } else {
+                append("You have a migraine that's still open. ")
+            }
+            append(
+                if (finalReminder) "Tap to add how it ended. We won't ask about this one again."
+                else "Tap to add how it ended."
+            )
+        }
+
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Is your migraine over?")
+            .setContentText(body)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+
+        nm.notify(8023, notification)
+    }
+
+    /**
+     * A trigger or prodrome the user opted into alerts for auto-fired today
+     * (threshold crossed or 2SD from baseline).
+     *
+     * The backend sends at most one per item per local day. The notes line
+     * carries the real numbers (e.g. "Sleep duration: 5.2h — 2SD below avg
+     * 7.4h") so the notification can say why rather than a vague "went off".
+     */
+    private fun showTriggerAlertNotification(label: String, notes: String, itemType: String) {
+        val channelId = "trigger_alert"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Create channel (no-op if already exists)
+        val channel = android.app.NotificationChannel(
+            channelId, "Trigger alerts",
+            android.app.NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = "Alerts when an item you follow becomes a trigger for the day" }
+        nm.createNotificationChannel(channel)
+
+        // Tap opens the journal, where the fired item shows on today's log
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.JOURNAL)
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 3, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val title = if (itemType == "prodrome") "Early warning detected" else "Trigger detected"
+        val body = if (notes.isNotBlank()) notes else label
+
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+
+        nm.notify(8024, notification)
     }
 
     private suspend fun saveFcmTokenToSupabase(fcmToken: String) {

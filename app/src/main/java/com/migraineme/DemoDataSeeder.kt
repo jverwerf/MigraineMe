@@ -135,6 +135,9 @@ object DemoDataSeeder {
         withContext(Dispatchers.IO) {
             try {
                 prog("Seeding sleep data…", 0.05f)
+                // Monitor cards read metric_settings, not the data tables — without
+                // an enabled row per metric they show "No data" however much we seed.
+                seedMetricSettings(token, userId, base, key); Log.d(TAG, "✓ Metric settings done")
                 seedSleep(token, metrics, today);            Log.d(TAG, "✓ Sleep done")
                 prog("Seeding physical data…", 0.15f)
                 seedPhysical(token, physical, today);        Log.d(TAG, "✓ Physical done")
@@ -169,6 +172,42 @@ object DemoDataSeeder {
     }
 
     // ── Sleep: 30 days, bad sleep before migraines ───────────────────────
+
+    /**
+     * Monitor gates every card on `metric_settings` (enabled + a matching source),
+     * NOT on rows existing in the *_daily tables. Without this the tour seeds a
+     * full month of sleep/physical/cognitive data and every one of those cards
+     * still reads "No data — connect a wearable".
+     */
+    private suspend fun seedMetricSettings(token: String, userId: String?, base: String, key: String) {
+        if (userId.isNullOrBlank()) return
+        val client = HttpClient()
+        // Metric keys are the source table names the seeder writes to.
+        val metrics = listOf(
+            "sleep_duration_daily", "sleep_score_daily", "sleep_efficiency_daily",
+            "sleep_disturbances_daily", "sleep_stages_daily", "fell_asleep_time_daily",
+            "hrv_daily", "resting_hr_daily", "recovery_score_daily", "spo2_daily",
+            "skin_temp_daily", "steps_daily", "time_in_high_hr_zones_daily",
+            "screen_time_daily", "screen_time_late_night", "stress_index_daily",
+            "ambient_noise_index_daily", "phone_unlock_daily", "phone_brightness_daily",
+            "phone_dark_mode_daily", "phone_volume_daily",
+            "nutrition", "humidity_daily", "pressure_daily", "temperature_daily",
+        )
+        try {
+            for (metric in metrics) {
+                try {
+                    upsertRow(client, "$base/rest/v1/metric_settings", token, key, "user_id,metric",
+                        buildJsonObject {
+                            put("user_id", userId)
+                            put("metric", metric)
+                            put("enabled", true)
+                            put("preferred_source", "demo")
+                            put("allowed_sources", buildJsonArray { add(JsonPrimitive("demo")) })
+                        })
+                } catch (_: Exception) {}
+            }
+        } finally { client.close() }
+    }
 
     private suspend fun seedSleep(token: String, m: SupabaseMetricsService, today: LocalDate) {
         for (i in 0 until DAYS) {
@@ -447,7 +486,6 @@ object DemoDataSeeder {
                         put("user_id", userId)
                         put("label", trig)
                         put("prediction_value", if (trig.contains("Sleep") || trig.contains("Pressure")) "HIGH" else "MILD")
-                        put("source", "system")
                     })
             } catch (_: Exception) {}
         }
@@ -868,6 +906,7 @@ object DemoDataSeeder {
         var botoxId: String? = null
         try {
             val botox = db.insertTreatmentRegimen(
+                userId = userId,
                 accessToken = token,
                 kind = "drug",
                 name = "Botox",
@@ -882,6 +921,7 @@ object DemoDataSeeder {
 
         try {
             val meditation = db.insertTreatmentRegimen(
+                userId = userId,
                 accessToken = token,
                 kind = "lifestyle",
                 name = "Daily meditation",

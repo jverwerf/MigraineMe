@@ -129,6 +129,11 @@
             </intent-filter>
         </receiver>
 
+        <!-- Handles the 2h device relief outcome notification actions -->
+        <receiver
+            android:name=".DeviceReliefOutcomeReceiver"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

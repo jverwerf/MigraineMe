@@ -18,6 +18,7 @@ fun InsightsContextScreen(
     vm: InsightsViewModel = viewModel()
 ) {
     val contextItems by vm.contextItems.collectAsState()
+    val contextIconKeys by vm.contextIconKeys.collectAsState()
     val migraines by vm.migraines.collectAsState()
     val overallAvgSeverity = remember(migraines) {
         val severities = migraines.mapNotNull { it.severity }
@@ -29,7 +30,7 @@ fun InsightsContextScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            ContextCard(contextItems, overallAvgSeverity)
+            ContextCard(contextItems, overallAvgSeverity, contextIconKeys = contextIconKeys)
         }
     }
 }

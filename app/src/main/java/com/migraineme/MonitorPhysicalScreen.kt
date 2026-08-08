@@ -153,7 +153,7 @@ fun MonitorPhysicalScreen(
                     Text("Go to Data Settings →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.clickable { navController.navigate(Routes.DATA) })
                 }
             } else {
-                BaseCard {
+                BrainyWatermarkCard(resId = R.drawable.brainy_physical, flipWatermark = true) {
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable {
                             if (PremiumManager.isPremium) navController.navigate(Routes.PHYSICAL_DATA_HISTORY)

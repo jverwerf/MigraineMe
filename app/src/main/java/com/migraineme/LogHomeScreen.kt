@@ -31,6 +31,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -111,6 +114,28 @@ fun LogHomeScreen(
         )
     }
 
+    // Aura detail sheet: opens whenever the Aura symptom is tapped.
+    var showAuraSheet by remember { mutableStateOf(false) }
+    // Non-null while the intensity sheet for that symptom is open.
+    var severitySheetLabel by remember { mutableStateOf<String?>(null) }
+
+    fun onSymptomTap(label: String) {
+        val isPainChar = painCharacter.any { it.label == label }
+        if (isAuraSymptomLabel(label)) {
+            if (label !in selectedSymptoms) selectedSymptoms.add(label)
+            syncDraft()
+            showAuraSheet = true
+        } else if (isPainChar) {
+            // Migraine types and pain quality have nothing to rate.
+            if (label in selectedSymptoms) selectedSymptoms.remove(label) else selectedSymptoms.add(label)
+            syncDraft()
+        } else {
+            if (label !in selectedSymptoms) selectedSymptoms.add(label)
+            syncDraft()
+            severitySheetLabel = label
+        }
+    }
+
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
@@ -158,21 +183,41 @@ fun LogHomeScreen(
                                 .background(Color.White.copy(alpha = 0.06f))
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
                                 sym,
                                 color = AppTheme.BodyTextColor,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                modifier = Modifier.weight(1f)
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                             )
+                            // Intensity is captured in the tap-through sheet; shown
+                            // here so the hero reflects what was rated.
+                            draft.symptomSeverities[sym]?.let { sev ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(50))
+                                        .background(AppTheme.AccentPurple.copy(alpha = 0.18f))
+                                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        sev.lowercase().replaceFirstChar { c -> c.uppercase() },
+                                        color = AppTheme.AccentPurple,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.weight(1f))
                             Icon(
                                 Icons.Outlined.Close,
                                 contentDescription = "Remove",
                                 tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier
                                     .size(18.dp)
-                                    .clickable { selectedSymptoms.remove(sym) }
+                                    .clickable {
+                                        selectedSymptoms.remove(sym)
+                                        if (isAuraSymptomLabel(sym)) vm.setAuraDraft(emptyList(), null)
+                                        syncDraft()
+                                    }
                             )
                         }
                     }
@@ -201,8 +246,7 @@ fun LogHomeScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         painCharacter.filter { it.label in freqPainIds }.forEach { symptom ->
                             SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
-                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
-                                syncDraft()
+                                onSymptomTap(symptom.label)
                             }
                         }
                     }
@@ -219,8 +263,7 @@ fun LogHomeScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         remainingPain.forEach { symptom ->
                             SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
-                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
-                                syncDraft()
+                                onSymptomTap(symptom.label)
                             }
                         }
                     }
@@ -238,8 +281,7 @@ fun LogHomeScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         accompanying.filter { it.label in freqAccompIds }.forEach { symptom ->
                             SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
-                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
-                                syncDraft()
+                                onSymptomTap(symptom.label)
                             }
                         }
                     }
@@ -256,8 +298,7 @@ fun LogHomeScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         remainingAccomp.forEach { symptom ->
                             SymptomButton(symptom.label, symptom.label in selectedSymptoms, iconKey = symptom.iconKey) {
-                                if (symptom.label in selectedSymptoms) selectedSymptoms.remove(symptom.label) else selectedSymptoms.add(symptom.label)
-                                syncDraft()
+                                onSymptomTap(symptom.label)
                             }
                         }
                     }
@@ -285,11 +326,88 @@ fun LogHomeScreen(
             Spacer(Modifier.height(32.dp))
         }
     }
+
+    if (showAuraSheet) {
+        // Staged entries: each is the zones the aura covered at one moment.
+        // The union is still written to migraines.aura_locations, so every
+        // existing consumer keeps working while the report gains a sequence.
+        val staged = draft.auraEntries
+        AuraDetailSheet(
+            initialZones = if (staged.isEmpty()) draft.auraLocations else emptyList(),
+            // Once moments are staged the chips describe the NEXT stage, so a
+            // reopen must not prefill them with the attack-total sum.
+            initialDurationMinutes = if (staged.isEmpty()) draft.auraDurationMinutes else null,
+            previousEntries = staged.map { AuraPrevEntry(it.startAtIso, it.durationMinutes, it.zones) },
+            onAddMoment = { zones, dur, at ->
+                val base = staged.ifEmpty {
+                    if (draft.auraLocations.isEmpty()) emptyList()
+                    else listOf(AuraEntryDraft(zones = draft.auraLocations))
+                }
+                vm.setAuraEntries(
+                    base + AuraEntryDraft(
+                        startAtIso = at ?: java.time.LocalDateTime.now()
+                            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")),
+                        zones = zones,
+                        durationMinutes = dur,
+                    ),
+                    dur,
+                )
+            },
+            onSave = { zones, dur, at ->
+                if (staged.isEmpty()) {
+                    if (at == null) {
+                        vm.setAuraDraft(zones, dur)
+                    } else {
+                        // A single moment with a user-chosen time is still a
+                        // sequence of one: stage it so the time is kept.
+                        vm.setAuraEntries(listOf(AuraEntryDraft(startAtIso = at, zones = zones, durationMinutes = dur)), dur)
+                    }
+                } else {
+                    val last = if (zones.isEmpty()) staged
+                    else staged + AuraEntryDraft(
+                        startAtIso = at ?: java.time.LocalDateTime.now()
+                            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")),
+                        zones = zones,
+                        durationMinutes = dur,
+                    )
+                    vm.setAuraEntries(last, dur)
+                }
+                showAuraSheet = false
+            },
+            onRemove = {
+                selectedSymptoms.removeAll { isAuraSymptomLabel(it) }
+                vm.setAuraEntries(emptyList(), null)
+                syncDraft()
+                showAuraSheet = false
+            },
+            onDismiss = { showAuraSheet = false }
+        )
+    }
+
+    severitySheetLabel?.let { label ->
+        SymptomSeveritySheet(
+            label = label,
+            selected = draft.symptomSeverities[label],
+            time = draft.symptomTimes[label],
+            onSelect = { sev ->
+                vm.setSymptomSeverity(label, sev)
+                severitySheetLabel = null
+            },
+            onSetTime = { vm.setSymptomTime(label, it) },
+            onRemove = {
+                selectedSymptoms.remove(label)
+                syncDraft()
+                severitySheetLabel = null
+            },
+            onDismiss = { severitySheetLabel = null }
+        )
+    }
 }
 
 @Composable
 internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? = null, onClick: () -> Unit) {
     val icon = SymptomIcons.forLabel(label, iconKey)
+    val brainyId = SymptomIcons.drawableForLabel(label, iconKey)
     val circleColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val borderColor = if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
@@ -315,8 +433,8 @@ internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? 
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (icon != null) {
-                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(26.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 26.dp, tint = iconTint)
             } else {
                 Text(
                     label.take(2).uppercase(),
@@ -338,3 +456,139 @@ internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? 
 }
 
 
+
+// ── Symptom severity sheet (mild / moderate / severe) ──────────
+/**
+ * Opens when a rateable symptom is tapped, mirroring the aura sheet so the
+ * interaction is the same everywhere. Three levels rather than a 1-10 slider:
+ * that's what people can actually judge for nausea or dizziness. Picking a
+ * level closes the sheet immediately, so rating stays one extra tap.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SymptomSeveritySheet(
+    label: String,
+    selected: String?,
+    time: String?,
+    onSelect: (String?) -> Unit,
+    onSetTime: (String?) -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // Timing is opt-in so the fast path stays one extra tap: pick a level and
+    // the sheet closes. Expanding this never stamps a default time.
+    var showTimePicker by remember { mutableStateOf(false) }
+    val levels = listOf(
+        Triple("MILD", "Mild", "Noticeable but I could carry on"),
+        Triple("MODERATE", "Moderate", "Hard to ignore, it got in the way"),
+        Triple("SEVERE", "Severe", "Overwhelming, I couldn't function"),
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = AppTheme.BaseCardContainer.copy(alpha = 0.96f),
+        contentColor = Color.White,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                label,
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+            Text(
+                "How bad was it?",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(Modifier.height(4.dp))
+
+            levels.forEach { (value, title, blurb) ->
+                val isOn = selected == value
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isOn) AppTheme.AccentPurple else Color.White.copy(alpha = 0.06f))
+                        .border(
+                            1.dp,
+                            if (isOn) Color.Transparent else AppTheme.AccentPurple.copy(alpha = 0.25f),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .clickable { onSelect(if (isOn) null else value) }
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Text(
+                        blurb,
+                        color = if (isOn) Color.White.copy(alpha = 0.85f) else AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            // Timing — collapsed by default, so it costs nothing to ignore
+            Text(
+                if (time == null) "+ Add a time" else "Started ${formatSymptomTime(time)}",
+                color = AppTheme.AccentPurple,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.fillMaxWidth().clickable { showTimePicker = !showTimePicker },
+                textAlign = TextAlign.Center
+            )
+            if (showTimePicker) {
+                AppDateTimePicker(
+                    label = if (time == null) "Set time" else formatSymptomTime(time)
+                ) { onSetTime(it) }
+                if (time != null) {
+                    Text(
+                        "Clear time",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth().clickable { onSetTime(null) },
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Skip — I'd rather not rate it",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth().clickable { onDismiss() },
+                textAlign = TextAlign.Center
+            )
+            Text(
+                "Remove $label from this log",
+                color = AppTheme.AccentPink.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth().clickable { onRemove() },
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/** Local formatter — the shared formatIsoDdMmYyHm helpers are file-private. */
+private fun formatSymptomTime(iso: String?): String {
+    if (iso.isNullOrBlank()) return "At attack start"
+    return runCatching {
+        java.time.OffsetDateTime.parse(iso)
+            .atZoneSameInstant(java.time.ZoneId.systemDefault())
+            .format(java.time.format.DateTimeFormatter.ofPattern("d MMM, HH:mm"))
+    }.getOrElse { iso }
+}

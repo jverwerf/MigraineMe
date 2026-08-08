@@ -121,6 +121,35 @@ fun InsightsExploreScreen(
                         }
                     }
 
+                    // The same visuals the full card and the report use, so the
+                    // preview shows the attack rather than describing it.
+                    sel?.let { attack ->
+                        val hasPain = attack.painLocations.isNotEmpty()
+                        val hasAura = attack.auraLocations.isNotEmpty()
+                        if (hasPain || hasAura) {
+                            Spacer(Modifier.height(6.dp))
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (hasPain) {
+                                    // Numbered dots, not percentages: one
+                                    // attack is always "100%" of itself.
+                                    AttackPainMap(attack, null, Modifier.width(92.dp))
+                                }
+                                if (hasAura) {
+                                    AuraHeatMap(
+                                        auraZoneCounts = attack.auraLocations.map { it to 1 },
+                                        totalAuraAttacks = 1,
+                                        modifier = Modifier.weight(1f),
+                                        showPercentages = false,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(Modifier.height(4.dp))
                     Text("Tap for full timeline with graph & filters",
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
@@ -381,11 +410,14 @@ fun buildRecommendationSections(recs: InsightsViewModel.AiRecommendations, dismi
 fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys: Set<String>, onClick: () -> Unit = {}) {
     val sections = buildRecommendationSections(recs, dismissedKeys)
 
-    BaseCard(modifier = Modifier.clickable { onClick() }) {
+    BrainyWatermarkCard(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        resId = R.drawable.brainy_recs,
+        flipWatermark = true
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Lightbulb, contentDescription = null,
-                tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
+            BrainyBlobIcon(R.drawable.brainy_recs_small)
+            Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Text("Recommendations", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
@@ -421,8 +453,11 @@ fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys
                         .background(Color.White.copy(alpha = 0.04f))
                         .padding(10.dp)
                 ) {
-                    Text(prettyLabel(row.name), color = Color.White,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BrainyRowIcon(row.name, size = 18.dp)
+                        Text(prettyLabel(row.name), color = Color.White,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    }
                     Spacer(Modifier.height(3.dp))
                     Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
                 }
@@ -441,8 +476,25 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            sections.forEach { section ->
-                BaseCard {
+            sections.forEachIndexed { i, section ->
+                MaybeWatermarkCard(
+                    watermark = i == sections.lastIndex,
+                    resId = R.drawable.brainy_recs,
+                    flipWatermark = true
+                ) {
+                    if (i == 0) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            BrainyBlobIcon(R.drawable.brainy_recs_small)
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text("Recommendations", color = AppTheme.TitleColor,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text("Built from your Insights patterns, with a next step for each",
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(section.icon, contentDescription = null,
                             tint = section.color, modifier = Modifier.size(18.dp))
@@ -460,8 +512,11 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                             verticalAlignment = Alignment.Top
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text(prettyLabel(row.name), color = Color.White,
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    BrainyRowIcon(row.name, size = 18.dp)
+                                    Text(prettyLabel(row.name), color = Color.White,
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                                }
                                 Spacer(Modifier.height(3.dp))
                                 Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
                             }

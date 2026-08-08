@@ -3,6 +3,7 @@ package com.migraineme
 import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -17,9 +18,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -108,7 +112,7 @@ object OnboardingPrefs {
     }
 }
 
-private enum class PageId { WELCOME, CHOOSE_START, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BATTERY_OPTIMIZATION }
+private enum class PageId { WELCOME, HOW_IT_WORKS, LOADING_DATA, SETUP_LANDING, LOCATION_PERMISSION, NOTIFICATION_PERMISSION, MICROPHONE_PERMISSION, CALENDAR_PERMISSION, SCREEN_TIME_PERMISSION, BATTERY_OPTIMIZATION }
 
 @Composable
 fun OnboardingScreen(
@@ -200,12 +204,13 @@ fun OnboardingScreen(
         }
     }
 
-    // ── Tour/Setup exit: keep demo data for the tour, just mark complete ──
+    // ── Tour/Setup entry: keep demo data, do NOT mark complete yet ──
+    // A DB trigger (profiles_onboarding_complete_purge_demo) purges every demo
+    // row the instant onboarding_completed flips to true, so marking complete
+    // here deleted the tour's data before the first card was shown. Completion
+    // is now written at the end of the flow (gift screen), matching iOS.
     fun proceedWithTour(then: () -> Unit) {
-        scope.launch(Dispatchers.IO) {
-            OnboardingPrefs.setCompletedInSupabase(appCtx)
-            kotlinx.coroutines.withContext(Dispatchers.Main) { then() }
-        }
+        then()
     }
 
     // ── Kick off seeding when we hit the LOADING_DATA page ──
@@ -254,6 +259,27 @@ fun OnboardingScreen(
     val bgBrush = remember { Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029))) }
 
     Box(Modifier.fillMaxSize().background(bgBrush)) {
+        // Welcome page gets the Home-style sky background fading into the gradient.
+        if (currentPage == PageId.WELCOME) {
+            Image(
+                painter = painterResource(id = R.drawable.purple_sky_bg),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.46f).align(Alignment.TopCenter)
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.46f)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            0.3f to Color.Transparent,
+                            1f to Color(0xFF2A003D)
+                        )
+                    )
+            )
+        }
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(20.dp))
 
@@ -282,16 +308,16 @@ fun OnboardingScreen(
                         }, label = "page"
                     ) { idx ->
                         when (pages[idx.coerceIn(0, pages.size - 1)]) {
-                            PageId.WELCOME -> WelcomePage()
-                            PageId.CHOOSE_START -> ChooseStartPage(
-                                onTakeTour = {
+                            PageId.WELCOME -> WelcomePage(
+                                onTakeFullTour = {
                                     OnboardingMode.noSeed = false
                                     currentIdx = pages.indexOf(PageId.HOW_IT_WORKS)
                                 },
-                                onSetUpNow = {
+                                onSetUpProfile = {
                                     OnboardingMode.noSeed = true
                                     proceedWithTour { onStartDataSettingsNoSeed() }
-                                }
+                                },
+                                onGoToApp = { skipOnboarding { onComplete() } }
                             )
                             PageId.HOW_IT_WORKS -> Box(Modifier.fillMaxSize()) // placeholder, never visible
                             PageId.LOADING_DATA -> LoadingDataPage(
@@ -312,27 +338,14 @@ fun OnboardingScreen(
             }
 
             // ── Bottom buttons ──
-            if (currentPage == PageId.CHOOSE_START || currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
+            if (currentPage == PageId.WELCOME || currentPage == PageId.LOCATION_PERMISSION || currentPage == PageId.NOTIFICATION_PERMISSION || currentPage == PageId.MICROPHONE_PERMISSION || currentPage == PageId.CALENDAR_PERMISSION || currentPage == PageId.SCREEN_TIME_PERMISSION || currentPage == PageId.BATTERY_OPTIMIZATION) {
                 // These pages handle their own buttons
-            } else if (currentPage == PageId.WELCOME || currentPage == PageId.HOW_IT_WORKS) {
+            } else if (currentPage == PageId.HOW_IT_WORKS) {
                 Column(
                     Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (currentPage == PageId.WELCOME) {
-                        Button(
-                            onClick = { currentIdx++ },
-                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.fillMaxWidth().height(52.dp)
-                        ) {
-                            Text("Next", fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
-                        }
-                        TextButton(onClick = { skipOnboarding { onComplete() } }) {
-                            Text("Skip", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    } else {
+                    run {
                         // No-seed onboarding skips the demo tour (it would showcase demo
                         // insights that don't exist) and goes straight to Data Settings.
                         val noSeed = OnboardingMode.noSeed
@@ -390,7 +403,6 @@ fun OnboardingScreen(
                 when (currentPage) {
                     PageId.HOW_IT_WORKS -> {}
                     PageId.WELCOME -> {}
-                    PageId.CHOOSE_START -> {}
                     PageId.LOCATION_PERMISSION -> {}
                     PageId.NOTIFICATION_PERMISSION -> {}
                     PageId.MICROPHONE_PERMISSION -> {}
@@ -482,7 +494,7 @@ private val LOADING_FACTS = listOf(
     "See which treatments are actually working — efficacy scored against your data.",
     "AI recommendations every month based on what your data actually shows.",
     "30+ migraine signals tracked automatically.",
-    "Connect Oura, Polar, Garmin, Apple Health and Health Connect.",
+    "Connect Oura, Polar, Garmin and Health Connect.",
     "Your full migraine profile, AI-configured in under a minute.",
     "Cycle-aware: hormonal windows feed straight into your risk score.",
     "Watch your risk gauge fill in real time.",
@@ -493,7 +505,7 @@ private val LOADING_FACTS = listOf(
     "Customise every trigger, prodrome, threshold and weight to fit you.",
     "Personalised companions for nutrition, sleep, stress and more.",
     "Pulls food from MyFitnessPal, Cronometer or barcode scan in seconds.",
-    "Apple Watch, Wear OS, Garmin and your phone — always in sync.",
+    "Wear OS, Garmin and your phone — always in sync.",
     "Triggers, prodromes, reliefs, treatments — all in one place.",
     "Articles and a forum built for migraine sufferers, by migraine sufferers.",
     "Your data, locked to your account. End-to-end private.",
@@ -536,27 +548,51 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (!isComplete) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(80.dp),
-                            color = AppTheme.AccentPink,
-                            strokeWidth = 2.5.dp,
+                        // Slow, calm ring — one revolution every 4s instead of the
+                        // default indeterminate spinner's frantic pace.
+                        val ringTransition = rememberInfiniteTransition(label = "ring")
+                        val ringAngle by ringTransition.animateFloat(
+                            0f, 360f,
+                            infiniteRepeatable(tween(4000, easing = LinearEasing)),
+                            label = "ringAngle"
                         )
+                        androidx.compose.foundation.Canvas(
+                            Modifier.size(80.dp).rotate(ringAngle)
+                        ) {
+                            drawArc(
+                                color = AppTheme.AccentPink,
+                                startAngle = 0f,
+                                sweepAngle = 270f,
+                                useCenter = false,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 2.5.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                                )
+                            )
+                        }
                     }
                     Box(
                         Modifier
                             .size((60 * if (!isComplete) pulseScale else 1f).dp)
                             .background(
                                 Brush.linearGradient(listOf(
-                                    AppTheme.AccentPurple.copy(alpha = if (!isComplete) pulseAlpha else 0.8f),
-                                    AppTheme.AccentPink.copy(alpha = if (!isComplete) pulseAlpha * 0.7f else 0.6f)
+                                    Color(0x57CE93D8),
+                                    Color(0x24B388FF)
                                 )),
                                 CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.brainy_briefcase_small),
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                    if (isComplete) {
                         Icon(
-                            if (isComplete) Icons.Outlined.CheckCircle else Icons.Outlined.CloudSync,
-                            null, tint = Color.White, modifier = Modifier.size(30.dp)
+                            Icons.Outlined.CheckCircle, null, tint = Color(0xFF81C784),
+                            modifier = Modifier.size(22.dp).align(Alignment.BottomEnd)
                         )
                     }
                 }

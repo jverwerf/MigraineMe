@@ -173,6 +173,10 @@ fun DataSettingsScreen(
 
     val scrollState = rememberScrollState()
 
+    // An active search turns the screen into a pure results list: the summary,
+    // the info banner and any card without a hit are all dropped.
+    val q = searchQuery.trim()
+
     // Report scroll position for setup coach overlay
     LaunchedEffect(scrollState.value, scrollState.maxValue) {
         if (TourManager.isActive() && TourManager.currentPhase() == CoachPhase.SETUP) {
@@ -206,40 +210,25 @@ fun DataSettingsScreen(
             // ═══════════════════════════════════════════════════════════
             // HERO — Data collection summary
             // ═══════════════════════════════════════════════════════════
-            HeroCard {
-                Text("Data Collection", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-                Text("$enabledCount / $totalCount", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
-                Text("metrics active", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            if (q.isBlank()) {
+                HeroCard {
+                    Text("Data Collection", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text("$enabledCount / $totalCount", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("metrics active", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
-                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    DStatColumn("Sections", "${sections.size}")
-                    DStatColumn("Sources", if (sourceCount > 0) "$sourceCount" else "-")
-                    DStatColumn("Wearables", if (connectedWearables.any { it == WearableSource.WHOOP }) "1" else "0")
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        DStatColumn("Sections", "${sections.size}")
+                        DStatColumn("Sources", if (sourceCount > 0) "$sourceCount" else "-")
+                        DStatColumn("Wearables", if (connectedWearables.any { it == WearableSource.WHOOP }) "1" else "0")
+                    }
                 }
             }
 
             // ═══════════════════════════════════════════════════════════
-            // HOW IT WORKS — purple accent card
-            // ═══════════════════════════════════════════════════════════
-            Card(
-                colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
-                    Text(
-                        "Toggle the metrics MigraineMe collects each day. " +
-                        "Enabled metrics feed into your daily risk score and AI insights. " +
-                        "Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.",
-                        color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-
-            // ═══════════════════════════════════════════════════════════
-            // SEARCH BAR
+            // SEARCH BAR — sits right under the summary so a metric can be
+            // found without scrolling past the info and section cards
             // ═══════════════════════════════════════════════════════════
             OutlinedTextField(
                 value = searchQuery,
@@ -265,9 +254,31 @@ fun DataSettingsScreen(
                 )
             )
 
-            val q = searchQuery.trim()
+            // ═══════════════════════════════════════════════════════════
+            // HOW IT WORKS — purple accent card
+            // ═══════════════════════════════════════════════════════════
+            if (q.isBlank()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        Text(
+                            "Toggle the metrics MigraineMe collects each day. " +
+                            "Enabled metrics feed into your daily risk score and AI insights. " +
+                            "Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.",
+                            color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+
+            // A section matches on its own title too ("environment" finds the
+            // whole Environment card, whose rows are named Temperature/Humidity).
             val filteredSections = if (q.isBlank()) sections
                 else sections.mapNotNull { section ->
+                    if (section.title.contains(q, ignoreCase = true)) return@mapNotNull section
                     val matched = section.rows.filter { it.collectedByLabel.contains(q, ignoreCase = true) }
                     if (matched.isEmpty()) null else section.copy(rows = matched)
                 }
@@ -389,7 +400,8 @@ fun DataSettingsScreen(
                         }
                     }
                 },
-                refreshTick = refreshTick
+                refreshTick = refreshTick,
+                searchQuery = q
             )
 
             Spacer(Modifier.height(16.dp))
@@ -415,6 +427,7 @@ fun DataSettingsScreen(
                     }
                 },
                 refreshTick = refreshTick,
+                searchQuery = q,
             )
 
             Spacer(Modifier.height(16.dp))

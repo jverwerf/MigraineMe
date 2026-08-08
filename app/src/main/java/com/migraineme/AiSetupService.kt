@@ -94,6 +94,13 @@ object AiSetupService {
         val autoTriggerLabels: Set<String> = emptySet(),
         /** Individual prodrome labels that have a metric_table = auto-detected */
         val autoProdromeLabels: Set<String> = emptySet(),
+        /** Lowercase label -> suggested_condition (null = always) from *_templates.suggested.
+         *  Medicines and prodromes deliberately have no suggestion tier. */
+        val suggestedTriggers: Map<String, String?> = emptyMap(),
+        val suggestedSymptoms: Map<String, String?> = emptyMap(),
+        val suggestedReliefs: Map<String, String?> = emptyMap(),
+        val suggestedActivities: Map<String, String?> = emptyMap(),
+        val suggestedLocations: Map<String, String?> = emptyMap(),
     ) {
         // DB categories (verified against production symptom_templates):
         //   "Postdrome" (14), "pain_character" (7), "accompanying" (4),
@@ -434,6 +441,43 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
         }
     }
 
+    /**
+     * Fetch onboarding suggestion labels from a global template table.
+     * Returns lowercase label -> suggested_condition (null = suggest for everyone,
+     * "menstruation"/"aura" = only when that profile condition holds).
+     */
+    private suspend fun fetchSuggestedFromTemplate(accessToken: String, table: String): Map<String, String?> {
+        val client = HttpClient(io.ktor.client.engine.android.Android)
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/$table?select=label,suggested_condition&suggested=eq.true"
+            val response = client.get(url) {
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+            if (!response.status.isSuccess()) {
+                Log.w(TAG, "Failed to fetch $table suggestions: ${response.status}")
+                emptyMap()
+            } else {
+                val arr = JSONArray(response.bodyAsText())
+                val out = mutableMapOf<String, String?>()
+                for (i in 0 until arr.length()) {
+                    val obj = arr.getJSONObject(i)
+                    val label = obj.optString("label", "")
+                    if (label.isNotBlank()) {
+                        out[label.lowercase()] = obj.optString("suggested_condition", "").ifBlank { null }
+                    }
+                }
+                Log.d(TAG, "Fetched ${out.size} suggested labels from $table")
+                out
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error fetching suggestions from $table", e)
+            emptyMap()
+        } finally {
+            client.close()
+        }
+    }
+
     suspend fun buildAvailableItems(context: Context): AvailableItems = withContext(Dispatchers.IO) {
         val appCtx = context.applicationContext
         val accessToken = SessionStore.getValidAccessToken(appCtx)
@@ -479,7 +523,15 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
             Log.w(TAG, "Failed to load location pool", it); emptyList()
         }
 
-        AvailableItems(triggers, prodromes, symptoms, medicines, reliefs, activities, missedActivities, locations, autoTriggerLabels, autoProdromeLabels)
+        AvailableItems(
+            triggers, prodromes, symptoms, medicines, reliefs, activities, missedActivities, locations,
+            autoTriggerLabels, autoProdromeLabels,
+            suggestedTriggers = fetchSuggestedFromTemplate(accessToken, "trigger_templates"),
+            suggestedSymptoms = fetchSuggestedFromTemplate(accessToken, "symptom_templates"),
+            suggestedReliefs = fetchSuggestedFromTemplate(accessToken, "relief_templates"),
+            suggestedActivities = fetchSuggestedFromTemplate(accessToken, "activity_templates"),
+            suggestedLocations = fetchSuggestedFromTemplate(accessToken, "location_templates"),
+        )
     }
 
     // ═══════════════════════════════════════════════════════════════════════

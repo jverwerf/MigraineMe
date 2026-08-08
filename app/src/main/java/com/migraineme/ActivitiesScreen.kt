@@ -164,7 +164,14 @@ fun ActivitiesScreen(
 
     val frequentLabels = remember(frequent) { frequent.mapNotNull { it.activity?.label }.toSet() }
     val selectedLabels = remember(draft.activities) { draft.activities.map { it.type }.toSet() }
-    val grouped = remember(pool) { pool.groupBy { it.category ?: "Other" }.toSortedMap() }
+    // Wizard search — live-filters the pool grid below
+    var wizardSearch by remember { mutableStateOf("") }
+    val searchPool = remember(pool, wizardSearch) {
+        if (wizardSearch.isBlank()) pool
+        else pool.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+    }
+
+    val grouped = remember(searchPool) { searchPool.groupBy { it.category ?: "Other" }.toSortedMap() }
 
     // Build daysAgo lookup keyed by title-case label (matching pool)
     val daysAgoByLabel = remember(recent, pool) {
@@ -246,6 +253,10 @@ fun ActivitiesScreen(
                 }
             }
 
+            if (!quickLogMode) {
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.POSTDROMES) })
+            }
+
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Activities", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
@@ -259,11 +270,13 @@ fun ActivitiesScreen(
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
             }
 
+            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFFF8A65))
+
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        pool.filter { it.label in frequentLabels }.forEach { act ->
+                        searchPool.filter { it.label in frequentLabels }.forEach { act ->
                             ActCircleButton(act.label, act.label in selectedLabels, act.iconKey, daysAgo = daysAgoByLabel[act.label]) { onTap(act.label) }
                         }
                     }
@@ -303,6 +316,7 @@ fun ActivitiesScreen(
 private fun ActCircleButton(label: String, isSelected: Boolean, iconKey: String? = null, daysAgo: Int? = null, onClick: () -> Unit) {
     val accent = Color(0xFFFF8A65)
     val icon = ActivityIcons.forLabel(label, iconKey)
+    val brainyId = ActivityIcons.drawableForLabel(label, iconKey)
 
     val (bg, border) = when {
         isSelected && daysAgo == null -> accent.copy(alpha = 0.40f) to accent.copy(alpha = 0.7f)
@@ -320,8 +334,8 @@ private fun ActCircleButton(label: String, isSelected: Boolean, iconKey: String?
         modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)
     ) {
         Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(1.5.dp, border, CircleShape), contentAlignment = Alignment.Center) {
-            if (icon != null) {
-                Icon(imageVector = icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(24.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = iconTint)
             } else {
                 Text(label.take(2).uppercase(), color = iconTint,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))

@@ -337,6 +337,7 @@ private fun CategoryBarRow(label: String, count: Int, maxCount: Int, color: Colo
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            BrainyRowIcon(label, size = 18.dp)
             Text(
                 label,
                 color = AppTheme.BodyTextColor,

@@ -79,10 +79,49 @@ data class MissedActivityDraft(
     val existingId: String? = null
 )
 
+/**
+ * One timestamped pain moment within the attack. startAtIso == null means
+ * "at attack start" (the first entry's default); added entries carry an
+ * explicit time so the user can capture the pain peaking or moving.
+ */
+data class PainEntryDraft(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val startAtIso: String? = null,
+    val severity: Int = 5,
+    val locations: List<String> = emptyList()
+)
+
+/**
+ * One aura moment: the zones the aura covered, and when. Mirrors
+ * PainEntryDraft — an aura that starts peripheral and migrates central is the
+ * progression ICHD-3 asks about, and a flat zone list cannot express it.
+ */
+data class AuraEntryDraft(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val startAtIso: String? = null,
+    val zones: List<String> = emptyList(),
+    /** How long this stage lasted. The attack's overall aura duration is the
+     *  SUM of the stages that carry one (see setAuraEntries). */
+    val durationMinutes: Int? = null,
+)
+
 data class Draft(
     val editMigraineId: String? = null,
     val migraine: MigraineDraft? = null,
-    val painLocations: List<String> = emptyList(),
+    val painEntries: List<PainEntryDraft> = listOf(PainEntryDraft()),
+    /** Per-symptom intensity, label -> MILD/MODERATE/SEVERE. Only for
+     *  non-pain_character symptoms (a migraine type or pain quality has no
+     *  separate intensity — that's migraine.severity). */
+    val symptomSeverities: Map<String, String> = emptyMap(),
+    /** Optional per-symptom timing, label -> ISO start. Absent means
+     *  "at attack start" — never defaulted to now(), so an untimed symptom
+     *  contributes no invented timeline. */
+    val symptomTimes: Map<String, String> = emptyMap(),
+    val auraLocations: List<String> = emptyList(),
+    val auraDurationMinutes: Int? = null,
+    /** Timestamped aura entries. auraLocations stays the union so every
+     *  existing consumer keeps working. */
+    val auraEntries: List<AuraEntryDraft> = emptyList(),
     val triggers: List<TriggerDraft> = emptyList(),
     val meds: List<MedicineDraft> = emptyList(),
     val rels: List<ReliefDraft> = emptyList(),
@@ -90,7 +129,18 @@ data class Draft(
     val locations: List<LocationDraft> = emptyList(),
     val activities: List<ActivityDraft> = emptyList(),
     val missedActivities: List<MissedActivityDraft> = emptyList()
-)
+) {
+    /** Mirror written to migraines.pain_locations: union across entries. */
+    val painLocationsUnion: List<String>
+        get() = painEntries.flatMap { it.locations }.distinct()
+
+    /** Mirror written to migraines.severity: max across entries that actually
+     *  logged pain. Entries without locations don't count — otherwise the
+     *  untouched default entry (severity 5) would override flows that save
+     *  severity as null on purpose (quick log). */
+    val maxPainSeverity: Int?
+        get() = painEntries.filter { it.locations.isNotEmpty() }.maxOfOrNull { it.severity }
+}
 
 // --- journal event feed ---
 sealed class JournalEvent {
@@ -116,6 +166,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private val _draft = MutableStateFlow(Draft())
     val draft: StateFlow<Draft> = _draft
 
+    /** Symptoms that already had an intensity/time stored when this log was
+     *  opened for edit. Used so clearing a rating actually writes NULL. */
+    private var loadedSymptomKeys: Set<String> = emptySet()
+
     /** When non-null, the wizard is in "edit" mode for this migraine. Review will update instead of insert. */
     private val _editMigraineId = MutableStateFlow<String?>(null)
     val editMigraineId: StateFlow<String?> = _editMigraineId
@@ -138,8 +192,40 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     ?.filter { it.isNotBlank() && it != "Migraine" }
                     ?: emptyList()
 
+                // Pain entries: prefer timestamped child rows (grouped by
+                // start_at); legacy attacks fall back to the mirror columns.
+                val painEntries = if (linked.painPoints.isNotEmpty()) {
+                    linked.painPoints.groupBy { it.startAt }.toSortedMap().map { (startAt, rows) ->
+                        PainEntryDraft(
+                            startAtIso = startAt,
+                            severity = rows.mapNotNull { it.severity }.maxOrNull() ?: row.severity ?: 5,
+                            locations = rows.map { it.locationId }
+                        )
+                    }
+                } else {
+                    listOf(PainEntryDraft(
+                        startAtIso = null,
+                        severity = row.severity ?: 5,
+                        locations = row.painLocations ?: emptyList()
+                    ))
+                }
+
+                // Symptom intensities live on the trigger-derived symptoms rows.
+                val severities = linked.postdromes
+                    .mapNotNull { r -> r.type?.let { t -> r.severity?.let { s -> t to s } } }
+                    .toMap()
+                val symptomTimes = linked.postdromes
+                    .mapNotNull { r -> r.type?.let { t -> r.startAt?.let { s -> t to s } } }
+                    .toMap()
+                // Remember what was stored so save() can tell "never rated"
+                // apart from "rated then cleared" — only the latter needs a
+                // PATCH to null it out.
+                loadedSymptomKeys = severities.keys + symptomTimes.keys
+
                 _draft.value = Draft(
                     editMigraineId = migraineId,
+                    symptomSeverities = severities,
+                    symptomTimes = symptomTimes,
                     migraine = MigraineDraft(
                         type = row.type,
                         symptoms = symptomLabels,
@@ -148,12 +234,38 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                         endedAtIso = row.endAt,
                         note = row.notes
                     ),
-                    painLocations = row.painLocations ?: emptyList(),
+                    painEntries = painEntries,
+                    auraLocations = row.auraLocations ?: emptyList(),
+                    auraEntries = runCatching { db.getAuraZones(accessToken, migraineId) }
+                        .getOrDefault(emptyList())
+                        .groupBy { it.startAt }
+                        .toSortedMap(compareBy { it ?: "" })
+                        .map { (at, rows) -> AuraEntryDraft(startAtIso = at, zones = rows.map { it.zone }, durationMinutes = rows.firstNotNullOfOrNull { it.durationMinutes }) },
+                    auraDurationMinutes = row.auraDurationMinutes,
                     triggers = linked.triggers
                         .filter { it.source != "system" }
                         .map { TriggerDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
-                    meds = linked.medicines.map { MedicineDraft(it.name, it.amount, it.notes, it.startAt, null, existingId = it.id) },
-                    rels = linked.reliefs.map { ReliefDraft(it.type ?: "", it.notes, it.startAt, it.endAt, null, existingId = it.id) },
+                    // Named args on purpose: positionally, the 5th slot is
+                    // reliefScale and sideEffectScale/-Notes fell to their
+                    // "NONE"/null defaults, so a no-op edit wiped a recorded
+                    // side effect on every medicine and relief.
+                    meds = linked.medicines.map {
+                        MedicineDraft(
+                            name = it.name, amount = it.amount, notes = it.notes,
+                            startAtIso = it.startAt, reliefScale = it.reliefScale,
+                            sideEffectScale = it.sideEffectScale,
+                            sideEffectNotes = it.sideEffectNotes, existingId = it.id
+                        )
+                    },
+                    rels = linked.reliefs.map {
+                        ReliefDraft(
+                            type = it.type ?: "", notes = it.notes,
+                            startAtIso = it.startAt, endAtIso = it.endAt,
+                            reliefScale = it.reliefScale,
+                            sideEffectScale = it.sideEffectScale,
+                            sideEffectNotes = it.sideEffectNotes, existingId = it.id
+                        )
+                    },
                     prodromes = linked.prodromes.map { ProdromeDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
                     locations = linked.locations.map { LocationDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
                     activities = linked.activities.map { ActivityDraft(it.type ?: "", it.startAt, it.endAt, it.notes, existingId = it.id) }
@@ -236,6 +348,13 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         clearNote: Boolean = false
     ) {
         val existing = _draft.value.migraine ?: MigraineDraft()
+        // Severity set outside PainLocationScreen (AI parser, sliders) must
+        // also seed the first pain entry — the saved severity is the MAX
+        // across entries, so a stale default entry would clobber it.
+        val entries = if (severity != null) {
+            val cur = _draft.value.painEntries.ifEmpty { listOf(PainEntryDraft()) }
+            listOf(cur.first().copy(severity = severity.coerceIn(1, 10))) + cur.drop(1)
+        } else _draft.value.painEntries
         _draft.value = _draft.value.copy(
             migraine = existing.copy(
                 type = type ?: existing.type,
@@ -244,19 +363,114 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 beganAtIso = if (clearBeganAt) null else (beganAtIso ?: existing.beganAtIso),
                 endedAtIso = if (clearEndedAt) null else (endedAtIso ?: existing.endedAtIso),
                 note = if (clearNote) null else (note ?: existing.note)
-            )
+            ),
+            painEntries = entries
         )
     }
 
     fun setSymptomsDraft(symptoms: List<String>) {
         val existing = _draft.value.migraine ?: MigraineDraft()
         _draft.value = _draft.value.copy(
-            migraine = existing.copy(symptoms = symptoms)
+            migraine = existing.copy(symptoms = symptoms),
+            // Drop intensities/times for symptoms that are no longer selected.
+            symptomSeverities = _draft.value.symptomSeverities.filterKeys { it in symptoms },
+            symptomTimes = _draft.value.symptomTimes.filterKeys { it in symptoms }
         )
     }
 
+    /** null clears it back to "not rated". */
+    fun setSymptomSeverity(label: String, severity: String?) {
+        val next = _draft.value.symptomSeverities.toMutableMap()
+        if (severity == null) next.remove(label) else next[label] = severity
+        _draft.value = _draft.value.copy(symptomSeverities = next)
+    }
+
+    /** null clears it back to "at attack start". */
+    fun setSymptomTime(label: String, startAtIso: String?) {
+        val next = _draft.value.symptomTimes.toMutableMap()
+        if (startAtIso == null) next.remove(label) else next[label] = startAtIso
+        _draft.value = _draft.value.copy(symptomTimes = next)
+    }
+
+    /** AI parser / batch apply: fills the first pain entry (parser output has
+     *  no per-point times yet — items land at attack start). */
     fun setPainLocationsDraft(locations: List<String>) {
-        _draft.value = _draft.value.copy(painLocations = locations)
+        val cur = _draft.value.painEntries.ifEmpty { listOf(PainEntryDraft()) }
+        _draft.value = _draft.value.copy(
+            painEntries = listOf(cur.first().copy(locations = locations)) + cur.drop(1)
+        )
+    }
+
+    // ── Timestamped pain entries ──
+
+    fun addPainEntry() {
+        val cur = _draft.value.painEntries
+        val entry = PainEntryDraft(
+            startAtIso = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+            severity = cur.lastOrNull()?.severity ?: 5
+        )
+        _draft.value = _draft.value.copy(painEntries = cur + entry)
+    }
+
+    fun removePainEntry(entryId: String) {
+        val cur = _draft.value.painEntries
+        if (cur.size <= 1) return
+        val next = cur.filterNot { it.id == entryId }
+        _draft.value = _draft.value.copy(painEntries = next)
+        syncSeverityFromEntries()
+    }
+
+    fun setPainEntryLocations(entryId: String, locations: List<String>) {
+        updatePainEntry(entryId) { it.copy(locations = locations) }
+    }
+
+    fun setPainEntrySeverity(entryId: String, severity: Int) {
+        updatePainEntry(entryId) { it.copy(severity = severity.coerceIn(1, 10)) }
+        syncSeverityFromEntries()
+    }
+
+    fun setPainEntryTime(entryId: String, startAtIso: String?) {
+        updatePainEntry(entryId) { it.copy(startAtIso = startAtIso) }
+    }
+
+    fun replacePainEntries(entries: List<PainEntryDraft>) {
+        _draft.value = _draft.value.copy(painEntries = entries.ifEmpty { listOf(PainEntryDraft()) })
+        syncSeverityFromEntries()
+    }
+
+    private fun updatePainEntry(entryId: String, transform: (PainEntryDraft) -> PainEntryDraft) {
+        _draft.value = _draft.value.copy(
+            painEntries = _draft.value.painEntries.map { if (it.id == entryId) transform(it) else it }
+        )
+    }
+
+    private fun syncSeverityFromEntries() {
+        // Overall max (not the location-gated mirror) so the review screen
+        // shows what the sliders say even before any dot is tapped.
+        val existing = _draft.value.migraine ?: MigraineDraft()
+        val overallMax = _draft.value.painEntries.maxOfOrNull { it.severity }
+        _draft.value = _draft.value.copy(
+            migraine = existing.copy(severity = overallMax ?: existing.severity)
+        )
+    }
+
+    fun setAuraDraft(locations: List<String>, durationMinutes: Int?) {
+        _draft.value = _draft.value.copy(auraLocations = locations, auraDurationMinutes = durationMinutes)
+    }
+
+    /** Timestamped aura entries. auraLocations is kept as the union so the
+     *  mirror column every other consumer reads stays correct. Overall
+     *  duration aggregates: when stages carry their own durations, the
+     *  attack's aura_duration_minutes is their SUM (Jordy 2026-08-08);
+     *  durationMinutes is only the fallback when no stage has one. */
+    fun setAuraEntries(entries: List<AuraEntryDraft>, durationMinutes: Int?) {
+        val stageSum = entries.mapNotNull { it.durationMinutes }
+            .takeIf { it.isNotEmpty() }?.sum()
+        _draft.value = _draft.value.copy(
+            auraEntries = entries,
+            auraLocations = entries.flatMap { it.zones }.distinct(),
+            auraDurationMinutes = stageSum ?: durationMinutes,
+        )
     }
 
     fun addTriggerDraft(trigger: String, startAtIso: String? = null, note: String? = null) {
@@ -304,6 +518,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun clearDraft() {
         _draft.value = Draft()
         _editMigraineId.value = null
+        loadedSymptomKeys = emptySet()
         autoSelectedFor.clear()
         autoAdded.clear()
     }
@@ -388,7 +603,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val nowIso = Instant.now().toString()
-                db.insertRelief(accessToken, migraineId = null, type = type, startAt = nowIso, notes = notes)
+                val row = db.insertRelief(accessToken, migraineId = null, type = type, startAt = nowIso, notes = notes)
+                DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, type)
                 loadJournal(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -406,7 +622,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         beganAtIso: String,
         endedAtIso: String?,
         note: String?,
-        painLocations: List<String>,
         meds: List<MedicineDraft>,
         rels: List<ReliefDraft>
     ) {
@@ -415,6 +630,17 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         val locationsSnapshot = _draft.value.locations
         val activitiesSnapshot = _draft.value.activities
         val missedActivitiesSnapshot = _draft.value.missedActivities
+        val auraLocationsSnapshot = _draft.value.auraLocations
+        val auraDurationSnapshot = _draft.value.auraDurationMinutes
+        val painEntriesSnapshot = _draft.value.painEntries
+        val auraEntriesSnapshot = _draft.value.auraEntries
+        val symptomSeveritiesSnapshot = _draft.value.symptomSeverities
+        val symptomTimesSnapshot = _draft.value.symptomTimes
+        val symptomKeysToWrite =
+            symptomSeveritiesSnapshot.keys + symptomTimesSnapshot.keys + loadedSymptomKeys
+        // Mirrors: severity = MAX across pain entries, pain_locations = UNION.
+        val painUnion = _draft.value.painLocationsUnion
+        val mirroredSeverity = listOfNotNull(_draft.value.maxPainSeverity, severity).maxOrNull()
 
         viewModelScope.launch {
             try {
@@ -424,7 +650,56 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
                 // Update migraine itself
                 println("DEBUG updateFull: updating migraineId=$migraineId")
-                db.updateMigraine(accessToken, migraineId, type, severity, migraineStart, endedAtIso, note, painLocations.takeIf { it.isNotEmpty() })
+                db.updateMigraine(
+                    accessToken, migraineId, type, mirroredSeverity, migraineStart, endedAtIso, note,
+                    painUnion.takeIf { it.isNotEmpty() },
+                    clearPainLocations = painUnion.isEmpty(),
+                    setAura = true,
+                    auraLocations = auraLocationsSnapshot,
+                    auraDurationMinutes = auraDurationSnapshot
+                )
+
+                // Timestamped pain points: wholesale replace. Entry time nil =
+                // attack start.
+                runCatching {
+                    db.replacePainPoints(accessToken, migraineId, painEntriesSnapshot.flatMap { entry ->
+                        entry.locations.map { loc ->
+                            SupabaseDbService.PainPointInsert(
+                                migraineId = migraineId,
+                                locationId = loc,
+                                severity = entry.severity,
+                                startAt = entry.startAtIso ?: migraineStart
+                            )
+                        }
+                    })
+                }.onFailure { println("DEBUG updateFull: pain points FAILED: ${it.message}") }
+
+                // Timestamped aura zones, same rule: an entry with no time
+                // falls back to the attack start rather than inventing one.
+                runCatching {
+                    db.replaceAuraZones(accessToken, migraineId, auraEntriesSnapshot.flatMap { entry ->
+                        entry.zones.map { zone ->
+                            SupabaseDbService.AuraZoneInsert(
+                                migraineId = migraineId,
+                                zone = zone,
+                                startAt = entry.startAtIso ?: migraineStart,
+                                durationMinutes = entry.durationMinutes
+                            )
+                        }
+                    })
+                }.onFailure { println("DEBUG updateFull: aura zones FAILED: ${it.message}") }
+
+                // Symptom severity. The `symptoms` rows are created by the DB
+                // sync trigger off `migraines.type` above, so this runs after
+                // and only updates them.
+                // Skip untouched symptoms so the update doesn't null out a
+                // value the user never opened the sheet for.
+                for (label in symptomKeysToWrite) {
+                    runCatching {
+                        db.setSymptomDetail(accessToken, migraineId, label,
+                            symptomSeveritiesSnapshot[label], symptomTimesSnapshot[label])
+                    }.onFailure { println("DEBUG updateFull: symptom detail '$label' FAILED: ${it.message}") }
+                }
 
                 // --- Triggers: delete removed, update existing, insert new ---
                 val oldLinked = db.getLinkedItems(accessToken, migraineId)
@@ -464,7 +739,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     if (r.existingId != null) {
                         runCatching { db.updateRelief(accessToken, r.existingId, r.type, rStart, r.notes, endAt = rEnd, reliefScale = r.reliefScale, sideEffectScale = r.sideEffectScale, sideEffectNotes = r.sideEffectNotes) }
                     } else {
-                        runCatching { db.insertRelief(accessToken, migraineId, r.type, rStart, r.notes, rEnd, r.reliefScale, sideEffectScale = r.sideEffectScale, sideEffectNotes = r.sideEffectNotes) }
+                        runCatching {
+                            val row = db.insertRelief(accessToken, migraineId, r.type, rStart, r.notes, rEnd, r.reliefScale, sideEffectScale = r.sideEffectScale, sideEffectNotes = r.sideEffectNotes)
+                            if (r.reliefScale == null || r.reliefScale == "NONE") {
+                                DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, r.type)
+                            }
+                        }
                     }
                 }
 
@@ -536,7 +816,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         beganAtIso: String,
         endedAtIso: String?,
         note: String?,
-        painLocations: List<String>,
         meds: List<MedicineDraft>,
         rels: List<ReliefDraft>
     ) {
@@ -545,6 +824,17 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         val locationsSnapshot = _draft.value.locations
         val activitiesSnapshot = _draft.value.activities
         val missedActivitiesSnapshot = _draft.value.missedActivities
+        val auraLocationsSnapshot = _draft.value.auraLocations
+        val auraDurationSnapshot = _draft.value.auraDurationMinutes
+        val painEntriesSnapshot = _draft.value.painEntries
+        val auraEntriesSnapshot = _draft.value.auraEntries
+        val symptomSeveritiesSnapshot = _draft.value.symptomSeverities
+        val symptomTimesSnapshot = _draft.value.symptomTimes
+        val symptomKeysToWrite =
+            symptomSeveritiesSnapshot.keys + symptomTimesSnapshot.keys + loadedSymptomKeys
+        // Mirrors: severity = MAX across pain entries, pain_locations = UNION.
+        val painUnion = _draft.value.painLocationsUnion
+        val mirroredSeverity = listOfNotNull(_draft.value.maxPainSeverity, severity).maxOrNull()
 
         println("DEBUG addFull: triggersSnapshot.size=${triggersSnapshot.size}, types=${triggersSnapshot.map { it.type }}")
         println("DEBUG addFull: prodromesSnapshot.size=${prodromesSnapshot.size}, meds=${meds.size}, rels=${rels.size}")
@@ -558,12 +848,52 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 val migraine = db.insertMigraine(
                     accessToken = accessToken,
                     type = type,
-                    severity = severity,
+                    severity = mirroredSeverity,
                     startAt = migraineStart,
                     endAt = endedAtIso,
                     notes = note,
-                    painLocations = painLocations.takeIf { it.isNotEmpty() }
+                    painLocations = painUnion.takeIf { it.isNotEmpty() },
+                    auraLocations = auraLocationsSnapshot.takeIf { it.isNotEmpty() },
+                    auraDurationMinutes = auraDurationSnapshot
                 )
+
+                // Timestamped pain points (wholesale insert for the new attack)
+                runCatching {
+                    db.replacePainPoints(accessToken, migraine.id, painEntriesSnapshot.flatMap { entry ->
+                        entry.locations.map { loc ->
+                            SupabaseDbService.PainPointInsert(
+                                migraineId = migraine.id,
+                                locationId = loc,
+                                severity = entry.severity,
+                                startAt = entry.startAtIso ?: migraineStart
+                            )
+                        }
+                    })
+                }.onFailure { println("DEBUG addFull: pain points FAILED: ${it.message}") }
+
+                // Timestamped aura zones, same rule: an entry with no time
+                // falls back to the attack start rather than inventing one.
+                runCatching {
+                    db.replaceAuraZones(accessToken, migraine.id, auraEntriesSnapshot.flatMap { entry ->
+                        entry.zones.map { zone ->
+                            SupabaseDbService.AuraZoneInsert(
+                                migraineId = migraine.id,
+                                zone = zone,
+                                startAt = entry.startAtIso ?: migraineStart,
+                                durationMinutes = entry.durationMinutes
+                            )
+                        }
+                    })
+                }.onFailure { println("DEBUG addFull: aura zones FAILED: ${it.message}") }
+
+                // Symptom severity — updates the rows the sync trigger just
+                // created off `migraines.type`.
+                for (label in symptomKeysToWrite) {
+                    runCatching {
+                        db.setSymptomDetail(accessToken, migraine.id, label,
+                            symptomSeveritiesSnapshot[label], symptomTimesSnapshot[label])
+                    }.onFailure { println("DEBUG addFull: symptom detail '$label' FAILED: ${it.message}") }
+                }
 
                 // Auto-detected triggers/prodromes are pre-selected in the UI and already
                 // included in the draft snapshots below – no separate linking needed.
@@ -600,7 +930,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 for (r in rels.filter { it.type.isNotBlank() }) {
                     try {
                         val rStart = r.startAtIso ?: migraineStart
-                        db.insertRelief(
+                        val row = db.insertRelief(
                             accessToken = accessToken,
                             migraineId = migraine.id,
                             type = r.type,
@@ -611,6 +941,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             sideEffectScale = r.sideEffectScale,
                             sideEffectNotes = r.sideEffectNotes
                         )
+                        if (r.reliefScale == null || r.reliefScale == "NONE") {
+                            DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, r.type)
+                        }
                     } catch (e: Exception) { e.printStackTrace() }
                 }
 

@@ -72,9 +72,14 @@ fun PostdromesScreen(
         )
     }
 
+    // Wizard search — live-filters the symptom grid below
+    var wizardSearch by remember { mutableStateOf("") }
+    val searchItems = if (wizardSearch.isBlank()) postdromeItems
+        else postdromeItems.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+
     val frequentLabels = postdromeItems.filter { it.id in favoriteIds }.map { it.label }.toSet()
-    val frequent = postdromeItems.filter { it.label in frequentLabels }
-    val rest = postdromeItems.filter { it.label !in frequentLabels }
+    val frequent = searchItems.filter { it.label in frequentLabels }
+    val rest = searchItems.filter { it.label !in frequentLabels }
     val accent = Color(0xFFCE93D8)
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -103,6 +108,8 @@ fun PostdromesScreen(
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center)
             }
+
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.MISSED_ACTIVITIES) })
 
             // Selected summary
             val selectedPostdromes = selectedSymptoms.filter { sym -> postdromeItems.any { it.label == sym } }
@@ -133,6 +140,8 @@ fun PostdromesScreen(
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_SYMPTOMS) })
                 }
             }
+
+            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = accent)
 
             BaseCard {
                 Text("Recovery symptoms", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))

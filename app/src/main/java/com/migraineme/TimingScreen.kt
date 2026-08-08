@@ -123,7 +123,6 @@ fun TimingScreen(
                             beganAtIso = nowIso,
                             endedAtIso = null,
                             note = null,
-                            painLocations = emptyList(),
                             meds = emptyList(),
                             rels = emptyList()
                         )
@@ -186,6 +185,8 @@ fun TimingScreen(
                     textAlign = TextAlign.Center
                 )
             }
+
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.PAINT_PICTURE) })
 
             // Start time
             BaseCard {

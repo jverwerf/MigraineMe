@@ -31,13 +31,27 @@ data class AiMatchItemV2(
     val sideEffectNotes: String? = null
 )
 
+/** One timestamped pain moment extracted from the narrative (labels, not ids —
+ *  converted at apply time like painLocations). */
+data class AiPainEntry(
+    val startAtIso: String? = null,   // null = attack start
+    val severity: Int = 5,
+    val locationLabels: List<String> = emptyList()
+)
+
 data class AiLogParseResultV2(
     val severity: AiParsedField<Int>? = null,
     val beganAtIso: AiParsedField<String>? = null,
     val endedAtIso: AiParsedField<String>? = null,
     val painLocations: List<AiParsedField<String>> = emptyList(),
     val symptoms: List<AiParsedField<String>> = emptyList(),
-    val matches: List<AiMatchItemV2> = emptyList()
+    val matches: List<AiMatchItemV2> = emptyList(),
+    /** Visual-field zone ids, only present when the narrative described an aura. */
+    val auraLocations: List<String> = emptyList(),
+    val auraDurationMinutes: Int? = null,
+    /** Only present when the narrative described the pain at more than one
+     *  moment (moving / peaking); painLocations still holds the union. */
+    val painEntries: List<AiPainEntry> = emptyList()
 )
 
 // ═════════════════════════════════════════════════════════════════════
@@ -609,6 +623,38 @@ Extract everything you can. JSON object only.
         }
     }
 
+    // Parse pain entries (timestamped timeline, optional)
+    val painEntries = mutableListOf<AiPainEntry>()
+    obj.optJSONArray("pain_entries")?.let { arr ->
+        for (i in 0 until arr.length()) {
+            val e = arr.optJSONObject(i) ?: continue
+            val locs = mutableListOf<String>()
+            e.optJSONArray("locations")?.let { la ->
+                for (j in 0 until la.length()) {
+                    val l = la.optString(j)
+                    if (l in painLocationOptions) locs.add(l)
+                }
+            }
+            if (locs.isEmpty()) continue
+            val sev = e.optInt("severity", 5).coerceIn(1, 10)
+            val start = e.optString("start_at", "").takeIf { it.isNotBlank() && it != "null" }
+            painEntries.add(AiPainEntry(start, sev, locs))
+        }
+    }
+
+    // Parse aura — zone ids are validated against the canonical set so a
+    // hallucinated id can never reach the database.
+    val auraZones = mutableListOf<String>()
+    obj.optJSONArray("aura_locations")?.let { arr ->
+        for (i in 0 until arr.length()) {
+            val z = arr.optString(i)
+            if (z.isNotBlank() && AuraZones.ALL_LABELS.containsKey(z)) auraZones.add(z)
+        }
+    }
+    val auraMinutes = if (obj.has("aura_duration_minutes") && !obj.isNull("aura_duration_minutes")) {
+        obj.optInt("aura_duration_minutes", 0).takeIf { it > 0 }
+    } else null
+
     // Parse symptoms
     val syms = mutableListOf<AiParsedField<String>>()
     val symArr = obj.optJSONArray("symptoms")
@@ -640,7 +686,9 @@ Extract everything you can. JSON object only.
                 val endAt = item.optString("end_at", "").takeIf { it.isNotBlank() && it != "null" }
                 val amount = item.optString("amount", "").takeIf { it.isNotBlank() && it != "null" }
                 val reliefScale = item.optString("relief_scale", "").takeIf { it.isNotBlank() && it != "null" }
+                    ?.let { normalizeReliefScale(it) }
                 val sideEffectScale = item.optString("side_effect_scale", "").takeIf { it.isNotBlank() && it != "null" }
+                    ?.let { normalizeSideEffectScale(it) }
                 val sideEffectNotes = item.optString("side_effect_notes", "").takeIf { it.isNotBlank() && it != "null" }
                 matches.add(AiMatchItemV2(
                     label = label, category = cat, inferred = inf,
@@ -655,7 +703,7 @@ Extract everything you can. JSON object only.
         }
     }
 
-    return AiLogParseResultV2(severity, beganAt, endedAt, painLocs, syms, matches)
+    return AiLogParseResultV2(severity, beganAt, endedAt, painLocs, syms, matches, auraZones, auraMinutes, painEntries)
 }
 
 // ═════════════════════════════════════════════════════════════════════
@@ -712,7 +760,13 @@ internal fun mergeResults(
         endedAtIso = endedAt,
         painLocations = painLocs,
         symptoms = symptoms,
-        matches = allMatches.values.toList()
+        matches = allMatches.values.toList(),
+        // Aura and pain entries only ever come from the model — the
+        // deterministic pass has no notion of visual-field position or
+        // pain timeline.
+        auraLocations = gpt.auraLocations,
+        auraDurationMinutes = gpt.auraDurationMinutes,
+        painEntries = gpt.painEntries
     )
 }
 
@@ -770,6 +824,15 @@ data class CheckInTreatmentSideEffectItem(
     val labels: List<String> = emptyList(),
     val freeText: String? = null,
 )
+/** During-attack symptom noticed today (open-migraine check-in only). */
+data class CheckInSymptomItem(val label: String, val inferred: Boolean = false)
+/** A "pain update" moment for the open migraine. Locations are the human
+ *  labels ("Left Temple") — the check-in screen maps them to head-map ids. */
+data class CheckInPainNow(
+    val locations: List<String>,
+    val severity: Int = 5,
+    val startAtIso: String? = null,
+)
 data class CheckInParseResult(
     val triggers: List<CheckInTriggerItem> = emptyList(),
     val prodromes: List<CheckInProdromeItem> = emptyList(),
@@ -778,6 +841,14 @@ data class CheckInParseResult(
     val activities: List<CheckInActivityItem> = emptyList(),
     val postdrome: List<CheckInPostdromeItem> = emptyList(),
     val treatmentSideEffects: List<CheckInTreatmentSideEffectItem> = emptyList(),
+    // Open-migraine extras — only populated when the check-in has an open
+    // migraine to attach them to.
+    val symptomsNow: List<CheckInSymptomItem> = emptyList(),
+    val painNow: CheckInPainNow? = null,
+    val auraZones: List<String> = emptyList(),
+    val auraDurationMinutes: Int? = null,
+    /** Non-null when the note says the migraine is over; ISO end time. */
+    val migraineEndedAtIso: String? = null,
 )
 
 // ═════════════════════════════════════════════════════════════════════
@@ -790,7 +861,11 @@ internal fun deterministicParseCheckIn(
     prodromePool: List<String>,
     medicinePool: List<String>,
     reliefPool: List<String>,
-    activityPool: List<String> = emptyList()
+    activityPool: List<String> = emptyList(),
+    // Open-migraine extras: pools for the "How's the migraine now?" page.
+    // Left empty when there is no open migraine so nothing gets extracted.
+    symptomPool: List<String> = emptyList(),
+    painLocationLabels: List<String> = emptyList(),
 ): CheckInParseResult {
     val lower = text.lowercase().trim()
 
@@ -849,7 +924,35 @@ internal fun deterministicParseCheckIn(
         }
     }
 
-    return CheckInParseResult(triggers, prodromes, medicines, reliefs, activities)
+    // ── Open-migraine extras ────────────────────────────────────
+    // During-attack symptoms ("still nauseous", "throbbing got worse")
+    val symptomsNow = if (symptomPool.isNotEmpty())
+        parseSymptoms(lower, symptomPool).map { CheckInSymptomItem(it.value, it.inferred) }
+    else emptyList()
+
+    // Pain update: mentioned locations + severity → one pain moment. Kept as
+    // human labels; the check-in screen maps them to head-map ids at apply
+    // time (same convention as the wizard's painLocations flow).
+    val painNow = if (painLocationLabels.isNotEmpty()) {
+        val locs = parsePainLocations(lower, painLocationLabels).map { it.value }
+        if (locs.isEmpty()) null else CheckInPainNow(
+            locations = locs,
+            severity = parseSeverity(lower)?.value ?: 5,
+            startAtIso = null,
+        )
+    } else null
+
+    // "it's gone now" / "ended at 5pm" → end the open migraine
+    val endedAt = if (symptomPool.isNotEmpty() || painLocationLabels.isNotEmpty())
+        parseEndedAt(lower)?.value
+    else null
+
+    return CheckInParseResult(
+        triggers, prodromes, medicines, reliefs, activities,
+        symptomsNow = symptomsNow,
+        painNow = painNow,
+        migraineEndedAtIso = endedAt,
+    )
 }
 
 // ── Infer time for a specific item from surrounding context ──────
@@ -949,6 +1052,25 @@ private fun inferMedicineAmount(text: String, label: String): String? {
     return null
 }
 
+// ── Scale normalization ─────────────────────────────────────────
+// DB CHECK constraints accept relief_scale NONE/LOW/MILD/HIGH and (by
+// convention) side_effect_scale NONE/SOFT/MODERATE/SEVERE. Model output is
+// clamped here so an off-vocabulary value can never poison an insert — an
+// invalid relief_scale rejects the whole row server-side.
+
+internal fun normalizeReliefScale(raw: String): String? = when (raw.uppercase()) {
+    "NONE", "LOW", "MILD", "HIGH" -> raw.uppercase()
+    "MODERATE", "MEDIUM", "SOME" -> "MILD"
+    else -> null
+}
+
+internal fun normalizeSideEffectScale(raw: String): String? = when (raw.uppercase()) {
+    "NONE", "SOFT", "MODERATE", "SEVERE" -> raw.uppercase()
+    "LOW", "MILD" -> "SOFT"
+    "HIGH" -> "SEVERE"
+    else -> null
+}
+
 // ── Infer relief scale ──────────────────────────────────────────
 
 private fun inferReliefScale(text: String, label: String): String? {
@@ -965,8 +1087,8 @@ private fun inferReliefScale(text: String, label: String): String? {
 
     return when {
         highRelief.any { nearby.contains(it) } -> "HIGH"
-        someRelief.any { nearby.contains(it) } -> "MODERATE"
-        noRelief.any { nearby.contains(it) } -> "LOW"
+        someRelief.any { nearby.contains(it) } -> "MILD"
+        noRelief.any { nearby.contains(it) } -> "NONE"
         else -> null
     }
 }
@@ -984,7 +1106,7 @@ private fun inferSideEffects(text: String, label: String): Pair<String?, String?
 
     if (sideEffectKeywords.any { nearby.contains(it) }) {
         val severeWords = listOf("terrible", "awful", "really bad", "horrible", "severe", "worst")
-        val scale = if (severeWords.any { nearby.contains(it) }) "HIGH" else "MODERATE"
+        val scale = if (severeWords.any { nearby.contains(it) }) "SEVERE" else "MODERATE"
         // Try to capture what the side effect was
         val noteWords = listOf("drowsy", "sleepy", "dizzy", "nauseous", "stomach", "tired", "foggy", "jittery", "anxious")
         val notes = noteWords.filter { nearby.contains(it) }.joinToString(", ")
@@ -1005,7 +1127,15 @@ internal suspend fun callGptForCheckInParse(
     prodromes: List<String>,
     medicines: List<String>,
     reliefs: List<String>,
-    deterministicResult: CheckInParseResult
+    deterministicResult: CheckInParseResult,
+    activities: List<String> = emptyList(),
+    postdromePool: List<String> = emptyList(),
+    regimenNames: List<String> = emptyList(),
+    // Open-migraine extras — empty/null when no migraine is open, which
+    // also tells the model not to extract them.
+    symptomPool: List<String> = emptyList(),
+    painLocationLabels: List<String> = emptyList(),
+    openMigraineStartIso: String? = null,
 ): CheckInParseResult {
 
     val alreadyFound = buildString {
@@ -1019,16 +1149,26 @@ internal suspend fun callGptForCheckInParse(
 
     // System prompt lives server-side under context_type "log_parser_evening".
     // user_message carries all dynamic data: user text, parser results, pools.
+    val openMigraineBlock = if (openMigraineStartIso != null) """
+OPEN MIGRAINE: yes, started $openMigraineStartIso
+SYMPTOM pool: ${symptomPool.joinToString(", ")}
+PAIN LOCATION options: ${painLocationLabels.joinToString(", ")}
+AURA ZONE ids: ${AuraZones.ALL_LABELS.keys.joinToString(", ")}
+""" else "OPEN MIGRAINE: no\n"
+
     val userMessage = """
 User said: "$noteText"
 
 Already found by deterministic parser: $alreadyFound
 Today's date: $today
-
+$openMigraineBlock
 TRIGGER pool: ${triggers.joinToString(", ")}
 PRODROME pool: ${prodromes.joinToString(", ")}
 MEDICINE pool: ${medicines.joinToString(", ")}
 RELIEF pool: ${reliefs.joinToString(", ")}
+ACTIVITY pool: ${activities.joinToString(", ")}
+POSTDROME pool: ${postdromePool.joinToString(", ")}
+ACTIVE TREATMENT regimens: ${regimenNames.joinToString(", ")}
 
 Extract everything. JSON only.
 """.trimIndent()
@@ -1061,14 +1201,17 @@ Extract everything. JSON only.
 
     val allPools = mapOf(
         "trigger" to triggers, "prodrome" to prodromes,
-        "medicine" to medicines, "relief" to reliefs
+        "medicine" to medicines, "relief" to reliefs,
+        "activity" to activities
     )
 
     val resTriggers = mutableListOf<CheckInTriggerItem>()
     val resProdromes = mutableListOf<CheckInProdromeItem>()
     val resMedicines = mutableListOf<CheckInMedicineItem>()
     val resReliefs = mutableListOf<CheckInReliefItem>()
+    val resActivities = mutableListOf<CheckInActivityItem>()
     val resPostdromes = mutableListOf<CheckInPostdromeItem>()
+    val resSymptomsNow = mutableListOf<CheckInSymptomItem>()
     // Group treatment side-effect rows by regimen_name so callers can pre-fill
     // each per-regimen page (and we can also write the free-form notes).
     val seByRegimen = mutableMapOf<String, MutableList<String>>()
@@ -1082,14 +1225,20 @@ Extract everything. JSON only.
             val inf = item.optBoolean("inferred", true)
             val startAt = item.optString("start_at", "").takeIf { it.isNotBlank() && it != "null" }
             val amount = item.optString("amount", "").takeIf { it.isNotBlank() && it != "null" }
-            val reliefScale = item.optString("relief_scale", "NONE").takeIf { it.isNotBlank() && it != "null" } ?: "NONE"
-            val sideEffectScale = item.optString("side_effect_scale", "NONE").takeIf { it.isNotBlank() && it != "null" } ?: "NONE"
+            val reliefScale = item.optString("relief_scale", "NONE").takeIf { it.isNotBlank() && it != "null" }
+                ?.let { normalizeReliefScale(it) } ?: "NONE"
+            val sideEffectScale = item.optString("side_effect_scale", "NONE").takeIf { it.isNotBlank() && it != "null" }
+                ?.let { normalizeSideEffectScale(it) } ?: "NONE"
             val sideEffectNotes = item.optString("side_effect_notes", "").takeIf { it.isNotBlank() && it != "null" }
 
             // Postdrome + treatment_side_effect don't gate on the trigger/relief
             // pools — they have their own pools the client already knows about.
             if (cat == "postdrome") {
-                resPostdromes.add(CheckInPostdromeItem(label, inf))
+                if (postdromePool.isEmpty() || label in postdromePool) resPostdromes.add(CheckInPostdromeItem(label, inf))
+                continue
+            }
+            if (cat == "symptom") {
+                if (label in symptomPool) resSymptomsNow.add(CheckInSymptomItem(label, inf))
                 continue
             }
             if (cat == "treatment_side_effect") {
@@ -1110,7 +1259,48 @@ Extract everything. JSON only.
                 "prodrome" -> resProdromes.add(CheckInProdromeItem(label, startAt, null, inf))
                 "medicine" -> resMedicines.add(CheckInMedicineItem(label, amount, startAt, null, reliefScale, sideEffectScale, sideEffectNotes, inf))
                 "relief" -> resReliefs.add(CheckInReliefItem(label, startAt, null, null, reliefScale, sideEffectScale, sideEffectNotes, inf))
+                "activity" -> resActivities.add(CheckInActivityItem(label, startAt, null, null, inf))
             }
+        }
+    }
+
+    // ── Open-migraine extras (only parsed when a migraine is open) ──
+    var resPainNow: CheckInPainNow? = null
+    var resAuraZones = emptyList<String>()
+    var resAuraDuration: Int? = null
+    var resEndedAt: String? = null
+    if (openMigraineStartIso != null) {
+        obj.optJSONObject("pain_now")?.let { p ->
+            val locs = mutableListOf<String>()
+            p.optJSONArray("locations")?.let { la ->
+                for (j in 0 until la.length()) {
+                    val l = la.optString(j)
+                    if (l in painLocationLabels) locs.add(l)
+                }
+            }
+            if (locs.isNotEmpty()) {
+                resPainNow = CheckInPainNow(
+                    locations = locs,
+                    severity = p.optInt("severity", 5).coerceIn(1, 10),
+                    startAtIso = p.optString("start_at", "").takeIf { it.isNotBlank() && it != "null" },
+                )
+            }
+        }
+        // Aura zone ids validated against the canonical set — a hallucinated
+        // id can never reach the database.
+        val zones = mutableListOf<String>()
+        obj.optJSONArray("aura_locations")?.let { arr2 ->
+            for (j in 0 until arr2.length()) {
+                val z = arr2.optString(j)
+                if (z.isNotBlank() && AuraZones.ALL_LABELS.containsKey(z)) zones.add(z)
+            }
+        }
+        resAuraZones = zones
+        resAuraDuration = if (obj.has("aura_duration_minutes") && !obj.isNull("aura_duration_minutes"))
+            obj.optInt("aura_duration_minutes", 0).takeIf { it > 0 } else null
+        if (obj.optBoolean("migraine_ended", false)) {
+            resEndedAt = obj.optString("migraine_ended_at", "").takeIf { it.isNotBlank() && it != "null" }
+                ?: OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         }
     }
 
@@ -1127,9 +1317,14 @@ Extract everything. JSON only.
         prodromes = resProdromes,
         medicines = resMedicines,
         reliefs = resReliefs,
-        activities = emptyList(),
+        activities = resActivities,
         postdrome = resPostdromes,
         treatmentSideEffects = resSideEffects,
+        symptomsNow = resSymptomsNow,
+        painNow = resPainNow,
+        auraZones = resAuraZones,
+        auraDurationMinutes = resAuraDuration,
+        migraineEndedAtIso = resEndedAt,
     )
 }
 
@@ -1223,7 +1418,29 @@ internal fun mergeCheckInResults(
         )}
     )
 
-    return CheckInParseResult(triggers, prodromes, medicines, reliefItems, activityItems)
+    // Postdrome, treatment side effects and the open-migraine extras only ever
+    // come from the GPT pass (with deterministic fallbacks for symptoms/pain/
+    // ended) — dropping them here was a bug that silently killed the voice
+    // pre-fill on those pages.
+    val symptomsNow = run {
+        val map = mutableMapOf<String, CheckInSymptomItem>()
+        for (s in deterministic.symptomsNow) map[s.label] = s
+        for (s in gpt.symptomsNow) {
+            val ex = map[s.label]
+            if (ex == null || (ex.inferred && !s.inferred)) map[s.label] = s
+        }
+        map.values.toList()
+    }
+    return CheckInParseResult(
+        triggers, prodromes, medicines, reliefItems, activityItems,
+        postdrome = gpt.postdrome,
+        treatmentSideEffects = gpt.treatmentSideEffects,
+        symptomsNow = symptomsNow,
+        painNow = gpt.painNow ?: deterministic.painNow,
+        auraZones = gpt.auraZones,
+        auraDurationMinutes = gpt.auraDurationMinutes,
+        migraineEndedAtIso = gpt.migraineEndedAtIso ?: deterministic.migraineEndedAtIso,
+    )
 }
 
 private fun <T> pickBest(a: AiParsedField<T>?, b: AiParsedField<T>?): AiParsedField<T>? {

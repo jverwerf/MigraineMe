@@ -1,14 +1,18 @@
 package com.migraineme
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,8 +27,11 @@ fun InsightsTreatmentsScreen(
     vm: InsightsViewModel = viewModel()
 ) {
     val correlationStats by vm.correlationStats.collectAsState()
+    val medicineCategories by vm.medicineCategories.collectAsState()
+    val reliefIconKeys by vm.reliefIconKeys.collectAsState()
     val correlationsLoading by vm.correlationsLoading.collectAsState()
     val symptomSegments by vm.symptomSegments.collectAsState()
+    val treatmentTiming by vm.treatmentTiming.collectAsState()
 
     // Treatments use self-reported relief — relax p-value filter, only require lift > 1.2
     val treatmentCorrelations = remember(correlationStats) {
@@ -53,10 +60,17 @@ fun InsightsTreatmentsScreen(
             }
 
             if (treatmentCorrelations.isNotEmpty() || treatmentInteractionCorrelations.isNotEmpty()) {
-                TreatmentEffectivenessCard(treatmentCorrelations, treatmentInteractionCorrelations)
+                TreatmentEffectivenessCard(treatmentCorrelations, treatmentInteractionCorrelations,
+                    medicineCategories = medicineCategories, reliefIconKeys = reliefIconKeys,
+                    watermarkOnLast = symptomSegments.isEmpty())
             }
 
             // Per-treatment symptom segment comparison (Phase 2c)
+            // Timing: does treating earlier lower the peak?
+            if (treatmentTiming.isNotEmpty()) {
+                TreatmentTimingCard(treatmentTiming)
+            }
+
             if (symptomSegments.isNotEmpty()) {
                 TreatmentSymptomSegmentCard(symptomSegments)
             }
@@ -92,31 +106,51 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
         v < 2.5f -> "mild"
         else      -> "high"
     }
-    BaseCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawShieldCheck(Color(0xFF4FC3F7)) } }
-            Spacer(Modifier.width(8.dp))
-            Column {
+    val tileShape = RoundedCornerShape(18.dp)
+    var sortMode by remember { mutableStateOf("Strongest effect") }
+    val sortedGroups = remember(grouped, sortMode) {
+        when (sortMode) {
+            "A to Z" -> grouped.sortedBy { it.first.lowercase() }
+            "Newest" -> grouped.sortedByDescending { it.second.maxOfOrNull { s -> s.updatedAt } ?: "" }
+            "Oldest" -> grouped.sortedBy { it.second.minOfOrNull { s -> s.updatedAt } ?: "" }
+            else -> grouped
+        }
+    }
+    BrainyWatermarkCard(resId = R.drawable.brainy_shield, flipWatermark = true) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
                 Text("Works Best When…", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Text("How relief changes depending on which symptoms are present",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
+            SortChipMenu(sortMode, listOf("Strongest effect", "A to Z", "Newest", "Oldest")) { sortMode = it }
         }
-        Spacer(Modifier.height(8.dp))
-        grouped.take(6).forEach { (med, list) ->
-            Column(Modifier.padding(vertical = 4.dp)) {
-                Text(med, color = Color.White,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+        Spacer(Modifier.height(6.dp))
+        sortedGroups.take(6).forEach { (med, list) ->
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(tileShape)
+                    .background(Color.White.copy(alpha = 0.035f))
+                    .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
+                    .padding(horizontal = 16.dp, vertical = 13.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyRowIcon(med, size = 20.dp)
+                    Text(med, color = Color(0xFFF3EAFB),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                }
                 list.take(4).forEach { stat ->
                     val withRelief = stat.pctMigraineWindows
                     val withoutRelief = stat.pctControlWindows
                     val lift = stat.liftRatio
                     val direction = if (lift > 1.1f) "better" else if (lift < 0.9f) "worse" else "similar"
-                    val color = if (lift > 1.1f) Color(0xFF81C784) else if (lift < 0.9f) Color(0xFFE57373) else Color(0xFFCFCFCF)
-                    Column(Modifier.padding(top = 2.dp)) {
+                    val color = if (lift > 1.1f) Color(0xFF9CCB9E) else if (lift < 0.9f) Color(0xFFE8A0A0) else Color(0xFF9D8BB3)
+                    Column(Modifier.padding(top = 7.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(prettyLabel(stat.symptomSegment), color = Color.White,
+                            BrainyRowIcon(stat.symptomSegment, size = 16.dp, gap = 5.dp)
+                            Text(prettyLabel(stat.symptomSegment), color = Color(0xFFDDD2EA),
                                 style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.weight(1f))
                             Text(direction, color = color,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
@@ -127,6 +161,96 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
                     }
                 }
             }
+            Spacer(Modifier.height(6.dp))
         }
+        Text("Relief levels come from what you logged after using the treatment.",
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+
+// ── Treatment timing card (early vs late) ──────────────────────
+/**
+ * Every row shown has already passed the engine's gate (>=3 attacks a side,
+ * >=1.5 point gap), so this view never decides what is worth saying.
+ *
+ * Copy stays "in your logged attacks", never causal: people treat bad attacks
+ * differently, so this is a correlation, not proof that treating early helps.
+ */
+@Composable
+fun TreatmentTimingCard(rows: List<EdgeFunctionsService.TreatmentTimingStat>) {
+    fun cutoffText(minutes: Int): String {
+        if (minutes < 90) return "$minutes min"
+        val hours = minutes / 60.0
+        if (hours >= 10) return "${Math.round(hours)}h"
+        val oneDecimal = String.format("%.1f", hours)
+        return if (oneDecimal.endsWith(".0")) "${oneDecimal.dropLast(2)}h" else "${oneDecimal}h"
+    }
+
+    BaseCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Timing",
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+
+        rows.forEach { row ->
+            val earlierIsBetter = row.earlyAvgPeak < row.lateAvgPeak
+            Text(
+                row.treatmentName,
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                TimingBucket("Within ${cutoffText(row.cutoffMinutes)}", row.earlyAvgPeak, row.earlyCount, earlierIsBetter, Modifier.weight(1f))
+                TimingBucket("Later", row.lateAvgPeak, row.lateCount, !earlierIsBetter, Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                if (earlierIsBetter)
+                    "In your logged attacks, taking ${row.treatmentName} sooner went with a lower peak."
+                else
+                    "In your logged attacks, the earlier doses went with a higher peak — often a sign the worst attacks get treated fastest.",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.height(10.dp))
+        }
+
+        Text(
+            "Based on attacks where you set a time for the dose.",
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
+}
+
+@Composable
+private fun TimingBucket(title: String, peak: Float, count: Int, highlight: Boolean, modifier: Modifier = Modifier) {
+    val good = Color(0xFF81C784)
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (highlight) good.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.05f))
+            .padding(vertical = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(title, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(
+            String.format("%.1f", peak),
+            color = if (highlight) good else Color.White.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+        )
+        Text("avg peak", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(
+            "$count attack${if (count == 1) "" else "s"}",
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
+            style = MaterialTheme.typography.labelSmall
+        )
     }
 }

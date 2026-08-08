@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +52,7 @@ import java.time.format.DateTimeFormatter
 private sealed class CheckInPage {
     data object Note : CheckInPage()
     data object Calendar : CheckInPage()
+    data object MigraineNow : CheckInPage()
     data object Postdrome : CheckInPage()
     data object Triggers : CheckInPage()
     data object Prodromes : CheckInPage()
@@ -168,6 +170,16 @@ fun EveningCheckInScreen(
     // Postdrome page — labels selected by the user. Saved on review as
     // `symptoms` rows tied to `openMigraine.id`.
     val selectedPostdromes = remember { mutableStateListOf<String>() }
+    // "How's the migraine now?" page — updates applied to the open migraine.
+    // Symptoms are appended to `migraines.type` (the source of truth the DB
+    // sync trigger reads), pain/aura become new timestamped child rows, and
+    // a non-null end time closes the attack.
+    val selectedNowSymptoms = remember { mutableStateListOf<String>() }
+    val painNowLocations = remember { mutableStateListOf<String>() }  // head-map ids
+    var painNowSeverity by remember { mutableStateOf(5) }
+    val auraNowZones = remember { mutableStateListOf<String>() }
+    var auraNowDurationMin by remember { mutableStateOf<Int?>(null) }
+    var migraineEndedAtIso by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(authState.accessToken) {
         val token = authState.accessToken ?: return@LaunchedEffect
         try {
@@ -292,6 +304,12 @@ fun EveningCheckInScreen(
         activityPool.map { SelectableItem(it.label, it.iconKey, false, it.category) }
     }
 
+    // Symptom pools, hoisted so the note parser can match against them too.
+    val accompanyingSymptomPool by symptomVm.accompanying.collectAsState()
+    val postdromeSymptomPool by symptomVm.postdrome.collectAsState()
+    val painLocationLabels = remember { (FRONT_PAIN_POINTS + BACK_PAIN_POINTS).map { it.label }.distinct() }
+    val painLabelToId = remember { (FRONT_PAIN_POINTS + BACK_PAIN_POINTS).associate { it.label.lowercase() to it.id } }
+
     fun runAiParse() {
         if (noteText.isBlank()) { aiParsed = true; return }
         aiLoading = true
@@ -305,7 +323,9 @@ fun EveningCheckInScreen(
                         prodromePool.map { it.label },
                         medicinePool.map { it.label },
                         reliefPool.map { it.label },
-                        activityPool.map { it.label }
+                        activityPool.map { it.label },
+                        symptomPool = if (openMigraine != null) accompanyingSymptomPool.map { it.label } else emptyList(),
+                        painLocationLabels = if (openMigraine != null) painLocationLabels else emptyList()
                     )
                 }
 
@@ -320,7 +340,13 @@ fun EveningCheckInScreen(
                                 prodromePool.map { it.label },
                                 medicinePool.map { it.label },
                                 reliefPool.map { it.label },
-                                deterResult
+                                deterResult,
+                                activities = activityPool.map { it.label },
+                                postdromePool = postdromeSymptomPool.map { it.label },
+                                regimenNames = activeRegimens.map { it.name },
+                                symptomPool = if (openMigraine != null) accompanyingSymptomPool.map { it.label } else emptyList(),
+                                painLocationLabels = if (openMigraine != null) painLocationLabels else emptyList(),
+                                openMigraineStartIso = openMigraine?.startAt
                             )
                         }
                     } catch (e: Exception) {
@@ -358,7 +384,9 @@ fun EveningCheckInScreen(
                     prodromePool.map { it.label },
                     medicinePool.map { it.label },
                     reliefPool.map { it.label },
-                    activityPool.map { it.label }
+                    activityPool.map { it.label },
+                    symptomPool = if (openMigraine != null) accompanyingSymptomPool.map { it.label } else emptyList(),
+                    painLocationLabels = if (openMigraine != null) painLocationLabels else emptyList()
                 )
                 aiParseResult = deterResult
                 deterResult.triggers.forEach { t -> if (!isTriggerSelected(t.label)) selectedTriggers.add(t) }
@@ -444,6 +472,63 @@ fun EveningCheckInScreen(
                             runCatching { db.insertMigraineSymptom(token, mid, label) }
                         }
                     }
+                    // "How's the migraine now?" — apply updates to the open migraine.
+                    if (mid != null) {
+                        // Pain update: APPEND a timestamped moment (the wizard's
+                        // replace path would wipe the attack-start entries).
+                        if (painNowLocations.isNotEmpty()) {
+                            runCatching {
+                                db.insertPainPoints(token, painNowLocations.map { loc ->
+                                    SupabaseDbService.PainPointInsert(
+                                        migraineId = mid, locationId = loc,
+                                        severity = painNowSeverity, startAt = now
+                                    )
+                                })
+                            }
+                        }
+                        // Aura moment: append child rows; parent mirrors updated below.
+                        if (auraNowZones.isNotEmpty()) {
+                            runCatching {
+                                db.insertAuraZones(token, auraNowZones.map { zone ->
+                                    SupabaseDbService.AuraZoneInsert(
+                                        migraineId = mid, zone = zone,
+                                        startAt = now, durationMinutes = auraNowDurationMin
+                                    )
+                                })
+                            }
+                        }
+                        // One parent update carrying everything that changed:
+                        // symptoms appended to `type` (the sync trigger turns
+                        // them into rows that survive later edits), the
+                        // pain/aura mirror columns, and the end time.
+                        val existingTypes = openMigraine?.type
+                            ?.split(", ")?.map { it.trim() }
+                            ?.filter { it.isNotBlank() && it != "Migraine" } ?: emptyList()
+                        val newSymptoms = selectedNowSymptoms.filter { s -> existingTypes.none { it.equals(s, ignoreCase = true) } }
+                        val newType = if (newSymptoms.isNotEmpty()) (existingTypes + newSymptoms).joinToString(", ") else null
+                        val painUnion = if (painNowLocations.isNotEmpty())
+                            ((openMigraine?.painLocations ?: emptyList()) + painNowLocations).distinct()
+                        else null
+                        val auraUnion = if (auraNowZones.isNotEmpty())
+                            ((openMigraine?.auraLocations ?: emptyList()) + auraNowZones).distinct()
+                        else null
+                        val auraTotal = if (auraNowZones.isNotEmpty())
+                            ((openMigraine?.auraDurationMinutes ?: 0) + (auraNowDurationMin ?: 0)).takeIf { it > 0 }
+                        else null
+                        if (newType != null || painUnion != null || auraUnion != null || migraineEndedAtIso != null) {
+                            runCatching {
+                                db.updateMigraine(
+                                    token, mid,
+                                    type = newType,
+                                    endAt = migraineEndedAtIso,
+                                    painLocations = painUnion,
+                                    setAura = auraUnion != null,
+                                    auraLocations = auraUnion ?: openMigraine?.auraLocations,
+                                    auraDurationMinutes = auraTotal ?: openMigraine?.auraDurationMinutes
+                                )
+                            }
+                        }
+                    }
                 }
                 saved = true
                 kotlinx.coroutines.delay(1200)
@@ -459,6 +544,7 @@ fun EveningCheckInScreen(
     val pages: List<CheckInPage> = buildList {
         add(CheckInPage.Note)
         if (CalendarService.hasReadPermission(context)) add(CheckInPage.Calendar)
+        if (openMigraine != null) add(CheckInPage.MigraineNow)
         if (openMigraine != null) add(CheckInPage.Postdrome)
         add(CheckInPage.Triggers)
         add(CheckInPage.Prodromes)
@@ -549,6 +635,10 @@ fun EveningCheckInScreen(
                             "prodrome" -> selectedProdromes.removeAll { it.label == label }
                             "medicine" -> selectedMedicines.removeAll { it.label == label }
                             "relief" -> selectedReliefs.removeAll { it.label == label }
+                            "symptom" -> selectedNowSymptoms.remove(label)
+                            "pain" -> painNowLocations.clear()
+                            "aura" -> { auraNowZones.clear(); auraNowDurationMin = null }
+                            "ended" -> migraineEndedAtIso = null
                         }
                         // The match pills are rendered from aiParseResult, so drop
                         // the item there too or the pill stays on screen after X.
@@ -558,6 +648,10 @@ fun EveningCheckInScreen(
                                 "prodrome" -> r.copy(prodromes = r.prodromes.filterNot { it.label == label })
                                 "medicine" -> r.copy(medicines = r.medicines.filterNot { it.label == label })
                                 "relief" -> r.copy(reliefs = r.reliefs.filterNot { it.label == label })
+                                "symptom" -> r.copy(symptomsNow = r.symptomsNow.filterNot { it.label == label })
+                                "pain" -> r.copy(painNow = null)
+                                "aura" -> r.copy(auraZones = emptyList(), auraDurationMinutes = null)
+                                "ended" -> r.copy(migraineEndedAtIso = null)
                                 else -> r
                             }
                         }
@@ -604,6 +698,52 @@ fun EveningCheckInScreen(
                     reliefVm = reliefVm,
                     triggerVm = triggerVm,
                 )
+                CheckInPage.MigraineNow -> {
+                    // Pre-fill from voice: symptoms, pain locations, aura and
+                    // end time the parser extracted for the open migraine.
+                    val ai = aiParseResult
+                    LaunchedEffect(ai) {
+                        ai?.symptomsNow?.forEach { s ->
+                            val poolLabel = accompanyingSymptomPool.firstOrNull { it.label.equals(s.label, ignoreCase = true) }?.label
+                            if (poolLabel != null && poolLabel !in selectedNowSymptoms) selectedNowSymptoms.add(poolLabel)
+                        }
+                        ai?.painNow?.let { p ->
+                            p.locations.mapNotNull { painLabelToId[it.lowercase()] }.forEach { id ->
+                                if (id !in painNowLocations) painNowLocations.add(id)
+                            }
+                            painNowSeverity = p.severity
+                        }
+                        ai?.auraZones?.forEach { z -> if (z !in auraNowZones) auraNowZones.add(z) }
+                        ai?.auraDurationMinutes?.let { auraNowDurationMin = it }
+                        ai?.migraineEndedAtIso?.let { migraineEndedAtIso = it }
+                    }
+                    val nowFavIds by symptomVm.favoriteIds.collectAsState()
+                    MigraineNowStep(
+                        symptomPool = accompanyingSymptomPool,
+                        favouriteIds = nowFavIds,
+                        selectedSymptoms = selectedNowSymptoms,
+                        onToggleSymptom = { l ->
+                            if (selectedNowSymptoms.contains(l)) selectedNowSymptoms.remove(l)
+                            else selectedNowSymptoms.add(l)
+                        },
+                        painLocations = painNowLocations,
+                        painSeverity = painNowSeverity,
+                        onPainSeverityChange = { painNowSeverity = it },
+                        onTogglePainLocation = { id ->
+                            if (id in painNowLocations) painNowLocations.remove(id) else painNowLocations.add(id)
+                        },
+                        auraZones = auraNowZones,
+                        auraDurationMin = auraNowDurationMin,
+                        onAuraSave = { zones, dur ->
+                            auraNowZones.clear(); auraNowZones.addAll(zones)
+                            auraNowDurationMin = dur
+                        },
+                        onAuraClear = { auraNowZones.clear(); auraNowDurationMin = null },
+                        endedAtIso = migraineEndedAtIso,
+                        onEndedChange = { migraineEndedAtIso = it },
+                        openMigraine = openMigraine
+                    )
+                }
                 CheckInPage.Postdrome -> {
                     val postdromePool by symptomVm.postdrome.collectAsState()
                     val allFavIds by symptomVm.favoriteIds.collectAsState()
@@ -683,6 +823,16 @@ fun EveningCheckInScreen(
                     selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs, selectedActivities,
                     calendarMappings.toList(),
                     aiParseResult, saving, saved,
+                    nowSymptoms = if (openMigraine != null) selectedNowSymptoms.toList() else emptyList(),
+                    painNowLocations = if (openMigraine != null) painNowLocations.toList() else emptyList(),
+                    painNowSeverity = painNowSeverity,
+                    auraNowZones = if (openMigraine != null) auraNowZones.toList() else emptyList(),
+                    auraNowDurationMin = auraNowDurationMin,
+                    endedAtIso = if (openMigraine != null) migraineEndedAtIso else null,
+                    rmNowSymptom = { label -> selectedNowSymptoms.remove(label) },
+                    rmPainNow = { painNowLocations.clear() },
+                    rmAuraNow = { auraNowZones.clear(); auraNowDurationMin = null },
+                    rmEnded = { migraineEndedAtIso = null },
                     rmTrigger = { label -> selectedTriggers.removeAll { it.label == label } },
                     rmProdrome = { label -> selectedProdromes.removeAll { it.label == label } },
                     rmMedicine = { label -> selectedMedicines.removeAll { it.label == label } },
@@ -870,7 +1020,7 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
                 favourites.forEach { item ->
-                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
+                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -894,7 +1044,7 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     grouped.getValue(cat).forEach { item ->
-                        CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
+                        CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selected, accentColor, item.label in aiMatched) { onToggle(item.label) }
                     }
                 }
             }
@@ -988,7 +1138,9 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
         Spacer(Modifier.height(12.dp))
 
         if (aiParsed && aiResult != null) {
-            val total = aiResult.triggers.size + aiResult.prodromes.size + aiResult.medicines.size + aiResult.reliefs.size
+            val total = aiResult.triggers.size + aiResult.prodromes.size + aiResult.medicines.size + aiResult.reliefs.size +
+                aiResult.symptomsNow.size + (if (aiResult.painNow != null) 1 else 0) +
+                (if (aiResult.auraZones.isNotEmpty()) 1 else 0) + (if (aiResult.migraineEndedAtIso != null) 1 else 0)
             if (total > 0) {
                 Spacer(Modifier.height(16.dp))
                 Text("Found $total match${if (total > 1) "es" else ""} — added to review:", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -1011,9 +1163,26 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
                     val detail = if (r.reliefScale != null && r.reliefScale != "NONE") "relief: ${r.reliefScale.lowercase()}" else null
                     NoteMatchPill(r.label, "relief", Color(0xFF81C784), r.inferred, r.startAtIso, detail, onRemove = { onRemoveMatch(r.label, "relief") })
                 }
+                // Open-migraine updates matched from the note
+                aiResult.symptomsNow.forEach { s ->
+                    NoteMatchPill(s.label, "symptom", Color(0xFF4DB6AC), s.inferred, null, onRemove = { onRemoveMatch(s.label, "symptom") })
+                }
+                aiResult.painNow?.let { p ->
+                    NoteMatchPill("Pain update · ${p.severity}/10", "pain", AppTheme.AccentPink, false, p.startAtIso,
+                        p.locations.joinToString(", "), onRemove = { onRemoveMatch("", "pain") })
+                }
+                if (aiResult.auraZones.isNotEmpty()) {
+                    NoteMatchPill("Aura moment", "aura", Color(0xFF9575CD), false, null,
+                        "${aiResult.auraZones.size} zone${if (aiResult.auraZones.size > 1) "s" else ""}" +
+                            (aiResult.auraDurationMinutes?.let { " · ${formatAuraDuration(it)}" } ?: ""),
+                        onRemove = { onRemoveMatch("", "aura") })
+                }
+                aiResult.migraineEndedAtIso?.let { endIso ->
+                    NoteMatchPill("Migraine ended", "ended", Color(0xFF81C784), false, endIso, onRemove = { onRemoveMatch("", "ended") })
+                }
             }
         }
-        if (aiParsed && (aiResult == null || (aiResult.triggers.isEmpty() && aiResult.prodromes.isEmpty() && aiResult.medicines.isEmpty() && aiResult.reliefs.isEmpty())) && noteText.isNotBlank()) {
+        if (aiParsed && (aiResult == null || (aiResult.triggers.isEmpty() && aiResult.prodromes.isEmpty() && aiResult.medicines.isEmpty() && aiResult.reliefs.isEmpty() && aiResult.symptomsNow.isEmpty() && aiResult.painNow == null && aiResult.auraZones.isEmpty() && aiResult.migraineEndedAtIso == null)) && noteText.isNotBlank()) {
             Spacer(Modifier.height(12.dp))
             Text("No matches found", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
@@ -1079,6 +1248,16 @@ private fun ReviewPage(
     calendarMappings: List<CalendarService.Mapping>,
     aiResult: CheckInParseResult?,
     saving: Boolean, saved: Boolean,
+    nowSymptoms: List<String> = emptyList(),
+    painNowLocations: List<String> = emptyList(),
+    painNowSeverity: Int = 5,
+    auraNowZones: List<String> = emptyList(),
+    auraNowDurationMin: Int? = null,
+    endedAtIso: String? = null,
+    rmNowSymptom: (String) -> Unit = {},
+    rmPainNow: () -> Unit = {},
+    rmAuraNow: () -> Unit = {},
+    rmEnded: () -> Unit = {},
     rmTrigger: (String) -> Unit,
     rmProdrome: (String) -> Unit,
     rmMedicine: (String) -> Unit,
@@ -1092,7 +1271,11 @@ private fun ReviewPage(
     val scrollState = rememberScrollState()
     val today = java.time.LocalDate.now().toString()
     val todayCalendar = calendarMappings.filter { (it.startAt?.take(10) ?: "") == today && it.targetType != "skip" && it.targetType != null }
-    val total = triggers.size + prodromes.size + medicines.size + reliefs.size + activities.size + todayCalendar.size
+    val migraineNowCount = nowSymptoms.size +
+        (if (painNowLocations.isNotEmpty()) 1 else 0) +
+        (if (auraNowZones.isNotEmpty()) 1 else 0) +
+        (if (endedAtIso != null) 1 else 0)
+    val total = triggers.size + prodromes.size + medicines.size + reliefs.size + activities.size + todayCalendar.size + migraineNowCount
     val aiLabels = aiResult?.let {
         (it.triggers.map { t -> t.label } + it.prodromes.map { p -> p.label } + it.medicines.map { m -> m.label } + it.reliefs.map { r -> r.label } + it.activities.map { a -> a.label }).toSet()
     } ?: emptySet()
@@ -1116,6 +1299,32 @@ private fun ReviewPage(
             Text("Nothing selected — go back to tap items, or save an empty check-in", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
 
+        if (migraineNowCount > 0) {
+            ReviewSectionHeader("Migraine update", Color(0xFF4DB6AC), migraineNowCount)
+            if (endedAtIso != null) {
+                ReviewItemRow("Migraine ended", Color(0xFF81C784), false, false,
+                    subtitle = formatTimeSubtitle(endedAtIso),
+                    onRemove = { rmEnded() }, onClick = {})
+            }
+            nowSymptoms.forEach { s ->
+                ReviewItemRow(s, Color(0xFF4DB6AC), false, false,
+                    subtitle = "new symptom",
+                    onRemove = { rmNowSymptom(s) }, onClick = {})
+            }
+            if (painNowLocations.isNotEmpty()) {
+                ReviewItemRow(
+                    "Pain update · $painNowSeverity/10", AppTheme.AccentPink, false, false,
+                    subtitle = painNowLocations.joinToString(", ") { ALL_PAIN_POINTS_MAP[it] ?: it },
+                    onRemove = { rmPainNow() }, onClick = {})
+            }
+            if (auraNowZones.isNotEmpty()) {
+                ReviewItemRow(
+                    "Aura moment", Color(0xFF9575CD), false, false,
+                    subtitle = "${auraNowZones.size} zone${if (auraNowZones.size > 1) "s" else ""}" +
+                        (auraNowDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
+                    onRemove = { rmAuraNow() }, onClick = {})
+            }
+        }
         if (triggers.isNotEmpty()) {
             ReviewSectionHeader("Triggers", Color(0xFFFFB74D), triggers.size)
             triggers.forEach { t ->
@@ -1357,9 +1566,10 @@ private fun TimeEditor(
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun ScalePicker(label: String, value: String, onChanged: (String) -> Unit, colorMap: Map<String, Color>) {
-    val options = listOf("NONE", "LOW", "MODERATE", "HIGH")
-    val labels = listOf("None", "Low", "Moderate", "High")
+private fun ScalePicker(
+    label: String, value: String, onChanged: (String) -> Unit, colorMap: Map<String, Color>,
+    options: List<String>, labels: List<String>,
+) {
     Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     Spacer(Modifier.height(4.dp))
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1380,8 +1590,15 @@ private fun ScalePicker(label: String, value: String, onChanged: (String) -> Uni
     }
 }
 
-private val reliefColorMap = mapOf("HIGH" to Color(0xFF81C784), "MODERATE" to Color(0xFFFFB74D), "LOW" to Color(0xFFEF5350), "NONE" to Color.White.copy(alpha = 0.2f))
-private val sideEffectColorMap = mapOf("HIGH" to Color(0xFFEF5350), "MODERATE" to Color(0xFFFFB74D), "LOW" to Color(0xFF81C784), "NONE" to Color.White.copy(alpha = 0.2f))
+// Value sets must match the DB CHECK constraints: relief_scale NONE/LOW/MILD/HIGH,
+// side_effect_scale NONE/SOFT/MODERATE/SEVERE — an off-set value rejects the whole row.
+private val reliefScaleOptions = listOf("NONE", "LOW", "MILD", "HIGH")
+private val reliefScaleLabels = listOf("None", "Low", "Mild", "High")
+private val sideEffectScaleOptions = listOf("NONE", "SOFT", "MODERATE", "SEVERE")
+private val sideEffectScaleLabels = listOf("None", "Soft", "Moderate", "Severe")
+
+private val reliefColorMap = mapOf("HIGH" to Color(0xFF81C784), "MILD" to Color(0xFFFFB74D), "LOW" to Color(0xFFEF5350), "NONE" to Color.White.copy(alpha = 0.2f))
+private val sideEffectColorMap = mapOf("SEVERE" to Color(0xFFEF5350), "MODERATE" to Color(0xFFFFB74D), "SOFT" to Color(0xFF81C784), "NONE" to Color.White.copy(alpha = 0.2f))
 
 // ═══════════════════════════════════════════════════════════════════
 //  Editor Header — shared by all editor pills
@@ -1462,9 +1679,9 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, onUpdate
         )
         Spacer(Modifier.height(10.dp))
 
-        ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap)
+        ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap, reliefScaleOptions, reliefScaleLabels)
         Spacer(Modifier.height(10.dp))
-        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap)
+        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap, sideEffectScaleOptions, sideEffectScaleLabels)
 
         if (sideEffectScale != "NONE") {
             Spacer(Modifier.height(10.dp))
@@ -1504,9 +1721,9 @@ private fun ReliefEditorPill(item: CheckInReliefItem, color: Color, onUpdate: (C
         TimeEditor(timeIso, color) { timeIso = it }
         Spacer(Modifier.height(10.dp))
 
-        ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap)
+        ScalePicker("How much did it help?", reliefScale, { reliefScale = it }, reliefColorMap, reliefScaleOptions, reliefScaleLabels)
         Spacer(Modifier.height(10.dp))
-        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap)
+        ScalePicker("Any side effects?", sideEffectScale, { sideEffectScale = it }, sideEffectColorMap, sideEffectScaleOptions, sideEffectScaleLabels)
 
         if (sideEffectScale != "NONE") {
             Spacer(Modifier.height(10.dp))
@@ -1546,7 +1763,8 @@ private fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolean
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)) {
         Box(contentAlignment = Alignment.Center) {
             Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(if (isAiMatched && isSelected) 2.dp else 1.5.dp, bdr, CircleShape), contentAlignment = Alignment.Center) {
-                if (icon != null) Icon(icon, label, tint = tint, modifier = Modifier.size(24.dp))
+                val brainyId = brainyForLogVector(icon) ?: brainyForLogKey(null, label)
+                if (brainyId != null || icon != null) LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = tint)
                 else Text(label.take(2).uppercase(), color = tint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
             }
             if (isAiMatched && isSelected) {
@@ -1818,6 +2036,275 @@ private fun PostdromeStep(
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  "How's the migraine now?" Page (evening check-in, open migraine only)
+// ═══════════════════════════════════════════════════════════════════
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MigraineNowStep(
+    symptomPool: List<SupabaseDbService.UserSymptomRow>,
+    favouriteIds: Set<String>,
+    selectedSymptoms: List<String>,
+    onToggleSymptom: (String) -> Unit,
+    painLocations: List<String>,
+    painSeverity: Int,
+    onPainSeverityChange: (Int) -> Unit,
+    onTogglePainLocation: (String) -> Unit,
+    auraZones: List<String>,
+    auraDurationMin: Int?,
+    onAuraSave: (List<String>, Int?) -> Unit,
+    onAuraClear: () -> Unit,
+    endedAtIso: String?,
+    onEndedChange: (String?) -> Unit,
+    openMigraine: SupabaseDbService.MigraineRow?,
+) {
+    val scrollState = rememberScrollState()
+    val accent = Color(0xFF4DB6AC)
+    val migraineLabel: String = openMigraine?.startAt?.let {
+        try {
+            val s = OffsetDateTime.parse(it)
+            "your migraine from ${s.format(DateTimeFormatter.ofPattern("E d MMM"))}"
+        } catch (_: Exception) { "your open migraine" }
+    } ?: "your open migraine"
+
+    // Symptoms already on the attack don't need re-adding.
+    val existingTypeLabels = remember(openMigraine?.type) {
+        openMigraine?.type?.split(", ")?.map { it.trim().lowercase() }?.toSet() ?: emptySet()
+    }
+    val addablePool = remember(symptomPool, existingTypeLabels) {
+        symptomPool.filter { it.label.lowercase() !in existingTypeLabels }
+    }
+
+    var painExpanded by rememberSaveable { mutableStateOf(false) }
+    var showBack by rememberSaveable { mutableStateOf(false) }
+    var showAuraSheet by remember { mutableStateOf(false) }
+
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Text("How's the migraine now?", color = Color.White,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Spacer(Modifier.height(4.dp))
+        Text("Update $migraineLabel — everything here is added to it",
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(16.dp))
+
+        // ── Has it ended? ──
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val ongoing = endedAtIso == null
+            Surface(
+                shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f),
+                color = if (ongoing) accent.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (ongoing) accent else Color.White.copy(alpha = 0.12f)),
+                onClick = { onEndedChange(null) }
+            ) {
+                Text("Still ongoing", color = if (ongoing) Color.White else AppTheme.SubtleTextColor,
+                    fontWeight = if (ongoing) FontWeight.SemiBold else FontWeight.Normal,
+                    textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
+            }
+            Surface(
+                shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f),
+                color = if (!ongoing) Color(0xFF81C784).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (!ongoing) Color(0xFF81C784) else Color.White.copy(alpha = 0.12f)),
+                onClick = {
+                    if (ongoing) onEndedChange(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                }
+            ) {
+                Text("It ended", color = if (!ongoing) Color.White else AppTheme.SubtleTextColor,
+                    fontWeight = if (!ongoing) FontWeight.SemiBold else FontWeight.Normal,
+                    textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
+            }
+        }
+        if (endedAtIso != null) {
+            Spacer(Modifier.height(10.dp))
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Color(0xFF81C784).copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                    .border(1.dp, Color(0xFF81C784).copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                    .padding(12.dp)
+            ) {
+                TimeEditor(endedAtIso, Color(0xFF81C784)) { onEndedChange(it) }
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+
+        // ── New symptoms ──
+        Text("Any new symptoms?", color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.height(4.dp))
+        Text("Tap what's appeared since you logged it", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(12.dp))
+        if (addablePool.isEmpty()) {
+            Text("All your symptoms are already on this migraine.",
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        } else {
+            val favs = addablePool.filter { it.id in favouriteIds }
+            val rest = addablePool.filter { it.id !in favouriteIds }
+            if (favs.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                    favs.forEach { item ->
+                        CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
+                            item.label in selectedSymptoms, accent, false) { onToggleSymptom(item.label) }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+            if (rest.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                    rest.forEach { item ->
+                        CheckInCircle(item.label, SymptomIcons.forKey(item.iconKey) ?: SymptomIcons.forKey(item.label.lowercase()),
+                            item.label in selectedSymptoms, accent, false) { onToggleSymptom(item.label) }
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+
+        // ── Pain update ──
+        Text("Pain update", color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.height(4.dp))
+        Text("Mark where it hurts right now — moved, spread or peaked",
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(10.dp))
+        if (!painExpanded && painLocations.isEmpty()) {
+            OutlinedButton(
+                onClick = { painExpanded = true },
+                modifier = Modifier.fillMaxWidth(),
+                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.4f)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPink)
+            ) { Text("+ Add pain update", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
+        } else {
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(AppTheme.AccentPink.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                    .border(1.dp, AppTheme.AccentPink.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
+                    .padding(12.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Severity", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Spacer(Modifier.weight(1f))
+                    Text("$painSeverity", color = AppTheme.AccentPink, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text(" / 10", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Outlined.Close, "Remove pain update",
+                        tint = AppTheme.AccentPink.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp).clickable {
+                            painExpanded = false
+                            painLocations.toList().forEach { onTogglePainLocation(it) }
+                        })
+                }
+                Slider(
+                    value = painSeverity.toFloat(),
+                    onValueChange = { onPainSeverityChange(it.toInt()) },
+                    valueRange = 1f..10f, steps = 8,
+                    colors = SliderDefaults.colors(thumbColor = AppTheme.AccentPink, activeTrackColor = AppTheme.AccentPink, inactiveTrackColor = AppTheme.TrackColor)
+                )
+                if (painLocations.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        painLocations.forEach { id ->
+                            val label = ALL_PAIN_POINTS_MAP[id] ?: id
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = AppTheme.AccentPink.copy(alpha = 0.15f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.3f)),
+                                onClick = { onTogglePainLocation(id) }
+                            ) {
+                                Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(label, color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("✕", color = AppTheme.AccentPink, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                // Front / Back toggle
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.08f)).padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf("Front" to false, "Back" to true).forEach { (label, isBack) ->
+                        val sel = showBack == isBack
+                        Surface(
+                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)),
+                            color = if (sel) AppTheme.AccentPurple else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp),
+                            onClick = { showBack = isBack }
+                        ) {
+                            Text(label, textAlign = TextAlign.Center,
+                                color = if (sel) Color.White else AppTheme.SubtleTextColor,
+                                fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())
+                        }
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                PainPointOverlay(
+                    imageRes = if (showBack) R.drawable.painpointsback else R.drawable.painpoints,
+                    points = if (showBack) BACK_PAIN_POINTS else FRONT_PAIN_POINTS,
+                    selected = painLocations,
+                    onToggle = onTogglePainLocation
+                )
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+
+        // ── Aura ──
+        Text("Aura", color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.height(4.dp))
+        Text("Did aura appear or come back?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(10.dp))
+        if (auraZones.isEmpty()) {
+            OutlinedButton(
+                onClick = { showAuraSheet = true },
+                modifier = Modifier.fillMaxWidth(),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9575CD).copy(alpha = 0.4f)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF9575CD))
+            ) { Text("+ Add aura moment", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
+        } else {
+            Row(
+                Modifier.fillMaxWidth()
+                    .background(Color(0xFF9575CD).copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                    .border(1.dp, Color(0xFF9575CD).copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                    .clickable { showAuraSheet = true }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "${auraZones.size} zone${if (auraZones.size > 1) "s" else ""}" +
+                            (auraDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
+                        color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                    )
+                    Text("Tap to edit", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                }
+                IconButton(onClick = onAuraClear, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Outlined.Close, "Remove", tint = Color(0xFF9575CD), modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+        if (showAuraSheet) {
+            AuraDetailSheet(
+                initialZones = auraZones,
+                initialDurationMinutes = auraDurationMin,
+                onSave = { zones, dur, _ -> onAuraSave(zones, dur); showAuraSheet = false },
+                onRemove = { onAuraClear(); showAuraSheet = false },
+                onDismiss = { showAuraSheet = false }
+            )
+        }
+
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  Side-Effects Page V2 (per regimen, uses pool + favourites + icons)
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1856,7 +2343,7 @@ private fun SideEffectsPageV2(
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
                 favourites.forEach { item ->
-                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
+                    CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -1881,7 +2368,7 @@ private fun SideEffectsPageV2(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     grouped.getValue(cat).forEach { item ->
-                        CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
+                        CheckInCircle(item.label, iconResolver(item.iconKey) ?: iconResolver(item.category) ?: iconResolver(item.label.lowercase()), item.label in selectedPills, accentColor, false) { onTogglePill(item.label) }
                     }
                 }
             }

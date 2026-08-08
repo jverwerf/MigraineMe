@@ -141,6 +141,11 @@ fun PaintThePictureScreen(
     // ── Editable result state (user can remove/edit items) ──
     var editSeverity by remember { mutableStateOf<AiParsedField<Int>?>(null) }
     val editPainLocations = remember { mutableStateListOf<AiParsedField<String>>() }
+    // Aura comes back as raw zone ids; the wizard's aura sheet is where the
+    // user reviews and corrects them.
+    val parsedAuraZones = remember { mutableStateListOf<String>() }
+    var parsedAuraMinutes by remember { mutableStateOf<Int?>(null) }
+    val parsedPainEntries = remember { mutableStateListOf<AiPainEntry>() }
     val editSymptoms = remember { mutableStateListOf<AiParsedField<String>>() }
     val editMatches = remember { mutableStateListOf<AiMatchItemV2>() }
 
@@ -184,17 +189,34 @@ fun PaintThePictureScreen(
         editPainLocations.clear(); editPainLocations.addAll(result.painLocations)
         editSymptoms.clear(); editSymptoms.addAll(result.symptoms)
         editMatches.clear(); editMatches.addAll(result.matches)
+        parsedAuraZones.clear(); parsedAuraZones.addAll(result.auraLocations)
+        parsedAuraMinutes = result.auraDurationMinutes
+        parsedPainEntries.clear(); parsedPainEntries.addAll(result.painEntries)
     }
 
     // Inject current editable state into draft
     fun injectIntoDraft() {
         editSeverity?.let { vm.setMigraineDraft(severity = it.value) }
-        if (editPainLocations.isNotEmpty()) {
+        if (parsedPainEntries.isNotEmpty()) {
+            // Narrative described the pain at several moments — build the full
+            // timestamped timeline (labels → ids, same map as below).
+            val labelToId = ALL_PAIN_POINTS_MAP.entries.associate { it.value to it.key }
+            vm.replacePainEntries(parsedPainEntries.map { e ->
+                PainEntryDraft(
+                    startAtIso = e.startAtIso,
+                    severity = e.severity,
+                    locations = e.locationLabels.mapNotNull { labelToId[it] }
+                )
+            })
+        } else if (editPainLocations.isNotEmpty()) {
             val labelToId = ALL_PAIN_POINTS_MAP.entries.associate { it.value to it.key }
             val ids = editPainLocations.mapNotNull { labelToId[it.value] }
             if (ids.isNotEmpty()) vm.setPainLocationsDraft(ids)
         }
         if (editSymptoms.isNotEmpty()) vm.setSymptomsDraft(editSymptoms.map { it.value })
+        if (parsedAuraZones.isNotEmpty() || parsedAuraMinutes != null) {
+            vm.setAuraDraft(parsedAuraZones.toList(), parsedAuraMinutes)
+        }
         // Replace item lists entirely so removals are reflected
         vm.replaceTriggers(editMatches.filter { it.category == "trigger" }.map {
             TriggerDraft(type = it.label, startAtIso = it.startAtIso)
@@ -363,6 +385,8 @@ fun PaintThePictureScreen(
                     textAlign = TextAlign.Center
                 )
             }
+
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.LOG_MIGRAINE) })
 
             // Input card
             BaseCard {
@@ -906,8 +930,12 @@ private fun ItemEditorPill(
     onDone: () -> Unit,
     onRemove: () -> Unit
 ) {
-    val scaleOptions = listOf("NONE", "LOW", "MODERATE", "HIGH")
-    val scaleLabels = listOf("None", "Low", "Moderate", "High")
+    // Match the DB CHECK constraints: relief_scale NONE/LOW/MILD/HIGH,
+    // side_effect_scale NONE/SOFT/MODERATE/SEVERE — off-set values reject the row.
+    val reliefOptions = listOf("NONE", "LOW", "MILD", "HIGH")
+    val reliefLabels = listOf("None", "Low", "Mild", "High")
+    val sideEffectOptions = listOf("NONE", "SOFT", "MODERATE", "SEVERE")
+    val sideEffectLabels = listOf("None", "Soft", "Moderate", "Severe")
 
     val parsedTime = remember(match.startAtIso) {
         match.startAtIso?.let { try { OffsetDateTime.parse(it) } catch (_: Exception) { null } }
@@ -1097,11 +1125,11 @@ private fun ItemEditorPill(
         Text("How much did it help?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            scaleOptions.forEachIndexed { idx, scale ->
+            reliefOptions.forEachIndexed { idx, scale ->
                 val selected = reliefScale == scale
                 val chipColor = when (scale) {
                     "HIGH" -> Color(0xFF81C784)
-                    "MODERATE" -> Color(0xFFFFB74D)
+                    "MILD" -> Color(0xFFFFB74D)
                     "LOW" -> Color(0xFFEF5350)
                     else -> Color.White.copy(alpha = 0.2f)
                 }
@@ -1116,7 +1144,7 @@ private fun ItemEditorPill(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        scaleLabels[idx],
+                        reliefLabels[idx],
                         color = if (selected) Color.White else AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
@@ -1132,12 +1160,12 @@ private fun ItemEditorPill(
         Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            scaleOptions.forEachIndexed { idx, scale ->
+            sideEffectOptions.forEachIndexed { idx, scale ->
                 val selected = sideEffectScale == scale
                 val chipColor = when (scale) {
-                    "HIGH" -> Color(0xFFEF5350)
+                    "SEVERE" -> Color(0xFFEF5350)
                     "MODERATE" -> Color(0xFFFFB74D)
-                    "LOW" -> Color(0xFF81C784)
+                    "SOFT" -> Color(0xFF81C784)
                     else -> Color.White.copy(alpha = 0.2f)
                 }
                 Box(
@@ -1151,7 +1179,7 @@ private fun ItemEditorPill(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        scaleLabels[idx],
+                        sideEffectLabels[idx],
                         color = if (selected) Color.White else AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal

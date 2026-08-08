@@ -68,7 +68,14 @@ fun LocationsScreen(
 
     val frequentLabels = remember(frequent) { frequent.mapNotNull { it.location?.label }.toSet() }
     val selectedLabels = remember(draft.locations) { draft.locations.map { it.type }.toSet() }
-    val grouped = remember(pool) { pool.groupBy { it.category ?: "Other" }.toSortedMap() }
+    // Wizard search — live-filters the pool grid below
+    var wizardSearch by remember { mutableStateOf("") }
+    val searchPool = remember(pool, wizardSearch) {
+        if (wizardSearch.isBlank()) pool
+        else pool.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+    }
+
+    val grouped = remember(searchPool) { searchPool.groupBy { it.category ?: "Other" }.toSortedMap() }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -110,6 +117,10 @@ fun LocationsScreen(
                 }
             }
 
+            if (!quickLogMode) {
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.ACTIVITIES) })
+            }
+
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Locations", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
@@ -123,11 +134,13 @@ fun LocationsScreen(
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
             }
 
+            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFF78909C))
+
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        pool.filter { it.label in frequentLabels }.forEach { loc ->
+                        searchPool.filter { it.label in frequentLabels }.forEach { loc ->
                             CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) }
                         }
                     }
@@ -166,6 +179,7 @@ fun LocationsScreen(
 @Composable
 private fun CircleButton(label: String, isSelected: Boolean, accent: Color, iconKey: String? = null, onClick: () -> Unit) {
     val icon = LocationIcons.forLabel(label, iconKey)
+    val brainyId = LocationIcons.drawableForLabel(label, iconKey)
     val bg = if (isSelected) accent.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.08f)
     val border = if (isSelected) accent.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     Column(
@@ -173,8 +187,8 @@ private fun CircleButton(label: String, isSelected: Boolean, accent: Color, icon
         modifier = Modifier.width(72.dp).clickable(remember { MutableInteractionSource() }, null, onClick = onClick)
     ) {
         Box(Modifier.size(52.dp).clip(CircleShape).background(bg).border(1.5.dp, border, CircleShape), contentAlignment = Alignment.Center) {
-            if (icon != null) {
-                Icon(imageVector = icon, contentDescription = label, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor, modifier = Modifier.size(24.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = if (isSelected) Color.White else AppTheme.SubtleTextColor)
             } else {
                 Text(label.take(2).uppercase(), color = if (isSelected) Color.White else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))

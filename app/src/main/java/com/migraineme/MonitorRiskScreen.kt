@@ -150,7 +150,7 @@ fun MonitorRiskScreen(
             }
 
             // 3. Today's Data card — mirrors main card layout
-            BaseCard {
+            BrainyWatermarkCard(resId = R.drawable.brainy_risk, flipWatermark = true) {
                 Row(
                     modifier = Modifier.fillMaxWidth().clickable {
                         if (PremiumManager.isPremium) navController.navigate(Routes.RISK_DATA_HISTORY)

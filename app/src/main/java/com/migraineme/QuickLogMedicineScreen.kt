@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -141,9 +142,10 @@ fun QuickLogMedicineScreen(
                                 )
                                 frequentLabels.forEach { label ->
                                     val icon = MedicineIcons.forKey(categoryByLabel[label])
+                                    val brainyId = MedicineIcons.drawableForKey(categoryByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
-                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
+                                        leadingIcon = if (brainyId != null || icon != null) {{ LogIconImage(drawableId = brainyId, fallback = icon, size = 20.dp, tint = LocalContentColor.current) }} else null,
                                         onClick = {
                                             selectedMedicine = label
                                             menuOpen = false
@@ -161,9 +163,10 @@ fun QuickLogMedicineScreen(
                                 )
                                 allLabels.forEach { label ->
                                     val icon = MedicineIcons.forKey(categoryByLabel[label])
+                                    val brainyId = MedicineIcons.drawableForKey(categoryByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
-                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
+                                        leadingIcon = if (brainyId != null || icon != null) {{ LogIconImage(drawableId = brainyId, fallback = icon, size = 20.dp, tint = LocalContentColor.current) }} else null,
                                         onClick = {
                                             selectedMedicine = label
                                             menuOpen = false

@@ -186,8 +186,15 @@ fun ProdromeLogScreen(
     val selectedLabels = remember(draft.prodromes) { draft.prodromes.map { it.type }.toSet() }
 
     // Group pool by category
-    val grouped = remember(pool) {
-        pool.groupBy { it.category ?: "Other" }.toSortedMap()
+    // Wizard search — live-filters the pool grid below
+    var wizardSearch by remember { mutableStateOf("") }
+    val searchPool = remember(pool, wizardSearch) {
+        if (wizardSearch.isBlank()) pool
+        else pool.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+    }
+
+    val grouped = remember(searchPool) {
+        searchPool.groupBy { it.category ?: "Other" }.toSortedMap()
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -245,13 +252,15 @@ fun ProdromeLogScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             // Icon in the selected row
-                            val rowIcon = pool.find { it.label == p.type }?.iconKey?.let { ProdromeIcons.forKey(it) }
-                            if (rowIcon != null) {
-                                Icon(
-                                    imageVector = rowIcon,
-                                    contentDescription = null,
-                                    tint = Color(0xFFCE93D8),
-                                    modifier = Modifier.size(20.dp)
+                            val rowIconKey = pool.find { it.label == p.type }?.iconKey
+                            val rowIcon = rowIconKey?.let { ProdromeIcons.forKey(it) }
+                            val rowBrainyId = ProdromeIcons.drawableForKey(rowIconKey)
+                            if (rowBrainyId != null || rowIcon != null) {
+                                LogIconImage(
+                                    drawableId = rowBrainyId,
+                                    fallback = rowIcon,
+                                    size = 20.dp,
+                                    tint = Color(0xFFCE93D8)
                                 )
                                 Spacer(Modifier.width(8.dp))
                             }
@@ -296,6 +305,10 @@ fun ProdromeLogScreen(
                 }
             }
 
+            if (!quickLogMode) {
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.TRIGGERS) })
+            }
+
             // Manage card
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -310,12 +323,14 @@ fun ProdromeLogScreen(
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
             }
 
+            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFCE93D8))
+
             // ── Prodromes card: Frequent, then categories ──
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        pool.filter { it.label in frequentLabels }.forEach { prod ->
+                        searchPool.filter { it.label in frequentLabels }.forEach { prod ->
                             ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recent.daysAgo[prod.label]) {
                                 onProdromeTap(prod.label)
                             }
@@ -451,6 +466,7 @@ private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? 
     val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
 
     val icon = ProdromeIcons.forKey(iconKey)
+    val brainyId = ProdromeIcons.drawableForKey(iconKey)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -470,12 +486,12 @@ private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? 
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = iconTint,
-                    modifier = Modifier.size(24.dp)
+            if (brainyId != null || icon != null) {
+                LogIconImage(
+                    drawableId = brainyId,
+                    fallback = icon,
+                    size = if (brainyId != null) 34.dp else 24.dp,
+                    tint = iconTint
                 )
             } else {
                 Text(

@@ -3,7 +3,9 @@
 // InsightsViewModel so data is shared with the detail screen.
 package com.migraineme
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.AlertDialog
@@ -19,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +34,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
     val owner = ctx as? ViewModelStoreOwner
     val vm: InsightsViewModel = if (owner != null) viewModel(owner) else viewModel()
     val ws by vm.weeklySummary.collectAsState()
+    val streak by vm.streakSummary.collectAsState()
     var showInfo by remember { mutableStateOf(false) }
 
     // Trigger load if we have an access token; mirrors InsightsScreen pattern.
@@ -42,66 +46,78 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        BaseCard(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+        MonitorBrainyCard(
+            modifier = Modifier.fillMaxWidth().clickable { onClick() },
+            resId = R.drawable.brainy_migraines,
+            flipWatermark = true
+        ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Canvas(Modifier.size(24.dp)) { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
+                MonitorBlobIcon(resId = R.drawable.brainy_migraines_small)
                 Spacer(Modifier.width(10.dp))
                 Text("Migraines", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f))
-                Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+                Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
             }
 
             val wsValue = ws
             if (wsValue != null) {
-                Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("${wsValue.thisWeekCount}", color = Color.White,
-                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-                            if (wsValue.trend != "stable") {
-                                val symbol = if (wsValue.trend == "up") "↑" else "↓"
-                                val color = if (wsValue.trend == "up") Color(0xFFE57373) else Color(0xFF81C784)
-                                Text(symbol, color = color,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            }
-                        }
-                        Text("this week", color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall)
-                        Text("vs ${wsValue.lastWeekCount} last", color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val trendSuffix = when (wsValue.trend) {
+                        "up" -> " ↑"
+                        "down" -> " ↓"
+                        else -> ""
                     }
-
+                    MetricTile(
+                        "${wsValue.thisWeekCount}$trendSuffix",
+                        "this week (vs ${wsValue.lastWeekCount})",
+                        if (wsValue.trend == "up") Color(0xFFE57373) else Color.White,
+                        Modifier.weight(1f)
+                    )
                     val avg = wsValue.thisWeekAvgSeverity
                     if (avg != null) {
-                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                            val sevColor = if (avg >= 7f) Color(0xFFE57373)
-                                else if (avg >= 4f) Color(0xFFFFB74D)
-                                else Color(0xFF81C784)
-                            Text(String.format("%.1f", avg), color = sevColor,
-                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-                            Text("avg sev", color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall)
-                            Text("this week", color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall)
-                        }
+                        val sevColor = if (avg >= 7f) Color(0xFFE57373)
+                            else if (avg >= 4f) Color(0xFFFFB74D)
+                            else Color(0xFF81C784)
+                        MetricTile(String.format("%.1f", avg), "avg sev this week", sevColor, Modifier.weight(1f))
                     }
-
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("${wsValue.totalLogged}", color = Color.White,
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-                        Text("total", color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall)
-                        Text("all time", color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall)
-                    }
+                    MetricTile("${wsValue.totalLogged}", "total all time", Color.White, Modifier.weight(1f))
                 }
             } else {
                 Spacer(Modifier.height(4.dp))
                 Text("Your weekly overview will appear after your first week of tracking.",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Start)
+            }
+
+            // Attack-free streak. Positive only: below 2 days the row simply isn't there,
+            // so an attack day never shows a zero.
+            streak?.takeIf { it.streakDays >= 2 }?.let { s ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(AppTheme.AccentPurple.copy(alpha = 0.12f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .border(1.dp, AppTheme.AccentPurple.copy(alpha = 0.30f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(11.dp)
+                ) {
+                    Text(
+                        "${s.streakDays}",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Column {
+                        Text("days migraine-free", color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(
+                            if (s.streakDays >= s.longestRunDaysThisYear) "your longest run this year"
+                            else "longest run this year: ${s.longestRunDaysThisYear}",
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
             }
         }
 
@@ -123,7 +139,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
             confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Canvas(Modifier.size(20.dp)) { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
+                    Image(painterResource(R.drawable.brainy_migraines_small), contentDescription = null, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("About Migraines", color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))

@@ -102,7 +102,6 @@ val ALL_PAIN_POINTS_MAP: Map<String, String> by lazy {
 }
 
 // ── Main screen composable ─────────────────────────────────────
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PainLocationScreen(
     navController: NavController,
@@ -110,25 +109,7 @@ fun PainLocationScreen(
     onClose: () -> Unit = {}
 ) {
     val draft by vm.draft.collectAsState()
-    val selected = remember { mutableStateListOf<String>() }
-    var severityValue by rememberSaveable { mutableStateOf(5f) }
-
-    // Sync from draft on first composition
-    LaunchedEffect(draft.painLocations) {
-        if (selected.isEmpty() && draft.painLocations.isNotEmpty()) {
-            selected.addAll(draft.painLocations)
-        }
-    }
-    LaunchedEffect(draft.migraine) {
-        draft.migraine?.let { m ->
-            severityValue = (m.severity ?: 5).coerceIn(1, 10).toFloat()
-        }
-    }
-
-    var showBack by rememberSaveable { mutableStateOf(false) }
     val scroll = rememberScrollState()
-
-    fun syncToDraft() { vm.setPainLocationsDraft(selected.toList()) }
 
     ScrollFadeContainer(scrollState = scroll) { scrollState ->
         ScrollableScreenContent(scrollState = scrollState, logoRevealHeight = 0.dp) {
@@ -151,106 +132,32 @@ fun PainLocationScreen(
                 Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(40.dp))
                 Text("Pain", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    "Rate the severity and mark where you feel it",
+                    "Rate the severity and mark where you feel it. Add another entry if the pain moved or peaked later",
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
             }
 
-            // ── 2. Severity ──
-            BaseCard {
-                val sev = severityValue.toInt()
-                val sevColor = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, (sev - 1) / 9f)
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.PRODROMES_LOG) })
 
-                Text("Severity", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    Text("$sev", color = sevColor, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold))
-                    Text(" / 10", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.titleMedium)
-                }
-
-                Slider(
-                    value = severityValue,
-                    onValueChange = { v ->
-                        severityValue = v.coerceIn(1f, 10f)
-                        vm.setMigraineDraft(severity = severityValue.toInt())
-                    },
-                    valueRange = 1f..10f,
-                    steps = 8,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = AppTheme.AccentPurple,
-                        activeTrackColor = AppTheme.AccentPurple,
-                        inactiveTrackColor = AppTheme.TrackColor
-                    )
-                )
-
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Mild", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    Text("Severe", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-
-            // ── 3. Where did you feel the pain? (BaseCard) ──
-            BaseCard {
-                Text("Where did you feel the pain?", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                Text(
-                    "Tap the dots on the head to mark where it hurts",
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                // Selected area count + chips
-                if (selected.isNotEmpty()) {
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "${selected.size} area${if (selected.size > 1) "s" else ""} selected",
-                        color = AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        selected.toList().forEach { id ->
-                            val label = ALL_PAIN_POINTS_MAP[id] ?: id
-                            AssistChip(
-                                onClick = { selected.remove(id); syncToDraft() },
-                                label = { Text(label, fontSize = 11.sp) },
-                                trailingIcon = { Text("✕", fontSize = 10.sp, color = AppTheme.AccentPink) },
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = AppTheme.AccentPurple.copy(alpha = 0.20f),
-                                    labelColor = Color.White
-                                ),
-                                border = AssistChipDefaults.assistChipBorder(
-                                    enabled = true,
-                                    borderColor = AppTheme.AccentPurple.copy(alpha = 0.35f)
-                                )
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(10.dp))
-
-                // Front / Back toggle
-                ViewToggle(showBack = showBack, onToggle = { showBack = it })
-
-                Spacer(Modifier.height(12.dp))
-
-                // Image with overlay dots
-                PainPointOverlay(
-                    imageRes = if (showBack) R.drawable.painpointsback else R.drawable.painpoints,
-                    points = if (showBack) BACK_PAIN_POINTS else FRONT_PAIN_POINTS,
-                    selected = selected,
-                    onToggle = { id ->
-                        if (id in selected) selected.remove(id) else selected.add(id)
-                        syncToDraft()
-                    }
+            // ── 2. One card per timestamped pain entry ──
+            draft.painEntries.forEachIndexed { index, entry ->
+                PainEntryCard(
+                    vm = vm,
+                    entry = entry,
+                    index = index,
+                    canRemove = draft.painEntries.size > 1
                 )
             }
+
+            // ── 3. Add entry ──
+            OutlinedButton(
+                onClick = { vm.addPainEntry() },
+                modifier = Modifier.fillMaxWidth(),
+                border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.35f)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+            ) { Text("+ Add pain entry", fontWeight = FontWeight.SemiBold) }
 
             // Navigation
             Row(
@@ -270,6 +177,130 @@ fun PainLocationScreen(
 
             Spacer(Modifier.height(32.dp))
         }
+    }
+}
+
+// ── One timestamped pain entry: time + severity + head-map ─────
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PainEntryCard(
+    vm: LogViewModel,
+    entry: PainEntryDraft,
+    index: Int,
+    canRemove: Boolean
+) {
+    var showBack by rememberSaveable(entry.id) { mutableStateOf(false) }
+
+    BaseCard {
+        // Header: name + remove
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (index == 0) "Pain at attack start" else "Pain entry ${index + 1}",
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+            Spacer(Modifier.weight(1f))
+            if (canRemove) {
+                IconButton(onClick = { vm.removePainEntry(entry.id) }) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Remove entry", tint = AppTheme.AccentPink, modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+
+        if (index > 0) {
+            AppDateTimePicker(
+                label = entry.startAtIso?.let { "When: ${formatIsoDdMmYyHm(it)}" } ?: "Set time"
+            ) { vm.setPainEntryTime(entry.id, it) }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        // Severity
+        val sev = entry.severity
+        val sevColor = lerp(AppTheme.AccentPurple, AppTheme.AccentPink, (sev - 1) / 9f)
+
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Severity", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.weight(1f))
+            Text("$sev", color = sevColor, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+            Text(" / 10", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.titleSmall)
+        }
+
+        Slider(
+            value = sev.toFloat(),
+            onValueChange = { v -> vm.setPainEntrySeverity(entry.id, v.toInt()) },
+            valueRange = 1f..10f,
+            steps = 8,
+            modifier = Modifier.fillMaxWidth(),
+            colors = SliderDefaults.colors(
+                thumbColor = AppTheme.AccentPurple,
+                activeTrackColor = AppTheme.AccentPurple,
+                inactiveTrackColor = AppTheme.TrackColor
+            )
+        )
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Mild", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text("Severe", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Pain locations
+        Text("Where did you feel the pain?", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+        Text(
+            "Tap the dots on the head to mark where it hurts",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        if (entry.locations.isNotEmpty()) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "${entry.locations.size} area${if (entry.locations.size > 1) "s" else ""} selected",
+                color = AppTheme.AccentPurple,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+            )
+            Spacer(Modifier.height(4.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                entry.locations.forEach { id ->
+                    val label = ALL_PAIN_POINTS_MAP[id] ?: id
+                    AssistChip(
+                        onClick = { vm.setPainEntryLocations(entry.id, entry.locations - id) },
+                        label = { Text(label, fontSize = 11.sp) },
+                        trailingIcon = { Text("✕", fontSize = 10.sp, color = AppTheme.AccentPink) },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = AppTheme.AccentPurple.copy(alpha = 0.20f),
+                            labelColor = Color.White
+                        ),
+                        border = AssistChipDefaults.assistChipBorder(
+                            enabled = true,
+                            borderColor = AppTheme.AccentPurple.copy(alpha = 0.35f)
+                        )
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // Front / Back toggle
+        ViewToggle(showBack = showBack, onToggle = { showBack = it })
+
+        Spacer(Modifier.height(12.dp))
+
+        // Image with overlay dots
+        PainPointOverlay(
+            imageRes = if (showBack) R.drawable.painpointsback else R.drawable.painpoints,
+            points = if (showBack) BACK_PAIN_POINTS else FRONT_PAIN_POINTS,
+            selected = entry.locations,
+            onToggle = { id ->
+                val next = if (id in entry.locations) entry.locations - id else entry.locations + id
+                vm.setPainEntryLocations(entry.id, next)
+            }
+        )
     }
 }
 
@@ -321,8 +352,9 @@ private fun ToggleButton(label: String, selected: Boolean, onClick: () -> Unit, 
 }
 
 // ── Image + dots overlay (ORIGINAL style) ──────────────────────
+// Internal: the evening check-in's "pain update" card reuses it.
 @Composable
-private fun PainPointOverlay(
+internal fun PainPointOverlay(
     imageRes: Int,
     points: List<PainPoint>,
     selected: List<String>,
@@ -427,3 +459,15 @@ private fun PainPointOverlay(
     }
 }
 
+
+// Local copy — the same helper is private in EditMigraineScreen/ReviewLogScreen/TimingScreen.
+private fun formatIsoDdMmYyHm(iso: String?): String {
+    if (iso.isNullOrBlank()) return "-"
+    return try {
+        val odt = runCatching { java.time.OffsetDateTime.parse(iso) }.getOrNull()
+        val ldt = odt?.toLocalDateTime() ?: java.time.LocalDateTime.parse(iso)
+        ldt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
+    } catch (_: Exception) {
+        "-"
+    }
+}

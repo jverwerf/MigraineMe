@@ -1,37 +1,25 @@
 // FILE: app/src/main/java/com/migraineme/FreeTrialGiftScreen.kt
 package com.migraineme
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.outlined.AutoGraph
-import androidx.compose.material.icons.outlined.CardGiftcard
-import androidx.compose.material.icons.outlined.Chat
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,14 +31,6 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
         Brush.verticalGradient(listOf(Color(0xFF1A0029), Color(0xFF2A003D), Color(0xFF1A0029)))
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "gift-glow")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.06f,
-        animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse),
-        label = "pulse"
-    )
-
     Box(Modifier.fillMaxSize().background(bgBrush)) {
         Column(
             Modifier.fillMaxSize().padding(horizontal = 28.dp),
@@ -58,41 +38,13 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
         ) {
             Spacer(Modifier.weight(1f))
 
-            Box(contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier
-                        .size(140.dp)
-                        .scale(pulseScale)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    AppTheme.AccentPurple.copy(alpha = 0.4f),
-                                    AppTheme.AccentPink.copy(alpha = 0.25f)
-                                )
-                            ),
-                            CircleShape
-                        )
-                )
-                Box(
-                    Modifier
-                        .size(140.dp)
-                        .border(
-                            2.dp,
-                            Brush.linearGradient(
-                                listOf(AppTheme.AccentPurple, AppTheme.AccentPink)
-                            ),
-                            CircleShape
-                        )
-                )
-                Icon(
-                    Icons.Outlined.CardGiftcard,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(56.dp)
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.brainy_premium),
+                contentDescription = null,
+                modifier = Modifier.size(150.dp)
+            )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(20.dp))
 
             Text(
                 "Enjoy 14 days on us",
@@ -116,14 +68,13 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
 
             Spacer(Modifier.height(28.dp))
 
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                GiftPerk(Icons.Outlined.AutoGraph, "7-day risk outlook")
-                GiftPerk(Icons.Outlined.Insights, "AI daily insights")
-                GiftPerk(Icons.Outlined.Chat, "Ask MigraineMe chat")
-                GiftPerk(Icons.Outlined.Description, "PDF reports for your doctor")
+            // Same language as the paywall: blob perks in a card that carries
+            // the page watermark.
+            BrainyWatermarkCard(resId = R.drawable.brainy_recs, flipWatermark = true) {
+                GiftPerk(R.drawable.brainy_risk_small, "7-day risk outlook")
+                GiftPerk(R.drawable.brainy_detective_small, "AI daily insights")
+                GiftPerk(R.drawable.brainy_ask_small, "Ask MigraineMe chat")
+                GiftPerk(R.drawable.brainy_briefcase_small, "PDF reports for your doctor")
             }
 
             Spacer(Modifier.weight(1f))
@@ -157,25 +108,13 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
 }
 
 @Composable
-private fun GiftPerk(icon: ImageVector, text: String) {
+private fun GiftPerk(@androidx.annotation.DrawableRes resId: Int, text: String) {
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Box(
-            Modifier
-                .size(34.dp)
-                .background(AppTheme.AccentPurple.copy(alpha = 0.18f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = AppTheme.AccentPurple,
-                modifier = Modifier.size(16.dp)
-            )
-        }
+        BrainyBlobIcon(resId = resId)
         Text(
             text,
             color = Color.White,

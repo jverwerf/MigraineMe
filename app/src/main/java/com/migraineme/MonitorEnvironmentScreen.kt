@@ -187,7 +187,7 @@ fun MonitorEnvironmentScreen(
                 }
             } else {
                 // Today's weather card
-                BaseCard {
+                BrainyWatermarkCard(resId = R.drawable.brainy_environment, flipWatermark = true) {
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.ENV_DATA_HISTORY) else navController.navigate(Routes.PAYWALL) },
                         horizontalArrangement = Arrangement.SpaceBetween,

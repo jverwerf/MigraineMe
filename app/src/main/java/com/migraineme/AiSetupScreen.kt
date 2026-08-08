@@ -147,6 +147,26 @@ fun AiSetupScreen(
     var selectedReliefs by remember { mutableStateOf(setOf<String>()) }
     var selectedActivities by remember { mutableStateOf(setOf<String>()) }
     var selectedMissedActivities by remember { mutableStateOf(setOf<String>()) }
+
+    // ── Tier tracking for pool pages ──
+    // matched* = labels pre-selected from the story parse + questionnaire seeds ("From what you told us").
+    // suggestedShown* = labels pre-selected from *_templates.suggested ("Suggested for your profile").
+    var matchedTriggers by remember { mutableStateOf(setOf<String>()) }
+    var matchedProdromes by remember { mutableStateOf(setOf<String>()) }
+    var matchedSymptoms by remember { mutableStateOf(setOf<String>()) }
+    var matchedMedicines by remember { mutableStateOf(setOf<String>()) }
+    var matchedReliefs by remember { mutableStateOf(setOf<String>()) }
+    var matchedActivities by remember { mutableStateOf(setOf<String>()) }
+    var matchedMissedActivities by remember { mutableStateOf(setOf<String>()) }
+    var matchedLocations by remember { mutableStateOf(setOf<String>()) }
+    var matchedPostdromes by remember { mutableStateOf(setOf<String>()) }
+    var suggestedShownTriggers by remember { mutableStateOf(setOf<String>()) }
+    var suggestedShownSymptoms by remember { mutableStateOf(setOf<String>()) }
+    var suggestedShownReliefs by remember { mutableStateOf(setOf<String>()) }
+    var suggestedShownActivities by remember { mutableStateOf(setOf<String>()) }
+    var suggestedShownLocations by remember { mutableStateOf(setOf<String>()) }
+    // One-shot flags so unticking a suggestion isn't re-applied on revisit.
+    var suggestionsApplied by remember { mutableStateOf(setOf<String>()) }
     var additionalNotes by remember { mutableStateOf<String?>(null) }
 
     // AI state
@@ -279,6 +299,15 @@ fun AiSetupScreen(
         if (pf.matchedMissedActivities.isNotEmpty()) { selectedMissedActivities = selectedMissedActivities + pf.matchedMissedActivities; filled.add("missedActivities") }
         if (pf.matchedLocations.isNotEmpty()) { selectedLocations = selectedLocations + pf.matchedLocations; filled.add("locations") }
         if (pf.matchedPostdromes.isNotEmpty()) { selectedPostdromes = selectedPostdromes + pf.matchedPostdromes; filled.add("postdromes") }
+        matchedTriggers = matchedTriggers + pf.matchedTriggers
+        matchedProdromes = matchedProdromes + pf.matchedProdromes
+        matchedSymptoms = matchedSymptoms + pf.matchedSymptoms
+        matchedMedicines = matchedMedicines + pf.matchedMedicines
+        matchedReliefs = matchedReliefs + pf.matchedReliefs
+        matchedActivities = matchedActivities + pf.matchedActivities
+        matchedMissedActivities = matchedMissedActivities + pf.matchedMissedActivities
+        matchedLocations = matchedLocations + pf.matchedLocations
+        matchedPostdromes = matchedPostdromes + pf.matchedPostdromes
         preFilledFields = filled
     }
 
@@ -424,14 +453,63 @@ fun AiSetupScreen(
     // Union with whatever the user (or story pre-fill) already selected — never removes.
     LaunchedEffect(currentPage, availableItems) {
         val items = availableItems ?: return@LaunchedEffect
+        // Profile-conditional suggestion gates (see *_templates.suggested_condition).
+        fun conditionHolds(cond: String?): Boolean = when (cond) {
+            null -> true
+            "menstruation" -> tracksCycle == "Yes"
+            "aura" -> "Aura" in selectedSymptoms || "Aura" in matchedSymptoms
+            else -> false
+        }
+        fun eligible(map: Map<String, String?>, pool: List<AiSetupService.PoolLabel>, exclude: Set<String>): Set<String> =
+            pool.map { it.label }
+                .filter { l -> map.containsKey(l.lowercase()) && conditionHolds(map[l.lowercase()]) && l !in exclude }
+                .toSet()
         when (currentPage) {
             AiPage.TRIGGERS -> {
                 val seed = DeterministicMapper.deriveTriggerSeed(buildAnswers(), items.triggers.map { it.label })
-                if (seed.isNotEmpty()) selectedTriggers = selectedTriggers + seed
+                if (seed.isNotEmpty()) { selectedTriggers = selectedTriggers + seed; matchedTriggers = matchedTriggers + seed }
+                if ("triggers" !in suggestionsApplied) {
+                    suggestionsApplied = suggestionsApplied + "triggers"
+                    val sugg = eligible(items.suggestedTriggers, items.triggers, matchedTriggers + selectedTriggers)
+                    suggestedShownTriggers = sugg
+                    selectedTriggers = selectedTriggers + sugg
+                }
             }
             AiPage.PRODROMES -> {
                 val seed = DeterministicMapper.deriveProdromeSeed(buildAnswers(), items.prodromes.map { it.label })
-                if (seed.isNotEmpty()) selectedProdromes = selectedProdromes + seed
+                if (seed.isNotEmpty()) { selectedProdromes = selectedProdromes + seed; matchedProdromes = matchedProdromes + seed }
+            }
+            AiPage.SYMPTOMS -> {
+                if ("symptoms" !in suggestionsApplied) {
+                    suggestionsApplied = suggestionsApplied + "symptoms"
+                    val sugg = eligible(items.suggestedSymptoms, items.symptoms, matchedSymptoms + selectedSymptoms)
+                    suggestedShownSymptoms = sugg
+                    selectedSymptoms = selectedSymptoms + sugg
+                }
+            }
+            AiPage.RELIEFS -> {
+                if ("reliefs" !in suggestionsApplied) {
+                    suggestionsApplied = suggestionsApplied + "reliefs"
+                    val sugg = eligible(items.suggestedReliefs, items.reliefs, matchedReliefs + selectedReliefs)
+                    suggestedShownReliefs = sugg
+                    selectedReliefs = selectedReliefs + sugg
+                }
+            }
+            AiPage.ACTIVITIES -> {
+                if ("activities" !in suggestionsApplied) {
+                    suggestionsApplied = suggestionsApplied + "activities"
+                    val sugg = eligible(items.suggestedActivities, items.activities, matchedActivities + selectedActivities)
+                    suggestedShownActivities = sugg
+                    selectedActivities = selectedActivities + sugg
+                }
+            }
+            AiPage.LOCATIONS -> {
+                if ("locations" !in suggestionsApplied) {
+                    suggestionsApplied = suggestionsApplied + "locations"
+                    val sugg = eligible(items.suggestedLocations, items.locations, matchedLocations + selectedLocations)
+                    suggestedShownLocations = sugg
+                    selectedLocations = selectedLocations + sugg
+                }
             }
             else -> {}
         }
@@ -488,46 +566,65 @@ fun AiSetupScreen(
                             triggerPool = availableItems?.triggers ?: emptyList(),
                             selected = selectedTriggers,
                             onToggle = { t -> selectedTriggers = if (t in selectedTriggers) selectedTriggers - t else selectedTriggers + t },
+                            matched = matchedTriggers,
+                            suggested = suggestedShownTriggers,
+                            onDeselectSuggested = { selectedTriggers = selectedTriggers - suggestedShownTriggers },
                         )
                         AiPage.PRODROMES -> AiQuestionsPageProdromes(
                             prodromePool = availableItems?.prodromes ?: emptyList(),
                             selected = selectedProdromes,
                             onToggle = { p -> selectedProdromes = if (p in selectedProdromes) selectedProdromes - p else selectedProdromes + p },
+                            matched = matchedProdromes,
                         )
                         AiPage.SYMPTOMS -> AiQuestionsPageSymptomsCore(
                             pool = availableItems?.symptomsDuringAttack ?: emptyList(),
                             selected = selectedSymptoms,
                             onToggle = { s -> selectedSymptoms = if (s in selectedSymptoms) selectedSymptoms - s else selectedSymptoms + s },
+                            matched = matchedSymptoms,
+                            suggested = suggestedShownSymptoms,
+                            onDeselectSuggested = { selectedSymptoms = selectedSymptoms - suggestedShownSymptoms },
                         )
                         AiPage.POSTDROMES -> AiQuestionsPagePostdromes(
                             postdromePool = availableItems?.postdromes ?: emptyList(),
                             selected = selectedPostdromes,
                             onToggle = { p -> selectedPostdromes = if (p in selectedPostdromes) selectedPostdromes - p else selectedPostdromes + p },
+                            matched = matchedPostdromes,
                         )
                         AiPage.LOCATIONS -> AiQuestionsPageLocations(
                             locationPool = availableItems?.locations ?: emptyList(),
                             selected = selectedLocations,
                             onToggle = { l -> selectedLocations = if (l in selectedLocations) selectedLocations - l else selectedLocations + l },
+                            matched = matchedLocations,
+                            suggested = suggestedShownLocations,
+                            onDeselectSuggested = { selectedLocations = selectedLocations - suggestedShownLocations },
                         )
                         AiPage.MEDICINES -> AiQuestionsPageMedicines(
                             pool = availableItems?.medicines ?: emptyList(),
                             selected = selectedMedicines,
                             onToggle = { m -> selectedMedicines = if (m in selectedMedicines) selectedMedicines - m else selectedMedicines + m },
+                            matched = matchedMedicines,
                         )
                         AiPage.RELIEFS -> AiQuestionsPageReliefs(
                             pool = availableItems?.reliefs ?: emptyList(),
                             selected = selectedReliefs,
                             onToggle = { r -> selectedReliefs = if (r in selectedReliefs) selectedReliefs - r else selectedReliefs + r },
+                            matched = matchedReliefs,
+                            suggested = suggestedShownReliefs,
+                            onDeselectSuggested = { selectedReliefs = selectedReliefs - suggestedShownReliefs },
                         )
                         AiPage.ACTIVITIES -> AiQuestionsPageActivities(
                             pool = availableItems?.activities ?: emptyList(),
                             selected = selectedActivities,
                             onToggle = { a -> selectedActivities = if (a in selectedActivities) selectedActivities - a else selectedActivities + a },
+                            matched = matchedActivities,
+                            suggested = suggestedShownActivities,
+                            onDeselectSuggested = { selectedActivities = selectedActivities - suggestedShownActivities },
                         )
                         AiPage.MISSED_ACTIVITIES -> AiQuestionsPageMissedActivities(
                             pool = availableItems?.missedActivities ?: emptyList(),
                             selected = selectedMissedActivities,
                             onToggle = { ma -> selectedMissedActivities = if (ma in selectedMissedActivities) selectedMissedActivities - ma else selectedMissedActivities + ma },
+                            matched = matchedMissedActivities,
                         )
                         AiPage.NOTES -> AiQuestionsPageNotes(
                             notes = additionalNotes,

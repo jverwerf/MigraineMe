@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -103,8 +105,14 @@ fun InsightsReportScreen(
     val zone = ZoneId.systemDefault()
 
     //  Filter state 
-    // Reset to NONE on first open so no metrics are pre-selected
-    LaunchedEffect(Unit) { vm.setTimeFrame(InsightsViewModel.TimeFrame.NONE) }
+    // Reset to NONE on first open so no metrics are pre-selected. The
+    // generated flag has to reset with it: leaving it set while the filter
+    // empties rendered a whole report claiming "No migraines logged yet" for
+    // an account with a hundred of them.
+    LaunchedEffect(Unit) {
+        vm.setTimeFrame(InsightsViewModel.TimeFrame.NONE)
+        vm.setReportGenerated(false)
+    }
     val tagIndex by vm.migraineTagIndex.collectAsState()
     val activeFilters by vm.activeFilters.collectAsState()
     val timeFrame by vm.timeFrame.collectAsState()
@@ -174,6 +182,16 @@ fun InsightsReportScreen(
     val impactItems by vm.impactItems.collectAsState()
     val painLocationCounts by vm.painLocationCounts.collectAsState()
     val severityCounts by vm.severityCounts.collectAsState()
+    // Newer clinical layers: pain timeline entries, where the pain migrates,
+    // and whether treating earlier changed the peak. All three are shown on
+    // their own Insights pages already; the report is the doctor-facing copy.
+    val painPointsByMigraine by vm.painPointsByMigraine.collectAsState()
+    val auraZonesByMigraine by vm.auraZonesByMigraine.collectAsState()
+    val painMigration by vm.painMigration.collectAsState()
+    val treatmentTiming by vm.treatmentTiming.collectAsState()
+    val symptomStats by vm.symptomStats.collectAsState()
+    val auraInsights by vm.auraInsights.collectAsState()
+    val contextIconKeys by vm.contextIconKeys.collectAsState()
     val totalMigraineCount by vm.totalMigraineCount.collectAsState()
     val overallAvgSeverity = remember(migraines) {
         val severities = migraines.mapNotNull { it.severity }
@@ -281,7 +299,7 @@ fun InsightsReportScreen(
 
     val autoSelectedKeys = remember(windowEvents) {
         windowEvents.filter { it.isAutomated }
-            .mapNotNull { ev: EventMarker -> vm.labelToMetricKey(ev.name) }
+            .flatMap { ev -> vm.metricKeysForLabel(ev.name) }
             .toSet()
     }
 
@@ -433,173 +451,63 @@ fun InsightsReportScreen(
                         "Unknown"
                     }
                     android.util.Log.d("ReportPDF", "timeLabel=$timeLabel, filteredSorted=${filteredSorted.size}")
+                    // Same bounds as filteredSorted so the PDF matches the screen:
+                    // custom ranges are start-of-day inclusive / day-after exclusive,
+                    // preset ranges are a rolling instant lower bound with no upper.
+                    val isoFmt = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                    val fromIso: String?
+                    val toIso: String?
+                    when {
+                        timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null -> {
+                            fromIso = customRange!!.from.atStartOfDay(zone).format(isoFmt)
+                            toIso = customRange!!.to.plusDays(1).atStartOfDay(zone).format(isoFmt)
+                        }
+                        timeFrame.days != null -> {
+                            fromIso = Instant.now().minus(Duration.ofDays(timeFrame.days!!.toLong()))
+                                .atZone(zone).format(isoFmt)
+                            toIso = null
+                        }
+                        else -> { fromIso = null; toIso = null }
+                    }
+                    val filterSummary = if (activeFilters.isNotEmpty()) {
+                        "$timeLabel · ${activeFilters.joinToString(", ") { it.label }}"
+                    } else null
                     scope.launch {
                         try {
-                            data class MgGraphData(
-                                val mg: MigraineSpan, val events: List<EventMarker>,
-                                val windowMigs: List<MigraineSpan>, val windowDates: Set<String>,
-                                val wStart: java.time.Instant, val wEnd: java.time.Instant,
-                                val autoKeys: Set<String>
+                            // The document is built by the `build-report-html`
+                            // edge function and printed here, so every surface
+                            // ships the same report without four drawing
+                            // engines drifting apart.
+                            val html = EdgeFunctionsService().getReportHtml(
+                                context = ctx,
+                                timeframeLabel = timeLabel,
+                                from = fromIso,
+                                to = toIso,
+                                metricKeys = enabledKeys.toList(),
+                                episodeIds = filteredSorted.mapNotNull { it.id },
+                                disabledMetricKeys = userDisabledKeys.toList(),
+                                filterSummary = filterSummary,
                             )
-                            val allGd = mutableListOf<MgGraphData>()
-                            val globalAutoKeys = mutableSetOf<String>()
-                            // Map<migraine_id → MigraineLinkedItems> — passed to the PDF
-                            // so the opening Migraine Log section can render every logged
-                            // value per attack instead of just truncating to `type`.
-                            val linkedItemsByMigraine = mutableMapOf<String, SupabaseDbService.MigraineLinkedItems>()
-
-                            android.util.Log.d("ReportPDF", "Building graph data for ${filteredSorted.size} migraines")
-                            for (mg in filteredSorted) {
-                                val mgId = mg.id ?: continue
-                                try {
-                                val linked = vm.getLinkedItemsFor(mgId)
-                                linkedItemsByMigraine[mgId] = linked
-                                val actsFor = allActs.filter { it.migraineId == mgId }
-                                val missedFor = allMissed.filter { it.migraineId == mgId }
-                                val events = buildEventMarkers(linked, actsFor, missedFor)
-                                val mWStart = mg.start.minus(Duration.ofDays(wBefore))
-                                val mWEnd = (mg.end ?: mg.start).plus(Duration.ofDays(wAfter))
-                                val mWindowDates = run {
-                                    val f = LocalDate.ofInstant(mWStart, zone)
-                                    val t = LocalDate.ofInstant(mWEnd, zone)
-                                    generateSequence(f) { it.plusDays(1) }
-                                        .takeWhile { !it.isAfter(t) }
-                                        .map { it.toString() }.toSet()
-                                }
-                                val mWindowMigs = migraines.filter { m ->
-                                    val e = m.end ?: m.start
-                                    !m.start.isAfter(mWEnd) && !e.isBefore(mWStart)
-                                }
-                                val mAutoKeys = events.filter { it.isAutomated }
-                                    .mapNotNull { ev -> vm.labelToMetricKey(ev.name) }.toSet()
-                                globalAutoKeys.addAll(mAutoKeys)
-                                allGd.add(MgGraphData(mg, events, mWindowMigs, mWindowDates, mWStart, mWEnd, mAutoKeys))
-                                } catch (e: Exception) {
-                                    android.util.Log.e("ReportPDF", "Error building graph data for migraine $mgId", e)
-                                }
+                            if (html == null) {
+                                isGeneratingPdf = false
+                                android.widget.Toast.makeText(
+                                    ctx, "Couldn't build the report — check your connection",
+                                    android.widget.Toast.LENGTH_LONG,
+                                ).show()
+                                return@launch
                             }
-
-                            android.util.Log.d("ReportPDF", "Built ${allGd.size} graph data, capturing timelines")
-                            val overlayKeys = globalAutoKeys + userToggledKeys
-                            val captures = mutableListOf<ReportPdfGenerator.TimelineCapture>()
-                            for (gd in allGd) {
-                                try {
-                                val mAvail = AllMetricDefs.filter { d ->
-                                    allDailyMetrics[d.key]?.any { it.date in gd.windowDates } == true
-                                }
-                                fun series(keys: Set<String>) = mAvail.filter { it.key in keys }.map { d ->
-                                    MetricSeries(d.key, d.label, d.unit, d.color,
-                                        allDailyMetrics[d.key]!!.filter { it.date in gd.windowDates }
-                                            .map { DailyMetricPoint(it.date, it.value) })
-                                }
-                                val autoSeries = series(gd.autoKeys)
-                                val fullSeries = series(overlayKeys)
-
-                                if (activityCtx != null) {
-                                    android.util.Log.d("ReportPDF", "Capturing timeline for migraine ${gd.mg.id}")
-                                    val autoBmp = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                        captureTimelineGraph(activityCtx, gd.windowMigs, gd.events, autoSeries, gd.wStart, gd.wEnd, gd.mg.start)
-                                    }
-                                    val fullBmp = if (fullSeries.size > autoSeries.size) {
-                                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                            captureTimelineGraph(activityCtx, gd.windowMigs, gd.events, fullSeries, gd.wStart, gd.wEnd, gd.mg.start)
-                                        }
-                                    } else autoBmp
-
-                                    val sortedEvents = gd.events.sortedBy { it.at }
-                                    val legendEvents = sortedEvents.mapIndexed { i, ev ->
-                                        ReportPdfGenerator.LegendEvent(i + 1, ev.name, ev.category,
-                                            ev.color.let { android.graphics.Color.argb((it.alpha * 255).toInt(), (it.red * 255).toInt(), (it.green * 255).toInt(), (it.blue * 255).toInt()) },
-                                            ev.isAutomated)
-                                    }
-                                    fun metricLegend(s: List<MetricSeries>) = s.map { ms ->
-                                        ReportPdfGenerator.LegendMetric(ms.label, ms.unit,
-                                            ms.color.let { android.graphics.Color.argb((it.alpha * 255).toInt(), (it.red * 255).toInt(), (it.green * 255).toInt(), (it.blue * 255).toInt()) })
-                                    }
-                                    if (autoBmp != null && fullBmp != null) {
-                                        captures.add(ReportPdfGenerator.TimelineCapture(
-                                            gd.mg, autoBmp, fullBmp, legendEvents, metricLegend(autoSeries), metricLegend(fullSeries)))
-                                    }
-                                }
-                                } catch (e: Exception) {
-                                    android.util.Log.e("ReportPDF", "Error capturing timeline for ${gd.mg.id}", e)
-                                }
-                            }
-
-                            android.util.Log.d("ReportPDF", "Captured ${captures.size} timelines, generating PDF")
-
-                            // Treatments section: leaderboard + cached GPT narratives + side-effect logs
-                            val token = auth.accessToken
-                            var treatments: List<SupabaseDbService.TreatmentLeaderboardRow> = emptyList()
-                            val narratives = mutableMapOf<String, String>()
-                            val sideEffects = mutableMapOf<String, List<SupabaseDbService.TreatmentSideEffectLogRow>>()
-                            if (token != null) {
-                                try {
-                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                    treatments = db.getTreatmentLeaderboard(token)
-                                    val today = java.time.LocalDate.now().toString()
-                                    for (row in treatments) {
-                                        runCatching { db.getTreatmentNarrative(token, row.regimenId)?.narrative }
-                                            .getOrNull()?.let { narratives[row.regimenId] = it }
-                                        runCatching {
-                                            db.getTreatmentSideEffectLogs(token, row.startDate, row.stopDate ?: today)
-                                        }.getOrNull()?.let { if (it.isNotEmpty()) sideEffects[row.regimenId] = it }
-                                    }
-                                } catch (e: Exception) {
-                                    android.util.Log.w("ReportPDF", "Treatments fetch for PDF failed", e)
-                                }
-                            }
-
-                            val symptomsByMigraine: Map<String, List<SupabaseDbService.SymptomLogRow>> =
-                                allSymptoms.groupBy { it.migraineId ?: "" }
-                                    .filterKeys { it.isNotBlank() }
-
-                            val reportData = ReportPdfGenerator.ReportData(
-                                filteredMigraines = filteredSorted, timeFrameLabel = timeLabel,
-                                spiders = spiders, enabledMetrics = enabledSeries,
-                                autoMetricKeys = allAutoSelectedKeys, allDailyMetrics = allDailyMetrics,
-                                timelineCaptures = captures,
-                                correlationStats = correlationStats,
-                                gaugeAccuracy = gaugeAccuracy,
-                                clinicalAssessment = clinicalAssessment,
-                                profileSummary = profileSummary,
-                                profileFrequency = profileFrequency,
-                                profileDuration = profileDuration,
-                                profileExperience = profileExperience,
-                                profileTrajectory = profileTrajectory,
-                                profileGender = profileGender,
-                                profileAgeRange = profileAgeRange,
-                                profileSeasonalPattern = profileSeasonalPattern,
-                                profileTracksCycle = profileTracksCycle,
-                                profileTriggerAreas = profileTriggerAreas,
-                                profileFreeText = profileFreeText,
-                                medicineEffectiveness = medEffectiveness,
-                                reliefEffectiveness = reliefEffectiveness,
-                                contextItems = filteredImpact.contextItems,
-                                impactItems = filteredImpact.impactItems,
-                                painLocationCounts = filteredImpact.painLocationCounts,
-                                severityCounts = filteredImpact.severityCounts,
-                                totalMigraineCount = filteredImpact.totalMigraineCount,
-                                overallAvgSeverity = filteredImpact.overallAvgSeverity,
-                                symptomStats = vm.symptomStats.value,
-                                symptomOutcomes = vm.symptomOutcomes.value,
-                                symptomSegments = vm.symptomSegments.value,
-                                treatments = treatments,
-                                treatmentNarratives = narratives,
-                                treatmentSideEffects = sideEffects,
-                                linkedItemsByMigraine = linkedItemsByMigraine,
-                                symptomsByMigraine = symptomsByMigraine)
-                            val generator = ReportPdfGenerator(ctx)
-                            android.util.Log.d("ReportPDF", "Calling generator.generate()")
-                            val file = generator.generate(reportData)
-                            android.util.Log.d("ReportPDF", "PDF generated: ${file?.absolutePath}")
+                            val file = ReportHtmlPrinter.renderToPdf(ctx, html)
                             isGeneratingPdf = false
-                            if (file != null) { generator.share(file) }
-                            else { android.widget.Toast.makeText(ctx, "Failed to generate PDF", android.widget.Toast.LENGTH_SHORT).show() }
+                            if (file != null) ReportHtmlPrinter.share(ctx, file)
+                            else android.widget.Toast.makeText(
+                                ctx, "Failed to generate PDF", android.widget.Toast.LENGTH_SHORT,
+                            ).show()
                         } catch (e: Exception) {
                             isGeneratingPdf = false
                             android.util.Log.e("ReportPDF", "PDF error", e)
-                            android.widget.Toast.makeText(ctx, "PDF error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(
+                                ctx, "PDF error: ${e.message}", android.widget.Toast.LENGTH_LONG,
+                            ).show()
                         }
                     }
                 },
@@ -654,6 +562,22 @@ fun InsightsReportScreen(
                     }
                 }
 
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BrainyBlobIcon(resId = R.drawable.brainy_migraines_small, flip = true)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Frequency Trends", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text("When the attacks fall and how that is moving",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+
                 // 1. Day of Week
                 if (filteredDayOfWeek.any { it.count > 0 }) {
                     BaseCard {
@@ -675,7 +599,7 @@ fun InsightsReportScreen(
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                     Spacer(Modifier.height(2.dp))
                                     val barH = (stat.pct / maxPct * 80f).coerceAtLeast(4f)
-                                    val barColor = if (stat.pct > maxPct * 0.8f) Color(0xFFE57373) else AppTheme.AccentPurple
+                                    val barColor = frequencyBarColor(stat.pct, maxPct)
                                     Canvas(Modifier.fillMaxWidth(0.6f).height(barH.dp)) {
                                         drawRoundRect(barColor, cornerRadius = CornerRadius(4f, 4f))
                                     }
@@ -749,7 +673,7 @@ fun InsightsReportScreen(
                                     Spacer(Modifier.height(2.dp))
                                     val barH = (avg / maxAvg * 80f).coerceAtLeast(4f)
                                     Canvas(Modifier.width(24.dp).height(barH.dp)) {
-                                        drawRoundRect(AppTheme.AccentPink.copy(alpha = 0.7f), cornerRadius = CornerRadius(4f, 4f))
+                                        drawRoundRect(frequencyBarColor(avg, maxAvg).copy(alpha = 0.7f), cornerRadius = CornerRadius(4f, 4f))
                                     }
                                     Spacer(Modifier.height(2.dp))
                                     Text(monthStart.format(durFmt), color = AppTheme.SubtleTextColor,
@@ -771,10 +695,6 @@ fun InsightsReportScreen(
                 }
                 if (seasonalCounts.sum() > 0) {
                     val labels = listOf("Winter", "Spring", "Summer", "Autumn")
-                    val colors = listOf(
-                        Color(0xFF4FC3F7), Color(0xFF81C784),
-                        Color(0xFFFFB74D), Color(0xFFFF8A65),
-                    )
                     val maxSeason = seasonalCounts.max().coerceAtLeast(1)
                     val total = seasonalCounts.sum()
                     BaseCard {
@@ -787,8 +707,7 @@ fun InsightsReportScreen(
                             verticalAlignment = Alignment.Bottom,
                         ) {
                             seasonalCounts.forEachIndexed { i, count ->
-                                val isMax = count == maxSeason && count > 0
-                                val barColor = if (isMax) Color(0xFFE57373) else colors[i]
+                                val barColor = frequencyBarColor(count.toFloat(), maxSeason.toFloat(), FrequencyPinkRamp)
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.weight(1f),
@@ -869,6 +788,20 @@ fun InsightsReportScreen(
                 )
             }
 
+            // ========== 3a-ii. TREATMENT TIMING (early vs late, all-time) ==========
+            // The engine only writes a row once both buckets clear >= 3 attacks
+            // and the gap is >= 1.5 points, so anything here is safe to print
+            // as-is. Deliberately all-time and not filtered: the split is the
+            // user's own median delay across their whole history.
+            if (treatmentTiming.isNotEmpty()) {
+                Column {
+                    TreatmentTimingCard(treatmentTiming)
+                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                }
+            }
+
             // ========== 3. WHAT WORKED (all time) ==========
             val previewTreatments = remember(correlationStats) {
                 correlationStats.filter { it.factorType == "treatment" && it.liftRatio > 1.2f }
@@ -891,80 +824,175 @@ fun InsightsReportScreen(
                 }
             }
 
+            // ========== 3b. WHAT'S HELPING (Well Done layer, all-time) ==========
+            val previewWellDone = remember(correlationStats) {
+                correlationStats.filter { it.factorType == "well_done" }
+                    .sortedByDescending { it.liftRatio }.take(3)
+            }
+            val previewWellDoneChains = remember(correlationStats) {
+                correlationStats.filter { it.factorType == "well_done_chain" }
+                    .sortedByDescending { it.liftRatio }.take(3)
+            }
+            if (previewWellDone.isNotEmpty() || previewWellDoneChains.isNotEmpty()) {
+                Column {
+                    // Gardener is What's Helping's costume on the Insights hub;
+                    // the report section wears the same one so the two read as
+                    // the same thing.
+                    BrainyWatermarkCard(resId = R.drawable.brainy_gardener, flipWatermark = true) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            BrainyBlobIcon(resId = R.drawable.brainy_gardener_small)
+                            Spacer(Modifier.width(10.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("What's Helping", color = AppTheme.TitleColor,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text("Habits that show up on your migraine-free days",
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                            TextButton(onClick = { navController.navigate(Routes.INSIGHTS_WHATS_HELPING) }) {
+                                Text("All →", color = AppTheme.AccentPurple)
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        previewWellDone.forEach { stat -> WellDoneDirectRow(stat) }
+                        previewWellDoneChains.forEach { stat -> WellDoneChainRow(stat) }
+                    }
+                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                }
+            }
+
             // ========== 4. WHAT WERE YOU DOING (filtered) ==========
             if (filteredImpact.contextItems.isNotEmpty()) {
+                // contextIconKeys gives the rows their Brainy log art, the same
+                // icons the user sees when logging the activity or location.
                 ContextCard(filteredImpact.contextItems.take(5), filteredImpact.overallAvgSeverity,
-                    onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) })
+                    onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) },
+                    contextIconKeys = contextIconKeys)
             }
 
             // ========== 5. HOW DID IT IMPACT YOU (filtered) ==========
-            if (filteredImpact.severityCounts.isNotEmpty() || filteredImpact.painLocationCounts.isNotEmpty() || filteredImpact.impactItems.isNotEmpty()) {
+            // Aura zones / duration and the top symptoms were already computed
+            // for the PDF but never rendered on screen. ImpactCard has taken
+            // both since the aura-detail build, so this is a wiring gap, not a
+            // new card.
+            val hasAura = filteredImpact.auraZoneCounts.isNotEmpty() && filteredImpact.auraAttackCount > 0
+            if (filteredImpact.severityCounts.isNotEmpty() || filteredImpact.painLocationCounts.isNotEmpty() ||
+                filteredImpact.impactItems.isNotEmpty() || hasAura) {
                 ImpactCard(
                     impactItems = filteredImpact.impactItems.take(3),
                     painLocationCounts = filteredImpact.painLocationCounts,
                     severityCounts = filteredImpact.severityCounts,
                     totalMigraines = filteredImpact.totalMigraineCount,
                     overallAvgSeverity = filteredImpact.overallAvgSeverity,
+                    topSymptoms = symptomStats.take(5),
+                    auraZoneCounts = filteredImpact.auraZoneCounts,
+                    auraAttacks = filteredImpact.auraAttackCount,
+                    auraDurationStats = filteredImpact.auraDurationStats,
+                    auraInsights = auraInsights,
                     onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
                 )
             }
 
-            // ========== 6. MIGRAINE TIMELINE ==========
-            BaseCard {
-                Text("Migraine Timeline", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            // ========== 5a. HOW YOUR PAIN MOVES (all-time) ==========
+            // Null unless >= 3 attacks with a real multi-entry timeline agreed
+            // on a pattern, so there is no empty-state branch to write here.
+            painMigration?.let { pm ->
+                Column {
+                    PainMigrationCard(pm)
+                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                }
+            }
 
-                if (filteredSorted.isEmpty()) {
-                    Text(
-                        if (sorted.isEmpty()) "No migraines logged yet"
-                        else "No migraines match filters",
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                } else {
-                    // Migraine selector
-                    DetailMigraineSelector(filteredSorted, clampedIdx, sel,
-                        onPrev = { if (clampedIdx < filteredSorted.size - 1) vm.selectMigraine(clampedIdx + 1) },
-                        onNext = { if (clampedIdx > 0) vm.selectMigraine(clampedIdx - 1) })
+            // ========== 6. ATTACK LOG ==========
+            // One card per attack: the person, the aura eyes, the window of
+            // metrics and events, and the sequence — the same composition the
+            // PDF prints, so the screen and the report cannot disagree.
+            if (filteredSorted.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                ReportSectionHeader(
+                    title = "Attack log",
+                    subtitle = "Every attack in range, in the order things happened",
+                    resId = R.drawable.brainy_briefcase_small,
+                )
+                Spacer(Modifier.height(8.dp))
 
-                    if (linkedLoading) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                            CircularProgressIndicator(Modifier.size(16.dp),
-                                strokeWidth = 2.dp, color = AppTheme.AccentPurple)
-                        }
-                    } else {
-                        val catCounts = remember(windowEvents) {
-                            windowEvents.groupBy { it.category }.mapValues { it.value.size }
-                        }
-                        if (catCounts.isNotEmpty()) {
-                            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                verticalAlignment = Alignment.CenterVertically) {
-                                catCounts.forEach { (c, n) ->
-                                    DetailChip(n, c, EventCategoryColors[c] ?: AppTheme.AccentPurple)
-                                }
-                            }
+                // Window stepper: every attack card honours it, so the reader
+                // can widen the context without leaving the report.
+                WindowDaysControl(wBefore, wAfter, onChanged = { b, a -> vm.setWindowDays(b, a) })
+
+                val metricSources by vm.metricSources.collectAsState()
+                if (metricSources.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    SourceBadgeRow(metricSources.sorted())
+                }
+                Spacer(Modifier.height(8.dp))
+
+                val symptomCats = remember { vm.catSymptomMap() }
+                filteredSorted.take(ATTACK_CARDS_SHOWN).forEach { attack ->
+                    val id = attack.id
+                    val detail = remember(attack, painPointsByMigraine, allSymptoms) {
+                        buildReportAttackDetail(attack, painPointsByMigraine, allSymptoms)
+                    }
+                    val aStart = attack.start.minus(Duration.ofDays(wBefore))
+                    val aEnd = (attack.end ?: attack.start).plus(Duration.ofDays(wAfter))
+                    val aDates = remember(aStart, aEnd) {
+                        val f = LocalDate.ofInstant(aStart, zone)
+                        val t = LocalDate.ofInstant(aEnd, zone)
+                        generateSequence(f) { it.plusDays(1) }.takeWhile { !it.isAfter(t) }
+                            .map { it.toString() }.toSet()
+                    }
+                    val aSeries = remember(aDates, enabledKeys, allDailyMetrics) {
+                        AllMetricDefs.filter { it.key in enabledKeys }.mapNotNull { d ->
+                            val pts = allDailyMetrics[d.key]?.filter { it.date in aDates }.orEmpty()
+                            if (pts.size < 2) null
+                            else MetricSeries(d.key, d.label, d.unit, d.color,
+                                pts.map { DailyMetricPoint(it.date, it.value) })
                         }
                     }
-
-                    // Graph
-                    InsightsTimelineGraph(
-                        windowMigs, windowEvents, enabledSeries,
-                        wStart, wEnd, sel?.start,
-                        Modifier.fillMaxWidth().height(360.dp))
-
-                    Text("Window around migraine", color = AppTheme.SubtleTextColor,
+                    AttackCard(
+                        mg = attack,
+                        detail = detail,
+                        events = if (id == sel?.id) windowEvents else emptyList(),
+                        metrics = aSeries,
+                        windowStart = aStart,
+                        windowEnd = aEnd,
+                        linked = if (id == sel?.id) linkedItems else null,
+                        symptoms = allSymptoms.filter { it.migraineId == id },
+                        symptomCategories = symptomCats,
+                        auraZones = auraZonesByMigraine[id].orEmpty(),
+                    )
+                }
+                if (filteredSorted.size > ATTACK_CARDS_SHOWN) {
+                    Text(
+                        "Showing $ATTACK_CARDS_SHOWN of ${filteredSorted.size} attacks · the PDF includes all ${filteredSorted.size}",
+                        color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall,
-                        textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-
-                    // Window adjustment
-                    WindowDaysControl(wBefore, wAfter, onChanged = { b, a -> vm.setWindowDays(b, a) })
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    )
                 }
             }
 
             // ========== 7. SPIDERS (filtered) ==========
 
             if (filteredSorted.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BrainyBlobIcon(resId = R.drawable.brainy_migraines_small)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("What You Logged", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Every log type across the attacks in range",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
                 val hasMigraineSyms = (spiders.painChar?.totalLogged ?: 0) > 0
                     || (spiders.accompanying?.totalLogged ?: 0) > 0
                     || (spiders.postdrome?.totalLogged ?: 0) > 0
@@ -1010,9 +1038,19 @@ fun InsightsReportScreen(
             // ========== 8. HEALTH METRICS (filtered) ==========
             if (enabledSeries.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                Text("Health Metrics", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.padding(horizontal = 4.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BrainyBlobIcon(resId = R.drawable.brainy_physical_small)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Health Metrics", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Everything tracked around the attacks in range",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
 
                 // Date range from filtered migraines ±7 days
@@ -1950,13 +1988,12 @@ private fun ReportRegimenTreatmentsCard(
     }
     val pink = androidx.compose.ui.graphics.Color(0xFFFF7BB0)
 
-    BaseCard {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(Icons.Outlined.MedicalServices, null,
-                tint = androidx.compose.ui.graphics.Color(0xFF4DD0E1), modifier = Modifier.size(20.dp))
-            Text("Treatments", color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-        }
+    BrainyWatermarkCard(resId = R.drawable.brainy_treatments, flipWatermark = true) {
+        ReportSectionHeader(
+            title = "Treatments",
+            subtitle = "How each regimen has changed your migraine days",
+            resId = R.drawable.brainy_treatments_small,
+        )
         Spacer(Modifier.height(8.dp))
         sorted.forEachIndexed { idx, r ->
             RegimenRow(r, narratives[r.regimenId], sideEffects[r.regimenId] ?: emptyList(), pink)
@@ -1988,6 +2025,7 @@ private fun RegimenRow(
 
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            BrainyRowIcon(r.name, category = r.kind, size = 20.dp)
             Column(modifier = Modifier.weight(1f)) {
                 Text(r.name, color = androidx.compose.ui.graphics.Color.White,
                     fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
@@ -2055,3 +2093,706 @@ private fun regimenBandColor(b: String): androidx.compose.ui.graphics.Color = wh
     else -> androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f)
 }
 
+
+// ======= Attack log (pain timeline + rated symptoms per attack) =======
+
+/**
+ * How many pain entries are printed per attack before the rest are summarised.
+ * Someone logging every twinge can produce dozens of entries for one attack;
+ * past ten the doctor is reading noise, not a pattern. The count of what was
+ * dropped is always shown so the report never silently truncates.
+ */
+private const val PAIN_ENTRIES_SHOWN = 10
+
+/** Attack cards rendered on screen. This list is scrollable, not lazy, so a
+ *  hundred cards would stall the report; the PDF carries the full set. */
+private const val ATTACK_CARDS_SHOWN = 12
+
+/** One moment in an attack: rows sharing a `start_at` are a single entry. */
+internal data class ReportPainEntry(
+    val at: Instant?,
+    val severity: Int?,
+    val locations: List<String>,
+)
+
+internal data class ReportAttackDetail(
+    val migraine: MigraineSpan,
+    /** Capped at [PAIN_ENTRIES_SHOWN]. */
+    val painEntries: List<ReportPainEntry>,
+    val totalPainEntries: Int,
+    /** Only symptoms carrying an intensity or a time — the rest are already
+     *  listed as the attack's type. */
+    val symptoms: List<SupabaseDbService.SymptomLogRow>,
+)
+
+/**
+ * Null when the attack has nothing timed to say, which keeps pre-feature
+ * attacks out of the section instead of giving them an empty row.
+ */
+internal fun buildReportAttackDetail(
+    mg: MigraineSpan,
+    painPointsByMigraine: Map<String, List<SupabaseDbService.PainPointRow>>,
+    allSymptoms: List<SupabaseDbService.SymptomLogRow>,
+): ReportAttackDetail? {
+    val id = mg.id ?: return null
+    val grouped = painPointsByMigraine[id].orEmpty()
+        .groupBy { it.startAt }
+        .toSortedMap()
+        .map { (startAt, rows) ->
+            ReportPainEntry(
+                at = TimeOfDay.parseInstant(startAt),
+                severity = rows.mapNotNull { it.severity }.maxOrNull(),
+                // prettyLabel, not the raw id: a location the map doesn't know
+                // (older logs, ids added since) should still read as English.
+                locations = rows.map { ALL_PAIN_POINTS_MAP[it.locationId] ?: prettyLabel(it.locationId) },
+            )
+        }
+    val symptoms = allSymptoms.filter {
+        it.migraineId == id && (it.severity != null || it.startAt != null)
+    }
+    if (grouped.isEmpty() && symptoms.isEmpty()) return null
+    return ReportAttackDetail(
+        migraine = mg,
+        painEntries = grouped.take(PAIN_ENTRIES_SHOWN),
+        totalPainEntries = grouped.size,
+        symptoms = symptoms,
+    )
+}
+
+/**
+ * How far an event sits from the attack's onset: "+2h 10m", "-2d 4h",
+ * "at onset". Triggers and prodromes are routinely logged hours or days
+ * BEFORE the attack, so the sign carries real clinical meaning and must
+ * never be flattened to "at onset".
+ */
+internal fun offsetFromStart(start: Instant, at: Instant?): String {
+    if (at == null) return ""
+    val mins = Duration.between(start, at).toMinutes()
+    if (mins == 0L) return "at onset"
+    val sign = if (mins < 0) "-" else "+"
+    val abs = kotlin.math.abs(mins)
+    val d = abs / 1440
+    val h = (abs % 1440) / 60
+    val m = abs % 60
+    return when {
+        d > 0L && h > 0L -> "$sign${d}d ${h}h"
+        d > 0L -> "$sign${d}d"
+        h > 0L && m > 0L -> "$sign${h}h ${m}m"
+        h > 0L -> "$sign${h}h"
+        else -> "$sign${m}m"
+    }
+}
+
+@Composable
+private fun AttackLogCard(details: List<ReportAttackDetail>) {
+    val zone = ZoneId.systemDefault()
+    val dateFmt = remember { DateTimeFormatter.ofPattern("d MMM yyyy").withZone(ZoneId.systemDefault()) }
+
+    BrainyWatermarkCard(resId = R.drawable.brainy_briefcase, flipWatermark = true) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            BrainyBlobIcon(resId = R.drawable.brainy_briefcase_small)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Attack Log", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("How the pain and symptoms moved through each attack",
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+        details.forEach { d ->
+            Spacer(Modifier.height(12.dp))
+            val mg = d.migraine
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(dateFmt.format(mg.start), color = Color.White,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+                Spacer(Modifier.weight(1f))
+                mg.severity?.let { s ->
+                    Text("Peak $s/10", color = severityColor(s),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+            }
+
+            d.painEntries.forEachIndexed { i, e ->
+                Spacer(Modifier.height(4.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Text(
+                        if (i == 0) "Pain" else "Then",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.width(44.dp)
+                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            buildString {
+                                append(offsetFromStart(mg.start, e.at).ifBlank { "time not logged" })
+                                e.severity?.let { append(" · $it/10") }
+                            },
+                            color = e.severity?.let { severityColor(it) } ?: AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                        )
+                        Text(e.locations.joinToString(", "),
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+            if (d.totalPainEntries > d.painEntries.size) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Showing ${d.painEntries.size} of ${d.totalPainEntries} pain entries",
+                    color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                )
+            }
+
+            d.symptoms.forEach { s ->
+                Spacer(Modifier.height(4.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    // Same Brainy art the user saw when logging the symptom;
+                    // label-first so pool items they added themselves resolve too.
+                    val symIcon = SymptomIcons.forKey(s.type)
+                    val symBrainy = brainyForLogKey(s.type, s.type) ?: brainyForLogVector(symIcon)
+                    if (symBrainy != null || symIcon != null) {
+                        LogIconImage(drawableId = symBrainy, fallback = symIcon,
+                            size = if (symBrainy != null) 26.dp else 18.dp, tint = Color(0xFF9575CD))
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text(
+                        (s.type ?: "Symptom").replace("_", " ").replaceFirstChar { it.uppercase() },
+                        color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f)
+                    )
+                    val detail = listOfNotNull(
+                        s.severity?.lowercase(),
+                        s.startAt?.let { TimeOfDay.parseInstant(it) }
+                            ?.let { offsetFromStart(mg.start, it) }?.takeIf { it.isNotBlank() },
+                    ).joinToString(" · ")
+                    if (detail.isNotEmpty()) {
+                        Text(detail, color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun severityColor(s: Int): Color = when {
+    s <= 3 -> Color(0xFF81C784)
+    s <= 6 -> Color(0xFFFFB74D)
+    else -> Color(0xFFE57373)
+}
+
+/**
+ * Section header in the Brainy style used across Insights and Monitor: blob
+ * icon, title, one line of plain-language context. Used for the report's own
+ * sections; the shared preview cards (Patterns, Treatments, Impact) already
+ * carry their own.
+ */
+@Composable
+internal fun ReportSectionHeader(
+    title: String,
+    subtitle: String,
+    resId: Int,
+    flip: Boolean = false,
+) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        BrainyBlobIcon(resId = resId, flip = flip)
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(subtitle, color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+// ======= Attack card: the PDF's composition, on screen =======
+
+/**
+ * One attack, shown the way the printed report shows it: where the pain sat,
+ * what the aura looked like, the health metrics and events around it, and the
+ * sequence spelled out underneath.
+ *
+ * This replaces the separate "Migraine Timeline" card — the two were the same
+ * attack described twice, and keeping one composition means the screen and the
+ * PDF can't drift.
+ */
+@Composable
+internal fun AttackCard(
+    mg: MigraineSpan,
+    detail: ReportAttackDetail?,
+    events: List<EventMarker>,
+    metrics: List<MetricSeries>,
+    windowStart: Instant,
+    windowEnd: Instant,
+    linked: SupabaseDbService.MigraineLinkedItems?,
+    symptoms: List<SupabaseDbService.SymptomLogRow>,
+    symptomCategories: Map<String, String>,
+    /** Timestamped aura zones for this attack, when it has them. */
+    auraZones: List<SupabaseDbService.AuraZoneRow> = emptyList(),
+) {
+    val zone = ZoneId.systemDefault()
+    val dateFmt = remember { DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm").withZone(zone) }
+    val hrs = mg.end?.let { (it.toEpochMilli() - mg.start.toEpochMilli()) / 3_600_000.0 }
+
+    BaseCard {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(dateFmt.format(mg.start), color = Color.White,
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+            Spacer(Modifier.weight(1f))
+            Text(
+                buildString {
+                    append(mg.severity?.let { "Severity $it" } ?: "Severity —")
+                    append(hrs?.let { " · ${String.format("%.1f", it)}h" } ?: " · ongoing")
+                },
+                color = mg.severity?.let { severityColor(it) } ?: AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        val painIds = remember(mg, detail) {
+            (mg.painLocations + detail?.painEntries.orEmpty().flatMap { it.locations }).distinct()
+        }
+
+        // Visuals across the top, chart full width underneath — the chart is
+        // the part that needs the room.
+        val hasVisuals = painIds.isNotEmpty() || mg.auraLocations.isNotEmpty()
+        if (hasVisuals) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (painIds.isNotEmpty()) {
+                    AttackPainMap(mg, detail, Modifier.width(112.dp))
+                }
+                if (mg.auraLocations.isNotEmpty()) {
+                    // Staged when the attack has timed zones: the later a zone
+                    // appeared, the deeper it reads — same rule as the pain
+                    // dots. Untimed attacks get one flat shade.
+                    val moments = auraZones.filter { it.startAt != null }
+                        .groupBy { it.startAt!! }
+                        .toSortedMap()
+                    val counts = if (moments.isEmpty()) {
+                        mg.auraLocations.map { it to 100 }
+                    } else {
+                        val steps = (moments.size - 1).coerceAtLeast(1)
+                        moments.entries.flatMapIndexed { i, entry ->
+                            entry.value.map { it.zone to (30 + (i * 70 / steps)) }
+                        }
+                    }
+                    AuraHeatMap(
+                        auraZoneCounts = counts,
+                        totalAuraAttacks = 100,
+                        modifier = Modifier.weight(1f),
+                        showPercentages = false,
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        AttackChart(
+            mg = mg, detail = detail, events = events, metrics = metrics,
+            windowStart = windowStart, windowEnd = windowEnd,
+            modifier = Modifier.fillMaxWidth().height(if (metrics.isEmpty()) 160.dp else 250.dp),
+        )
+
+        Spacer(Modifier.height(8.dp))
+        AttackSequence(mg, detail, linked, symptoms, symptomCategories, metrics)
+    }
+}
+
+/** The attack's sequence, then the same items grouped by category. */
+@Composable
+private fun AttackSequence(
+    mg: MigraineSpan,
+    detail: ReportAttackDetail?,
+    linked: SupabaseDbService.MigraineLinkedItems?,
+    symptoms: List<SupabaseDbService.SymptomLogRow>,
+    symptomCategories: Map<String, String>,
+    metrics: List<MetricSeries> = emptyList(),
+) {
+    data class Row3(val label: String, val at: Instant?, val text: String, val pain: Boolean = false)
+
+    val rows = remember(mg, detail, linked, symptoms) {
+        val out = mutableListOf<Row3>()
+        val catOf = { l: String -> symptomCategories[l.trim().lowercase()]?.lowercase() ?: "" }
+        val ts = { raw: String? -> raw?.let { TimeOfDay.parseInstant(it) } }
+        val rowFor = symptoms.filter { !it.type.isNullOrBlank() }
+            .associateBy { it.type!!.trim().lowercase() }
+
+        (mg.label ?: "").split(",").map { it.trim() }
+            .filter { it.isNotEmpty() && it != "Migraine" && catOf(it) != "postdrome" }
+            .forEach { label ->
+                val src = rowFor[label.lowercase()]
+                val note = src?.severity?.let { " · ${it.lowercase()}" } ?: ""
+                out += Row3("Symptom", src?.startAt?.let { TimeOfDay.parseInstant(it) },
+                    prettyLabel(label) + note)
+            }
+        symptoms.forEach { s ->
+            val t = s.type ?: return@forEach
+            if (catOf(t) != "postdrome") return@forEach
+            out += Row3("Postdrome", s.startAt?.let { TimeOfDay.parseInstant(it) },
+                prettyLabel(t) + (s.severity?.let { " · ${it.lowercase()}" } ?: ""))
+        }
+        detail?.painEntries?.forEach { e ->
+            out += Row3("Pain", e.at,
+                (e.severity?.let { "$it/10 — " } ?: "") + e.locations.joinToString(", "), pain = true)
+        }
+        if (detail == null && mg.painLocations.isNotEmpty()) {
+            out += Row3("Pain location", null,
+                mg.painLocations.joinToString(", ") { ALL_PAIN_POINTS_MAP[it] ?: prettyLabel(it) },
+                pain = true)
+        }
+        linked?.triggers?.forEach { r ->
+            r.type?.let { out += Row3("Trigger", ts(r.startAt), prettyLabel(it)) }
+        }
+        linked?.prodromes?.forEach { r ->
+            r.type?.let { out += Row3("Prodrome", ts(r.startAt), prettyLabel(it)) }
+        }
+        linked?.medicines?.forEach { r ->
+            val n = r.name ?: return@forEach
+            val amt = r.amount?.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""
+            out += Row3("Medicine", ts(r.startAt), prettyLabel(n) + amt)
+        }
+        linked?.reliefs?.forEach { r ->
+            r.type?.let { out += Row3("Relief", ts(r.startAt), prettyLabel(it)) }
+        }
+        linked?.locations?.forEach { r ->
+            r.type?.let { out += Row3("Location", ts(r.startAt), prettyLabel(it)) }
+        }
+        linked?.activities?.forEach { r ->
+            r.type?.let { out += Row3("Activity", ts(r.startAt), prettyLabel(it)) }
+        }
+        if (mg.auraLocations.isNotEmpty()) {
+            out += Row3("Aura", null,
+                mg.auraLocations.joinToString(", ") { AuraZones.label(it) } +
+                    (mg.auraDurationMinutes?.let { " · ${formatAuraDuration(it)}" } ?: ""))
+        }
+        val order = listOf("Symptom", "Prodrome", "Pain", "Pain location", "Postdrome",
+            "Aura", "Trigger", "Medicine", "Relief", "Activity", "Location")
+        out.filter { it.at != null }.sortedBy { it.at } +
+            out.filter { it.at == null }.sortedBy { order.indexOf(it.label).let { i -> if (i < 0) 99 else i } }
+    }
+
+    if (rows.isEmpty()) return
+
+    Text("BY CATEGORY", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+        style = MaterialTheme.typography.labelSmall)
+    rows.filter { it.label != "Aura" }
+        .groupBy { it.label }
+        .forEach { (cat, items) ->
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                Text(cat.uppercase(),
+                    color = if (items.first().pain) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(74.dp))
+                Text(items.joinToString(", ") { it.text }, color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+            }
+        }
+
+    // The chart scales each line to its own range, which is only honest if the
+    // real numbers are printed somewhere the reader can find them.
+    val drawn = metrics.filter { it.points.size >= 2 }
+    if (drawn.isNotEmpty()) {
+        Spacer(Modifier.height(8.dp))
+        Text("TRACKED DATA", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.labelSmall)
+        drawn.forEach { series ->
+            val values = series.points.map { it.value }
+            val min = values.min()
+            val max = values.max()
+            fun fmt(v: Double) = if (kotlin.math.abs(v) >= 100) String.format("%.0f", v) else String.format("%.1f", v)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(series.label + (series.unit.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""),
+                    color = series.color, style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f))
+                Text("${fmt(min)}–${fmt(max)}", color = AppTheme.BodyTextColor,
+                    style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+
+    Spacer(Modifier.height(8.dp))
+    Text("TIMELINE", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+        style = MaterialTheme.typography.labelSmall)
+    rows.forEach { r ->
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            Text(r.label, color = if (r.pain) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(74.dp))
+            Text(offsetFromStart(mg.start, r.at), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(58.dp))
+            Text(r.text, color = AppTheme.BodyTextColor,
+                style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+
+/**
+ * The attack's pain on the person: one dot per entry, numbered in the order
+ * they happened and deepening with time. Nothing is drawn when the attack has
+ * no pain locations — an empty head is not information.
+ */
+@Composable
+internal fun AttackPainMap(
+    mg: MigraineSpan,
+    detail: ReportAttackDetail?,
+    modifier: Modifier = Modifier,
+) {
+    data class Pin(val id: String, val n: Int, val alpha: Float)
+
+    val pins = remember(mg, detail) {
+        val entries = detail?.painEntries.orEmpty()
+        if (entries.isNotEmpty()) {
+            val steps = (entries.size - 1).coerceAtLeast(1)
+            entries.flatMapIndexed { i, entry ->
+                entry.locations.map { label ->
+                    val id = ALL_PAIN_POINTS_MAP.entries.firstOrNull { it.value == label }?.key ?: label
+                    Pin(id, i + 1, 0.35f + (i.toFloat() / steps) * 0.6f)
+                }
+            }
+        } else {
+            mg.painLocations.map { Pin(it, 0, 0.9f) }
+        }
+    }.filter { pin -> FRONT_PAIN_POINTS.any { it.id == pin.id } }
+
+    if (pins.isEmpty()) return
+
+    Box(modifier) {
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(R.drawable.painpoints),
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.matchParentSize()) {
+            val w = maxWidth
+            val h = maxHeight
+            pins.forEach { pin ->
+                val point = FRONT_PAIN_POINTS.firstOrNull { it.id == pin.id } ?: return@forEach
+                Box(
+                    Modifier
+                        .offset(x = w * point.xPct - 8.dp, y = h * point.yPct - 8.dp)
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(AppTheme.AccentPink.copy(alpha = pin.alpha))
+                        .border(1.dp, AppTheme.AccentPink, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (pin.n > 0) {
+                        Text("${pin.n}", color = Color.White,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/** Catmull-Rom through the points as cubic beziers — a data line that curves
+ *  rather than kinks reads as a trend instead of a zigzag. Same curve the
+ *  printed report draws. */
+private fun smoothPath(points: List<Offset>): Path {
+    val path = Path()
+    if (points.isEmpty()) return path
+    path.moveTo(points[0].x, points[0].y)
+    if (points.size == 2) {
+        path.lineTo(points[1].x, points[1].y)
+        return path
+    }
+    for (i in 0 until points.size - 1) {
+        val p0 = points.getOrElse(i - 1) { points[i] }
+        val p1 = points[i]
+        val p2 = points[i + 1]
+        val p3 = points.getOrElse(i + 2) { p2 }
+        path.cubicTo(
+            p1.x + (p2.x - p0.x) / 6f, p1.y + (p2.y - p0.y) / 6f,
+            p2.x - (p3.x - p1.x) / 6f, p2.y - (p3.y - p1.y) / 6f,
+            p2.x, p2.y,
+        )
+    }
+    return path
+}
+
+/**
+ * The attack window, drawn the way the report prints it: one uniform time axis,
+ * a top panel for the attack itself (pain curve plus every discrete event
+ * labelled at 45°) and a bottom panel for continuously tracked data, each line
+ * named and scaled to its own range. The onset line runs through both.
+ */
+@Composable
+internal fun AttackChart(
+    mg: MigraineSpan,
+    detail: ReportAttackDetail?,
+    events: List<EventMarker>,
+    metrics: List<MetricSeries>,
+    windowStart: Instant,
+    windowEnd: Instant,
+    modifier: Modifier = Modifier,
+) {
+    val zone = ZoneId.systemDefault()
+    val dayFmt = remember { DateTimeFormatter.ofPattern("dd MMM").withZone(zone) }
+    val hasMetrics = metrics.any { it.points.size >= 2 }
+    val density = LocalDensity.current
+
+    Canvas(modifier) {
+        val spanMs = (windowEnd.toEpochMilli() - windowStart.toEpochMilli()).coerceAtLeast(3_600_000L)
+        val padL = 26.dp.toPx()
+        val padR = 10.dp.toPx()
+        val plotW = size.width - padL - padR
+        fun xOf(t: Instant): Float {
+            val ms = t.toEpochMilli().coerceIn(windowStart.toEpochMilli(), windowEnd.toEpochMilli())
+            return padL + (ms - windowStart.toEpochMilli()).toFloat() / spanMs * plotW
+        }
+
+        val p1Top = 6.dp.toPx()
+        val painTop = p1Top + 10.dp.toPx()
+        val painH = 62.dp.toPx()
+        val p1Bottom = painTop + painH + 40.dp.toPx()   // room for the 45° labels
+        val p2Top = p1Bottom + 8.dp.toPx()
+        val metricTop = p2Top + 10.dp.toPx()
+        val metricH = if (hasMetrics) 62.dp.toPx() else 0f
+        val p2Bottom = if (hasMetrics) metricTop + metricH + 4.dp.toPx() else p1Bottom
+
+        fun yPain(sev: Float) = painTop + (1f - sev / 10f) * painH
+
+        // Panels
+        val panelFill = Color.White.copy(alpha = 0.022f)
+        drawRoundRect(panelFill, Offset(padL - 6.dp.toPx(), p1Top),
+            androidx.compose.ui.geometry.Size(size.width - padL, p1Bottom - p1Top),
+            CornerRadius(8.dp.toPx()))
+        if (hasMetrics) {
+            drawRoundRect(panelFill, Offset(padL - 6.dp.toPx(), p2Top),
+                androidx.compose.ui.geometry.Size(size.width - padL, p2Bottom - p2Top),
+                CornerRadius(8.dp.toPx()))
+        }
+
+        // Day stripes and date ticks
+        val dayMs = 86_400_000L
+        var day = windowStart.toEpochMilli()
+        var idx = 0
+        val nativeCanvas = drawContext.canvas.nativeCanvas
+        val tickPaint = android.graphics.Paint().apply {
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.75f).toArgb()
+            textSize = with(density) { 7.sp.toPx() }
+            textAlign = android.graphics.Paint.Align.CENTER
+            isAntiAlias = true
+        }
+        while (day <= windowEnd.toEpochMilli()) {
+            val x = xOf(Instant.ofEpochMilli(day))
+            val next = xOf(Instant.ofEpochMilli(minOf(day + dayMs, windowEnd.toEpochMilli())))
+            if (idx % 2 == 0) {
+                drawRect(Color.White.copy(alpha = 0.018f), Offset(x, p1Top + 10.dp.toPx()),
+                    androidx.compose.ui.geometry.Size((next - x).coerceAtLeast(0f), p2Bottom - p1Top - 10.dp.toPx()))
+            }
+            drawLine(Color.White.copy(alpha = 0.06f), Offset(x, p1Top + 10.dp.toPx()),
+                Offset(x, p2Bottom), strokeWidth = 1f)
+            // Days from onset rather than calendar dates: on a per-attack
+            // window the useful question is "how long before".
+            val fromOnset = ((day - mg.start.toEpochMilli()) / dayMs.toDouble()).let { Math.round(it) }
+            val label = when {
+                fromOnset == 0L -> "onset"
+                fromOnset > 0 -> "+${fromOnset}d"
+                else -> "${fromOnset}d"
+            }
+            nativeCanvas.drawText(label, x, size.height - 2.dp.toPx(), tickPaint)
+            day += dayMs
+            idx++
+        }
+
+        // Severity gridlines
+        val axisPaint = android.graphics.Paint().apply {
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.75f).toArgb()
+            textSize = with(density) { 7.sp.toPx() }
+            isAntiAlias = true
+        }
+        listOf(0f, 5f, 10f).forEach { sv ->
+            drawLine(Color.White.copy(alpha = 0.05f), Offset(padL, yPain(sv)),
+                Offset(size.width - padR, yPain(sv)), strokeWidth = 1f)
+            nativeCanvas.drawText(sv.toInt().toString(), 4.dp.toPx(), yPain(sv) + 3.dp.toPx(), axisPaint)
+        }
+
+        // The attack itself, shaded through both panels
+        val attackEnd = mg.end ?: mg.start
+        drawRect(AppTheme.AccentPink.copy(alpha = 0.10f), Offset(xOf(mg.start), p1Top + 10.dp.toPx()),
+            androidx.compose.ui.geometry.Size((xOf(attackEnd) - xOf(mg.start)).coerceAtLeast(2f),
+                p2Bottom - p1Top - 10.dp.toPx()))
+
+        // Pain curve, carried out to the end of the attack
+        val pain = detail?.painEntries.orEmpty().mapNotNull { e ->
+            e.at?.let { it to (e.severity?.toFloat() ?: return@mapNotNull null) }
+        }
+        if (pain.size >= 2) {
+            val pts = pain + listOf(attackEnd to pain.last().second)
+            val path = smoothPath(pts.map { (t, sev) -> Offset(xOf(t), yPain(sev)) })
+            drawPath(path, AppTheme.AccentPink.copy(alpha = 0.25f), style = Stroke(width = 5.dp.toPx(), cap = StrokeCap.Round))
+            drawPath(path, AppTheme.AccentPink, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+            pain.forEach { (t, sev) ->
+                drawCircle(AppTheme.AccentPink, radius = 3.dp.toPx(), center = Offset(xOf(t), yPain(sev)))
+            }
+        }
+
+        // Events: a pin at the axis with its name set at 45°
+        val labelPaint = android.graphics.Paint().apply {
+            color = AppTheme.BodyTextColor.copy(alpha = 0.85f).toArgb()
+            textSize = with(density) { 7.sp.toPx() }
+            isAntiAlias = true
+        }
+        val used = mutableListOf<Float>()
+        events.sortedBy { it.at }.forEach { ev ->
+            var x = xOf(ev.at)
+            while (used.any { kotlin.math.abs(it - x) < 7.dp.toPx() }) x += 7.dp.toPx()
+            used += x
+            val baseY = painTop + painH
+            drawLine(ev.color.copy(alpha = 0.3f), Offset(x, painTop), Offset(x, p2Bottom),
+                strokeWidth = 1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f)))
+            drawCircle(ev.color, radius = 3.dp.toPx(), center = Offset(x, baseY))
+            nativeCanvas.save()
+            nativeCanvas.rotate(45f, x + 2.dp.toPx(), baseY + 6.dp.toPx())
+            nativeCanvas.drawText(ev.name, x + 2.dp.toPx(), baseY + 6.dp.toPx(), labelPaint)
+            nativeCanvas.restore()
+        }
+
+        // Onset
+        drawLine(AppTheme.AccentPink.copy(alpha = 0.55f), Offset(xOf(mg.start), p1Top),
+            Offset(xOf(mg.start), p2Bottom), strokeWidth = 1.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
+
+        // Tracked data: each line scaled to its own range, named on the line
+        if (hasMetrics) {
+            metrics.filter { it.points.size >= 2 }.forEachIndexed { i, series ->
+                val pts = series.points.mapNotNull { pt ->
+                    runCatching { LocalDate.parse(pt.date).atStartOfDay(zone).toInstant() }
+                        .getOrNull()?.let { it to pt.value.toFloat() }
+                }.filter { it.first >= windowStart && it.first <= windowEnd }
+                if (pts.size < 2) return@forEachIndexed
+                val min = pts.minOf { it.second }
+                val max = pts.maxOf { it.second }
+                val range = (max - min).takeIf { it != 0f } ?: 1f
+                fun yOf(v: Float) = metricTop + (1f - (v - min) / range) * metricH
+                val path = smoothPath(pts.map { (t, v) -> Offset(xOf(t), yOf(v)) })
+                drawPath(path, series.color.copy(alpha = 0.18f), style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round))
+                drawPath(path, series.color, style = Stroke(width = 1.4.dp.toPx(), cap = StrokeCap.Round))
+
+                val lx = padL + plotW * (0.06f + (i % 4) * 0.22f)
+                val near = pts.minByOrNull { kotlin.math.abs(xOf(it.first) - lx) } ?: pts.first()
+                val ly = (yOf(near.second) - 5.dp.toPx()).coerceAtLeast(metricTop + 7.dp.toPx())
+                val namePaint = android.graphics.Paint().apply {
+                    color = series.color.toArgb()
+                    textSize = with(density) { 7.sp.toPx() }
+                    isAntiAlias = true
+                }
+                nativeCanvas.drawText(series.label, lx, ly, namePaint)
+            }
+        }
+    }
+}

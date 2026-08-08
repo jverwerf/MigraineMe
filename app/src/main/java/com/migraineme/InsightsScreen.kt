@@ -6,10 +6,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,8 +27,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -50,13 +55,132 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.interaction.MutableInteractionSource
 
+/** Brainy header icon inside a soft organic blob. */
+@Composable
+internal fun BrainyBlobIcon(resId: Int = R.drawable.brainy_detective_small, flip: Boolean = false) {
+    Box(
+        modifier = Modifier
+            .size(width = 58.dp, height = 54.dp)
+            .background(
+                brush = Brush.linearGradient(
+                    listOf(Color(0x57CE93D8), Color(0x24B388FF))
+                ),
+                shape = RoundedCornerShape(
+                    topStartPercent = 46, topEndPercent = 54,
+                    bottomEndPercent = 42, bottomStartPercent = 58
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(resId),
+            contentDescription = null,
+            modifier = Modifier
+                .size(44.dp)
+                .graphicsLayer(scaleX = if (flip) -1f else 1f)
+        )
+    }
+}
+
+/**
+ * Static navigation card for the Insights hub: Brainy + title + a one-line
+ * description of what lives on the detail page. Never shows data itself.
+ */
+@Composable
+internal fun BrainyNavCard(
+    title: String,
+    description: String,
+    resId: Int,
+    onClick: () -> Unit,
+    flipBlob: Boolean = false,
+    flipWatermark: Boolean = false,
+) {
+    BrainyWatermarkCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        resId = resId,
+        flipWatermark = flipWatermark
+    ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            BrainyBlobIcon(resId = smallVariantOf(resId), flip = flipBlob)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(description, color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall)
+            }
+            Spacer(Modifier.width(8.dp))
+            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+private fun smallVariantOf(resId: Int): Int = when (resId) {
+    R.drawable.brainy_detective -> R.drawable.brainy_detective_small
+    R.drawable.brainy_archer -> R.drawable.brainy_archer_small
+    R.drawable.brainy_shield -> R.drawable.brainy_shield_small
+    R.drawable.brainy_runner -> R.drawable.brainy_runner_small
+    R.drawable.brainy_briefcase -> R.drawable.brainy_briefcase_small
+    R.drawable.brainy_recover -> R.drawable.brainy_recover_small
+    R.drawable.brainy_gardener -> R.drawable.brainy_gardener_small
+    R.drawable.brainy_risk -> R.drawable.brainy_risk_small
+    else -> resId
+}
+
+/** BaseCard variant with a faint oversized Brainy bleeding off the bottom-right corner. */
+@Composable
+internal fun BrainyWatermarkCard(
+    modifier: Modifier = Modifier,
+    resId: Int = R.drawable.brainy_detective,
+    // watermark Brainys should look left, into the card; flip right-facing poses
+    flipWatermark: Boolean = false,
+    contentPadding: Dp = 12.dp,
+    innerSpacing: Dp = 6.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = AppTheme.BaseCardShape,
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        elevation = CardDefaults.cardElevation(0.dp),
+        border = AppTheme.BaseCardBorder
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            // matchParentSize keeps the oversized watermark from stretching short cards
+            Box(Modifier.matchParentSize()) {
+                Image(
+                    painter = painterResource(resId),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 18.dp, y = 24.dp)
+                        .alpha(0.14f)
+                        .graphicsLayer(scaleX = if (flipWatermark) -1f else 1f)
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(contentPadding),
+                verticalArrangement = Arrangement.spacedBy(innerSpacing),
+                content = content
+            )
+        }
+    }
+}
+
 data class MigraineSpan(
     val start: Instant,
     val end: Instant?,
     val severity: Int? = null,
     val label: String? = null,
     val id: String? = null,
-    val painLocations: List<String> = emptyList()
+    val painLocations: List<String> = emptyList(),
+    val auraLocations: List<String> = emptyList(),
+    val auraDurationMinutes: Int? = null
 )
 data class ReliefSpan(val start: Instant, val end: Instant?, val intensity: Int? = null, val name: String, val sideEffectScale: String? = null)
 data class TriggerPoint(val at: Instant, val name: String)
@@ -221,7 +345,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     val autoSelectedKeys = remember(windowEvents, templateMap) {
         windowEvents
             .filter { it.isAutomated }
-            .mapNotNull { ev -> vm.labelToMetricKey(ev.name) }
+            .flatMap { ev -> vm.metricKeysForLabel(ev.name) }
             .toSet()
     }
 
@@ -354,15 +478,16 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // ── 2. FULL REPORT ──
                 var showFullReportInfo by remember { mutableStateOf(false) }
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    BaseCard(modifier = Modifier
+                    BrainyWatermarkCard(modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
                             if (premiumStateTop.isPremium) navController.navigate(Routes.INSIGHTS_REPORT)
                             else navController.navigate(Routes.PAYWALL)
-                        }
+                        },
+                        resId = R.drawable.brainy_briefcase, flipWatermark = true
                     ) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawBriefcase(Color(0xFF4FC3F7)) } }
+                            BrainyBlobIcon(R.drawable.brainy_briefcase_small)
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
                                 Text("Full Report", color = AppTheme.TitleColor,
@@ -492,8 +617,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        AccuracyPreviewCard(
-                            gaugeAccuracy = gaugeAccuracy,
+                        BrainyNavCard(
+                            title = "Accuracy",
+                            description = "How well your risk score lined up with your attacks",
+                            resId = R.drawable.brainy_archer,
+                            flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_THRESHOLDS) },
                         )
                         IconButton(
@@ -540,38 +668,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        if (significantCorrelations.isEmpty()) {
-                            BaseCard(modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { navController.navigate(Routes.INSIGHTS_PATTERNS) }
-                            ) {
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                    Canvas(Modifier.size(24.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
-                                    Spacer(Modifier.width(10.dp))
-                                    Text("What Happened", color = AppTheme.TitleColor,
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                        modifier = Modifier.weight(1f))
-                                    Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
-                                }
-                                Spacer(Modifier.height(4.dp))
-                                Text("Discover correlations and dangerous trigger combinations from your data.",
-                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                            }
-                        } else {
-                            val previewPatterns = remember(triggerCorrelations, metricCorrelations) {
-                                (triggerCorrelations + metricCorrelations).sortedByDescending { it.liftRatio }.take(2)
-                            }
-                            val previewInteractions = remember(interactionCorrelations) {
-                                interactionCorrelations.take(2)
-                            }
-                            val symptomOutcomes by vm.symptomOutcomes.collectAsState()
-                            PatternsPreviewCard(
-                                patterns = previewPatterns,
-                                interactions = previewInteractions,
-                                symptomOutcomes = symptomOutcomes.take(2),
-                                onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
-                            )
-                        }
+                        BrainyNavCard(
+                            title = "What Happened",
+                            description = "Triggers, patterns & dangerous combinations behind your migraines",
+                            resId = R.drawable.brainy_detective,
+                            flipBlob = true,
+                            onClick = { navController.navigate(Routes.INSIGHTS_PATTERNS) },
+                        )
                         IconButton(
                             onClick = { showWhatHappenedInfo = true },
                             modifier = Modifier
@@ -615,19 +718,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     subtitle = "See which medicines and reliefs work best",
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
-                    val previewTreatments = remember(treatmentCorrelations) {
-                        treatmentCorrelations.take(2)
-                    }
-                    val previewTreatmentInteractions = remember(treatmentInteractionCorrelations) {
-                        treatmentInteractionCorrelations.take(2)
-                    }
-                    val symptomSegments by vm.symptomSegments.collectAsState()
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        TreatmentPreviewCard(
-                            treatments = previewTreatments,
-                            treatmentInteractions = previewTreatmentInteractions,
-                            symptomSegments = symptomSegments.take(2),
-                            onShowAll = { navController.navigate(Routes.INSIGHTS_TREATMENTS) }
+                        BrainyNavCard(
+                            title = "What Worked",
+                            description = "Which medicines & reliefs shorten your attacks",
+                            resId = R.drawable.brainy_shield,
+                            flipWatermark = true,
+                            onClick = { navController.navigate(Routes.INSIGHTS_TREATMENTS) },
                         )
                         IconButton(
                             onClick = { showWhatWorkedInfo = true },
@@ -665,6 +762,114 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                // ── 6b. WHAT'S HELPING (Well Done positive layer) ──
+                // docs/well-done-layer-spec.md (migraineme-ios repo). Habits
+                // present on migraine-free days + what drives them.
+                var showWhatsHelpingInfo by remember { mutableStateOf(false) }
+                PremiumGate(
+                    message = "Unlock What's Helping",
+                    subtitle = "See the habits behind your migraine-free days",
+                    onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        BrainyNavCard(
+                            title = "What's Helping",
+                            description = "Habits that show up on your migraine-free days",
+                            resId = R.drawable.brainy_gardener,
+                            flipWatermark = true,
+                            onClick = { navController.navigate(Routes.INSIGHTS_WHATS_HELPING) },
+                        )
+                        IconButton(
+                            onClick = { showWhatsHelpingInfo = true },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-14).dp)
+                                .size(34.dp)
+                        ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "About What's Helping",
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                        }
+                    }
+                }
+                if (showWhatsHelpingInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showWhatsHelpingInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showWhatsHelpingInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About What's Helping", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(WhatsHelpingInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
+                    )
+                }
+
+                // ── 6c. WHAT CHANGED (last 30 days vs the 30 before) ──
+                // Mirrors the PDF report's What changed page; hidden entirely
+                // when no item's count moved between the two windows.
+                val itemTrends by vm.itemTrends.collectAsState()
+                val changedTrends = remember(itemTrends) {
+                    itemTrends.filter { it.current != it.prior }
+                }
+                var showWhatChangedInfo by remember { mutableStateOf(false) }
+                if (changedTrends.isNotEmpty()) {
+                    PremiumGate(
+                        message = "Unlock What Changed",
+                        subtitle = "See which logged items moved over the last month",
+                        onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                    ) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            WhatChangedCard(changedTrends) {
+                                navController.navigate(Routes.INSIGHTS_WHAT_CHANGED)
+                            }
+                            IconButton(
+                                onClick = { showWhatChangedInfo = true },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 10.dp, y = (-14).dp)
+                                    .size(34.dp)
+                            ) {
+                                    Icon(
+                                        Icons.Outlined.Info,
+                                        contentDescription = "About What Changed",
+                                        tint = AppTheme.SubtleTextColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                            }
+                        }
+                    }
+                }
+                if (showWhatChangedInfo) {
+                    AlertDialog(
+                        onDismissRequest = { showWhatChangedInfo = false },
+                        confirmButton = {
+                            TextButton(onClick = { showWhatChangedInfo = false }) {
+                                Text("Got it", color = AppTheme.AccentPurple)
+                            }
+                        },
+                        title = {
+                            Text("About What Changed", color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        },
+                        text = {
+                            Text(WhatChangedInfoCopy.text, modifier = Modifier.verticalScroll(rememberScrollState()), color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodyMedium)
+                        },
+                        containerColor = AppTheme.BaseCardContainer
+                    )
+                }
+
                 // ── 7. WHAT WERE YOU DOING ──
                 var showContextInfo by remember { mutableStateOf(false) }
                 PremiumGate(
@@ -673,8 +878,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        ContextCard(contextItems.take(2), overallAvgSeverity,
-                            onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) })
+                        BrainyNavCard(
+                            title = "What Were You Doing",
+                            description = "Activities & locations during your migraines",
+                            resId = R.drawable.brainy_runner,
+                            flipWatermark = true,
+                            onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) },
+                        )
                         IconButton(
                             onClick = { showContextInfo = true },
                             modifier = Modifier
@@ -716,6 +926,10 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val sevCounts by vm.severityCounts.collectAsState()
                 val totalMigraineCount by vm.totalMigraineCount.collectAsState()
                 val topSymptoms by vm.symptomStats.collectAsState()
+                val auraZoneCounts by vm.auraZoneCounts.collectAsState()
+                val auraAttackCount by vm.auraAttackCount.collectAsState()
+                val auraDurationStats by vm.auraDurationStats.collectAsState()
+                val auraInsights by vm.auraInsights.collectAsState()
                 var showImpactInfo by remember { mutableStateOf(false) }
                 PremiumGate(
                     message = "Unlock Impact Analysis",
@@ -723,13 +937,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        ImpactCard(
-                            impactItems = impactItems.take(2),
-                            painLocationCounts = painLocCounts,
-                            severityCounts = sevCounts,
-                            totalMigraines = totalMigraineCount,
-                            overallAvgSeverity = overallAvgSeverity,
-                            topSymptoms = topSymptoms.take(3),
+                        BrainyNavCard(
+                            title = "How Did It Impact You",
+                            description = "Severity, pain locations, symptoms & missed activities",
+                            resId = R.drawable.brainy_recover,
+                            flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
                         )
                         IconButton(
@@ -777,11 +989,17 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
 }
 
 // ── Dismissible medical disclaimer box (health policy) ──
+// One X dismisses it app-wide on this device ("all_dismissed"); the legacy
+// per-surface prefKey is still read so pre-existing dismissals keep their
+// surface hidden. Per-device by design: never synced to the backend, so a
+// fresh install (and any store reviewer) always sees it once.
 @Composable
 fun MedicalDisclaimerCard(prefKey: String) {
     val ctx = LocalContext.current
     val prefs = remember { ctx.getSharedPreferences("medical_disclaimer", Context.MODE_PRIVATE) }
-    var dismissed by remember { mutableStateOf(prefs.getBoolean(prefKey, false)) }
+    var dismissed by remember {
+        mutableStateOf(prefs.getBoolean("all_dismissed", false) || prefs.getBoolean(prefKey, false))
+    }
     if (dismissed) return
     BaseCard(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.Top) {
@@ -793,7 +1011,7 @@ fun MedicalDisclaimerCard(prefKey: String) {
             )
             IconButton(
                 onClick = {
-                    prefs.edit().putBoolean(prefKey, true).apply()
+                    prefs.edit().putBoolean("all_dismissed", true).apply()
                     dismissed = true
                 },
                 modifier = Modifier.size(24.dp)
@@ -1195,6 +1413,7 @@ private fun CorrelationRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
     // internal gaps — looked airy compared to iOS). Labels also run through
     // prettyLabel so snake_case from older logs renders cleanly.
     Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        BrainyRowIcon(stat.factorName, size = 18.dp)
         Column(Modifier.weight(1f)) {
             if (stat.factorB != null) {
                 Text(
@@ -1261,49 +1480,260 @@ internal fun TopPatternsCard(
     triggers: List<EdgeFunctionsService.CorrelationStat>,
     metrics: List<EdgeFunctionsService.CorrelationStat>,
     interactions: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
+    iconKeys: Map<String, String> = emptyMap(),
+    watermarkOnLast: Boolean = false,
 ) {
     // Source of truth — matches the edge function's "topRiskFactors"
     // definition (compute-correlation-stats:1491): trigger || metric.
     // The detail screen (sole caller) shows ALL significant findings;
     // home / Full Report previews use the dedicated *Preview* cards.
-    val combined = remember(triggers, metrics) {
-        (triggers + metrics).sortedByDescending { it.liftRatio }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("insights_patterns", Context.MODE_PRIVATE) }
+    var hiddenKeys by remember { mutableStateOf(prefs.getStringSet("hidden", emptySet())!!.toSet()) }
+    var showHidden by remember { mutableStateOf(false) }
+    var sortMode by remember { mutableStateOf("Highest risk") }
+    var comboSortMode by remember { mutableStateOf("Highest risk") }
+
+    fun keyOf(stat: EdgeFunctionsService.CorrelationStat) = "${stat.factorName}|${stat.factorB ?: ""}"
+    fun toggleHidden(stat: EdgeFunctionsService.CorrelationStat) {
+        val k = keyOf(stat)
+        hiddenKeys = if (k in hiddenKeys) hiddenKeys - k else hiddenKeys + k
+        prefs.edit().putStringSet("hidden", hiddenKeys).apply()
     }
-    val topInteractions = remember(interactions) {
-        interactions.sortedByDescending { it.liftRatio }
+    fun sorted(list: List<EdgeFunctionsService.CorrelationStat>, mode: String) = when (mode) {
+        "Most frequent" -> list.sortedByDescending { it.pctMigraineWindows }
+        "Most severe" -> list.sortedByDescending { it.avgSeverity ?: -1f }
+        "Days before" -> list.sortedBy { it.bestLagDays }
+        "Newest" -> list.sortedByDescending { it.updatedAt }
+        "Oldest" -> list.sortedBy { it.updatedAt }
+        else -> list.sortedByDescending { it.liftRatio }
     }
+    // Patterns mixes triggers, metrics and interactions, so a factor name belongs
+    // to no one pool: "Fatigue" and "Yawning" live in the prodrome pool and
+    // "Weather change" in none at all. Looking only in the trigger pool, by key
+    // only, left every metric row and most trigger rows with no icon. The pool key
+    // stays the preferred path when there is one; the manifest resolves the rest
+    // by label across all kinds.
+    fun iconFor(name: String?): Int? = name?.let { n ->
+        brainyForLogKey(iconKeys[n.lowercase()], n)
+    }
+
+    val combined = remember(triggers, metrics) { triggers + metrics }
+    val topInteractions = remember(interactions) { interactions }
     if (combined.isEmpty() && topInteractions.isEmpty()) return
 
-    BaseCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
-            Spacer(Modifier.width(8.dp))
-            Column {
-                Text("What Happened", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("Triggers, prodromes & metrics linked to your migraines",
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
-        }
+    val visiblePatterns = sorted(combined, sortMode).filter { showHidden || keyOf(it) !in hiddenKeys }
+    val visibleCombos = sorted(topInteractions, comboSortMode).filter { showHidden || keyOf(it) !in hiddenKeys }
+    val hiddenCount = (combined + topInteractions).count { keyOf(it) in hiddenKeys }
 
+    val combosCardShown = visibleCombos.isNotEmpty() || (topInteractions.isNotEmpty() && showHidden)
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         if (combined.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text("Top Patterns", color = Color(0xFFCE93D8),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-
-            combined.forEach { stat ->
-                CorrelationRow(stat)
+            MaybeWatermarkCard(watermark = watermarkOnLast && !combosCardShown, resId = R.drawable.brainy_detective) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyBlobIcon(flip = true)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Patterns", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Each factor made a migraine this many times likelier",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                    SortChipMenu(sortMode,
+                        listOf("Highest risk", "Most frequent", "Most severe", "Days before", "Newest", "Oldest")) { sortMode = it }
+                }
+                Spacer(Modifier.height(6.dp))
+                visiblePatterns.forEach { stat ->
+                    PatternTile(stat, icon = iconFor(stat.factorName), iconB = iconFor(stat.factorB),
+                        dimmed = keyOf(stat) in hiddenKeys) { toggleHidden(stat) }
+                    Spacer(Modifier.height(6.dp))
+                }
+                Spacer(Modifier.height(2.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Confidence: three dots is the strongest statistical signal.",
+                        color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.weight(1f))
+                    if (hiddenCount > 0) {
+                        Text(
+                            if (showHidden) "hide $hiddenCount again" else "$hiddenCount hidden \u00b7 show",
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
+                        )
+                    }
+                }
             }
         }
 
-        if (topInteractions.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text("Dangerous Combinations", color = Color(0xFFE57373),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-            Spacer(Modifier.height(4.dp))
+        if (combosCardShown) {
+            MaybeWatermarkCard(watermark = watermarkOnLast, resId = R.drawable.brainy_detective) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Combinations", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Together, these pairs multiplied your risk the most",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                    SortChipMenu(comboSortMode,
+                        listOf("Highest risk", "Most frequent", "Days before", "Newest", "Oldest")) { comboSortMode = it }
+                }
+                Spacer(Modifier.height(6.dp))
+                visibleCombos.forEach { stat ->
+                    PatternTile(stat, icon = iconFor(stat.factorName), iconB = iconFor(stat.factorB),
+                        dimmed = keyOf(stat) in hiddenKeys) { toggleHidden(stat) }
+                    Spacer(Modifier.height(6.dp))
+                }
+            }
+        }
+    }
+}
 
-            topInteractions.forEach { stat ->
-                CorrelationRow(stat)
+/** Small sort selector chip with a purple dropdown, shared by Insights detail cards. */
+@Composable
+internal fun SortChipMenu(current: String, options: List<String>, onSelect: (String) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        Text(
+            "$current \u25be",
+            color = AppTheme.AccentPurple,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .clickable { open = true }
+                .background(Color.White.copy(alpha = 0.05f))
+                .padding(horizontal = 9.dp, vertical = 5.dp)
+        )
+        DropdownMenu(
+            expanded = open,
+            onDismissRequest = { open = false },
+            modifier = Modifier.background(Color(0xFF1E0A2E))
+        ) {
+            options.forEach { mode ->
+                DropdownMenuItem(
+                    text = { Text(mode, color = if (mode == current) AppTheme.AccentPurple else Color.White,
+                        style = MaterialTheme.typography.bodySmall) },
+                    onClick = { onSelect(mode); open = false }
+                )
+            }
+        }
+    }
+}
+
+/** BaseCard that becomes a BrainyWatermarkCard when it is the page's last visible card. */
+@Composable
+internal fun MaybeWatermarkCard(
+    watermark: Boolean,
+    resId: Int,
+    flipWatermark: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    if (watermark) BrainyWatermarkCard(resId = resId, flipWatermark = flipWatermark, content = content)
+    else BaseCard(content = content)
+}
+
+/** Quiet rounded tile for one pattern/combination finding. */
+@Composable
+private fun PatternTile(
+    stat: EdgeFunctionsService.CorrelationStat,
+    icon: Int? = null,
+    iconB: Int? = null,
+    dimmed: Boolean = false,
+    onToggleHide: (() -> Unit)? = null,
+) {
+    val lagText = when (stat.bestLagDays) {
+        0 -> "same day"
+        1 -> "1 day before"
+        else -> "${stat.bestLagDays} days before"
+    }
+    val occText = "${stat.attackHits} of ${stat.sampleSize} attacks (${stat.pctMigraineWindows.toInt()}%)"
+    val isCombo = stat.factorType == "interaction"
+    val metaColor = Color(0xFF9C8BB0)
+    val tileShape = RoundedCornerShape(18.dp)
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .alpha(if (dimmed) 0.55f else 1f)
+            .clip(tileShape)
+            .background(Color.White.copy(alpha = 0.035f))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
+            .padding(horizontal = 16.dp, vertical = 13.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val title = androidx.compose.ui.text.buildAnnotatedString {
+                if (icon != null) { appendInlineContent("iconA", "\u2b1c"); append(" ") }
+                append(stat.factorName)
+                if (stat.factorB != null) {
+                    append("  +  ")
+                    if (iconB != null) { appendInlineContent("iconB", "\u2b1c"); append(" ") }
+                    append(stat.factorB)
+                }
+            }
+            val inlineIcons = buildMap {
+                icon?.let { res ->
+                    put("iconA", androidx.compose.foundation.text.InlineTextContent(
+                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
+                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                }
+                iconB?.let { res ->
+                    put("iconB", androidx.compose.foundation.text.InlineTextContent(
+                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
+                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                }
+            }
+            Text(
+                title,
+                inlineContent = inlineIcons,
+                color = Color(0xFFF3EAFB),
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(10.dp))
+            val headlineStat = if (stat.mode != "prevalence") {
+                if (stat.liftRatio >= 2f) "${stat.liftRatio.toInt()}\u00d7 more likely"
+                else "${String.format("%.1f", stat.liftRatio)}\u00d7 more likely"
+            } else {
+                "in ${stat.pctMigraineWindows.toInt()}% of attacks"
+            }
+            Text(
+                headlineStat,
+                color = if (isCombo) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.End
+            )
+            onToggleHide?.let { toggle ->
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    if (dimmed) Icons.Outlined.Check else Icons.Outlined.Close,
+                    contentDescription = if (dimmed) "Unhide" else "Hide",
+                    tint = AppTheme.SubtleTextColor.copy(alpha = if (dimmed) 0.9f else 0.45f),
+                    modifier = Modifier.size(15.dp).clickable { toggle() }
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text("$lagText  \u00b7  $occText", color = metaColor, style = MaterialTheme.typography.labelSmall)
+        Spacer(Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text("confidence", color = metaColor, style = MaterialTheme.typography.labelSmall)
+            ConfidenceDots(stat.pValue, Color(0xFFB388FF))
+            if (stat.factorType == "trigger" && (stat.avgSeverity != null || stat.avgDurationHrs != null)) {
+                Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
+                stat.avgSeverity?.let { sev ->
+                    Text("${String.format("%.0f", sev)}/10 avg severity", color = metaColor,
+                        style = MaterialTheme.typography.labelSmall)
+                }
+                stat.avgDurationHrs?.let { hrs ->
+                    if (stat.avgSeverity != null) Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
+                    val durText = if (hrs >= 24f) "~${String.format("%.0f", hrs / 24)}d duration"
+                        else "~${String.format("%.0f", hrs)}h duration"
+                    Text(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
+                }
             }
         }
     }
@@ -1318,9 +1748,9 @@ internal fun PatternsPreviewCard(
     symptomOutcomes: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     onShowAll: () -> Unit
 ) {
-    BaseCard(modifier = Modifier.clickable { onShowAll() }) {
+    BrainyWatermarkCard(modifier = Modifier.clickable { onShowAll() }) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
+            BrainyBlobIcon(flip = true)
             Spacer(Modifier.width(8.dp))
             Text("What Happened", color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -1330,7 +1760,7 @@ internal fun PatternsPreviewCard(
 
         if (patterns.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Top Patterns", color = Color(0xFFCE93D8),
+            Text("Patterns", color = Color(0xFFCE93D8),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             patterns.forEach { stat ->
                 CorrelationRowCompact(stat)
@@ -1339,7 +1769,7 @@ internal fun PatternsPreviewCard(
 
         if (interactions.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Dangerous Combinations", color = Color(0xFFE57373),
+            Text("Combinations", color = Color(0xFFE57373),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             interactions.forEach { stat ->
                 CorrelationRowCompact(stat)
@@ -1372,9 +1802,9 @@ internal fun TreatmentPreviewCard(
     symptomSegments: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     onShowAll: () -> Unit
 ) {
-    BaseCard(modifier = Modifier.clickable { onShowAll() }) {
+    BrainyWatermarkCard(modifier = Modifier.clickable { onShowAll() }, resId = R.drawable.brainy_shield, flipWatermark = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawShieldCheck(Color(0xFF81C784)) } }
+            BrainyBlobIcon(R.drawable.brainy_shield_small)
             Spacer(Modifier.width(8.dp))
             Text("What Worked", color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -1430,6 +1860,7 @@ internal fun TreatmentPreviewCard(
 private fun TreatmentRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
     val green = Color(0xFF81C784)
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        BrainyRowIcon(stat.factorName, size = 18.dp)
         Column(Modifier.weight(1f)) {
             Text(
                 stat.factorName,
@@ -1480,10 +1911,10 @@ internal fun AccuracyPreviewCard(
 ) {
     val hasData = gaugeAccuracy != null && gaugeAccuracy.totalDays >= 7
 
-    BaseCard(modifier = Modifier.clickable { onClick() }) {
+    BrainyWatermarkCard(modifier = Modifier.clickable { onClick() }, resId = R.drawable.brainy_archer, flipWatermark = true) {
         // ── Header ──
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawThresholdTarget(Color(0xFFFFB74D)) } }
+            BrainyBlobIcon(R.drawable.brainy_archer_small)
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
                 Text("Accuracy", color = AppTheme.TitleColor,
@@ -1767,7 +2198,7 @@ internal fun InteractionInsightsCard(interactions: List<EdgeFunctionsService.Cor
     BaseCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text("Dangerous Combinations", color = Color(0xFFE57373),
+                Text("Combinations", color = Color(0xFFE57373),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
             }
         }
@@ -1788,45 +2219,198 @@ internal fun TreatmentEffectivenessCard(
     treatments: List<EdgeFunctionsService.CorrelationStat>,
     treatmentInteractions: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     showLegend: Boolean = false,
+    medicineCategories: Map<String, String> = emptyMap(),
+    reliefIconKeys: Map<String, String> = emptyMap(),
+    watermarkOnLast: Boolean = false,
 ) {
-    // Detail card — show every treatment (was capped at 5).
-    val top = remember(treatments) {
-        treatments.sortedByDescending { it.liftRatio }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("insights_treatments", Context.MODE_PRIVATE) }
+    var hiddenKeys by remember { mutableStateOf(prefs.getStringSet("hidden", emptySet())!!.toSet()) }
+    var showHidden by remember { mutableStateOf(false) }
+    var sortMode by remember { mutableStateOf("Most effective") }
+    var comboSortMode by remember { mutableStateOf("Most effective") }
+
+    fun keyOf(stat: EdgeFunctionsService.CorrelationStat) = "${stat.factorName}|${stat.factorB ?: ""}"
+    fun toggleHidden(stat: EdgeFunctionsService.CorrelationStat) {
+        val k = keyOf(stat)
+        hiddenKeys = if (k in hiddenKeys) hiddenKeys - k else hiddenKeys + k
+        prefs.edit().putStringSet("hidden", hiddenKeys).apply()
     }
-    val topInteractions = remember(treatmentInteractions) {
-        treatmentInteractions.sortedByDescending { it.liftRatio }
+    fun sorted(list: List<EdgeFunctionsService.CorrelationStat>, mode: String) = when (mode) {
+        "Most used" -> list.sortedByDescending { it.pctMigraineWindows }
+        "A to Z" -> list.sortedBy { it.factorName.lowercase() }
+        "Newest" -> list.sortedByDescending { it.updatedAt }
+        "Oldest" -> list.sortedBy { it.updatedAt }
+        else -> list.sortedByDescending { maxOf(it.durationLift, it.severityLift, it.liftRatio) }
     }
-    BaseCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawShieldCheck(Color(0xFF81C784)) } }
-            Spacer(Modifier.width(8.dp))
-            Column {
-                Text("What Worked", color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("Medicines & reliefs that shorten your migraines",
+    // Category first: MigraineMe draws medicines per drug class on purpose, so
+    // every triptan shares one icon rather than 55 drugs each getting their own.
+    // The old fallbacks passed a raw drug name into forKey(), which is keyed by
+    // category and case-sensitive — "Sumatriptan" could never match. The manifest
+    // handles the rest, including reliefs and the brand names.
+    fun iconFor(name: String?): Int? = name?.let { n ->
+        val cat = medicineCategories[n.lowercase()]
+        brainyForLogKey(reliefIconKeys[n.lowercase()], n, cat)
+    }
+
+    val top = remember(treatments) { treatments }
+    val topInteractions = remember(treatmentInteractions) { treatmentInteractions }
+    val visibleTreatments = sorted(top, sortMode).filter { showHidden || keyOf(it) !in hiddenKeys }
+    val visibleCombos = sorted(topInteractions, comboSortMode).filter { showHidden || keyOf(it) !in hiddenKeys }
+    val hiddenCount = (top + topInteractions).count { keyOf(it) in hiddenKeys }
+
+    val combosCardShown = visibleCombos.isNotEmpty()
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        MaybeWatermarkCard(watermark = watermarkOnLast && !combosCardShown, resId = R.drawable.brainy_shield, flipWatermark = true) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BrainyBlobIcon(R.drawable.brainy_shield_small)
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Treatments", color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text("How much easier each one made your migraines",
+                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                }
+                SortChipMenu(sortMode,
+                    listOf("Most effective", "Most used", "A to Z", "Newest", "Oldest")) { sortMode = it }
+            }
+            Spacer(Modifier.height(6.dp))
+            if (top.isEmpty()) {
+                Text("Log medicines and reliefs with your migraines to see what works best.",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+            visibleTreatments.forEach { stat ->
+                TreatmentTile(stat, icon = iconFor(stat.factorName), iconB = iconFor(stat.factorB),
+                    dimmed = keyOf(stat) in hiddenKeys) { toggleHidden(stat) }
+                Spacer(Modifier.height(6.dp))
+            }
+            Spacer(Modifier.height(2.dp))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("\u00d7 shorter \u2014 migraines ended that much faster \u00b7 \u00d7 milder \u2014 pain stayed that much lower",
+                    color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.weight(1f))
+                if (hiddenCount > 0) {
+                    Text(
+                        if (showHidden) "hide $hiddenCount again" else "$hiddenCount hidden \u00b7 show",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
+                    )
+                }
             }
         }
 
-        Spacer(Modifier.height(8.dp))
-
-        if (top.isEmpty() && topInteractions.isEmpty()) {
-            Text("Log medicines and reliefs with your migraines to see what works best.",
-                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        if (combosCardShown) {
+            MaybeWatermarkCard(watermark = watermarkOnLast, resId = R.drawable.brainy_shield, flipWatermark = true) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Effective Combinations", color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text("Pairs that worked better together",
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                    SortChipMenu(comboSortMode,
+                        listOf("Most effective", "Most used", "A to Z", "Newest", "Oldest")) { comboSortMode = it }
+                }
+                Spacer(Modifier.height(6.dp))
+                visibleCombos.forEach { stat ->
+                    TreatmentTile(stat, icon = iconFor(stat.factorName), iconB = iconFor(stat.factorB),
+                        dimmed = keyOf(stat) in hiddenKeys) { toggleHidden(stat) }
+                    Spacer(Modifier.height(6.dp))
+                }
+            }
         }
+    }
+}
 
-        top.forEach { stat ->
-            TreatmentRow(stat)
+/** Quiet rounded tile for one treatment/combination, green accents. */
+@Composable
+private fun TreatmentTile(
+    stat: EdgeFunctionsService.CorrelationStat,
+    icon: Int? = null,
+    iconB: Int? = null,
+    dimmed: Boolean = false,
+    onToggleHide: (() -> Unit)? = null,
+) {
+    val green = Color(0xFF9CCB9E)
+    val metaColor = Color(0xFF9C8BB0)
+    val tileShape = RoundedCornerShape(18.dp)
+    fun fmt(lift: Float, type: String) =
+        if (lift >= 2f) "${lift.toInt()}\u00d7 $type" else "${String.format("%.1f", lift)}\u00d7 $type"
+    val headline = when {
+        stat.durationLift > 1f -> fmt(stat.durationLift, "shorter")
+        stat.severityLift > 1f -> fmt(stat.severityLift, "milder")
+        else -> fmt(stat.liftRatio, "effective")
+    }
+    val secondary = if (stat.durationLift > 1f && stat.severityLift > 1f) "also ${fmt(stat.severityLift, "milder")}" else null
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .alpha(if (dimmed) 0.55f else 1f)
+            .clip(tileShape)
+            .background(Color.White.copy(alpha = 0.035f))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
+            .padding(horizontal = 16.dp, vertical = 13.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val title = androidx.compose.ui.text.buildAnnotatedString {
+                if (icon != null) { appendInlineContent("iconA", "\u2b1c"); append(" ") }
+                append(stat.factorName)
+                if (stat.factorB != null) {
+                    append("  +  ")
+                    if (iconB != null) { appendInlineContent("iconB", "\u2b1c"); append(" ") }
+                    append(stat.factorB)
+                }
+            }
+            val inlineIcons = buildMap {
+                icon?.let { res ->
+                    put("iconA", androidx.compose.foundation.text.InlineTextContent(
+                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
+                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                }
+                iconB?.let { res ->
+                    put("iconB", androidx.compose.foundation.text.InlineTextContent(
+                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
+                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                }
+            }
+            Text(
+                title,
+                inlineContent = inlineIcons,
+                color = Color(0xFFF3EAFB),
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(headline, color = green,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.End)
+            onToggleHide?.let { toggle ->
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    if (dimmed) Icons.Outlined.Check else Icons.Outlined.Close,
+                    contentDescription = if (dimmed) "Unhide" else "Hide",
+                    tint = AppTheme.SubtleTextColor.copy(alpha = if (dimmed) 0.9f else 0.45f),
+                    modifier = Modifier.size(15.dp).clickable { toggle() }
+                )
+            }
         }
-
-        if (topInteractions.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text("Effective Combinations", color = Color(0xFF81C784),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-            Spacer(Modifier.height(4.dp))
-
-            topInteractions.forEach { stat ->
-                TreatmentRow(stat)
+        Spacer(Modifier.height(6.dp))
+        Text("used in ${stat.pctMigraineWindows.toInt()}% of migraines", color = metaColor,
+            style = MaterialTheme.typography.labelSmall)
+        Spacer(Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text("confidence", color = metaColor, style = MaterialTheme.typography.labelSmall)
+            ConfidenceDots(stat.pValue, Color(0xFF81C784))
+            secondary?.let {
+                Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
+                Text(it, color = metaColor, style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -1948,65 +2532,145 @@ internal fun TreatmentInteractionCard(interactions: List<EdgeFunctionsService.Co
 // ── "What Were You Doing?" Card ──
 
 @Composable
-internal fun ContextCard(items: List<InsightsViewModel.ContextItem>, overallAvgSeverity: Float, onClick: (() -> Unit)? = null) {
-    BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
+internal fun ContextCard(
+    items: List<InsightsViewModel.ContextItem>,
+    overallAvgSeverity: Float,
+    onClick: (() -> Unit)? = null,
+    contextIconKeys: Map<String, Pair<String, Boolean>> = emptyMap(),
+) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("insights_context", Context.MODE_PRIVATE) }
+    var hiddenKeys by remember { mutableStateOf(prefs.getStringSet("hidden", emptySet())!!.toSet()) }
+    var showHidden by remember { mutableStateOf(false) }
+    var sortMode by remember { mutableStateOf("Most frequent") }
+
+    fun toggleHidden(name: String) {
+        hiddenKeys = if (name in hiddenKeys) hiddenKeys - name else hiddenKeys + name
+        prefs.edit().putStringSet("hidden", hiddenKeys).apply()
+    }
+    val sortedItems = remember(items, sortMode) {
+        when (sortMode) {
+            "Most severe" -> items.sortedByDescending { it.avgSeverity }
+            "Longest" -> items.sortedByDescending { it.avgDurationHrs ?: 0f }
+            "A to Z" -> items.sortedBy { it.name.lowercase() }
+            else -> items.sortedByDescending { it.count }
+        }
+    }
+    // The old label fallbacks called forKey(name.lowercase()), feeding a human
+    // label into a snake_case-key lookup: "Eating out" became "eating out" and
+    // never matched the key "eating_out", so only accidental single-word keys
+    // ("gym", "home", "park") ever resolved. The manifest normalises properly.
+    fun iconFor(name: String): Int? =
+        brainyForLogKey(contextIconKeys[name.lowercase()]?.first, name)
+
+    val visible = sortedItems.take(12).filter { showHidden || it.name !in hiddenKeys }
+    val hiddenCount = items.count { it.name in hiddenKeys }
+    val cyan = Color(0xFF8FD4DA)
+    val metaColor = Color(0xFF9C8BB0)
+    val tileShape = RoundedCornerShape(18.dp)
+
+    BrainyWatermarkCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier, resId = R.drawable.brainy_runner, flipWatermark = true) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawActivityPulse(Color(0xFF4DD0E1)) } }
-            Spacer(Modifier.width(8.dp))
+            BrainyBlobIcon(R.drawable.brainy_runner_small)
+            Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("What Were You Doing", color = AppTheme.TitleColor,
+                Text("Activities & Locations", color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("Activities & locations during your migraines",
+                Text("What you were doing when your migraines hit",
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             if (onClick != null) {
                 Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+            } else {
+                SortChipMenu(sortMode, listOf("Most frequent", "Most severe", "Longest", "A to Z")) { sortMode = it }
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
 
         if (items.isEmpty()) {
             Text("Log activities and locations with your migraines to see what you were doing when they hit.",
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
-            items.take(7).forEach { item ->
-                Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            item.name,
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(
-                            "${item.count} migraines (${item.pctOfMigraines.toInt()}%)",
-                            color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        val sevColor = when {
-                            item.avgSeverity >= 7f -> Color(0xFFE57373)
-                            item.avgSeverity >= 5f -> Color(0xFFFFB74D)
-                            else -> Color(0xFF81C784)
+            visible.forEach { item ->
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .alpha(if (item.name in hiddenKeys) 0.55f else 1f)
+                        .clip(tileShape)
+                        .background(Color.White.copy(alpha = 0.035f))
+                        .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
+                        .padding(horizontal = 16.dp, vertical = 13.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val title = androidx.compose.ui.text.buildAnnotatedString {
+                            if (iconFor(item.name) != null) { appendInlineContent("icon", "\u2b1c"); append(" ") }
+                            append(item.name)
                         }
-                        Box(Modifier.size(8.dp).clip(CircleShape).background(sevColor))
-                        Text("${String.format("%.0f", item.avgSeverity)}/10",
+                        val inlineIcons = buildMap {
+                            iconFor(item.name)?.let { res ->
+                                put("icon", androidx.compose.foundation.text.InlineTextContent(
+                                    androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                                        androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
+                                ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                            }
+                        }
+                        Text(
+                            title,
+                            inlineContent = inlineIcons,
+                            color = Color(0xFFF3EAFB),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text("${item.count} migraines (${item.pctOfMigraines.toInt()}%)",
+                            color = cyan,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            textAlign = TextAlign.End)
+                        if (onClick == null) {
+                            Spacer(Modifier.width(8.dp))
+                            Icon(
+                                if (item.name in hiddenKeys) Icons.Outlined.Check else Icons.Outlined.Close,
+                                contentDescription = if (item.name in hiddenKeys) "Unhide" else "Hide",
+                                tint = AppTheme.SubtleTextColor.copy(alpha = if (item.name in hiddenKeys) 0.9f else 0.45f),
+                                modifier = Modifier.size(15.dp).clickable { toggleHidden(item.name) }
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        val sevColor = when {
+                            item.avgSeverity >= 7f -> Color(0xFFE59A9A)
+                            item.avgSeverity >= 5f -> Color(0xFFD9B27C)
+                            else -> Color(0xFF9CCB9E)
+                        }
+                        Text("${String.format("%.0f", item.avgSeverity)}/10 avg severity",
                             color = sevColor,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                         item.avgDurationHrs?.let { hrs ->
-                            Text("\u00B7", color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall)
-                            val durText = if (hrs >= 24f) "${String.format("%.0f", hrs / 24f)}d avg duration"
-                                else "${String.format("%.0f", hrs)}h avg duration"
-                            Text(durText, color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall)
+                            Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
+                            val durText = if (hrs >= 24f) "~${String.format("%.0f", hrs / 24f)}d avg duration"
+                                else "~${String.format("%.0f", hrs)}h avg duration"
+                            Text(durText, color = metaColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Severity colour: green mild, amber medium, rose severe.",
+                    color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.weight(1f))
+                if (hiddenCount > 0 && onClick == null) {
+                    Text(
+                        if (showHidden) "hide $hiddenCount again" else "$hiddenCount hidden \u00b7 show",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
+                    )
                 }
             }
         }
@@ -2023,13 +2687,17 @@ internal fun ImpactCard(
     totalMigraines: Int = 0,
     overallAvgSeverity: Float = 5f,
     topSymptoms: List<EdgeFunctionsService.SymptomStat> = emptyList(),
+    auraZoneCounts: List<Pair<String, Int>> = emptyList(),
+    auraAttacks: Int = 0,
+    auraDurationStats: Pair<Int, Int>? = null,
+    auraInsights: List<EdgeFunctionsService.AuraInsight> = emptyList(),
     onClick: (() -> Unit)? = null,
 ) {
-    val hasData = impactItems.isNotEmpty() || painLocationCounts.isNotEmpty() || severityCounts.isNotEmpty() || topSymptoms.isNotEmpty()
+    val hasData = impactItems.isNotEmpty() || painLocationCounts.isNotEmpty() || severityCounts.isNotEmpty() || topSymptoms.isNotEmpty() || auraZoneCounts.isNotEmpty()
 
-    BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
+    BrainyWatermarkCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier, resId = R.drawable.brainy_recover) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(24.dp)) { HubIcons.run { drawRipple(Color(0xFFE57373)) } }
+            BrainyBlobIcon(R.drawable.brainy_recover_small)
             Spacer(Modifier.width(8.dp))
             Text("How Did It Impact You", color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -2045,7 +2713,7 @@ internal fun ImpactCard(
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                 textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-            return@BaseCard
+            return@BrainyWatermarkCard
         }
 
         // ── 1. Severity ──
@@ -2090,6 +2758,45 @@ internal fun ImpactCard(
             }
         }
 
+        // ── 2b. Aura map (where in the visual field, % of aura attacks) ──
+        if (auraZoneCounts.isNotEmpty() && auraAttacks > 0) {
+            Spacer(Modifier.height(14.dp))
+            Text("Aura Location", color = AppTheme.AccentPurple,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(2.dp))
+            Text("Across $auraAttacks aura attack${if (auraAttacks > 1) "s" else ""}, as seen through your own eyes",
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Spacer(Modifier.height(8.dp))
+            AuraHeatMap(
+                auraZoneCounts = auraZoneCounts,
+                totalAuraAttacks = auraAttacks,
+                modifier = Modifier.fillMaxWidth()
+            )
+            // Duration reads at a glance next to the severity average — it's the
+            // number a clinician asks about first.
+            auraDurationStats?.let { (avgMin, timed) ->
+                Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Average aura duration", color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    Text("${formatAuraDuration(avgMin)} · $timed timed",
+                        color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                }
+            }
+            // Server-computed findings — the patterns, not just the counts.
+            auraInsights.take(2).forEach { ins ->
+                Spacer(Modifier.height(6.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    Text("•", color = AppTheme.AccentPurple,
+                        style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.width(6.dp))
+                    Text(ins.headline, color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
         // ── 3. Missed Activities ──
         if (impactItems.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
@@ -2101,6 +2808,7 @@ internal fun ImpactCard(
                     Modifier.fillMaxWidth().padding(vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    BrainyRowIcon(item.name, size = 20.dp)
                     Column(Modifier.weight(1f)) {
                         Text(prettyLabel(item.name), color = Color.White,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -2127,6 +2835,7 @@ private fun TopSymptomsSection(topSymptoms: List<EdgeFunctionsService.SymptomSta
     topSymptoms.forEach { s ->
         val pct = (s.pctOfAttacks * 100f).toInt()
         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+            BrainyRowIcon(s.symptomLabel, size = 18.dp)
             Text(prettyLabel(s.symptomLabel), color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -2688,10 +3397,89 @@ private fun DayOfWeekCard(pattern: List<InsightsViewModel.DayOfWeekStat>) {
 
 
 
+// ======= What changed (last 30 days vs the 30 before) =======
+
+internal val TrendRed = Color(0xFFE57373)
+internal val TrendGreen = Color(0xFF81C784)
+internal val TrendAmber = Color(0xFFFFB74D)
+
+/**
+ * Row color for an item trend. Unwanted items (triggers, prodromes, medicines,
+ * symptoms) going up read red and going down green; reliefs going up read
+ * green and going down muted — fewer reliefs is not a bad sign, just quieter.
+ */
+internal fun trendColor(kind: String, delta: Int): Color =
+    if (kind == "relief") {
+        if (delta > 0) TrendGreen else AppTheme.SubtleTextColor
+    } else {
+        if (delta > 0) TrendRed else TrendGreen
+    }
+
+/** True when acute medication use is rising: count reached 3+ and grew 50%+ (or from zero). */
+internal fun medicationRising(changed: List<InsightsViewModel.ItemTrend>): Boolean =
+    changed.any {
+        it.kind == "medicine" && it.current >= 3 &&
+            (it.prior == 0 || it.current.toFloat() / it.prior >= 1.5f)
+    }
+
+@Composable
+internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick: () -> Unit) {
+    val top = remember(changed) {
+        changed.sortedByDescending { kotlin.math.abs(it.delta) }.take(4)
+    }
+    val medRising = remember(changed) { medicationRising(changed) }
+    BrainyWatermarkCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        resId = R.drawable.brainy_risk,
+        flipWatermark = true
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BrainyBlobIcon(R.drawable.brainy_risk_small)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text("What changed", color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("Last 30 days vs the 30 before", color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall)
+            }
+            Spacer(Modifier.width(8.dp))
+            Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(Modifier.height(4.dp))
+        top.forEach { t ->
+            val color = trendColor(t.kind, t.delta)
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BrainyRowIcon(t.name, size = 18.dp)
+                Text(prettyLabel(t.name), color = Color.White,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
+                Text("${t.prior}→${t.current}", color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.labelMedium)
+                Spacer(Modifier.width(6.dp))
+                Text(if (t.delta > 0) "↑" else "↓", color = color,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
+            }
+        }
+        if (medRising) {
+            Spacer(Modifier.height(2.dp))
+            Text("Acute medication use rising — worth an overuse check.",
+                color = TrendAmber, style = MaterialTheme.typography.labelSmall)
+        }
+    }
+}
+
 private const val MEDICAL_NOTE = "\n\nMigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. This is not medical advice, always consult a qualified healthcare professional."
 
 object FullReportInfoCopy {
-    const val text = "The big one. A single scrollable report that pulls every angle we have on your data into one place: frequency over time, top patterns and trigger interactions, which treatments and lifestyle changes are working, the activities and locations that surround your attacks, severity and pain location breakdowns, missed-activity counts, plus the full migraine timeline with spider charts of what was happening around each attack.\n\nThe raw inputs are tweakable. You can edit any logged migraine, change a trigger or prodrome's severity in Manage Items, and filter the whole report by time range or tags. The AI-derived parts (Recommendations and the What Happened pattern findings) aren't directly editable; they recompute live from whatever data you've kept in.\n\nUseful for sharing with your neurologist or just getting a quarterly read of how things are trending. Everything you see in the individual cards below is in here too, but stitched together so patterns across categories become obvious." + MEDICAL_NOTE
+    const val text = "The big one. A single scrollable report that pulls every angle we have on your data into one place: frequency over time, top patterns and trigger interactions, which treatments and lifestyle changes are working, the activities and locations that surround your attacks, severity, pain location and aura breakdowns, missed-activity counts, plus the full migraine timeline with spider charts of what was happening around each attack.\n\nThe raw inputs are tweakable. You can edit any logged migraine, change a trigger or prodrome's severity in Manage Items, and filter the whole report by time range or tags. The AI-derived parts (Recommendations and the What Happened pattern findings) aren't directly editable; they recompute live from whatever data you've kept in.\n\nUseful for sharing with your neurologist or just getting a quarterly read of how things are trending. Everything you see in the individual cards below is in here too, but stitched together so patterns across categories become obvious." + MEDICAL_NOTE
 }
 
 object AiRecommendationsInfoCopy {
@@ -2710,10 +3498,18 @@ object WhatWorkedInfoCopy {
     const val text = "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." + MEDICAL_NOTE
 }
 
+object WhatsHelpingInfoCopy {
+    const val text = "The positive side of your data: what you're doing right, tied to your migraine-free days.\n\u2022 Well done: habits and steady health signals (consistent sleep, calm stress, steady caffeine, trigger-free eating days) that show up on the days you stay migraine-free. Consistency is the point, staying near your own normal, not hitting anyone else's targets.\n\u2022 What drives it: the things that make those habits happen, an active day leading to steadier recovery, alcohol-free days leading to steadier sleep, yoga leading to calmer stress.\n\nEverything here is measured against your own data. Nothing in this card warns or judges; it only shows what is already working so you can keep doing it.\n\nFindings sharpen with more logging. If the card is quiet, it just needs more days of data, not different behaviour." + MEDICAL_NOTE
+}
+
+object WhatChangedInfoCopy {
+    const val text = "A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report." + MEDICAL_NOTE
+}
+
 object ContextInfoCopy {
     const val text = "A simple picture of the activities and locations you've tagged on your migraine logs. For each one we show how often it showed up alongside an attack (count and percentage of your attacks) and the average severity of those attacks compared to your overall average. Higher than usual gets flagged red; lower gets flagged green.\n\nThe preview shows the top 2 by frequency. Tap in for the full list.\n\nImportant: this only counts activities and locations you've actually linked to a specific migraine (via the Activities and Locations steps in the full wizard, or in the Daily Check-In). It's not a correlation analysis like What Happened; it's a straight tally of what was around when you logged each attack. If you don't tag activities or locations, nothing shows up here." + MEDICAL_NOTE
 }
 
 object ImpactInfoCopy {
-    const val text = "The downstream story: not what caused your attacks, but what they looked like and what you missed because of them.\n• Severity distribution: how your attacks break down across the 1-10 scale. Useful for spotting whether you mostly get moderate ones or whether you're getting a creeping number of severe ones.\n• Pain locations: which sides and zones of your head get hit most. Pulled from the Pain step in the wizard.\n• Top symptoms: which symptoms show up most often, with the average severity and duration of the attacks they appear in. Comes from your linked symptom logs.\n• Missed activities: the things you've explicitly tagged as missed because of an attack, ranked by how often they came up.\n\nTap in for the full breakdown.\n\nLike the other cards, this only counts data you've logged. If you don't rate severity, pick pain locations, or tag missed activities in your wizard, those sections stay empty." + MEDICAL_NOTE
+    const val text = "The downstream story: not what caused your attacks, but what they looked like and what you missed because of them.\n• Severity distribution: how your attacks break down across the 1-10 scale. Useful for spotting whether you mostly get moderate ones or whether you're getting a creeping number of severe ones.\n• Pain locations: which sides and zones of your head get hit most. Pulled from the Pain step in the wizard.\n• Aura location: if you log an aura, where in your field of vision it appears and how long it lasts, drawn as you see it through your own eyes. Only shows once you've logged at least one aura.\n• Top symptoms: which symptoms show up most often, with the average severity and duration of the attacks they appear in. Comes from your linked symptom logs.\n• Missed activities: the things you've explicitly tagged as missed because of an attack, ranked by how often they came up.\n\nTap in for the full breakdown.\n\nLike the other cards, this only counts data you've logged. If you don't rate severity, pick pain locations, or tag missed activities in your wizard, those sections stay empty." + MEDICAL_NOTE
 }

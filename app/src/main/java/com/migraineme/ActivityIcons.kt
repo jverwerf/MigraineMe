@@ -737,4 +737,20 @@ object ActivityIcons {
             else -> Other
         }
     }
+
+
+    /** Brainy mascot drawable for this icon_key, or null if no art exists. */
+    fun drawableForKey(key: String?): Int? =
+        BrainyLogManifest.drawableFor(null, key, null, "activity")
+
+    /** Key for a resolved vector (identity match), used to bridge label-based lookups to Brainy art. */
+    private fun keyForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): String? =
+        v?.let { vec -> ALL_ICONS.find { it.icon === vec }?.key }
+
+    fun drawableForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): Int? =
+        drawableForKey(keyForVector(v))
+
+    fun drawableForLabel(label: String, iconKey: String? = null): Int? =
+        BrainyLogManifest.drawableFor(label, iconKey, null, "activity")
+            ?: drawableForVector(forLabel(label, null))
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -140,9 +141,10 @@ fun QuickLogTriggerScreen(
                                 )
                                 frequentLabels.forEach { label ->
                                     val icon = TriggerIcons.forKey(iconKeyByLabel[label])
+                                    val brainyId = TriggerIcons.drawableForKey(iconKeyByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
-                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
+                                        leadingIcon = if (brainyId != null || icon != null) {{ LogIconImage(drawableId = brainyId, fallback = icon, size = 20.dp, tint = LocalContentColor.current) }} else null,
                                         onClick = {
                                             selectedTrigger = label
                                             menuOpen = false
@@ -160,9 +162,10 @@ fun QuickLogTriggerScreen(
                                 )
                                 allLabels.forEach { label ->
                                     val icon = TriggerIcons.forKey(iconKeyByLabel[label])
+                                    val brainyId = TriggerIcons.drawableForKey(iconKeyByLabel[label])
                                     DropdownMenuItem(
                                         text = { Text(label) },
-                                        leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
+                                        leadingIcon = if (brainyId != null || icon != null) {{ LogIconImage(drawableId = brainyId, fallback = icon, size = 20.dp, tint = LocalContentColor.current) }} else null,
                                         onClick = {
                                             selectedTrigger = label
                                             menuOpen = false

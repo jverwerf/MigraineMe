@@ -562,7 +562,8 @@ fun MonitorNutritionScreen(
             }
             
             // Today's Log
-            BaseCard {
+            // diet art faces left already, so the watermark stays unflipped
+            BrainyWatermarkCard(resId = R.drawable.brainy_diet, flipWatermark = false) {
                 Row(
                     modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.NUTRITION_HISTORY) else navController.navigate(Routes.PAYWALL) },
                     horizontalArrangement = Arrangement.SpaceBetween,

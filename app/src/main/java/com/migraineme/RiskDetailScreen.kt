@@ -69,10 +69,11 @@ fun RiskDetailScreen(
                 }
             )
 
-            // ALL triggers — not limited to 3
+            // ALL triggers — not limited to 3; carries the Brainy watermark as the last visible card
             DetailTriggersCard(
                 triggers = displayTriggers,
                 gaugeMax = state.gaugeMaxScore,
+                watermark = true,
                 onViewGraph = {
                     val contribParam = java.net.URLEncoder.encode(
                         displayTriggers.joinToString("|") { it.name }, "UTF-8"
@@ -116,7 +117,8 @@ private fun DetailHeroCard(
         else "Risk"
     }
 
-    HeroCard(modifier = modifier) {
+    Box(modifier = modifier) {
+    HeroCard {
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
                 dayLabel,
@@ -193,6 +195,14 @@ private fun DetailHeroCard(
             dayRisks = dayRisks,
             onDaySelected = onDaySelected
         )
+    }
+        Box(
+            Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 12.dp)
+        ) {
+            BrainyBlobIcon(resId = R.drawable.brainy_risk_small)
+        }
     }
 }
 
@@ -299,11 +309,12 @@ private fun DetailMini(
 private fun DetailTriggersCard(
     triggers: List<TriggerScore>,
     gaugeMax: Double = 10.0,
+    watermark: Boolean = false,
     onViewGraph: () -> Unit = {}
 ) {
     if (triggers.isEmpty()) return
 
-    BaseCard {
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_risk, flipWatermark = true) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

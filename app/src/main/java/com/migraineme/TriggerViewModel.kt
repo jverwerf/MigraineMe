@@ -162,5 +162,16 @@ class TriggerViewModel : ViewModel() {
             }
         }
     }
+
+    fun setAlertEnabled(accessToken: String, triggerId: String, enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                db.updateTriggerPoolItem(accessToken, triggerId, alertEnabled = enabled)
+                loadAll(accessToken)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }
 

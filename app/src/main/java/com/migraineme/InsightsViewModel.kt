@@ -43,6 +43,22 @@ class InsightsViewModel : ViewModel() {
     private val _migraines = MutableStateFlow<List<MigraineSpan>>(emptyList())
     val migraines: StateFlow<List<MigraineSpan>> = _migraines
 
+    // label/displayGroup (lowercased) -> icon_key, for factor icons on Insights tiles
+    private val _triggerIconKeys = MutableStateFlow<Map<String, String>>(emptyMap())
+    val triggerIconKeys: StateFlow<Map<String, String>> = _triggerIconKeys
+
+    // medicine label (lowercased) -> category (MedicineIcons keys by category, label fallback)
+    private val _medicineCategories = MutableStateFlow<Map<String, String>>(emptyMap())
+    val medicineCategories: StateFlow<Map<String, String>> = _medicineCategories
+
+    // relief label (lowercased) -> icon_key
+    private val _reliefIconKeys = MutableStateFlow<Map<String, String>>(emptyMap())
+    val reliefIconKeys: StateFlow<Map<String, String>> = _reliefIconKeys
+
+    // activity/location label (lowercased) -> icon_key
+    private val _contextIconKeys = MutableStateFlow<Map<String, Pair<String, Boolean>>>(emptyMap())
+    val contextIconKeys: StateFlow<Map<String, Pair<String, Boolean>>> = _contextIconKeys // value: iconKey to isActivity
+
     private val _reliefs = MutableStateFlow<List<ReliefSpan>>(emptyList())
     val reliefs: StateFlow<List<ReliefSpan>> = _reliefs
 
@@ -115,6 +131,20 @@ class InsightsViewModel : ViewModel() {
 
     private val _painLocationCounts = MutableStateFlow<List<Pair<String, Int>>>(emptyList())
     val painLocationCounts: StateFlow<List<Pair<String, Int>>> = _painLocationCounts
+
+    private val _auraZoneCounts = MutableStateFlow<List<Pair<String, Int>>>(emptyList())
+    val auraZoneCounts: StateFlow<List<Pair<String, Int>>> = _auraZoneCounts
+
+    private val _auraAttackCount = MutableStateFlow(0)
+    val auraAttackCount: StateFlow<Int> = _auraAttackCount
+
+    /** Average aura duration in minutes, and how many attacks were actually timed. */
+    private val _auraDurationStats = MutableStateFlow<Pair<Int, Int>?>(null)
+    val auraDurationStats: StateFlow<Pair<Int, Int>?> = _auraDurationStats
+
+    /** Timed auras grouped into bands, in AURA_DURATION_BUCKETS order. */
+    private val _auraDurationBuckets = MutableStateFlow<List<Pair<String, Int>>>(emptyList())
+    val auraDurationBuckets: StateFlow<List<Pair<String, Int>>> = _auraDurationBuckets
 
     private val _medicineSpider = MutableStateFlow<SpiderData?>(null)
     val medicineSpider: StateFlow<SpiderData?> = _medicineSpider
@@ -193,11 +223,23 @@ class InsightsViewModel : ViewModel() {
     private val _symptomStats = MutableStateFlow<List<EdgeFunctionsService.SymptomStat>>(emptyList())
     val symptomStats: StateFlow<List<EdgeFunctionsService.SymptomStat>> = _symptomStats
 
+    /** Server-computed aura findings (side match, duration relationships, trend). */
+    private val _auraInsights = MutableStateFlow<List<EdgeFunctionsService.AuraInsight>>(emptyList())
+    val auraInsights: StateFlow<List<EdgeFunctionsService.AuraInsight>> = _auraInsights
+
     private val _symptomOutcomes = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
     val symptomOutcomes: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _symptomOutcomes
 
     private val _symptomSegments = MutableStateFlow<List<EdgeFunctionsService.CorrelationStat>>(emptyList())
     val symptomSegments: StateFlow<List<EdgeFunctionsService.CorrelationStat>> = _symptomSegments
+
+    /** Early-vs-late treatment comparison; empty unless the engine's gate passed. */
+    private val _treatmentTiming = MutableStateFlow<List<EdgeFunctionsService.TreatmentTimingStat>>(emptyList())
+    val treatmentTiming: StateFlow<List<EdgeFunctionsService.TreatmentTimingStat>> = _treatmentTiming
+
+    /** Where the pain starts / spreads. Null until enough timelined attacks. */
+    private val _painMigration = MutableStateFlow<EdgeFunctionsService.PainMigrationStat?>(null)
+    val painMigration: StateFlow<EdgeFunctionsService.PainMigrationStat?> = _painMigration
 
     private val _gaugeAccuracy = MutableStateFlow<EdgeFunctionsService.GaugeAccuracy?>(null)
     val gaugeAccuracy: StateFlow<EdgeFunctionsService.GaugeAccuracy?> = _gaugeAccuracy
@@ -294,6 +336,213 @@ class InsightsViewModel : ViewModel() {
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
+    // ======= What changed (last 30 days vs the 30 before) =======
+
+    /**
+     * Occurrence count for one logged item on attacks in the current 30-day
+     * window vs the 30 days before. Mirrors the PDF report's What changed page
+     * (build-report-html trends): attacks whose start_at falls in each window,
+     * then their linked trigger/prodrome/medicine/relief rows counted by name.
+     * Date windows only — no other filters on either side.
+     */
+    data class ItemTrend(
+        val kind: String,   // "trigger" | "prodrome" | "medicine" | "relief"
+        val name: String,
+        val prior: Int,
+        val current: Int,
+    ) {
+        val delta: Int get() = current - prior
+    }
+
+    private val _itemTrends = MutableStateFlow<List<ItemTrend>>(emptyList())
+    val itemTrends: StateFlow<List<ItemTrend>> = _itemTrends
+
+    private fun computeItemTrends(
+        migs: List<SupabaseDbService.MigraineRow>,
+        trigs: List<SupabaseDbService.TriggerRow>,
+        prods: List<SupabaseDbService.ProdromeLogRow>,
+        meds: List<SupabaseDbService.MedicineRow>,
+        rels: List<SupabaseDbService.ReliefRow>,
+        syms: List<SupabaseDbService.SymptomLogRow>,
+    ) {
+        val now = Instant.now()
+        val curFrom = now.minus(30, ChronoUnit.DAYS)
+        val priorFrom = now.minus(60, ChronoUnit.DAYS)
+        val curIds = mutableSetOf<String>()
+        val priorIds = mutableSetOf<String>()
+        migs.forEach { m ->
+            val start = try { Instant.parse(m.startAt) } catch (_: Exception) { return@forEach }
+            when {
+                !start.isBefore(curFrom) && start.isBefore(now) -> curIds.add(m.id)
+                !start.isBefore(priorFrom) && start.isBefore(curFrom) -> priorIds.add(m.id)
+            }
+        }
+        val trends = mutableListOf<ItemTrend>()
+        fun <T> count(kind: String, rows: List<T>, migraineId: (T) -> String?, name: (T) -> String?) {
+            val counts = mutableMapOf<String, IntArray>() // [prior, current]
+            rows.forEach { r ->
+                val mid = migraineId(r) ?: return@forEach
+                val side = when (mid) {
+                    in curIds -> 1
+                    in priorIds -> 0
+                    else -> return@forEach
+                }
+                val n = name(r)?.trim().takeUnless { it.isNullOrEmpty() } ?: return@forEach
+                counts.getOrPut(n) { IntArray(2) }[side]++
+            }
+            counts.forEach { (n, c) -> trends.add(ItemTrend(kind, n, prior = c[0], current = c[1])) }
+        }
+        count("trigger", trigs, { it.migraineId }, { it.type })
+        count("prodrome", prods, { it.migraineId }, { it.type })
+        count("medicine", meds, { it.migraineId }, { it.name })
+        count("symptom", syms, { it.migraineId }, { it.type })
+        count("relief", rels, { it.migraineId }, { it.type })
+        _itemTrends.value = trends
+    }
+
+    // ======= Attack-level trends ("Your migraines") =======
+
+    /**
+     * One attack-level stat, last 30 days vs the 30 before, mirroring the
+     * PDF's What changed summary. A window with no data counts as zero;
+     * rows that are zero on both sides are dropped before publishing.
+     */
+    data class AttackTrend(
+        val key: String,      // "count" | "severity" | "duration" | "symptoms"
+        val label: String,
+        val prior: Double,
+        val current: Double,
+        val isCount: Boolean = false,  // integer captions (attack count)
+        val isHours: Boolean = false,  // "h" suffix (avg duration)
+    )
+
+    private val _attackTrends = MutableStateFlow<List<AttackTrend>>(emptyList())
+    val attackTrends: StateFlow<List<AttackTrend>> = _attackTrends
+
+    private fun computeAttackTrends(
+        migs: List<SupabaseDbService.MigraineRow>,
+        syms: List<SupabaseDbService.SymptomLogRow>,
+    ) {
+        val now = Instant.now()
+        val curFrom = now.minus(30, ChronoUnit.DAYS)
+        val priorFrom = now.minus(60, ChronoUnit.DAYS)
+
+        class Win {
+            val ids = mutableSetOf<String>()
+            val severities = mutableListOf<Double>()
+            val durations = mutableListOf<Double>()
+        }
+
+        val prior = Win()
+        val current = Win()
+        migs.forEach { m ->
+            val start = try { Instant.parse(m.startAt) } catch (_: Exception) { return@forEach }
+            val win = when {
+                !start.isBefore(curFrom) && start.isBefore(now) -> current
+                !start.isBefore(priorFrom) && start.isBefore(curFrom) -> prior
+                else -> return@forEach
+            }
+            win.ids.add(m.id)
+            m.severity?.let { win.severities.add(it.toDouble()) }
+            m.endAt?.let { endStr ->
+                val end = try { Instant.parse(endStr) } catch (_: Exception) { null }
+                if (end != null && end.isAfter(start)) {
+                    win.durations.add(ChronoUnit.MINUTES.between(start, end) / 60.0)
+                }
+            }
+        }
+        val priorSyms = syms.count { it.migraineId != null && it.migraineId in prior.ids }
+        val curSyms = syms.count { it.migraineId != null && it.migraineId in current.ids }
+        fun mean(l: List<Double>) = if (l.isEmpty()) 0.0 else l.average()
+        fun perAttack(count: Int, attacks: Int) = if (attacks == 0) 0.0 else count.toDouble() / attacks
+
+        val rows = listOf(
+            AttackTrend("count", "Migraines",
+                prior.ids.size.toDouble(), current.ids.size.toDouble(), isCount = true),
+            AttackTrend("severity", "Avg severity",
+                mean(prior.severities), mean(current.severities)),
+            AttackTrend("duration", "Avg duration",
+                mean(prior.durations), mean(current.durations), isHours = true),
+            AttackTrend("symptoms", "Symptoms per attack",
+                perAttack(priorSyms, prior.ids.size), perAttack(curSyms, current.ids.size)),
+        )
+        _attackTrends.value = rows.filter { it.prior != 0.0 || it.current != 0.0 }
+    }
+
+    // ======= Daily habits (lifestyle context) =======
+
+    /**
+     * Mean of one daily habit metric over the last 30 days vs the 30 days
+     * before. Mirrors the PDF report's Lifestyle context table
+     * (build-report-html lifestyleContext + data.ts lifestyle loader): plain
+     * means of the daily values already in the metrics cache. Risk metrics
+     * (alcohol, tyramine) average the 0-3 daily exposure level over days the
+     * user logged food — zero-exposure days included, same denominator as the
+     * report. Time metrics (bedtime) average clock hours, with readings before
+     * noon shifted +24h so the mean doesn't zigzag across midnight.
+     * Date windows only.
+     */
+    data class HabitTrend(
+        val key: String,
+        val label: String,
+        val unit: String,     // "" | "h" | "%" | "ml" | "mg" | "ms" | "bpm" | "min" | "risk"
+        val isTime: Boolean,  // mean clock time; trend moves in minutes, not percent
+        val prior: Double?,
+        val current: Double?,
+    )
+
+    private val _habitTrends = MutableStateFlow<List<HabitTrend>>(emptyList())
+    val habitTrends: StateFlow<List<HabitTrend>> = _habitTrends
+
+    /** The report's curated lifestyle list, in its print order. */
+    private data class HabitDef(
+        val key: String, val label: String, val unit: String, val isTime: Boolean = false,
+    )
+
+    private val habitDefs = listOf(
+        HabitDef("sleep_dur", "Sleep duration", "h"),
+        HabitDef("sleep_score", "Sleep score", "%"),
+        HabitDef("bedtime", "Bedtime", "h", isTime = true),
+        HabitDef("late_screen", "Late screen", "h"),
+        HabitDef("steps", "Steps", ""),
+        HabitDef("hydration", "Hydration", "ml"),
+        HabitDef("caffeine", "Caffeine", "mg"),
+        HabitDef("alcohol", "Alcohol", "risk"),
+        HabitDef("tyramine", "Tyramine", "risk"),
+        HabitDef("stress", "Stress index", ""),
+        HabitDef("hrv", "HRV", "ms"),
+        HabitDef("rhr", "Resting HR", "bpm"),
+        HabitDef("mindfulness", "Mindfulness", "min"),
+    )
+
+    private fun computeHabitTrends(
+        metrics: Map<String, List<DailyValue>>,
+        riskWithZeroDays: Map<String, List<DailyValue>>,
+    ) {
+        val today = LocalDate.now()
+        val loDay = today.minusDays(60).toString()
+        val splitDay = today.minusDays(30).toString()
+        val hiDay = today.plusDays(1).toString()
+        fun meansOf(points: List<DailyValue>): Pair<Double?, Double?> {
+            val prior = mutableListOf<Double>()
+            val current = mutableListOf<Double>()
+            points.forEach { p ->
+                if (p.date < loDay || p.date >= hiDay) return@forEach
+                (if (p.date < splitDay) prior else current).add(p.value)
+            }
+            return prior.takeIf { it.isNotEmpty() }?.average() to
+                current.takeIf { it.isNotEmpty() }?.average()
+        }
+        val trends = mutableListOf<HabitTrend>()
+        habitDefs.forEach { def ->
+            val points = riskWithZeroDays[def.key] ?: metrics[def.key] ?: return@forEach
+            val (prior, current) = meansOf(points)
+            if (prior == null && current == null) return@forEach
+            trends.add(HabitTrend(def.key, def.label, def.unit, def.isTime, prior, current))
+        }
+        _habitTrends.value = trends
+    }
+
     // ======= Weekly summary (derived from migraines) =======
 
     data class WeeklySummary(
@@ -307,6 +556,16 @@ class InsightsViewModel : ViewModel() {
 
     private val _weeklySummary = MutableStateFlow<WeeklySummary?>(null)
     val weeklySummary: StateFlow<WeeklySummary?> = _weeklySummary
+
+    // ======= Attack-free streak =======
+
+    data class StreakSummary(
+        val streakDays: Int,              // full days since the last migraine day
+        val longestRunDaysThisYear: Int,  // longest attack-free run this calendar year
+    )
+
+    private val _streakSummary = MutableStateFlow<StreakSummary?>(null)
+    val streakSummary: StateFlow<StreakSummary?> = _streakSummary
 
     // ======= Day-of-week pattern =======
 
@@ -339,6 +598,25 @@ class InsightsViewModel : ViewModel() {
     private val _allSymptoms = MutableStateFlow<List<SupabaseDbService.SymptomLogRow>>(emptyList())
     val allSymptoms: StateFlow<List<SupabaseDbService.SymptomLogRow>> = _allSymptoms
     private val _allLocations = MutableStateFlow<List<SupabaseDbService.LocationLogRow>>(emptyList())
+
+    /**
+     * Every timestamped pain entry the user has logged, keyed by migraine id and
+     * ordered by time. Only attacks logged after the pain-timeline feature landed
+     * have rows here; older attacks fall back to the `pain_locations` union on the
+     * migraine itself, which is why the report renders the timeline as an
+     * addition rather than a replacement.
+     */
+    private val _painPointsByMigraine =
+        MutableStateFlow<Map<String, List<SupabaseDbService.PainPointRow>>>(emptyMap())
+    val painPointsByMigraine: StateFlow<Map<String, List<SupabaseDbService.PainPointRow>>> =
+        _painPointsByMigraine
+
+    /** Timestamped aura zones per attack. Empty for attacks logged before the
+     *  feature; those fall back to migraines.aura_locations. */
+    private val _auraZonesByMigraine =
+        MutableStateFlow<Map<String, List<SupabaseDbService.AuraZoneRow>>>(emptyMap())
+    val auraZonesByMigraine: StateFlow<Map<String, List<SupabaseDbService.AuraZoneRow>>> =
+        _auraZonesByMigraine
 
     // "What Were You Doing?" card data (activities + locations)
     private val _contextItems = MutableStateFlow<List<ContextItem>>(emptyList())
@@ -469,6 +747,10 @@ class InsightsViewModel : ViewModel() {
         val severityCounts: List<Pair<Int, Int>> = emptyList(),
         val totalMigraineCount: Int = 0,
         val overallAvgSeverity: Float = 5f,
+        val auraZoneCounts: List<Pair<String, Int>> = emptyList(),
+        val auraAttackCount: Int = 0,
+        val auraDurationStats: Pair<Int, Int>? = null,
+        val auraDurationBuckets: List<Pair<String, Int>> = emptyList(),
     )
 
     fun buildFilteredImpactData(migraineIds: Set<String>): FilteredImpactData {
@@ -537,6 +819,14 @@ class InsightsViewModel : ViewModel() {
             if (it.isEmpty()) 5f else it.average().toFloat()
         }
 
+        // Aura, scoped to the same filtered rows
+        val auraPerMigraine = rows.flatMap { m ->
+            (m.auraLocations ?: emptyList()).distinct().map { it to m.id }
+        }.groupBy({ it.first }, { it.second })
+        val auraZoneCounts = auraPerMigraine.map { (zone, ids) -> zone to ids.distinct().size }
+            .sortedByDescending { it.second }
+        val auraDurations = rows.mapNotNull { it.auraDurationMinutes }.filter { it > 0 }
+
         return FilteredImpactData(
             contextItems = contextItems,
             impactItems = impactItems,
@@ -544,6 +834,12 @@ class InsightsViewModel : ViewModel() {
             severityCounts = severityCounts,
             totalMigraineCount = rows.size,
             overallAvgSeverity = avgSev,
+            auraZoneCounts = auraZoneCounts,
+            auraAttackCount = rows.count { !it.auraLocations.isNullOrEmpty() },
+            auraDurationStats = if (auraDurations.isEmpty()) null
+                else auraDurations.average().toInt() to auraDurations.size,
+            auraDurationBuckets = auraDurations.groupingBy { auraDurationBucket(it) }.eachCount()
+                .let { counts -> AURA_DURATION_BUCKETS.map { it to (counts[it] ?: 0) }.filter { it.second > 0 } },
         )
     }
 
@@ -568,7 +864,9 @@ class InsightsViewModel : ViewModel() {
     private val _userDisabledMetrics = MutableStateFlow<Set<String>>(emptySet())
     val userDisabledMetrics: StateFlow<Set<String>> = _userDisabledMetrics
 
-    private val _windowDaysBefore = MutableStateFlow(7L)
+    // Three days of run-up is what the report prints, and what a reader can
+    // actually take in; seven made the attack itself a sliver.
+    private val _windowDaysBefore = MutableStateFlow(3L)
     val windowDaysBefore: StateFlow<Long> = _windowDaysBefore
 
     private val _windowDaysAfter = MutableStateFlow(2L)
@@ -746,6 +1044,8 @@ class InsightsViewModel : ViewModel() {
     private fun normaliseLabel(raw: String): String {
         return raw.lowercase()
             .replace(":", "")
+            .replace("_", " ")
+            .replace(Regex("\\s+"), " ")
             .trim()
             .replace(Regex("\\s+(low|high|short|long|late|early|many|few)\\b.*"), "")
             .trim()
@@ -971,7 +1271,9 @@ class InsightsViewModel : ViewModel() {
                         severity = row.severity,
                         label = row.type,
                         id = row.id,
-                        painLocations = row.painLocations ?: emptyList()
+                        painLocations = row.painLocations ?: emptyList(),
+                        auraLocations = row.auraLocations ?: emptyList(),
+                        auraDurationMinutes = row.auraDurationMinutes
                     )
                 }
 
@@ -992,12 +1294,49 @@ class InsightsViewModel : ViewModel() {
                     TriggerPoint(Instant.parse(row.startAt), row.type ?: "Trigger")
                 }
 
+                try {
+                    val pool = db.getAllTriggerPool(accessToken)
+                    val iconMap = mutableMapOf<String, String>()
+                    pool.forEach { row ->
+                        row.iconKey?.let { key ->
+                            iconMap.putIfAbsent(row.label.lowercase(), key)
+                            row.displayGroup?.let { g -> iconMap.putIfAbsent(g.lowercase(), key) }
+                        }
+                    }
+                    _triggerIconKeys.value = iconMap
+                } catch (_: Exception) { /* icons are decorative; ignore fetch failures */ }
+
+                try {
+                    _medicineCategories.value = db.getAllMedicinePool(accessToken)
+                        .mapNotNull { row -> row.category?.let { row.label.lowercase() to it } }.toMap()
+                    _reliefIconKeys.value = db.getAllReliefPool(accessToken)
+                        .mapNotNull { row -> row.iconKey?.let { row.label.lowercase() to it } }.toMap()
+                    val ctxIcons = mutableMapOf<String, Pair<String, Boolean>>()
+                    db.getAllActivityPool(accessToken).forEach { row ->
+                        row.iconKey?.let { ctxIcons.putIfAbsent(row.label.lowercase(), it to true) }
+                    }
+                    db.getAllLocationPool(accessToken).forEach { row ->
+                        row.iconKey?.let { ctxIcons.putIfAbsent(row.label.lowercase(), it to false) }
+                    }
+                    _contextIconKeys.value = ctxIcons
+                } catch (_: Exception) { /* icons are decorative; ignore fetch failures */ }
+
                 // Populate raw linked items immediately so auto-metric detection works
                 _allTriggers.value = trigs
                 _allMedicines.value = meds
                 _allReliefs.value = rels
                 val prods = db.getAllProdromeLog(accessToken)
                 _allProdromes.value = prods
+                // Per-migraine symptom rows, needed for the What changed
+                // trends below; loadSpiderData reuses them instead of
+                // fetching twice. A failed fetch must not sink the rest of
+                // load(), so it degrades to no symptom rows.
+                val syms = runCatching { db.getSymptoms(accessToken) }.getOrDefault(emptyList())
+                _allSymptoms.value = syms
+
+                // What changed: item occurrences on attacks, last 30 days vs the 30 before
+                computeItemTrends(migs, trigs, prods, meds, rels, syms)
+                computeAttackTrends(migs, syms)
 
                 // Sleep
                 val metrics = SupabaseMetricsService(context)
@@ -1027,6 +1366,7 @@ class InsightsViewModel : ViewModel() {
                 loadInsightHistory(context)
                 loadAiRecommendations(context)
                 computeWeeklySummary()
+                computeStreakSummary()
                 computeDayOfWeekPattern()
             } catch (_: Exception) {
                 _migraines.value = emptyList()
@@ -1132,10 +1472,13 @@ class InsightsViewModel : ViewModel() {
                 .map { it.copy(value = it.value * 60.0) }
         }
 
-        //  Nutrition / Diet 
+        //  Nutrition / Diet
         // nutrition_daily has basic 8 fields; nutrition_records has ALL nutrients per-record.
         // We query nutrition_records and aggregate by date for the full picture.
-        loadNutritionMetrics(client, base, key, token, userId, cutoff, map)
+        // riskWithZeroDays keeps the zero-exposure days the chart cache drops,
+        // so the Daily habits means use the report's denominator.
+        val riskWithZeroDays = mutableMapOf<String, List<DailyValue>>()
+        loadNutritionMetrics(client, base, key, token, userId, cutoff, map, riskWithZeroDays)
 
         // Also load nutrition_daily as fallback for dates that may not have records
         val nutritionArr = fetchArr(client, base, key, token, userId, "nutrition_daily",
@@ -1202,6 +1545,9 @@ class InsightsViewModel : ViewModel() {
 
         _allDailyMetrics.value = map.filterValues { it.isNotEmpty() }
 
+        // Daily habits: last-30 vs prior-30 means for the What changed screen
+        computeHabitTrends(map, riskWithZeroDays)
+
         // Collect distinct sources from tables that have a source column
         val sourceTables = listOf(
             "recovery_score_daily", "hrv_daily", "resting_hr_daily", "spo2_daily",
@@ -1240,7 +1586,8 @@ class InsightsViewModel : ViewModel() {
     /** Aggregate ALL nutrient columns from nutrition_records by date. */
     private fun loadNutritionMetrics(
         client: OkHttpClient, base: String, key: String, token: String,
-        userId: String, cutoff: String, map: MutableMap<String, List<DailyValue>>
+        userId: String, cutoff: String, map: MutableMap<String, List<DailyValue>>,
+        riskWithZeroDays: MutableMap<String, List<DailyValue>>? = null,
     ) {
         try {
             val cols = "timestamp,calories,protein,total_carbohydrate,total_fat,dietary_fiber,sugar," +
@@ -1331,12 +1678,19 @@ class InsightsViewModel : ViewModel() {
             }
             for ((metKey, _) in riskKeys) {
                 val list = mutableListOf<DailyValue>()
+                val full = mutableListOf<DailyValue>()
                 for ((date, sums) in riskDaySums) {
-                    val v = sums[metKey]
-                    if (v != null && v > 0.0) list += DailyValue(date, v)
+                    val v = sums[metKey] ?: continue
+                    full += DailyValue(date, v)
+                    if (v > 0.0) list += DailyValue(date, v)
                 }
                 if (list.isNotEmpty()) {
                     map[metKey] = list.sortedByDescending { it.date }
+                }
+                // Days with records but no exposure count as 0 — an average
+                // exposure level over days the user actually logged food.
+                if (full.isNotEmpty() && riskWithZeroDays != null) {
+                    riskWithZeroDays[metKey] = full.sortedByDescending { it.date }
                 }
             }
         } catch (_: Exception) { /* nutrition data optional */ }
@@ -1419,8 +1773,18 @@ class InsightsViewModel : ViewModel() {
             val symptomPool = db.getAllSymptomPool(accessToken)
             // Cache label → category map for symptom bucket resolution in buildMigraineTagIndex.
             catSymptom = symptomPool.associate { it.label.lowercase() to (it.category ?: "Other") }
-            // Per-migraine symptom rows (postdromes + wizard-side inserts). Mirrors iOS vm.symptoms.
-            _allSymptoms.value = db.getSymptoms(accessToken)
+            // Per-migraine symptom rows (postdromes + wizard-side inserts,
+            // mirrors iOS vm.symptoms) are fetched in load() before the
+            // What changed trends and already sit in _allSymptoms.
+            // Pain timeline entries for the report's per-attack log. Failing to
+            // load these must not take the whole spider build down with it —
+            // every consumer treats an empty map as "no timeline logged".
+            _painPointsByMigraine.value = runCatching {
+                db.getAllPainPoints(accessToken).groupBy { it.migraineId }
+            }.getOrDefault(emptyMap())
+            _auraZonesByMigraine.value = runCatching {
+                db.getAllAuraZones(accessToken).groupBy { it.migraineId }
+            }.getOrDefault(emptyMap())
             val medicinePool = db.getAllMedicinePool(accessToken)
             val reliefPool = db.getAllReliefPool(accessToken)
             val activityPool = db.getAllActivityPool(accessToken)
@@ -1602,6 +1966,23 @@ class InsightsViewModel : ViewModel() {
                 loc to migraineIds.distinct().size
             }.sortedByDescending { it.second }
 
+            // Aura zone counts as % of aura attacks (attacks with any aura data)
+            val auraZonePerMigraine = migs.flatMap { m ->
+                (m.auraLocations ?: emptyList()).distinct().map { it to m.id }
+            }.groupBy({ it.first }, { it.second })
+            _auraZoneCounts.value = auraZonePerMigraine.map { (zone, migraineIds) ->
+                zone to migraineIds.distinct().size
+            }.sortedByDescending { it.second }
+            _auraAttackCount.value = migs.count { !it.auraLocations.isNullOrEmpty() }
+
+            val auraDurations = migs.mapNotNull { it.auraDurationMinutes }.filter { it > 0 }
+            _auraDurationStats.value = if (auraDurations.isEmpty()) null
+                else auraDurations.average().toInt() to auraDurations.size
+            val bucketed = auraDurations.groupingBy { auraDurationBucket(it) }.eachCount()
+            _auraDurationBuckets.value = AURA_DURATION_BUCKETS
+                .map { it to (bucketed[it] ?: 0) }
+                .filter { it.second > 0 }
+
             _severityCounts.value = migs.mapNotNull { it.severity }
                 .groupingBy { it }.eachCount().toList().sortedBy { it.first }
 
@@ -1744,7 +2125,8 @@ class InsightsViewModel : ViewModel() {
             _correlationsLoading.value = true
             try {
                 val edge = EdgeFunctionsService()
-                val stats = withContext(Dispatchers.IO) { edge.getTopCorrelations(context, 50) }
+                // 80 (was 50): room for Well Done layer rows without crowding treatments
+                val stats = withContext(Dispatchers.IO) { edge.getTopCorrelations(context, 80) }
                 _correlationStats.value = stats
 
                 val accuracy = withContext(Dispatchers.IO) { edge.getGaugeAccuracy(context) }
@@ -1758,6 +2140,9 @@ class InsightsViewModel : ViewModel() {
                 _symptomStats.value     = withContext(Dispatchers.IO) { edge.getSymptomStats(context) }
                 _symptomOutcomes.value  = withContext(Dispatchers.IO) { edge.getSymptomOutcomes(context) }
                 _symptomSegments.value  = withContext(Dispatchers.IO) { edge.getSymptomSegments(context) }
+                _treatmentTiming.value  = withContext(Dispatchers.IO) { edge.getTreatmentTiming(context) }
+                _painMigration.value     = withContext(Dispatchers.IO) { edge.getPainMigration(context) }
+                _auraInsights.value     = withContext(Dispatchers.IO) { edge.getAuraInsights(context) }
             } catch (e: Exception) {
                 android.util.Log.w("InsightsVM", "loadCorrelationData failed: ${e.message}")
                 _correlationStats.value = emptyList()
@@ -1766,6 +2151,9 @@ class InsightsViewModel : ViewModel() {
                 _symptomStats.value = emptyList()
                 _symptomOutcomes.value = emptyList()
                 _symptomSegments.value = emptyList()
+                _treatmentTiming.value = emptyList()
+                _painMigration.value = null
+                _auraInsights.value = emptyList()
             } finally {
                 _correlationsLoading.value = false
             }
@@ -2160,6 +2548,52 @@ class InsightsViewModel : ViewModel() {
             } catch (_: Exception) {
                 _weeklySummary.value = null
             }
+        }
+    }
+
+    // ======= Attack-free streak (computed from loaded migraines) =======
+
+    private fun computeStreakSummary() {
+        try {
+            val migs = _migraines.value
+            if (migs.isEmpty()) {
+                _streakSummary.value = null
+                return
+            }
+            val zone = ZoneId.systemDefault()
+            val today = LocalDate.now()
+            // Every date an attack spans is a migraine day; an open attack runs to today.
+            val migraineDays = sortedSetOf<LocalDate>()
+            migs.forEach { m ->
+                var d = LocalDate.ofInstant(m.start, zone)
+                val endDay = LocalDate.ofInstant(m.end ?: Instant.now(), zone)
+                var guard = 0
+                while (!d.isAfter(endDay) && guard < 62) {
+                    migraineDays.add(d)
+                    d = d.plusDays(1)
+                    guard++
+                }
+            }
+            val streak = java.time.temporal.ChronoUnit.DAYS
+                .between(migraineDays.last(), today).toInt().coerceAtLeast(0)
+
+            // Longest attack-free run this calendar year, bounded at Jan 1.
+            val yearStart = today.withDayOfYear(1)
+            var longest = 0
+            var prev = yearStart.minusDays(1)
+            for (d in migraineDays.filter { !it.isBefore(yearStart) }) {
+                val gap = java.time.temporal.ChronoUnit.DAYS.between(prev, d).toInt() - 1
+                if (gap > longest) longest = gap
+                prev = d
+            }
+            val tail = java.time.temporal.ChronoUnit.DAYS.between(prev, today).toInt()
+            if (tail > longest) longest = tail
+            // A streak that started last year can exceed the Jan-1-bounded runs.
+            if (streak > longest) longest = streak
+
+            _streakSummary.value = StreakSummary(streakDays = streak, longestRunDaysThisYear = longest)
+        } catch (_: Exception) {
+            _streakSummary.value = null
         }
     }
 

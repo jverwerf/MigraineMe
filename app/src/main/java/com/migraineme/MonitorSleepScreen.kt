@@ -158,7 +158,7 @@ fun MonitorSleepScreen(
                 }
             } else {
                 // Last Night's Sleep
-                BaseCard {
+                BrainyWatermarkCard(resId = R.drawable.brainy_sleep, flipWatermark = true) {
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable {
                             if (PremiumManager.isPremium) navController.navigate(Routes.SLEEP_DATA_HISTORY)

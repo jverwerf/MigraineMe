@@ -393,6 +393,197 @@ object ReliefIcons {
         }.build()
     }
 
+    val Cefaly: ImageVector by lazy {
+        ImageVector.Builder("Cefaly", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 4f); lineTo(20f, 18f); curveTo(20f, 20f, 18f, 20f, 18f, 20f)
+                lineTo(6f, 20f); curveTo(6f, 20f, 4f, 20f, 4f, 18f); close()
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(12f, 12f); curveTo(13.7f, 12f, 15f, 13.3f, 15f, 15f)
+                curveTo(15f, 16.7f, 13.7f, 18f, 12f, 18f)
+                curveTo(10.3f, 18f, 9f, 16.7f, 9f, 15f)
+                curveTo(9f, 13.3f, 10.3f, 12f, 12f, 12f)
+            }
+        }.build()
+    }
+
+    val Nerivio: ImageVector by lazy {
+        ImageVector.Builder("Nerivio", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(7f, 5f); curveTo(3f, 8f, 3f, 16f, 7f, 19f)
+                moveTo(17f, 5f); curveTo(21f, 8f, 21f, 16f, 17f, 19f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(9f, 9f); lineTo(15f, 9f); lineTo(15f, 15f); lineTo(9f, 15f); close()
+            }
+        }.build()
+    }
+
+    val GammaCore: ImageVector by lazy {
+        ImageVector.Builder("GammaCore", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(7f, 8f); lineTo(17f, 8f); lineTo(17f, 20f); curveTo(17f, 21f, 16f, 21f, 16f, 21f)
+                lineTo(8f, 21f); curveTo(8f, 21f, 7f, 21f, 7f, 20f); close()
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(9.5f, 5.5f); curveTo(9.5f, 4.5f, 10.2f, 4f, 10.7f, 4f); curveTo(11.3f, 4f, 11.9f, 4.5f, 11.9f, 5.5f)
+                moveTo(12.6f, 5.5f); curveTo(12.6f, 4.5f, 13.2f, 4f, 13.8f, 4f); curveTo(14.3f, 4f, 15f, 4.5f, 15f, 5.5f)
+                moveTo(10f, 12f); lineTo(14f, 12f); moveTo(10f, 15f); lineTo(14f, 15f)
+            }
+        }.build()
+    }
+
+    val Stms: ImageVector by lazy {
+        ImageVector.Builder("Stms", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(4f, 16f); curveTo(4f, 9f, 8f, 6f, 12f, 6f); curveTo(16f, 6f, 20f, 9f, 20f, 16f)
+                moveTo(4f, 16f); lineTo(4f, 19f); moveTo(20f, 16f); lineTo(20f, 19f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(12f, 10f); lineTo(10.5f, 13f); lineTo(13.5f, 13f); lineTo(12f, 16f)
+            }
+        }.build()
+    }
+
+    val Relivion: ImageVector by lazy {
+        ImageVector.Builder("Relivion", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 4f); curveTo(17f, 4f, 20f, 8f, 20f, 12f); curveTo(20f, 16f, 17f, 20f, 12f, 20f)
+                curveTo(7f, 20f, 4f, 16f, 4f, 12f); curveTo(4f, 8f, 7f, 4f, 12f, 4f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(10f, 4.4f); lineTo(10f, 6.4f); moveTo(14f, 4.4f); lineTo(14f, 6.4f)
+                moveTo(10f, 17.6f); lineTo(10f, 19.6f); moveTo(14f, 17.6f); lineTo(14f, 19.6f)
+            }
+        }.build()
+    }
+
+    val Quell: ImageVector by lazy {
+        ImageVector.Builder("Quell", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(9f, 4f); curveTo(4f, 6f, 4f, 18f, 9f, 20f)
+                moveTo(15f, 4f); curveTo(20f, 6f, 20f, 18f, 15f, 20f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(9.5f, 9.5f); lineTo(14.5f, 9.5f); lineTo(14.5f, 14.5f); lineTo(9.5f, 14.5f); close()
+                moveTo(12f, 11.5f); lineTo(12f, 12.5f)
+            }
+        }.build()
+    }
+
+    val Reliefband: ImageVector by lazy {
+        ImageVector.Builder("Reliefband", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 7f); curveTo(14.8f, 7f, 17f, 9.2f, 17f, 12f); curveTo(17f, 14.8f, 14.8f, 17f, 12f, 17f)
+                curveTo(9.2f, 17f, 7f, 14.8f, 7f, 12f); curveTo(7f, 9.2f, 9.2f, 7f, 12f, 7f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(10f, 7f); lineTo(9f, 3f); lineTo(15f, 3f); lineTo(14f, 7f)
+                moveTo(10f, 17f); lineTo(9f, 21f); lineTo(15f, 21f); lineTo(14f, 17f)
+                moveTo(12f, 12f); lineTo(12f, 12.01f)
+            }
+        }.build()
+    }
+
+    val CalmiGo: ImageVector by lazy {
+        ImageVector.Builder("CalmiGo", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(9f, 7f); lineTo(15f, 7f); lineTo(15f, 20f); curveTo(15f, 21f, 14f, 21f, 14f, 21f)
+                lineTo(10f, 21f); curveTo(10f, 21f, 9f, 21f, 9f, 20f); close()
+                moveTo(10.5f, 7f); lineTo(10.5f, 4f); lineTo(13.5f, 4f); lineTo(13.5f, 7f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(12f, 10.5f); lineTo(12f, 10.51f); moveTo(12f, 14f); lineTo(12f, 14.01f); moveTo(12f, 17.5f); lineTo(12f, 17.51f)
+            }
+        }.build()
+    }
+
+    val HeartMath: ImageVector by lazy {
+        ImageVector.Builder("HeartMath", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(8f, 4f); curveTo(5.8f, 4f, 4f, 5.8f, 4f, 8f); curveTo(4f, 10.2f, 5.8f, 12f, 8f, 12f)
+                curveTo(10.2f, 12f, 12f, 10.2f, 12f, 8f); curveTo(12f, 5.8f, 10.2f, 4f, 8f, 4f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(11f, 11f); curveTo(13f, 13f, 14f, 15f, 14f, 17f)
+                moveTo(11f, 17f); curveTo(11f, 15.6f, 12.1f, 14.8f, 13.2f, 14.8f)
+                curveTo(14.3f, 14.8f, 15.2f, 15.6f, 15.2f, 16.4f)
+                curveTo(15.2f, 15.6f, 16.1f, 14.8f, 17.2f, 14.8f)
+                curveTo(18.3f, 14.8f, 19.4f, 15.6f, 19.4f, 17f)
+                curveTo(19.4f, 19f, 16.5f, 20.6f, 15.2f, 21f)
+                curveTo(13.9f, 20.6f, 11f, 19f, 11f, 17f)
+            }
+        }.build()
+    }
+
+    val Avulux: ImageVector by lazy {
+        ImageVector.Builder("Avulux", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(7f, 10f); curveTo(9.2f, 10f, 11f, 11.8f, 11f, 14f); curveTo(11f, 16.2f, 9.2f, 18f, 7f, 18f)
+                curveTo(4.8f, 18f, 3f, 16.2f, 3f, 14f); curveTo(3f, 11.8f, 4.8f, 10f, 7f, 10f)
+                moveTo(17f, 10f); curveTo(19.2f, 10f, 21f, 11.8f, 21f, 14f); curveTo(21f, 16.2f, 19.2f, 18f, 17f, 18f)
+                curveTo(14.8f, 18f, 13f, 16.2f, 13f, 14f); curveTo(13f, 11.8f, 14.8f, 10f, 17f, 10f)
+                moveTo(11f, 13f); curveTo(11.5f, 12f, 12.5f, 12f, 13f, 13f)
+                moveTo(3f, 12f); lineTo(2f, 10f); moveTo(21f, 12f); lineTo(22f, 10f)
+            }
+        }.build()
+    }
+
+    val TheraSpecs: ImageVector by lazy {
+        ImageVector.Builder("TheraSpecs", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(3f, 10f); lineTo(10f, 10f); lineTo(10f, 16f); lineTo(3f, 16f); close()
+                moveTo(14f, 10f); lineTo(21f, 10f); lineTo(21f, 16f); lineTo(14f, 16f); close()
+                moveTo(10f, 12f); curveTo(10.7f, 11f, 13.3f, 11f, 14f, 12f)
+                moveTo(3f, 11f); lineTo(1.5f, 10f); moveTo(21f, 11f); lineTo(22.5f, 10f)
+            }
+        }.build()
+    }
+
+    val Allay: ImageVector by lazy {
+        ImageVector.Builder("Allay", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(9f, 5f); lineTo(15f, 5f); lineTo(15f, 17f); lineTo(9f, 17f); close()
+                moveTo(7f, 20f); lineTo(17f, 20f)
+                moveTo(10f, 17f); lineTo(10f, 20f); moveTo(14f, 17f); lineTo(14f, 20f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(12f, 8f); lineTo(12f, 14f)
+                moveTo(5f, 8f); lineTo(6.5f, 9.5f); moveTo(19f, 8f); lineTo(17.5f, 9.5f)
+            }
+        }.build()
+    }
+
+    val ThermaZone: ImageVector by lazy {
+        ImageVector.Builder("ThermaZone", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(4f, 10f); curveTo(4f, 5.5f, 20f, 5.5f, 20f, 10f)
+                moveTo(4f, 10f); curveTo(4f, 12.5f, 20f, 12.5f, 20f, 10f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(12f, 12f); curveTo(12f, 15f, 8f, 14f, 8f, 17f)
+                moveTo(5.5f, 17f); lineTo(10.5f, 17f); lineTo(10.5f, 21f); lineTo(5.5f, 21f); close()
+            }
+        }.build()
+    }
+
+    val Apollo: ImageVector by lazy {
+        ImageVector.Builder("Apollo", W.dp, H.dp, W, H).apply {
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) {
+                moveTo(8.5f, 9f); lineTo(15.5f, 9f); curveTo(16.5f, 9f, 17f, 9.5f, 17f, 10.5f)
+                lineTo(17f, 13.5f); curveTo(17f, 14.5f, 16.5f, 15f, 15.5f, 15f)
+                lineTo(8.5f, 15f); curveTo(7.5f, 15f, 7f, 14.5f, 7f, 13.5f)
+                lineTo(7f, 10.5f); curveTo(7f, 9.5f, 7.5f, 9f, 8.5f, 9f)
+            }
+            path(stroke = stroke, strokeLineWidth = 1.8f, strokeLineCap = StrokeCap.Round) {
+                moveTo(7f, 12f); curveTo(4.5f, 12f, 3f, 12f, 2f, 13f)
+                moveTo(17f, 12f); curveTo(19.5f, 12f, 21f, 12f, 22f, 13f)
+                moveTo(12f, 12f); lineTo(12f, 12.01f)
+            }
+        }.build()
+    }
+
     data class ReliefPickerIcon(val key: String, val label: String, val icon: ImageVector)
 
     val ALL_ICONS: List<ReliefPickerIcon> by lazy { listOf(
@@ -423,6 +614,20 @@ object ReliefIcons {
         ReliefPickerIcon("fresh_air", "Fresh air", FreshAir),
         ReliefPickerIcon("quiet", "Quiet", Quiet),
         ReliefPickerIcon("noise_cancelling", "Headphones", NoiseCancellingHeadphones),
+        ReliefPickerIcon("cefaly", "CEFALY", Cefaly),
+        ReliefPickerIcon("nerivio", "Nerivio", Nerivio),
+        ReliefPickerIcon("gammacore", "gammaCore", GammaCore),
+        ReliefPickerIcon("stms", "sTMS", Stms),
+        ReliefPickerIcon("relivion", "Relivion", Relivion),
+        ReliefPickerIcon("quell", "Quell", Quell),
+        ReliefPickerIcon("reliefband", "Reliefband", Reliefband),
+        ReliefPickerIcon("calmigo", "CalmiGo", CalmiGo),
+        ReliefPickerIcon("heartmath", "HeartMath", HeartMath),
+        ReliefPickerIcon("avulux", "Avulux", Avulux),
+        ReliefPickerIcon("theraspecs", "TheraSpecs", TheraSpecs),
+        ReliefPickerIcon("allay", "Allay Lamp", Allay),
+        ReliefPickerIcon("thermazone", "ThermaZone", ThermaZone),
+        ReliefPickerIcon("apollo", "Apollo Neuro", Apollo),
         ReliefPickerIcon("other", "Other", Other),
     ) }
 
@@ -459,7 +664,37 @@ object ReliefIcons {
             l.contains("fresh air") || l.contains("outside") || l.contains("ventilat") -> FreshAir
             l.contains("quiet") || l.contains("silence") -> Quiet
             l.contains("headphone") || l.contains("noise cancel") -> NoiseCancellingHeadphones
+            l.contains("cefaly") || l.contains("etns") -> Cefaly
+            l.contains("nerivio") -> Nerivio
+            l.contains("gammacore") || l.contains("vagus") || l.contains("nvns") -> GammaCore
+            l.contains("stms") || l.contains("savi") -> Stms
+            l.contains("relivion") || l.contains("ecot") -> Relivion
+            l.contains("quell") -> Quell
+            l.contains("reliefband") || l.contains("reletex") -> Reliefband
+            l.contains("calmigo") -> CalmiGo
+            l.contains("heartmath") || l.contains("inner balance") -> HeartMath
+            l.contains("avulux") -> Avulux
+            l.contains("theraspecs") || l.contains("migraine glass") -> TheraSpecs
+            l.contains("allay") || l.contains("green light") -> Allay
+            l.contains("thermazone") -> ThermaZone
+            l.contains("apollo") -> Apollo
             else -> null
         }
     }
+
+
+    /** Brainy mascot drawable for this icon_key, or null if no art exists. */
+    fun drawableForKey(key: String?): Int? =
+        BrainyLogManifest.drawableFor(null, key, null, "relief")
+
+    /** Key for a resolved vector (identity match), used to bridge label-based lookups to Brainy art. */
+    private fun keyForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): String? =
+        v?.let { vec -> ALL_ICONS.find { it.icon === vec }?.key }
+
+    fun drawableForVector(v: androidx.compose.ui.graphics.vector.ImageVector?): Int? =
+        drawableForKey(keyForVector(v))
+
+    fun drawableForLabel(label: String, iconKey: String? = null): Int? =
+        BrainyLogManifest.drawableFor(label, iconKey, null, "relief")
+            ?: drawableForVector(forLabel(label, null))
 }

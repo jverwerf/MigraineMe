@@ -46,7 +46,9 @@ class SupabaseDbService(
         @SerialName("start_at") val startAt: String,
         @SerialName("ended_at") val endAt: String? = null,
         val notes: String? = null,
-        @SerialName("pain_locations") val painLocations: List<String>? = null
+        @SerialName("pain_locations") val painLocations: List<String>? = null,
+        @SerialName("aura_locations") val auraLocations: List<String>? = null,
+        @SerialName("aura_duration_minutes") val auraDurationMinutes: Int? = null
     )
     @Serializable
     data class MigraineInsert(
@@ -55,7 +57,9 @@ class SupabaseDbService(
         @SerialName("start_at") val startAt: String,
         @SerialName("ended_at") val endAt: String? = null,
         val notes: String? = null,
-        @SerialName("pain_locations") val painLocations: List<String>? = null
+        @SerialName("pain_locations") val painLocations: List<String>? = null,
+        @SerialName("aura_locations") val auraLocations: List<String>? = null,
+        @SerialName("aura_duration_minutes") val auraDurationMinutes: Int? = null
     )
     /** Lightweight row for migraine linking. */
     @Serializable data class MigraneSummaryRow(
@@ -78,6 +82,152 @@ class SupabaseDbService(
         return response.body()
     }
 
+    //  PAIN POINTS (timestamped, one row per location per pain entry)
+    // Rows sharing (migraine_id, start_at) form one pain entry. The parent
+    // migraines row keeps severity = MAX and pain_locations = UNION so
+    // Insights / correlation stats / PDF read the mirrors unchanged.
+    @Serializable
+    data class PainPointRow(
+        val id: String,
+        @SerialName("migraine_id") val migraineId: String,
+        @SerialName("location_id") val locationId: String,
+        val severity: Int? = null,
+        @SerialName("start_at") val startAt: String
+    )
+    @Serializable
+    data class PainPointInsert(
+        @SerialName("migraine_id") val migraineId: String,
+        @SerialName("location_id") val locationId: String,
+        val severity: Int? = null,
+        @SerialName("start_at") val startAt: String
+    )
+
+    suspend fun getPainPoints(accessToken: String, migraineId: String): List<PainPointRow> {
+        val r = client.get("$supabaseUrl/rest/v1/migraine_pain_points") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("migraine_id", "eq.$migraineId")
+            parameter("order", "start_at.asc")
+        }
+        return if (r.status.isSuccess()) r.body() else emptyList()
+    }
+
+    /** All of the user's pain points (RLS scopes to the user) for the journal feed. */
+    suspend fun getAllPainPoints(accessToken: String): List<PainPointRow> {
+        val r = client.get("$supabaseUrl/rest/v1/migraine_pain_points") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("order", "start_at.asc")
+        }
+        return if (r.status.isSuccess()) r.body() else emptyList()
+    }
+
+    // ── Aura zones (timestamped, one row per zone per moment) ──
+
+    /** Rows sharing (migraine_id, start_at) form one aura entry. The parent
+     *  migraines row keeps aura_locations = UNION and aura_duration_minutes =
+     *  total, so Insights / correlation stats / chat read the mirrors
+     *  unchanged. */
+    @Serializable
+    data class AuraZoneRow(
+        val id: String,
+        @SerialName("migraine_id") val migraineId: String,
+        val zone: String,
+        @SerialName("start_at") val startAt: String? = null,
+        @SerialName("duration_minutes") val durationMinutes: Int? = null,
+    )
+
+    @Serializable
+    data class AuraZoneInsert(
+        @SerialName("migraine_id") val migraineId: String,
+        val zone: String,
+        @SerialName("start_at") val startAt: String,
+        @SerialName("duration_minutes") val durationMinutes: Int? = null,
+    )
+
+    suspend fun getAuraZones(accessToken: String, migraineId: String): List<AuraZoneRow> {
+        val r = client.get("$supabaseUrl/rest/v1/migraine_aura_zones") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("migraine_id", "eq.$migraineId")
+            parameter("order", "start_at.asc")
+        }
+        return if (r.status.isSuccess()) r.body() else emptyList()
+    }
+
+    /** All of the user's aura zones (RLS scopes to the user), for the report. */
+    suspend fun getAllAuraZones(accessToken: String): List<AuraZoneRow> {
+        val r = client.get("$supabaseUrl/rest/v1/migraine_aura_zones") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("order", "start_at.asc")
+        }
+        return if (r.status.isSuccess()) r.body() else emptyList()
+    }
+
+    /** Append-only insert for the evening check-in's aura moment — replace
+     *  would wipe the zones logged when the attack started. */
+    suspend fun insertAuraZones(accessToken: String, rows: List<AuraZoneInsert>) {
+        if (rows.isEmpty()) return
+        val ins = client.post("$supabaseUrl/rest/v1/migraine_aura_zones") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json)
+            setBody(rows)
+        }
+        if (!ins.status.isSuccess()) error("Insert aura zones failed: ${ins.bodyAsText()}")
+    }
+
+    /** Wholesale replace, same as pain points: aura entries have no per-row
+     *  identity worth reconciling. */
+    suspend fun replaceAuraZones(accessToken: String, migraineId: String, rows: List<AuraZoneInsert>) {
+        val del = client.delete("$supabaseUrl/rest/v1/migraine_aura_zones") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("migraine_id", "eq.$migraineId")
+        }
+        if (!del.status.isSuccess()) error("Delete aura zones failed: ${del.bodyAsText()}")
+        if (rows.isEmpty()) return
+        val ins = client.post("$supabaseUrl/rest/v1/migraine_aura_zones") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json)
+            setBody(rows)
+        }
+        if (!ins.status.isSuccess()) error("Insert aura zones failed: ${ins.bodyAsText()}")
+    }
+
+    /** Append-only insert for the evening check-in's "pain update": the wizard's
+     *  wholesale replace would wipe the entries logged at attack start. */
+    suspend fun insertPainPoints(accessToken: String, rows: List<PainPointInsert>) {
+        if (rows.isEmpty()) return
+        val ins = client.post("$supabaseUrl/rest/v1/migraine_pain_points") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json)
+            setBody(rows)
+        }
+        if (!ins.status.isSuccess()) error("Insert pain points failed: ${ins.bodyAsText()}")
+    }
+
+    /** Wholesale replace: pain entries have no per-row identity worth reconciling. */
+    suspend fun replacePainPoints(accessToken: String, migraineId: String, rows: List<PainPointInsert>) {
+        val del = client.delete("$supabaseUrl/rest/v1/migraine_pain_points") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("migraine_id", "eq.$migraineId")
+        }
+        if (!del.status.isSuccess()) error("Delete pain points failed: ${del.bodyAsText()}")
+        if (rows.isEmpty()) return
+        val response = client.post("$supabaseUrl/rest/v1/migraine_pain_points") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            contentType(ContentType.Application.Json)
+            setBody(rows)
+        }
+        if (!response.status.isSuccess()) error("Insert pain points failed: ${response.bodyAsText()}")
+    }
+
     /** All items linked to a specific migraine, for display on the journal card. */
     data class MigraineLinkedItems(
         val triggers: List<TriggerRow> = emptyList(),
@@ -86,7 +236,8 @@ class SupabaseDbService(
         val prodromes: List<ProdromeLogRow> = emptyList(),
         val postdromes: List<SymptomLogRow> = emptyList(),
         val activities: List<ActivityLogRow> = emptyList(),
-        val locations: List<LocationLogRow> = emptyList()
+        val locations: List<LocationLogRow> = emptyList(),
+        val painPoints: List<PainPointRow> = emptyList()
     )
 
     suspend fun getLinkedItems(accessToken: String, migraineId: String): MigraineLinkedItems {
@@ -160,7 +311,8 @@ class SupabaseDbService(
             prodromes = fetchProdromes("prodromes"),
             postdromes = fetchPostdromes(),
             activities = fetchActivities("time_in_high_hr_zones_daily"),
-            locations = fetchLocations("locations")
+            locations = fetchLocations("locations"),
+            painPoints = getPainPoints(accessToken, migraineId)
         )
     }
 
@@ -171,10 +323,12 @@ class SupabaseDbService(
         startAt: String?,
         endAt: String?,
         notes: String?,
-        painLocations: List<String>? = null
+        painLocations: List<String>? = null,
+        auraLocations: List<String>? = null,
+        auraDurationMinutes: Int? = null
     ): MigraineRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
-        val payload = MigraineInsert(type, severity, safeStart, endAt, notes, painLocations)
+        val payload = MigraineInsert(type, severity, safeStart, endAt, notes, painLocations, auraLocations, auraDurationMinutes)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -212,7 +366,14 @@ class SupabaseDbService(
         startAt: String? = null,
         endAt: String? = null,
         notes: String? = null,
-        painLocations: List<String>? = null
+        painLocations: List<String>? = null,
+        // When true, pain_locations is written as NULL — the caller owns the
+        // field and the user cleared it.
+        clearPainLocations: Boolean = false,
+        // When true, aura fields are always written, so an emptied aura clears the columns.
+        setAura: Boolean = false,
+        auraLocations: List<String>? = null,
+        auraDurationMinutes: Int? = null
     ): MigraineRow {
         val payload = buildJsonObject {
             type?.let { put("type", it) }
@@ -220,8 +381,18 @@ class SupabaseDbService(
             startAt?.let { put("start_at", it) }
             endAt?.let { put("ended_at", it) }
             notes?.let { put("notes", it) }
-            painLocations?.let { locs ->
+            // Written even when empty so deselecting every location actually
+            // clears the column. Omitting the key left a stale array that
+            // Insights, correlation stats and the PDF kept reading.
+            if (clearPainLocations) put("pain_locations", kotlinx.serialization.json.JsonNull)
+            else painLocations?.let { locs ->
                 put("pain_locations", kotlinx.serialization.json.JsonArray(locs.map { kotlinx.serialization.json.JsonPrimitive(it) }))
+            }
+            if (setAura) {
+                if (auraLocations.isNullOrEmpty()) put("aura_locations", kotlinx.serialization.json.JsonNull)
+                else put("aura_locations", kotlinx.serialization.json.JsonArray(auraLocations.map { kotlinx.serialization.json.JsonPrimitive(it) }))
+                if (auraDurationMinutes == null) put("aura_duration_minutes", kotlinx.serialization.json.JsonNull)
+                else put("aura_duration_minutes", auraDurationMinutes)
             }
         }
         val response = client.patch("$supabaseUrl/rest/v1/migraines") {
@@ -541,6 +712,10 @@ class SupabaseDbService(
     )
     @Serializable
     data class TreatmentRegimenInsert(
+        // treatment_regimens.user_id is NOT NULL with no default and no
+        // set-from-JWT trigger, so it must be sent explicitly or the RLS
+        // WITH CHECK (auth.uid() = user_id) rejects the row.
+        @SerialName("user_id") val userId: String,
         val kind: String,
         val name: String,
         val amount: String? = null,
@@ -552,6 +727,7 @@ class SupabaseDbService(
     )
     suspend fun insertTreatmentRegimen(
         accessToken: String,
+        userId: String,
         kind: String,
         name: String,
         amount: String?,
@@ -561,7 +737,7 @@ class SupabaseDbService(
         notes: String? = null,
         groupId: String? = null
     ): TreatmentRegimenRow {
-        val payload = TreatmentRegimenInsert(kind, name, amount, frequency, startDate, stopDate, notes, groupId)
+        val payload = TreatmentRegimenInsert(userId, kind, name, amount, frequency, startDate, stopDate, notes, groupId)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/treatment_regimens") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -692,14 +868,55 @@ class SupabaseDbService(
         @SerialName("user_id") val userId: String,
         @SerialName("migraine_id") val migraineId: String? = null,
         val type: String? = null,
+        /** MILD/MODERATE/SEVERE, null when unrated or a pain_character symptom. */
+        val severity: String? = null,
+        /** When the symptom started. null = at attack start. Distinct from
+         *  createdAt, which is when the sync trigger created the row. */
+        @SerialName("start_at") val startAt: String? = null,
         @SerialName("created_at") val createdAt: String? = null,
     )
+
+    /**
+     * `symptoms` rows are created server-side by the sync trigger off
+     * `migraines.type`, so severity is written as an update after the migraine
+     * save, matched on (migraine_id, type). Never insert here.
+     */
+    suspend fun setSymptomDetail(
+        accessToken: String, migraineId: String, type: String,
+        severity: String?, startAt: String?
+    ) {
+        val payload = buildJsonObject {
+            if (severity == null) put("severity", kotlinx.serialization.json.JsonNull)
+            else put("severity", severity)
+            // Written as SQL NULL when absent, never stamped with now() — an
+            // untimed symptom must not look like a real time.
+            if (startAt == null) put("start_at", kotlinx.serialization.json.JsonNull)
+            else put("start_at", startAt)
+        }
+        val r = client.patch("$supabaseUrl/rest/v1/symptoms") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("migraine_id", "eq.$migraineId")
+            parameter("type", "eq.$type")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!r.status.isSuccess()) error("Set symptom detail failed: ${r.bodyAsText()}")
+    }
+
+    suspend fun getSymptomRows(accessToken: String, migraineId: String): List<SymptomLogRow> {
+        val r = client.get("$supabaseUrl/rest/v1/symptoms") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("apikey", supabaseKey)
+            parameter("migraine_id", "eq.$migraineId")
+        }
+        return if (r.status.isSuccess()) r.body() else emptyList()
+    }
 
     /** Fetch per-migraine symptom log rows (postdromes + wizard-side inserts). Mirrors iOS getSymptoms. */
     suspend fun getSymptoms(accessToken: String, days: Int = 365): List<SymptomLogRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,migraine_id,type,created_at")
+            parameter("select", "id,user_id,migraine_id,type,severity,start_at,created_at")
             parameter("created_at", "gte.${Instant.now().minus(Duration.ofDays(days.toLong()))}")
             parameter("order", "created_at.desc")
         }
@@ -1037,7 +1254,8 @@ class SupabaseDbService(
         @SerialName("enabled_by_default") val enabledByDefault: Boolean = false,
         @SerialName("metric_table") val metricTable: String? = null,
         @SerialName("metric_column") val metricColumn: String? = null,
-        @SerialName("display_group") val displayGroup: String? = null
+        @SerialName("display_group") val displayGroup: String? = null,
+        @SerialName("alert_enabled") val alertEnabled: Boolean? = null
     )
     @Serializable
     data class TriggerPrefRow(
@@ -1053,7 +1271,7 @@ class SupabaseDbService(
     suspend fun getAllTriggerPool(accessToken: String): List<UserTriggerRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column,display_group"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
+            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column,display_group,alert_enabled"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
         }
         if (!response.status.isSuccess()) error("Fetch user_triggers failed: ${response.bodyAsText()}")
         return response.body()
@@ -1086,12 +1304,14 @@ class SupabaseDbService(
         triggerId: String,
         predictionValue: String? = null,
         category: String? = null,
-        defaultThreshold: Double? = null
+        defaultThreshold: Double? = null,
+        alertEnabled: Boolean? = null
     ) {
         val payload = buildJsonObject {
             predictionValue?.let { put("prediction_value", it) }
             category?.let { put("category", it) }
             defaultThreshold?.let { put("default_threshold", it) }
+            alertEnabled?.let { put("alert_enabled", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/user_triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -1548,7 +1768,8 @@ class SupabaseDbService(
         @SerialName("enabled_by_default") val enabledByDefault: Boolean = false,
         @SerialName("metric_table") val metricTable: String? = null,
         @SerialName("metric_column") val metricColumn: String? = null,
-        @SerialName("display_group") val displayGroup: String? = null
+        @SerialName("display_group") val displayGroup: String? = null,
+        @SerialName("alert_enabled") val alertEnabled: Boolean? = null
     )
     @Serializable
     data class ProdromePrefRow(
@@ -1568,7 +1789,7 @@ class SupabaseDbService(
     suspend fun getAllProdromePool(accessToken: String): List<UserProdromeRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column,display_group"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
+            parameter("select", "id,label,category,icon_key,prediction_value,direction,default_threshold,unit,enabled_by_default,metric_table,metric_column,display_group,alert_enabled"); parameter("order", "metric_table.asc.nullslast,metric_column.asc.nullslast,direction.asc.nullslast,label.asc")
         }
         if (!response.status.isSuccess()) error("Fetch user_prodromes failed: ${response.bodyAsText()}")
         return response.body()
@@ -1600,12 +1821,14 @@ class SupabaseDbService(
         prodromeId: String,
         predictionValue: String? = null,
         category: String? = null,
-        defaultThreshold: Double? = null
+        defaultThreshold: Double? = null,
+        alertEnabled: Boolean? = null
     ) {
         val payload = buildJsonObject {
             predictionValue?.let { put("prediction_value", it) }
             category?.let { put("category", it) }
             defaultThreshold?.let { put("default_threshold", it) }
+            alertEnabled?.let { put("alert_enabled", it) }
         }
         val response = client.patch("$supabaseUrl/rest/v1/user_prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")

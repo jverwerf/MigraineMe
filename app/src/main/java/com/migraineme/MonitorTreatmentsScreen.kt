@@ -2,6 +2,7 @@ package com.migraineme
 
 import android.content.Context
 import android.widget.DatePicker
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,7 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -248,7 +251,7 @@ fun MonitorTreatmentsScreen(navController: NavController) {
     ) {
         PremiumGate(
             message = "Unlock Treatments",
-            subtitle = "Track how well each drug or lifestyle change reduces your migraine days",
+            subtitle = "Track how well each drug, device, or lifestyle change reduces your migraine days",
             onUpgrade = { navController.navigate(Routes.PAYWALL) },
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -322,7 +325,7 @@ private fun AddTreatmentButton(onClick: () -> Unit) {
         Spacer(Modifier.width(12.dp))
         Column {
             Text("Add Treatment", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
-            Text("Drug or lifestyle.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+            Text("Drug, device, or lifestyle.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
             Text("Track its effect on your migraines.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         }
     }
@@ -440,7 +443,7 @@ private fun EmptyState() {
     ) {
         Text("No treatments yet", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(4.dp))
-        Text("Tap Add Treatment to start tracking a drug or lifestyle change.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+        Text("Tap Add Treatment to start tracking a drug, device, or lifestyle change.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -490,44 +493,52 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
         loading = false
     }
     Box(modifier = Modifier.fillMaxWidth()) {
-        Column(
+        Box(
             modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
                 .background(Color(0xFF2A0C3C).copy(alpha = 0.65f))
                 .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
                 .clickable(onClick = onClick)
-                .padding(14.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    if (isPremium) Icons.Outlined.TrackChanges else Icons.Outlined.Lock,
+            Box(Modifier.matchParentSize()) {
+                Image(
+                    painter = painterResource(R.drawable.brainy_treatments),
                     contentDescription = null,
-                    tint = Color(0xFF4DD0E1),
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier
+                        .size(100.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 16.dp, y = 20.dp)
+                        .alpha(0.14f)
+                        .graphicsLayer(scaleX = -1f)
                 )
+            }
+            Column(Modifier.fillMaxWidth().padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                MonitorBlobIcon(resId = R.drawable.brainy_treatments_small)
                 Spacer(Modifier.width(10.dp))
-                Text("Treatments", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                Text("Treatments", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.weight(1f))
                 if (isPremium) {
-                    Text("$activeCount active · →", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
+                    Text("→", color = Color(0xFFB388FF), style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text("Premium · →", color = Color(0xFFB97BFF), style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(6.dp))
             if (!isPremium) {
-                Text("Track how well each drug or lifestyle change reduces your migraine days. Upgrade to unlock.",
+                Text("Track how well each drug, device, or lifestyle change reduces your migraine days. Upgrade to unlock.",
                     color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
             } else if (loading) {
                 CircularProgressIndicator(color = Color(0xFFB97BFF), modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
             } else if (rows.isEmpty()) {
-                Text("Add a drug or lifestyle change to track effectiveness.",
+                Text("Add a drug, device, or lifestyle change to track effectiveness.",
                     color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
             } else {
                 rows.forEachIndexed { i, row ->
-                    HomeRegimenRow(row)
-                    if (i != rows.size - 1) Divider(color = Color.White.copy(alpha = 0.08f))
+                    MonitorRegimenRow(row)
+                    if (i != rows.size - 1) Divider(color = Color.White.copy(alpha = 0.06f))
                 }
+            }
             }
         }
         IconButton(
@@ -548,11 +559,11 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
             title = { Text("Treatments", color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold) },
             text = {
                 Text(
-                    "Track how well each drug or lifestyle change is reducing your migraine days. " +
+                    "Track how well each drug, device, or lifestyle change is reducing your migraine days. " +
                     "Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\n\n" +
                     "The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: " +
                     "a 50% or greater drop is the gold standard.\n\n" +
-                    "Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs or gepants, none for lifestyle changes. " +
+                    "Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. " +
                     "A secondary \"Last 4 weeks\" number on the detail screen shows whether things are trending up or down recently.\n\n" +
                     "A note on Link: linking treatments combines them into one shared % change. " +
                     "It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. " +
@@ -567,32 +578,27 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
     }
 }
 
+/** Calm hub-card row: name left, compact effect badge right. Dose and
+ *  duration stay on the detail page. */
 @Composable
-private fun HomeRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
-    val weeks = try {
-        val start = LocalDate.parse(r.startDate)
-        java.time.temporal.ChronoUnit.WEEKS.between(start, LocalDate.now()).coerceAtLeast(0L).toInt()
-    } catch (_: Throwable) { 0 }
-    val band = r.band
+private fun MonitorRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-            val sub = listOfNotNull(r.amount, "$weeks wks").joinToString(" · ")
-            Text(sub, color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
+        Text(r.name, color = Color.White, fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1)
+        val pct = r.pctChangeMmd
+        val (label, color) = when {
+            r.band == "not_enough_data" -> "not enough data" to Color.White.copy(alpha = 0.55f)
+            pct != null -> String.format("%+.0f%% days", pct) to bandPctColor(r.band)
+            else -> bandPillLabel(r.band) to bandPctColor(r.band)
         }
-        if (band == "not_enough_data") {
-            Text("not enough data", color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
-        } else {
-            val mag = r.pctChangeMmd?.let { minOf(Math.abs(it), 100.0) / 100.0 } ?: 0.0
-            val color = bandPctColor(band)
-            Box(modifier = Modifier.width(54.dp).height(5.dp)
-                .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(3.dp))) {
-                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(mag.toFloat())
-                    .background(color, RoundedCornerShape(3.dp)))
-            }
-        }
+        Text(label, color = color,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier
+                .background(color.copy(alpha = 0.16f), RoundedCornerShape(999.dp))
+                .padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
+
 
 // ════════════════════════════════════════════════════════════════════════════
 // Add dialog
@@ -625,8 +631,12 @@ private fun AddTreatmentRegimenDialog(
                 try {
                     val token = SessionStore.getValidAccessToken(context) ?: error("Not signed in")
                     val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                    val uid = SessionStore.readUserId(context)
+                        ?: JwtUtils.extractUserIdFromAccessToken(token)
+                        ?: error("Not signed in")
                     db.insertTreatmentRegimen(
                         accessToken = token,
+                        userId = uid,
                         kind = kind,
                         name = trimmedName,
                         amount = amount.ifBlank { null },
@@ -651,22 +661,41 @@ private fun AddTreatmentRegimenDialog(
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(selected = kind == "drug", onClick = { kind = "drug" },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)) { Text("Drug") }
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)) { Text("Drug") }
                     SegmentedButton(selected = kind == "lifestyle", onClick = { kind = "lifestyle" },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)) { Text("Lifestyle") }
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)) { Text("Lifestyle") }
+                    SegmentedButton(selected = kind == "device", onClick = { kind = "device" },
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)) { Text("Device") }
                 }
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = name, onValueChange = { name = it },
                     label = { Text("Name") },
-                    placeholder = { Text(if (kind == "drug") "e.g. Topiramate" else "e.g. Meditation") },
+                    placeholder = { Text(when (kind) {
+                        "drug" -> "e.g. Topiramate"
+                        "device" -> "e.g. CEFALY preventive"
+                        else -> "e.g. Meditation"
+                    }) },
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
+                if (kind == "device") {
+                    Spacer(Modifier.height(6.dp))
+                    @OptIn(ExperimentalLayoutApi::class)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        DeviceCatalog.LABELS.forEach { d ->
+                            AssistChip(onClick = { name = d }, label = { Text(d, style = MaterialTheme.typography.labelSmall) })
+                        }
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = amount, onValueChange = { amount = it },
                     label = { Text("Amount") },
-                    placeholder = { Text(if (kind == "drug") "e.g. 50mg" else "e.g. 20 min") },
+                    placeholder = { Text(when (kind) {
+                        "drug" -> "e.g. 50mg"
+                        "device" -> "e.g. 20 min session"
+                        else -> "e.g. 20 min"
+                    }) },
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))

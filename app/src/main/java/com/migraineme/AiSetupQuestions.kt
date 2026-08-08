@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -43,10 +44,8 @@ private fun QPageHeader(icon: ImageVector, title: String, subtitle: String, page
         Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(4.dp))
         Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-        if (pageNum > 0 || totalPages > 0) {
-            Spacer(Modifier.height(4.dp))
-            Text("Question page $pageNum of $totalPages", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
-        }
+        // No page counter here — the top bar already shows "MigraineMe Setup — n of N",
+        // and the two counters disagreed (they count different things).
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -105,11 +104,51 @@ private fun QMultiChips(options: List<String>, selected: Set<String>, onToggle: 
 private enum class PoolType { SYMPTOM, MEDICINE, RELIEF, ACTIVITY, MISSED_ACTIVITY, TRIGGER, PRODROME, LOCATION, POSTDROME, PAIN_CHAR, ACCOMPANYING }
 
 @Composable
-private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, accentColor: Color = AppTheme.AccentPink, poolType: PoolType = PoolType.SYMPTOM) {
-    val grouped: Map<String, List<AiSetupService.PoolLabel>> = items.groupBy { item -> item.category ?: "Other" }
+private fun QPoolMultiSelect(
+    items: List<AiSetupService.PoolLabel>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+    accentColor: Color = AppTheme.AccentPink,
+    poolType: PoolType = PoolType.SYMPTOM,
+    /** Labels pre-selected from the user's story/questionnaire — shown as "From what you told us". */
+    matched: Set<String> = emptySet(),
+    /** Labels pre-selected as profile suggestions — shown as "Suggested for your profile". */
+    suggested: Set<String> = emptySet(),
+    onDeselectSuggested: (() -> Unit)? = null,
+) {
+    val matchedItems = items.filter { it.label in matched }
+    val suggestedItems = items.filter { it.label in suggested && it.label !in matched }
+    val restItems = items.filter { it.label !in matched && it.label !in suggested }
+    val grouped: Map<String, List<AiSetupService.PoolLabel>> = restItems.groupBy { item -> item.category ?: "Other" }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (matchedItems.isNotEmpty()) {
+            Text("From what you told us", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+            QPoolChipGrid(matchedItems, selected, onToggle, accentColor, poolType)
+        }
+        if (suggestedItems.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("✦ Suggested for your profile", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                if (onDeselectSuggested != null) {
+                    Text(
+                        "Deselect all",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
+                        modifier = Modifier.clickable { onDeselectSuggested() }
+                    )
+                }
+            }
+            QPoolChipGrid(suggestedItems, selected, onToggle, accentColor, poolType)
+        }
         for ((category, poolItems) in grouped) {
             Text(category, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+            QPoolChipGrid(poolItems, selected, onToggle, accentColor, poolType)
+        }
+    }
+}
+
+@Composable
+private fun QPoolChipGrid(poolItems: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, accentColor: Color, poolType: PoolType) {
+    Column {
             val rows = poolItems.chunked(4)
             for (row in rows) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
@@ -133,6 +172,11 @@ private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Se
                             PoolType.PAIN_CHAR -> SymptomIcons.forLabel(item.label, item.iconKey)
                             PoolType.ACCOMPANYING -> SymptomIcons.forLabel(item.label, item.iconKey)
                         }
+                        // Resolve by key/label first so the manifest's label rules apply
+                        // (bedroom → sleeping, forest → park, mountains → altitude…).
+                        // The vector path only covers items with a Material icon, which
+                        // left anything without one showing 2-letter initials.
+                        val brainyId = brainyForLogKey(item.iconKey, item.label) ?: brainyForLogVector(icon)
 
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,8 +197,8 @@ private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Se
                                     .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (icon != null) {
-                                    Icon(imageVector = icon, contentDescription = item.label, tint = iconTint, modifier = Modifier.size(22.dp))
+                                if (brainyId != null || icon != null) {
+                                    LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 30.dp else 22.dp, tint = iconTint)
                                 } else {
                                     Text(item.label.take(2).uppercase(), color = iconTint, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                                 }
@@ -173,7 +217,6 @@ private fun QPoolMultiSelect(items: List<AiSetupService.PoolLabel>, selected: Se
                     repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
-        }
     }
 }
 
@@ -661,6 +704,9 @@ fun AiQuestionsPageTriggers(
     triggerPool: List<AiSetupService.PoolLabel>,
     selected: Set<String>,
     onToggle: (String) -> Unit,
+    matched: Set<String> = emptySet(),
+    suggested: Set<String> = emptySet(),
+    onDeselectSuggested: (() -> Unit)? = null,
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
@@ -670,7 +716,7 @@ fun AiQuestionsPageTriggers(
         if (selected.isNotEmpty()) {
             Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
-        QPoolMultiSelect(triggerPool, selected, onToggle, Color(0xFFFFB74D), PoolType.TRIGGER)
+        QPoolMultiSelect(triggerPool, selected, onToggle, Color(0xFFFFB74D), PoolType.TRIGGER, matched, suggested, onDeselectSuggested)
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -684,6 +730,7 @@ fun AiQuestionsPageProdromes(
     prodromePool: List<AiSetupService.PoolLabel>,
     selected: Set<String>,
     onToggle: (String) -> Unit,
+    matched: Set<String> = emptySet(),
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
@@ -693,7 +740,7 @@ fun AiQuestionsPageProdromes(
         if (selected.isNotEmpty()) {
             Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
-        QPoolMultiSelect(prodromePool, selected, onToggle, Color(0xFF9575CD), PoolType.PRODROME)
+        QPoolMultiSelect(prodromePool, selected, onToggle, Color(0xFF9575CD), PoolType.PRODROME, matched)
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -707,6 +754,9 @@ fun AiQuestionsPageLocations(
     locationPool: List<AiSetupService.PoolLabel>,
     selected: Set<String>,
     onToggle: (String) -> Unit,
+    matched: Set<String> = emptySet(),
+    suggested: Set<String> = emptySet(),
+    onDeselectSuggested: (() -> Unit)? = null,
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
@@ -719,7 +769,7 @@ fun AiQuestionsPageLocations(
         if (locationPool.isEmpty()) {
             Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
-            QPoolMultiSelect(locationPool, selected, onToggle, Color(0xFF4FC3F7), PoolType.LOCATION)
+            QPoolMultiSelect(locationPool, selected, onToggle, Color(0xFF4FC3F7), PoolType.LOCATION, matched, suggested, onDeselectSuggested)
         }
         Spacer(Modifier.height(80.dp))
     }
@@ -734,6 +784,7 @@ fun AiQuestionsPagePostdromes(
     postdromePool: List<AiSetupService.PoolLabel>,
     selected: Set<String>,
     onToggle: (String) -> Unit,
+    matched: Set<String> = emptySet(),
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
@@ -747,7 +798,7 @@ fun AiQuestionsPagePostdromes(
             Text("No postdrome symptoms in the pool yet — you can add your own later from Manage Items.",
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
-            QPoolMultiSelect(postdromePool, selected, onToggle, Color(0xFF4DB6AC), PoolType.POSTDROME)
+            QPoolMultiSelect(postdromePool, selected, onToggle, Color(0xFF4DB6AC), PoolType.POSTDROME, matched)
         }
         Spacer(Modifier.height(80.dp))
     }
@@ -771,6 +822,9 @@ private fun AiPoolPage(
     accent: Color,
     poolType: PoolType,
     emptyMessage: String? = null,
+    matched: Set<String> = emptySet(),
+    suggested: Set<String> = emptySet(),
+    onDeselectSuggested: (() -> Unit)? = null,
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
@@ -787,14 +841,14 @@ private fun AiPoolPage(
                 Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         } else {
-            QPoolMultiSelect(pool, selected, onToggle, accent, poolType)
+            QPoolMultiSelect(pool, selected, onToggle, accent, poolType, matched, suggested, onDeselectSuggested)
         }
         Spacer(Modifier.height(80.dp))
     }
 }
 
 @Composable
-fun AiQuestionsPageSymptomsCore(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+fun AiQuestionsPageSymptomsCore(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet(), suggested: Set<String> = emptySet(), onDeselectSuggested: (() -> Unit)? = null) {
     val bucketed = remember(pool) {
         val pain = pool.filter { (it.category ?: "").equals("pain_character", ignoreCase = true) }
             .map { it.copy(category = "Pain Character") }
@@ -805,35 +859,40 @@ fun AiQuestionsPageSymptomsCore(pool: List<AiSetupService.PoolLabel>, selected: 
     AiPoolPage(Icons.Outlined.MedicalServices, "Symptoms During an Attack",
         "Tap the migraine type you usually get under Pain Character, plus anything that tags along under Accompanying.",
         10, 17, bucketed, selected, onToggle, AppTheme.AccentPink, PoolType.SYMPTOM,
-        emptyMessage = "No symptoms in the pool yet.")
+        emptyMessage = "No symptoms in the pool yet.",
+        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested)
 }
 
 @Composable
-fun AiQuestionsPageActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+fun AiQuestionsPageActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet(), suggested: Set<String> = emptySet(), onDeselectSuggested: (() -> Unit)? = null) {
     AiPoolPage(Icons.Outlined.DirectionsRun, "What You Were Doing",
         "Tap what you're usually doing when a migraine hits.",
-        15, 17, pool, selected, onToggle, Color(0xFFFF8A65), PoolType.ACTIVITY)
+        15, 17, pool, selected, onToggle, Color(0xFFFF8A65), PoolType.ACTIVITY,
+        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested)
 }
 
 @Composable
-fun AiQuestionsPageMissedActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+fun AiQuestionsPageMissedActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet()) {
     AiPoolPage(Icons.Outlined.EventBusy, "What You Missed",
         "Tap anything you regularly miss because of migraines.",
-        16, 17, pool, selected, onToggle, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY)
+        16, 17, pool, selected, onToggle, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY,
+        matched = matched)
 }
 
 @Composable
-fun AiQuestionsPageMedicines(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+fun AiQuestionsPageMedicines(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet()) {
     AiPoolPage(Icons.Outlined.Medication, "Your Medicines",
         "Anything you take to prevent or stop a migraine.",
-        13, 17, pool, selected, onToggle, Color(0xFF4FC3F7), PoolType.MEDICINE)
+        13, 17, pool, selected, onToggle, Color(0xFF4FC3F7), PoolType.MEDICINE,
+        matched = matched)
 }
 
 @Composable
-fun AiQuestionsPageReliefs(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit) {
+fun AiQuestionsPageReliefs(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet(), suggested: Set<String> = emptySet(), onDeselectSuggested: (() -> Unit)? = null) {
     AiPoolPage(Icons.Outlined.Spa, "What Brings Relief",
         "Tap anything that helps — dark room, cold compress, sleep, caffeine.",
-        14, 17, pool, selected, onToggle, Color(0xFF81C784), PoolType.RELIEF)
+        14, 17, pool, selected, onToggle, Color(0xFF81C784), PoolType.RELIEF,
+        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested)
 }
 
 @Composable

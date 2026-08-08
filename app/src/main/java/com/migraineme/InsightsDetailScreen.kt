@@ -153,7 +153,7 @@ fun InsightsDetailScreen(
     val templateMap by vm.labelToMetricMap.collectAsState()
     val autoSelectedKeys = remember(windowEvents, templateMap) {
         windowEvents.filter { it.isAutomated }
-            .mapNotNull { ev: EventMarker -> vm.labelToMetricKey(ev.name) }
+            .flatMap { ev -> vm.metricKeysForLabel(ev.name) }
             .toSet()
     }
 
@@ -242,11 +242,29 @@ fun InsightsDetailScreen(
                     }
                 }
 
-                // Graph
-                InsightsTimelineGraph(
-                    windowMigs, windowEvents, enabledSeries,
-                    wStart, wEnd, sel?.start,
-                    Modifier.fillMaxWidth().height(360.dp))
+                // The attack as one composition — the person, the aura eyes,
+                // the window and the sequence — matching the printed report so
+                // the screen and the PDF can't describe it differently.
+                sel?.let { attack ->
+                    val painPoints by vm.painPointsByMigraine.collectAsState()
+                    val symptomRows by vm.allSymptoms.collectAsState()
+                    val auraZones by vm.auraZonesByMigraine.collectAsState()
+                    val detail = remember(attack, painPoints, symptomRows) {
+                        buildReportAttackDetail(attack, painPoints, symptomRows)
+                    }
+                    AttackCard(
+                        mg = attack,
+                        detail = detail,
+                        events = windowEvents,
+                        metrics = enabledSeries,
+                        windowStart = wStart ?: attack.start,
+                        windowEnd = wEnd ?: attack.start,
+                        linked = linkedItems,
+                        symptoms = symptomRows.filter { it.migraineId == attack.id },
+                        symptomCategories = vm.catSymptomMap(),
+                        auraZones = auraZones[attack.id].orEmpty(),
+                    )
+                }
 
                 // Source badges
                 val metricSources by vm.metricSources.collectAsState()

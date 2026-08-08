@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -22,9 +23,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +52,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -131,6 +145,9 @@ fun ScrollableScreenContent(
 @Composable
 fun HeroCard(
     modifier: Modifier = Modifier,
+    watermarkRes: Int? = null,
+    // watermark Brainys should look left, into the card; flip right-facing poses
+    flipWatermark: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val glowColor = remember { AppTheme.AccentPurple.copy(alpha = 0.20f) }
@@ -153,19 +170,114 @@ fun HeroCard(
         colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            if (watermarkRes != null) {
+                // matchParentSize keeps the oversized watermark from stretching short cards
+                Box(Modifier.matchParentSize()) {
+                    Image(
+                        painter = painterResource(watermarkRes),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 18.dp, y = 24.dp)
+                            .alpha(0.14f)
+                            .graphicsLayer(scaleX = if (flipWatermark) -1f else 1f)
+                    )
+                }
+            }
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 content = content
             )
         }
     }
+}
+
+/**
+ * Back + Skip row rendered directly under a wizard step's HeroCard, so a step
+ * can be passed over without scrolling to the bottom Next button. Skip is pure
+ * navigation — it never writes or clears the step's draft data.
+ */
+@Composable
+fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onBack)
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = null,
+                tint = AppTheme.SubtleTextColor,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text("Back", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onSkip)
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+        ) {
+            Text("Skip", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.width(4.dp))
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Search field for wizard pool pages, live-filtering the item grid below it.
+ * Same idiom as the ManagePoolScreen search bar.
+ */
+@Composable
+fun WizardSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    accent: Color = AppTheme.AccentPurple
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Search…", color = AppTheme.SubtleTextColor) },
+        leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                }
+            }
+        },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            cursorColor = accent,
+            focusedBorderColor = accent.copy(alpha = 0.5f),
+            unfocusedBorderColor = Color.White.copy(alpha = 0.12f)
+        )
+    )
 }
 
 /**

@@ -94,6 +94,8 @@ fun NotesScreen(
                 )
             }
 
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.REVIEW) })
+
             // Notes input
             BaseCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {

@@ -3,6 +3,7 @@ package com.migraineme
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -33,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -59,6 +62,30 @@ enum class NavHintLocation(val icon: ImageVector, val label: String) {
     TOP_SETTINGS(Icons.Outlined.Settings, "Settings menu (top left)"),
 }
 
+/** Brainy pose for each coach step, matched on title prefix. */
+internal fun brainyForCoachTitle(title: String): Int? = when {
+    title.startsWith("Home") -> R.drawable.brainy_risk_small
+    title.startsWith("Monitor") -> R.drawable.brainy_physical_small
+    title.startsWith("Diet") -> R.drawable.brainy_diet_small
+    title.startsWith("Insights") -> R.drawable.brainy_detective_small
+    title.startsWith("Log") -> R.drawable.brainy_migraines_small
+    title.startsWith("Auto-Captured") -> R.drawable.brainy_runner_small
+    title.startsWith("Daily Check-In") -> R.drawable.brainy_ask_small
+    title.startsWith("Menstrual") -> R.drawable.brainy_menstruation_small
+    title.startsWith("Treatments") -> R.drawable.brainy_treatments_small
+    title.startsWith("Journal") -> R.drawable.brainy_briefcase_small
+    title.startsWith("Community") -> R.drawable.brainy_recs_small
+    title.startsWith("Settings") -> R.drawable.brainy_cognitive_small
+    title.startsWith("Risk Model") -> R.drawable.brainy_archer_small
+    title.startsWith("Manage Items") -> R.drawable.brainy_gardener_small
+    title.startsWith("Profile") -> R.drawable.brainy_recover_small
+    title.startsWith("AI Calibration") -> R.drawable.brainy_shield_small
+    title.startsWith("Connect Health") -> R.drawable.brainy_physical_small
+    title.startsWith("Connect Your Wearable") -> R.drawable.brainy_runner_small
+    title.startsWith("Configure Data") -> R.drawable.brainy_cognitive_small
+    else -> null
+}
+
 data class TourStep(
     val route: String,
     val icon: ImageVector,
@@ -77,24 +104,24 @@ val tourSteps = listOf(
         "Tap any day on the 7-day forecast strip to preview future risk, or tap the gauge for the full contributor breakdown.",
         navHint = NavHintLocation.BOTTOM_HOME),
     TourStep(Routes.MONITOR, Icons.Outlined.Timeline, "Monitor — Your Health Data",
-        "Every relevant health signal in one place, each as its own card.\n\nRisk shows your current bucket level, top contributors, and the favourites you've pinned. Migraines rolls up this week's attacks (count, avg severity, vs last week, all-time total). Medicines tracks 30-day usage in D/W/M totals. Treatments scores each drug or lifestyle change as Working well / Showing progress / Some effect / Not noticeable, compared against your migraine days before it started.\n\nSleep, Physical, Mental, Environment, and Nutrition pull live from your wearable, phone, weather feed, and any nutrition app linked through Health Connect or HealthKit (caffeine, sodium, tyramine, alcohol, gluten and histamine get flagged automatically).\n\nMenstruation predicts your next period and feeds it back into the risk score. Tap any card for the detail screen with charts and a history view.",
+        "Every relevant health signal in one place, each as its own card.\n\nRisk shows your current bucket level, top contributors, and the favourites you've pinned. Migraines rolls up this week's attacks (count, avg severity, vs last week, all-time total). Medicines tracks 30-day usage in D/W/M totals. Treatments scores each drug, device, or lifestyle change as Working well / Showing progress / Some effect / Not noticeable, compared against your migraine days before it started.\n\nSleep, Physical, Mental, Environment, and Nutrition pull live from your wearable, phone, weather feed, and any nutrition app linked through Health Connect (caffeine, sodium, tyramine, alcohol, gluten and histamine get flagged automatically).\n\nMenstruation predicts your next period and feeds it back into the risk score. Tap any card for the detail screen with charts and a history view.",
         "Hit Customize at the top to reorder cards (drag on Android, arrows on iOS) or hide ones you don't care about. The order saves to your account.",
         navHint = NavHintLocation.BOTTOM_MONITOR),
     TourStep(Routes.MONITOR_NUTRITION, Icons.Outlined.Restaurant, "Diet — What You're Eating",
-        "Three ways to log food: scan a barcode, search the USDA database (700,000+ items), or let Health Connect / HealthKit pull from MyFitnessPal, Cronometer, or any nutrition app you already use.\n\nMigraineMe automatically scores each item against the nutrients that matter most for migraine. For everyday tracking that's caffeine, sodium and sugar.\n\nOn top of those, four known dietary triggers get flagged whenever they show up: tyramine (aged cheeses, cured meats), alcohol, gluten, and histamine (fermented foods). Excess in any of these, or a sudden withdrawal like skipping your usual coffee, feeds straight into your risk score.\n\nYou pick which three metrics show on the card; the detail screen has the full breakdown plus a daily history chart.",
+        "Three ways to log food: scan a barcode, search the USDA database (700,000+ items), or let Health Connect pull from MyFitnessPal, Cronometer, or any nutrition app you already use.\n\nMigraineMe automatically scores each item against the nutrients that matter most for migraine. For everyday tracking that's caffeine, sodium and sugar.\n\nOn top of those, four known dietary triggers get flagged whenever they show up: tyramine (aged cheeses, cured meats), alcohol, gluten, and histamine (fermented foods). Excess in any of these, or a sudden withdrawal like skipping your usual coffee, feeds straight into your risk score.\n\nYou pick which three metrics show on the card; the detail screen has the full breakdown plus a daily history chart.",
         "Try the barcode scanner on something in your kitchen, or search a food to see how tyramine, alcohol, gluten and histamine get flagged when any of them are present.",
         interactive = true,
         navHint = NavHintLocation.BOTTOM_MONITOR),
     TourStep(Routes.INSIGHTS, Icons.Outlined.BarChart, "Insights — What Your Data Says",
-        "Seven cards that turn your logs into something actionable.\n\nFull Report builds a doctor-ready PDF with every metric for the period you choose. AI Recommendations reads your data and suggests changes across six categories (triggers, prodromes, medicines, reliefs, activities, symptoms), including overuse flags for medicines.\n\nAccuracy scores your gauge against what actually happened: true positives, false alarms, and missed attacks. What Happened ranks each trigger and prodrome by how much it lifts your attack risk.\n\nWhat Worked scores each treatment by its impact on severity and duration. What Were You Doing shows which activities and locations turn up most around your attacks. How Did It Impact You rolls up severity, duration, pain locations and missed activities.",
+        "Seven cards that turn your logs into something actionable.\n\nFull Report builds a doctor-ready PDF with every metric for the period you choose. AI Recommendations reads your data and suggests changes across six categories (triggers, prodromes, medicines, reliefs, activities, symptoms), including overuse flags for medicines.\n\nAccuracy scores your gauge against what actually happened: true positives, false alarms, and missed attacks. What Happened ranks each trigger and prodrome by how much it lifts your attack risk.\n\nWhat Worked scores each treatment by its impact on severity and duration. What Were You Doing shows which activities and locations turn up most around your attacks. How Did It Impact You rolls up severity, duration, pain locations, aura location and missed activities.",
         "Tap Full Report for the PDF, or AI Recommendations to review and accept or reject each suggestion with one tap.",
         navHint = NavHintLocation.BOTTOM_INSIGHTS),
     TourStep(Routes.MIGRAINE, Icons.Outlined.Psychology, "Log — Capture Everything",
-        "Tap Log Migraine for the full 13-step wizard (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, review).\n\nIf you're in the middle of an attack, there's an \"It's happening right now\" shortcut on the timing step that saves the entry in one tap so you don't have to answer 12 more questions while in pain.\n\nBelow the hero card is Quick Log: one-tap entry for a single migraine, prodrome, trigger, medicine, relief, or symptom without a full wizard.\n\nDaily Check-In is the evening rollup where the app lists everything it caught automatically (sleep, weather, nutrition, activity) and you confirm, plus capture postdrome symptoms tied to today's attack.",
+        "Tap Log Migraine for the full 13-step wizard (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, review).\n\nIf you're in the middle of an attack, there's an \"It's happening right now\" shortcut on the timing step that saves the entry in one tap so you don't have to answer 12 more questions while in pain.\n\nBelow the hero card is Quick Log: one-tap entry for a single migraine, prodrome, trigger, medicine, relief, or symptom without a full wizard.\n\nPick Aura as a symptom anywhere and a short sheet opens so you can mark where in your vision it appeared and how long it lasted. You can skip it, and you can change it later by tapping Aura again.\n\nDaily Check-In is the evening rollup where the app lists everything it caught automatically (sleep, weather, nutrition, activity) and you confirm, plus capture postdrome symptoms tied to today's attack.",
         "Test the \"It's happening right now\" button on the first wizard step; it logs immediately so you can come back and fill in details later.",
         navHint = NavHintLocation.BOTTOM_MIGRAINE),
     TourStep(Routes.TRIGGERS, Icons.Outlined.Whatshot, "Auto-Captured Data — Less Logging, More Tracking",
-        "You don't have to manually log every trigger. MigraineMe pulls signals from your wearable, phone, location, and the apps you've linked (Health Connect / HealthKit) and converts them into trigger logs automatically.\n\nThe big ones: poor sleep or sudden over-sleep, low HRV vs. your baseline, falling barometric pressure, hot or humid days, period-prediction windows, and nutrient flags from anything you ate (caffeine, sodium, tyramine, alcohol, gluten, histamine).\n\nActivities like workouts, runs, walks, and meditations get pulled in the same way, so they appear under your daily logs without you tapping anything.\n\nEven prodromes can be auto-suggested when your data shows the signature pattern (HRV dip, sleep disruption, mood shift) that usually precedes one of your attacks.\n\nAnything auto-captured shows up on your Triggers screen with a timestamp so you can see exactly when it landed.",
+        "You don't have to manually log every trigger. MigraineMe pulls signals from your wearable, phone, location, and the apps you've linked (Health Connect) and converts them into trigger logs automatically.\n\nThe big ones: poor sleep or sudden over-sleep, low HRV vs. your baseline, falling barometric pressure, hot or humid days, period-prediction windows, and nutrient flags from anything you ate (caffeine, sodium, tyramine, alcohol, gluten, histamine).\n\nActivities like workouts, runs, walks, and meditations get pulled in the same way, so they appear under your daily logs without you tapping anything.\n\nEven prodromes can be auto-suggested when your data shows the signature pattern (HRV dip, sleep disruption, mood shift) that usually precedes one of your attacks.\n\nAnything auto-captured shows up on your Triggers screen with a timestamp so you can see exactly when it landed.",
         "If the app is detecting something you don't trust, tap the item and adjust its severity in Manage Items, or turn the whole source off under Data Settings.",
         navHint = NavHintLocation.BOTTOM_MIGRAINE, bottomCard = true),
     TourStep(Routes.EVENING_CHECKIN, Icons.Outlined.Nightlight, "Daily Check-In — One-Tap Review of Your Day",
@@ -499,12 +526,36 @@ fun CoachOverlay(
 
                                 val bodyScrollState = rememberScrollState()
                                 LaunchedEffect(tourState.stepIndex) { bodyScrollState.scrollTo(0) }
+                                // Watermark overlays the body (bottom-right, facing left
+                                // into the card) — same treatment as the app's cards. It
+                                // must sit in a Box with the content, not in the column
+                                // flow, or it takes layout space and pushes text down.
+                                Box(Modifier.fillMaxWidth()) {
+                                brainyForCoachTitle(step.title)?.let { wm ->
+                                    Box(Modifier.matchParentSize()) {
+                                        Image(
+                                            painter = painterResource(wm),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(100.dp)
+                                                .align(Alignment.BottomEnd)
+                                                .offset(x = 16.dp, y = 20.dp)
+                                                .alpha(0.14f)
+                                                .graphicsLayer(scaleX = -1f)
+                                        )
+                                    }
+                                }
                                 Column(Modifier.padding(16.dp).verticalScroll(bodyScrollState)) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Box(Modifier.size(38.dp).background(
-                                            Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
-                                            CircleShape), contentAlignment = Alignment.Center) {
-                                            Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        val headerBrainy = brainyForCoachTitle(step.title)
+                                        if (headerBrainy != null) {
+                                            MonitorBlobIcon(headerBrainy, flip = false)
+                                        } else {
+                                            Box(Modifier.size(38.dp).background(
+                                                Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))),
+                                                CircleShape), contentAlignment = Alignment.Center) {
+                                                Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                            }
                                         }
                                         Column(Modifier.weight(1f)) {
                                             Text(step.title, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -512,6 +563,13 @@ fun CoachOverlay(
                                         }
                                         IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
                                             Icon(Icons.Outlined.UnfoldLess, "Minimize", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                                        }
+                                        if (tourState.phase == CoachPhase.TOUR) {
+                                            // Exit runs the same cleanup as finishing: clearDemoData joins
+                                            // the seed job before deleting, then lands on setup landing.
+                                            IconButton(onClick = { finishAndClean() }, modifier = Modifier.size(28.dp)) {
+                                                Icon(Icons.Outlined.Close, "Exit tour", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                                            }
                                         }
                                     }
 
@@ -549,6 +607,7 @@ fun CoachOverlay(
                                             }
                                         }
                                     }
+                                }
                                 }
                             }
 

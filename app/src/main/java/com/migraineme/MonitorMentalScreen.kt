@@ -159,7 +159,7 @@ fun MonitorMentalScreen(
                 }
             } else {
                 // Today's Mental Health
-                BaseCard {
+                BrainyWatermarkCard(resId = R.drawable.brainy_cognitive, flipWatermark = true) {
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable {
                             if (PremiumManager.isPremium) navController.navigate(Routes.MENTAL_DATA_HISTORY)

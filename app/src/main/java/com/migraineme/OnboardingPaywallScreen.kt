@@ -4,6 +4,7 @@ package com.migraineme
 import android.app.Activity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -155,7 +157,15 @@ fun OnboardingPaywallScreen(
                     .padding(horizontal = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(8.dp))
+
+                Image(
+                    painter = painterResource(id = R.drawable.brainy_premium),
+                    contentDescription = null,
+                    modifier = Modifier.size(130.dp)
+                )
+
+                Spacer(Modifier.height(8.dp))
 
                 // ── Premium badge ──
                 Box(
@@ -285,35 +295,32 @@ fun OnboardingPaywallScreen(
 
                 // ── Features ──
                 val features = listOf(
-                    Triple(Icons.Outlined.Analytics, "Full Insights & Spider Charts", "Treatment effectiveness and trigger patterns"),
-                    Triple(Icons.Outlined.Timeline, "7-Day Risk Outlook", "See your estimated risk for the week ahead"),
-                    Triple(Icons.Outlined.Speed, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
-                    Triple(Icons.Outlined.Psychology, "Smart Calibration", "Personalised risk model tuned to you"),
-                    Triple(Icons.Outlined.Description, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
-                    Triple(Icons.Outlined.Restaurant, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk scoring"),
+                    Triple(R.drawable.brainy_detective_small, "Full Insights & Spider Charts", "Treatment effectiveness and trigger patterns"),
+                    Triple(R.drawable.brainy_risk_small, "7-Day Risk Outlook", "See your estimated risk for the week ahead"),
+                    Triple(R.drawable.brainy_trigger_small, "Active Trigger Breakdown", "See exactly what's driving your risk score"),
+                    Triple(R.drawable.brainy_archer_small, "Smart Calibration", "Personalised risk model tuned to you"),
+                    Triple(R.drawable.brainy_briefcase_small, "PDF Reports for Doctors", "Professional reports with charts and timelines"),
+                    Triple(R.drawable.brainy_diet_small, "Food Risk Analysis", "Tyramine, gluten, and alcohol risk scoring"),
                 )
 
-                features.forEach { (icon, title, subtitle) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .background(Color.White.copy(alpha = 0.04f), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 14.dp, vertical = 11.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            Modifier.size(36.dp).background(AppTheme.AccentPurple.copy(alpha = 0.15f), CircleShape),
-                            contentAlignment = Alignment.Center
+                // Last card on the page, so it carries the page watermark.
+                BrainyWatermarkCard(resId = R.drawable.brainy_recs, flipWatermark = true) {
+                    features.forEach { (resId, title, subtitle) ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .background(Color.White.copy(alpha = 0.04f), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 14.dp, vertical = 11.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                        }
-                        Column {
-                            Text(title, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            BrainyBlobIcon(resId = resId)
+                            Column {
+                                Text(title, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            }
                         }
                     }
-                    Spacer(Modifier.height(6.dp))
                 }
 
                 Spacer(Modifier.height(8.dp))

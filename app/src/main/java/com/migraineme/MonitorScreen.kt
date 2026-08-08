@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -17,15 +18,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.BubbleChart
-import androidx.compose.material.icons.outlined.Cloud
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Restaurant
-import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -41,9 +41,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -399,7 +402,9 @@ fun MonitorScreen(
                             EnvironmentCard(
                                 weatherLoading = weatherLoading,
                                 weatherSummary = weatherSummary,
-                                displayMetrics = filterWeatherDisplayMetrics(weatherDisplayMetrics, enabledMetrics).take(3),
+                                // The card shows the user's 3 pinned favourites verbatim; a pin
+                                // without data renders "-" rather than being dropped.
+                                displayMetrics = weatherDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_ENVIRONMENT) }
                             )
                         }
@@ -419,7 +424,7 @@ fun MonitorScreen(
                             PhysicalHealthCard(
                                 physicalLoading = physicalLoading,
                                 physicalSummary = physicalSummary,
-                                displayMetrics = filterPhysicalDisplayMetrics(physicalDisplayMetrics, enabledMetrics).take(3),
+                                displayMetrics = physicalDisplayMetrics.take(3),
                                 sources = physicalSources,
                                 hasHealthSource = hasHealthSource,
                                 onClick = { navController.navigate(Routes.MONITOR_PHYSICAL) }
@@ -429,7 +434,7 @@ fun MonitorScreen(
                             SleepCard(
                                 sleepLoading = sleepLoading,
                                 sleepSummary = sleepSummary,
-                                displayMetrics = filterSleepDisplayMetrics(sleepDisplayMetrics, enabledMetrics).take(3),
+                                displayMetrics = sleepDisplayMetrics.take(3),
                                 hasHealthSource = hasHealthSource,
                                 onClick = { navController.navigate(Routes.MONITOR_SLEEP) }
                             )
@@ -438,7 +443,7 @@ fun MonitorScreen(
                             MentalHealthCard(
                                 mentalLoading = mentalLoading,
                                 mentalSummary = mentalSummary,
-                                displayMetrics = filterMentalDisplayMetrics(mentalDisplayMetrics, enabledMetrics).take(3),
+                                displayMetrics = mentalDisplayMetrics.take(3),
                                 onClick = { navController.navigate(Routes.MONITOR_MENTAL) }
                             )
                         }
@@ -468,9 +473,12 @@ private fun NutritionCard(
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
-        icon = Icons.Outlined.Restaurant,
+        brainyRes = R.drawable.brainy_diet,
+        brainySmallRes = R.drawable.brainy_diet_small,
         title = "Diet",
-        iconTint = Color(0xFFFFB74D),
+        // chef art already faces left, so the blob flips and the watermark doesn't
+        flipBlob = true,
+        flipWatermark = false,
         infoBody = "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten and histamine. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods.",
         onClick = onClick
     ) {
@@ -480,7 +488,7 @@ private fun NutritionCard(
             val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 displayMetrics.forEachIndexed { index, metric ->
                     val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
@@ -489,17 +497,11 @@ private fun NutritionCard(
                     val unit = MetricRegistry.unit(registryKey)
                     val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
                     val color = slotColors.getOrElse(index) { slotColors.last() }
-                    
-                    NutritionMetric(
-                        label = label,
-                        value = formatted,
-                        color = color
-                    )
+
+                    MetricTile(formatted, label, color, Modifier.weight(1f))
                 }
             }
-            
-            Spacer(Modifier.height(6.dp))
-            
+
             val mealTypes = nutritionItems.mapNotNull { it.mealType?.takeIf { m -> m.isNotBlank() && m != "unknown" } }.toSet()
             Text(
                 "${mealTypes.size} meals • ${nutritionItems.size} items today",
@@ -518,9 +520,9 @@ private fun EnvironmentCard(
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
-        icon = Icons.Outlined.Cloud,
+        brainyRes = R.drawable.brainy_environment,
+        brainySmallRes = R.drawable.brainy_environment_small,
         title = "Environment",
-        iconTint = Color(0xFF4FC3F7),
         infoBody = "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief.",
         onClick = onClick
     ) {
@@ -535,7 +537,8 @@ private fun EnvironmentCard(
             val altUnit by UnitsPrefs.altUnit.collectAsState()
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
@@ -547,24 +550,34 @@ private fun EnvironmentCard(
                     )
                     Text(weather.condition, color = AppTheme.SubtleTextColor)
                 }
-                Column(horizontalAlignment = Alignment.End) {
+                Column(
+                    modifier = Modifier.width(172.dp).padding(end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
                     val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                     displayMetrics.take(3).forEachIndexed { index, metric ->
                         val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
                         val value = getWeatherMetricValue(weather, metric)
                         val unit = weatherDisplayUnit(metric)
-                        Text(
-                            "$label: $value$unit",
-                            color = slotColors.getOrElse(index) { slotColors.last() },
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        // fixed-width block: labels share a left edge, values share a right edge
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(label, color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                            Text("$value$unit",
+                                color = slotColors.getOrElse(index) { slotColors.last() },
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                maxLines = 1)
+                        }
                     }
                 }
             }
         }
     }
 }
-
 internal fun getWeatherMetricValue(weather: WeatherSummary, metric: String): String {
     return when (metric) {
         // Temperature / altitude honour the display-units preference (canonical
@@ -599,9 +612,9 @@ private fun PhysicalHealthCard(
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
-        icon = Icons.Outlined.FitnessCenter,
+        brainyRes = R.drawable.brainy_physical,
+        brainySmallRes = R.drawable.brainy_physical_small,
         title = "Physical Health",
-        iconTint = Color(0xFF81C784),
         infoBody = "Resting heart rate, HRV, steps and activity. Low HRV and elevated resting HR often precede a migraine by 12-48 hours — your autonomic nervous system shifts before the attack starts. Sudden bursts of intense exercise can also trigger.\n\nUseful as an early-warning signal: if HRV drops well below your baseline, treat that day as higher-risk even if you feel fine.",
         onClick = onClick
     ) {
@@ -620,7 +633,7 @@ private fun PhysicalHealthCard(
             val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 displayMetrics.forEachIndexed { index, metric ->
                     val label = PhysicalCardConfig.labelFor(metric)
@@ -636,11 +649,10 @@ private fun PhysicalHealthCard(
                         PhysicalCardConfig.METRIC_STEPS -> physical.steps?.let { "%,d".format(it) } ?: "-"
                         else -> "-"
                     }
-                    PhysicalMetric(label, value, color)
+                    MetricTile(value, label, color, Modifier.weight(1f))
                 }
             }
             if (sources.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
                 SourceBadgeRow(sources)
             }
         }
@@ -656,9 +668,9 @@ private fun SleepCard(
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
-        icon = Icons.Outlined.Bedtime,
+        brainyRes = R.drawable.brainy_sleep,
+        brainySmallRes = R.drawable.brainy_sleep_small,
         title = "Sleep",
-        iconTint = Color(0xFF7986CB),
         infoBody = "Total hours, quality and timing. Sleep is one of the top three migraine triggers — and BOTH too little AND too much can set one off. Irregular schedules (weekend lie-ins, jet-lag, shift work) are especially bad: it's the change vs your baseline that matters.\n\nUse this card to spot patterns: aim for a consistent window every night, not just \"7 hours on average\".",
         onClick = onClick
     ) {
@@ -676,18 +688,17 @@ private fun SleepCard(
             val sleep = sleepSummary
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                 displayMetrics.forEachIndexed { index, metric ->
                     val label = SleepCardConfig.labelFor(metric)
                     val color = slotColors.getOrElse(index) { slotColors.last() }
                     val value = getSleepSummaryMetricValue(sleep, metric)
-                    SleepMetric(label, value, color)
+                    MetricTile(value, label, color, Modifier.weight(1f))
                 }
             }
             if (sleep.sourceLabel.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
                 SourceBadgeRow(listOf(sleep.sourceLabel.lowercase()))
             }
         }
@@ -702,9 +713,9 @@ private fun MentalHealthCard(
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
-        icon = Icons.Outlined.BubbleChart,
+        brainyRes = R.drawable.brainy_cognitive,
+        brainySmallRes = R.drawable.brainy_cognitive_small,
         title = "Cognitive",
-        iconTint = Color(0xFFBA68C8),
         infoBody = "Stress score, mood, screen time. \"Let-down\" migraines are real, relaxing after high stress (weekend, after a deadline, on holiday) triggers an attack in many people. Sustained high stress is also a top trigger.\n\nUse this card to spot let-down patterns: if you see migraines clustered on Fridays / Saturdays, that's often the signal.\n\nNoise: sampled from your phone mic. Shown as Quiet, Moderate, Loud, or Very loud so you can read it at a glance. The underlying score is kept for correlations and trigger detection.",
         onClick = onClick
     ) {
@@ -718,7 +729,7 @@ private fun MentalHealthCard(
             val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 displayMetrics.forEachIndexed { index, metric ->
                     val label = MentalCardConfig.labelFor(metric)
@@ -726,7 +737,7 @@ private fun MentalHealthCard(
                     // Noise rows use band color (Quiet/Moderate/Loud/Very loud) instead of slot palette.
                     val color = if (metric.startsWith("noise")) noiseSlotColor(value)
                                 else slotColors.getOrElse(index) { slotColors.last() }
-                    MentalMetric(label, value, color)
+                    MetricTile(value, label, color, Modifier.weight(1f))
                 }
             }
         }
@@ -744,25 +755,15 @@ private fun noiseSlotColor(label: String): Color = when (label) {
 }
 
 @Composable
-private fun MentalMetric(label: String, value: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-    }
-}
-
-
-
-@Composable
 private fun MenstruationCard(
     menstruationLoading: Boolean,
     menstruationSettings: MenstruationSettings?,
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
-        icon = Icons.Outlined.FavoriteBorder,
+        brainyRes = R.drawable.brainy_menstruation,
+        brainySmallRes = R.drawable.brainy_menstruation_small,
         title = "Menstruation",
-        iconTint = Color(0xFFE57373),
         infoBody = "Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment.",
         onClick = onClick
     ) {
@@ -778,73 +779,125 @@ private fun MenstruationCard(
             val todayDate = LocalDate.now()
             val daysUntil = ChronoUnit.DAYS.between(todayDate, nextExpected)
             
+            val nextLabel = nextExpected.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))
+            val countdown = when {
+                daysUntil < 0 -> "${-daysUntil} days ago"
+                daysUntil == 0L -> "Today"
+                daysUntil == 1L -> "Tomorrow"
+                else -> "In $daysUntil days"
+            }
+            val countdownColor = when {
+                daysUntil in -2..2 -> Color(0xFFE57373)
+                daysUntil in 3..7 -> Color(0xFFFFB74D)
+                else -> Color(0xFF81C784)
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Column {
-                    Text(
-                        "Next: $nextExpected",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    Text(
-                        when {
-                            daysUntil < 0 -> "${-daysUntil} days ago"
-                            daysUntil == 0L -> "Today"
-                            daysUntil == 1L -> "Tomorrow"
-                            else -> "In $daysUntil days"
-                        },
-                        color = when {
-                            daysUntil in -2..2 -> Color(0xFFE57373)
-                            daysUntil in 3..7 -> Color(0xFFFFB74D)
-                            else -> AppTheme.SubtleTextColor
-                        },
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        "Cycle: ${settings.avgCycleLength} days",
-                        color = AppTheme.BodyTextColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        "Last: $lastDate",
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                MetricTile(nextLabel, "Next period", Color.White, Modifier.weight(1f))
+                MetricTile(countdown, "Countdown", countdownColor, Modifier.weight(1f))
+                MetricTile("${settings.avgCycleLength}d", "Avg cycle", Color(0xFF4FC3F7), Modifier.weight(1f))
             }
+            Text(
+                "Last period: ${lastDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))}",
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Compact Brainy card language for Monitor: 44dp blob, 100dp watermark,
+// 12dp padding, quiet metric tiles. Insights keeps its larger variants.
+// ═══════════════════════════════════════════════════════════════════════════
+
 @Composable
-private fun NutritionMetric(
-    label: String,
-    value: String,
-    color: Color
+internal fun MonitorBlobIcon(resId: Int, flip: Boolean = false) {
+    Box(
+        modifier = Modifier
+            .size(width = 44.dp, height = 41.dp)
+            .background(
+                brush = Brush.linearGradient(
+                    listOf(Color(0x57CE93D8), Color(0x24B388FF))
+                ),
+                shape = RoundedCornerShape(
+                    topStartPercent = 46, topEndPercent = 54,
+                    bottomEndPercent = 42, bottomStartPercent = 58
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(resId),
+            contentDescription = null,
+            modifier = Modifier
+                .size(33.dp)
+                .graphicsLayer(scaleX = if (flip) -1f else 1f)
+        )
+    }
+}
+
+@Composable
+internal fun MonitorBrainyCard(
+    modifier: Modifier = Modifier,
+    resId: Int,
+    flipWatermark: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            value,
-            color = color,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-        )
-        Text(
-            label,
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.bodySmall
-        )
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = AppTheme.BaseCardShape,
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        elevation = CardDefaults.cardElevation(0.dp),
+        border = AppTheme.BaseCardBorder
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            Box(Modifier.matchParentSize()) {
+                Image(
+                    painter = painterResource(resId),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 16.dp, y = 20.dp)
+                        .alpha(0.14f)
+                        .graphicsLayer(scaleX = if (flipWatermark) -1f else 1f)
+                )
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                content = content
+            )
+        }
+    }
+}
+
+/** Quiet rounded tile for one metric: bold coloured value over a muted label. */
+@Composable
+internal fun MetricTile(value: String, label: String, valueColor: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(Color.White.copy(alpha = 0.055f), RoundedCornerShape(12.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(12.dp))
+            .padding(vertical = 7.dp, horizontal = 3.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(value, color = valueColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), maxLines = 1)
+        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 1)
     }
 }
 
 @Composable
 private fun MonitorCategoryCard(
-    icon: ImageVector,
+    brainyRes: Int,
+    brainySmallRes: Int,
     title: String,
-    iconTint: Color,
+    // blob art faces right into the card; watermark art faces left into the card
+    flipBlob: Boolean = false,
+    flipWatermark: Boolean = true,
     enabled: Boolean = true,
     infoBody: String? = null,
     onClick: () -> Unit,
@@ -852,19 +905,18 @@ private fun MonitorCategoryCard(
 ) {
     var showInfo by remember { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxWidth()) {
-        BaseCard(
-            modifier = if (enabled) Modifier.fillMaxWidth().clickable(onClick = onClick) else Modifier.fillMaxWidth()
+        MonitorBrainyCard(
+            modifier = if (enabled) Modifier.fillMaxWidth().clickable(onClick = onClick) else Modifier.fillMaxWidth(),
+            resId = brainyRes,
+            flipWatermark = flipWatermark
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = if (enabled) iconTint else iconTint.copy(alpha = 0.4f),
-                    modifier = Modifier.size(24.dp)
-                )
+                Box(Modifier.alpha(if (enabled) 1f else 0.4f)) {
+                    MonitorBlobIcon(resId = brainySmallRes, flip = flipBlob)
+                }
                 Spacer(Modifier.width(10.dp))
                 Text(
                     title,
@@ -880,8 +932,6 @@ private fun MonitorCategoryCard(
                     )
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
 
             content()
         }
@@ -912,7 +962,7 @@ private fun MonitorCategoryCard(
             },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+                    Image(painterResource(brainySmallRes), contentDescription = null, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("About $title", color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -922,38 +972,6 @@ private fun MonitorCategoryCard(
                 Text(infoBody, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             },
             containerColor = Color(0xFF1E0A2E)
-        )
-    }
-}
-
-@Composable
-private fun PhysicalMetric(label: String, value: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            value,
-            color = color,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-        )
-        Text(
-            label,
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.bodySmall
-        )
-    }
-}
-
-@Composable
-private fun SleepMetric(label: String, value: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            value,
-            color = color,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-        )
-        Text(
-            label,
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -1650,9 +1668,9 @@ private fun RiskCard(
     onClick: () -> Unit
 ) {
     MonitorCategoryCard(
-        icon = Icons.Outlined.TrendingUp,
+        brainyRes = R.drawable.brainy_risk,
+        brainySmallRes = R.drawable.brainy_risk_small,
         title = "Risk",
-        iconTint = Color(0xFFEF5350),
         infoBody = "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief.",
         onClick = onClick
     ) {
@@ -1661,38 +1679,43 @@ private fun RiskCard(
         } else if (riskLive == null) {
             Text("No risk data yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
-            // Risk's own data
-            val zone = riskLive.zone.lowercase().replaceFirstChar { it.uppercase() }
+            // Risk's own data: score + zone fuse into one zone-tinted hero tile
+            val zoneColor = when (riskLive.zone.uppercase()) {
+                "LOW" -> Color(0xFF81C784)
+                "MILD" -> Color(0xFFFFB74D)
+                "HIGH" -> Color(0xFFEF5350)
+                else -> Color(0xFF9E9E9E)
+            }
             val triggers = parseTopTriggersFromJson(riskLive.topTriggers)
-            val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("%.1f".format(riskLive.score), color = slotColors[0], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                    Text("Score", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier
+                        .weight(1.4f)
+                        .background(zoneColor.copy(alpha = 0.09f), RoundedCornerShape(12.dp))
+                        .border(1.dp, zoneColor.copy(alpha = 0.22f), RoundedCornerShape(12.dp))
+                        .padding(vertical = 7.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("%.1f".format(riskLive.score), color = zoneColor,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold))
+                    Spacer(Modifier.width(8.dp))
+                    Text(riskLive.zone.uppercase(), color = zoneColor,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier
+                            .background(zoneColor.copy(alpha = 0.2f), RoundedCornerShape(999.dp))
+                            .padding(horizontal = 8.dp, vertical = 2.dp))
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(zone, color = slotColors[1], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                    Text("Zone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("${triggers.size}", color = slotColors[2], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                    Text("Triggers", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
+                MetricTile("${triggers.size}", "Triggers today", Color(0xFF81C784), Modifier.weight(1f))
             }
 
             // Fav-of-favs beneath
             if (favOfFavs.isNotEmpty()) {
-                Spacer(Modifier.height(6.dp))
-                HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
-                Spacer(Modifier.height(6.dp))
                 val favColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     favOfFavs.take(3).forEachIndexed { i, (key, label) ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(resolveFavValue(key), color = favColors.getOrElse(i) { favColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
+                        MetricTile(resolveFavValue(key), label, favColors.getOrElse(i) { favColors.last() }, Modifier.weight(1f))
                     }
                 }
             }

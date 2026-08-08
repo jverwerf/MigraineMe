@@ -336,7 +336,7 @@ fun QuickLogReliefScreen(
                                                 BuildConfig.SUPABASE_URL,
                                                 BuildConfig.SUPABASE_ANON_KEY
                                             )
-                                            db.insertRelief(
+                                            val row = db.insertRelief(
                                                 accessToken = token,
                                                 migraineId = null, // Standalone relief
                                                 type = relief,
@@ -347,6 +347,9 @@ fun QuickLogReliefScreen(
                                                 sideEffectScale = sideEffectScale,
                                                 sideEffectNotes = sideEffectNotes.ifBlank { null }
                                             )
+                                            if (reliefScale == null || reliefScale == "NONE") {
+                                                DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, relief)
+                                            }
                                         }
                                         snackbarHostState.showSnackbar("Relief logged!")
                                         navController.popBackStack()

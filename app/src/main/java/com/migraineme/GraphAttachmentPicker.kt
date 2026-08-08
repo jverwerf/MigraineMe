@@ -179,7 +179,7 @@ private fun InsightsGraphTab(
     val autoSelectedKeys = remember(windowEvents, templateMap) {
         windowEvents
             .filter { it.isAutomated }
-            .mapNotNull { ev -> insightsVm.labelToMetricKey(ev.name) }
+            .flatMap { ev -> insightsVm.metricKeysForLabel(ev.name) }
             .toSet()
     }
 
@@ -246,11 +246,25 @@ private fun InsightsGraphTab(
         Spacer(Modifier.height(8.dp))
 
         // ── Graph ──
-        InsightsTimelineGraph(
-            windowMigs, windowEvents, enabledSeries,
-            wStart, wEnd, sel?.start,
-            Modifier.fillMaxWidth().height(180.dp)
-        )
+        // The same chart the report and the PDF draw, so a graph shared to the
+        // forum looks like the one the poster is reading.
+        sel?.let { attack ->
+            val painPoints by insightsVm.painPointsByMigraine.collectAsState()
+            val symptomRows by insightsVm.allSymptoms.collectAsState()
+            val detail = remember(attack, painPoints, symptomRows) {
+                buildReportAttackDetail(attack, painPoints, symptomRows)
+            }
+            AttackChart(
+                mg = attack,
+                detail = detail,
+                events = windowEvents,
+                metrics = enabledSeries,
+                windowStart = wStart ?: attack.start,
+                windowEnd = wEnd ?: attack.start,
+                modifier = Modifier.fillMaxWidth()
+                    .height(if (enabledSeries.isEmpty()) 160.dp else 230.dp),
+            )
+        }
 
         Spacer(Modifier.height(4.dp))
 

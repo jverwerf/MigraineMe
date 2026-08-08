@@ -62,6 +62,8 @@ data class HomeUiState(
     val triggersAtRisk: List<TriggerScore> = emptyList(),
     val aiRecommendation: String = "",
     val dailyInsight: String? = null,       // from daily_insights table (premium)
+    /** Positive-only daily notes. Always at least one, even on a bad week. */
+    val positives: List<String> = emptyList(),
     val recentLogs: List<MigraineLog> = emptyList(),
     // Gauge thresholds for display
     val gaugeMaxScore: Double = 10.0,       // the HIGH threshold — used as gauge max
@@ -211,6 +213,7 @@ class HomeViewModel : ViewModel() {
 
         // Fetch AI daily insight (premium feature)
         var dailyInsight: String? = null
+        var positives: List<String> = emptyList()
         try {
             val token = SessionStore.getValidAccessToken(appCtx)
             if (token != null) {
@@ -221,7 +224,7 @@ class HomeViewModel : ViewModel() {
                     val response = client.get("${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/daily_insights") {
                         header("Authorization", "Bearer $token")
                         header("apikey", BuildConfig.SUPABASE_ANON_KEY)
-                        parameter("select", "insight")
+                        parameter("select", "insight,positives")
                         parameter("date", "eq.$today")
                         parameter("limit", "1")
                         header(io.ktor.http.HttpHeaders.Accept, "application/json")
@@ -231,8 +234,14 @@ class HomeViewModel : ViewModel() {
                     if (response.status.isSuccess()) {
                         val arr = org.json.JSONArray(body)
                         if (arr.length() > 0) {
-                            dailyInsight = arr.getJSONObject(0).optString("insight", null)
-                            Log.d(TAG, "Daily insight loaded: ${dailyInsight?.take(60)}...")
+                            val row = arr.getJSONObject(0)
+                            dailyInsight = row.optString("insight", null)
+                            row.optJSONArray("positives")?.let { pArr ->
+                                positives = (0 until pArr.length()).mapNotNull { i ->
+                                    pArr.optJSONObject(i)?.optString("text")?.takeIf { it.isNotBlank() }
+                                }
+                            }
+                            Log.d(TAG, "Daily insight loaded: ${dailyInsight?.take(60)}..., positives=${positives.size}")
                         } else {
                             Log.d(TAG, "Daily insight: empty array returned")
                         }
@@ -255,6 +264,7 @@ class HomeViewModel : ViewModel() {
             triggersAtRisk = topTriggers,
             aiRecommendation = dailyInsight ?: aiTip,
             dailyInsight = dailyInsight,
+            positives = positives,
             gaugeMaxScore = gaugeMax,
             forecast = forecast,
             dayRisks = dayRisks,

@@ -140,8 +140,15 @@ fun ReliefsScreen(
     val selectedLabels = remember(draft.rels) { draft.rels.map { it.type }.toSet() }
 
     // Group pool by category
-    val grouped = remember(pool) {
-        pool.groupBy { it.category ?: "Other" }.toSortedMap()
+    // Wizard search — live-filters the pool grid below
+    var wizardSearch by remember { mutableStateOf("") }
+    val searchPool = remember(pool, wizardSearch) {
+        if (wizardSearch.isBlank()) pool
+        else pool.filter { it.label.contains(wizardSearch.trim(), ignoreCase = true) }
+    }
+
+    val grouped = remember(searchPool) {
+        searchPool.groupBy { it.category ?: "Other" }.toSortedMap()
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -264,6 +271,10 @@ fun ReliefsScreen(
                 }
             }
 
+            if (!quickLogMode) {
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.LOCATIONS) })
+            }
+
             // Manage card (own card)
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -278,12 +289,14 @@ fun ReliefsScreen(
                 MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
             }
 
+            WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFF81C784))
+
             // ── Single reliefs card: Frequent → divider → categories ──
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
                     Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        pool.filter { it.label in frequentLabels }.forEach { rel ->
+                        searchPool.filter { it.label in frequentLabels }.forEach { rel ->
                             ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {
                                 onReliefTap(rel.label)
                             }
@@ -512,6 +525,7 @@ private fun ReliefButton(label: String, isSelected: Boolean, iconKey: String? = 
     val borderColor = if (isSelected) Color(0xFF81C784).copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     val iconTint = if (isSelected) Color.White else AppTheme.SubtleTextColor
     val icon = ReliefIcons.forLabel(label, iconKey)
+    val brainyId = ReliefIcons.drawableForLabel(label, iconKey)
     val textColor = if (isSelected) Color.White else AppTheme.BodyTextColor
 
     Column(
@@ -532,8 +546,8 @@ private fun ReliefButton(label: String, isSelected: Boolean, iconKey: String? = 
                 .border(width = 1.5.dp, color = borderColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (icon != null) {
-                Icon(imageVector = icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(24.dp))
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 34.dp else 24.dp, tint = iconTint)
             } else {
                 Text(label.take(2).uppercase(), color = iconTint, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
             }

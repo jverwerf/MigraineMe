@@ -18,8 +18,10 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -66,6 +68,7 @@ data class PoolItem(
     val prediction: PredictionValue = PredictionValue.NONE,
     val isAutomatable: Boolean = false,
     val isAutomated: Boolean = false,
+    val alertEnabled: Boolean = false,
     val threshold: Double? = null,
     val defaultThreshold: Double? = null,
     val unit: String? = null,
@@ -93,6 +96,7 @@ data class PoolConfig(
     val onToggleAutomation: (itemId: String, enabled: Boolean) -> Unit = { _, _ -> },
     val onSetCategory: (itemId: String, category: String?) -> Unit = { _, _ -> },
     val onThresholdChange: (itemId: String, threshold: Double?) -> Unit = { _, _ -> },
+    val onToggleAlert: ((String, Boolean) -> Unit)? = null,
     val onSave: (suspend () -> Unit)? = null,
     val infoText: String? = null,
 )
@@ -310,8 +314,9 @@ fun ManagePoolScreen(
                                         .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (groupIcon != null) {
-                                        Icon(groupIcon, groupName, tint = effectiveConfig.iconColor, modifier = Modifier.size(20.dp))
+                                    val groupBrainyId = brainyForLogVector(groupIcon) ?: brainyForLogKey(members.firstOrNull()?.iconKey, members.firstOrNull()?.label)
+                                    if (groupBrainyId != null || groupIcon != null) {
+                                        LogIconImage(drawableId = groupBrainyId, fallback = groupIcon, size = if (groupBrainyId != null) 26.dp else 20.dp, tint = effectiveConfig.iconColor)
                                     } else {
                                         Text(groupName.take(2).uppercase(), color = effectiveConfig.iconColor,
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
@@ -698,8 +703,9 @@ private fun PoolItemRow(
                     .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (icon != null) {
-                    Icon(icon, item.label, tint = config.iconColor.copy(alpha = 0.8f), modifier = Modifier.size(18.dp))
+                val brainyId = brainyForLogVector(icon) ?: brainyForLogKey(item.iconKey, item.label)
+                if (brainyId != null || icon != null) {
+                    LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 26.dp else 18.dp, tint = config.iconColor.copy(alpha = 0.8f))
                 } else {
                     Text(item.label.take(2).uppercase(), color = config.iconColor.copy(alpha = 0.8f),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
@@ -727,6 +733,18 @@ private fun PoolItemRow(
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(item.prediction.display, color = item.prediction.chipColor, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+
+            // Alert bell — per-item trigger alert opt-in (auto-detectable items only)
+            if (config.onToggleAlert != null && item.isAutomatable) {
+                IconButton(onClick = { config.onToggleAlert.invoke(item.id, !item.alertEnabled) }, modifier = Modifier.size(28.dp)) {
+                    Icon(
+                        if (item.alertEnabled) Icons.Filled.Notifications else Icons.Outlined.NotificationsNone,
+                        contentDescription = if (item.alertEnabled) "Turn off alerts" else "Turn on alerts",
+                        tint = if (item.alertEnabled) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.4f),
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
 
