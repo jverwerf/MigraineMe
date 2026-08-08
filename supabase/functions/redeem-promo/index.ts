@@ -112,6 +112,7 @@ serve(async (req: Request) => {
         user_id: userId,
         partner_id: promo.partner_id,
         promo_code_id: promo.id,
+        source: "promo_code",
       }, { onConflict: "user_id", ignoreDuplicates: true });
     }
 
