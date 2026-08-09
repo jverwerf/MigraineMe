@@ -124,7 +124,6 @@ object Routes {
     const val HOME = "home"
     const val PROFILE = "profile"
     const val DATA = "data"
-    const val DEVICES = "devices"
     const val MENSTRUATION_SETTINGS = "menstruation_settings"
     const val COMMUNITY = "community"
     const val ARTICLE_DETAIL = "community/article"
@@ -710,7 +709,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val drawerItems = listOf(
         DrawerItem("Profile", Routes.PROFILE, Icons.Outlined.Person),
         DrawerItem("Connections", Routes.THIRD_PARTY_CONNECTIONS, Icons.Outlined.Link),
-        DrawerItem("Devices", Routes.DEVICES, Icons.Outlined.Watch),
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
@@ -903,7 +901,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.THIRD_PARTY_CONNECTIONS ||
             current == Routes.PROFILE ||
             current == Routes.DATA ||
-            current == Routes.DEVICES ||
             current == Routes.RISK_WEIGHTS ||
             current == Routes.RISK_DETAIL ||
             current == Routes.CHANGE_PASSWORD ||
@@ -1047,7 +1044,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.TIMING -> "Timing"
                                     Routes.PAINT_PICTURE -> "Paint the Picture"
                                     Routes.THIRD_PARTY_CONNECTIONS -> "Connections"
-                                    Routes.DEVICES -> "Devices"
                                     Routes.CHANGE_PASSWORD -> "Change password"
                                     Routes.RISK_WEIGHTS -> "Risk Model"
                                     Routes.RISK_DETAIL -> "Risk Detail"
@@ -2388,10 +2384,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ThirdPartyConnectionsScreen(onBack = { nav.popBackStack() })
                     }
 
-                    composable(Routes.DEVICES) {
-                        DevicesScreen(onBack = { nav.popBackStack() })
-                    }
-
                     composable(Routes.MANAGE_CALENDAR_SKIPS) {
                         ManageCalendarSkipsScreen(navController = nav)
                     }
@@ -2480,6 +2472,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             },
                             onTourSkipped = {
                                 nav.navigate("${Routes.ONBOARDING}/setup") {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onAcuteAttack = {
+                                // Straight into the wizard. Skips the paywall too:
+                                // someone mid-attack is not the person to sell to.
+                                nav.navigate(Routes.LOG_MIGRAINE) {
                                     popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                     launchSingleTop = true
                                 }

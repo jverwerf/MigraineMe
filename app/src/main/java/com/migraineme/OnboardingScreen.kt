@@ -124,6 +124,11 @@ fun OnboardingScreen(
     onStartSetup: () -> Unit = {},
     onStartDataSettingsNoSeed: () -> Unit = {},
     onTourSkipped: () -> Unit = {},
+    /** Acute-attack escape hatch: land in the log wizard, not on Home. Someone
+     *  mid-attack tapped it to log the attack, so dropping them on Home makes
+     *  them find the wizard themselves. Falls back to [onComplete] where the
+     *  caller has nowhere to send them. */
+    onAcuteAttack: () -> Unit = onComplete,
 ) {
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
@@ -261,17 +266,31 @@ fun OnboardingScreen(
     Box(Modifier.fillMaxSize().background(bgBrush)) {
         // Welcome page gets the Home-style sky background fading into the gradient.
         if (currentPage == PageId.WELCOME) {
+            // The Scaffold hosting this route still reserves the status-bar
+            // inset even with no top bar, so without pulling the art up by
+            // that amount it stops short of the screen top instead of
+            // bleeding under the status bar.
+            val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             Image(
                 painter = painterResource(id = R.drawable.purple_sky_bg),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.46f).align(Alignment.TopCenter)
+                // Crop from the TOP of the artwork, not its centre. Centre
+                // crop skips the empty sky the illustration opens with and
+                // pushes the swing hard against the status bar.
+                alignment = Alignment.TopCenter,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.46f)
+                    .align(Alignment.TopCenter)
+                    .offset(y = -statusBarInset)
             )
             Box(
                 Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(0.46f)
                     .align(Alignment.TopCenter)
+                    .offset(y = -statusBarInset)
                     .background(
                         Brush.verticalGradient(
                             0.3f to Color.Transparent,
@@ -314,10 +333,14 @@ fun OnboardingScreen(
                                     currentIdx = pages.indexOf(PageId.HOW_IT_WORKS)
                                 },
                                 onSetUpProfile = {
+                                    // Show the setup landing first, the way iOS
+                                    // and the RN apps do. This jumped straight
+                                    // out to Data settings, so the page existed
+                                    // in the flow but was never reachable.
                                     OnboardingMode.noSeed = true
-                                    proceedWithTour { onStartDataSettingsNoSeed() }
+                                    currentIdx = pages.indexOf(PageId.SETUP_LANDING)
                                 },
-                                onGoToApp = { skipOnboarding { onComplete() } }
+                                onGoToApp = { skipOnboarding { onAcuteAttack() } }
                             )
                             PageId.HOW_IT_WORKS -> Box(Modifier.fillMaxSize()) // placeholder, never visible
                             PageId.LOADING_DATA -> LoadingDataPage(
@@ -662,19 +685,15 @@ private fun SetupLandingPage() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-            Box(Modifier.size(56.dp).background(AppTheme.AccentPurple.copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.Link, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(28.dp))
-            }
-            Box(Modifier.size(56.dp).background(AppTheme.AccentPink.copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.Storage, null, tint = AppTheme.AccentPink, modifier = Modifier.size(28.dp))
-            }
-            Box(Modifier.size(56.dp).background(Color(0xFFFFB74D).copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.AutoAwesome, null, tint = Color(0xFFFFB74D), modifier = Modifier.size(28.dp))
-            }
-        }
+        // One Brainy mark rather than three overlapping glyph circles: the
+        // character introduces the setup, and it keeps this page to the point.
+        Image(
+            painter = painterResource(id = R.drawable.brainy_briefcase),
+            contentDescription = null,
+            modifier = Modifier.size(96.dp)
+        )
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(20.dp))
         Text("Now let's set up\nyour data", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(16.dp))
         Text("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes a few minutes.",
@@ -687,6 +706,15 @@ private fun SetupLandingPage() {
         SetupStepPreview(Icons.Outlined.Storage, "3. Configure", "Choose which data to collect")
         Spacer(Modifier.height(8.dp))
         SetupStepPreview(Icons.Outlined.AutoAwesome, "4. AI Personalisation", "Answer questions about your migraines, AI configures everything")
+        Spacer(Modifier.height(14.dp))
+        // Pointer to the policy; iOS and the RN apps carry the same line.
+        Text(
+            "See our Privacy Policy for details.",
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

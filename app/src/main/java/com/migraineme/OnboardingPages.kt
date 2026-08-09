@@ -68,7 +68,7 @@ fun WelcomePage(
         Modifier.fillMaxSize().padding(horizontal = 20.dp).verticalScroll(rememberScrollState())
     ) {
         // Fixed top gap keeps the sky background visible above the content.
-        Spacer(Modifier.height(130.dp))
+        Spacer(Modifier.height(110.dp))
 
         Text(
             "Welcome to MigraineMe",
@@ -86,7 +86,7 @@ fun WelcomePage(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
 
         // Acute-attack escape hatch: sits above everything and is itself
         // the shortcut to the app — mid-attack users shouldn't have to read
@@ -112,10 +112,10 @@ fun WelcomePage(
             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
 
         HeroCard {
-            Column(Modifier.padding(20.dp)) {
+            Column(Modifier.padding(16.dp)) {
                 Box(
                     Modifier
                         .clip(RoundedCornerShape(50))
@@ -129,15 +129,15 @@ fun WelcomePage(
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
                     )
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(8.dp))
                 NumberedPoint(1, "See every screen already filled with example data, so nothing is empty or abstract.")
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 NumberedPoint(2, "Learn what the risk gauge, insights and auto-tracking actually do for you.")
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 NumberedPoint(3, "Takes about 5 minutes. You can leave the tour at any point.")
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 NumberedPoint(4, "Ends with setting up your profile — easier once you've seen what everything does.")
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onTakeFullTour,
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
@@ -151,16 +151,18 @@ fun WelcomePage(
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
 
         HeroCard {
-            Column(Modifier.padding(20.dp)) {
+            Column(Modifier.padding(16.dp)) {
                 NumberedPoint(1, "Connect your wearable and Health Connect.")
-                Spacer(Modifier.height(8.dp))
-                NumberedPoint(2, "Choose which data to track — your triggers come pre-filled from your answers.")
-                Spacer(Modifier.height(8.dp))
-                NumberedPoint(3, "AI personalises your risk model from a few quick questions.")
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(6.dp))
+                NumberedPoint(2, "Choose which data to track.")
+                Spacer(Modifier.height(6.dp))
+                NumberedPoint(3, "Tell us about yourself and answer some questions.")
+                Spacer(Modifier.height(6.dp))
+                NumberedPoint(4, "AI personalises your risk model from your answers.")
+                Spacer(Modifier.height(12.dp))
                 OutlinedButton(
                     onClick = onSetUpProfile,
                     shape = RoundedCornerShape(14.dp),
@@ -195,7 +197,7 @@ fun WelcomePage(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
     }
 }
 
