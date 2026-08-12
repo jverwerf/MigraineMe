@@ -10,6 +10,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getLang, t, type Lang } from "../_shared/i18n.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -47,25 +48,31 @@ serve(async (req: Request) => {
     if (authErr || !user) return json({ error: "Unauthorized" }, 401);
     const userId = user.id;
 
+    // Display language for every `message` below. The app shows these verbatim
+    // in the paywall, so this response IS the render boundary — there is no
+    // second chance for the client to translate. `error` stays English: it is a
+    // machine code, not copy.
+    const lang: Lang = await getLang(supabase, userId);
+
     // ── Parse input ──
     const body = await req.json().catch(() => ({}));
     const rawCode = (body.code ?? "").toString().trim().toUpperCase();
-    if (!rawCode) return json({ error: "missing_code", message: "Please enter a promo code." }, 400);
+    if (!rawCode) return json({ error: "missing_code", message: t(lang, "Please enter a promo code.") }, 400);
 
     // ── Look up code ──
     const { data: promo, error: lookupErr } = await supabase
       .from("promo_codes").select("*").eq("code", rawCode).maybeSingle();
-    if (lookupErr || !promo) return json({ error: "invalid_code", message: "This promo code doesn't exist." }, 404);
+    if (lookupErr || !promo) return json({ error: "invalid_code", message: t(lang, "This promo code doesn't exist.") }, 404);
 
     // ── Validate code ──
-    if (!promo.is_active) return json({ error: "inactive_code", message: "This promo code is no longer active." }, 410);
-    if (promo.expires_at && new Date(promo.expires_at) < new Date()) return json({ error: "expired_code", message: "This promo code has expired." }, 410);
-    if (promo.max_uses !== null && promo.times_used >= promo.max_uses) return json({ error: "exhausted_code", message: "This promo code has reached its usage limit." }, 410);
+    if (!promo.is_active) return json({ error: "inactive_code", message: t(lang, "This promo code is no longer active.") }, 410);
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) return json({ error: "expired_code", message: t(lang, "This promo code has expired.") }, 410);
+    if (promo.max_uses !== null && promo.times_used >= promo.max_uses) return json({ error: "exhausted_code", message: t(lang, "This promo code has reached its usage limit.") }, 410);
 
     // ── Check if user already redeemed this code ──
     const { data: existing } = await supabase
       .from("promo_redemptions").select("id").eq("user_id", userId).eq("promo_code_id", promo.id).maybeSingle();
-    if (existing) return json({ error: "already_redeemed", message: "You've already used this promo code." }, 409);
+    if (existing) return json({ error: "already_redeemed", message: t(lang, "You've already used this promo code.") }, 409);
 
     // ── Get current premium_status ──
     const { data: currentStatus } = await supabase
@@ -80,7 +87,7 @@ serve(async (req: Request) => {
     // ── Update premium_status ──
     const { error: updateErr } = await supabase
       .from("premium_status").upsert({ user_id: userId, trial_end: newTrialEnd.toISOString() }, { onConflict: "user_id" });
-    if (updateErr) return json({ error: "update_failed", message: "Something went wrong. Please try again." }, 500);
+    if (updateErr) return json({ error: "update_failed", message: t(lang, "Something went wrong. Please try again.") }, 500);
 
     // ── Log the redemption ──
     await supabase.from("promo_redemptions").insert({
@@ -100,7 +107,7 @@ serve(async (req: Request) => {
       // Another request beat us to the last use — roll back
       await supabase.from("premium_status").upsert({ user_id: userId, trial_end: currentStatus?.trial_end ?? null }, { onConflict: "user_id" });
       await supabase.from("promo_redemptions").delete().eq("user_id", userId).eq("promo_code_id", promo.id);
-      return json({ error: "exhausted_code", message: "This promo code has reached its usage limit." }, 410);
+      return json({ error: "exhausted_code", message: t(lang, "This promo code has reached its usage limit.") }, 410);
     }
 
     // ── Affiliate attribution: first-touch, permanent ──
@@ -122,6 +129,9 @@ serve(async (req: Request) => {
 
   } catch (err) {
     console.error("redeem-promo error:", err);
+    // English on purpose: this catch also covers a failure to resolve the user,
+    // so there is no language to render in. An untranslated last-resort message
+    // beats swallowing the error.
     return json({ error: "internal_error", message: "Something went wrong." }, 500);
   }
 });

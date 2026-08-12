@@ -71,17 +71,25 @@ async function getFirebaseAccessToken(): Promise<string> {
   return tokenData.access_token;
 }
 
-// Send FCM message to a single device
+// Send FCM message to a single device.
+//
+// `notification` is optional and, when present, is ALREADY TRANSLATED by the
+// caller. A push is the one piece of user-facing text the device cannot render
+// itself — it only ever sees the finished string — so the caller looks up the
+// recipient's profiles.lang and renders before handing the text over. Data-only
+// pushes stay data-only: the app builds their text on-device through Strings,
+// which is better, because that text then follows a language change.
 async function sendFcmMessage(
   accessToken: string,
   fcmToken: string,
   messageType: string,
-  extraData: Record<string, string> = {}
+  extraData: Record<string, string> = {},
+  notification?: { title: string; body: string }
 ): Promise<boolean> {
   const projectId = FIREBASE_SERVICE_ACCOUNT.project_id;
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
-  const message = {
+  const message: Record<string, unknown> = {
     message: {
       token: fcmToken,
       data: {
@@ -89,6 +97,7 @@ async function sendFcmMessage(
         ...extraData,
         type: messageType,
       },
+      ...(notification ? { notification } : {}),
       android: {
         priority: "high",
       },
@@ -176,9 +185,12 @@ serve(async (req) => {
     const url = new URL(req.url);
     let messageType = "sync_hourly";
     let directTokens: string[] | null = null;
+    let directUserIds: string[] | null = null;
     // Extra payload fields, e.g. the gauge alert's zone and percent, so the app
     // can name the actual number instead of a generic "something is ready".
     let extraData: Record<string, string> = {};
+    // Pre-rendered, already-translated notification text. See sendFcmMessage.
+    let notification: { title: string; body: string } | undefined;
 
     if (req.method === "POST") {
       const body = await req.json();
@@ -188,6 +200,28 @@ serve(async (req) => {
       // that already know which specific tokens to target
       if (body.tokens && Array.isArray(body.tokens)) {
         directTokens = body.tokens;
+      }
+
+      // Direct user send. Callers that work in user_ids (the community push
+      // batches per user, and has to look each user's language up anyway)
+      // should not have to duplicate the token lookup. This used to be sent
+      // and silently ignored, which dropped the caller through to the
+      // metric-based branch below and fanned the push out to every user with
+      // location enabled — the opposite of targeting one person.
+      if (body.user_ids && Array.isArray(body.user_ids)) {
+        directUserIds = body.user_ids;
+      }
+
+      if (
+        body.notification &&
+        typeof body.notification === "object" &&
+        typeof body.notification.title === "string" &&
+        typeof body.notification.body === "string"
+      ) {
+        notification = {
+          title: body.notification.title,
+          body: body.notification.body,
+        };
       }
 
       // FCM only accepts string values in the data map.
@@ -209,6 +243,19 @@ serve(async (req) => {
     // ── Direct token mode (recalibration, etc.) ──
     if (directTokens && directTokens.length > 0) {
       tokensToSend = directTokens;
+
+    } else if (directUserIds && directUserIds.length > 0) {
+      // ── Direct user mode: resolve tokens for exactly these users ──
+      const { data: targets, error: targetsError } = await supabase
+        .from("profiles")
+        .select("user_id, fcm_token")
+        .in("user_id", directUserIds)
+        .not("fcm_token", "is", null);
+
+      if (targetsError) {
+        return new Response(JSON.stringify({ error: targetsError.message }), { status: 500 });
+      }
+      tokensToSend = (targets || []).map((p: any) => p.fcm_token).filter(Boolean);
 
     } else if (messageType === "evening_checkin") {
       // ── Evening check-in: only users where it's 8pm local ──
@@ -326,7 +373,7 @@ serve(async (req) => {
     let failed = 0;
 
     for (const fcmToken of tokensToSend) {
-      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType, extraData);
+      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType, extraData, notification);
       if (success) sent++;
       else failed++;
     }

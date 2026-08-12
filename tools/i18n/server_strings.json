@@ -1,0 +1,280 @@
+{
+  "_why": "Strings rendered by the BACKEND, not by Compose. extract.py cannot find these — it scans app/src/main/java for Text()/label=/title= sites, and an edge function has none. So they are declared by hand here and MERGED into strings.json by extract.py, which keeps strings.json the single spec that check_lengths.py gates and generate.py compiles, and means re-running extraction never silently drops them. Add a string here the moment an edge function renders one.",
+  "_budgets": "max_len is set explicitly rather than derived, because the tolerance formula in extract.py measures a Compose row or button and these strings live somewhere else. Push titles and bodies are measured against the Android notification tray (one title line, ~2 body lines); the rest is dialog and snackbar copy and carries the soft budget the extractor would have given it.",
+  "_placeholders": "%1$s / %2$s, positional, matching the convention documented on Strings.kt: word order moves in translation and a translator must be free to reorder. supabase/functions/_shared/i18n.ts substitutes them the same way Kotlin's String.format does.",
+  "entries": [
+    {
+      "en": "%1$s commented",
+      "class": "hard",
+      "max_len": 42,
+      "sites": [
+        "supabase/functions/generate-bot-comments/index.ts (push title, one companion)"
+      ]
+    },
+    {
+      "en": "%1$s and %2$s commented",
+      "class": "hard",
+      "max_len": 42,
+      "sites": [
+        "supabase/functions/generate-bot-comments/index.ts (push title, two companions)"
+      ]
+    },
+    {
+      "en": "%1$s and %2$s others commented",
+      "class": "hard",
+      "max_len": 46,
+      "sites": [
+        "supabase/functions/generate-bot-comments/index.ts (push title, three or more companions)"
+      ]
+    },
+    {
+      "en": "%1$s new comments in your community feed",
+      "class": "hard",
+      "max_len": 64,
+      "sites": [
+        "supabase/functions/generate-bot-comments/index.ts (push body, batched)"
+      ]
+    },
+    {
+      "en": "Please enter a promo code.",
+      "class": "soft",
+      "max_len": 37,
+      "sites": [
+        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+      ]
+    },
+    {
+      "en": "This promo code doesn't exist.",
+      "class": "soft",
+      "max_len": 43,
+      "sites": [
+        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+      ]
+    },
+    {
+      "en": "This promo code is no longer active.",
+      "class": "soft",
+      "max_len": 52,
+      "sites": [
+        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+      ]
+    },
+    {
+      "en": "This promo code has expired.",
+      "class": "soft",
+      "max_len": 40,
+      "sites": [
+        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+      ]
+    },
+    {
+      "en": "This promo code has reached its usage limit.",
+      "class": "soft",
+      "max_len": 63,
+      "sites": [
+        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+      ]
+    },
+    {
+      "en": "You've already used this promo code.",
+      "class": "soft",
+      "max_len": 52,
+      "sites": [
+        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+      ]
+    },
+    {
+      "en": "Something went wrong. Please try again.",
+      "class": "soft",
+      "max_len": 56,
+      "sites": [
+        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+      ]
+    },
+    {
+      "en": "This feature requires a premium subscription.",
+      "class": "soft",
+      "max_len": 65,
+      "sites": [
+        "supabase/functions/recalibrate/index.ts (message)",
+        "supabase/functions/apply-recalibration/index.ts (message)"
+      ]
+    },
+    {
+      "en": "Next recalibration available after %1$s",
+      "class": "soft",
+      "max_len": 56,
+      "sites": [
+        "supabase/functions/recalibrate/index.ts (cooldown message)"
+      ]
+    },
+    {
+      "en": "Profile re-assessment is available once per day. Try again tomorrow.",
+      "class": "soft",
+      "max_len": 98,
+      "sites": [
+        "supabase/functions/recalibrate/index.ts (cooldown message)"
+      ]
+    },
+    {
+      "en": "No proposals specified",
+      "class": "soft",
+      "max_len": 32,
+      "sites": [
+        "supabase/functions/apply-recalibration/index.ts (message)"
+      ]
+    },
+    {
+      "en": "No matching pending proposals",
+      "class": "soft",
+      "max_len": 42,
+      "sites": [
+        "supabase/functions/apply-recalibration/index.ts (message)"
+      ]
+    },
+    {
+      "en": "A free month on us, and a quick question",
+      "class": "soft",
+      "max_len": 70,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Hi %1$s,",
+      "class": "soft",
+      "max_len": 17,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Hi there,",
+      "class": "soft",
+      "max_len": 16,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch.",
+      "class": "soft",
+      "max_len": 279,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "If you've got a second, I'd really like to know what made you stop.",
+      "class": "soft",
+      "max_len": 118,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Was it the price, something missing, or just not the right time?",
+      "class": "soft",
+      "max_len": 112,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Even a one-line reply genuinely helps shape what we build next.",
+      "class": "soft",
+      "max_len": 111,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "And if it was timing or cost, I'd love to give you",
+      "class": "soft",
+      "max_len": 88,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "another month, free, cancel anytime.",
+      "class": "soft",
+      "max_len": 63,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "MigraineMe's insights get better the more you log.",
+      "class": "soft",
+      "max_len": 88,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Triggers, patterns and risk forecasts need a real stretch of data before they show up, and one month often isn't long enough to see them. So here's another, to give your data a proper chance.",
+      "class": "soft",
+      "max_len": 335,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Everything's still there, right where you left it.",
+      "class": "soft",
+      "max_len": 88,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Claim your free month:",
+      "class": "soft",
+      "max_len": 39,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1$s.",
+      "class": "soft",
+      "max_len": 142,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "We're building MigraineMe into a place where",
+      "class": "soft",
+      "max_len": 77,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "data and evidence come first",
+      "class": "soft",
+      "max_len": 51,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "for people living with migraine. It's still early, and I'd love to have you along.",
+      "class": "soft",
+      "max_len": 144,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    },
+    {
+      "en": "Either way, thanks for giving MigraineMe a go.",
+      "class": "soft",
+      "max_len": 81,
+      "sites": [
+        "supabase/functions/winback-daily/index.ts (winback email)"
+      ]
+    }
+  ]
+}

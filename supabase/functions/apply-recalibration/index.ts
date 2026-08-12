@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getLang, t, type Lang } from "../_shared/i18n.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -19,6 +20,12 @@ serve(async (req: Request) => {
     if (!user) return json({ error: "Unauthorized" }, 401);
     const userId = user.id;
 
+    // Display language for the `message` fields below. The `error` codes and
+    // everything written to recalibration_history stay English: history rows
+    // are read back by the app, which renders them through its own tables, so
+    // translating at write time would freeze them in one language.
+    const lang: Lang = await getLang(supabase, userId);
+
     // ── Premium check ──
     try {
       const { data: premiumRow, error: premiumErr } = await supabase
@@ -31,7 +38,7 @@ serve(async (req: Request) => {
         const trialActive = premiumRow?.trial_end && new Date(premiumRow.trial_end) > new Date();
         const subActive = premiumRow?.rc_subscription_status === "active" || premiumRow?.rc_subscription_status === "grace_period";
         if (!trialActive && !subActive) {
-          return json({ ok: false, error: "premium_required", message: "This feature requires a premium subscription." }, 403);
+          return json({ ok: false, error: "premium_required", message: t(lang, "This feature requires a premium subscription.") }, 403);
         }
       }
     } catch {
@@ -43,7 +50,7 @@ serve(async (req: Request) => {
     const rejected: string[] = body.rejected ?? [];
 
     if (accepted.length === 0 && rejected.length === 0) {
-      return json({ error: "No proposals specified" }, 400);
+      return json({ error: "no_proposals", message: t(lang, "No proposals specified") }, 400);
     }
 
     // Load all referenced proposals
@@ -55,7 +62,7 @@ serve(async (req: Request) => {
       .in("id", [...accepted, ...rejected]);
 
     if (!proposals || proposals.length === 0) {
-      return json({ error: "No matching pending proposals" }, 404);
+      return json({ error: "no_pending_proposals", message: t(lang, "No matching pending proposals") }, 404);
     }
 
     const now = new Date().toISOString();
@@ -175,13 +182,15 @@ serve(async (req: Request) => {
           break;
         }
 
-        // ── Profile update ──
-        case "profile": {
-          // p.label is the field name (e.g. "frequency", "trajectory")
+        // ── Menstrual decay curve (15-day cycle-centered bell) ──
+        case "menstruation_decay": {
+          const weights = JSON.parse(p.to_value);
           await supabase
-            .from("ai_setup_profiles")
-            .update({ [p.label]: p.to_value })
-            .eq("user_id", userId);
+            .from("menstruation_decay_weights")
+            .upsert({
+              user_id: userId,
+              ...weights,
+            }, { onConflict: "user_id" });
 
           changeCount++;
           break;

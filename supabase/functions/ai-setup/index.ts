@@ -12,6 +12,7 @@ const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const DEFAULT_MODEL = "gpt-4o-mini";
 const MODEL_BY_CONTEXT: Record<string, string> = {
   onboarding_parser: "gpt-4o",
+  onboarding_suggester: "gpt-4o",
 };
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -228,6 +229,108 @@ RULES:
   "migraine_ended": false, "migraine_ended_at": null
 }
 Omit pain_now / aura_locations / migraine_ended keys entirely when not described.`,
+  onboarding_suggester: `You are a neurologist taking on a new patient.
+
+A first pass has already recorded everything the patient stated directly. That is
+their history. It is settled, you do not revisit it, and you will not be shown it
+as editable.
+
+What is left is the part a clinician actually does: build a picture of who this
+person is from that history, then decide what is worth testing.
+
+You are given their PROFILE and the fields the first pass left blank. For each one,
+ask what you would ask in clinic: given this patient, what would I expect here, and
+what would I want them to start watching to find out?
+
+=== EVERY ANSWER COMES FROM THE PROFILE ===
+This is the whole job. Each answer must follow from something in front of you —
+their attack frequency, duration, age, sex, how long they have had this, their
+work and routine, what already sets them off, what they take, how they cope.
+If you cannot point at the part of the profile that led you there, leave it blank.
+
+You are not guessing at a stranger. You are reasoning about one patient whose
+history you have just taken.
+
+=== WHAT TO TEST, NOT EVERYTHING TO TEST ===
+The patient reviews every one of these on the next screens. Put forward what you
+would genuinely raise with them and stop. A short list they recognise as "yes,
+that's me" is worth far more than a full sheet — a wall of maybes gets skimmed,
+cleared, and teaches you nothing about them.
+
+Nor be timid — and timid is the more common failure. Someone writing a few
+sentences has told you a fraction of what this app tracks; the rest is your job,
+not theirs. A blank is something the app never records, so it is a pattern you can
+never find for them later. Coming back with one or two answers for a patient whose
+profile supports a dozen is not caution, it is leaving them with an app that cannot
+learn anything. Where their profile supports an answer, give it.
+
+=== HOW TO PUT IT TO THEM ===
+Each answer carries its reasoning, written to the patient, as something worth
+watching rather than a verdict.
+
+You are filling the fields they did NOT talk about. So the reasoning must never
+state anything about this patient as if they had told you — not in the opening,
+not in the second half. "You didn't mention this, but your attacks come on within
+hours" is the same fabrication as "you mentioned they come on within hours": you
+invented a fact about them either way.
+
+A reason has two honest halves:
+  1. What in their profile you reasoned FROM. This must actually be in the
+     profile — their words, or something the first pass established.
+  2. That the answer is your starting point, which they should correct.
+
+Good:
+  "Red wine is one of your triggers and that usually acts fast, so I've started
+   you at 'within hours' — change it if yours build more slowly."
+  "You're at a desk for long hours, so I've assumed heavy screen use. Correct it
+   if that's off."
+Bad:
+  "Your migraines often follow triggers within hours."   (a fact you invented)
+  "You mentioned neck stiffness."                        (they did not)
+
+Reason from their history and from what you know clinically — but keep the two
+apart in the sentence, so they can always tell which is which. Never cite
+statistics about other people.
+
+=== COVER THE WHOLE FORM ===
+Work through every blank field, not a favourite corner of them. Filling the sleep
+trigger questions but skipping how long they sleep, or the reverse, leaves the
+patient a half-finished form either way. If their profile supports an answer,
+give it — for facts about their routine and for what might be driving their
+attacks alike.
+
+Do not fill a field just to have filled it. An answer that asserts nothing —
+"no particular pattern", a neutral middle option picked because something had to
+go there — is noise on a screen they have to review. If the profile does not point
+somewhere specific, leave it blank.
+
+=== HARD RULES ===
+- Never contradict or restate anything the first pass already answered.
+- Use ONLY exact values from the option lists. Never invent a string or a label.
+- Certainty reflects how strongly their profile points at it, exactly as it would
+  for an answer they gave you. A well-supported inference is "OFTEN"; a thinner
+  one is "SOMETIMES" or "RARELY". Do not put everything at one level — pinning
+  them all low makes every suggestion read as trivial and tells the patient
+  nothing about which ones you actually mean. "EVERY_TIME" is reserved for what
+  they stated themselves, so never use it here.
+- Never set favorite=true. The quick-log bar is for what they told us.
+- Never fill: gender, age_range, last_period_date, cycle_length,
+  uses_contraception, contraception_effect, a "Yes, diagnosed" gluten answer,
+  or any medicine. Those are identity, clinical history and prescribing — you ask
+  those directly, and the wizard does so a page later.
+- Conditional fields stay conditional: only fill one when its parent makes sense.
+
+Respond with ONLY valid JSON — the same schema as the first pass, containing ONLY
+the fields you filled, PLUS one extra key:
+
+  "suggestion_reasons": { "<field_name>": "<one short sentence to the patient>" }
+
+One entry for every field you filled, keyed by the same field name you used. Each
+sentence says why it is worth watching, in their terms — "you mentioned you work
+long hours at a desk". This is what they read when they tap the suggestion, so
+write it to them, not to a clinician.
+
+No markdown fences, no preamble, no commentary.`,
   onboarding_parser: `You are helping a migraine patient set up their tracking app. They've described their migraine history in natural language. Extract every field you can confidently infer from their story.
 
 A deterministic parser has already found some items (listed in user_message under "Already found by deterministic parser"). Treat those as confirmed and ADD everything else by re-reading the user's story carefully.
@@ -235,6 +338,12 @@ A deterministic parser has already found some items (listed in user_message unde
 === ANSWER RULES ===
 - Use ONLY values from the EXACT option lists below. Never invent strings, never approximate.
 - If the story gives no signal for a field, OMIT the key (or set to null). Do not guess.
+- Some fields are SETTLED by the story without being stated outright. If the patient
+  describes something only one sex experiences — periods, menstrual cycle, pregnancy,
+  hormonal contraception — set gender accordingly, and set the other fields that
+  follow with it (someone whose attacks track their period is tracking their cycle). Anything the story logically
+  establishes counts as stated, not guessed, and belongs here rather than being left
+  blank.
 - For map fields, include ONLY the keys you confidently inferred — do not list every option with "NO".
 - For array fields, include only items you have evidence for.
 - Pool labels (triggers/prodromes/symptoms/medicines/reliefs/activities/missed_activities) must match EXACTLY from the lists provided in user_message — never invent labels.
@@ -673,13 +782,116 @@ Deno.serve(async (req)=>{
         }
       });
     }
+    // ── Stage 2: the neurologist pass ────────────────────────────────────────
+    // Stage 1 above locked in everything the patient stated outright. Stage 2
+    // takes that as a profile and fills only what stage 1 left blank, grounded
+    // in that profile. It runs as a separate call so it is never even shown the
+    // answered fields — stage 1 cannot be overwritten, structurally, rather
+    // than because a prompt asked nicely.
+    let finalPayload = clean;
+    if (context_type === "onboarding_parser") {
+      try {
+        const stage1 = JSON.parse(clean);
+        const answered = Object.keys(stage1).filter((k)=>{
+          const v = stage1[k];
+          if (v === null || v === undefined) return false;
+          if (Array.isArray(v)) return v.length > 0;
+          if (typeof v === "object") return Object.keys(v).length > 0;
+          return true;
+        });
+        // Stage 2 has its own system prompt and so never sees the field schema
+        // the parser was given. Without it, it can only name the pool arrays it
+        // can see in the message and every question field goes unanswered —
+        // which is exactly what it did. Hand it the same schema block.
+        const parserPrompt = SYSTEM_PROMPTS["onboarding_parser"] ?? "";
+        const schemaStart = parserPrompt.indexOf("=== SCHEMA ===");
+        const schemaEnd = parserPrompt.indexOf("=== INFERENCE EXAMPLES ===");
+        const schemaBlock = schemaStart >= 0
+          ? parserPrompt.slice(schemaStart, schemaEnd > schemaStart ? schemaEnd : undefined)
+          : "";
+        const stage2Msg = [
+          "=== PATIENT PROFILE (from their own words — settled, do not revisit) ===",
+          JSON.stringify(stage1, null, 2),
+          "",
+          "=== ALREADY ANSWERED — do not return these keys ===",
+          answered.join(", ") || "(none)",
+          "",
+          "=== EVERY FIELD YOU MAY FILL (same schema as the first pass) ===",
+          "Work through these, not just the pool arrays. The question fields are",
+          "the ones the patient walks through next, and they are where a blank",
+          "costs them most.",
+          schemaBlock,
+          "",
+          "=== THEIR ORIGINAL STORY AND THE AVAILABLE OPTIONS/LABELS ===",
+          user_message
+        ].join("\n");
+        const sugModel = MODEL_BY_CONTEXT["onboarding_suggester"] ?? DEFAULT_MODEL;
+        const sugRes = await fetch(OPENAI_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${openaiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: sugModel,
+            max_tokens: 8000,
+            temperature: 0.4,
+            messages: [
+              { role: "system", content: SYSTEM_PROMPTS["onboarding_suggester"] },
+              { role: "user", content: stage2Msg }
+            ]
+          })
+        });
+        if (sugRes.ok) {
+          const sugData = await sugRes.json();
+          const sugRaw = sugData.choices?.[0]?.message?.content ?? "";
+          const sugClean = sugRaw.replace(/```json/g, "").replace(/```/g, "").trim();
+          const stage2 = JSON.parse(sugClean);
+          // Stage 1 always wins. Anything it answered is dropped from stage 2
+          // before merging, so a stray key cannot clobber a stated answer.
+          const suggestedFields = [];
+          // Pulled out before the merge so it never lands in the answer payload
+          // as if it were a field the user answered.
+          const reasons = stage2.suggestion_reasons ?? {};
+          delete stage2.suggestion_reasons;
+          const merged = { ...stage1 };
+          for (const [k, v] of Object.entries(stage2)){
+            if (answered.includes(k)) continue;
+            if (v === null || v === undefined) continue;
+            if (Array.isArray(v) && v.length === 0) continue;
+            if (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0) continue;
+            merged[k] = v;
+            suggestedFields.push(k);
+          }
+          // Lets the app say "N from what you told us, M worth watching".
+          merged.direct_field_count = answered.length;
+          merged.suggested_field_count = suggestedFields.length;
+          merged.suggested_fields = suggestedFields;
+          // Only keep reasons for fields that actually survived the merge.
+          merged.suggestion_reasons = Object.fromEntries(
+            suggestedFields.filter((k)=>reasons[k]).map((k)=>[k, String(reasons[k])])
+          );
+          finalPayload = JSON.stringify(merged);
+          const su = sugData.usage;
+          if (su) {
+            const cost2 = (su.prompt_tokens * 2.50 + su.completion_tokens * 10.00) / 1_000_000;
+            console.log(`Stage2 [suggester] ${user.id} — direct:${answered.length} suggested:${suggestedFields.length} in:${su.prompt_tokens} out:${su.completion_tokens} $${cost2.toFixed(6)}`);
+          }
+        } else {
+          console.error(`Stage2 suggester failed: ${sugRes.status} — returning stage 1 only`);
+        }
+      } catch (e) {
+        // Stage 2 is an enhancement. If it fails the user still gets stage 1.
+        console.error(`Stage2 suggester error: ${e.message} — returning stage 1 only`);
+      }
+    }
     // Record for rate limiting
     supabaseAdmin.from("edge_audit").insert({
       fn: "ai-setup",
       user_id: user.id,
       ok: true
     }).then(()=>{}, ()=>{});
-    return new Response(clean, {
+    return new Response(finalPayload, {
       status: 200,
       headers: {
         ...corsHeaders,
