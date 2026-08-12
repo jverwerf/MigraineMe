@@ -241,12 +241,12 @@ fun HelpScreen(
         OutlinedTextField(
             value = state.query,
             onValueChange = { vm.setQuery(it) },
-            placeholder = { Text("Search help…", color = Color.White.copy(alpha = 0.5f)) },
+            placeholder = { Text(t("Search help…"), color = Color.White.copy(alpha = 0.5f)) },
             leadingIcon = { Icon(Icons.Outlined.Search, null, tint = Color.White.copy(alpha = 0.6f)) },
             trailingIcon = {
                 if (state.query.isNotEmpty()) {
                     IconButton(onClick = { vm.setQuery("") }) {
-                        Icon(Icons.Outlined.Clear, "Clear", tint = Color.White.copy(alpha = 0.6f))
+                        Icon(Icons.Outlined.Clear, t("Clear"), tint = Color.White.copy(alpha = 0.6f))
                     }
                 }
             },
@@ -280,7 +280,7 @@ fun HelpScreen(
                 ) {
                     Icon(Icons.Outlined.HelpOutline, null, tint = Color.White.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(8.dp))
-                    Text("No help articles yet", color = Color.White.copy(alpha = 0.6f))
+                    Text(t("No help articles yet"), color = Color.White.copy(alpha = 0.6f))
                 }
             }
             else -> {
@@ -351,7 +351,7 @@ fun HelpArticleDetailRoute(slug: String, onBack: () -> Unit) {
     if (article == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (state.isLoading) CircularProgressIndicator(color = AppTheme.AccentPurple)
-            else Text("Article not found", color = Color.White.copy(alpha = 0.6f))
+            else Text(t("Article not found"), color = Color.White.copy(alpha = 0.6f))
         }
     } else {
         HelpArticleDetailScreen(article = article, onBack = onBack)

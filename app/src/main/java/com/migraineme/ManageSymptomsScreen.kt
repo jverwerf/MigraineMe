@@ -92,11 +92,11 @@ fun ManageSymptomsScreen(
             onDismissRequest = { showHeroInfo = false },
             containerColor = Color(0xFF1E0A2E),
             title = {
-                Text("About Migraines", color = AppTheme.TitleColor,
+                Text(t("About Migraines"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = { Text(heroInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 
@@ -119,20 +119,20 @@ fun ManageSymptomsScreen(
                         }
                     },
                     enabled = addLabel.isNotBlank()
-                ) { Text("Add", color = if (addLabel.isNotBlank()) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
+                ) { Text(t("Add"), color = if (addLabel.isNotBlank()) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false; addLabel = ""; addIconKey = null }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
-            title = { Text(if (addCategory == "pain_character") "Add Pain Character" else "Add Accompanying Experience") },
+            title = { Text(if (addCategory == "pain_character") t("Add Pain Character") else t("Add Accompanying Experience")) },
             text = {
                 Column {
                     OutlinedTextField(
                         value = addLabel,
                         onValueChange = { addLabel = it },
-                        label = { Text("Symptom name") },
+                        label = { Text(t("Symptom name")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -146,7 +146,7 @@ fun ManageSymptomsScreen(
                         )
                     )
                     Spacer(Modifier.height(12.dp))
-                    Text("Category", style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
+                    Text(t("Category"), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
                     Spacer(Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         val categories = if (addCategory == "pain_character")
@@ -162,7 +162,7 @@ fun ManageSymptomsScreen(
                             val selected = addSubCategory == cat
                             AssistChip(
                                 onClick = { addSubCategory = cat },
-                                label = { Text(displayName, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(displayName), style = MaterialTheme.typography.labelSmall) },
                                 colors = AssistChipDefaults.assistChipColors(
                                     containerColor = if (selected) AppTheme.AccentPurple.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.06f),
                                     labelColor = if (selected) Color.White else AppTheme.SubtleTextColor
@@ -175,7 +175,7 @@ fun ManageSymptomsScreen(
                         }
                     }
                     Spacer(Modifier.height(16.dp))
-                    Text("Pick an icon", style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
+                    Text(t("Pick an icon"), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
                     Spacer(Modifier.height(10.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SymptomIcons.PICKER_ICONS.forEach { picker ->
@@ -226,15 +226,15 @@ fun ManageSymptomsScreen(
                     val token = authState.accessToken ?: return@TextButton
                     vm.removeFromPool(token, deleteTarget!!.id)
                     showDeleteDialog = false; deleteTarget = null
-                }) { Text("Delete", color = AppTheme.AccentPink) }
+                }) { Text(t("Delete"), color = AppTheme.AccentPink) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
-            title = { Text("Remove symptom?") },
-            text = { Text("Remove \"${deleteTarget?.label}\"? This can't be undone.") }
+            title = { Text(t("Remove symptom?")) },
+            text = { Text(t("Remove \"%s\"? This can't be undone.", deleteTarget?.label)) }
         )
     }
 
@@ -243,9 +243,9 @@ fun ManageSymptomsScreen(
 
             // Close bar
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Manage Migraines", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Manage Migraines"), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -253,9 +253,9 @@ fun ManageSymptomsScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 HeroCard {
                     Icon(Icons.Outlined.Psychology, contentDescription = null, tint = AppTheme.AccentPink, modifier = Modifier.size(40.dp))
-                    Text("Migraines", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(t("Migraines"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     Text(
-                        "Add, remove, or star frequent symptoms",
+                        t("Add, remove, or star frequent symptoms"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
@@ -268,7 +268,7 @@ fun ManageSymptomsScreen(
                         .offset(x = 10.dp, y = (-14).dp)
                         .size(34.dp)
                 ) {
-                    Icon(Icons.Outlined.Info, contentDescription = "About Migraines",
+                    Icon(Icons.Outlined.Info, contentDescription = t("About Migraines"),
                         tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                 }
             }
@@ -276,13 +276,13 @@ fun ManageSymptomsScreen(
             // Pain Character section
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Pain character", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Pain character"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     IconButton(onClick = { addCategory = "pain_character"; addSubCategory = "pain_character"; showAddDialog = true }) {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add", tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.Add, contentDescription = t("Add"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     }
                 }
                 if (painCharacter.isEmpty()) {
-                    Text("No symptoms yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No symptoms yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 } else {
                     painCharacter.forEach { symptom ->
                         val isFav = symptom.id in favoriteIds
@@ -305,13 +305,13 @@ fun ManageSymptomsScreen(
             // Accompanying Experience section
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Accompanying experience", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Accompanying experience"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     IconButton(onClick = { addCategory = "accompanying"; addSubCategory = "accompanying"; showAddDialog = true }) {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add", tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.Add, contentDescription = t("Add"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     }
                 }
                 if (accompanying.isEmpty()) {
-                    Text("No symptoms yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No symptoms yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 } else {
                     val grouped = accompanying.groupBy { it.category ?: "Other" }.toSortedMap()
                     grouped.forEach { (cat, symptoms) ->
@@ -342,13 +342,13 @@ fun ManageSymptomsScreen(
             // Postdrome section
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Postdrome (after attack)", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Postdrome (after attack)"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     IconButton(onClick = { addCategory = "Postdrome"; addSubCategory = "Postdrome"; showAddDialog = true }) {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add", tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.Add, contentDescription = t("Add"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     }
                 }
                 if (postdrome.isEmpty()) {
-                    Text("No postdrome symptoms yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No postdrome symptoms yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 } else {
                     postdrome.forEach { symptom ->
                         val isFav = symptom.id in favoriteIds
@@ -374,7 +374,7 @@ fun ManageSymptomsScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -419,19 +419,19 @@ private fun SymptomRow(
             }
         }
         // Label
-        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         // Star
         IconButton(onClick = onToggleFavorite, modifier = Modifier.size(32.dp)) {
             Icon(
                 if (isFavorite) Icons.Outlined.Star else Icons.Outlined.StarBorder,
-                contentDescription = if (isFavorite) "Remove from frequent" else "Add to frequent",
+                contentDescription = if (isFavorite) t("Remove from frequent") else t("Add to frequent"),
                 tint = if (isFavorite) Color(0xFFFFD54F) else AppTheme.SubtleTextColor,
                 modifier = Modifier.size(18.dp)
             )
         }
         // Delete
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = AppTheme.AccentPink.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+            Icon(Icons.Outlined.Delete, contentDescription = t("Delete"), tint = AppTheme.AccentPink.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
         }
     }
 }

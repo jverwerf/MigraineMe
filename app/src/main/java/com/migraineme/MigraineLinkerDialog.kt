@@ -112,15 +112,15 @@ fun MigraineLinkerDialog(
         containerColor = Color(0xFF1E0A2E),
         titleContentColor = Color.White,
         textContentColor = AppTheme.BodyTextColor,
-        title = { Text("Link to migraine?") },
+        title = { Text(t("Link to migraine?")) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val hint = when (direction) {
-                    LinkDirection.FORWARD -> "Which migraine did this lead to?"
-                    LinkDirection.BACKWARD -> "Which migraine was this for?"
+                    LinkDirection.FORWARD -> t("Which migraine did this lead to?")
+                    LinkDirection.BACKWARD -> t("Which migraine was this for?")
                 }
                 Text(hint, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
@@ -131,14 +131,14 @@ fun MigraineLinkerDialog(
                     }
                 } else if (suggested.isEmpty()) {
                     Text(
-                        "No migraines found nearby",
+                        t("No migraines found nearby"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     )
                 } else {
-                    Text("Suggested", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Suggested"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                     suggested.forEach { m ->
                         MigraineRow(m, selectedId == m.id, today) { selectedId = if (selectedId == m.id) null else m.id }
                     }
@@ -153,7 +153,7 @@ fun MigraineLinkerDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Browse all migraines",
+                        t("Browse all migraines"),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                     )
@@ -175,7 +175,7 @@ fun MigraineLinkerDialog(
                         val extra = allRecent.filter { it.id !in suggestedIds }
                         if (extra.isEmpty()) {
                             Text(
-                                "No other migraines in the last 30 days",
+                                t("No other migraines in the last 30 days"),
                                 color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(vertical = 4.dp)
@@ -191,12 +191,12 @@ fun MigraineLinkerDialog(
         },
         confirmButton = {
             TextButton(onClick = { onLink(selectedId) }) {
-                Text(if (selectedId != null) "Link & Save" else "Save without linking", color = AppTheme.AccentPurple)
+                Text(if (selectedId != null) t("Link & Save") else t("Save without linking"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppTheme.SubtleTextColor)
+                Text(t("Cancel"), color = AppTheme.SubtleTextColor)
             }
         }
     )

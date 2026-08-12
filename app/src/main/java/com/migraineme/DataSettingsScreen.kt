@@ -165,11 +165,18 @@ fun DataSettingsScreen(
     // Only count metrics that are defined in sections (Supabase may contain extras
     // from Health Connect / Polar / Garmin that aren't displayed in the UI)
     val sectionMetricKeys = remember(sections) {
-        sections.flatMap { section -> section.rows.map { it.table } }.toSet()
+        // calendar_events renders in its own card rather than a section, but it
+        // is a collected metric like any other and belongs in the count.
+        (sections.flatMap { section -> section.rows.map { it.table } } + "calendar_events").toSet()
     }
     val enabledCount = metricSettings.count { it.key in sectionMetricKeys && it.value.enabled }
     val totalCount = sectionMetricKeys.size
     val sourceCount = metricSettings.values.mapNotNull { it.preferredSource }.toSet().size
+
+    // Reported up by NotificationsCard, which owns every notification setting.
+    // Reads 0 while POST_NOTIFICATIONS is missing, matching the card's own rows.
+    var notificationsEnabledCount by remember { mutableStateOf(0) }
+    var notificationsTotalCount by remember { mutableStateOf(0) }
 
     val scrollState = rememberScrollState()
 
@@ -212,16 +219,15 @@ fun DataSettingsScreen(
             // ═══════════════════════════════════════════════════════════
             if (q.isBlank()) {
                 HeroCard {
-                    Text("Data Collection", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Data Collection"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Text("$enabledCount / $totalCount", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
-                    Text("metrics active", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("metrics active"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
                     HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        DStatColumn("Sections", "${sections.size}")
-                        DStatColumn("Sources", if (sourceCount > 0) "$sourceCount" else "-")
-                        DStatColumn("Wearables", if (connectedWearables.any { it == WearableSource.WHOOP }) "1" else "0")
+                        DStatColumn("Wearables", "${connectedWearables.size}")
+                        DStatColumn("Notifications", "$notificationsEnabledCount / $notificationsTotalCount")
                     }
                 }
             }
@@ -233,12 +239,12 @@ fun DataSettingsScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search…", color = AppTheme.SubtleTextColor) },
+                placeholder = { Text(t("Search…"), color = AppTheme.SubtleTextColor) },
                 leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Outlined.Close, t("Clear"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
                         }
                     }
                 },
@@ -255,6 +261,63 @@ fun DataSettingsScreen(
             )
 
             // ═══════════════════════════════════════════════════════════
+            // NOTIFICATIONS — BaseCard
+            // ═══════════════════════════════════════════════════════════
+            NotificationsCard(
+                onRequestNotificationPermission = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val askedBefore = hasAskedNotificationPermission(appContext)
+                        val canRationale = activity?.let {
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                it, Manifest.permission.POST_NOTIFICATIONS
+                            )
+                        } ?: true
+
+                        if (askedBefore && !canRationale) {
+                            openAppSettings(appContext)
+                        } else {
+                            markAskedNotificationPermission(appContext)
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                },
+                refreshTick = refreshTick,
+                searchQuery = q,
+                onEnabledCountChange = { enabled, total ->
+                    notificationsEnabledCount = enabled
+                    notificationsTotalCount = total
+                }
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ═══════════════════════════════════════════════════════════
+            // CALENDAR — BaseCard (data toggle + permission sub-row)
+            // ═══════════════════════════════════════════════════════════
+            CalendarCard(
+                metricSettings = metricSettings,
+                onRequestCalendarPermission = {
+                    calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
+                },
+                onToggleData = { enabled ->
+                    scope.launch {
+                        DataSettingsToggleHandler.toggleMetric(
+                            context = appContext,
+                            metric = "calendar_events",
+                            enabled = enabled,
+                            preferredSource = null,
+                            metricSettingsMap = metricSettings
+                        )
+                        refreshTick++
+                    }
+                },
+                refreshTick = refreshTick,
+                searchQuery = q,
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ═══════════════════════════════════════════════════════════
             // HOW IT WORKS — purple accent card
             // ═══════════════════════════════════════════════════════════
             if (q.isBlank()) {
@@ -265,9 +328,9 @@ fun DataSettingsScreen(
                     Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                         Text(
-                            "Toggle the metrics MigraineMe collects each day. " +
-                            "Enabled metrics feed into your daily risk score and AI insights. " +
-                            "Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.",
+                            t("Toggle the metrics MigraineMe collects each day. ") +
+                            t("Enabled metrics feed into your daily risk score and AI insights. ") +
+                            t("Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you."),
                             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -376,61 +439,10 @@ fun DataSettingsScreen(
                             )
                         }
                     }
+
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // NOTIFICATIONS — BaseCard
-            // ═══════════════════════════════════════════════════════════
-            NotificationsCard(
-                onRequestNotificationPermission = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val askedBefore = hasAskedNotificationPermission(appContext)
-                        val canRationale = activity?.let {
-                            ActivityCompat.shouldShowRequestPermissionRationale(
-                                it, Manifest.permission.POST_NOTIFICATIONS
-                            )
-                        } ?: true
-
-                        if (askedBefore && !canRationale) {
-                            openAppSettings(appContext)
-                        } else {
-                            markAskedNotificationPermission(appContext)
-                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    }
-                },
-                refreshTick = refreshTick,
-                searchQuery = q
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // ═══════════════════════════════════════════════════════════
-            // CALENDAR — BaseCard (data toggle + permission sub-row)
-            // ═══════════════════════════════════════════════════════════
-            CalendarCard(
-                metricSettings = metricSettings,
-                onRequestCalendarPermission = {
-                    calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
-                },
-                onToggleData = { enabled ->
-                    scope.launch {
-                        DataSettingsToggleHandler.toggleMetric(
-                            context = appContext,
-                            metric = "calendar_events",
-                            enabled = enabled,
-                            preferredSource = null,
-                            metricSettingsMap = metricSettings
-                        )
-                        refreshTick++
-                    }
-                },
-                refreshTick = refreshTick,
-                searchQuery = q,
-            )
-
-            Spacer(Modifier.height(16.dp))
         }
     }
 
@@ -471,7 +483,7 @@ fun DataSettingsScreen(
 private fun DStatColumn(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 

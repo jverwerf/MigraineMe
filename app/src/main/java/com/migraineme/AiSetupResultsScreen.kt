@@ -28,6 +28,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Results Review Screen
@@ -110,13 +112,21 @@ fun AiSetupResultsScreen(
     ) {
         // ── Header ──
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "MigraineMe",
-                modifier = Modifier.size(72.dp)
-            )
+            // Logo in a translucent grey blob, matching the sign-in screen.
+            Box(
+                modifier = Modifier
+                    .size(105.dp)
+                    .background(Color.White.copy(alpha = 0.06f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = t("MigraineMe"),
+                    modifier = Modifier.size(72.dp)
+                )
+            }
             Spacer(Modifier.height(12.dp))
-            Text("Your Personalised Setup", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+            Text(t("Your Personalised Setup"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         }
 
         // ── AI Analysis Hint ──
@@ -127,8 +137,8 @@ fun AiSetupResultsScreen(
             Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
                 Icon(Icons.Outlined.AutoAwesome, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("MigraineMe AI has analysed your profile", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Below are personalised triggers, medicines, reliefs, gauge thresholds, and decay curves — all tailored to you. Tap any value to adjust it, or press ✕ to remove items. Everything can be changed later in Settings.",
+                    Text(t("Confirmed links, plus some worth watching"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Some of this came straight from what you told us. The rest are things worth watching, picked because they fit your profile — we can only spot a pattern in what you track. Go through the next pages and adjust anything that doesn't fit. Everything can be changed later in Settings."),
                         color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -148,8 +158,8 @@ fun AiSetupResultsScreen(
                             Icon(Icons.Outlined.Psychology, null, tint = AppTheme.AccentPink, modifier = Modifier.size(18.dp))
                         }
                         Column(Modifier.weight(1f)) {
-                            Text("What Our AI Found", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Clinical assessment of your profile", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("What Our AI Found"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Clinical assessment of your profile"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                         Icon(if (assessmentExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                     }
@@ -174,8 +184,8 @@ fun AiSetupResultsScreen(
                             Icon(Icons.Outlined.Analytics, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
                         }
                         Column(Modifier.weight(1f)) {
-                            Text("How We Calibrated Your Gauge", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Why your thresholds are set where they are", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("How We Calibrated Your Gauge"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Why your thresholds are set where they are"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                         Icon(if (calibrationExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                     }
@@ -208,7 +218,7 @@ fun AiSetupResultsScreen(
         val lowT = triggers.filter { it.severity == "LOW" }
 
         if (highT.isNotEmpty() || mildT.isNotEmpty() || lowT.isNotEmpty()) {
-            CollapsibleSection("Triggers", Icons.Outlined.Bolt, Color(0xFFFFB74D), "${highT.size} high, ${mildT.size} mild, ${lowT.size} low") {
+            CollapsibleSection(t("Triggers"), Icons.Outlined.Bolt, Color(0xFFFFB74D), "${highT.size} high, ${mildT.size} mild, ${lowT.size} low") {
                 if (highT.isNotEmpty()) EditableSeverityGroup("HIGH", Color(0xFFEF5350), highT.map { TDI(it.label, it.favorite, it.reasoning, it.defaultThreshold) },
                     onDelete = { label -> triggers = triggers.filter { it.label != label } },
                     onChangeSeverity = { label, newSev -> triggers = triggers.map { if (it.label == label) it.copy(severity = newSev) else it } },
@@ -234,7 +244,7 @@ fun AiSetupResultsScreen(
         val lowP = activeP.filter { it.severity == "LOW" }
 
         if (activeP.isNotEmpty()) {
-            CollapsibleSection("Warning Signs", Icons.Outlined.Sensors, Color(0xFFCE93D8), "${highP.size} high, ${mildP.size} mild, ${lowP.size} low") {
+            CollapsibleSection(t("Warning Signs"), Icons.Outlined.Sensors, Color(0xFFCE93D8), "${highP.size} high, ${mildP.size} mild, ${lowP.size} low") {
                 if (highP.isNotEmpty()) EditableSeverityGroup("HIGH", Color(0xFFEF5350), highP.map { TDI(it.label, it.favorite, it.reasoning, it.defaultThreshold) },
                     onDelete = { label -> prodromes = prodromes.filter { it.label != label } },
                     onChangeSeverity = { label, newSev -> prodromes = prodromes.map { if (it.label == label) it.copy(severity = newSev) else it } },
@@ -252,35 +262,35 @@ fun AiSetupResultsScreen(
 
         // ── Medicines ──
         if (medicines.isNotEmpty()) {
-            CollapsibleSection("Medicines", Icons.Outlined.Medication, Color(0xFF4FC3F7), "${medicines.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Medicines"), Icons.Outlined.Medication, Color(0xFF4FC3F7), "${medicines.count { it.favorite }} in quick-log") {
                 medicines.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = medicineIcon(item.label), iconTint = Color(0xFF4FC3F7), favorite = item.favorite, onToggleFavorite = { medicines = medicines.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { medicines = medicines.filter { it.label != item.label } } }
             }
         }
 
         // ── Symptoms ──
         if (symptoms.isNotEmpty()) {
-            CollapsibleSection("Symptoms", Icons.Outlined.Healing, AppTheme.AccentPink, "${symptoms.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Symptoms"), Icons.Outlined.Healing, AppTheme.AccentPink, "${symptoms.count { it.favorite }} in quick-log") {
                 symptoms.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = symptomIcon(item.label), iconTint = AppTheme.AccentPink, favorite = item.favorite, onToggleFavorite = { symptoms = symptoms.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { symptoms = symptoms.filter { it.label != item.label } } }
             }
         }
 
         // ── Reliefs ──
         if (reliefs.isNotEmpty()) {
-            CollapsibleSection("Reliefs", Icons.Outlined.Spa, Color(0xFF81C784), "${reliefs.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Reliefs"), Icons.Outlined.Spa, Color(0xFF81C784), "${reliefs.count { it.favorite }} in quick-log") {
                 reliefs.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = reliefIcon(item.label), iconTint = Color(0xFF81C784), favorite = item.favorite, onToggleFavorite = { reliefs = reliefs.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { reliefs = reliefs.filter { it.label != item.label } } }
             }
         }
 
         // ── Activities ──
         if (activities.isNotEmpty()) {
-            CollapsibleSection("Activities", Icons.Outlined.DirectionsRun, Color(0xFFFF8A65), "${activities.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Activities"), Icons.Outlined.DirectionsRun, Color(0xFFFF8A65), "${activities.count { it.favorite }} in quick-log") {
                 activities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = activityIcon(item.label), iconTint = Color(0xFFFF8A65), favorite = item.favorite, onToggleFavorite = { activities = activities.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { activities = activities.filter { it.label != item.label } } }
             }
         }
 
         // ── Missed Activities ──
         if (missedActivities.isNotEmpty()) {
-            CollapsibleSection("Missed Activities", Icons.Outlined.EventBusy, Color(0xFFFF7043), "${missedActivities.count { it.favorite }} in quick-log") {
+            CollapsibleSection(t("Missed Activities"), Icons.Outlined.EventBusy, Color(0xFFFF7043), "${missedActivities.count { it.favorite }} in quick-log") {
                 missedActivities.forEach { item -> DeletableFavoriteChip(item.label, item.reasoning, icon = missedActivityIcon(item.label), iconTint = Color(0xFFFF7043), favorite = item.favorite, onToggleFavorite = { missedActivities = missedActivities.map { if (it.label == item.label) it.copy(favorite = !it.favorite) else it } }) { missedActivities = missedActivities.filter { it.label != item.label } } }
             }
         }
@@ -290,17 +300,17 @@ fun AiSetupResultsScreen(
             Column(Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.Speed, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                    Text("Risk Gauge Configuration", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Risk Gauge Configuration"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 }
                 Spacer(Modifier.height(4.dp))
-                Text("Tap any value below to adjust it. You can always fine-tune these later in Settings → Risk Model.",
+                Text(t("Tap any value below to adjust it. You can always fine-tune these later in Settings → Risk Model."),
                     color = AppTheme.AccentPurple.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
 
                 // ── Thresholds ──
                 Spacer(Modifier.height(14.dp))
-                Text("Zone Thresholds", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Zone Thresholds"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
-                Text("Set where the gauge transitions between None → Low → Mild → High", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("Set where the gauge transitions between None → Low → Mild → High"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     EditableThresholdBadge("Low", gaugeThresholds.low, Color(0xFF81C784)) { gaugeThresholds = gaugeThresholds.copy(low = it) }
@@ -319,10 +329,10 @@ fun AiSetupResultsScreen(
                     Spacer(Modifier.height(14.dp))
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Outlined.TrendingDown, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
-                        Text("Decay Curves", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Decay Curves"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     }
                     Spacer(Modifier.height(4.dp))
-                    Text("How quickly trigger risk fades over days — one template per severity", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("How quickly trigger risk fades over days — one template per severity"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
 
                     decayWeights.forEachIndexed { idx, dw ->
                         val color = when (dw.severity) { "HIGH" -> Color(0xFFEF5350); "MILD" -> Color(0xFFFFB74D); else -> Color(0xFF81C784) }
@@ -336,7 +346,7 @@ fun AiSetupResultsScreen(
                             Spacer(Modifier.width(8.dp))
                             Text(dw.severity, color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
                             IconButton(onClick = { decayWeights = decayWeights.toMutableList().also { it.removeAt(idx) } }, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
                             }
                         }
                         Spacer(Modifier.height(4.dp))
@@ -384,7 +394,7 @@ fun AiSetupResultsScreen(
                                     }
                                     Spacer(Modifier.height(2.dp))
                                     Box(Modifier.fillMaxWidth().height(barHeight).clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp)).background(zoneColor.copy(alpha = 0.7f)))
-                                    Text(labels[i], color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
+                                    Text(t(labels[i]), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -407,16 +417,16 @@ fun AiSetupResultsScreen(
                 Column(Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Outlined.FavoriteBorder, null, tint = Color(0xFFE57373), modifier = Modifier.size(18.dp))
-                        Text("Menstruation Tracking", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Menstruation Tracking"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.weight(1f))
-                        Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp).clickable { menstruationConfig = null })
+                        Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp).clickable { menstruationConfig = null })
                     }
                     Spacer(Modifier.height(12.dp))
 
                     // Cycle info
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
-                            Text("Cycle Length", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("Cycle Length"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             // Tap to edit — every AI-suggested value on this screen is adjustable.
                             var editingCycle by remember { mutableStateOf(false) }
                             var cycleText by remember(mc.avgCycleLength) { mutableStateOf(mc.avgCycleLength.toString()) }
@@ -442,13 +452,13 @@ fun AiSetupResultsScreen(
                                     }
                                 }
                             } else {
-                                Text("${mc.avgCycleLength} days", color = Color.White,
+                                Text(t("%s days", mc.avgCycleLength), color = Color.White,
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                                     modifier = Modifier.clickable { editingCycle = true })
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Severity", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("Severity"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             val sevColor = when (mc.severity) { "HIGH" -> Color(0xFFEF5350); "MILD" -> Color(0xFFFFB74D); else -> Color(0xFF81C784) }
                             var showMcSeverity by remember { mutableStateOf(false) }
                             Box {
@@ -472,7 +482,7 @@ fun AiSetupResultsScreen(
                     // Decay curve visualization
                     if (mc.decayCurve.size == 15) {
                         Spacer(Modifier.height(12.dp))
-                        Text("Risk Curve (days relative to period)", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Risk Curve (days relative to period) — tap a bar to adjust"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         Spacer(Modifier.height(6.dp))
                         val labels = listOf("-7", "-6", "-5", "-4", "-3", "-2", "-1", "T0", "+1", "+2", "+3", "+4", "+5", "+6", "+7")
                         val maxVal = mc.decayCurve.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
@@ -480,9 +490,21 @@ fun AiSetupResultsScreen(
                             mc.decayCurve.forEachIndexed { i, v ->
                                 val frac = (v / maxVal).toFloat().coerceIn(0f, 1f)
                                 val barColor = when { i < 7 -> Color(0xFFFFB74D); i == 7 -> Color(0xFFE57373); else -> Color(0xFF81C784) }
-                                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                                // Tap a bar to cycle its weight, the same way the
+                                // trigger decay curves above are edited. This one was
+                                // read-only while everything beside it could be changed.
+                                Column(
+                                    Modifier.weight(1f).clickable {
+                                        val steps = listOf(0.0, 1.0, 2.5, 5.0, 7.5, 10.0)
+                                        val next = steps[(steps.indexOfFirst { it > v - 0.01 }.takeIf { it >= 0 }?.plus(1) ?: 1) % steps.size]
+                                        menstruationConfig = mc.copy(
+                                            decayCurve = mc.decayCurve.toMutableList().also { it[i] = next }
+                                        )
+                                    },
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
                                     Box(Modifier.fillMaxWidth().height((frac * 36).dp.coerceAtLeast(2.dp)).background(barColor.copy(alpha = 0.6f), RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp)))
-                                    Text(labels[i], color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                                    Text(t(labels[i]), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
                                 }
                             }
                         }
@@ -501,7 +523,7 @@ fun AiSetupResultsScreen(
         if (isApplying && applyProgress != null) {
             Card(colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer), shape = RoundedCornerShape(16.dp)) {
                 Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Applying configuration...", color = Color.White, style = MaterialTheme.typography.titleSmall)
+                    Text(t("Applying configuration..."), color = Color.White, style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(
                         progress = { applyProgress.current.toFloat() / applyProgress.total.coerceAtLeast(1) },
@@ -517,10 +539,10 @@ fun AiSetupResultsScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(14.dp)) {
                 Icon(Icons.Filled.Check, null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Apply Configuration", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Apply Configuration"), style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
             }
             TextButton(onClick = onSkip, modifier = Modifier.fillMaxWidth()) {
-                Text("Skip — I'll configure manually in Settings", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Skip — I'll configure manually in Settings"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
             }
         }
 
@@ -528,7 +550,7 @@ fun AiSetupResultsScreen(
         Card(colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)), shape = RoundedCornerShape(12.dp)) {
             Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
                 Icon(Icons.Outlined.Tune, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                Text("Everything here is fully adjustable. Go to Manage Items to change triggers, medicines, and reliefs. Go to Settings → Risk Model to adjust gauge thresholds and decay curves at any time. The AI will also suggest refinements on Insights as it learns from your data.",
+                Text(t("Everything here is fully adjustable. Go to Manage Items to change triggers, medicines, and reliefs. Go to Settings → Risk Model to adjust gauge thresholds and decay curves at any time. The AI will also suggest refinements on Insights as it learns from your data."),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
         }
@@ -577,7 +599,7 @@ private fun SeverityGroup(severity: String, color: Color, items: List<TDI>, icon
             }
             if (item.favorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
             Column(Modifier.weight(1f)) {
-                Text(item.label, color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(t(item.label), color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (item.reasoning.isNotBlank()) Text(item.reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             if (item.threshold != null) {
@@ -597,7 +619,7 @@ private fun ItemChip(label: String, severity: String, isFavorite: Boolean, reaso
         }
         if (isFavorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
         Column(Modifier.weight(1f)) {
-            Text(label, color = Color.White, style = MaterialTheme.typography.bodySmall)
+            Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall)
             if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2)
         }
         Box(Modifier.background(color.copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
@@ -612,7 +634,7 @@ private fun FavoriteChip(label: String, reasoning: String) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
         Column(Modifier.weight(1f)) {
-            Text(label, color = Color.White, style = MaterialTheme.typography.bodySmall)
+            Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall)
             if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2)
         }
     }
@@ -634,7 +656,7 @@ private fun EditableSeverityGroup(severity: String, color: Color, items: List<TD
             if (brainyId != null || icon != null) LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 22.dp else 16.dp, tint = color.copy(alpha = 0.7f))
             if (item.favorite) Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
             Column(Modifier.weight(1f)) {
-                Text(item.label, color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(t(item.label), color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (item.reasoning.isNotBlank()) Text(item.reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             if (item.threshold != null) {
@@ -669,7 +691,7 @@ private fun EditableSeverityGroup(severity: String, color: Color, items: List<TD
             }
             // Delete
             IconButton(onClick = { onDelete(item.label) }, modifier = Modifier.size(28.dp)) {
-                Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
             }
         }
     }
@@ -702,11 +724,11 @@ private fun DeletableFavoriteChip(label: String, reasoning: String, icon: ImageV
             Text("★", color = Color(0xFFFFD54F), style = MaterialTheme.typography.labelMedium)
         }
         Column(Modifier.weight(1f)) {
-            Text(label, color = Color.White, style = MaterialTheme.typography.bodySmall)
+            Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall)
             if (reasoning.isNotBlank()) Text(reasoning, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2)
         }
         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-            Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+            Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
         }
     }
 }
@@ -727,7 +749,7 @@ private fun EditableThresholdBadge(label: String, value: Int, color: Color, onCh
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
             TextButton(onClick = { text.toIntOrNull()?.let { onChange(it) }; editing = false }, modifier = Modifier.height(24.dp), contentPadding = PaddingValues(0.dp)) {
-                Text("Done", color = color, style = MaterialTheme.typography.labelSmall)
+                Text(t("Done"), color = color, style = MaterialTheme.typography.labelSmall)
             }
         } else {
             Box(Modifier.size(48.dp).background(color.copy(alpha = 0.15f), CircleShape).border(2.dp, color.copy(alpha = 0.4f), CircleShape).clickable { editing = true }, contentAlignment = Alignment.Center) {
@@ -735,7 +757,7 @@ private fun EditableThresholdBadge(label: String, value: Int, color: Color, onCh
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -746,6 +768,6 @@ private fun ThresholdBadge(label: String, value: Int, color: Color) {
             Text("$value", color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }

@@ -284,7 +284,7 @@ fun ChatAssistantScreen(
     var reportingMessage by remember { mutableStateOf<ChatMessage?>(null) }
     reportingMessage?.let { msg ->
         ReportDialog(
-            title = "Report AI response",
+            title = t("Report AI response"),
             onDismiss = { reportingMessage = null },
             onSubmit = { reason ->
                 SessionStore.readAccessToken(context)?.let { token ->
@@ -314,7 +314,7 @@ fun ChatAssistantScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = t("Back"),
                             tint = Color.White
                         )
                     }
@@ -390,7 +390,7 @@ fun ChatAssistantScreen(
                     if (uiState.isRateLimited) {
                         item(key = "rate_limit") {
                             InfoCard(
-                                message = "You\u2019ve reached your daily message limit. It resets at midnight — come back tomorrow!",
+                                message = t("You\u2019ve reached your daily message limit. It resets at midnight — come back tomorrow!"),
                                 onDismiss = { viewModel.clearRateLimited() }
                             )
                         }
@@ -408,7 +408,7 @@ fun ChatAssistantScreen(
                 uiState.remainingMessages?.let { remaining ->
                     if (remaining <= 5) {
                         Text(
-                            text = "$remaining messages remaining today",
+                            text = t("%s messages remaining today", remaining),
                             color = if (remaining <= 2) Color(0xFFFF8A8A)
                             else Color.White.copy(alpha = 0.4f),
                             fontSize = 11.sp,
@@ -439,7 +439,7 @@ fun ChatAssistantScreen(
                             modifier = Modifier.weight(1f),
                             placeholder = {
                                 Text(
-                                    "Ask about your health data\u2026",
+                                    t("Ask about your health data\u2026"),
                                     color = Color.White.copy(alpha = 0.4f),
                                     fontSize = 14.sp
                                 )
@@ -490,7 +490,7 @@ fun ChatAssistantScreen(
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "Send",
+                                contentDescription = t("Send"),
                                 tint = if (canSend) Color.White
                                 else Color.White.copy(alpha = 0.3f),
                                 modifier = Modifier.size(20.dp)
@@ -527,7 +527,7 @@ private fun WelcomeCard(onSuggestionTap: (String) -> Unit) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Your Health Insights Assistant",
+                t("Your Health Insights Assistant"),
                 color = Color.White,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
@@ -535,7 +535,7 @@ private fun WelcomeCard(onSuggestionTap: (String) -> Unit) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "I can help you understand your migraine patterns using your last 7 days of data \u2014 sleep, HRV, recovery, triggers, and more.",
+                t("I can help you understand your migraine patterns using your last 7 days of data \u2014 sleep, HRV, recovery, triggers, and more."),
                 color = Color.White.copy(alpha = 0.65f),
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
@@ -544,10 +544,13 @@ private fun WelcomeCard(onSuggestionTap: (String) -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             // Tappable suggestion chips
+            // Translated at the data site on purpose: the tapped string both
+            // labels the chip and becomes the prompt sent to the assistant, and
+            // a natural-language prompt should be in the user's language.
             val suggestions = listOf(
-                "Why have I been feeling off lately?",
-                "How\u2019s my sleep been this week?",
-                "Any patterns before my last migraine?"
+                t("Why have I been feeling off lately?"),
+                t("How\u2019s my sleep been this week?"),
+                t("Any patterns before my last migraine?")
             )
             suggestions.forEach { suggestion ->
                 SuggestionChip(
@@ -559,7 +562,7 @@ private fun WelcomeCard(onSuggestionTap: (String) -> Unit) {
 
             Spacer(Modifier.height(10.dp))
             Text(
-                "Not medical advice. Based on your tracked data only.",
+                t("Not medical advice. Based on your tracked data only."),
                 color = Color.White.copy(alpha = 0.35f),
                 fontSize = 11.sp,
                 textAlign = TextAlign.Center
@@ -629,7 +632,7 @@ private fun ChatBubble(message: ChatMessage, onReport: (() -> Unit)? = null) {
             IconButton(onClick = onReport, modifier = Modifier.size(28.dp)) {
                 Icon(
                     Icons.Outlined.Flag,
-                    contentDescription = "Report AI response",
+                    contentDescription = t("Report AI response"),
                     tint = Color.White.copy(alpha = 0.35f),
                     modifier = Modifier.size(14.dp)
                 )
@@ -664,7 +667,7 @@ private fun TypingIndicator() {
                             repeatMode = RepeatMode.Reverse,
                             initialStartOffset = StartOffset(index * 180)
                         ),
-                        label = "dot$index"
+                        label = t("dot%s", index)
                     )
                     Box(
                         Modifier
@@ -698,7 +701,7 @@ private fun ErrorCard(message: String, onDismiss: () -> Unit) {
                 modifier = Modifier.weight(1f)
             )
             TextButton(onClick = onDismiss) {
-                Text("Dismiss", color = Color(0xFFFF8A8A), fontSize = 12.sp)
+                Text(t("Dismiss"), color = Color(0xFFFF8A8A), fontSize = 12.sp)
             }
         }
     }
@@ -723,7 +726,7 @@ private fun InfoCard(message: String, onDismiss: () -> Unit) {
                 modifier = Modifier.weight(1f)
             )
             TextButton(onClick = onDismiss) {
-                Text("OK", color = AppTheme.AccentPurple, fontSize = 12.sp)
+                Text(t("OK"), color = AppTheme.AccentPurple, fontSize = 12.sp)
             }
         }
     }
@@ -739,14 +742,14 @@ private fun PremiumRequiredCard(onUpgrade: () -> Unit) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                "Premium Feature",
+                t("Premium Feature"),
                 color = Color.White,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "The chat assistant is available for premium subscribers. Upgrade to get personalised health insights from your data.",
+                t("The chat assistant is available for premium subscribers. Upgrade to get personalised health insights from your data."),
                 color = Color.White.copy(alpha = 0.6f),
                 fontSize = 12.sp,
                 lineHeight = 17.sp
@@ -760,7 +763,7 @@ private fun PremiumRequiredCard(onUpgrade: () -> Unit) {
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Upgrade", color = Color.White)
+                Text(t("Upgrade"), color = Color.White)
             }
         }
     }

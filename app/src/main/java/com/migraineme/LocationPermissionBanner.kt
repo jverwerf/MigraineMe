@@ -180,7 +180,7 @@ fun LocationPermissionBanner(modifier: Modifier = Modifier) {
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                "Location tracking stopped",
+                t("Location tracking stopped"),
                 color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
@@ -223,7 +223,7 @@ fun LocationPermissionBanner(modifier: Modifier = Modifier) {
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Text("Turn it back on", fontWeight = FontWeight.SemiBold)
+                Text(t("Turn it back on"), fontWeight = FontWeight.SemiBold)
             }
 
             TextButton(
@@ -234,7 +234,7 @@ fun LocationPermissionBanner(modifier: Modifier = Modifier) {
                 }
             ) {
                 Text(
-                    "Not now",
+                    t("Not now"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )

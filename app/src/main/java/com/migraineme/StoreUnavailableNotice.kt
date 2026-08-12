@@ -40,15 +40,15 @@ fun StoreUnavailableNotice(onRetry: () -> Unit) {
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            "Subscriptions aren't available right now",
+            t("Subscriptions aren't available right now"),
             color = Color.White,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            "We couldn't load the plans from the store, so there's nothing to show you " +
-                "yet. You haven't been charged. This is usually temporary.",
+            t("We couldn't load the plans from the store, so there's nothing to show you ") +
+                t("yet. You haven't been charged. This is usually temporary."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center
@@ -59,11 +59,11 @@ fun StoreUnavailableNotice(onRetry: () -> Unit) {
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
         ) {
-            Text("Try again")
+            Text(t("Try again"))
         }
         Spacer(Modifier.height(10.dp))
         Text(
-            "Still stuck? Email help@migraineme.app and we'll sort it out.",
+            t("Still stuck? Email help@migraineme.app and we'll sort it out."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center

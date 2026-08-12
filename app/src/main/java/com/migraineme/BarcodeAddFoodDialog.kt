@@ -73,7 +73,7 @@ fun BarcodeAddFoodDialog(
 
     AlertDialog(
         onDismissRequest = { if (!isAdding) onDismiss() },
-        title = { Text("Add Scanned Food", color = AppTheme.TitleColor) },
+        title = { Text(t("Add Scanned Food"), color = AppTheme.TitleColor) },
         text = {
             Column(
                 modifier = Modifier
@@ -117,10 +117,10 @@ fun BarcodeAddFoodDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Portion", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t("Portion"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                     product.servingQuantityGrams?.let {
                         Text(
-                            "1 serving ≈ ${it.toInt()} g",
+                            t("1 serving ≈ %s g", it.toInt()),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.clickable {
@@ -137,7 +137,7 @@ fun BarcodeAddFoodDialog(
                         gramsText = txt
                         txt.replace(",", ".").toDoubleOrNull()?.takeIf { it >= 0 }?.let(onGramsChange)
                     },
-                    placeholder = { Text("Grams") },
+                    placeholder = { Text(t("Grams")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     trailingIcon = { Text("g", color = AppTheme.SubtleTextColor, modifier = Modifier.padding(end = 12.dp)) },
@@ -155,7 +155,7 @@ fun BarcodeAddFoodDialog(
 
                 // Favorite metrics
                 Text(
-                    "Nutrition (${grams.toInt()} g)",
+                    t("Nutrition (%s g)", grams.toInt()),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -163,7 +163,7 @@ fun BarcodeAddFoodDialog(
 
                 monitorMetrics.forEach { metric ->
                     if (!MonitorCardConfig.isRiskMetric(metric)) {
-                        val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                        val label = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
                         val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
                         NutrientRow(label, scaled(metric), unit)
                     }
@@ -176,11 +176,11 @@ fun BarcodeAddFoodDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Food Risks", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Food Risks"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(Modifier.size(12.dp), AppTheme.AccentPurple, strokeWidth = 1.5.dp)
                             Spacer(Modifier.width(4.dp))
-                            Text("Classifying…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(t("Classifying…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 } else {
@@ -193,13 +193,13 @@ fun BarcodeAddFoodDialog(
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                 Spacer(Modifier.height(6.dp))
-                Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("All Nutrients"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
 
                 val shown = monitorMetrics.toSet()
                 MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
                     if (!MonitorCardConfig.isRiskMetric(metric) && metric !in shown) {
-                        val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                        val label = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
                         val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
                         NutrientRow(label, scaled(metric), unit)
                     }
@@ -207,7 +207,7 @@ fun BarcodeAddFoodDialog(
 
                 Spacer(Modifier.height(16.dp))
 
-                Text("Meal Type", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Meal Type"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
 
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -244,13 +244,13 @@ fun BarcodeAddFoodDialog(
                 if (isAdding) {
                     CircularProgressIndicator(Modifier.size(16.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
                 } else {
-                    Text("Add", color = AppTheme.AccentPurple)
+                    Text(t("Add"), color = AppTheme.AccentPurple)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isAdding) {
-                Text("Cancel", color = AppTheme.SubtleTextColor)
+                Text(t("Cancel"), color = AppTheme.SubtleTextColor)
             }
         },
         containerColor = Color(0xFF1E0A2E)
@@ -280,7 +280,7 @@ private fun BarcodeRiskRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             icon(color, 14.dp)
             Spacer(Modifier.width(6.dp))
-            Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
         }
         Row(verticalAlignment = Alignment.Bottom) {
             Text(display, color = color, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))

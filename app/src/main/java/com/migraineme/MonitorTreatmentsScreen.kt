@@ -96,7 +96,7 @@ fun MonitorTreatmentsConfigScreen(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
             Text(
-                "Pick up to $TREATMENT_CARD_MAX_FAVOURITES treatments to show on the Monitor home tile. Leave empty to auto-pick by best % change.",
+                t("Pick up to %s treatments to show on the Monitor home tile. Leave empty to auto-pick by best %% change.", TREATMENT_CARD_MAX_FAVOURITES),
                 color = Color.White.copy(alpha = 0.62f),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(vertical = 8.dp)
@@ -108,7 +108,7 @@ fun MonitorTreatmentsConfigScreen(navController: NavController) {
                 }
             } else if (active.isEmpty()) {
                 Text(
-                    "No active treatments yet. Add one to customize the card.",
+                    t("No active treatments yet. Add one to customize the card."),
                     color = Color.White.copy(alpha = 0.62f),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 30.dp)
@@ -250,8 +250,8 @@ fun MonitorTreatmentsScreen(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         PremiumGate(
-            message = "Unlock Treatments",
-            subtitle = "Track how well each drug, device, or lifestyle change reduces your migraine days",
+            message = t("Unlock Treatments"),
+            subtitle = t("Track how well each drug, device, or lifestyle change reduces your migraine days"),
             onUpgrade = { navController.navigate(Routes.PAYWALL) },
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -264,11 +264,11 @@ fun MonitorTreatmentsScreen(navController: NavController) {
                     }
                 } else {
                     if (active.isNotEmpty()) {
-                        SectionHeader("Active")
+                        SectionHeader(t("Active"))
                         active.forEach { ListRow(it, navController) }
                     }
                     if (past.isNotEmpty()) {
-                        SectionHeader("Past")
+                        SectionHeader(t("Past"))
                         past.forEach { ListRow(it, navController) }
                     }
                     if (active.isEmpty() && past.isEmpty()) EmptyState()
@@ -303,8 +303,8 @@ private fun CustomizeTreatmentsHero(onClick: () -> Unit) {
         Icon(Icons.Outlined.Tune, contentDescription = null, tint = Color(0xFFB97BFF), modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text("Customize Treatments", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-            Text("Pick up to 3 that appear on the Monitor card.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+            Text(t("Customize Treatments"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Pick up to 3 that appear on the Monitor card."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         }
         Text("→", color = Color(0xFFB97BFF))
     }
@@ -324,9 +324,9 @@ private fun AddTreatmentButton(onClick: () -> Unit) {
         Icon(Icons.Outlined.Add, contentDescription = null, tint = Color(0xFFB97BFF), modifier = Modifier.size(28.dp))
         Spacer(Modifier.width(12.dp))
         Column {
-            Text("Add Treatment", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
-            Text("Drug, device, or lifestyle.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
-            Text("Track its effect on your migraines.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+            Text(t("Add Treatment"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Text(t("Drug, device, or lifestyle."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+            Text(t("Track its effect on your migraines."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -441,9 +441,9 @@ private fun EmptyState() {
         modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("No treatments yet", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodyMedium)
+        Text(t("No treatments yet"), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(4.dp))
-        Text("Tap Add Treatment to start tracking a drug, device, or lifestyle change.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+        Text(t("Tap Add Treatment to start tracking a drug, device, or lifestyle change."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -516,22 +516,22 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 MonitorBlobIcon(resId = R.drawable.brainy_treatments_small)
                 Spacer(Modifier.width(10.dp))
-                Text("Treatments", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+                Text(t("Treatments"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.weight(1f))
                 if (isPremium) {
                     Text("→", color = Color(0xFFB388FF), style = MaterialTheme.typography.bodyMedium)
                 } else {
-                    Text("Premium · →", color = Color(0xFFB97BFF), style = MaterialTheme.typography.labelSmall)
+                    Text(t("Premium · →"), color = Color(0xFFB97BFF), style = MaterialTheme.typography.labelSmall)
                 }
             }
             Spacer(Modifier.height(6.dp))
             if (!isPremium) {
-                Text("Track how well each drug, device, or lifestyle change reduces your migraine days. Upgrade to unlock.",
+                Text(t("Track how well each drug, device, or lifestyle change reduces your migraine days. Upgrade to unlock."),
                     color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
             } else if (loading) {
                 CircularProgressIndicator(color = Color(0xFFB97BFF), modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
             } else if (rows.isEmpty()) {
-                Text("Add a drug, device, or lifestyle change to track effectiveness.",
+                Text(t("Add a drug, device, or lifestyle change to track effectiveness."),
                     color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
             } else {
                 rows.forEachIndexed { i, row ->
@@ -548,7 +548,7 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
                 .offset(x = 10.dp, y = (-14).dp)
                 .size(34.dp)
         ) {
-            Icon(Icons.Outlined.Info, contentDescription = "About Treatments",
+            Icon(Icons.Outlined.Info, contentDescription = t("About Treatments"),
                 tint = Color.White.copy(alpha = 0.55f), modifier = Modifier.size(20.dp))
         }
     }
@@ -556,24 +556,24 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
         AlertDialog(
             onDismissRequest = { showInfo = false },
             containerColor = Color(0xFF2A0C3C),
-            title = { Text("Treatments", color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold) },
+            title = { Text(t("Treatments"), color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold) },
             text = {
                 Text(
-                    "Track how well each drug, device, or lifestyle change is reducing your migraine days. " +
-                    "Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\n\n" +
-                    "The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: " +
-                    "a 50% or greater drop is the gold standard.\n\n" +
-                    "Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. " +
-                    "A secondary \"Last 4 weeks\" number on the detail screen shows whether things are trending up or down recently.\n\n" +
-                    "A note on Link: linking treatments combines them into one shared % change. " +
-                    "It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. " +
-                    "If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\n\n" +
-                    "Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.",
+                    t("Track how well each drug, device, or lifestyle change is reducing your migraine days. ") +
+                    t("Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\n\n") +
+                    t("The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: ") +
+                    t("a 50% or greater drop is the gold standard.\n\n") +
+                    t("Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. ") +
+                    t("A secondary \"Last 4 weeks\" number on the detail screen shows whether things are trending up or down recently.\n\n") +
+                    t("A note on Link: linking treatments combines them into one shared % change. ") +
+                    t("It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. ") +
+                    t("If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\n\n") +
+                    t("Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page."),
                     color = Color.White.copy(alpha = 0.86f),
                     style = MaterialTheme.typography.bodySmall
                 )
             },
-            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = Color(0xFFB97BFF)) } }
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = Color(0xFFB97BFF)) } }
         )
     }
 }
@@ -591,7 +591,7 @@ private fun MonitorRegimenRow(r: SupabaseDbService.TreatmentLeaderboardRow) {
             pct != null -> String.format("%+.0f%% days", pct) to bandPctColor(r.band)
             else -> bandPillLabel(r.band) to bandPctColor(r.band)
         }
-        Text(label, color = color,
+        Text(t(label), color = color,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier
                 .background(color.copy(alpha = 0.16f), RoundedCornerShape(999.dp))
@@ -656,27 +656,28 @@ private fun AddTreatmentRegimenDialog(
     AlertDialog(
         onDismissRequest = { if (!saving) onDismiss() },
         containerColor = Color(0xFF2A0C3C),
-        title = { Text("Add Treatment", color = Color(0xFFDCCEFF)) },
+        title = { Text(t("Add Treatment"), color = Color(0xFFDCCEFF)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(selected = kind == "drug", onClick = { kind = "drug" },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)) { Text("Drug") }
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)) { Text(t("Drug")) }
                     SegmentedButton(selected = kind == "lifestyle", onClick = { kind = "lifestyle" },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)) { Text("Lifestyle") }
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)) { Text(t("Lifestyle")) }
                     SegmentedButton(selected = kind == "device", onClick = { kind = "device" },
-                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)) { Text("Device") }
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)) { Text(t("Device")) }
                 }
                 Spacer(Modifier.height(12.dp))
+                FieldLabel(t("Name *"))
                 OutlinedTextField(
                     value = name, onValueChange = { name = it },
-                    label = { Text("Name") },
+                    
                     placeholder = { Text(when (kind) {
-                        "drug" -> "e.g. Topiramate"
-                        "device" -> "e.g. CEFALY preventive"
-                        else -> "e.g. Meditation"
+                        "drug" -> t("e.g. Topiramate")
+                        "device" -> t("e.g. CEFALY preventive")
+                        else -> t("e.g. Meditation")
                     }) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                    singleLine = true, colors = treatmentFieldColors(), modifier = Modifier.fillMaxWidth()
                 )
                 if (kind == "device") {
                     Spacer(Modifier.height(6.dp))
@@ -688,30 +689,33 @@ private fun AddTreatmentRegimenDialog(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
+                FieldLabel(t("Amount"))
                 OutlinedTextField(
                     value = amount, onValueChange = { amount = it },
-                    label = { Text("Amount") },
+                    
                     placeholder = { Text(when (kind) {
-                        "drug" -> "e.g. 50mg"
-                        "device" -> "e.g. 20 min session"
-                        else -> "e.g. 20 min"
+                        "drug" -> t("e.g. 50mg")
+                        "device" -> t("e.g. 20 min session")
+                        else -> t("e.g. 20 min")
                     }) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                    singleLine = true, colors = treatmentFieldColors(), modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
+                FieldLabel(t("Frequency"))
                 OutlinedTextField(
                     value = frequency, onValueChange = { frequency = it },
-                    label = { Text("Frequency") },
-                    placeholder = { Text("e.g. daily, 2x per week") },
-                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                    
+                    placeholder = { Text(t("e.g. daily, 2x per week")) },
+                    singleLine = true, colors = treatmentFieldColors(), modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
-                Text("Start date", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+                FieldLabel(t("Start date *"))
                 StartDatePicker(date = startDate, onChange = { startDate = it })
                 Spacer(Modifier.height(8.dp))
+                FieldLabel(t("Notes"))
                 OutlinedTextField(
                     value = notes, onValueChange = { notes = it },
-                    label = { Text("Notes (optional)") },
+                    colors = treatmentFieldColors(),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                 )
                 error?.let {
@@ -722,26 +726,69 @@ private fun AddTreatmentRegimenDialog(
         },
         confirmButton = {
             TextButton(onClick = { save() }, enabled = !saving && name.trim().isNotEmpty()) {
-                Text(if (saving) "Saving..." else "Save", color = Color(0xFFB97BFF))
+                Text(if (saving) t("Saving...") else t("Save"), color = Color(0xFFB97BFF))
             }
         },
         dismissButton = {
-            TextButton(onClick = { if (!saving) onDismiss() }) { Text("Cancel", color = Color.White.copy(alpha = 0.82f)) }
+            TextButton(onClick = { if (!saving) onDismiss() }) { Text(t("Cancel"), color = Color.White.copy(alpha = 0.82f)) }
         }
     )
 }
 
+/** Small caps field label sitting above its box, the same shape iOS,
+ *  VertigoMe and MeSeries use — Material's floating label hid the example
+ *  text until the field was focused, so the examples were never seen. */
+@Composable
+private fun FieldLabel(text: String) {
+    Text(
+        text.uppercase(),
+        color = Color.White.copy(alpha = 0.62f),
+        style = MaterialTheme.typography.labelSmall,
+        modifier = Modifier.padding(bottom = 4.dp)
+    )
+}
+
+/** Field colours for the Add Treatment dialog. The dialog sits on a dark
+ *  purple container, where the default M3 outline and placeholder tints are
+ *  close to invisible — the example text ("e.g. Topiramate") was there all
+ *  along and simply could not be read. */
+@Composable
+private fun treatmentFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    focusedBorderColor = Color(0xFFB97BFF),
+    unfocusedBorderColor = Color.White.copy(alpha = 0.38f),
+    focusedLabelColor = Color(0xFFDCCEFF),
+    unfocusedLabelColor = Color.White.copy(alpha = 0.72f),
+    focusedPlaceholderColor = Color.White.copy(alpha = 0.55f),
+    unfocusedPlaceholderColor = Color.White.copy(alpha = 0.55f),
+    cursorColor = Color(0xFFB97BFF)
+)
+
+/** Start date as a tappable pill that opens the platform date dialog — the
+ *  same shape iOS uses, instead of an inline calendar that dominated the
+ *  sheet and looked nothing like the other three apps. */
 @Composable
 private fun StartDatePicker(date: LocalDate, onChange: (LocalDate) -> Unit) {
-    AndroidView(
-        factory = { ctx ->
-            DatePicker(ctx).apply {
-                init(date.year, date.monthValue - 1, date.dayOfMonth) { _, y, m, d ->
-                    onChange(LocalDate.of(y, m + 1, d))
-                }
-            }
-        },
-        update = { it.updateDate(date.year, date.monthValue - 1, date.dayOfMonth) },
-        modifier = Modifier.fillMaxWidth()
-    )
+    val ctx = LocalContext.current
+    val label = remember(date) {
+        date.format(DateTimeFormatter.ofPattern("d MMM yyyy"))
+    }
+    Surface(
+        color = Color.White.copy(alpha = 0.10f),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.clickable {
+            android.app.DatePickerDialog(
+                ctx,
+                { _: DatePicker, y: Int, m: Int, d: Int -> onChange(LocalDate.of(y, m + 1, d)) },
+                date.year, date.monthValue - 1, date.dayOfMonth
+            ).show()
+        }
+    ) {
+        Text(t(label),
+            color = Color.White,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+        )
+    }
 }

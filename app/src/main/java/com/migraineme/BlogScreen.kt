@@ -42,7 +42,7 @@ fun BlogsContent(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text("Loading blogs…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Loading blogs…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     } else if (state.blogs.isEmpty()) {
@@ -53,9 +53,9 @@ fun BlogsContent(
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("No blogs yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
+                Text(t("No blogs yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                 Spacer(Modifier.height(4.dp))
-                Text("Check back soon!", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Check back soon!"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
     } else {
@@ -142,7 +142,7 @@ private fun BlogCard(
                 if (blog.readMinutes != null) {
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        "${blog.readMinutes} min read",
+                        t("%s min read", blog.readMinutes),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall
                     )

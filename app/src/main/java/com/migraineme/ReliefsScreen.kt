@@ -158,19 +158,19 @@ fun ReliefsScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Medicines", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(t("Medicines"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                     }
                 } else {
                     Spacer(Modifier.size(28.dp))
@@ -184,10 +184,10 @@ fun ReliefsScreen(
                         .size(40.dp)
                         .drawBehind { HubIcons.run { drawReliefLeaf(Color(0xFF81C784)) } }
                 )
-                Text("Reliefs", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Reliefs"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    if (draft.rels.isEmpty()) "Add reliefs that helped"
-                    else "${draft.rels.size} relief${if (draft.rels.size > 1) "s" else ""} added",
+                    if (draft.rels.isEmpty()) t("Add reliefs that helped")
+                    else (if (draft.rels.size == 1) t("1 relief added") else t("%s reliefs added", draft.rels.size)),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -214,7 +214,7 @@ fun ReliefsScreen(
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Text(
-                                        if (r.startAtIso == null) "Same as migraine start"
+                                        if (r.startAtIso == null) t("Same as migraine start")
                                         else formatReliefTime(r.startAtIso),
                                         color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                                         style = MaterialTheme.typography.labelSmall
@@ -229,7 +229,7 @@ fun ReliefsScreen(
                                     if (r.startAtIso != null && r.endAtIso != null) {
                                         deriveDurationMinutes(r.startAtIso, r.endAtIso)?.let { mins ->
                                             Text(
-                                                "• ${mins}min",
+                                                t("• %smin", mins),
                                                 color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                                                 style = MaterialTheme.typography.labelSmall
                                             )
@@ -238,14 +238,14 @@ fun ReliefsScreen(
                                 }
                                 // Relief scale
                                 Text(
-                                    "Relief: ${relief.display}",
+                                    t("Relief: %s", relief.display),
                                     color = relief.color,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                                 )
                             }
                             Icon(
                                 Icons.Outlined.Edit,
-                                contentDescription = "Edit",
+                                contentDescription = t("Edit"),
                                 tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -257,7 +257,7 @@ fun ReliefsScreen(
                             Spacer(Modifier.width(8.dp))
                             Icon(
                                 Icons.Outlined.Close,
-                                contentDescription = "Remove",
+                                contentDescription = t("Remove"),
                                 tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -278,8 +278,8 @@ fun ReliefsScreen(
             // Manage card (own card)
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Reliefs", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Reliefs"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_RELIEFS) })
                 }
             }
@@ -294,7 +294,7 @@ fun ReliefsScreen(
             // ── Single reliefs card: Frequent → divider → categories ──
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
-                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { rel ->
                             ReliefButton(rel.label, rel.label in selectedLabels, rel.iconKey) {
@@ -325,7 +325,7 @@ fun ReliefsScreen(
                 }
 
                 if (pool.isEmpty()) {
-                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -338,12 +338,12 @@ fun ReliefsScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Cancel" else "Back") }
+                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
                     onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.LOCATIONS) },
                     enabled = !quickLogMode || draft.rels.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Save" else "Next") }
+                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -377,23 +377,23 @@ private fun ReliefAddDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Start time
-                Text("When did you start?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Text("Start: ${formatReliefTime(startIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select start time", onDateTimeSelected = { iso -> startIso = iso })
+                Text(t("When did you start?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Start: %s", formatReliefTime(startIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select start time"), onDateTimeSelected = { iso -> startIso = iso })
 
                 // End time
-                Text("When did you stop? (optional)", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Text("End: ${formatReliefTime(endIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select end time", onDateTimeSelected = { iso -> endIso = iso })
+                Text(t("When did you stop? (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("End: %s", formatReliefTime(endIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select end time"), onDateTimeSelected = { iso -> endIso = iso })
 
                 // Relief scale
-                Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReliefScale.entries.forEach { scale ->
                         FilterChip(
                             selected = selectedRelief == scale,
                             onClick = { selectedRelief = scale },
-                            label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                 selectedLabelColor = Color.White,
@@ -420,16 +420,16 @@ private fun ReliefAddDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
-                Text("Add", color = AppTheme.AccentPurple)
+                Text(t("Add"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
                 TextButton(onClick = onSkip) {
-                    Text("Skip", color = Color(0xFF81C784))
+                    Text(t("Skip"), color = Color(0xFF81C784))
                 }
             }
         }
@@ -462,22 +462,22 @@ private fun ReliefEditDialog(
         containerColor = Color(0xFF1E0A2E),
         titleContentColor = Color.White,
         textContentColor = AppTheme.BodyTextColor,
-        title = { Text("Edit $title") },
+        title = { Text(t("Edit %s", title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Start: ${formatReliefTime(startIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select start time", onDateTimeSelected = { iso -> startIso = iso })
+                Text(t("Start: %s", formatReliefTime(startIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select start time"), onDateTimeSelected = { iso -> startIso = iso })
 
-                Text("End: ${formatReliefTime(endIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select end time", onDateTimeSelected = { iso -> endIso = iso })
+                Text(t("End: %s", formatReliefTime(endIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select end time"), onDateTimeSelected = { iso -> endIso = iso })
 
-                Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReliefScale.entries.forEach { scale ->
                         FilterChip(
                             selected = selectedRelief == scale,
                             onClick = { selectedRelief = scale },
-                            label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                 selectedLabelColor = Color.White,
@@ -504,12 +504,12 @@ private fun ReliefEditDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
-                Text("Save", color = AppTheme.AccentPurple)
+                Text(t("Save"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppTheme.SubtleTextColor)
+                Text(t("Cancel"), color = AppTheme.SubtleTextColor)
             }
         }
     )
@@ -553,8 +553,7 @@ private fun ReliefButton(label: String, isSelected: Boolean, iconKey: String? = 
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            label,
+        Text(t(label),
             color = textColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,

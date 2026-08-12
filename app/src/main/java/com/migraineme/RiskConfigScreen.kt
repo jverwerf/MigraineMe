@@ -60,10 +60,10 @@ fun RiskConfigScreen(onBack: () -> Unit) {
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             BaseCard {
-                Text("Choose 3 Favorites", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Choose 3 Favorites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category.",
+                    t("Pick 3 metrics to show beneath the risk score on your Monitor card. These are drawn from the favorites you configured in each category."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -93,7 +93,7 @@ fun RiskConfigScreen(onBack: () -> Unit) {
                                     } else selected
                                     save()
                                 },
-                                label = { Text(entry.label) },
+                                label = { Text(t(entry.label)) },
                                 leadingIcon = if (sel) {{ Icon(Icons.Filled.Check, null, Modifier.size(16.dp)) }} else null,
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = color.copy(alpha = 0.2f),
@@ -110,7 +110,7 @@ fun RiskConfigScreen(onBack: () -> Unit) {
 
             if (pool.isEmpty()) {
                 BaseCard {
-                    Text("No favorites configured yet. Set up favorites in each category's detail screen first.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No favorites configured yet. Set up favorites in each category's detail screen first."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }

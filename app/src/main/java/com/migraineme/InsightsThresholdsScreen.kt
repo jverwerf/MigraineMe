@@ -39,7 +39,7 @@ fun InsightsThresholdsScreen(
                     ) {
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
                         Spacer(Modifier.width(12.dp))
-                        Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -56,9 +56,9 @@ fun InsightsThresholdsScreen(
                         BrainyBlobIcon(R.drawable.brainy_archer_small)
                         Spacer(Modifier.width(10.dp))
                         Column {
-                            Text("Gauge Accuracy", color = AppTheme.TitleColor,
+                            Text(t("Gauge Accuracy"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("How well your risk gauge predicts migraines",
+                            Text(t("How well your risk gauge predicts migraines"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -79,7 +79,7 @@ fun InsightsThresholdsScreen(
                                 Text("${ga.sensitivityPct}%", color = Color(0xFF81C784),
                                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
                                 Spacer(Modifier.height(4.dp))
-                                Text("Caught — migraines that followed a warning", color = AppTheme.SubtleTextColor,
+                                Text(t("Caught — migraines that followed a warning"), color = AppTheme.SubtleTextColor,
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                             }
@@ -98,7 +98,7 @@ fun InsightsThresholdsScreen(
                                     color = if (ga.falseAlarmRatePct > 30) Color(0xFFE57373) else Color(0xFFFFB74D),
                                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
                                 Spacer(Modifier.height(4.dp))
-                                Text("False alarms — warnings with no migraine", color = AppTheme.SubtleTextColor,
+                                Text(t("False alarms — warnings with no migraine"), color = AppTheme.SubtleTextColor,
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                             }
@@ -110,34 +110,34 @@ fun InsightsThresholdsScreen(
 
                 // ── Confusion matrix ──
                 BrainyWatermarkCard(resId = R.drawable.brainy_archer, flipWatermark = true) {
-                    Text("Detailed Breakdown", color = AppTheme.TitleColor,
+                    Text(t("Detailed Breakdown"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
-                    Text("Every tracked day, sorted by warning vs outcome",
+                    Text(t("Every tracked day, sorted by warning vs outcome"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
                     Spacer(Modifier.height(14.dp))
 
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Spacer(Modifier.width(64.dp))
-                        MatrixAxisLabel("Migraine\nhappened", Modifier.weight(1f))
-                        MatrixAxisLabel("No\nmigraine", Modifier.weight(1f))
+                        MatrixAxisLabel(t("Migraine\nhappened"), Modifier.weight(1f))
+                        MatrixAxisLabel(t("No\nmigraine"), Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically) {
-                        MatrixAxisLabel("Gauge\nwarned", Modifier.width(64.dp))
+                        MatrixAxisLabel(t("Gauge\nwarned"), Modifier.width(64.dp))
                         ConfusionCell(
                             modifier = Modifier.weight(1f),
                             value = "${ga.truePositives}",
-                            label = "Caught",
+                            label = t("Caught"),
                             sublabel = "Warned & it happened",
                             color = Color(0xFF81C784),
                         )
                         ConfusionCell(
                             modifier = Modifier.weight(1f),
                             value = "${ga.falsePositives}",
-                            label = "False alarm",
+                            label = t("False alarm"),
                             sublabel = "Warned, nothing came",
                             color = Color(0xFFE57373),
                         )
@@ -145,25 +145,25 @@ fun InsightsThresholdsScreen(
                     Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically) {
-                        MatrixAxisLabel("No\nwarning", Modifier.width(64.dp))
+                        MatrixAxisLabel(t("No\nwarning"), Modifier.width(64.dp))
                         ConfusionCell(
                             modifier = Modifier.weight(1f),
                             value = "${ga.falseNegatives}",
-                            label = "Missed",
+                            label = t("Missed"),
                             sublabel = "It happened unwarned",
                             color = Color(0xFFFFB74D),
                         )
                         ConfusionCell(
                             modifier = Modifier.weight(1f),
                             value = "${ga.trueNegatives}",
-                            label = "Quiet days",
+                            label = t("Quiet days"),
                             sublabel = "No warning, no migraine",
                             color = AppTheme.SubtleTextColor,
                         )
                     }
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "How to read it: green and grey are the gauge being right; amber and red are the two ways it can be wrong. Together the four cells cover all ${ga.totalDays} tracked days.",
+                        t("How to read it: green and grey are the gauge being right; amber and red are the two ways it can be wrong. Together the four cells cover all %s tracked days.", ga.totalDays),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -176,10 +176,10 @@ fun InsightsThresholdsScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Canvas(Modifier.size(36.dp)) { HubIcons.run { drawThresholdTarget(Color(0xFFFFB74D)) } }
                         Spacer(Modifier.height(8.dp))
-                        Text("Not enough data yet", color = AppTheme.TitleColor,
+                        Text(t("Not enough data yet"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
-                        Text("Keep logging migraines and using the gauge. After 7+ days of data, accuracy metrics will appear here.",
+                        Text(t("Keep logging migraines and using the gauge. After 7+ days of data, accuracy metrics will appear here."),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center)
                     }
@@ -221,7 +221,7 @@ private fun ConfusionCell(
             Text(value, color = color,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
             Spacer(Modifier.height(2.dp))
-            Text(label, color = Color.White,
+            Text(t(label), color = Color.White,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(2.dp))
             Text(sublabel, color = AppTheme.SubtleTextColor,

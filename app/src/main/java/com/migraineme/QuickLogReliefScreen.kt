@@ -97,13 +97,13 @@ fun QuickLogReliefScreen(
                 // Hero Card - Relief Selection
                 HeroCard {
                     Text(
-                        "Quick Log Relief",
+                        t("Quick Log Relief"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     
                     Text(
-                        "Log a relief method without a migraine",
+                        t("Log a relief method without a migraine"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -116,7 +116,7 @@ fun QuickLogReliefScreen(
                             value = selectedRelief ?: "Select relief...",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Relief", color = AppTheme.SubtleTextColor) },
+                            label = { Text(t("Relief"), color = AppTheme.SubtleTextColor) },
                             trailingIcon = {
                                 IconButton(onClick = { menuOpen = true }) {
                                     Text("▼", color = Color.White)
@@ -137,14 +137,14 @@ fun QuickLogReliefScreen(
                         ) {
                             if (frequentLabels.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("Frequent", fontWeight = FontWeight.Bold) },
+                                    text = { Text(t("Frequent"), fontWeight = FontWeight.Bold) },
                                     onClick = {},
                                     enabled = false
                                 )
                                 frequentLabels.forEach { label ->
                                     val icon = ReliefIcons.forLabel(label, iconKeyByLabel[label])
                                     DropdownMenuItem(
-                                        text = { Text(label) },
+                                        text = { Text(t(label)) },
                                         leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
                                         onClick = {
                                             selectedRelief = label
@@ -157,14 +157,14 @@ fun QuickLogReliefScreen(
                             
                             if (allLabels.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("All", fontWeight = FontWeight.Bold) },
+                                    text = { Text(t("All"), fontWeight = FontWeight.Bold) },
                                     onClick = {},
                                     enabled = false
                                 )
                                 allLabels.forEach { label ->
                                     val icon = ReliefIcons.forLabel(label, iconKeyByLabel[label])
                                     DropdownMenuItem(
-                                        text = { Text(label) },
+                                        text = { Text(t(label)) },
                                         leadingIcon = if (icon != null) {{ Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null,
                                         onClick = {
                                             selectedRelief = label
@@ -181,7 +181,7 @@ fun QuickLogReliefScreen(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = { navController.navigate(Routes.ADJUST_RELIEFS) }) {
-                            Text("Manage Reliefs", color = AppTheme.AccentPurple)
+                            Text(t("Manage Reliefs"), color = AppTheme.AccentPurple)
                         }
                     }
                 }
@@ -189,17 +189,17 @@ fun QuickLogReliefScreen(
                 // Details Card
                 BaseCard {
                     Text(
-                        "Details",
+                        t("Details"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     
                     // Start time picker
                     Column(Modifier.fillMaxWidth()) {
-                        Text("When did you start?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("When did you start?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(4.dp))
                         AppDateTimePicker(
-                            label = startAtIso?.let { formatIsoForDisplay(it) } ?: "Select start time..."
+                            label = startAtIso?.let { formatIsoForDisplay(it) } ?: t("Select start time...")
                         ) { iso ->
                             startAtIso = iso
                         }
@@ -209,10 +209,10 @@ fun QuickLogReliefScreen(
                     
                     // End time picker
                     Column(Modifier.fillMaxWidth()) {
-                        Text("When did you finish?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("When did you finish?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(4.dp))
                         AppDateTimePicker(
-                            label = endAtIso?.let { formatIsoForDisplay(it) } ?: "Select end time..."
+                            label = endAtIso?.let { formatIsoForDisplay(it) } ?: t("Select end time...")
                         ) { iso ->
                             endAtIso = iso
                         }
@@ -224,7 +224,7 @@ fun QuickLogReliefScreen(
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        label = { Text("Notes (optional)", color = AppTheme.SubtleTextColor) },
+                        label = { Text(t("Notes (optional)"), color = AppTheme.SubtleTextColor) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
@@ -238,14 +238,14 @@ fun QuickLogReliefScreen(
                     Spacer(Modifier.height(12.dp))
 
                     // Relief scale
-                    Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ReliefScale.entries.forEach { scale ->
                             androidx.compose.material3.FilterChip(
                                 selected = reliefScale == scale.name,
                                 onClick = { reliefScale = scale.name },
-                                label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
                                 colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                     selectedLabelColor = Color.White,
@@ -265,7 +265,7 @@ fun QuickLogReliefScreen(
                     Spacer(Modifier.height(12.dp))
 
                     // Side effects
-                    Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Any side effects?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("NONE" to "None", "SOFT" to "Soft", "MODERATE" to "Moderate", "SEVERE" to "Severe").forEach { (key, display) ->
@@ -294,8 +294,8 @@ fun QuickLogReliefScreen(
                     OutlinedTextField(
                         value = sideEffectNotes,
                         onValueChange = { sideEffectNotes = it },
-                        label = { Text("Side effect notes", color = AppTheme.SubtleTextColor) },
-                        placeholder = { Text("e.g. drowsiness, nausea…", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+                        label = { Text(t("Side effect notes"), color = AppTheme.SubtleTextColor) },
+                        placeholder = { Text(t("e.g. drowsiness, nausea…"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
@@ -319,7 +319,7 @@ fun QuickLogReliefScreen(
                                 contentColor = Color.White
                             )
                         ) {
-                            Text("Cancel")
+                            Text(t("Cancel"))
                         }
                         
                         Button(
@@ -365,7 +365,7 @@ fun QuickLogReliefScreen(
                                 containerColor = AppTheme.AccentPurple
                             )
                         ) {
-                            Text(if (saving) "Saving..." else "Log Relief")
+                            Text(if (saving) t("Saving...") else t("Log Relief"))
                         }
                     }
                 }

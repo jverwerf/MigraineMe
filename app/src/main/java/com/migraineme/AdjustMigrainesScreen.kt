@@ -51,7 +51,7 @@ fun AdjustMigrainesScreen(
                     OutlinedTextField(
                         value = newLabel,
                         onValueChange = { newLabel = it },
-                        label = { Text("New migraine label") },
+                        label = { Text(t("New migraine label")) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -73,14 +73,14 @@ fun AdjustMigrainesScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Add to list")
+                            Text(t("Add to list"))
                         }
                     }
                 }
             }
 
             // Frequent header
-            item { Text("Frequent", style = MaterialTheme.typography.titleMedium) }
+            item { Text(t("Frequent"), style = MaterialTheme.typography.titleMedium) }
 
             // Frequent items
             items(frequent, key = { it.id }) { pref ->
@@ -101,14 +101,14 @@ fun AdjustMigrainesScreen(
                             val token = authState.accessToken ?: return@IconButton
                             vm.removeFromFrequent(token, pref.id)
                         }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Remove from Frequent")
+                            Icon(Icons.Default.Delete, contentDescription = t("Remove from Frequent"))
                         }
                     }
                 }
             }
 
             // All Migraines header
-            item { Text("All Migraines", style = MaterialTheme.typography.titleMedium) }
+            item { Text(t("All Migraines"), style = MaterialTheme.typography.titleMedium) }
 
             // All Migraines with swipe-to-delete
             val frequentIds = frequent.map { it.migraineId }.toSet()
@@ -145,7 +145,7 @@ fun AdjustMigrainesScreen(
                         ) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Delete",
+                                contentDescription = t("Delete"),
                                 tint = Color.White
                             )
                         }
@@ -164,12 +164,12 @@ fun AdjustMigrainesScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(mg.label, style = MaterialTheme.typography.bodyLarge)
+                            Text(t(mg.label), style = MaterialTheme.typography.bodyLarge)
                             IconButton(onClick = {
                                 val token = authState.accessToken ?: return@IconButton
                                 vm.addToFrequent(token, mg.id)
                             }) {
-                                Icon(Icons.Default.Add, contentDescription = "Add to Frequent")
+                                Icon(Icons.Default.Add, contentDescription = t("Add to Frequent"))
                             }
                         }
                     }

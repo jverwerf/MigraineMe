@@ -208,19 +208,19 @@ fun TriggersScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Prodromes", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(t("Prodromes"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                     }
                 } else {
                     Spacer(Modifier.size(28.dp))
@@ -234,10 +234,10 @@ fun TriggersScreen(
                         .size(40.dp)
                         .drawBehind { HubIcons.run { drawTriggerBolt(Color(0xFFFFB74D)) } }
                 )
-                Text("Triggers", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Triggers"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    if (draft.triggers.isEmpty()) "Select triggers that may have contributed"
-                    else "${draft.triggers.size} trigger${if (draft.triggers.size > 1) "s" else ""} selected",
+                    if (draft.triggers.isEmpty()) t("Select triggers that may have contributed")
+                    else (if (draft.triggers.size == 1) t("1 trigger selected") else t("%s triggers selected", draft.triggers.size)),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -262,7 +262,7 @@ fun TriggersScreen(
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                                 )
                                 Text(
-                                    if (t.startAtIso == null) "Same as migraine start"
+                                    if (t.startAtIso == null) t("Same as migraine start")
                                     else formatTriggerTime(t.startAtIso),
                                     color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                                     style = MaterialTheme.typography.labelSmall
@@ -270,7 +270,7 @@ fun TriggersScreen(
                             }
                             Icon(
                                 Icons.Outlined.Edit,
-                                contentDescription = "Edit time",
+                                contentDescription = t("Edit time"),
                                 tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -282,7 +282,7 @@ fun TriggersScreen(
                             Spacer(Modifier.width(8.dp))
                             Icon(
                                 Icons.Outlined.Close,
-                                contentDescription = "Remove",
+                                contentDescription = t("Remove"),
                                 tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -303,8 +303,8 @@ fun TriggersScreen(
             // Manage card (own card)
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Triggers", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Triggers"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_TRIGGERS) })
                 }
             }
@@ -321,7 +321,7 @@ fun TriggersScreen(
             BaseCard {
                 // Frequent section
                 if (frequentLabels.isNotEmpty()) {
-                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { trig ->
                             TriggerButton(trig.label, trig.iconKey, trig.label in selectedLabels, daysAgo = recent.daysAgo[trig.label]) {
@@ -353,7 +353,7 @@ fun TriggersScreen(
                 }
 
                 if (pool.isEmpty()) {
-                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -366,12 +366,12 @@ fun TriggersScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Cancel" else "Back") }
+                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
                     onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.MEDICINES) },
                     enabled = !quickLogMode || draft.triggers.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Save" else "Next") }
+                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -403,33 +403,33 @@ private fun TriggerTimeDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "When did this start?",
+                    t("When did this start?"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    "Time: ${formatTriggerTime(pickedIso)}",
+                    t("Time: %s", formatTriggerTime(pickedIso)),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 AppDateTimePicker(
-                    label = "Select time",
+                    label = t("Select time"),
                     onDateTimeSelected = { iso -> pickedIso = iso }
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(pickedIso) }) {
-                Text("Set time", color = AppTheme.AccentPurple)
+                Text(t("Set time"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
                 TextButton(onClick = onSkip) {
-                    Text("Skip", color = Color(0xFFFFB74D))
+                    Text(t("Skip"), color = Color(0xFFFFB74D))
                 }
             }
         }
@@ -491,8 +491,7 @@ private fun TriggerButton(label: String, iconKey: String? = null, isSelected: Bo
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            label,
+        Text(t(label),
             color = textColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
@@ -502,9 +501,9 @@ private fun TriggerButton(label: String, iconKey: String? = null, isSelected: Bo
         if (isSelected && daysAgo != null && daysAgo > 0) {
             Text(
                 when (daysAgo) {
-                    1 -> "yesterday"
-                    2 -> "2d ago"
-                    3 -> "3d ago"
+                    1 -> t("yesterday")
+                    2 -> t("2d ago")
+                    3 -> t("3d ago")
                     else -> ""
                 },
                 color = Color.White.copy(alpha = 0.5f),

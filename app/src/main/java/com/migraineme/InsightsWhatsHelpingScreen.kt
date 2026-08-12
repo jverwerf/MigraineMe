@@ -54,7 +54,7 @@ fun InsightsWhatsHelpingScreen(
                         verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
                         Spacer(Modifier.width(12.dp))
-                        Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -65,9 +65,9 @@ fun InsightsWhatsHelpingScreen(
                         BrainyBlobIcon(R.drawable.brainy_gardener_small)
                         Spacer(Modifier.width(10.dp))
                         Column {
-                            Text("Well Done", color = AppTheme.TitleColor,
+                            Text(t("Well Done"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Habits that show up on your migraine-free days",
+                            Text(t("Habits that show up on your migraine-free days"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -82,9 +82,9 @@ fun InsightsWhatsHelpingScreen(
                         BrainyBlobIcon(R.drawable.brainy_runner_small)
                         Spacer(Modifier.width(10.dp))
                         Column {
-                            Text("What Drives It", color = AppTheme.TitleColor,
+                            Text(t("What Drives It"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("What makes those habits happen",
+                            Text(t("What makes those habits happen"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -98,10 +98,10 @@ fun InsightsWhatsHelpingScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Canvas(Modifier.size(36.dp)) { HubIcons.run { drawShieldCheck(WD_GREEN) } }
                         Spacer(Modifier.height(8.dp))
-                        Text("Nothing to show yet", color = AppTheme.TitleColor,
+                        Text(t("Nothing to show yet"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
-                        Text("Keep logging — as your sleep, stress and habit data builds up, the things you're doing right show up here.",
+                        Text(t("Keep logging — as your sleep, stress and habit data builds up, the things you're doing right show up here."),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center)
                     }
@@ -138,7 +138,7 @@ internal fun WellDoneDirectRow(stat: EdgeFunctionsService.CorrelationStat) {
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             ConfidenceDotsGreen(stat.pValue)
         }
-        Text("On ${stat.pctControlWindows.toInt()}% of your migraine-free days.",
+        Text(t("On %s%% of your migraine-free days.", stat.pctControlWindows.toInt()),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
@@ -153,13 +153,13 @@ internal fun WellDoneChainRow(stat: EdgeFunctionsService.CorrelationStat) {
             Text("${prettyLabel(stat.factorName)} → ", color = Color.White,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
             BrainyRowIcon(stat.factorB)
-            Text("steady ${prettyLabel(stat.factorB ?: "").lowercase()}",
+            Text(t("steady %s", prettyLabel(stat.factorB ?: "").lowercase()),
                 color = Color.White,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             ConfidenceDotsGreen(stat.pValue)
         }
-        Text("Steady ${stat.pctControlWindows.toInt()}% of the time with it, ${stat.pctMigraineWindows.toInt()}% without.",
+        Text(t("Steady %1\$s%% of the time with it, %2\$s%% without.", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }

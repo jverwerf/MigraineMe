@@ -76,7 +76,7 @@ fun OnboardingPaywallScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple, strokeWidth = 2.dp, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.height(16.dp))
-                Text("Preparing your experience...", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Preparing your experience..."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
         return
@@ -102,13 +102,13 @@ fun OnboardingPaywallScreen(
                 }
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    if (premiumState.tier == PremiumTier.TRIAL) "Your Free Trial is Active!" else "You're Premium!",
+                    if (premiumState.tier == PremiumTier.TRIAL) t("Your Free Trial is Active!") else t("You're Premium!"),
                     color = Color.White,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "All features are unlocked.",
+                    t("All features are unlocked."),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -179,7 +179,7 @@ fun OnboardingPaywallScreen(
                         .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        "14-DAY FREE TRIAL",
+                        t("14-DAY FREE TRIAL"),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
@@ -191,7 +191,7 @@ fun OnboardingPaywallScreen(
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    "Try Premium free\nfor 14 days",
+                    t("Try Premium free\nfor 14 days"),
                     color = Color.White,
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center
@@ -200,7 +200,7 @@ fun OnboardingPaywallScreen(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "Unlock all insights, risk forecasts, and AI features. Cancel anytime before your trial ends — you won't be charged.",
+                    t("Unlock all insights, risk forecasts, and AI features. Cancel anytime before your trial ends — you won't be charged."),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
@@ -245,14 +245,14 @@ fun OnboardingPaywallScreen(
                                 Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            if (pkg.isAnnual) "Annual" else "Monthly",
+                                            if (pkg.isAnnual) t("Annual") else t("Monthly"),
                                             color = Color.White,
                                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                                         )
                                         if (pkg.isAnnual) {
                                             Spacer(Modifier.width(8.dp))
                                             Text(
-                                                "BEST VALUE",
+                                                t("BEST VALUE"),
                                                 color = AppTheme.AccentPurple,
                                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                                 modifier = Modifier
@@ -263,7 +263,7 @@ fun OnboardingPaywallScreen(
                                     }
                                     if (pkg.pricePerMonth != null) {
                                         Text(
-                                            "Just ${pkg.pricePerMonth}/month",
+                                            t("Just %s/month", pkg.pricePerMonth),
                                             color = AppTheme.SubtleTextColor,
                                             style = MaterialTheme.typography.bodySmall
                                         )
@@ -316,8 +316,8 @@ fun OnboardingPaywallScreen(
                         ) {
                             BrainyBlobIcon(resId = resId)
                             Column {
-                                Text(title, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                                Text(t(title), color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text(t(subtitle), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -328,7 +328,7 @@ fun OnboardingPaywallScreen(
                 // ── Promo Code ──
                 TextButton(onClick = { promoExpanded = !promoExpanded }) {
                     Text(
-                        if (promoExpanded) "Hide promo code" else "Have a promo code?",
+                        if (promoExpanded) t("Hide promo code") else t("Have a promo code?"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -343,7 +343,7 @@ fun OnboardingPaywallScreen(
                         OutlinedTextField(
                             value = promoCode,
                             onValueChange = { promoCode = it.uppercase().take(30); promoSuccess = null; error = null },
-                            placeholder = { Text("Enter code", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                            placeholder = { Text(t("Enter code"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -388,7 +388,7 @@ fun OnboardingPaywallScreen(
                             if (promoLoading) {
                                 CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                             } else {
-                                Text("Apply", fontWeight = FontWeight.SemiBold)
+                                Text(t("Apply"), fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -411,12 +411,12 @@ fun OnboardingPaywallScreen(
                         onError = { msg -> error = msg }
                     )
                 }) {
-                    Text("Restore Purchases", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Restore Purchases"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
 
                 // Subscription terms (clear auto-renewal disclosure)
                 Text(
-                    "Free for 14 days, then the price shown. Auto-renews until cancelled. Cancel anytime in Play Store settings.",
+                    t("Free for 14 days, then the price shown. Auto-renews until cancelled. Cancel anytime in Play Store settings."),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = TextAlign.Center,
@@ -425,7 +425,7 @@ fun OnboardingPaywallScreen(
 
                 Row(horizontalArrangement = Arrangement.Center) {
                     Text(
-                        "Terms of Service",
+                        t("Terms of Service"),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                         style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
                         modifier = Modifier.clickable {
@@ -434,7 +434,7 @@ fun OnboardingPaywallScreen(
                     )
                     Text("  •  ", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f), style = MaterialTheme.typography.labelSmall)
                     Text(
-                        "Privacy Policy",
+                        t("Privacy Policy"),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                         style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
                         modifier = Modifier.clickable {
@@ -453,7 +453,7 @@ fun OnboardingPaywallScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Maybe later", color = AppTheme.SubtleTextColor)
+                    Text(t("Maybe later"), color = AppTheme.SubtleTextColor)
                 }
 
                 Button(
@@ -482,9 +482,9 @@ fun OnboardingPaywallScreen(
                     if (purchasing) {
                         CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
-                        Text("Processing…")
+                        Text(t("Processing…"))
                     } else {
-                        Text("Start Free Trial"); Spacer(Modifier.width(4.dp))
+                        Text(t("Start Free Trial")); Spacer(Modifier.width(4.dp))
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                     }
                 }

@@ -88,13 +88,13 @@ fun TimingScreen(
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Log", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Log"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -145,12 +145,12 @@ fun TimingScreen(
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "It's happening right now",
+                            t("It's happening right now"),
                             color = Color.White,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
-                            "Tap to log an attack starting now. Add details later.",
+                            t("Tap to log an attack starting now. Add details later."),
                             color = Color.White.copy(alpha = 0.75f),
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -168,18 +168,18 @@ fun TimingScreen(
             HeroCard {
                 Icon(
                     imageVector = Icons.Outlined.AccessTime,
-                    contentDescription = "Timing",
+                    contentDescription = t("Timing"),
                     tint = AppTheme.AccentPink,
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
-                    "When did it happen?",
+                    t("When did it happen?"),
                     color = Color.White,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    "Set when the migraine started and ended",
+                    t("Set when the migraine started and ended"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -193,10 +193,10 @@ fun TimingScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Started", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Started"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
                 AppDateTimePicker(
-                    label = beganAt?.let { "Started: ${formatIsoDdMmYyHm(it)}" } ?: "Set start time"
+                    label = beganAt?.let { "Started: ${formatIsoDdMmYyHm(it)}" } ?: t("Set start time")
                 ) { beganAt = it; syncDraft() }
             }
 
@@ -205,10 +205,10 @@ fun TimingScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Ended", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Ended"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
                 AppDateTimePicker(
-                    label = endedAt?.let { "Ended: ${formatIsoDdMmYyHm(it)}" } ?: "Set end time (optional)"
+                    label = endedAt?.let { "Ended: ${formatIsoDdMmYyHm(it)}" } ?: t("Set end time (optional)")
                 ) { endedAt = it; syncDraft() }
             }
 
@@ -217,7 +217,7 @@ fun TimingScreen(
                 val duration = computeDurationText(beganAt!!, endedAt!!)
                 if (duration != null) {
                     BaseCard {
-                        Text("Duration: $duration", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                        Text(t("Duration: %s", duration), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
@@ -231,11 +231,11 @@ fun TimingScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
                 Button(
                     onClick = { navController.navigate(Routes.PAINT_PICTURE) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))

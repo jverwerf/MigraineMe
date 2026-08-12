@@ -203,13 +203,13 @@ fun InsightsDetailScreen(
 
             // ========== 2. GRAPH CARD ==========
             HeroCard {
-                Text("Migraine Timeline", color = AppTheme.TitleColor,
+                Text(t("Migraine Timeline"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
 
                 if (filteredSorted.isEmpty()) {
                     Text(
-                        if (sorted.isEmpty()) "No migraines logged yet"
-                        else "No migraines match filters",
+                        if (sorted.isEmpty()) t("No migraines logged yet")
+                        else t("No migraines match filters"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -273,7 +273,7 @@ fun InsightsDetailScreen(
                     SourceBadgeRow(metricSources.sorted())
                 }
 
-                Text("Window around migraine", color = AppTheme.SubtleTextColor,
+                Text(t("Window around migraine"), color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
 
@@ -284,10 +284,10 @@ fun InsightsDetailScreen(
             // ========== 3. METRIC PICKER (below graph) ==========
             if (available.isNotEmpty()) {
                 BaseCard {
-                    Text("Overlay Metrics", color = AppTheme.TitleColor,
+                    Text(t("Overlay Metrics"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(2.dp))
-                    Text("Tap to toggle metric lines. Highlighted chips were logged with this attack.",
+                    Text(t("Tap to toggle metric lines. Highlighted chips were logged with this attack."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
@@ -358,24 +358,24 @@ private fun FilterCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(Icons.Filled.FilterList,
-                contentDescription = "Filter",
+                contentDescription = t("Filter"),
                 tint = if (hasFilters) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
                 modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    if (hasFilters) "Filters ($activeCount)"
-                    else "Filter Migraines",
+                    if (hasFilters) t("Filters (%s)", activeCount)
+                    else t("Filter Migraines"),
                     color = if (hasFilters) Color.White else AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 if (hasFilters) {
-                    Text("$filteredCount of $totalCount migraines",
+                    Text(t("%1\$s of %2\$s migraines", filteredCount, totalCount),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall)
                 }
             }
             if (hasFilters) {
-                Text("Clear",
+                Text(t("Clear"),
                     color = AppTheme.AccentPurple.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier
@@ -387,7 +387,7 @@ private fun FilterCard(
             Icon(
                 if (expanded) Icons.Filled.KeyboardArrowUp
                 else Icons.Filled.KeyboardArrowDown,
-                contentDescription = "Expand",
+                contentDescription = t("Expand"),
                 tint = AppTheme.SubtleTextColor,
                 modifier = Modifier.size(20.dp))
         }
@@ -401,7 +401,7 @@ private fun FilterCard(
                     val timeLabel = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null) {
                         val df = java.time.format.DateTimeFormatter.ofPattern("MMM d")
                         "${df.format(customRange.from)} — ${df.format(customRange.to)}"
-                    } else timeFrame.label
+                    } else t(timeFrame.label)
                     Row(
                         Modifier
                             .clip(RoundedCornerShape(16.dp))
@@ -432,7 +432,7 @@ private fun FilterCard(
         ) {
             Column(Modifier.padding(top = 8.dp)) {
                 // Timeframe selector
-                Text("Time Range", color = AppTheme.AccentPurple.copy(alpha = 0.8f),
+                Text(t("Time Range"), color = AppTheme.AccentPurple.copy(alpha = 0.8f),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(bottom = 2.dp))
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -464,7 +464,7 @@ private fun FilterCard(
                     ) {
                         // From button
                         Column(Modifier.weight(1f)) {
-                            Text("From", color = AppTheme.SubtleTextColor,
+                            Text(t("From"), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall)
                             Row(
                                 Modifier
@@ -484,7 +484,7 @@ private fun FilterCard(
                             modifier = Modifier.padding(top = 12.dp))
                         // To button
                         Column(Modifier.weight(1f)) {
-                            Text("To", color = AppTheme.SubtleTextColor,
+                            Text(t("To"), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall)
                             Row(
                                 Modifier
@@ -540,10 +540,10 @@ private fun FilterCard(
                         onCustomRange(customFrom, customTo)
                     }
                     showFromPicker = false
-                }) { Text("OK") }
+                }) { Text(t("OK")) }
             },
             dismissButton = {
-                TextButton(onClick = { showFromPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showFromPicker = false }) { Text(t("Cancel")) }
             }
         ) {
             DatePicker(state = state)
@@ -566,10 +566,10 @@ private fun FilterCard(
                         onCustomRange(customFrom, customTo)
                     }
                     showToPicker = false
-                }) { Text("OK") }
+                }) { Text(t("OK")) }
             },
             dismissButton = {
-                TextButton(onClick = { showToPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showToPicker = false }) { Text(t("Cancel")) }
             }
         ) {
             DatePicker(state = state)
@@ -592,7 +592,7 @@ private fun ActiveFilterChip(
     ) {
         Box(Modifier.size(6.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(4.dp))
-        Text(tag.label, color = color,
+        Text(t(tag.label), color = color,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.width(4.dp))
@@ -618,7 +618,7 @@ private fun FilterOptionChip(
         Box(Modifier.size(6.dp).clip(CircleShape)
             .background(if (active) color else color.copy(alpha = 0.3f)))
         Spacer(Modifier.width(4.dp))
-        Text(label, color = tc,
+        Text(t(label), color = tc,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -737,13 +737,13 @@ private fun DetailMigraineSelector(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Older",
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Older"),
                 tint = if (idx < sorted.size - 1) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-            Text(displayTitle ?: sel?.label ?: "Migraine", color = Color.White,
+            Text(displayTitle ?: sel?.label ?: t("Migraine"), color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sel != null) {
@@ -753,18 +753,18 @@ private fun DetailMigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "-"}/10",
+                    Text(t("%1\$s%2\$sm • Severity: %3\$s/10", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: "-"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "-"}/10",
+                    Text(t("Severity: %s/10", sel.severity ?: "-"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Text("${idx + 1} of ${sorted.size}", color = AppTheme.AccentPurple,
+            Text(t("%1\$s of %2\$s", idx + 1, sorted.size), color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
         }
         IconButton(onClick = onNext, enabled = idx > 0) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, "Newer",
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, t("Newer"),
                 tint = if (idx > 0) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
@@ -780,7 +780,7 @@ private fun DetailChip(n: Int, label: String, color: Color) {
         Text("$n", color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.width(2.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -806,7 +806,7 @@ private fun DetailToggle(
                 .background(if (active) color else color.copy(alpha = 0.3f)))
         }
         Spacer(Modifier.width(4.dp))
-        Text(label, color = tc,
+        Text(t(label), color = tc,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
     }
 }

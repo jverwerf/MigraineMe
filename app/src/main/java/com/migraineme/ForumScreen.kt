@@ -82,7 +82,7 @@ fun ForumPostCard(
                 Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        post.profiles?.displayName ?: "Anonymous",
+                        post.profiles?.displayName ?: t("Anonymous"),
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
@@ -94,7 +94,7 @@ fun ForumPostCard(
                 }
                 Box {
                     IconButton(onClick = { showMenu = true }, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Outlined.MoreVert, "More", tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Outlined.MoreVert, t("More"), tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
                     }
                     DropdownMenu(
                         expanded = showMenu,
@@ -103,13 +103,13 @@ fun ForumPostCard(
                     ) {
                         if (isOwn) {
                             DropdownMenuItem(
-                                text = { Text("Delete", color = Color(0xFFFF6B6B), style = MaterialTheme.typography.bodySmall) },
+                                text = { Text(t("Delete"), color = Color(0xFFFF6B6B), style = MaterialTheme.typography.bodySmall) },
                                 leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(16.dp)) },
                                 onClick = { showMenu = false; onDelete() }
                             )
                         } else {
                             DropdownMenuItem(
-                                text = { Text("Report", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) },
+                                text = { Text(t("Report"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) },
                                 leadingIcon = { Icon(Icons.Outlined.Flag, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp)) },
                                 onClick = { showMenu = false; onReport() }
                             )
@@ -145,7 +145,7 @@ fun ForumPostCard(
                 Icon(Icons.Outlined.ChatBubbleOutline, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    "${post.replyCount} ${if (post.replyCount == 1) "reply" else "replies"}",
+                    if (post.replyCount == 1) t("1 reply") else t("%s replies", post.replyCount),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -165,7 +165,7 @@ fun ForumPostCard(
                     IconButton(onClick = onToggleMeToo, modifier = Modifier.size(28.dp)) {
                         Icon(
                             if (isMeToo) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = if (isMeToo) "Unlike" else "Me too",
+                            contentDescription = if (isMeToo) t("Unlike") else t("Me too"),
                             tint = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor,
                             modifier = Modifier.size(18.dp)
                         )
@@ -200,13 +200,13 @@ fun ReportDialog(
             containerColor = Color(0xFF1A0628),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text("Report submitted", fontWeight = FontWeight.Bold) },
-            text = { Text("Thanks for letting us know. We'll review this content shortly.", style = MaterialTheme.typography.bodySmall) },
+            title = { Text(t("Report submitted"), fontWeight = FontWeight.Bold) },
+            text = { Text(t("Thanks for letting us know. We'll review this content shortly."), style = MaterialTheme.typography.bodySmall) },
             confirmButton = {
                 Button(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Done") }
+                ) { Text(t("Done")) }
             }
         )
         return
@@ -221,7 +221,7 @@ fun ReportDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    "Why are you reporting this?",
+                    t("Why are you reporting this?"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -256,10 +256,10 @@ fun ReportDialog(
                 },
                 enabled = selected.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-            ) { Text("Report") }
+            ) { Text(t("Report")) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = AppTheme.SubtleTextColor) }
+            TextButton(onClick = onDismiss) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
         }
     )
 }
@@ -279,13 +279,13 @@ fun CreateForumPostDialog(
         containerColor = Color(0xFF1A0628),
         titleContentColor = Color.White,
         textContentColor = AppTheme.BodyTextColor,
-        title = { Text("New Discussion", fontWeight = FontWeight.Bold) },
+        title = { Text(t("New Discussion"), fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { if (it.length <= 200) title = it },
-                    placeholder = { Text("Title...", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium) },
+                    placeholder = { Text(t("Title..."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium) },
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -300,7 +300,7 @@ fun CreateForumPostDialog(
                 OutlinedTextField(
                     value = body,
                     onValueChange = { if (it.length <= 5000) body = it },
-                    placeholder = { Text("What's on your mind?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) },
+                    placeholder = { Text(t("What's on your mind?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(160.dp),
@@ -320,10 +320,10 @@ fun CreateForumPostDialog(
                 onClick = { onPost(title.trim(), body.trim()) },
                 enabled = title.isNotBlank() && body.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-            ) { Text("Post") }
+            ) { Text(t("Post")) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = AppTheme.SubtleTextColor) }
+            TextButton(onClick = onDismiss) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
         }
     )
 }
@@ -350,7 +350,7 @@ fun ForumPostDetailScreen(
 
     if (!isPinned && post == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Discussion not found", color = AppTheme.SubtleTextColor)
+            Text(t("Discussion not found"), color = AppTheme.SubtleTextColor)
         }
         return
     }
@@ -370,7 +370,7 @@ fun ForumPostDetailScreen(
     // Report dialogs
     if (reportingPost && post != null) {
         ReportDialog(
-            title = "Report post",
+            title = t("Report post"),
             onDismiss = { reportingPost = false },
             onSubmit = { reason ->
                 accessToken?.let { vm.reportContent(it, postId = post.id, commentId = null, reason = reason) }
@@ -379,7 +379,7 @@ fun ForumPostDetailScreen(
     }
     reportingComment?.let { comment ->
         ReportDialog(
-            title = "Report comment",
+            title = t("Report comment"),
             onDismiss = { reportingComment = null },
             onSubmit = { reason ->
                 accessToken?.let { vm.reportContent(it, postId = null, commentId = comment.id, reason = reason) }
@@ -393,12 +393,12 @@ fun ForumPostDetailScreen(
             onDismissRequest = { vm.dismissModerationAlert() },
             confirmButton = {
                 TextButton(onClick = { vm.dismissModerationAlert() }) {
-                    Text("OK", color = AppTheme.AccentPurple)
+                    Text(t("OK"), color = AppTheme.AccentPurple)
                 }
             },
             icon = { Icon(Icons.Outlined.Info, contentDescription = null, tint = AppTheme.AccentPurple) },
-            title = { Text("Content under review", color = Color.White, fontWeight = FontWeight.Bold) },
-            text = { Text("Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly.", color = Color.White.copy(alpha = 0.7f)) },
+            title = { Text(t("Content under review"), color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text(t("Your post has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly."), color = Color.White.copy(alpha = 0.7f)) },
             containerColor = Color(0xFF1A0029),
             shape = RoundedCornerShape(16.dp)
         )
@@ -422,10 +422,10 @@ fun ForumPostDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, t("Back"), tint = Color.White)
                 }
                 Text(
-                    "Discussion",
+                    t("Discussion"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f)
@@ -443,7 +443,7 @@ fun ForumPostDetailScreen(
                         IconButton(onClick = { vm.toggleMeToo(accessToken, postId) }) {
                             Icon(
                                 if (isMeToo) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = if (isMeToo) "Unlike" else "Me too",
+                                contentDescription = if (isMeToo) t("Unlike") else t("Me too"),
                                 tint = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor
                             )
                         }
@@ -451,7 +451,7 @@ fun ForumPostDetailScreen(
                     // Report post button (only for others' posts)
                     if (post != null && post.userId != currentUserId) {
                         IconButton(onClick = { reportingPost = true }) {
-                            Icon(Icons.Outlined.Flag, "Report", tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f))
+                            Icon(Icons.Outlined.Flag, t("Report"), tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f))
                         }
                     }
                 }
@@ -499,7 +499,7 @@ fun ForumPostDetailScreen(
                         Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                post.profiles?.displayName ?: "Anonymous",
+                                post.profiles?.displayName ?: t("Anonymous"),
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                             )
@@ -525,7 +525,7 @@ fun ForumPostDetailScreen(
             // ── Replies card ──
             BaseCard {
                 Text(
-                    "Replies (${state.forumComments.size})",
+                    t("Replies (%s)", state.forumComments.size),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -536,7 +536,7 @@ fun ForumPostDetailScreen(
                         CircularProgressIndicator(color = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                     }
                 } else if (topLevel.isEmpty()) {
-                    Text("No replies yet — be the first!", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No replies yet — be the first!"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 } else {
                     topLevel.forEach { comment ->
                         ForumCommentBubble(
@@ -585,13 +585,13 @@ fun ForumPostDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Replying to ${replyingTo!!.profiles?.displayName ?: "user"}",
+                    t("Replying to %s", replyingTo!!.profiles?.displayName ?: t("user")),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = { replyingTo = null }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Outlined.Close, "Cancel", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Outlined.Close, t("Cancel"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
                 }
             }
             Spacer(Modifier.height(4.dp))
@@ -609,7 +609,7 @@ fun ForumPostDetailScreen(
                 OutlinedTextField(
                     value = commentText,
                     onValueChange = { if (it.length <= 2000) commentText = it },
-                    placeholder = { Text("Write a reply...", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) },
+                    placeholder = { Text(t("Write a reply..."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) },
                     modifier = Modifier.weight(1f),
                     textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -637,7 +637,7 @@ fun ForumPostDetailScreen(
                     if (posting) {
                         CircularProgressIndicator(color = AppTheme.AccentPurple, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     } else {
-                        Icon(Icons.Outlined.Send, "Post", tint = if (commentText.isNotBlank()) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
+                        Icon(Icons.Outlined.Send, t("Post"), tint = if (commentText.isNotBlank()) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
                     }
                 }
             }
@@ -659,22 +659,22 @@ private fun ForumCommentBubble(
         Row(verticalAlignment = Alignment.CenterVertically) {
             AvatarCircle(comment.profiles?.avatarUrl, comment.profiles?.displayName, 72)
             Spacer(Modifier.width(8.dp))
-            Text(comment.profiles?.displayName ?: "Anonymous", color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(comment.profiles?.displayName ?: t("Anonymous"), color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.width(8.dp))
             Text(formatForumDate(comment.createdAt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.weight(1f))
             if (onReply != null) {
                 IconButton(onClick = onReply, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.AutoMirrored.Outlined.Reply, "Reply", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Outlined.Reply, t("Reply"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                 }
             }
             if (isOwn) {
                 IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Outlined.Delete, "Delete", tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Outlined.Delete, t("Delete"), tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
                 }
             } else {
                 IconButton(onClick = onReport, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Outlined.Flag, "Report", tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Outlined.Flag, t("Report"), tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
                 }
             }
         }

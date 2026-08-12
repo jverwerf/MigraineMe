@@ -169,8 +169,8 @@ fun MenstruationSettingsScreen(
                 }
 
                 if (settings?.lastMenstruationDate == null) {
-                    Text("No cycle data yet", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Configure your cycle settings below to get started.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No cycle data yet"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Configure your cycle settings below to get started."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 } else {
                     val s = settings!!
                     val nextExpected = s.lastMenstruationDate!!.plusDays(s.avgCycleLength.toLong())
@@ -189,7 +189,7 @@ fun MenstruationSettingsScreen(
                         else -> AppTheme.AccentPurple
                     }
 
-                    Text("Next Period", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Next Period"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Text(countdownText, color = countdownColor, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
 
                     HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
@@ -212,10 +212,10 @@ fun MenstruationSettingsScreen(
                 Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     Text(
-                        "Your predicted period date gets a single trigger. The risk curve controls " +
-                        "how many points it contributes on each day relative to the predicted date. " +
-                        "When the predicted date arrives, it auto-converts to a real period log and " +
-                        "the next prediction moves forward by one cycle.",
+                        t("Your predicted period date gets a single trigger. The risk curve controls ") +
+                        t("how many points it contributes on each day relative to the predicted date. ") +
+                        t("When the predicted date arrives, it auto-converts to a real period log and ") +
+                        t("the next prediction moves forward by one cycle."),
                         color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -227,7 +227,7 @@ fun MenstruationSettingsScreen(
             BaseCard {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.CalendarMonth, null, tint = Color(0xFFE57373), modifier = Modifier.size(18.dp))
-                    Text("Log a Period", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Log a Period"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 }
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -262,7 +262,7 @@ fun MenstruationSettingsScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373))
                     ) {
                         if (addingPeriod) CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                        else Text("Add")
+                        else Text(t("Add"))
                     }
                 }
             }
@@ -273,15 +273,15 @@ fun MenstruationSettingsScreen(
             BaseCard {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.Settings, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                    Text("Cycle Settings", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Cycle Settings"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 }
 
                 // Last period date
-                Text("Last Period Start Date", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Last Period Start Date"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     MStyledDatePicker(isoDate = lastDateText, enabled = !saving, onDateSelected = { lastDateText = it }, modifier = Modifier.weight(1f))
                     if (lastDateText.isNotBlank()) {
-                        TextButton(onClick = { lastDateText = "" }, enabled = !saving) { Text("Clear", color = AppTheme.AccentPurple) }
+                        TextButton(onClick = { lastDateText = "" }, enabled = !saving) { Text(t("Clear"), color = AppTheme.AccentPurple) }
                     }
                 }
 
@@ -290,8 +290,8 @@ fun MenstruationSettingsScreen(
                 // Average cycle length
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.weight(1f)) {
-                        Text("Average Cycle Length", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Typical range: 21–35 days", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Average Cycle Length"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Typical range: 21–35 days"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                     OutlinedTextField(
                         value = avgCycleText,
@@ -310,8 +310,8 @@ fun MenstruationSettingsScreen(
                 // Auto-update toggle
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Auto-update Average", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Recalculate from logged periods", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Auto-update Average"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Recalculate from logged periods"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                     Switch(
                         checked = autoUpdateAvg, onCheckedChange = { autoUpdateAvg = it }, enabled = !saving,
@@ -324,7 +324,7 @@ fun MenstruationSettingsScreen(
                     modifier = Modifier.fillMaxWidth(), enabled = !saving,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (saving) "Saving…" else "Save Settings") }
+                ) { Text(if (saving) t("Saving…") else t("Save Settings")) }
             }
 
             // ═══════════════════════════════════════════
@@ -334,9 +334,9 @@ fun MenstruationSettingsScreen(
                 // Header
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.TrendingDown, null, tint = Color(0xFFE57373), modifier = Modifier.size(18.dp))
-                    Text("Menstruation Risk Curve", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Menstruation Risk Curve"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 }
-                Text("Tap a bar to edit · Risk points per day relative to predicted period", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("Tap a bar to edit · Risk points per day relative to predicted period"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
 
                 // ── Visual bar chart ──
                 val values = decayDays.map { it.toDoubleOrNull() ?: 0.0 }
@@ -432,7 +432,7 @@ fun MenstruationSettingsScreen(
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                "Risk points contributed on this day",
+                                t("Risk points contributed on this day"),
                                 color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall
                             )
@@ -479,7 +479,7 @@ fun MenstruationSettingsScreen(
 
                 // ── Save / Reset ──
                 if (saveSuccess) {
-                    Text("✓ Saved successfully", color = Color(0xFF81C784), style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                    Text(t("✓ Saved successfully"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                 }
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -490,7 +490,7 @@ fun MenstruationSettingsScreen(
                         },
                         modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-                    ) { Text("Reset Defaults") }
+                    ) { Text(t("Reset Defaults")) }
                     Button(
                         onClick = { saveDecayWeights() },
                         modifier = Modifier.weight(1f), enabled = !saving,
@@ -498,7 +498,7 @@ fun MenstruationSettingsScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                     ) {
                         if (saving) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                        else Text("Save Weights")
+                        else Text(t("Save Weights"))
                     }
                 }
             }
@@ -514,7 +514,7 @@ fun MenstruationSettingsScreen(
 @Composable
 private fun MStatColumn(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(2.dp))
         Text(value, color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
     }
@@ -524,7 +524,7 @@ private fun MStatColumn(label: String, value: String) {
 private fun MPhaseChip(label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Box(Modifier.size(8.dp).background(color.copy(alpha = 0.6f), RoundedCornerShape(2.dp)))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -544,7 +544,7 @@ private fun MStyledDatePicker(
             }, initial.year, initial.monthValue - 1, initial.dayOfMonth).show()
         },
         enabled = enabled, modifier = modifier, shape = RoundedCornerShape(12.dp)
-    ) { Text(if (isoDate.isBlank()) "Select date" else isoDate, color = Color.White) }
+    ) { Text(if (isoDate.isBlank()) t("Select date") else isoDate, color = Color.White) }
 }
 
 private fun validateMenstrInputs(lastDateText: String, avgCycleText: String): Triple<LocalDate?, Int, String?> {

@@ -236,8 +236,8 @@ fun OnboardingChoiceCard(label: String, description: String, isSelected: Boolean
                 Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(14.dp))
             } else Box(Modifier.size(20.dp).border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape))
             Column {
-                Text(label, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text(description, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t(label), color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t(description), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -249,7 +249,7 @@ fun OnboardingChoiceChip(label: String, isSelected: Boolean, onClick: () -> Unit
         .background(if (isSelected) AppTheme.AccentPurple.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.04f))
         .then(if (isSelected) Modifier.border(1.dp, AppTheme.AccentPurple, RoundedCornerShape(10.dp)) else Modifier)
         .clickable { onClick() }.padding(horizontal = 14.dp, vertical = 10.dp)) {
-        Text(label, color = if (isSelected) AppTheme.AccentPurple else AppTheme.BodyTextColor,
+        Text(t(label), color = if (isSelected) AppTheme.AccentPurple else AppTheme.BodyTextColor,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal))
     }
 }
@@ -267,8 +267,8 @@ fun OnboardingQuestionSection(question: String, content: @Composable ColumnScope
 fun SeverityQuestionCard(question: SeverityQuestion, selected: SeverityChoice, onSelect: (SeverityChoice) -> Unit) {
     Card(colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.04f)), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp)) {
-            Text(question.displayName, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-            Text(question.description, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t(question.displayName), color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
+            Text(t(question.description), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 SeverityChoice.entries.reversed().forEach { choice ->
@@ -277,7 +277,7 @@ fun SeverityQuestionCard(question: SeverityQuestion, selected: SeverityChoice, o
                         .background(if (isSelected) choice.color.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.04f))
                         .then(if (isSelected) Modifier.border(1.5.dp, choice.color, RoundedCornerShape(8.dp)) else Modifier.border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(8.dp)))
                         .clickable { onSelect(choice) }, contentAlignment = Alignment.Center) {
-                        Text(choice.label, color = if (isSelected) choice.color else AppTheme.SubtleTextColor,
+                        Text(t(choice.label), color = if (isSelected) choice.color else AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal))
                     }
                 }
@@ -290,7 +290,7 @@ fun SeverityQuestionCard(question: SeverityQuestion, selected: SeverityChoice, o
 fun SuggestionRow(label: String, severity: SeverityChoice, onChange: (SeverityChoice) -> Unit) {
     Row(Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.04f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
+        Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SeverityChoice.entries.reversed().forEach { choice ->
                 val isSelected = choice == severity
@@ -311,9 +311,9 @@ fun DataToggleRow(item: DataCollectionItem, enabled: Boolean, available: Boolean
     Row(Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.04f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(item.displayName, color = if (available) Color.White else AppTheme.SubtleTextColor,
+            Text(t(item.displayName), color = if (available) Color.White else AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-            Text(if (!available) "Requires ${if (item.requiresWearable) "wearable" else "location"}" else item.description,
+            Text(if (!available) (if (item.requiresWearable) t("Requires wearable") else t("Requires location")) else t(item.description),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
         Switch(checked = enabled && available, onCheckedChange = { if (available) onToggle(it) }, enabled = available,

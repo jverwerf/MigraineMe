@@ -73,7 +73,7 @@ fun DiscussionStarterCard(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        "Community",
+                        t("Community"),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
@@ -103,7 +103,7 @@ fun DiscussionStarterCard(
                 )
 
                 Text(
-                    "See what works for them →",
+                    t("See what works for them →"),
                     color = AppTheme.AccentPink,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -151,7 +151,7 @@ fun ThreadSummaryBanner(
                 modifier = Modifier.size(16.dp)
             )
             Text(
-                "Community Summary",
+                t("Community Summary"),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,

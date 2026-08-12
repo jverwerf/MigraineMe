@@ -81,9 +81,9 @@ fun ManageItemsScreen(navController: NavController) {
                             .size(40.dp)
                             .drawBehind { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
                     )
-                    Text("Manage Items", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(t("Manage Items"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     Text(
-                        "Add, remove, or organise your triggers, medicines, reliefs, symptoms, AI companions, and more",
+                        t("Add, remove, or organise your triggers, medicines, reliefs, symptoms, AI companions, and more"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
@@ -96,15 +96,15 @@ fun ManageItemsScreen(navController: NavController) {
                         .offset(x = 10.dp, y = (-14).dp)
                         .size(34.dp)
                 ) {
-                    Icon(Icons.Outlined.Info, contentDescription = "About Manage Items",
+                    Icon(Icons.Outlined.Info, contentDescription = t("About Manage Items"),
                         tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                 }
             }
 
             // Manage cards
             ManageItemRow(
-                title = "Migraines",
-                subtitle = "Pain character & accompanying experiences",
+                title = t("Migraines"),
+                subtitle = t("Pain character & accompanying experiences"),
                 iconColor = AppTheme.AccentPink,
                 drawIcon = { HubIcons.run { drawMigraineStarburst(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_SYMPTOMS) },
@@ -112,8 +112,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Triggers",
-                subtitle = "Manage your trigger pool",
+                title = t("Triggers"),
+                subtitle = t("Manage your trigger pool"),
                 iconColor = Color(0xFFFFB74D),
                 drawIcon = { HubIcons.run { drawTriggerBolt(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_TRIGGERS) },
@@ -121,8 +121,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Medicines",
-                subtitle = "Manage your medicine pool",
+                title = t("Medicines"),
+                subtitle = t("Manage your medicine pool"),
                 iconColor = Color(0xFF4FC3F7),
                 drawIcon = { HubIcons.run { drawMedicinePill(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_MEDICINES) },
@@ -130,8 +130,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Reliefs",
-                subtitle = "Manage your relief pool",
+                title = t("Reliefs"),
+                subtitle = t("Manage your relief pool"),
                 iconColor = Color(0xFF81C784),
                 drawIcon = { HubIcons.run { drawReliefLeaf(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_RELIEFS) },
@@ -139,8 +139,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Prodromes",
-                subtitle = "Early warning signs",
+                title = t("Prodromes"),
+                subtitle = t("Early warning signs"),
                 iconColor = Color(0xFFCE93D8),
                 drawIcon = { HubIcons.run { drawProdromeEye(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_PRODROMES) },
@@ -148,8 +148,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Locations",
-                subtitle = "Where were you?",
+                title = t("Locations"),
+                subtitle = t("Where were you?"),
                 iconColor = Color(0xFF64B5F6),
                 drawIcon = { HubIcons.run { drawLocationPin(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_LOCATIONS) },
@@ -157,8 +157,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Activities",
-                subtitle = "What were you doing?",
+                title = t("Activities"),
+                subtitle = t("What were you doing?"),
                 iconColor = Color(0xFFFF8A65),
                 drawIcon = { HubIcons.run { drawActivityPulse(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_ACTIVITIES) },
@@ -166,8 +166,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Missed Activities",
-                subtitle = "What did you miss?",
+                title = t("Missed Activities"),
+                subtitle = t("What did you miss?"),
                 iconColor = Color(0xFFEF9A9A),
                 drawIcon = { HubIcons.run { drawMissedActivity(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_MISSED_ACTIVITIES) },
@@ -175,8 +175,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Treatment side effects",
-                subtitle = "Symptoms you flag as caused by your treatments",
+                title = t("Treatment side effects"),
+                subtitle = t("Symptoms you flag as caused by your treatments"),
                 iconColor = AppTheme.AccentPurple,
                 drawIcon = { HubIcons.run { drawCapsulePlus(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_TREATMENT_SIDE_EFFECTS) },
@@ -184,8 +184,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "Calendar opt-outs",
-                subtitle = "Titles you've undone from calendar",
+                title = t("Calendar opt-outs"),
+                subtitle = t("Titles you've undone from calendar"),
                 iconColor = Color(0xFF64B5F6),
                 drawIcon = { HubIcons.run { drawCalendarWeek(it) } },
                 onClick = { navController.navigate(Routes.MANAGE_CALENDAR_SKIPS) },
@@ -193,8 +193,8 @@ fun ManageItemsScreen(navController: NavController) {
             )
 
             ManageItemRow(
-                title = "AI Companions",
-                subtitle = "Follow curators that flag relevant articles",
+                title = t("AI Companions"),
+                subtitle = t("Follow curators that flag relevant articles"),
                 iconColor = AppTheme.AccentPurple,
                 materialIcon = Icons.Outlined.SmartToy,
                 onClick = { navController.navigate("companions_manage") },
@@ -213,12 +213,12 @@ fun ManageItemsScreen(navController: NavController) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(20.dp).drawBehind { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } })
                     Spacer(Modifier.width(8.dp))
-                    Text("Manage Items", color = AppTheme.TitleColor,
+                    Text(t("Manage Items"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
             },
             text = { Text(MANAGE_ITEMS_HERO_INFO, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 
@@ -227,11 +227,11 @@ fun ManageItemsScreen(navController: NavController) {
             onDismissRequest = { showInfoFor = null },
             containerColor = Color(0xFF1E0A2E),
             title = {
-                Text("About $key", color = AppTheme.TitleColor,
+                Text(t("About %s", key), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = { Text(MANAGE_ITEM_INFO[key] ?: "", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showInfoFor = null }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showInfoFor = null }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 }
@@ -313,7 +313,7 @@ private fun ManageItemRow(
                     .offset(x = 10.dp, y = (-14).dp)
                     .size(28.dp)
             ) {
-                Icon(Icons.Outlined.Info, contentDescription = "About $title",
+                Icon(Icons.Outlined.Info, contentDescription = t("About %s", title),
                     tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
             }
         }

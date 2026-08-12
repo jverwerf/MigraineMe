@@ -87,7 +87,7 @@ fun DateTimePickerField(
         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.BodyTextColor),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
     ) {
-        Text(label, color = AppTheme.BodyTextColor)
+        Text(t(label), color = AppTheme.BodyTextColor)
     }
 
     // Date picker dialog
@@ -104,11 +104,11 @@ fun DateTimePickerField(
                         }
                     },
                     enabled = datePickerState.selectedDateMillis != null
-                ) { Text("Next", color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
+                ) { Text(t("Next"), color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
             colors = DatePickerDefaults.colors(containerColor = Color(0xFF1E0A2E))
@@ -116,7 +116,7 @@ fun DateTimePickerField(
             DatePicker(
                 state = datePickerState,
                 colors = appDatePickerColors(),
-                title = { Text("Select date", color = Color.White, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) },
+                title = { Text(t("Select date"), color = Color.White, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) },
                 headline = null,
                 showModeToggle = false
             )
@@ -140,14 +140,14 @@ fun DateTimePickerField(
                         onDateTimeSelected(iso)
                         showTimePicker = false
                     }
-                ) { Text("Done", color = AppTheme.AccentPurple) }
+                ) { Text(t("Done"), color = AppTheme.AccentPurple) }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
-            title = { Text("Select time") },
+            title = { Text(t("Select time")) },
             text = {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                     TimePicker(
@@ -219,11 +219,11 @@ fun ThemedDatePicker(
                         }
                     },
                     enabled = datePickerState.selectedDateMillis != null
-                ) { Text("OK", color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
+                ) { Text(t("OK"), color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
             },
             dismissButton = {
                 TextButton(onClick = { showPicker = false }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
             colors = DatePickerDefaults.colors(containerColor = Color(0xFF1E0A2E))

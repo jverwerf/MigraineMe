@@ -247,11 +247,11 @@ fun ProfileScreen(
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text("Updating picture") },
+            title = { Text(t("Updating picture")) },
             text = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(modifier = Modifier.size(22.dp), color = AppTheme.AccentPurple)
-                    Text("Uploading and updating profile…")
+                    Text(t("Uploading and updating profile…"))
                 }
             }
         )
@@ -263,9 +263,9 @@ fun ProfileScreen(
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text("Upload failed") },
+            title = { Text(t("Upload failed")) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { avatarUploadErrorDialog.value = null }) { Text("OK", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { avatarUploadErrorDialog.value = null }) { Text(t("OK"), color = AppTheme.AccentPurple) } }
         )
     }
 
@@ -299,7 +299,7 @@ fun ProfileScreen(
                     ) {
                         val bmp = avatarBitmap.value
                         if (bmp != null) {
-                            Image(bitmap = bmp, contentDescription = "Avatar", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().clip(CircleShape))
+                            Image(bitmap = bmp, contentDescription = t("Avatar"), contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().clip(CircleShape))
                         } else {
                             Text(headerName.trim().firstOrNull()?.uppercase() ?: "?", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
                         }
@@ -313,14 +313,14 @@ fun ProfileScreen(
                             .clickable { imagePickerLauncher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.CameraAlt, "Change picture", tint = Color.White, modifier = Modifier.size(14.dp))
+                        Icon(Icons.Outlined.CameraAlt, t("Change picture"), tint = Color.White, modifier = Modifier.size(14.dp))
                     }
                 }
 
                 // "Change profile picture" link
                 Spacer(Modifier.height(6.dp))
                 TextButton(onClick = { imagePickerLauncher.launch("image/*") }) {
-                    Text("Change profile picture", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Change profile picture"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
                 }
 
                 Spacer(Modifier.height(4.dp))
@@ -328,7 +328,7 @@ fun ProfileScreen(
                 if (isEditing.value) {
                     OutlinedTextField(
                         value = editName.value, onValueChange = { editName.value = it },
-                        label = { Text("Name", color = AppTheme.SubtleTextColor) },
+                        label = { Text(t("Name"), color = AppTheme.SubtleTextColor) },
                         singleLine = true,
                         enabled = auth.accessToken != null && !profileLoading.value,
                         textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White, textAlign = TextAlign.Center),
@@ -338,17 +338,17 @@ fun ProfileScreen(
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         IconButton(onClick = { saveInline() }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Outlined.Check, "Save", tint = AppTheme.AccentPurple)
+                            Icon(Icons.Outlined.Check, t("Save"), tint = AppTheme.AccentPurple)
                         }
                         IconButton(onClick = { cancelInline() }, enabled = !profileLoading.value, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Outlined.Close, "Cancel", tint = AppTheme.SubtleTextColor)
+                            Icon(Icons.Outlined.Close, t("Cancel"), tint = AppTheme.SubtleTextColor)
                         }
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(headerName, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                         IconButton(onClick = { isEditing.value = true }, enabled = auth.accessToken != null && !profileLoading.value, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Outlined.Edit, "Edit", tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Outlined.Edit, t("Edit"), tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
@@ -361,8 +361,7 @@ fun ProfileScreen(
                 // Migraine type capsule
                 current?.migraineType?.let { type ->
                     Spacer(Modifier.height(4.dp))
-                    Text(
-                        type.label,
+                    Text(t(type.label),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier
@@ -387,7 +386,7 @@ fun ProfileScreen(
                 Row(Modifier.padding(20.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(Modifier.size(18.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                     Spacer(Modifier.width(10.dp))
-                    Text("Loading migraine profile…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Loading migraine profile…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -406,8 +405,8 @@ fun ProfileScreen(
                 ) {
                     Icon(Icons.Outlined.Lock, null, tint = Color(0xFF4FC3F7), modifier = Modifier.size(20.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Change Password", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Send a password reset link to your email", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Change Password"), color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Send a password reset link to your email"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                     Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                 }
@@ -423,8 +422,8 @@ fun ProfileScreen(
             ) {
                 Icon(Icons.Outlined.RestartAlt, null, tint = Color(0xFF4FC3F7), modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Redo Onboarding", color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Review your data settings & recalibrate your profile", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Redo Onboarding"), color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Review your data settings & recalibrate your profile"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
                 Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
             }
@@ -439,8 +438,8 @@ fun ProfileScreen(
             ) {
                 Icon(Icons.Outlined.DeleteForever, null, tint = Color(0xFFE57373), modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Delete Account", color = Color(0xFFE57373), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Permanently removes all your data", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Delete Account"), color = Color(0xFFE57373), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Permanently removes all your data"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
                 Icon(Icons.Outlined.ChevronRight, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
             }
@@ -449,7 +448,7 @@ fun ProfileScreen(
         // ── Medical disclaimer (Google Play Health Content policy) ──
         BaseCard {
             Text(
-                "MigraineMe is for informational and self-tracking purposes only and is not a medical device. It does not diagnose, treat, cure, or prevent migraine or any other medical condition, and it does not provide medical advice. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment, and before making any decisions about your health.",
+                t("MigraineMe is for informational and self-tracking purposes only and is not a medical device. It does not diagnose, treat, cure, or prevent migraine or any other medical condition, and it does not provide medical advice. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment, and before making any decisions about your health."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall
             )
@@ -462,17 +461,17 @@ fun ProfileScreen(
                 containerColor = Color(0xFF1E0A2E),
                 shape = RoundedCornerShape(20.dp),
                 title = {
-                    Text("Delete account?", color = Color(0xFFE57373), fontWeight = FontWeight.SemiBold)
+                    Text(t("Delete account?"), color = Color(0xFFE57373), fontWeight = FontWeight.SemiBold)
                 },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
-                            "This will permanently delete your account and all your migraine data. This action cannot be undone.",
+                            t("This will permanently delete your account and all your migraine data. This action cannot be undone."),
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            "Type DELETE to confirm:",
+                            t("Type DELETE to confirm:"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -481,7 +480,7 @@ fun ProfileScreen(
                             onValueChange = { deleteConfirmText = it },
                             singleLine = true,
                             enabled = !deleteBusy,
-                            placeholder = { Text("DELETE", color = AppTheme.SubtleTextColor.copy(alpha = 0.3f)) },
+                            placeholder = { Text(t("DELETE"), color = AppTheme.SubtleTextColor.copy(alpha = 0.3f)) },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFFE57373),
@@ -497,7 +496,7 @@ fun ProfileScreen(
                         if (deleteBusy) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFFE57373), strokeWidth = 2.dp)
-                                Text("Deleting account…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t("Deleting account…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -562,7 +561,7 @@ fun ProfileScreen(
                         ),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Delete permanently", fontWeight = FontWeight.SemiBold)
+                        Text(t("Delete permanently"), fontWeight = FontWeight.SemiBold)
                     }
                 },
                 dismissButton = {
@@ -570,7 +569,7 @@ fun ProfileScreen(
                         onClick = { showDeleteDialog = false; deleteError = null },
                         enabled = !deleteBusy
                     ) {
-                        Text("Cancel", color = AppTheme.SubtleTextColor)
+                        Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                     }
                 }
             )
@@ -625,8 +624,8 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                     Icon(Icons.Outlined.Psychology, null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Your Migraine Profile", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-                    Text("From AI setup questionnaire", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Your Migraine Profile"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+                    Text(t("From AI setup questionnaire"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
                 Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
             }
@@ -678,7 +677,7 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(value, color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
-                                        Text(label, color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
+                                        Text(t(label), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -698,7 +697,7 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Icon(Icons.Outlined.MedicalInformation, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
-                                Text("MigraineMe Clinical Assessment", color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+                                Text(t("MigraineMe Clinical Assessment"), color = Color.White, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
                                 Icon(if (assessmentExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                             }
                             AnimatedVisibility(visible = assessmentExpanded) {
@@ -717,7 +716,7 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Icon(Icons.Outlined.FormatQuote, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
-                                Text("Your notes", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                                Text(t("Your notes"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(freeText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
@@ -734,7 +733,7 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                 .offset(x = 10.dp, y = (-14).dp)
                 .size(34.dp)
         ) {
-            Icon(Icons.Outlined.Info, contentDescription = "About your migraine profile",
+            Icon(Icons.Outlined.Info, contentDescription = t("About your migraine profile"),
                 tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
         }
     }
@@ -747,19 +746,19 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Psychology, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Your migraine profile", color = AppTheme.TitleColor,
+                    Text(t("Your migraine profile"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
             },
             text = {
                 Text(
-                    "What you told us during the AI Setup questionnaire when you onboarded. At signup, your answers shaped the initial state of the app: which triggers, prodromes, medicines, reliefs, symptoms, and activities got added to your pool, the severity weight on each one, your starting LOW / MILD / HIGH gauge thresholds, your day-by-day decay curve, and your menstruation config if you tracked your cycle.\n\n" +
-                    "Trigger Areas are the broad categories you flagged as relevant (sleep, hormones, weather, diet, etc.) and Clinical Assessment captures any diagnosis you mentioned. Both are kept as a snapshot of what you said; they're useful as a reference for you and any clinician you share data with, but they don't actively change how the app behaves day-to-day.\n\n" +
-                    "The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The monthly AI Calibration card in Insights nudges those values over time as the app learns from your data.",
+                    t("What you told us during the AI Setup questionnaire when you onboarded. At signup, your answers shaped the initial state of the app: which triggers, prodromes, medicines, reliefs, symptoms, and activities got added to your pool, the severity weight on each one, your starting LOW / MILD / HIGH gauge thresholds, your day-by-day decay curve, and your menstruation config if you tracked your cycle.\n\n") +
+                    t("Trigger Areas are the broad categories you flagged as relevant (sleep, hormones, weather, diet, etc.) and Clinical Assessment captures any diagnosis you mentioned. Both are kept as a snapshot of what you said; they're useful as a reference for you and any clinician you share data with, but they don't actively change how the app behaves day-to-day.\n\n") +
+                    t("The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The monthly AI Calibration card in Insights nudges those values over time as the app learns from your data."),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
                 )
             },
-            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 }
@@ -803,15 +802,15 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                 }
                 Column(Modifier.weight(1f)) {
                     Text(
-                        "Subscription",
+                        t("Subscription"),
                         color = Color.White,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
                         when (premiumState.tier) {
-                            PremiumTier.PREMIUM -> premiumState.planType?.replaceFirstChar { it.uppercase() }?.let { "$it plan" } ?: "Premium"
-                            PremiumTier.TRIAL -> "${premiumState.trialDaysRemaining} days left on trial"
-                            PremiumTier.FREE -> "Free plan"
+                            PremiumTier.PREMIUM -> premiumState.planType?.replaceFirstChar { it.uppercase() }?.let { t("%s plan", it) } ?: t("Premium")
+                            PremiumTier.TRIAL -> t("%s days left on trial", premiumState.trialDaysRemaining)
+                            PremiumTier.FREE -> t("Free plan")
                         },
                         color = when (premiumState.tier) {
                             PremiumTier.PREMIUM -> AppTheme.AccentPurple
@@ -864,7 +863,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                     ) {
                         Icon(Icons.Outlined.OpenInNew, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Manage subscription", style = MaterialTheme.typography.labelMedium)
+                        Text(t("Manage subscription"), style = MaterialTheme.typography.labelMedium)
                     }
                 }
 
@@ -883,7 +882,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(icon, null, tint = AppTheme.AccentPurple.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
-                            Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
 
@@ -896,7 +895,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                         Icon(Icons.Outlined.WorkspacePremium, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            if (premiumState.tier == PremiumTier.TRIAL) "Upgrade now" else "Unlock Premium",
+                            if (premiumState.tier == PremiumTier.TRIAL) t("Upgrade now") else t("Unlock Premium"),
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
@@ -911,7 +910,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                 .offset(x = 10.dp, y = (-14).dp)
                 .size(34.dp)
         ) {
-            Icon(Icons.Outlined.Info, contentDescription = "About your subscription",
+            Icon(Icons.Outlined.Info, contentDescription = t("About your subscription"),
                 tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
         }
     }
@@ -924,19 +923,19 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.WorkspacePremium, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Your subscription", color = AppTheme.TitleColor,
+                    Text(t("Your subscription"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
             },
             text = {
                 Text(
-                    "Free Plan covers the basics: full logging (wizard + Quick Log + Daily Check-In), today's risk score with the top 3 contributors, and all Monitor cards.\n\n" +
-                    "Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and monthly AI Calibration of your gauge.\n\n" +
-                    "Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.",
+                    t("Free Plan covers the basics: full logging (wizard + Quick Log + Daily Check-In), today's risk score with the top 3 contributors, and all Monitor cards.\n\n") +
+                    t("Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and monthly AI Calibration of your gauge.\n\n") +
+                    t("Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans."),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
                 )
             },
-            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 }

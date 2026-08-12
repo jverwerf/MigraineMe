@@ -68,7 +68,7 @@ fun CalendarCheckInPage(
 
         if (!hasPermission) {
             Text(
-                "Connect your calendar in Data Settings to see suggestions here.",
+                t("Connect your calendar in Data Settings to see suggestions here."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -85,7 +85,7 @@ fun CalendarCheckInPage(
 
         val mappings = mappingsState.value
         if (mappings.isEmpty()) {
-            Text("No calendar events to log today.",
+            Text(t("No calendar events to log today."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -205,9 +205,9 @@ private fun Header() {
     ) {
         Icon(Icons.Filled.CalendarMonth, null, tint = Color(0xFF64B5F6),
             modifier = Modifier.size(36.dp))
-        Text("From your calendar", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(t("From your calendar"), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Text(
-            "These were added automatically. Tap Undo to remove anything that's not right.",
+            t("These were added automatically. Tap Undo to remove anything that's not right."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
@@ -239,7 +239,7 @@ private fun EventCard(
     onSetSeverity: (String) -> Unit = {},
 ) {
     val type = mapping.targetType ?: "activity"
-    val label = mapping.targetLabel ?: "(unknown)"
+    val label = mapping.targetLabel ?: t("(unknown)")
     val categoryColor = when (type) {
         "activity" -> Color(0xFF64B5F6)
         "relief" -> Color(0xFF81C784)
@@ -258,7 +258,7 @@ private fun EventCard(
     ) {
         Row(verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(mapping.title ?: "(no title)",
+                Text(mapping.title ?: t("(no title)"),
                     color = Color.White, fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.bodyMedium)
                 formatRange(mapping.startAt, mapping.endAt, mapping.allDay == true)?.let {
@@ -283,7 +283,7 @@ private fun EventCard(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                if (isUndone) "Removed" else "Saved as $type: $label",
+                if (isUndone) t("Removed") else t("Saved as %1\$s: %2\$s", type, label),
                 color = if (isUndone) AppTheme.SubtleTextColor else Color.White,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f),
@@ -293,7 +293,7 @@ private fun EventCard(
                     Modifier.background(Color(0xFFFFB74D).copy(alpha = 0.18f), RoundedCornerShape(999.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Text("verify", color = Color(0xFFFFB74D), fontSize = 9.sp, fontWeight = FontWeight.Medium)
+                    Text(t("verify"), color = Color(0xFFFFB74D), fontSize = 9.sp, fontWeight = FontWeight.Medium)
                 }
                 Spacer(Modifier.width(6.dp))
             }
@@ -305,7 +305,7 @@ private fun EventCard(
                                 .clickable { onUndo() }
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
-                            Text("Undo", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Text(t("Undo"), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                         Spacer(Modifier.width(6.dp))
                         Box(
@@ -313,7 +313,7 @@ private fun EventCard(
                                 .clickable { onNeverSuggest() }
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
-                            Text("Never suggest again",
+                            Text(t("Never suggest again"),
                                 color = Color(0xFFE57373), fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -332,14 +332,14 @@ private fun EventCard(
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "How strong is this trigger for you?",
+                        t("How strong is this trigger for you?"),
                         color = AppTheme.SubtleTextColor,
                         fontSize = 10.sp,
                         modifier = Modifier.weight(1f),
                     )
                     if (currentSeverity == "NONE") {
                         Text(
-                            "Suggested: Low",
+                            t("Suggested: Low"),
                             color = Color(0xFFFFB74D),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -382,8 +382,7 @@ private fun SeverityChip(
             .clickable { onTap(value) }
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Text(
-            label,
+        Text(t(label),
             color = if (selected) Color.White else accent,
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,

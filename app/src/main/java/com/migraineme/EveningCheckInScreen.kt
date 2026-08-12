@@ -599,7 +599,7 @@ fun EveningCheckInScreen(
             color = AppTheme.AccentPink, trackColor = AppTheme.TrackColor
         )
         Text(
-            "Evening Check-in — ${pageIndex + 1} of ${pages.size}",
+            t("Evening Check-in — %1\$s of %2\$s", pageIndex + 1, pages.size),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = 28.dp)
@@ -657,7 +657,7 @@ fun EveningCheckInScreen(
                         }
                     }
                 ) { runAiParse() }
-                CheckInPage.Triggers -> FavouritesPage("Any triggers today?", if (aiTriggerLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything that happened", triggerItems, selectedTriggers.map { it.label } + calendarLabelsForType("trigger"), Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
+                CheckInPage.Triggers -> FavouritesPage(t("Any triggers today?"), if (aiTriggerLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust") else t("Tap anything that happened"), triggerItems, selectedTriggers.map { it.label } + calendarLabelsForType("trigger"), Color(0xFFFFB74D), { TriggerIcons.forKey(it) }, aiTriggerLabels) { l ->
                     val calMapping = calendarMappingFor(l, "trigger")
                     if (calMapping != null) {
                         activityScope.launch {
@@ -666,13 +666,13 @@ fun EveningCheckInScreen(
                         }
                     } else if (isTriggerSelected(l)) selectedTriggers.removeAll { it.label == l } else selectedTriggers.add(CheckInTriggerItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
                 }
-                CheckInPage.Prodromes -> FavouritesPage("Any warning signs?", if (aiProdromeLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Body signals you noticed", prodromeItems, selectedProdromes.map { it.label }, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }, aiProdromeLabels) { l ->
+                CheckInPage.Prodromes -> FavouritesPage(t("Any warning signs?"), if (aiProdromeLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust") else t("Body signals you noticed"), prodromeItems, selectedProdromes.map { it.label }, Color(0xFF9575CD), { ProdromeIcons.forKey(it) }, aiProdromeLabels) { l ->
                     if (isProdromeSelected(l)) selectedProdromes.removeAll { it.label == l } else selectedProdromes.add(CheckInProdromeItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
                 }
-                CheckInPage.Medicines -> FavouritesPage("Take any medicine?", if (aiMedicineLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What did you take today", medicineItems, selectedMedicines.map { it.label }, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }, aiMedicineLabels) { l ->
+                CheckInPage.Medicines -> FavouritesPage(t("Take any medicine?"), if (aiMedicineLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust") else t("What did you take today"), medicineItems, selectedMedicines.map { it.label }, Color(0xFF4FC3F7), { MedicineIcons.forKey(it) }, aiMedicineLabels) { l ->
                     if (isMedicineSelected(l)) selectedMedicines.removeAll { it.label == l } else selectedMedicines.add(CheckInMedicineItem(label = l, startAtIso = nowIso(), note = "evening check-in", reliefScale = "NONE", sideEffectScale = "NONE"))
                 }
-                CheckInPage.Reliefs -> FavouritesPage("Use any relief methods?", if (aiReliefLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "What helped today", reliefItems, selectedReliefs.map { it.label } + calendarLabelsForType("relief"), Color(0xFF81C784), { ReliefIcons.forKey(it) }, aiReliefLabels) { l ->
+                CheckInPage.Reliefs -> FavouritesPage(t("Use any relief methods?"), if (aiReliefLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust") else t("What helped today"), reliefItems, selectedReliefs.map { it.label } + calendarLabelsForType("relief"), Color(0xFF81C784), { ReliefIcons.forKey(it) }, aiReliefLabels) { l ->
                     val calMapping = calendarMappingFor(l, "relief")
                     if (calMapping != null) {
                         activityScope.launch {
@@ -683,7 +683,7 @@ fun EveningCheckInScreen(
                 }
                 CheckInPage.Activities -> {
                     val aiActivityLabels = remember(aiParseResult) { aiParseResult?.activities?.map { it.label }?.toSet() ?: emptySet() }
-                    FavouritesPage("What did you do today?", if (aiActivityLabels.isNotEmpty()) "We matched some from your note — confirm or adjust" else "Tap anything you did", activityItems, selectedActivities.map { it.label } + calendarLabelsForType("activity"), Color(0xFFFF8A65), { ActivityIcons.forKey(it) }, aiActivityLabels) { l ->
+                    FavouritesPage(t("What did you do today?"), if (aiActivityLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust") else t("Tap anything you did"), activityItems, selectedActivities.map { it.label } + calendarLabelsForType("activity"), Color(0xFFFF8A65), { ActivityIcons.forKey(it) }, aiActivityLabels) { l ->
                         val calMapping = calendarMappingFor(l, "activity")
                         if (calMapping != null) {
                             activityScope.launch {
@@ -860,19 +860,19 @@ fun EveningCheckInScreen(
         if (!saved) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (currentPage == CheckInPage.Note) {
-                    TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text("Cancel", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
+                    TextButton(onClick = { navController.popBackStack() }, modifier = Modifier.height(36.dp)) { Text(t("Cancel"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
                 } else {
-                    TextButton(onClick = { goBack() }, modifier = Modifier.height(36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text("Back", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
+                    TextButton(onClick = { goBack() }, modifier = Modifier.height(36.dp)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(14.dp), tint = AppTheme.SubtleTextColor); Spacer(Modifier.width(2.dp)); Text(t("Back"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall) }
                 }
                 when (currentPage) {
                     CheckInPage.Review -> Button(onClick = { save() }, enabled = !saving, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
-                        if (saving) { CircularProgressIndicator(Modifier.size(14.dp), Color.White, strokeWidth = 2.dp) } else { Icon(Icons.Outlined.Check, null, Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Save", style = MaterialTheme.typography.bodySmall) }
+                        if (saving) { CircularProgressIndicator(Modifier.size(14.dp), Color.White, strokeWidth = 2.dp) } else { Icon(Icons.Outlined.Check, null, Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text(t("Save"), style = MaterialTheme.typography.bodySmall) }
                     }
                     CheckInPage.Note -> Button(onClick = { goNext() }, enabled = !aiLoading, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
-                        Text(if (noteText.isNotBlank() && !aiParsed) "Match & continue" else if (noteText.isBlank()) "Skip" else "Next", style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
+                        Text(if (noteText.isNotBlank() && !aiParsed) t("Match & continue") else if (noteText.isBlank()) t("Skip") else t("Next"), style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
                     }
                     else -> Button(onClick = { goNext() }, modifier = Modifier.height(36.dp), colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)) {
-                        Text("Next", style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
+                        Text(t("Next"), style = MaterialTheme.typography.bodySmall); Spacer(Modifier.width(2.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
                     }
                 }
             }
@@ -908,9 +908,9 @@ private fun SideEffectsPage(
         ) {
             Icon(Icons.Outlined.MedicalServices, contentDescription = null, tint = Color(0xFFB97BFF), modifier = Modifier.size(36.dp))
             Spacer(Modifier.height(8.dp))
-            Text("Any side effects today?", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Text(t("Any side effects today?"), color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
-            Text("Tap what applies. Add details or skip.", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
+            Text(t("Tap what applies. Add details or skip."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         }
 
         FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -922,8 +922,7 @@ private fun SideEffectsPage(
                     border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) Color(0xFFB97BFF) else Color.White.copy(alpha = 0.10f)),
                     onClick = { onTogglePill(label) }
                 ) {
-                    Text(
-                        label,
+                    Text(t(label),
                         color = if (isSel) Color(0xFFDCCEFF) else Color.White.copy(alpha = 0.86f),
                         fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Normal,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
@@ -936,7 +935,7 @@ private fun SideEffectsPage(
         OutlinedTextField(
             value = freeText,
             onValueChange = onFreeTextChange,
-            label = { Text("Extra notes (optional)") },
+            label = { Text(t("Extra notes (optional)")) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 110.dp)
         )
 
@@ -948,7 +947,7 @@ private fun SideEffectsPage(
                     .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
                     .padding(12.dp)
             ) {
-                Text("Active treatments", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
+                Text(t("Active treatments"), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.height(4.dp))
                 activeRegimens.forEach { r ->
                     val parts = listOfNotNull(r.name, r.amount, r.frequency).joinToString(" · ")
@@ -996,15 +995,14 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
                         if (isAi) {
                             Text("✦ ", color = Color(0xFFFFD54F), style = MaterialTheme.typography.bodySmall)
                         }
-                        Text(
-                            label,
+                        Text(t(label),
                             color = Color.White,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                             modifier = Modifier.weight(1f)
                         )
                         Icon(
                             Icons.Outlined.Close,
-                            contentDescription = "Remove",
+                            contentDescription = t("Remove"),
                             tint = accentColor.copy(alpha = 0.6f),
                             modifier = Modifier.size(16.dp).clickable { onToggle(label) }
                         )
@@ -1016,7 +1014,7 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
         Spacer(Modifier.height(16.dp))
 
         if (favourites.isNotEmpty()) {
-            Text("Favourites", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
                 favourites.forEach { item ->
@@ -1095,14 +1093,14 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        Text("Tell us about your day", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Text(t("Tell us about your day"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
-        Text("Type or speak freely — keep each thing separate so we can match it accurately", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(t("Type or speak freely — keep each thing separate so we can match it accurately"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(20.dp))
 
         OutlinedTextField(
             value = noteText, onValueChange = onNoteChange,
-            placeholder = { Text("e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+            placeholder = { Text(t("e.g. \"had red wine at dinner. neck felt stiff. took 2 ibuprofen. it helped a bit.\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = AppTheme.AccentPurple, focusedBorderColor = AppTheme.AccentPurple, unfocusedBorderColor = Color.White.copy(alpha = 0.15f)),
             minLines = 3, maxLines = 6
@@ -1120,7 +1118,7 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
             ) {
                 Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Voice", style = MaterialTheme.typography.bodySmall)
+                Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
             }
 
             if (noteText.isNotBlank() && !aiParsed) {
@@ -1130,8 +1128,8 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.8f)),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    if (aiLoading) { CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)); Text("Finding…", style = MaterialTheme.typography.bodySmall) }
-                    else Text("Find matches", style = MaterialTheme.typography.bodySmall)
+                    if (aiLoading) { CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)); Text(t("Finding…"), style = MaterialTheme.typography.bodySmall) }
+                    else Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -1143,7 +1141,7 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
                 (if (aiResult.auraZones.isNotEmpty()) 1 else 0) + (if (aiResult.migraineEndedAtIso != null) 1 else 0)
             if (total > 0) {
                 Spacer(Modifier.height(16.dp))
-                Text("Found $total match${if (total > 1) "es" else ""} — added to review:", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(if (total == 1) t("Found 1 match — added to review:") else t("Found %s matches — added to review:", total), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(8.dp))
 
                 aiResult.triggers.forEach { t ->
@@ -1184,7 +1182,7 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
         }
         if (aiParsed && (aiResult == null || (aiResult.triggers.isEmpty() && aiResult.prodromes.isEmpty() && aiResult.medicines.isEmpty() && aiResult.reliefs.isEmpty() && aiResult.symptomsNow.isEmpty() && aiResult.painNow == null && aiResult.auraZones.isEmpty() && aiResult.migraineEndedAtIso == null)) && noteText.isNotBlank()) {
             Spacer(Modifier.height(12.dp))
-            Text("No matches found", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t("No matches found"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
         if (noteText.isBlank()) {
             Spacer(Modifier.height(12.dp))
@@ -1203,8 +1201,7 @@ private fun NoteMatchPill(label: String, category: String, color: Color, inferre
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
-            Text(
-                label, color = if (inferred) Color.White.copy(alpha = 0.7f) else Color.White,
+            Text(t(label), color = if (inferred) Color.White.copy(alpha = 0.7f) else Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = if (inferred) FontWeight.Normal else FontWeight.Medium,
                     fontStyle = if (inferred) FontStyle.Italic else FontStyle.Normal
@@ -1223,11 +1220,11 @@ private fun NoteMatchPill(label: String, category: String, color: Color, inferre
             }
         }
         if (inferred) {
-            Text("suggested", color = color.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), modifier = Modifier.padding(end = 4.dp))
+            Text(t("suggested"), color = color.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), modifier = Modifier.padding(end = 4.dp))
         }
         Text(category.replaceFirstChar { it.uppercase() }, color = color, style = MaterialTheme.typography.labelSmall)
         IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
-            Icon(Icons.Outlined.Close, "Remove", tint = color.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+            Icon(Icons.Outlined.Close, t("Remove"), tint = color.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
         }
     }
 }
@@ -1283,24 +1280,24 @@ private fun ReviewPage(
     var expandedKey by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        Text("Review", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Text(t("Review"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
         Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM")), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(20.dp))
 
         AnimatedVisibility(visible = saved) {
             Row(Modifier.fillMaxWidth().background(Color(0xFF2E7D32).copy(alpha = 0.85f), RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Check-in saved!", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text(t("Check-in saved!"), color = Color.White, fontWeight = FontWeight.SemiBold)
             }
         }
 
         if (total == 0 && !saved) {
             Spacer(Modifier.height(40.dp))
-            Text("Nothing selected — go back to tap items, or save an empty check-in", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Text(t("Nothing selected — go back to tap items, or save an empty check-in"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
 
         if (migraineNowCount > 0) {
-            ReviewSectionHeader("Migraine update", Color(0xFF4DB6AC), migraineNowCount)
+            ReviewSectionHeader(t("Migraine update"), Color(0xFF4DB6AC), migraineNowCount)
             if (endedAtIso != null) {
                 ReviewItemRow("Migraine ended", Color(0xFF81C784), false, false,
                     subtitle = formatTimeSubtitle(endedAtIso),
@@ -1308,7 +1305,7 @@ private fun ReviewPage(
             }
             nowSymptoms.forEach { s ->
                 ReviewItemRow(s, Color(0xFF4DB6AC), false, false,
-                    subtitle = "new symptom",
+                    subtitle = t("new symptom"),
                     onRemove = { rmNowSymptom(s) }, onClick = {})
             }
             if (painNowLocations.isNotEmpty()) {
@@ -1320,13 +1317,13 @@ private fun ReviewPage(
             if (auraNowZones.isNotEmpty()) {
                 ReviewItemRow(
                     "Aura moment", Color(0xFF9575CD), false, false,
-                    subtitle = "${auraNowZones.size} zone${if (auraNowZones.size > 1) "s" else ""}" +
+                    subtitle = (if (auraNowZones.size == 1) t("1 zone") else t("%s zones", auraNowZones.size)) +
                         (auraNowDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
                     onRemove = { rmAuraNow() }, onClick = {})
             }
         }
         if (triggers.isNotEmpty()) {
-            ReviewSectionHeader("Triggers", Color(0xFFFFB74D), triggers.size)
+            ReviewSectionHeader(t("Triggers"), Color(0xFFFFB74D), triggers.size)
             triggers.forEach { t ->
                 val key = "trigger_${t.label}"
                 if (expandedKey == key) {
@@ -1344,7 +1341,7 @@ private fun ReviewPage(
             }
         }
         if (prodromes.isNotEmpty()) {
-            ReviewSectionHeader("Prodromes", Color(0xFF9575CD), prodromes.size)
+            ReviewSectionHeader(t("Prodromes"), Color(0xFF9575CD), prodromes.size)
             prodromes.forEach { p ->
                 val key = "prodrome_${p.label}"
                 if (expandedKey == key) {
@@ -1362,7 +1359,7 @@ private fun ReviewPage(
             }
         }
         if (medicines.isNotEmpty()) {
-            ReviewSectionHeader("Medicines", Color(0xFF4FC3F7), medicines.size)
+            ReviewSectionHeader(t("Medicines"), Color(0xFF4FC3F7), medicines.size)
             medicines.forEach { m ->
                 val key = "medicine_${m.label}"
                 if (expandedKey == key) {
@@ -1387,7 +1384,7 @@ private fun ReviewPage(
             }
         }
         if (reliefs.isNotEmpty()) {
-            ReviewSectionHeader("Reliefs", Color(0xFF81C784), reliefs.size)
+            ReviewSectionHeader(t("Reliefs"), Color(0xFF81C784), reliefs.size)
             reliefs.forEach { r ->
                 val key = "relief_${r.label}"
                 if (expandedKey == key) {
@@ -1411,7 +1408,7 @@ private fun ReviewPage(
             }
         }
         if (activities.isNotEmpty()) {
-            ReviewSectionHeader("Activities", Color(0xFFFF8A65), activities.size)
+            ReviewSectionHeader(t("Activities"), Color(0xFFFF8A65), activities.size)
             activities.forEach { a ->
                 ReviewItemRow(a.label, Color(0xFFFF8A65), a.label in aiLabels, a.inferred,
                     subtitle = formatTimeSubtitle(a.startAtIso),
@@ -1421,7 +1418,7 @@ private fun ReviewPage(
             }
         }
         if (todayCalendar.isNotEmpty()) {
-            ReviewSectionHeader("From calendar", Color(0xFF64B5F6), todayCalendar.size)
+            ReviewSectionHeader(t("From calendar"), Color(0xFF64B5F6), todayCalendar.size)
             todayCalendar.forEach { m ->
                 val type = m.targetType ?: "activity"
                 val color = when (type) {
@@ -1442,7 +1439,7 @@ private fun ReviewPage(
 
         if (total > 0 && !saved) {
             Spacer(Modifier.height(12.dp))
-            Text("Logging $total item${if (total > 1) "s" else ""}", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Text((if (total == 1) t("Logging 1 item") else t("Logging %s items", total)), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
         Spacer(Modifier.height(80.dp))
     }
@@ -1467,8 +1464,7 @@ private fun ReviewItemRow(label: String, color: Color, isAiMatched: Boolean, inf
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(Modifier.weight(1f)) {
-            Text(
-                label, color = if (inferred) Color.White.copy(alpha = 0.7f) else Color.White,
+            Text(t(label), color = if (inferred) Color.White.copy(alpha = 0.7f) else Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = if (inferred) FontWeight.Normal else FontWeight.Medium,
                     fontStyle = if (inferred) FontStyle.Italic else FontStyle.Normal
@@ -1481,11 +1477,11 @@ private fun ReviewItemRow(label: String, color: Color, isAiMatched: Boolean, inf
             if (tagParts.isNotEmpty()) {
                 Text(tagParts.joinToString(" · "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             } else {
-                Text("Tap to edit", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
+                Text(t("Tap to edit"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
             }
         }
         IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Outlined.Close, "Remove", tint = color.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+            Icon(Icons.Outlined.Close, t("Remove"), tint = color.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -1516,7 +1512,7 @@ private fun TimeEditor(
         onTimeChanged(iso)
     }
 
-    Text("When?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    Text(t("When?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     Spacer(Modifier.height(2.dp))
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -1540,21 +1536,21 @@ private fun TimeEditor(
                         selectedDate = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                     }
                     showDatePicker = false; commit()
-                }, enabled = datePickerState.selectedDateMillis != null) { Text("OK", color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
+                }, enabled = datePickerState.selectedDateMillis != null) { Text(t("OK"), color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
             },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancel", color = AppTheme.SubtleTextColor) } },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) } },
             colors = DatePickerDefaults.colors(containerColor = Color(0xFF1E0A2E))
-        ) { DatePicker(state = datePickerState, colors = appDatePickerColors(), title = { Text("Select date", color = Color.White, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) }, headline = null, showModeToggle = false) }
+        ) { DatePicker(state = datePickerState, colors = appDatePickerColors(), title = { Text(t("Select date"), color = Color.White, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) }, headline = null, showModeToggle = false) }
     }
 
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text("Hour", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Hour"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Slider(value = hour.toFloat(), onValueChange = { hour = it.toInt(); commit() }, valueRange = 0f..23f, steps = 22,
                 colors = SliderDefaults.colors(thumbColor = color, activeTrackColor = color, inactiveTrackColor = color.copy(alpha = 0.2f)))
         }
         Column(Modifier.weight(1f)) {
-            Text("Min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Min"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Slider(value = minute.toFloat(), onValueChange = { minute = (it.toInt() / 5) * 5; commit() }, valueRange = 0f..55f, steps = 10,
                 colors = SliderDefaults.colors(thumbColor = color, activeTrackColor = color, inactiveTrackColor = color.copy(alpha = 0.2f)))
         }
@@ -1570,7 +1566,7 @@ private fun ScalePicker(
     label: String, value: String, onChanged: (String) -> Unit, colorMap: Map<String, Color>,
     options: List<String>, labels: List<String>,
 ) {
-    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     Spacer(Modifier.height(4.dp))
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         options.forEachIndexed { idx, scale ->
@@ -1583,7 +1579,7 @@ private fun ScalePicker(
                     .clickable { onChanged(scale) }.padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(labels[idx], color = if (selected) Color.White else AppTheme.SubtleTextColor,
+                Text(t(labels[idx]), color = if (selected) Color.White else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal))
             }
         }
@@ -1607,12 +1603,12 @@ private val sideEffectColorMap = mapOf("SEVERE" to Color(0xFFEF5350), "MODERATE"
 @Composable
 private fun EditorHeader(label: String, color: Color, onDone: () -> Unit, onRemove: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
+        Text(t(label), color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
         Row {
-            Text("Done", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            Text(t("Done"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { onDone() }.padding(horizontal = 8.dp, vertical = 4.dp))
             Box(Modifier.size(28.dp).clip(CircleShape).clickable { onRemove() }, contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.Close, "Remove", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+                Icon(Icons.Outlined.Close, t("Remove"), tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
             }
         }
     }
@@ -1667,11 +1663,11 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, onUpdate
         TimeEditor(timeIso, color) { timeIso = it }
         Spacer(Modifier.height(10.dp))
 
-        Text("Amount / dosage", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t("Amount / dosage"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         OutlinedTextField(
             value = amount, onValueChange = { amount = it },
-            placeholder = { Text("e.g. 2 tablets, 400mg", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+            placeholder = { Text(t("e.g. 2 tablets, 400mg"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
             modifier = Modifier.fillMaxWidth().height(48.dp),
             textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
             colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
@@ -1685,11 +1681,11 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, onUpdate
 
         if (sideEffectScale != "NONE") {
             Spacer(Modifier.height(10.dp))
-            Text("Side effect details", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Side effect details"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(4.dp))
             OutlinedTextField(
                 value = sideEffectNotes, onValueChange = { sideEffectNotes = it },
-                placeholder = { Text("e.g. drowsy, nauseous", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                placeholder = { Text(t("e.g. drowsy, nauseous"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                 colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
@@ -1727,11 +1723,11 @@ private fun ReliefEditorPill(item: CheckInReliefItem, color: Color, onUpdate: (C
 
         if (sideEffectScale != "NONE") {
             Spacer(Modifier.height(10.dp))
-            Text("Side effect details", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Side effect details"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(4.dp))
             OutlinedTextField(
                 value = sideEffectNotes, onValueChange = { sideEffectNotes = it },
-                placeholder = { Text("e.g. drowsy, nauseous", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                placeholder = { Text(t("e.g. drowsy, nauseous"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                 colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
@@ -1774,7 +1770,7 @@ private fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolean
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = txt, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
+        Text(t(label), color = txt, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -1958,10 +1954,10 @@ private fun PostdromeStep(
     } ?: "your open migraine"
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        Text("Postdrome", color = Color.White,
+        Text(t("Postdrome"), color = Color.White,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
-        Text("Any lingering symptoms from $migraineLabel?",
+        Text(t("Any lingering symptoms from %s?", migraineLabel),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(12.dp))
 
@@ -1976,7 +1972,7 @@ private fun PostdromeStep(
                     modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "This migraine has been open for ${ageDays ?: 0} days. End it from the journal when it's truly over.",
+                    t("This migraine has been open for %s days. End it from the journal when it's truly over.", ageDays ?: 0),
                     color = Color.White, style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -1984,7 +1980,7 @@ private fun PostdromeStep(
         }
 
         if (pool.isEmpty()) {
-            Text("No postdrome symptoms in your pool. Manage your symptoms list to add some.",
+            Text(t("No postdrome symptoms in your pool. Manage your symptoms list to add some."),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 24.dp).fillMaxWidth())
         } else {
@@ -1992,7 +1988,7 @@ private fun PostdromeStep(
             val favs = pool.filter { it.id in favouriteIds }
             val rest = pool.filter { it.id !in favouriteIds }
             if (favs.isNotEmpty()) {
-                Text("Favourites", color = AppTheme.TitleColor,
+                Text(t("Favourites"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(12.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -2080,10 +2076,10 @@ private fun MigraineNowStep(
     var showAuraSheet by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        Text("How's the migraine now?", color = Color.White,
+        Text(t("How's the migraine now?"), color = Color.White,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
-        Text("Update $migraineLabel — everything here is added to it",
+        Text(t("Update %s — everything here is added to it", migraineLabel),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(16.dp))
 
@@ -2096,7 +2092,7 @@ private fun MigraineNowStep(
                 border = androidx.compose.foundation.BorderStroke(1.dp, if (ongoing) accent else Color.White.copy(alpha = 0.12f)),
                 onClick = { onEndedChange(null) }
             ) {
-                Text("Still ongoing", color = if (ongoing) Color.White else AppTheme.SubtleTextColor,
+                Text(t("Still ongoing"), color = if (ongoing) Color.White else AppTheme.SubtleTextColor,
                     fontWeight = if (ongoing) FontWeight.SemiBold else FontWeight.Normal,
                     textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
@@ -2109,7 +2105,7 @@ private fun MigraineNowStep(
                     if (ongoing) onEndedChange(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                 }
             ) {
-                Text("It ended", color = if (!ongoing) Color.White else AppTheme.SubtleTextColor,
+                Text(t("It ended"), color = if (!ongoing) Color.White else AppTheme.SubtleTextColor,
                     fontWeight = if (!ongoing) FontWeight.SemiBold else FontWeight.Normal,
                     textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth())
@@ -2129,13 +2125,13 @@ private fun MigraineNowStep(
         Spacer(Modifier.height(20.dp))
 
         // ── New symptoms ──
-        Text("Any new symptoms?", color = AppTheme.TitleColor,
+        Text(t("Any new symptoms?"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
         Spacer(Modifier.height(4.dp))
-        Text("Tap what's appeared since you logged it", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t("Tap what's appeared since you logged it"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(12.dp))
         if (addablePool.isEmpty()) {
-            Text("All your symptoms are already on this migraine.",
+            Text(t("All your symptoms are already on this migraine."),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
             val favs = addablePool.filter { it.id in favouriteIds }
@@ -2163,10 +2159,10 @@ private fun MigraineNowStep(
         Spacer(Modifier.height(20.dp))
 
         // ── Pain update ──
-        Text("Pain update", color = AppTheme.TitleColor,
+        Text(t("Pain update"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
         Spacer(Modifier.height(4.dp))
-        Text("Mark where it hurts right now — moved, spread or peaked",
+        Text(t("Mark where it hurts right now — moved, spread or peaked"),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
         if (!painExpanded && painLocations.isEmpty()) {
@@ -2175,7 +2171,7 @@ private fun MigraineNowStep(
                 modifier = Modifier.fillMaxWidth(),
                 border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPink.copy(alpha = 0.4f)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPink)
-            ) { Text("+ Add pain update", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
+            ) { Text(t("+ Add pain update"), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
         } else {
             Column(
                 Modifier.fillMaxWidth()
@@ -2184,12 +2180,12 @@ private fun MigraineNowStep(
                     .padding(12.dp)
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Severity", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Severity"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.weight(1f))
                     Text("$painSeverity", color = AppTheme.AccentPink, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                     Text(" / 10", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Spacer(Modifier.width(8.dp))
-                    Icon(Icons.Outlined.Close, "Remove pain update",
+                    Icon(Icons.Outlined.Close, t("Remove pain update"),
                         tint = AppTheme.AccentPink.copy(alpha = 0.7f),
                         modifier = Modifier.size(18.dp).clickable {
                             painExpanded = false
@@ -2213,7 +2209,7 @@ private fun MigraineNowStep(
                                 onClick = { onTogglePainLocation(id) }
                             ) {
                                 Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(label, color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                    Text(t(label), color = Color.White, style = MaterialTheme.typography.labelSmall)
                                     Spacer(Modifier.width(4.dp))
                                     Text("✕", color = AppTheme.AccentPink, style = MaterialTheme.typography.labelSmall)
                                 }
@@ -2236,7 +2232,7 @@ private fun MigraineNowStep(
                             shape = RoundedCornerShape(8.dp),
                             onClick = { showBack = isBack }
                         ) {
-                            Text(label, textAlign = TextAlign.Center,
+                            Text(t(label), textAlign = TextAlign.Center,
                                 color = if (sel) Color.White else AppTheme.SubtleTextColor,
                                 fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
                                 style = MaterialTheme.typography.bodySmall,
@@ -2256,10 +2252,10 @@ private fun MigraineNowStep(
         Spacer(Modifier.height(20.dp))
 
         // ── Aura ──
-        Text("Aura", color = AppTheme.TitleColor,
+        Text(t("Aura"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
         Spacer(Modifier.height(4.dp))
-        Text("Did aura appear or come back?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t("Did aura appear or come back?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
         if (auraZones.isEmpty()) {
             OutlinedButton(
@@ -2267,7 +2263,7 @@ private fun MigraineNowStep(
                 modifier = Modifier.fillMaxWidth(),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9575CD).copy(alpha = 0.4f)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF9575CD))
-            ) { Text("+ Add aura moment", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
+            ) { Text(t("+ Add aura moment"), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall) }
         } else {
             Row(
                 Modifier.fillMaxWidth()
@@ -2279,14 +2275,14 @@ private fun MigraineNowStep(
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(
-                        "${auraZones.size} zone${if (auraZones.size > 1) "s" else ""}" +
+                        (if (auraZones.size == 1) t("1 zone") else t("%s zones", auraZones.size)) +
                             (auraDurationMin?.let { " · ${formatAuraDuration(it)}" } ?: ""),
                         color = Color.White, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                     )
-                    Text("Tap to edit", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Tap to edit"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
                 IconButton(onClick = onAuraClear, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Outlined.Close, "Remove", tint = Color(0xFF9575CD), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Outlined.Close, t("Remove"), tint = Color(0xFF9575CD), modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -2326,7 +2322,7 @@ private fun SideEffectsPageV2(
 
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
         // Title "Side effects" + regimen name underneath + amount/frequency meta.
-        Text("Side effects", color = Color.White,
+        Text(t("Side effects"), color = Color.White,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Text(regimen.name, color = Color.White,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -2339,7 +2335,7 @@ private fun SideEffectsPageV2(
         Spacer(Modifier.height(12.dp))
 
         if (favourites.isNotEmpty()) {
-            Text("Favourites", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("Favourites"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
                 favourites.forEach { item ->
@@ -2409,7 +2405,7 @@ private fun SideEffectsPageV2(
         ) {
             Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
             Spacer(Modifier.width(4.dp))
-            Text("Voice", style = MaterialTheme.typography.bodySmall)
+            Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
         }
 
         Spacer(Modifier.height(80.dp))

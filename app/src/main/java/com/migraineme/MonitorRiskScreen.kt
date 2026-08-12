@@ -139,11 +139,11 @@ fun MonitorRiskScreen(
             // 1. Configure HeroCard
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.RISK_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Tune, "Configure", tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Outlined.Tune, t("Configure"), tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Customize Monitor Card", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Choose 3 favorites for the Risk card on Monitor", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Customize Monitor Card"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Choose 3 favorites for the Risk card on Monitor"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
@@ -159,13 +159,13 @@ fun MonitorRiskScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Today's Data", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Today's Data"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     if (PremiumManager.isPremium) {
-                        Text("History \u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        Text(t("History \u2192"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Icon(Icons.Outlined.Lock, "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
-                            Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                            Icon(Icons.Outlined.Lock, t("Premium"), tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
+                            Text(t("History"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -183,15 +183,15 @@ fun MonitorRiskScreen(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("%.1f".format(live.score), color = slotColors[0], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                Text("Score", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t("Score"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(live.zone.lowercase().replaceFirstChar { it.uppercase() }, color = slotColors[1], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                Text("Zone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t("Zone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("${parsedTriggers.size}", color = slotColors[2], style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                Text("Triggers", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t("Triggers"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                         }
 
@@ -204,7 +204,7 @@ fun MonitorRiskScreen(
                                 effectiveFavs.take(3).forEachIndexed { i, fav ->
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(resolveValue(fav.key), color = slotColors.getOrElse(i) { slotColors.last() }, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-                                        Text(fav.label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                                        Text(t(fav.label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -233,14 +233,14 @@ fun MonitorRiskScreen(
                             }
                         }
                     } else {
-                        Text("No risk data yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("No risk data yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
 
                     if (favPool.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                         Spacer(Modifier.height(8.dp))
-                        Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
 
                         favPool.groupBy { it.category }.forEach { (category, entries) ->
@@ -261,8 +261,8 @@ fun MonitorRiskScreen(
 
             // 4. History Graph — premium only
             PremiumGate(
-                message = "Unlock Risk Trends",
-                subtitle = "Track your risk score over time",
+                message = t("Unlock Risk Trends"),
+                subtitle = t("Track your risk score over time"),
                 onUpgrade = { navController.navigate(Routes.PAYWALL) }
             ) {
                 RiskHistoryGraph(
@@ -279,7 +279,7 @@ fun MonitorRiskScreen(
 @Composable
 private fun MetricRowItem(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
         Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
     }
 }

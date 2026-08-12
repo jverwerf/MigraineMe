@@ -312,7 +312,7 @@ object MetricsSyncManager {
                 } else if (!whoopConnected && (whoopSleepEnabled || whoopPhysicalEnabled)) {
                     withContext(Dispatchers.Main) {
                         snackbarHostState.showSnackbar(
-                            message = "Whoop not connected — connect Whoop to collect data.",
+                            message = tSync("Whoop not connected — connect Whoop to collect data."),
                             duration = SnackbarDuration.Short
                         )
                     }

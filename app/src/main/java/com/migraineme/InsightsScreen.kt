@@ -457,7 +457,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text("Loading insights\u2026", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Loading insights\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
         return
@@ -490,14 +490,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             BrainyBlobIcon(R.drawable.brainy_briefcase_small)
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("Full Report", color = AppTheme.TitleColor,
+                                Text(t("Full Report"), color = AppTheme.TitleColor,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Text("Generate a doctor-ready PDF with all your migraine data",
+                                Text(t("Generate a doctor-ready PDF with all your migraine data"),
                                     color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.bodySmall)
                             }
                             if (!premiumStateTop.isPremium) {
-                                Icon(Icons.Outlined.Lock, contentDescription = "Premium",
+                                Icon(Icons.Outlined.Lock, contentDescription = t("Premium"),
                                     tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(6.dp))
                             }
@@ -513,7 +513,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     ) {
                             Icon(
                                 Icons.Outlined.Info,
-                                contentDescription = "About Full Report",
+                                contentDescription = t("About Full Report"),
                                 tint = AppTheme.SubtleTextColor,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -524,11 +524,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showFullReportInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showFullReportInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About Full Report", color = AppTheme.TitleColor,
+                            Text(t("About Full Report"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -548,9 +548,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         Canvas(Modifier.size(24.dp)) { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("Explore Migraines", color = AppTheme.TitleColor,
+                            Text(t("Explore Migraines"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Timeline, breakdowns & detailed charts",
+                            Text(t("Timeline, breakdowns & detailed charts"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                         Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
@@ -563,8 +563,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 var showRecsInfo by remember { mutableStateOf(false) }
                 if (buildRecommendationSections(aiRecs, dismissedRecKeys).isNotEmpty()) {
                     PremiumGate(
-                        message = "Unlock AI Recommendations",
-                        subtitle = "Per-category guidance from your data",
+                        message = t("Unlock AI Recommendations"),
+                        subtitle = t("Per-category guidance from your data"),
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
@@ -580,7 +580,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             ) {
                                     Icon(
                                         Icons.Outlined.Info,
-                                        contentDescription = "About AI Recommendations",
+                                        contentDescription = t("About AI Recommendations"),
                                         tint = AppTheme.SubtleTextColor,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -593,11 +593,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showRecsInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showRecsInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About AI Recommendations", color = AppTheme.TitleColor,
+                            Text(t("About AI Recommendations"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -612,14 +612,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // ── 4. ACCURACY ──
                 var showAccuracyInfo by remember { mutableStateOf(false) }
                 PremiumGate(
-                    message = "Unlock Accuracy",
-                    subtitle = "See how well your risk score lined up with your logged attacks",
+                    message = t("Unlock Accuracy"),
+                    subtitle = t("See how well your risk score lined up with your logged attacks"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
-                            title = "Accuracy",
-                            description = "How well your risk score lined up with your attacks",
+                            title = t("Accuracy"),
+                            description = t("How well your risk score lined up with your attacks"),
                             resId = R.drawable.brainy_archer,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_THRESHOLDS) },
@@ -633,7 +633,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = "About Accuracy",
+                                    contentDescription = t("About Accuracy"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -645,11 +645,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showAccuracyInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showAccuracyInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About Accuracy", color = AppTheme.TitleColor,
+                            Text(t("About Accuracy"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -663,14 +663,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // ── 5. WHAT HAPPENED ──
                 var showWhatHappenedInfo by remember { mutableStateOf(false) }
                 PremiumGate(
-                    message = "Unlock Pattern Analysis",
-                    subtitle = "See correlations, combinations & thresholds",
+                    message = t("Unlock Pattern Analysis"),
+                    subtitle = t("See correlations, combinations & thresholds"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
-                            title = "What Happened",
-                            description = "Triggers, patterns & dangerous combinations behind your migraines",
+                            title = t("What Happened"),
+                            description = t("Triggers, patterns & dangerous combinations behind your migraines"),
                             resId = R.drawable.brainy_detective,
                             flipBlob = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_PATTERNS) },
@@ -684,7 +684,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = "About What Happened",
+                                    contentDescription = t("About What Happened"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -696,11 +696,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showWhatHappenedInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showWhatHappenedInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About What Happened", color = AppTheme.TitleColor,
+                            Text(t("About What Happened"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -714,14 +714,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // ── 6. WHAT WORKED ──
                 var showWhatWorkedInfo by remember { mutableStateOf(false) }
                 PremiumGate(
-                    message = "Unlock Treatment Analysis",
-                    subtitle = "See which medicines and reliefs work best",
+                    message = t("Unlock Treatment Analysis"),
+                    subtitle = t("See which medicines and reliefs work best"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
-                            title = "What Worked",
-                            description = "Which medicines & reliefs shorten your attacks",
+                            title = t("What Worked"),
+                            description = t("Which medicines & reliefs shorten your attacks"),
                             resId = R.drawable.brainy_shield,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_TREATMENTS) },
@@ -735,7 +735,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = "About What Worked",
+                                    contentDescription = t("About What Worked"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -747,11 +747,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showWhatWorkedInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showWhatWorkedInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About What Worked", color = AppTheme.TitleColor,
+                            Text(t("About What Worked"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -767,14 +767,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // present on migraine-free days + what drives them.
                 var showWhatsHelpingInfo by remember { mutableStateOf(false) }
                 PremiumGate(
-                    message = "Unlock What's Helping",
-                    subtitle = "See the habits behind your migraine-free days",
+                    message = t("Unlock What's Helping"),
+                    subtitle = t("See the habits behind your migraine-free days"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
-                            title = "What's Helping",
-                            description = "Habits that show up on your migraine-free days",
+                            title = t("What's Helping"),
+                            description = t("Habits that show up on your migraine-free days"),
                             resId = R.drawable.brainy_gardener,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_WHATS_HELPING) },
@@ -788,7 +788,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = "About What's Helping",
+                                    contentDescription = t("About What's Helping"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -800,11 +800,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showWhatsHelpingInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showWhatsHelpingInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About What's Helping", color = AppTheme.TitleColor,
+                            Text(t("About What's Helping"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -825,8 +825,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 var showWhatChangedInfo by remember { mutableStateOf(false) }
                 if (changedTrends.isNotEmpty()) {
                     PremiumGate(
-                        message = "Unlock What Changed",
-                        subtitle = "See which logged items moved over the last month",
+                        message = t("Unlock What Changed"),
+                        subtitle = t("See which logged items moved over the last month"),
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
@@ -842,7 +842,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             ) {
                                     Icon(
                                         Icons.Outlined.Info,
-                                        contentDescription = "About What Changed",
+                                        contentDescription = t("About What Changed"),
                                         tint = AppTheme.SubtleTextColor,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -855,11 +855,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showWhatChangedInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showWhatChangedInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About What Changed", color = AppTheme.TitleColor,
+                            Text(t("About What Changed"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -873,14 +873,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // ── 7. WHAT WERE YOU DOING ──
                 var showContextInfo by remember { mutableStateOf(false) }
                 PremiumGate(
-                    message = "Unlock Context Analysis",
-                    subtitle = "See what you were doing when migraines hit",
+                    message = t("Unlock Context Analysis"),
+                    subtitle = t("See what you were doing when migraines hit"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
-                            title = "What Were You Doing",
-                            description = "Activities & locations during your migraines",
+                            title = t("What Were You Doing"),
+                            description = t("Activities & locations during your migraines"),
                             resId = R.drawable.brainy_runner,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) },
@@ -894,7 +894,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = "About What Were You Doing",
+                                    contentDescription = t("About What Were You Doing"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -906,11 +906,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showContextInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showContextInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About What Were You Doing", color = AppTheme.TitleColor,
+                            Text(t("About What Were You Doing"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -932,14 +932,14 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val auraInsights by vm.auraInsights.collectAsState()
                 var showImpactInfo by remember { mutableStateOf(false) }
                 PremiumGate(
-                    message = "Unlock Impact Analysis",
-                    subtitle = "See severity, pain locations & missed activities",
+                    message = t("Unlock Impact Analysis"),
+                    subtitle = t("See severity, pain locations & missed activities"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
-                            title = "How Did It Impact You",
-                            description = "Severity, pain locations, symptoms & missed activities",
+                            title = t("How Did It Impact You"),
+                            description = t("Severity, pain locations, symptoms & missed activities"),
                             resId = R.drawable.brainy_recover,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
@@ -953,7 +953,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = "About How Did It Impact You",
+                                    contentDescription = t("About How Did It Impact You"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -965,11 +965,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onDismissRequest = { showImpactInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showImpactInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About How Did It Impact You", color = AppTheme.TitleColor,
+                            Text(t("About How Did It Impact You"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -1004,7 +1004,7 @@ fun MedicalDisclaimerCard(prefKey: String) {
     BaseCard(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.Top) {
             Text(
-                "MigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. Risk estimates and insights are based on your own logged data and are not medical advice; always consult a qualified healthcare professional.",
+                t("MigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. Risk estimates and insights are based on your own logged data and are not medical advice; always consult a qualified healthcare professional."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.weight(1f)
@@ -1018,7 +1018,7 @@ fun MedicalDisclaimerCard(prefKey: String) {
             ) {
                 Icon(
                     Icons.Outlined.Close,
-                    contentDescription = "Dismiss disclaimer",
+                    contentDescription = t("Dismiss disclaimer"),
                     tint = AppTheme.SubtleTextColor,
                     modifier = Modifier.size(16.dp)
                 )
@@ -1041,13 +1041,13 @@ private fun MigraineSelector(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Older",
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Older"),
                 tint = if (idx < sorted.size - 1) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-            Text(sel?.label ?: "Migraine", color = Color.White,
+            Text(sel?.label ?: t("Migraine"), color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sel != null) {
@@ -1057,18 +1057,18 @@ private fun MigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "-"}/10",
+                    Text(t("%1\$s%2\$sm • Severity: %3\$s/10", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: "-"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "-"}/10",
+                    Text(t("Severity: %s/10", sel.severity ?: "-"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Text("${idx + 1} of ${sorted.size}", color = AppTheme.AccentPurple,
+            Text(t("%1\$s of %2\$s", idx + 1, sorted.size), color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
         }
         IconButton(onClick = onNext, enabled = idx > 0) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, "Newer",
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, t("Newer"),
                 tint = if (idx > 0) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
@@ -1084,7 +1084,7 @@ private fun Chip(n: Int, label: String, color: Color) {
         Text("$n", color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.width(2.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -1146,7 +1146,7 @@ internal fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes
             Column(Modifier.weight(1f)) {
                 Text(data.logType, color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                Text("${data.totalLogged} logged • ${data.breakdown.size} categories",
+                Text(t("%1\$s logged • %2\$s categories", data.totalLogged, data.breakdown.size),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
@@ -1170,7 +1170,7 @@ internal fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Side effects: ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                Text(t("Side effects: "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
                 listOf(
                     Color(0xFF81C784) to "none",
                     Color(0xFFFFB74D) to "soft",
@@ -1182,7 +1182,7 @@ internal fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes
                         drawCircle(c.copy(alpha = 0.7f), size.minDimension / 2f, style = Stroke(width = 2f))
                     }
                     Spacer(Modifier.width(3.dp))
-                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                    Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
                 }
             }
         }
@@ -1200,16 +1200,16 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("Migraines", color = AppTheme.TitleColor,
+                Text(t("Migraines"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                Text("${ms.size} migraines logged",
+                Text(t("%s migraines logged", ms.size),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
         }
         pcs?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(16.dp))
-            Text("Pain Character", color = Color(0xFFEF5350),
+            Text(t("Pain Character"), color = Color(0xFFEF5350),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
             if (data.axes.size >= 3) {
@@ -1220,7 +1220,7 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
         }
         acs?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(16.dp))
-            Text("Accompanying Experience", color = Color(0xFFBA68C8),
+            Text(t("Accompanying Experience"), color = Color(0xFFBA68C8),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
             if (data.axes.size >= 3) {
@@ -1231,7 +1231,7 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
         }
         pds?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(16.dp))
-            Text("Postdrome", color = Color(0xFF4DB6AC),
+            Text(t("Postdrome"), color = Color(0xFF4DB6AC),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
             if (data.axes.size >= 3) {
@@ -1251,12 +1251,12 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
 @Composable
 internal fun LiftBadge(lift: Float) {
     val label = when {
-        lift >= 2f -> "${lift.toInt()}\u00D7 more likely"
-        else -> "${String.format("%.1f", lift)}\u00D7 more likely"
+        lift >= 2f -> t("%s\u00D7 more likely", lift.toInt())
+        else -> t("%s\u00D7 more likely", String.format("%.1f", lift))
     }
     val fraction = (lift / 5f).coerceIn(0f, 1f)
     Column(horizontalAlignment = Alignment.End) {
-        Text(label, color = AppTheme.AccentPurple,
+        Text(t(label), color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
         Spacer(Modifier.height(3.dp))
         Box(
@@ -1301,9 +1301,9 @@ internal fun PatternBadge(stat: EdgeFunctionsService.CorrelationStat) {
 @Composable
 internal fun LagChip(lagDays: Int) {
     val text = when (lagDays) {
-        0 -> "same day"
-        1 -> "1 day before"
-        else -> "$lagDays days before"
+        0 -> t("same day")
+        1 -> t("1 day before")
+        else -> t("%s days before", lagDays)
     }
     Text(
         text,
@@ -1534,9 +1534,9 @@ internal fun TopPatternsCard(
                     BrainyBlobIcon(flip = true)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Patterns", color = AppTheme.TitleColor,
+                        Text(t("Patterns"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Each factor made a migraine this many times likelier",
+                        Text(t("Each factor made a migraine this many times likelier"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     SortChipMenu(sortMode,
@@ -1550,13 +1550,13 @@ internal fun TopPatternsCard(
                 }
                 Spacer(Modifier.height(2.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Confidence: three dots is the strongest statistical signal.",
+                    Text(t("Confidence: three dots is the strongest statistical signal."),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.weight(1f))
                     if (hiddenCount > 0) {
                         Text(
-                            if (showHidden) "hide $hiddenCount again" else "$hiddenCount hidden \u00b7 show",
+                            if (showHidden) t("hide %s again", hiddenCount) else t("%s hidden \u00b7 show", hiddenCount),
                             color = AppTheme.AccentPurple,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                             modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
@@ -1570,9 +1570,9 @@ internal fun TopPatternsCard(
             MaybeWatermarkCard(watermark = watermarkOnLast, resId = R.drawable.brainy_detective) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Combinations", color = AppTheme.TitleColor,
+                        Text(t("Combinations"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Together, these pairs multiplied your risk the most",
+                        Text(t("Together, these pairs multiplied your risk the most"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     SortChipMenu(comboSortMode,
@@ -1595,7 +1595,7 @@ internal fun SortChipMenu(current: String, options: List<String>, onSelect: (Str
     var open by remember { mutableStateOf(false) }
     Box {
         Text(
-            "$current \u25be",
+            t("%s \u25be", t(current)),
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier
@@ -1611,7 +1611,7 @@ internal fun SortChipMenu(current: String, options: List<String>, onSelect: (Str
         ) {
             options.forEach { mode ->
                 DropdownMenuItem(
-                    text = { Text(mode, color = if (mode == current) AppTheme.AccentPurple else Color.White,
+                    text = { Text(t(mode), color = if (mode == current) AppTheme.AccentPurple else Color.White,
                         style = MaterialTheme.typography.bodySmall) },
                     onClick = { onSelect(mode); open = false }
                 )
@@ -1710,7 +1710,7 @@ private fun PatternTile(
                 Spacer(Modifier.width(8.dp))
                 Icon(
                     if (dimmed) Icons.Outlined.Check else Icons.Outlined.Close,
-                    contentDescription = if (dimmed) "Unhide" else "Hide",
+                    contentDescription = if (dimmed) t("Unhide") else t("Hide"),
                     tint = AppTheme.SubtleTextColor.copy(alpha = if (dimmed) 0.9f else 0.45f),
                     modifier = Modifier.size(15.dp).clickable { toggle() }
                 )
@@ -1720,12 +1720,12 @@ private fun PatternTile(
         Text("$lagText  \u00b7  $occText", color = metaColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text("confidence", color = metaColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("confidence"), color = metaColor, style = MaterialTheme.typography.labelSmall)
             ConfidenceDots(stat.pValue, Color(0xFFB388FF))
             if (stat.factorType == "trigger" && (stat.avgSeverity != null || stat.avgDurationHrs != null)) {
                 Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
                 stat.avgSeverity?.let { sev ->
-                    Text("${String.format("%.0f", sev)}/10 avg severity", color = metaColor,
+                    Text(t("%s/10 avg severity", String.format("%.0f", sev)), color = metaColor,
                         style = MaterialTheme.typography.labelSmall)
                 }
                 stat.avgDurationHrs?.let { hrs ->
@@ -1752,7 +1752,7 @@ internal fun PatternsPreviewCard(
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             BrainyBlobIcon(flip = true)
             Spacer(Modifier.width(8.dp))
-            Text("What Happened", color = AppTheme.TitleColor,
+            Text(t("What Happened"), color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.weight(1f))
             Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
@@ -1760,7 +1760,7 @@ internal fun PatternsPreviewCard(
 
         if (patterns.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Patterns", color = Color(0xFFCE93D8),
+            Text(t("Patterns"), color = Color(0xFFCE93D8),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             patterns.forEach { stat ->
                 CorrelationRowCompact(stat)
@@ -1769,7 +1769,7 @@ internal fun PatternsPreviewCard(
 
         if (interactions.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Combinations", color = Color(0xFFE57373),
+            Text(t("Combinations"), color = Color(0xFFE57373),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             interactions.forEach { stat ->
                 CorrelationRowCompact(stat)
@@ -1778,7 +1778,7 @@ internal fun PatternsPreviewCard(
 
         if (symptomOutcomes.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Trigger \u2192 Symptom", color = Color(0xFFFFB74D),
+            Text(t("Trigger \u2192 Symptom"), color = Color(0xFFFFB74D),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             symptomOutcomes.take(2).forEach { stat ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1806,7 +1806,7 @@ internal fun TreatmentPreviewCard(
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             BrainyBlobIcon(R.drawable.brainy_shield_small)
             Spacer(Modifier.width(8.dp))
-            Text("What Worked", color = AppTheme.TitleColor,
+            Text(t("What Worked"), color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.weight(1f))
             Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
@@ -1814,13 +1814,13 @@ internal fun TreatmentPreviewCard(
 
         if (treatments.isEmpty() && treatmentInteractions.isEmpty() && symptomSegments.isEmpty()) {
             Spacer(Modifier.height(4.dp))
-            Text("Log medicines and reliefs with your migraines to see what works best.",
+            Text(t("Log medicines and reliefs with your migraines to see what works best."),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
 
         if (treatments.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Top Treatments", color = Color(0xFF81C784),
+            Text(t("Top Treatments"), color = Color(0xFF81C784),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             treatments.forEach { stat ->
                 TreatmentRowCompact(stat)
@@ -1829,7 +1829,7 @@ internal fun TreatmentPreviewCard(
 
         if (treatmentInteractions.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Effective Combinations", color = Color(0xFF81C784),
+            Text(t("Effective Combinations"), color = Color(0xFF81C784),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             treatmentInteractions.forEach { stat ->
                 TreatmentRowCompact(stat)
@@ -1838,7 +1838,7 @@ internal fun TreatmentPreviewCard(
 
         if (symptomSegments.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Works Best When", color = Color(0xFF4FC3F7),
+            Text(t("Works Best When"), color = Color(0xFF4FC3F7),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             symptomSegments.take(2).forEach { stat ->
                 val direction = if (stat.liftRatio > 1.1f) "better" else if (stat.liftRatio < 0.9f) "worse" else "similar"
@@ -1879,7 +1879,7 @@ private fun TreatmentRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
             Spacer(Modifier.height(2.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "used in ${stat.pctMigraineWindows.toInt()}% of migraines",
+                    t("used in %s%% of migraines", stat.pctMigraineWindows.toInt()),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall,
                 )
@@ -1917,9 +1917,9 @@ internal fun AccuracyPreviewCard(
             BrainyBlobIcon(R.drawable.brainy_archer_small)
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
-                Text("Accuracy", color = AppTheme.TitleColor,
+                Text(t("Accuracy"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("How well your risk score lined up with your attacks", color = AppTheme.SubtleTextColor,
+                Text(t("How well your risk score lined up with your attacks"), color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall)
             }
             Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
@@ -1942,7 +1942,7 @@ internal fun AccuracyPreviewCard(
                         Text("${gaugeAccuracy!!.sensitivityPct}%", color = Color(0xFF81C784),
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
                         Spacer(Modifier.height(4.dp))
-                        Text("Caught", color = AppTheme.SubtleTextColor,
+                        Text(t("Caught"), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                     }
                 }
@@ -1961,7 +1961,7 @@ internal fun AccuracyPreviewCard(
                             color = if (gaugeAccuracy.falseAlarmRatePct > 30) Color(0xFFE57373) else Color(0xFFFFB74D),
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
                         Spacer(Modifier.height(4.dp))
-                        Text("False alarms", color = AppTheme.SubtleTextColor,
+                        Text(t("False alarms"), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                     }
                 }
@@ -1979,7 +1979,7 @@ internal fun AccuracyPreviewCard(
                         Text("${gaugeAccuracy!!.totalDays}", color = Color.White,
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
                         Spacer(Modifier.height(4.dp))
-                        Text("Days tracked", color = AppTheme.SubtleTextColor,
+                        Text(t("Days tracked"), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                     }
                 }
@@ -1987,7 +1987,7 @@ internal fun AccuracyPreviewCard(
         } else {
             Spacer(Modifier.height(14.dp))
             Text(
-                "Need at least 7 days of gauge data to show accuracy.",
+                t("Need at least 7 days of gauge data to show accuracy."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
                 modifier = Modifier.fillMaxWidth(),
@@ -2018,7 +2018,7 @@ private fun ThresholdPreviewCard(
         ) {
             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawThresholdTarget(Color(0xFFFFB74D)) } }
             Spacer(Modifier.width(8.dp))
-            Text("Threshold Suggestions", color = AppTheme.TitleColor,
+            Text(t("Threshold Suggestions"), color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.weight(1f))
             if (isAdjusting) {
@@ -2096,9 +2096,9 @@ internal fun ThresholdDetailCard(
             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawThresholdTarget(Color(0xFFFFB74D)) } }
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
-                Text("Threshold Suggestions", color = AppTheme.TitleColor,
+                Text(t("Threshold Suggestions"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("Your data suggests adjusting these triggers",
+                Text(t("Your data suggests adjusting these triggers"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             if (isAdjusting) {
@@ -2137,13 +2137,13 @@ internal fun ThresholdDetailCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column {
-                            Text("Current", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("Current"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             Text(fmtCurrent, color = Color(0xFFFFB74D),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
                         }
                         Text("\u2192", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.titleMedium)
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Suggested", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("Suggested"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             Text(fmtSuggested, color = Color(0xFF81C784),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
                         }
@@ -2169,7 +2169,7 @@ internal fun ThresholdDetailCard(
 
                         val statAdjusting = stat.id in adjustingIds
                         Text(
-                            if (statAdjusting) "Adjusting…" else "Adjust",
+                            if (statAdjusting) t("Adjusting…") else t("Adjust"),
                             color = if (statAdjusting) AppTheme.SubtleTextColor else AppTheme.AccentPurple,
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                             modifier = Modifier
@@ -2198,7 +2198,7 @@ internal fun InteractionInsightsCard(interactions: List<EdgeFunctionsService.Cor
     BaseCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text("Combinations", color = Color(0xFFE57373),
+                Text(t("Combinations"), color = Color(0xFFE57373),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
             }
         }
@@ -2266,9 +2266,9 @@ internal fun TreatmentEffectivenessCard(
                 BrainyBlobIcon(R.drawable.brainy_shield_small)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Treatments", color = AppTheme.TitleColor,
+                    Text(t("Treatments"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("How much easier each one made your migraines",
+                    Text(t("How much easier each one made your migraines"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
                 SortChipMenu(sortMode,
@@ -2276,7 +2276,7 @@ internal fun TreatmentEffectivenessCard(
             }
             Spacer(Modifier.height(6.dp))
             if (top.isEmpty()) {
-                Text("Log medicines and reliefs with your migraines to see what works best.",
+                Text(t("Log medicines and reliefs with your migraines to see what works best."),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             visibleTreatments.forEach { stat ->
@@ -2286,13 +2286,13 @@ internal fun TreatmentEffectivenessCard(
             }
             Spacer(Modifier.height(2.dp))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("\u00d7 shorter \u2014 migraines ended that much faster \u00b7 \u00d7 milder \u2014 pain stayed that much lower",
+                Text(t("\u00d7 shorter \u2014 migraines ended that much faster \u00b7 \u00d7 milder \u2014 pain stayed that much lower"),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.weight(1f))
                 if (hiddenCount > 0) {
                     Text(
-                        if (showHidden) "hide $hiddenCount again" else "$hiddenCount hidden \u00b7 show",
+                        if (showHidden) t("hide %s again", hiddenCount) else t("%s hidden \u00b7 show", hiddenCount),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
@@ -2305,9 +2305,9 @@ internal fun TreatmentEffectivenessCard(
             MaybeWatermarkCard(watermark = watermarkOnLast, resId = R.drawable.brainy_shield, flipWatermark = true) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Effective Combinations", color = AppTheme.TitleColor,
+                        Text(t("Effective Combinations"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Pairs that worked better together",
+                        Text(t("Pairs that worked better together"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     SortChipMenu(comboSortMode,
@@ -2395,18 +2395,18 @@ private fun TreatmentTile(
                 Spacer(Modifier.width(8.dp))
                 Icon(
                     if (dimmed) Icons.Outlined.Check else Icons.Outlined.Close,
-                    contentDescription = if (dimmed) "Unhide" else "Hide",
+                    contentDescription = if (dimmed) t("Unhide") else t("Hide"),
                     tint = AppTheme.SubtleTextColor.copy(alpha = if (dimmed) 0.9f else 0.45f),
                     modifier = Modifier.size(15.dp).clickable { toggle() }
                 )
             }
         }
         Spacer(Modifier.height(6.dp))
-        Text("used in ${stat.pctMigraineWindows.toInt()}% of migraines", color = metaColor,
+        Text(t("used in %s%% of migraines", stat.pctMigraineWindows.toInt()), color = metaColor,
             style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text("confidence", color = metaColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("confidence"), color = metaColor, style = MaterialTheme.typography.labelSmall)
             ConfidenceDots(stat.pValue, Color(0xFF81C784))
             secondary?.let {
                 Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
@@ -2444,7 +2444,7 @@ internal fun TreatmentRow(stat: EdgeFunctionsService.CorrelationStat) {
                 Spacer(Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "used in ${stat.pctMigraineWindows.toInt()}% of migraines",
+                        t("used in %s%% of migraines", stat.pctMigraineWindows.toInt()),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall,
                     )
@@ -2485,7 +2485,7 @@ private fun EffectivenessBadge(lift: Float, type: String = "effective") {
     }
     val fraction = (lift / 5f).coerceIn(0f, 1f)
     Column(horizontalAlignment = Alignment.End) {
-        Text(label, color = green,
+        Text(t(label), color = green,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
         Spacer(Modifier.height(3.dp))
         Box(
@@ -2513,7 +2513,7 @@ internal fun TreatmentInteractionCard(interactions: List<EdgeFunctionsService.Co
     BaseCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text("Effective Combinations", color = Color(0xFF81C784),
+                Text(t("Effective Combinations"), color = Color(0xFF81C784),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
             }
         }
@@ -2574,9 +2574,9 @@ internal fun ContextCard(
             BrainyBlobIcon(R.drawable.brainy_runner_small)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("Activities & Locations", color = AppTheme.TitleColor,
+                Text(t("Activities & Locations"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("What you were doing when your migraines hit",
+                Text(t("What you were doing when your migraines hit"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             if (onClick != null) {
@@ -2589,7 +2589,7 @@ internal fun ContextCard(
         Spacer(Modifier.height(6.dp))
 
         if (items.isEmpty()) {
-            Text("Log activities and locations with your migraines to see what you were doing when they hit.",
+            Text(t("Log activities and locations with your migraines to see what you were doing when they hit."),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
             visible.forEach { item ->
@@ -2625,7 +2625,7 @@ internal fun ContextCard(
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(Modifier.width(10.dp))
-                        Text("${item.count} migraines (${item.pctOfMigraines.toInt()}%)",
+                        Text(t("%1\$s migraines (%2\$s%%)", item.count, item.pctOfMigraines.toInt()),
                             color = cyan,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             textAlign = TextAlign.End)
@@ -2633,7 +2633,7 @@ internal fun ContextCard(
                             Spacer(Modifier.width(8.dp))
                             Icon(
                                 if (item.name in hiddenKeys) Icons.Outlined.Check else Icons.Outlined.Close,
-                                contentDescription = if (item.name in hiddenKeys) "Unhide" else "Hide",
+                                contentDescription = if (item.name in hiddenKeys) t("Unhide") else t("Hide"),
                                 tint = AppTheme.SubtleTextColor.copy(alpha = if (item.name in hiddenKeys) 0.9f else 0.45f),
                                 modifier = Modifier.size(15.dp).clickable { toggleHidden(item.name) }
                             )
@@ -2646,7 +2646,7 @@ internal fun ContextCard(
                             item.avgSeverity >= 5f -> Color(0xFFD9B27C)
                             else -> Color(0xFF9CCB9E)
                         }
-                        Text("${String.format("%.0f", item.avgSeverity)}/10 avg severity",
+                        Text(t("%s/10 avg severity", String.format("%.0f", item.avgSeverity)),
                             color = sevColor,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                         item.avgDurationHrs?.let { hrs ->
@@ -2660,13 +2660,13 @@ internal fun ContextCard(
                 Spacer(Modifier.height(6.dp))
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Severity colour: green mild, amber medium, rose severe.",
+                Text(t("Severity colour: green mild, amber medium, rose severe."),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.weight(1f))
                 if (hiddenCount > 0 && onClick == null) {
                     Text(
-                        if (showHidden) "hide $hiddenCount again" else "$hiddenCount hidden \u00b7 show",
+                        if (showHidden) t("hide %s again", hiddenCount) else t("%s hidden \u00b7 show", hiddenCount),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
@@ -2699,7 +2699,7 @@ internal fun ImpactCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             BrainyBlobIcon(R.drawable.brainy_recover_small)
             Spacer(Modifier.width(8.dp))
-            Text("How Did It Impact You", color = AppTheme.TitleColor,
+            Text(t("How Did It Impact You"), color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.weight(1f))
             if (onClick != null) {
@@ -2709,7 +2709,7 @@ internal fun ImpactCard(
 
         if (!hasData) {
             Spacer(Modifier.height(8.dp))
-            Text("Log pain locations, severity, and missed activities to see your impact summary.",
+            Text(t("Log pain locations, severity, and missed activities to see your impact summary."),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                 textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -2729,7 +2729,7 @@ internal fun ImpactCard(
                         color = sevColor,
                         style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                     )
-                    Text("avg /10", color = AppTheme.SubtleTextColor,
+                    Text(t("avg /10"), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall)
                 }
                 Spacer(Modifier.width(16.dp))
@@ -2761,10 +2761,10 @@ internal fun ImpactCard(
         // ── 2b. Aura map (where in the visual field, % of aura attacks) ──
         if (auraZoneCounts.isNotEmpty() && auraAttacks > 0) {
             Spacer(Modifier.height(14.dp))
-            Text("Aura Location", color = AppTheme.AccentPurple,
+            Text(t("Aura Location"), color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             Spacer(Modifier.height(2.dp))
-            Text("Across $auraAttacks aura attack${if (auraAttacks > 1) "s" else ""}, as seen through your own eyes",
+            Text((if (auraAttacks == 1) t("Across 1 aura attack, as seen through your own eyes") else t("Across %s aura attacks, as seen through your own eyes", auraAttacks)),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(8.dp))
             AuraHeatMap(
@@ -2777,9 +2777,9 @@ internal fun ImpactCard(
             auraDurationStats?.let { (avgMin, timed) ->
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Average aura duration", color = AppTheme.SubtleTextColor,
+                    Text(t("Average aura duration"), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                    Text("${formatAuraDuration(avgMin)} · $timed timed",
+                    Text(t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), timed),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
@@ -2800,7 +2800,7 @@ internal fun ImpactCard(
         // ── 3. Missed Activities ──
         if (impactItems.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Missed Activities", color = Color(0xFFE57373),
+            Text(t("Missed Activities"), color = Color(0xFFE57373),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
 
             impactItems.forEach { item ->
@@ -2813,7 +2813,7 @@ internal fun ImpactCard(
                         Text(prettyLabel(item.name), color = Color.White,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text("missed during ${item.pctOfMigraines.toInt()}% of migraines",
+                        Text(t("missed during %s%% of migraines", item.pctOfMigraines.toInt()),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                     Text("${item.totalMissed}\u00D7", color = Color(0xFFE57373),
@@ -2830,7 +2830,7 @@ internal fun ImpactCard(
 private fun TopSymptomsSection(topSymptoms: List<EdgeFunctionsService.SymptomStat>) {
     if (topSymptoms.isEmpty()) return
     Spacer(Modifier.height(12.dp))
-    Text("Top Symptoms", color = Color(0xFFCE93D8),
+    Text(t("Top Symptoms"), color = Color(0xFFCE93D8),
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
     topSymptoms.forEach { s ->
         val pct = (s.pctOfAttacks * 100f).toInt()
@@ -2841,7 +2841,7 @@ private fun TopSymptomsSection(topSymptoms: List<EdgeFunctionsService.SymptomSta
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             val sev = s.avgSeverity
             if (sev != null) {
-                Text("sev ${String.format("%.1f", sev)}",
+                Text(t("sev %s", String.format("%.1f", sev)),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(end = 6.dp))
             }
@@ -2878,7 +2878,7 @@ internal fun PainHeatMap(
     Box(modifier.clip(RoundedCornerShape(12.dp))) {
         Image(
             painter = painterResource(imageRes),
-            contentDescription = "Pain location heatmap",
+            contentDescription = t("Pain location heatmap"),
             contentScale = ContentScale.FillWidth,
             alpha = 0.3f,
             modifier = Modifier.fillMaxSize()
@@ -2988,7 +2988,7 @@ internal fun GaugePerformanceCard(
                     Text("${ga.sensitivityPct}%", color = Color(0xFF81C784),
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
                     Spacer(Modifier.height(4.dp))
-                    Text("Caught", color = AppTheme.SubtleTextColor,
+                    Text(t("Caught"), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                 }
             }
@@ -3006,7 +3006,7 @@ internal fun GaugePerformanceCard(
                         color = if (ga.falseAlarmRatePct > 30) Color(0xFFE57373) else Color(0xFFFFB74D),
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
                     Spacer(Modifier.height(4.dp))
-                    Text("False alarms", color = AppTheme.SubtleTextColor,
+                    Text(t("False alarms"), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
                 }
             }
@@ -3035,7 +3035,7 @@ internal fun GaugeProposalRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(proposal.label.uppercase(), color = zoneColor,
+                Text(t(proposal.label).uppercase(), color = zoneColor,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 Spacer(Modifier.width(6.dp))
                 Text(typeLabel, color = AppTheme.SubtleTextColor,
@@ -3062,12 +3062,12 @@ internal fun GaugeProposalRow(
             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
         } else {
             IconButton(onClick = onReject, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Outlined.Close, contentDescription = "Reject",
+                Icon(Icons.Outlined.Close, contentDescription = t("Reject"),
                     tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
             }
             Spacer(Modifier.width(2.dp))
             IconButton(onClick = onAccept, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Outlined.Check, contentDescription = "Accept",
+                Icon(Icons.Outlined.Check, contentDescription = t("Accept"),
                     tint = Color(0xFF81C784), modifier = Modifier.size(18.dp))
             }
         }
@@ -3078,7 +3078,7 @@ internal fun GaugeProposalRow(
 internal fun GaugeStat(value: String, label: String, sublabel: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
         if (sublabel.isNotBlank()) {
             Text(sublabel, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
@@ -3093,7 +3093,7 @@ private fun WeeklySummaryCard(ws: InsightsViewModel.WeeklySummary, onClick: () -
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawCalendarWeek(AppTheme.AccentPurple) } }
             Spacer(Modifier.width(8.dp))
-            Text("This Week", color = AppTheme.TitleColor,
+            Text(t("This Week"), color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.weight(1f))
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
@@ -3114,8 +3114,8 @@ private fun WeeklySummaryCard(ws: InsightsViewModel.WeeklySummary, onClick: () -
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                     }
                 }
-                Text("migraines", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
-                Text("vs ${ws.lastWeekCount} last week", color = AppTheme.SubtleTextColor,
+                Text(t("migraines"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("vs %s last week", ws.lastWeekCount), color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall)
             }
 
@@ -3128,9 +3128,9 @@ private fun WeeklySummaryCard(ws: InsightsViewModel.WeeklySummary, onClick: () -
                     }
                     Text(String.format("%.1f", avg), color = sevColor,
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-                    Text("avg severity", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("avg severity"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
                     ws.lastWeekAvgSeverity?.let { lastAvg ->
-                        Text("vs ${String.format("%.1f", lastAvg)} last week", color = AppTheme.SubtleTextColor,
+                        Text(t("vs %s last week", String.format("%.1f", lastAvg)), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -3139,8 +3139,8 @@ private fun WeeklySummaryCard(ws: InsightsViewModel.WeeklySummary, onClick: () -
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("${ws.totalLogged}", color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-                Text("total", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
-                Text("all time", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("total"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("all time"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -3158,9 +3158,9 @@ private fun InsightHistoryCard(history: List<InsightsViewModel.DailyInsightRow>)
             Text("💡", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
-                Text("Daily Insights", color = AppTheme.TitleColor,
+                Text(t("Daily Insights"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("Your recent personalised advice",
+                Text(t("Your recent personalised advice"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -3209,7 +3209,7 @@ private fun InsightHistoryCard(history: List<InsightsViewModel.DailyInsightRow>)
         if (history.size > 3) {
             Spacer(Modifier.height(4.dp))
             Text(
-                if (expanded) "Show less" else "Show all ${history.size} insights",
+                if (expanded) t("Show less") else t("Show all %s insights", history.size),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier
@@ -3230,7 +3230,7 @@ private fun TreatmentEffectivenessContent(
     Divider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
     Spacer(Modifier.height(12.dp))
 
-    Text("Effectiveness Ranking", color = AppTheme.SubtleTextColor,
+    Text(t("Effectiveness Ranking"), color = AppTheme.SubtleTextColor,
         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
     Spacer(Modifier.height(8.dp))
 
@@ -3241,11 +3241,11 @@ private fun TreatmentEffectivenessContent(
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFF81C784)))
-            Text("High relief", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("High relief"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFFFB74D)))
-            Text("Some relief", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Some relief"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE57373)))
@@ -3263,10 +3263,10 @@ private fun TreatmentRow(item: InsightsViewModel.TreatmentItem) {
     }
     val pct = (item.avgRelief / 3f).coerceIn(0f, 1f)
     val label = when {
-        item.avgRelief >= 2.5f -> "High"
-        item.avgRelief >= 1.5f -> "Mild"
-        item.avgRelief >= 0.5f -> "Low"
-        else -> "None"
+        item.avgRelief >= 2.5f -> t("High")
+        item.avgRelief >= 1.5f -> t("Mild")
+        item.avgRelief >= 0.5f -> t("Low")
+        else -> t("None")
     }
 
     Row(
@@ -3277,7 +3277,7 @@ private fun TreatmentRow(item: InsightsViewModel.TreatmentItem) {
             Text(prettyLabel(item.name), color = Color.White,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("${item.count}\u00D7 used", color = AppTheme.SubtleTextColor,
+            Text(t("%s\u00D7 used", item.count), color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall)
         }
 
@@ -3298,7 +3298,7 @@ private fun TreatmentRow(item: InsightsViewModel.TreatmentItem) {
 
         Spacer(Modifier.width(8.dp))
 
-        Text(label, color = barColor,
+        Text(t(label), color = barColor,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.width(36.dp))
     }
@@ -3320,9 +3320,9 @@ private fun DayOfWeekCard(pattern: List<InsightsViewModel.DayOfWeekStat>) {
             Text("\uD83D\uDCC6", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.width(8.dp))
             Column {
-                Text("Day of Week", color = AppTheme.TitleColor,
+                Text(t("Day of Week"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("When your migraines hit most",
+                Text(t("When your migraines hit most"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -3383,8 +3383,7 @@ private fun DayOfWeekCard(pattern: List<InsightsViewModel.DayOfWeekStat>) {
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
-                        "${w.dayName}s account for ${String.format("%.0f", w.pct)}% of your migraines \u2014 " +
-                            "${String.format("%.1f", ratio)}\u00D7 the average day.",
+                        t("%1\$ss account for %2\$s%% of your migraines \u2014 %3\$s\u00D7 the average day.", w.dayName, String.format("%.0f", w.pct), String.format("%.1f", ratio)),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(10.dp),
@@ -3439,9 +3438,9 @@ internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick
             BrainyBlobIcon(R.drawable.brainy_risk_small)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("What changed", color = AppTheme.TitleColor,
+                Text(t("What changed"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("Last 30 days vs the 30 before", color = AppTheme.SubtleTextColor,
+                Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(8.dp))
@@ -3470,46 +3469,46 @@ internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick
         }
         if (medRising) {
             Spacer(Modifier.height(2.dp))
-            Text("Acute medication use rising — worth an overuse check.",
+            Text(t("Acute medication use rising — worth an overuse check."),
                 color = TrendAmber, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
 
-private const val MEDICAL_NOTE = "\n\nMigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. This is not medical advice, always consult a qualified healthcare professional."
+private val MEDICAL_NOTE: String get() = "\n\n" + tSync("MigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. This is not medical advice, always consult a qualified healthcare professional.")
 
 object FullReportInfoCopy {
-    const val text = "The big one. A single scrollable report that pulls every angle we have on your data into one place: frequency over time, top patterns and trigger interactions, which treatments and lifestyle changes are working, the activities and locations that surround your attacks, severity, pain location and aura breakdowns, missed-activity counts, plus the full migraine timeline with spider charts of what was happening around each attack.\n\nThe raw inputs are tweakable. You can edit any logged migraine, change a trigger or prodrome's severity in Manage Items, and filter the whole report by time range or tags. The AI-derived parts (Recommendations and the What Happened pattern findings) aren't directly editable; they recompute live from whatever data you've kept in.\n\nUseful for sharing with your neurologist or just getting a quarterly read of how things are trending. Everything you see in the individual cards below is in here too, but stitched together so patterns across categories become obvious." + MEDICAL_NOTE
+    val text: String get() = tSync("The big one. A single scrollable report that pulls every angle we have on your data into one place: frequency over time, top patterns and trigger interactions, which treatments and lifestyle changes are working, the activities and locations that surround your attacks, severity, pain location and aura breakdowns, missed-activity counts, plus the full migraine timeline with spider charts of what was happening around each attack.\n\nThe raw inputs are tweakable. You can edit any logged migraine, change a trigger or prodrome's severity in Manage Items, and filter the whole report by time range or tags. The AI-derived parts (Recommendations and the What Happened pattern findings) aren't directly editable; they recompute live from whatever data you've kept in.\n\nUseful for sharing with your neurologist or just getting a quarterly read of how things are trending. Everything you see in the individual cards below is in here too, but stitched together so patterns across categories become obvious.") + MEDICAL_NOTE
 }
 
 object AiRecommendationsInfoCopy {
-    const val text = "A more useful read on top of the patterns we've already found in your data. The AI takes what's showing up (the items that turn up around your attacks, the combinations that look risky together, the treatments that seem to be helping) and adds a personal next step for each one, across six categories.\n\nWhat it looks at per category:\n• Triggers: the ones that keep showing up before attacks, and the pairs that look especially risky together. Gives you a preventive action tied to your pattern.\n• Prodromes: your personal early warning signs, with interventions that may abort or shorten an attack when they appear.\n• Medicines: rebound and overuse flags (triptans, NSAIDs, paracetamol, opioids), alternatives when something isn't relieving well, side-effect mitigation, same-class swaps, doctor-discussion prompts. All tied to your own usage.\n• Reliefs: same angles for non-drug methods (alternatives, technique tweaks, timing).\n• Activities: links your timing (exercise, sleep, stress) to context like cortisol and dehydration.\n• Symptoms: the ones running high or severe in your attacks, with targeted prep (anti-emetic on hand, dim-room kit, postdrome plan).\n\nEach recommendation comes with a short evidence line so you can see why it's being suggested. Dismiss anything that doesn't match your reality and it won't come back. These are starting points to discuss with your neurologist, not diagnoses." + MEDICAL_NOTE
+    val text: String get() = tSync("A more useful read on top of the patterns we've already found in your data. The AI takes what's showing up (the items that turn up around your attacks, the combinations that look risky together, the treatments that seem to be helping) and adds a personal next step for each one, across six categories.\n\nWhat it looks at per category:\n• Triggers: the ones that keep showing up before attacks, and the pairs that look especially risky together. Gives you a preventive action tied to your pattern.\n• Prodromes: your personal early warning signs, with interventions that may abort or shorten an attack when they appear.\n• Medicines: rebound and overuse flags (triptans, NSAIDs, paracetamol, opioids), alternatives when something isn't relieving well, side-effect mitigation, same-class swaps, doctor-discussion prompts. All tied to your own usage.\n• Reliefs: same angles for non-drug methods (alternatives, technique tweaks, timing).\n• Activities: links your timing (exercise, sleep, stress) to context like cortisol and dehydration.\n• Symptoms: the ones running high or severe in your attacks, with targeted prep (anti-emetic on hand, dim-room kit, postdrome plan).\n\nEach recommendation comes with a short evidence line so you can see why it's being suggested. Dismiss anything that doesn't match your reality and it won't come back. These are starting points to discuss with your neurologist, not diagnoses.") + MEDICAL_NOTE
 }
 
 object AccuracyInfoCopy {
-    const val text = "A reality check on your risk gauge. We look back at every day you've used the app and ask two questions: when the gauge said HIGH or MILD, did an attack actually happen? And when an attack happened, was the gauge warning the day before?\n\nThat gives you two numbers:\n• Hit rate: of all your attack days, what share the gauge correctly flagged as high-risk beforehand.\n• False alarm rate: of all your non-attack days, what share the gauge flagged anyway.\n\nTap in for the full breakdown (true positives, missed attacks, etc.) and to review any pending recalibration proposals. To tune the LOW / MILD / HIGH thresholds and the day-by-day decay curve yourself, open the menu and tap Risk Model. Lowering the HIGH threshold catches more attacks (higher hit rate) but also more false alarms; raising it does the opposite.\n\nThe monthly recalibration uses these same numbers to nudge your thresholds in the right direction: too many false alarms means thresholds get raised; missed attacks means they get lowered. Changes are incremental (around 20-30% per pass) so the gauge gradually homes in on what works for you.\n\nNeeds at least 7 days of logged data to start showing." + MEDICAL_NOTE
+    val text: String get() = tSync("A reality check on your risk gauge. We look back at every day you've used the app and ask two questions: when the gauge said HIGH or MILD, did an attack actually happen? And when an attack happened, was the gauge warning the day before?\n\nThat gives you two numbers:\n• Hit rate: of all your attack days, what share the gauge correctly flagged as high-risk beforehand.\n• False alarm rate: of all your non-attack days, what share the gauge flagged anyway.\n\nTap in for the full breakdown (true positives, missed attacks, etc.) and to review any pending recalibration proposals. To tune the LOW / MILD / HIGH thresholds and the day-by-day decay curve yourself, open the menu and tap Risk Model. Lowering the HIGH threshold catches more attacks (higher hit rate) but also more false alarms; raising it does the opposite.\n\nThe monthly recalibration uses these same numbers to nudge your thresholds in the right direction: too many false alarms means thresholds get raised; missed attacks means they get lowered. Changes are incremental (around 20-30% per pass) so the gauge gradually homes in on what works for you.\n\nNeeds at least 7 days of logged data to start showing.") + MEDICAL_NOTE
 }
 
 object WhatHappenedInfoCopy {
-    const val text = "The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"X× more likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list." + MEDICAL_NOTE
+    val text: String get() = tSync("The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"X× more likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list.") + MEDICAL_NOTE
 }
 
 object WhatWorkedInfoCopy {
-    const val text = "Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this." + MEDICAL_NOTE
+    val text: String get() = tSync("Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this.") + MEDICAL_NOTE
 }
 
 object WhatsHelpingInfoCopy {
-    const val text = "The positive side of your data: what you're doing right, tied to your migraine-free days.\n\u2022 Well done: habits and steady health signals (consistent sleep, calm stress, steady caffeine, trigger-free eating days) that show up on the days you stay migraine-free. Consistency is the point, staying near your own normal, not hitting anyone else's targets.\n\u2022 What drives it: the things that make those habits happen, an active day leading to steadier recovery, alcohol-free days leading to steadier sleep, yoga leading to calmer stress.\n\nEverything here is measured against your own data. Nothing in this card warns or judges; it only shows what is already working so you can keep doing it.\n\nFindings sharpen with more logging. If the card is quiet, it just needs more days of data, not different behaviour." + MEDICAL_NOTE
+    val text: String get() = tSync("The positive side of your data: what you're doing right, tied to your migraine-free days.\n\u2022 Well done: habits and steady health signals (consistent sleep, calm stress, steady caffeine, trigger-free eating days) that show up on the days you stay migraine-free. Consistency is the point, staying near your own normal, not hitting anyone else's targets.\n\u2022 What drives it: the things that make those habits happen, an active day leading to steadier recovery, alcohol-free days leading to steadier sleep, yoga leading to calmer stress.\n\nEverything here is measured against your own data. Nothing in this card warns or judges; it only shows what is already working so you can keep doing it.\n\nFindings sharpen with more logging. If the card is quiet, it just needs more days of data, not different behaviour.") + MEDICAL_NOTE
 }
 
 object WhatChangedInfoCopy {
-    const val text = "A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report." + MEDICAL_NOTE
+    val text: String get() = tSync("A straight before-and-after of what you've been logging: for every trigger, prodrome, medicine and relief, how often it appeared on the attacks of the last 30 days compared with the 30 days before that.\n\nThis is a tally, not a correlation analysis. It only counts items linked to an attack, and it only compares the two date windows — nothing is filtered or weighted. An item shows up here the moment its count moved between the two periods.\n\nColours give you the read at a glance: an unwanted item (trigger, prodrome, medicine) climbing shows red, easing off shows green. Reliefs work the other way round: using them more shows green.\n\nIf your acute medication count is climbing fast, a small note flags it. Medication-overuse headache is a real thing, and catching the trend early is exactly what this card is for.\n\nThe preview shows the four biggest movers. Tap in for the full list, matching the What changed page of the PDF report.") + MEDICAL_NOTE
 }
 
 object ContextInfoCopy {
-    const val text = "A simple picture of the activities and locations you've tagged on your migraine logs. For each one we show how often it showed up alongside an attack (count and percentage of your attacks) and the average severity of those attacks compared to your overall average. Higher than usual gets flagged red; lower gets flagged green.\n\nThe preview shows the top 2 by frequency. Tap in for the full list.\n\nImportant: this only counts activities and locations you've actually linked to a specific migraine (via the Activities and Locations steps in the full wizard, or in the Daily Check-In). It's not a correlation analysis like What Happened; it's a straight tally of what was around when you logged each attack. If you don't tag activities or locations, nothing shows up here." + MEDICAL_NOTE
+    val text: String get() = tSync("A simple picture of the activities and locations you've tagged on your migraine logs. For each one we show how often it showed up alongside an attack (count and percentage of your attacks) and the average severity of those attacks compared to your overall average. Higher than usual gets flagged red; lower gets flagged green.\n\nThe preview shows the top 2 by frequency. Tap in for the full list.\n\nImportant: this only counts activities and locations you've actually linked to a specific migraine (via the Activities and Locations steps in the full wizard, or in the Daily Check-In). It's not a correlation analysis like What Happened; it's a straight tally of what was around when you logged each attack. If you don't tag activities or locations, nothing shows up here.") + MEDICAL_NOTE
 }
 
 object ImpactInfoCopy {
-    const val text = "The downstream story: not what caused your attacks, but what they looked like and what you missed because of them.\n• Severity distribution: how your attacks break down across the 1-10 scale. Useful for spotting whether you mostly get moderate ones or whether you're getting a creeping number of severe ones.\n• Pain locations: which sides and zones of your head get hit most. Pulled from the Pain step in the wizard.\n• Aura location: if you log an aura, where in your field of vision it appears and how long it lasts, drawn as you see it through your own eyes. Only shows once you've logged at least one aura.\n• Top symptoms: which symptoms show up most often, with the average severity and duration of the attacks they appear in. Comes from your linked symptom logs.\n• Missed activities: the things you've explicitly tagged as missed because of an attack, ranked by how often they came up.\n\nTap in for the full breakdown.\n\nLike the other cards, this only counts data you've logged. If you don't rate severity, pick pain locations, or tag missed activities in your wizard, those sections stay empty." + MEDICAL_NOTE
+    val text: String get() = tSync("The downstream story: not what caused your attacks, but what they looked like and what you missed because of them.\n• Severity distribution: how your attacks break down across the 1-10 scale. Useful for spotting whether you mostly get moderate ones or whether you're getting a creeping number of severe ones.\n• Pain locations: which sides and zones of your head get hit most. Pulled from the Pain step in the wizard.\n• Aura location: if you log an aura, where in your field of vision it appears and how long it lasts, drawn as you see it through your own eyes. Only shows once you've logged at least one aura.\n• Top symptoms: which symptoms show up most often, with the average severity and duration of the attacks they appear in. Comes from your linked symptom logs.\n• Missed activities: the things you've explicitly tagged as missed because of an attack, ranked by how often they came up.\n\nTap in for the full breakdown.\n\nLike the other cards, this only counts data you've logged. If you don't rate severity, pick pain locations, or tag missed activities in your wizard, those sections stay empty.") + MEDICAL_NOTE
 }

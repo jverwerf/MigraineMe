@@ -16,6 +16,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,6 +68,7 @@ fun AiSetupScreen(
     var preFill by remember { mutableStateOf<OnboardingPreFill?>(null) }
     // Track which fields were pre-filled by story (so UI can show hints)
     var preFilledFields by remember { mutableStateOf(setOf<String>()) }
+    var showParseSummary by remember { mutableStateOf(false) }
 
     // ── Trigger / prodrome / location / postdrome pool selections ──
     var selectedTriggers by remember { mutableStateOf(setOf<String>()) }
@@ -357,6 +360,7 @@ fun AiSetupScreen(
 
                 // Step 3: merge and apply
                 val merged = AiOnboardingParser.merge(deter, gpt)
+                Log.d("AiSetup", "suggested=${merged.suggestedFields} reasons=${merged.suggestionReasons.keys} direct=${merged.directFieldCount}")
                 preFill = merged
                 applyPreFill(merged)
 
@@ -364,6 +368,7 @@ fun AiSetupScreen(
                 Log.e("AiSetup", "Story parse failed: ${e.message}", e)
             }
             storyParsed = true; storyLoading = false
+            showParseSummary = true
             currentPage = AiPage.Q1
         }
     }
@@ -532,11 +537,48 @@ fun AiSetupScreen(
             )
             Row(Modifier.padding(horizontal = 28.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Icon(Icons.Outlined.AutoAwesome, null, tint = AppTheme.AccentPink, modifier = Modifier.size(14.dp))
-                Text("MigraineMe Setup — $pageNum of $totalPages", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("MigraineMe Setup — %1\$s of %2\$s", pageNum, totalPages), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
             Spacer(Modifier.height(8.dp))
 
             // Page content
+            // What the setup just did, said once, right where the answers land.
+            // Dismissed on first page change so it never becomes furniture.
+            val pf = preFill
+            if (pf != null && showParseSummary && (pf.directFieldCount > 0 || pf.suggestedFieldCount > 0)) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.12f)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Outlined.AutoAwesome, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(
+                                t("We filled in %s from what you told us", pf.directFieldCount) +
+                                    if (pf.suggestedFieldCount > 0) t(", and suggested %s more", pf.suggestedFieldCount) else "",
+                                color = AppTheme.AccentPurple,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Text(
+                                if (pf.suggestedFieldCount > 0)
+                                    t("The suggestions come from your profile — worth tracking to find out. Change anything that doesn't fit as you go.")
+                                else
+                                    t("Check them as you go and change anything that doesn't fit."),
+                                color = AppTheme.BodyTextColor,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
+
+            CompositionLocalProvider(
+                LocalAiSuggestions provides AiSuggestions(
+                    fields = preFill?.suggestedFields ?: emptySet(),
+                    reasons = preFill?.suggestionReasons ?: emptyMap()
+                )
+            ) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AnimatedContent(
                     targetState = currentPage,
@@ -550,7 +592,7 @@ fun AiSetupScreen(
                     when (page) {
                         AiPage.STORY -> AiQuestionsPageStory(
                             text = storyText,
-                            onTextChange = { storyText = it; storyParsed = false; preFill = null; preFilledFields = emptySet() },
+                            onTextChange = { storyText = it; storyParsed = false; preFill = null; preFilledFields = emptySet(); showParseSummary = false },
                             isLoading = storyLoading,
                             onParse = { parseStory() },
                             onSkip = { currentPage = AiPage.Q1 },
@@ -650,44 +692,45 @@ fun AiSetupScreen(
                     }
                 }
             }
+            }
 
             // Bottom navigation
             if (currentPage != AiPage.STORY && currentPage != AiPage.PROCESSING && currentPage != AiPage.RESULTS && currentPage != AiPage.COMPANIONS) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     if (currentPage == AiPage.Q1) {
-                        TextButton(onClick = { currentPage = AiPage.STORY }) { Text("Back", color = AppTheme.SubtleTextColor) }
+                        TextButton(onClick = { currentPage = AiPage.STORY }) { Text(t("Back"), color = AppTheme.SubtleTextColor) }
                     } else {
-                        TextButton(onClick = { val prev = AiPage.entries.getOrNull(currentPage.ordinal - 1); if (prev != null) currentPage = prev }) { Text("Back", color = AppTheme.SubtleTextColor) }
+                        TextButton(onClick = { val prev = AiPage.entries.getOrNull(currentPage.ordinal - 1); if (prev != null) currentPage = prev }) { Text(t("Back"), color = AppTheme.SubtleTextColor) }
                     }
                     if (currentPage == AiPage.NOTES) {
                         Button(onClick = { currentPage = AiPage.PROCESSING }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(12.dp)) {
-                            Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Analyse & Configure")
+                            Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t("Analyse & Configure"))
                         }
                     } else {
                         Button(onClick = { val next = AiPage.entries.getOrNull(currentPage.ordinal + 1); if (next != null) currentPage = next }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(12.dp)) {
-                            Text("Next"); Spacer(Modifier.width(4.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+                            Text(t("Next")); Spacer(Modifier.width(4.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
             }
             if (currentPage == AiPage.STORY) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onSkip) { Text("Skip Setup", color = AppTheme.SubtleTextColor) }
+                    TextButton(onClick = onSkip) { Text(t("Skip Setup"), color = AppTheme.SubtleTextColor) }
                     if (storyText.isNotBlank() && !storyLoading) {
                         Button(onClick = { parseStory() }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink), shape = RoundedCornerShape(12.dp)) {
-                            Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Find matches & continue")
+                            Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(t("Find matches & continue"))
                         }
                     } else if (!storyLoading) {
                         Button(onClick = { currentPage = AiPage.Q1 }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(12.dp)) {
-                            Text("OR Continue and answer manually"); Spacer(Modifier.width(4.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+                            Text(t("OR Continue and answer manually")); Spacer(Modifier.width(4.dp)); Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
             }
             if (currentPage == AiPage.PROCESSING && !isProcessing && aiError != null) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { currentPage = AiPage.NOTES }) { Text("Back", color = AppTheme.SubtleTextColor) }
-                    TextButton(onClick = onSkip) { Text("Skip Setup", color = AppTheme.SubtleTextColor) }
+                    TextButton(onClick = { currentPage = AiPage.NOTES }) { Text(t("Back"), color = AppTheme.SubtleTextColor) }
+                    TextButton(onClick = onSkip) { Text(t("Skip Setup"), color = AppTheme.SubtleTextColor) }
                 }
             }
         }

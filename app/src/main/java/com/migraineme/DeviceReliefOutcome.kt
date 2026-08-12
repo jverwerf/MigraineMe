@@ -58,7 +58,7 @@ class DeviceReliefOutcomeWorker(
     override suspend fun doWork(): Result {
         val ctx = applicationContext
         val reliefId = inputData.getString(KEY_RELIEF_ID) ?: return Result.success()
-        val label = inputData.getString(KEY_LABEL) ?: "your device"
+        val label = inputData.getString(KEY_LABEL) ?: tSync("your device")
 
         val optedIn = runCatching {
             EdgeFunctionsService().getNotificationEnabled(ctx, "device_relief_outcome", default = true)
@@ -82,7 +82,7 @@ class DeviceReliefOutcomeWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Device check-ins", NotificationManager.IMPORTANCE_DEFAULT)
+                NotificationChannel(CHANNEL_ID, tSync("Device check-ins"), NotificationManager.IMPORTANCE_DEFAULT)
             )
         }
 
@@ -112,14 +112,14 @@ class DeviceReliefOutcomeWorker(
 
         val notif = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("How did $label go?")
-            .setContentText("It's been 2 hours since your session. Recording the outcome sharpens your Insights.")
-            .setStyle(NotificationCompat.BigTextStyle().bigText("It's been 2 hours since your $label session. Recording the outcome sharpens your Insights and your provider report."))
+            .setContentTitle(tSync("How did %s go?", label))
+            .setContentText(tSync("It's been 2 hours since your session. Recording the outcome sharpens your Insights."))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(tSync("It's been 2 hours since your %s session. Recording the outcome sharpens your Insights and your provider report.", label)))
             .setContentIntent(openApp)
             .setAutoCancel(true)
-            .addAction(action("HIGH", "Pain free", notifId * 10 + 1))
-            .addAction(action("MILD", "Better", notifId * 10 + 2))
-            .addAction(action("NONE", "No change", notifId * 10 + 3))
+            .addAction(action("HIGH", tSync("Pain free"), notifId * 10 + 1))
+            .addAction(action("MILD", tSync("Better"), notifId * 10 + 2))
+            .addAction(action("NONE", tSync("No change"), notifId * 10 + 3))
             .build()
 
         NotificationManagerCompat.from(context).notify(notifId, notif)

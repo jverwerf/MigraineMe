@@ -134,7 +134,7 @@ fun BlogCommentsSection(
     // Report dialog
     reportingComment?.let { comment ->
         ReportDialog(
-            title = "Report comment",
+            title = t("Report comment"),
             onDismiss = { reportingComment = null },
             onSubmit = { reason ->
                 accessToken?.let { communityVm?.reportContent(it, postId = null, commentId = null, reason = reason, articleCommentId = comment.id) }
@@ -149,12 +149,12 @@ fun BlogCommentsSection(
             onDismissRequest = { showModerationAlert = false },
             confirmButton = {
                 TextButton(onClick = { showModerationAlert = false }) {
-                    Text("OK", color = AppTheme.AccentPurple)
+                    Text(t("OK"), color = AppTheme.AccentPurple)
                 }
             },
             icon = { Icon(Icons.Outlined.Info, contentDescription = null, tint = AppTheme.AccentPurple) },
-            title = { Text("Comment under review", color = Color.White, fontWeight = FontWeight.Bold) },
-            text = { Text("Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly.", color = Color.White.copy(alpha = 0.7f)) },
+            title = { Text(t("Comment under review"), color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text(t("Your comment has been flagged by our moderation system and is currently under review. If this was a mistake, it will be restored shortly."), color = Color.White.copy(alpha = 0.7f)) },
             containerColor = Color(0xFF1A0029),
             shape = RoundedCornerShape(16.dp)
         )
@@ -163,7 +163,7 @@ fun BlogCommentsSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         //  Header
         Text(
-            "Comments (${comments.size})",
+            t("Comments (%s)", comments.size),
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier.padding(bottom = 12.dp)
@@ -175,7 +175,7 @@ fun BlogCommentsSection(
             }
         } else if (topLevel.isEmpty()) {
             Text(
-                "No comments yet - be the first!",
+                t("No comments yet - be the first!"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -264,7 +264,7 @@ fun BlogCommentsSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Replying to ${replyingTo!!.profiles?.displayName ?: "user"}",
+                    t("Replying to %s", replyingTo!!.profiles?.displayName ?: t("user")),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.weight(1f)
@@ -295,9 +295,9 @@ fun BlogCommentsSection(
                     ) {
                         Icon(Icons.Outlined.ShowChart, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Graph attached", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+                        Text(t("Graph attached"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
                         IconButton(onClick = { pendingAttachment = null }, modifier = Modifier.size(24.dp)) {
-                            Icon(Icons.Outlined.Close, contentDescription = "Remove", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Outlined.Close, contentDescription = t("Remove"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
                         }
                     }
                 }
@@ -327,7 +327,7 @@ fun BlogCommentsSection(
                 ) {
                     Icon(
                         Icons.Outlined.ShowChart,
-                        contentDescription = "Attach graph",
+                        contentDescription = t("Attach graph"),
                         tint = if (showGraphPicker) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -338,7 +338,7 @@ fun BlogCommentsSection(
                     onValueChange = { if (it.length <= 2000) commentText = it },
                     placeholder = {
                         Text(
-                            if (replyingTo != null) "Write a reply..." else "Write a comment...",
+                            if (replyingTo != null) t("Write a reply...") else t("Write a comment..."),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -438,7 +438,7 @@ fun BlogCommentsSection(
                     } else {
                         Icon(
                             Icons.Outlined.Send,
-                            contentDescription = "Post",
+                            contentDescription = t("Post"),
                             tint = if (commentText.isNotBlank()) AppTheme.AccentPurple else AppTheme.SubtleTextColor
                         )
                     }
@@ -496,7 +496,7 @@ private fun BlogCommentBubble(
             Spacer(Modifier.width(8.dp))
 
             Text(
-                comment.profiles?.displayName ?: "Anonymous",
+                comment.profiles?.displayName ?: t("Anonymous"),
                 color = Color.White,
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
             )
@@ -516,7 +516,7 @@ private fun BlogCommentBubble(
                 IconButton(onClick = onReply, modifier = Modifier.size(28.dp)) {
                     Icon(
                         Icons.AutoMirrored.Outlined.Reply,
-                        contentDescription = "Reply",
+                        contentDescription = t("Reply"),
                         tint = AppTheme.SubtleTextColor,
                         modifier = Modifier.size(16.dp)
                     )
@@ -526,7 +526,7 @@ private fun BlogCommentBubble(
                 IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = t("Delete"),
                         tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                         modifier = Modifier.size(16.dp)
                     )
@@ -535,7 +535,7 @@ private fun BlogCommentBubble(
                 IconButton(onClick = onReport, modifier = Modifier.size(28.dp)) {
                     Icon(
                         Icons.Outlined.Flag,
-                        contentDescription = "Report",
+                        contentDescription = t("Report"),
                         tint = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                         modifier = Modifier.size(16.dp)
                     )
@@ -633,7 +633,7 @@ private fun BlogAttachedInsightsGraphCard(graphVm: CommunityGraphViewModel) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(8.dp).clip(CircleShape).background(series.color))
                             Spacer(Modifier.width(4.dp))
-                            Text(series.label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t(series.label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     val eventCats = events.map { it.category }.distinct()
@@ -675,7 +675,7 @@ private fun BlogAttachedRiskGraphCard(graphVm: CommunityGraphViewModel) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFEF5350)))
                 Spacer(Modifier.width(6.dp))
-                Text("Risk Score", color = Color(0xFFEF5350), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Risk Score"), color = Color(0xFFEF5350), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.width(8.dp))
                 Text("$from – $to", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
@@ -700,7 +700,7 @@ private fun BlogAttachedRiskGraphCard(graphVm: CommunityGraphViewModel) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(8.dp).clip(CircleShape).background(series.color))
                             Spacer(Modifier.width(4.dp))
-                            Text(series.label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t(series.label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

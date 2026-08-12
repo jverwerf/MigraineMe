@@ -130,7 +130,7 @@ fun CommunityScreen(
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 88.dp)
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = "New discussion")
+                Icon(Icons.Outlined.Add, contentDescription = t("New discussion"))
             }
 
             if (showCreateDialog) {
@@ -187,8 +187,7 @@ private fun ArticlesContent(
                 selected = selected,
                 onClick = { vm.selectTab(index) },
                 label = {
-                    Text(
-                        label,
+                    Text(t(label),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                     )
@@ -245,7 +244,7 @@ private fun ArticlesContent(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text("Loading articles\u2026", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Loading articles\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     } else {
@@ -273,9 +272,9 @@ private fun ArticlesContent(
                         drawSavedHeart(AppTheme.SubtleTextColor.copy(alpha = 0.4f), filled = false)
                     }
                     Spacer(Modifier.height(12.dp))
-                    Text("No saved articles yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
+                    Text(t("No saved articles yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(4.dp))
-                    Text("Tap the heart on any article to save it", color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Tap the heart on any article to save it"), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -304,9 +303,9 @@ private fun ArticlesContent(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("No articles yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
+                    Text(t("No articles yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(4.dp))
-                    Text("Check back soon!", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Check back soon!"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -331,7 +330,7 @@ private fun ForumContent(
 
     reportingPost?.let { post ->
         ReportDialog(
-            title = "Report post",
+            title = t("Report post"),
             onDismiss = { reportingPost = null },
             onSubmit = { reason ->
                 accessToken?.let { vm.reportContent(it, postId = post.id, commentId = null, reason = reason) }
@@ -352,7 +351,7 @@ private fun ForumContent(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = AppTheme.AccentPurple)
                     Spacer(Modifier.height(8.dp))
-                    Text("Loading discussions\u2026", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Loading discussions\u2026"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
                 }
             }
         } else if (regularPosts.isEmpty()) {
@@ -363,9 +362,9 @@ private fun ForumContent(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("No discussions yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
+                    Text(t("No discussions yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(4.dp))
-                    Text("Tap + to start the conversation!", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Tap + to start the conversation!"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
         } else {
@@ -461,7 +460,7 @@ private fun PinnedTopicCard(
                 ) {
                     Icon(
                         if (isMeToo) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (isMeToo) "Unlike" else "Me too",
+                        contentDescription = if (isMeToo) t("Unlike") else t("Me too"),
                         tint = if (isMeToo) AppTheme.AccentPink else AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         modifier = Modifier.size(18.dp)
                     )
@@ -610,8 +609,7 @@ private fun SegmentedTabRow(
                     .clickable { onSelect(index) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    label,
+                Text(t(label),
                     color = if (selected) Color.White else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium

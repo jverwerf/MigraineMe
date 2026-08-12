@@ -47,7 +47,7 @@ object RiskColors {
 
     /** Format a risk level (0-3) to display text + color */
     fun formatRiskLevel(metric: String, level: Int): Pair<String, Color> {
-        val label = when (level) { 3 -> "High"; 2 -> "Medium"; 1 -> "Low"; else -> "None" }
+        val label = when (level) { 3 -> tSync("High"); 2 -> tSync("Medium"); 1 -> tSync("Low"); else -> tSync("None") }
         val color = colorFor(metric, level).takeIf { it != Color.Unspecified } ?: AppTheme.SubtleTextColor
         return label to color
     }

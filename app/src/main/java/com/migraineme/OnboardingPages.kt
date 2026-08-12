@@ -67,21 +67,31 @@ fun WelcomePage(
     Column(
         Modifier.fillMaxSize().padding(horizontal = 20.dp).verticalScroll(rememberScrollState())
     ) {
+        // Language as a flag pinned top-right: the full-width dropdown pushed
+        // the whole hero down and undid the page's layout. Same picker, one tap.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Spacer(Modifier.height(44.dp))
+            LanguageFlagButton()
+        }
+
         // Fixed top gap keeps the sky background visible above the content.
-        Spacer(Modifier.height(110.dp))
+        Spacer(Modifier.height(66.dp))
 
         Text(
-            "Welcome to MigraineMe",
+            t("Welcome to MigraineMe"),
             color = Color.White,
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(14.dp))
+
+        // Sits on top of the hero artwork, where the muted grey was close to
+        // unreadable — white, like the title above it. Same fix as iOS.
         Text(
-            "How would you like to start?",
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.bodyMedium,
+            t("How would you like to start?"),
+            color = Color.White.copy(alpha = 0.92f),
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -104,7 +114,7 @@ fun WelcomePage(
         ) {
             Icon(Icons.Outlined.Info, null, tint = AppTheme.AccentPink, modifier = Modifier.size(16.dp))
             Text(
-                "In an acute attack right now? Go straight to the app",
+                t("In an acute attack right now? Go straight to the app"),
                 color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f)
@@ -124,19 +134,19 @@ fun WelcomePage(
                         .padding(horizontal = 10.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        "RECOMMENDED",
+                        t("RECOMMENDED"),
                         color = AppTheme.AccentPink,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
                     )
                 }
                 Spacer(Modifier.height(8.dp))
-                NumberedPoint(1, "See every screen already filled with example data, so nothing is empty or abstract.")
+                NumberedPoint(1, t("See every screen already filled with example data, so nothing is empty or abstract."))
                 Spacer(Modifier.height(6.dp))
-                NumberedPoint(2, "Learn what the risk gauge, insights and auto-tracking actually do for you.")
+                NumberedPoint(2, t("Learn what the risk gauge, insights and auto-tracking actually do for you."))
                 Spacer(Modifier.height(6.dp))
-                NumberedPoint(3, "Takes about 5 minutes. You can leave the tour at any point.")
+                NumberedPoint(3, t("Takes about 5 minutes. You can leave the tour at any point."))
                 Spacer(Modifier.height(6.dp))
-                NumberedPoint(4, "Ends with setting up your profile — easier once you've seen what everything does.")
+                NumberedPoint(4, t("Ends with setting up your profile — easier once you've seen what everything does."))
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onTakeFullTour,
@@ -146,7 +156,7 @@ fun WelcomePage(
                 ) {
                     Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Take the Full Tour", fontWeight = FontWeight.SemiBold)
+                    Text(t("Take the Full Tour"), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -155,13 +165,13 @@ fun WelcomePage(
 
         HeroCard {
             Column(Modifier.padding(16.dp)) {
-                NumberedPoint(1, "Connect your wearable and Health Connect.")
+                NumberedPoint(1, t("Connect your wearable and Health Connect."))
                 Spacer(Modifier.height(6.dp))
-                NumberedPoint(2, "Choose which data to track.")
+                NumberedPoint(2, t("Choose which data to track."))
                 Spacer(Modifier.height(6.dp))
-                NumberedPoint(3, "Tell us about yourself and answer some questions.")
+                NumberedPoint(3, t("Tell us about yourself and answer some questions."))
                 Spacer(Modifier.height(6.dp))
-                NumberedPoint(4, "AI personalises your risk model from your answers.")
+                NumberedPoint(4, t("AI personalises your risk model from your answers."))
                 Spacer(Modifier.height(12.dp))
                 OutlinedButton(
                     onClick = onSetUpProfile,
@@ -172,7 +182,7 @@ fun WelcomePage(
                 ) {
                     Icon(Icons.Outlined.Tune, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Set Up My Profile", fontWeight = FontWeight.SemiBold)
+                    Text(t("Set Up My Profile"), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -181,7 +191,7 @@ fun WelcomePage(
 
         TextButton(onClick = onGoToApp, modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Text(
-                "Go to the app",
+                t("Go to the app"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.SemiBold,
@@ -190,7 +200,7 @@ fun WelcomePage(
             )
         }
         Text(
-            "Empty Home screen for now. Rerun setup anytime from Profile.",
+            t("Empty Home screen for now. Rerun setup anytime from Profile."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
@@ -256,7 +266,7 @@ fun HowItWorksPage(
     }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("How It Works", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(t("How It Works"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(24.dp))
         Column {
             steps.forEachIndexed { index, (brainyRes, title, subtitle) ->
@@ -292,8 +302,8 @@ fun HowItWorksPage(
                     }
                     // Text
                     Column(Modifier.padding(top = 10.dp)) {
-                        Text(title, color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text(subtitle, color = if (isActive) AppTheme.BodyTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall)
+                        Text(t(title), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t(subtitle), color = if (isActive) AppTheme.BodyTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -332,19 +342,19 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Enable Location", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        Text(t("Enable Location"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(12.dp))
         Text(
-            "MigraineMe uses your location to track weather conditions — a top migraine trigger. We collect city-level data only, never your exact address.",
+            t("MigraineMe uses your location to track weather conditions — a top migraine trigger. We collect city-level data only, never your exact address."),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            FeatureBullet(Icons.Outlined.Cloud, "Automatic weather tracking (pressure, humidity, temp)")
-            FeatureBullet(Icons.Outlined.Schedule, "Timezone-accurate trigger detection")
-            FeatureBullet(Icons.Outlined.Terrain, "Altitude change monitoring")
-            FeatureBullet(Icons.Outlined.TrendingUp, "Better risk predictions")
+            FeatureBullet(Icons.Outlined.Cloud, t("Automatic weather tracking (pressure, humidity, temp)"))
+            FeatureBullet(Icons.Outlined.Schedule, t("Timezone-accurate trigger detection"))
+            FeatureBullet(Icons.Outlined.Terrain, t("Altitude change monitoring"))
+            FeatureBullet(Icons.Outlined.TrendingUp, t("Better risk predictions"))
         }
 
         Spacer(Modifier.weight(1f))
@@ -356,7 +366,7 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             if (hasLocation.value) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(20.dp))
-                    Text("Location enabled", color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Location enabled"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(
@@ -364,7 +374,7 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = {
@@ -376,10 +386,10 @@ fun LocationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Allow Location Access", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Allow Location Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -417,19 +427,19 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Enable Notifications", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        Text(t("Enable Notifications"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(12.dp))
         Text(
-            "Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes.",
+            t("Stay on top of your migraine risk with timely alerts. MigraineMe sends you daily check-in reminders and warns you when your risk spikes."),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            FeatureBullet(Icons.Outlined.Warning, "High-risk alerts before migraines hit")
-            FeatureBullet(Icons.Outlined.Nightlight, "Evening check-in reminders")
-            FeatureBullet(Icons.Outlined.AutoAwesome, "AI calibration updates")
-            FeatureBullet(Icons.Outlined.Article, "New articles matching your triggers")
+            FeatureBullet(Icons.Outlined.Warning, t("High-risk alerts before migraines hit"))
+            FeatureBullet(Icons.Outlined.Nightlight, t("Evening check-in reminders"))
+            FeatureBullet(Icons.Outlined.AutoAwesome, t("AI calibration updates"))
+            FeatureBullet(Icons.Outlined.Article, t("New articles matching your triggers"))
         }
 
         Spacer(Modifier.weight(1f))
@@ -441,7 +451,7 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             if (hasNotification.value) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(20.dp))
-                    Text("Notifications enabled", color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Notifications enabled"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(
@@ -449,7 +459,7 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = {
@@ -460,10 +470,10 @@ fun NotificationPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Allow Notifications", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Allow Notifications"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -499,19 +509,19 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Enable Microphone", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        Text(t("Enable Microphone"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(12.dp))
         Text(
-            "MigraineMe can use your microphone for voice-based logging and ambient noise detection — both known migraine factors.",
+            t("MigraineMe can use your microphone for voice-based logging and ambient noise detection — both known migraine factors."),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            FeatureBullet(Icons.Outlined.RecordVoiceOver, "Voice migraine logging")
-            FeatureBullet(Icons.Outlined.GraphicEq, "Ambient noise sampling")
-            FeatureBullet(Icons.Outlined.Nightlight, "Evening check-in voice input")
-            FeatureBullet(Icons.Outlined.AutoAwesome, "AI story recording")
+            FeatureBullet(Icons.Outlined.RecordVoiceOver, t("Voice-powered migraine logging"))
+            FeatureBullet(Icons.Outlined.GraphicEq, t("Ambient noise level tracking"))
+            FeatureBullet(Icons.Outlined.Nightlight, t("Evening check-in by voice"))
+            FeatureBullet(Icons.Outlined.AutoAwesome, t("AI story input via voice"))
         }
 
         Spacer(Modifier.weight(1f))
@@ -523,7 +533,7 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             if (hasMic.value) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(20.dp))
-                    Text("Microphone enabled", color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Microphone enabled"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(
@@ -531,17 +541,17 @@ fun MicrophonePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = { launcher.launch(android.Manifest.permission.RECORD_AUDIO) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Allow Microphone Access", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Allow Microphone Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -586,19 +596,19 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Enable Calendar", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        Text(t("Enable Calendar"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(12.dp))
         Text(
-            "MigraineMe reads your calendar to suggest activities, reliefs, and stress triggers from your events — read-only.",
+            t("MigraineMe reads your calendar to suggest activities, reliefs, and stress triggers from your events — no events are stored, only what you confirm."),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            FeatureBullet(Icons.Outlined.FitnessCenter, "Auto-detect workouts and yoga")
-            FeatureBullet(Icons.Outlined.Warning, "Spot stress-heavy meeting days")
-            FeatureBullet(Icons.Outlined.CheckCircle, "One tap to confirm or skip")
-            FeatureBullet(Icons.Outlined.Lock, "Read-only, never written back")
+            FeatureBullet(Icons.Outlined.FitnessCenter, t("Auto-detect workouts and yoga"))
+            FeatureBullet(Icons.Outlined.Warning, t("Spot stress-heavy meeting days"))
+            FeatureBullet(Icons.Outlined.CheckCircle, t("One tap to confirm or skip"))
+            FeatureBullet(Icons.Outlined.Lock, t("Read-only, never written back"))
         }
 
         Spacer(Modifier.weight(1f))
@@ -610,7 +620,7 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             if (hasCal.value) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(20.dp))
-                    Text("Calendar enabled", color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Calendar enabled"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(
@@ -618,17 +628,17 @@ fun CalendarPermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = { launcher.launch(android.Manifest.permission.READ_CALENDAR) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Allow Calendar Access", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Allow Calendar Access"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -675,19 +685,19 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Enable Screen Time", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        Text(t("Enable Screen Time"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(12.dp))
         Text(
-            "Screen time is a common migraine trigger. MigraineMe can track your usage patterns to find correlations with your attacks.",
+            t("Screen time is a common migraine trigger. MigraineMe can track your usage patterns to find correlations with your attacks."),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            FeatureBullet(Icons.Outlined.Timer, "Screen time trigger tracking")
-            FeatureBullet(Icons.Outlined.Nightlight, "Late-night usage detection")
-            FeatureBullet(Icons.Outlined.Apps, "App usage patterns")
-            FeatureBullet(Icons.Outlined.SelfImprovement, "Digital wellness correlation")
+            FeatureBullet(Icons.Outlined.Timer, t("Screen time trigger tracking"))
+            FeatureBullet(Icons.Outlined.Nightlight, t("Late-night usage detection"))
+            FeatureBullet(Icons.Outlined.Apps, t("App usage patterns"))
+            FeatureBullet(Icons.Outlined.SelfImprovement, t("Digital wellness correlation"))
         }
 
         Spacer(Modifier.weight(1f))
@@ -699,7 +709,7 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             if (hasScreenTime.value) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(20.dp))
-                    Text("Screen time enabled", color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Screen time enabled"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(
@@ -707,7 +717,7 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 Button(
                     onClick = {
@@ -718,10 +728,10 @@ fun ScreenTimePermissionPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Open Settings", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Open Settings"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -759,19 +769,19 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Disable Battery Optimization", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+        Text(t("Disable Battery Optimization"), color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(12.dp))
         Text(
-            "Android may pause MigraineMe in the background to save battery. Disabling optimization ensures reliable data collection and timely alerts.",
+            t("Android may pause MigraineMe in the background to save battery. Disabling optimization ensures reliable data collection and timely alerts."),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         Spacer(Modifier.height(24.dp))
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            FeatureBullet(Icons.Outlined.Sync, "Reliable background sync")
-            FeatureBullet(Icons.Outlined.Storage, "Uninterrupted data collection")
-            FeatureBullet(Icons.Outlined.Notifications, "Timely notifications")
-            FeatureBullet(Icons.Outlined.Speed, "Consistent risk scoring")
+            FeatureBullet(Icons.Outlined.Sync, t("Reliable background sync"))
+            FeatureBullet(Icons.Outlined.Storage, t("Uninterrupted data collection"))
+            FeatureBullet(Icons.Outlined.Notifications, t("Timely notifications"))
+            FeatureBullet(Icons.Outlined.Speed, t("Consistent risk scoring"))
         }
 
         Spacer(Modifier.weight(1f))
@@ -783,7 +793,7 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
             if (isIgnoring.value) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Filled.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(20.dp))
-                    Text("Battery optimization disabled", color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Battery optimization disabled"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(
@@ -791,7 +801,7 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Continue"), fontWeight = FontWeight.SemiBold) }
             } else {
                 @Suppress("BatteryLife")
                 Button(
@@ -806,10 +816,10 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) { Text("Disable Battery Optimization", fontWeight = FontWeight.SemiBold) }
+                ) { Text(t("Disable Battery Optimization"), fontWeight = FontWeight.SemiBold) }
             }
             TextButton(onClick = onSkip) {
-                Text("Skip for now", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Skip for now"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -818,8 +828,8 @@ fun BatteryOptimizationPage(onGrant: () -> Unit, onSkip: () -> Unit) {
 @Composable
 fun ConnectionsPage(onNavigateToConnections: () -> Unit, wearableConnected: String?, onWearableChanged: (String) -> Unit) {
     OnboardingScrollPage {
-        OnboardingIconHeader(Icons.Outlined.Link, "Connect your data")
-        Text("The more data MigraineMe has, the better it predicts.", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        OnboardingIconHeader(Icons.Outlined.Link, t("Connect your data"))
+        Text(t("The more data MigraineMe has, the better it predicts."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(4.dp))
         listOf("Health Connect" to "Steps, sleep, heart rate, nutrition, and more", "WHOOP" to "Sleep, recovery, HRV, HR, SpO₂, skin temp", "Both" to "Get the best of both sources", "None" to "I'll log everything manually").forEach { (label, desc) ->
             OnboardingChoiceCard(label, desc, wearableConnected == label) { onWearableChanged(label) }
@@ -829,9 +839,9 @@ fun ConnectionsPage(onNavigateToConnections: () -> Unit, wearableConnected: Stri
             OutlinedButton(onClick = onNavigateToConnections, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple)) {
                 Icon(Icons.Outlined.Settings, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
-                Text("Set up connections now", color = AppTheme.AccentPurple)
+                Text(t("Set up connections now"), color = AppTheme.AccentPurple)
             }
-            Text("You can also do this later from the menu.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Text(t("You can also do this later from the menu."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
         Spacer(Modifier.height(0.dp))
     }
@@ -842,12 +852,12 @@ fun DataCollectionPage(wearable: String?, enabledMetrics: MutableMap<String, Boo
     val hasWearable = wearable == "WHOOP" || wearable == "Both"
     val hasLocation = enabledMetrics["user_location_daily"] == true
     OnboardingScrollPage {
-        OnboardingIconHeader(Icons.Outlined.Storage, "What do you want to track?")
-        Text("Turn on the data you want MigraineMe to collect. You can change these later in Settings → Data.",
+        OnboardingIconHeader(Icons.Outlined.Storage, t("What do you want to track?"))
+        Text(t("Turn on the data you want MigraineMe to collect. You can change these later in Settings → Data."),
             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(4.dp))
         dataCollectionGroups.forEach { group ->
-            Text(group.title, color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(top = 4.dp))
+            Text(t(group.title), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(top = 4.dp))
             group.items.forEach { item ->
                 val available = when {
                     item.requiresWearable && !hasWearable -> false
@@ -865,14 +875,14 @@ fun DataCollectionPage(wearable: String?, enabledMetrics: MutableMap<String, Boo
 @Composable
 fun PersonalQuestionsPage1(frequency: String?, onFrequency: (String) -> Unit, duration: String?, onDuration: (String) -> Unit, severity: String?, onSeverity: (String) -> Unit) {
     OnboardingScrollPage {
-        OnboardingIconHeader(Icons.Outlined.Person, "About your migraines")
-        OnboardingQuestionSection("How often do you get migraines?") {
+        OnboardingIconHeader(Icons.Outlined.Person, t("About your migraines"))
+        OnboardingQuestionSection(t("How often do you get migraines?")) {
             listOf("Daily", "2-3x per week", "Weekly", "2-3x per month", "Monthly", "Rarely").forEach { OnboardingChoiceChip(it, frequency == it) { onFrequency(it) } }
         }
-        OnboardingQuestionSection("How long do they usually last?") {
+        OnboardingQuestionSection(t("How long do they usually last?")) {
             listOf("A few hours", "Half a day", "A full day", "2-3 days", "More than 3 days").forEach { OnboardingChoiceChip(it, duration == it) { onDuration(it) } }
         }
-        OnboardingQuestionSection("How severe are they typically?") {
+        OnboardingQuestionSection(t("How severe are they typically?")) {
             listOf("Mild — can push through", "Moderate — slows me down", "Severe — can't function", "Debilitating — bed rest required").forEach { OnboardingChoiceChip(it, severity == it) { onSeverity(it) } }
         }
         Spacer(Modifier.height(0.dp))
@@ -882,14 +892,14 @@ fun PersonalQuestionsPage1(frequency: String?, onFrequency: (String) -> Unit, du
 @Composable
 fun PersonalQuestionsPage2(timing: String?, onTiming: (String) -> Unit, warningSign: String?, onWarningSign: (String) -> Unit, medication: String?, onMedication: (String) -> Unit) {
     OnboardingScrollPage {
-        OnboardingIconHeader(Icons.Outlined.Schedule, "Timing & patterns")
-        OnboardingQuestionSection("When do they usually hit?") {
+        OnboardingIconHeader(Icons.Outlined.Schedule, t("Timing & patterns"))
+        OnboardingQuestionSection(t("When do they usually hit?")) {
             listOf("Morning (wake up with it)", "Afternoon", "Evening", "Night", "No pattern / varies").forEach { OnboardingChoiceChip(it, timing == it) { onTiming(it) } }
         }
-        OnboardingQuestionSection("Do you get warning signs before an attack?") {
+        OnboardingQuestionSection(t("Do you get warning signs before an attack?")) {
             listOf("Yes, clearly — I can feel one coming", "Sometimes — occasional hints", "Rarely — they catch me off guard", "No — they come without warning").forEach { OnboardingChoiceChip(it, warningSign == it) { onWarningSign(it) } }
         }
-        OnboardingQuestionSection("Do you take preventive or acute medication?") {
+        OnboardingQuestionSection(t("Do you take preventive or acute medication?")) {
             listOf("Yes, preventive daily medication", "Yes, acute medication when needed", "Both preventive and acute", "No medication currently").forEach { OnboardingChoiceChip(it, medication == it) { onMedication(it) } }
         }
         Spacer(Modifier.height(0.dp))
@@ -899,8 +909,8 @@ fun PersonalQuestionsPage2(timing: String?, onTiming: (String) -> Unit, warningS
 @Composable
 fun PersonalQuestionsPage3(knownTriggerAreas: Set<String>, onTriggerAreas: (Set<String>) -> Unit, familyHistory: String?, onFamilyHistory: (String) -> Unit, trackCycle: String?, onTrackCycle: (String) -> Unit) {
     OnboardingScrollPage {
-        OnboardingIconHeader(Icons.Outlined.Lightbulb, "What you already know")
-        OnboardingQuestionSection("Which of these seem to affect your migraines? (select all that apply)") {
+        OnboardingIconHeader(Icons.Outlined.Lightbulb, t("What you already know"))
+        OnboardingQuestionSection(t("Which of these seem to affect your migraines? (select all that apply)")) {
             listOf("Sleep", "Stress", "Weather", "Screen time", "Diet", "Hormones", "Exercise", "Not sure yet").forEach { area ->
                 val selected = area in knownTriggerAreas
                 OnboardingChoiceChip(area, selected) {
@@ -909,10 +919,10 @@ fun PersonalQuestionsPage3(knownTriggerAreas: Set<String>, onTriggerAreas: (Set<
                 }
             }
         }
-        OnboardingQuestionSection("Does anyone in your family get migraines?") {
+        OnboardingQuestionSection(t("Does anyone in your family get migraines?")) {
             listOf("Yes", "No", "Not sure").forEach { OnboardingChoiceChip(it, familyHistory == it) { onFamilyHistory(it) } }
         }
-        OnboardingQuestionSection("Do you want to track your menstrual cycle?") {
+        OnboardingQuestionSection(t("Do you want to track your menstrual cycle?")) {
             listOf("Yes", "No", "Not applicable").forEach { OnboardingChoiceChip(it, trackCycle == it) { onTrackCycle(it) } }
         }
         Spacer(Modifier.height(0.dp))
@@ -923,7 +933,7 @@ fun PersonalQuestionsPage3(knownTriggerAreas: Set<String>, onTriggerAreas: (Set<
 fun TriggerGroupPage(title: String, icon: ImageVector, questions: List<SeverityQuestion>, answers: MutableMap<String, SeverityChoice>) {
     OnboardingScrollPage {
         OnboardingIconHeader(icon, title)
-        Text("How much does each of these affect your migraines?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(t("How much does each of these affect your migraines?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(4.dp))
         questions.forEach { q -> SeverityQuestionCard(q, answers[q.label] ?: SeverityChoice.NONE) { answers[q.label] = it } }
         Spacer(Modifier.height(0.dp))
@@ -933,20 +943,20 @@ fun TriggerGroupPage(title: String, icon: ImageVector, questions: List<SeverityQ
 @Composable
 fun SuggestionsPage(suggestions: MutableMap<String, SeverityChoice>) {
     OnboardingScrollPage {
-        OnboardingIconHeader(Icons.Outlined.AutoAwesome, "Your personalised model")
-        Text("Based on your answers, here's what we suggest. Tap to adjust.", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        OnboardingIconHeader(Icons.Outlined.AutoAwesome, t("Your personalised model"))
+        Text(t("Based on your answers, here's what we suggest. Tap to adjust."), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(4.dp))
         if (suggestions.isEmpty()) {
-            Text("Complete the previous sections to get personalised suggestions.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))
+            Text(t("Complete the previous sections to get personalised suggestions."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))
         } else {
             val grouped = suggestions.entries.sortedByDescending { it.value.ordinal }.groupBy { it.value }
             grouped.forEach { (severity, items) ->
                 if (severity == SeverityChoice.NONE) return@forEach
-                Text("${severity.label} influence", color = severity.color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(top = 8.dp))
+                Text(t("%s influence", t(severity.label)), color = severity.color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(top = 8.dp))
                 items.forEach { (label, sev) -> SuggestionRow(label, sev) { suggestions[label] = it } }
             }
             val noneCount = suggestions.count { it.value == SeverityChoice.NONE }
-            if (noneCount > 0) Text("$noneCount triggers left at None (no influence)", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
+            if (noneCount > 0) Text(t("%s triggers left at None (no influence)", noneCount), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
         }
         Spacer(Modifier.height(0.dp))
     }
@@ -955,16 +965,16 @@ fun SuggestionsPage(suggestions: MutableMap<String, SeverityChoice>) {
 @Composable
 fun RiskModelPage() {
     OnboardingScrollPage {
-        OnboardingIconHeader(Icons.Outlined.Speed, "Your Risk Gauge")
-        Text("Each trigger has a severity — you decide how much it matters:", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        OnboardingIconHeader(Icons.Outlined.Speed, t("Your Risk Gauge"))
+        Text(t("Each trigger has a severity — you decide how much it matters:"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
-        SeverityExplainRow(SeverityChoice.HIGH, "Reliably triggers your migraines")
-        SeverityExplainRow(SeverityChoice.MILD, "Contributes but not always the cause")
-        SeverityExplainRow(SeverityChoice.LOW, "Might play a role occasionally")
-        SeverityExplainRow(SeverityChoice.NONE, "No influence — doesn't count")
+        SeverityExplainRow(SeverityChoice.HIGH, t("Reliably triggers your migraines"))
+        SeverityExplainRow(SeverityChoice.MILD, t("Contributes but not always the cause"))
+        SeverityExplainRow(SeverityChoice.LOW, t("Might play a role occasionally"))
+        SeverityExplainRow(SeverityChoice.NONE, t("No influence — doesn't count"))
         Spacer(Modifier.height(12.dp))
-        Text("Recent triggers weigh more than older ones. The score decays over 7 days.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-        Text("Adjust everything anytime in Settings → Risk Model.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(t("Recent triggers weigh more than older ones. The score decays over 7 days."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(t("Adjust everything anytime in Settings → Risk Model."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(0.dp))
     }
 }
@@ -973,7 +983,7 @@ fun RiskModelPage() {
 private fun SeverityExplainRow(severity: SeverityChoice, description: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(10.dp).background(severity.color, CircleShape))
-        Text("${severity.label}:", color = severity.color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.width(42.dp))
+        Text("${t(severity.label)}:", color = severity.color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.width(42.dp))
         Text(description, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
     }
 }
@@ -985,9 +995,9 @@ fun CompletePage(saving: Boolean) {
             Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(40.dp))
         }
         Spacer(Modifier.height(24.dp))
-        Text("Almost there!", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+        Text(t("Almost there!"), color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
-        Text("Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen.",
+        Text(t("Your risk model is personalised.\n\nWe're loading some sample data so you can see the app in action. Next up: a quick tour of every screen."),
             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
     }
 }

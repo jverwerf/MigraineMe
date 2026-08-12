@@ -79,7 +79,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))
-                Text("Loading journal…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("Loading journal…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
         return
@@ -162,7 +162,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Journal",
+                        t("Journal"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
@@ -174,10 +174,10 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                     .background(AppTheme.AccentPurple.copy(alpha = 0.2f))
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
-                                Text("Last 7 days", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+                                Text(t("Last 7 days"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
                             }
                         }
-                        Text("${filtered.size} entries", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("%s entries", filtered.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
 
@@ -186,7 +186,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
 
                     // Type dropdown
                     var typeExpanded by remember { mutableStateOf(false) }
-                    Text("Type", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Type"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Spacer(Modifier.height(2.dp))
                     Box {
                         Box(
@@ -203,10 +203,10 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedTypeFilter, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                                Text(t(selectedTypeFilter), color = Color.White, style = MaterialTheme.typography.bodyMedium)
                                 Icon(
                                     if (typeExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = "Expand",
+                                    contentDescription = t("Expand"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -223,7 +223,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                 androidx.compose.material3.DropdownMenuItem(
                                     text = {
                                         Text(
-                                            f,
+                                            t(f),
                                             color = if (selectedTypeFilter == f) AppTheme.AccentPurple else Color.White,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = if (selectedTypeFilter == f) FontWeight.Bold else FontWeight.Normal
@@ -238,7 +238,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     Spacer(Modifier.height(6.dp))
 
                     // Source chips
-                    Text("Source", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Source"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Spacer(Modifier.height(2.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("All", "Manual").forEach { s ->
@@ -246,7 +246,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             FilterChip(
                                 selected = sel,
                                 onClick = { selectedSourceFilter = s },
-                                label = { Text(s, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(s), style = MaterialTheme.typography.labelSmall) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f),
                                     selectedLabelColor = AppTheme.AccentPurple,
@@ -265,7 +265,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     Spacer(Modifier.height(6.dp))
 
                     // Timeframe chips
-                    Text("Timeframe", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Timeframe"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Spacer(Modifier.height(2.dp))
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -276,7 +276,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             FilterChip(
                                 selected = sel,
                                 onClick = { selectedTimeframe = tf },
-                                label = { Text(tf, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(tf), style = MaterialTheme.typography.labelSmall) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.25f),
                                     selectedLabelColor = AppTheme.AccentPurple,
@@ -340,19 +340,19 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         val state = rememberDatePickerState(initialSelectedDateMillis = customFromDate)
                         DatePickerDialog(
                             onDismissRequest = { showFromPicker = false },
-                            confirmButton = { TextButton(onClick = { customFromDate = state.selectedDateMillis; showFromPicker = false; showToPicker = true }) { Text("Next", color = AppTheme.AccentPurple) } },
-                            dismissButton = { TextButton(onClick = { showFromPicker = false }) { Text("Cancel", color = AppTheme.SubtleTextColor) } },
+                            confirmButton = { TextButton(onClick = { customFromDate = state.selectedDateMillis; showFromPicker = false; showToPicker = true }) { Text(t("Next"), color = AppTheme.AccentPurple) } },
+                            dismissButton = { TextButton(onClick = { showFromPicker = false }) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) } },
                             colors = DatePickerDefaults.colors(containerColor = Color(0xFF1E0A2E))
-                        ) { DatePicker(state = state, colors = dpColors, title = { Text("From date", color = AppTheme.TitleColor, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) }) }
+                        ) { DatePicker(state = state, colors = dpColors, title = { Text(t("From date"), color = AppTheme.TitleColor, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) }) }
                     }
                     if (showToPicker) {
                         val state = rememberDatePickerState(initialSelectedDateMillis = customToDate)
                         DatePickerDialog(
                             onDismissRequest = { showToPicker = false },
-                            confirmButton = { TextButton(onClick = { customToDate = state.selectedDateMillis; showToPicker = false }) { Text("Done", color = AppTheme.AccentPurple) } },
-                            dismissButton = { TextButton(onClick = { showToPicker = false }) { Text("Cancel", color = AppTheme.SubtleTextColor) } },
+                            confirmButton = { TextButton(onClick = { customToDate = state.selectedDateMillis; showToPicker = false }) { Text(t("Done"), color = AppTheme.AccentPurple) } },
+                            dismissButton = { TextButton(onClick = { showToPicker = false }) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) } },
                             colors = DatePickerDefaults.colors(containerColor = Color(0xFF1E0A2E))
-                        ) { DatePicker(state = state, colors = dpColors, title = { Text("To date", color = AppTheme.TitleColor, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) }) }
+                        ) { DatePicker(state = state, colors = dpColors, title = { Text(t("To date"), color = AppTheme.TitleColor, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) }) }
                     }
 
                 } else {
@@ -364,7 +364,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     ) {
                         Icon(Icons.Outlined.FilterList, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Upgrade to filter & search your full history", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Upgrade to filter & search your full history"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 } // Column
@@ -373,9 +373,9 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
             // ── Empty state ──
             if (filtered.isEmpty()) {
                 BaseCard {
-                    Text("No entries found", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("No entries found"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
-                    Text("Start logging migraines, triggers, medicines, and reliefs to see them here.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Start logging migraines, triggers, medicines, and reliefs to see them here."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -599,10 +599,10 @@ private fun JournalEntryHeader(
                 .border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                 .padding(horizontal = 10.dp, vertical = 3.dp)
         ) {
-            Text(label, color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(t(label), color = color, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (showAttention) Icon(Icons.Filled.Error, contentDescription = "Needs attention", tint = Color(0xFFFFB74D), modifier = Modifier.size(16.dp))
+            if (showAttention) Icon(Icons.Filled.Error, contentDescription = t("Needs attention"), tint = Color(0xFFFFB74D), modifier = Modifier.size(16.dp))
             if (!timestamp.isNullOrBlank()) Text(formatTimestamp(timestamp), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         }
     }
@@ -615,7 +615,7 @@ private fun JournalDetail(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(0.38f))
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(0.38f))
         Text(value, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(0.62f), textAlign = TextAlign.End)
     }
 }
@@ -627,11 +627,11 @@ private fun JournalActions(onEdit: (() -> Unit)?, onDelete: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         if (onEdit != null) {
             TextButton(onClick = onEdit) {
-                Text("Edit", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Edit"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             }
         }
         TextButton(onClick = onDelete) {
-            Text("Delete", color = Color(0xFFE57373), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("Delete"), color = Color(0xFFE57373), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
         }
     }
 }
@@ -643,10 +643,10 @@ private fun DeleteDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
         containerColor = Color(0xFF1E0A2E),
         titleContentColor = AppTheme.TitleColor,
         textContentColor = AppTheme.SubtleTextColor,
-        title = { Text("Delete entry?") },
-        text = { Text("This action can't be undone.") },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Delete", color = Color(0xFFE57373)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = AppTheme.SubtleTextColor) } }
+        title = { Text(t("Delete entry?")) },
+        text = { Text(t("This action can't be undone.")) },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(t("Delete"), color = Color(0xFFE57373)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) } }
     )
 }
 

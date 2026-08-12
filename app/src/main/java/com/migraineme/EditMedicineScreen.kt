@@ -98,7 +98,7 @@ fun EditMedicineScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Edit Medicine")
+        Text(t("Edit Medicine"))
 
         // Name dropdown with Frequent / All
         if (frequent.isNotEmpty() || all.isNotEmpty()) {
@@ -107,10 +107,10 @@ fun EditMedicineScreen(
                     value = name,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Name") },
+                    label = { Text(t("Name")) },
                     trailingIcon = {
                         IconButton(onClick = { nameMenuOpen = true }) {
-                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose medicine")
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose medicine"))
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -121,7 +121,7 @@ fun EditMedicineScreen(
                 ) {
                     if (frequent.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("Frequent", fontWeight = FontWeight.Bold) },
+                            text = { Text(t("Frequent"), fontWeight = FontWeight.Bold) },
                             onClick = {},
                             enabled = false
                         )
@@ -138,7 +138,7 @@ fun EditMedicineScreen(
                     }
                     if (all.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("All", fontWeight = FontWeight.Bold) },
+                            text = { Text(t("All"), fontWeight = FontWeight.Bold) },
                             onClick = {},
                             enabled = false
                         )
@@ -158,7 +158,7 @@ fun EditMedicineScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text(t("Name")) },
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -166,15 +166,15 @@ fun EditMedicineScreen(
         OutlinedTextField(
             value = amount,
             onValueChange = { amount = it },
-            label = { Text("Amount") },
+            label = { Text(t("Amount")) },
             modifier = Modifier.fillMaxWidth()
         )
 
         // Start time using shared picker
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Start time: ${formatIsoDdMmHm(startAt)}")
+            Text(t("Start time: %s", formatIsoDdMmHm(startAt)))
             AppDateTimePicker(
-                label = "Select time",
+                label = t("Select time"),
                 onDateTimeSelected = { iso -> startAt = iso ?: "" }
             )
         }
@@ -182,19 +182,19 @@ fun EditMedicineScreen(
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text(t("Notes")) },
             modifier = Modifier.fillMaxWidth()
         )
 
         // Relief scale
         Spacer(Modifier.height(4.dp))
-        Text("How much relief?")
+        Text(t("How much relief?"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ReliefScale.entries.forEach { scale ->
                 androidx.compose.material3.FilterChip(
                     selected = reliefScale == scale.name,
                     onClick = { reliefScale = scale.name },
-                    label = { Text(scale.display) },
+                    label = { Text(t(scale.display)) },
                     colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
                         selectedContainerColor = scale.color.copy(alpha = 0.3f),
                         selectedLabelColor = androidx.compose.ui.graphics.Color.White,
@@ -219,10 +219,10 @@ fun EditMedicineScreen(
                 value = selectedMigraineLabel,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Linked Migraine") },
+                label = { Text(t("Linked Migraine")) },
                 trailingIcon = {
                     IconButton(onClick = { migraineMenuOpen = true }) {
-                        Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose migraine")
+                        Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose migraine"))
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -232,7 +232,7 @@ fun EditMedicineScreen(
                 onDismissRequest = { migraineMenuOpen = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("None") },
+                    text = { Text(t("None")) },
                     onClick = {
                         migraineId = ""
                         migraineMenuOpen = false
@@ -243,7 +243,7 @@ fun EditMedicineScreen(
                     .forEach { m ->
                         val label = labelForMigraine(m.startAt)
                         DropdownMenuItem(
-                            text = { Text(label) },
+                            text = { Text(t(label)) },
                             onClick = {
                                 migraineId = m.id
                                 migraineMenuOpen = false
@@ -276,14 +276,14 @@ fun EditMedicineScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Save")
+            Text(t("Save"))
         }
 
         TextButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Cancel")
+            Text(t("Cancel"))
         }
     }
 }

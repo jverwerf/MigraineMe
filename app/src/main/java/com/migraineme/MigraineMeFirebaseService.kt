@@ -158,9 +158,9 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         // Create channel (no-op if already exists)
         val channel = android.app.NotificationChannel(
-            channelId, "Evening Check-in",
+            channelId, tSync("Evening Check-in"),
             android.app.NotificationManager.IMPORTANCE_DEFAULT
-        ).apply { description = "Daily evening check-in reminder" }
+        ).apply { description = tSync("Daily evening check-in reminder") }
         nm.createNotificationChannel(channel)
 
         // Tap opens the check-in screen
@@ -175,8 +175,8 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("How was today?")
-            .setContentText("Take 15 seconds to log your day")
+            .setContentTitle(tSync("How was today?"))
+            .setContentText(tSync("Take 15 seconds to log your day"))
             .setContentIntent(pi)
             .setAutoCancel(true)
             .build()
@@ -190,9 +190,9 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         // Create channel (no-op if already exists)
         val channel = android.app.NotificationChannel(
-            channelId, "New Insights",
+            channelId, tSync("New Insights"),
             android.app.NotificationManager.IMPORTANCE_DEFAULT
-        ).apply { description = "Alerts when new insights and recommendations are ready" }
+        ).apply { description = tSync("Alerts when new insights and recommendations are ready") }
         nm.createNotificationChannel(channel)
 
         // Tap opens the Insights tab
@@ -207,8 +207,8 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("New recommendations ready")
-            .setContentText("Your recommendations for today are ready. Tap to see them.")
+            .setContentTitle(tSync("New recommendations ready"))
+            .setContentText(tSync("Your recommendations for today are ready. Tap to see them."))
             .setContentIntent(pi)
             .setAutoCancel(true)
             .build()
@@ -235,9 +235,9 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         // Create channel (no-op if already exists)
         val channel = android.app.NotificationChannel(
-            channelId, "Daily Risk Gauge",
+            channelId, tSync("Daily Risk Gauge"),
             android.app.NotificationManager.IMPORTANCE_DEFAULT
-        ).apply { description = "Alerts when today's migraine risk reaches your chosen level" }
+        ).apply { description = tSync("Alerts when today's migraine risk reaches your chosen level") }
         nm.createNotificationChannel(channel)
 
         // Tap opens Home, where the gauge lives
@@ -257,7 +257,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             else -> return  // NONE never alerts
         }
 
-        val title = if (escalated) "Risk just went up: $zoneLabel" else "Today's risk: $zoneLabel"
+        val title = if (escalated) tSync("Risk just went up: %s", zoneLabel) else tSync("Today's risk: %s", zoneLabel)
         val body = buildString {
             if (percent != null) append("Your gauge is at $percent%. ")
             if (topTrigger.isNotBlank()) append("Biggest factor: $topTrigger. ")
@@ -289,9 +289,9 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         // Create channel (no-op if already exists)
         val channel = android.app.NotificationChannel(
-            channelId, "Ongoing Migraine",
+            channelId, tSync("Ongoing Migraine"),
             android.app.NotificationManager.IMPORTANCE_DEFAULT
-        ).apply { description = "Reminders to close a migraine you logged but never ended" }
+        ).apply { description = tSync("Reminders to close a migraine you logged but never ended") }
         nm.createNotificationChannel(channel)
 
         // Tap opens the journal, where the open migraine can be edited
@@ -306,21 +306,20 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         val body = buildString {
             if (daysOpen != null) {
-                append("You logged a migraine $daysOpen ")
-                append(if (daysOpen == 1) "day" else "days")
-                append(" ago and it's still open. ")
+                if (daysOpen == 1) append(tSync("You logged a migraine 1 day ago and it's still open. "))
+                else append(tSync("You logged a migraine %s days ago and it's still open. ", daysOpen))
             } else {
-                append("You have a migraine that's still open. ")
+                append(tSync("You have a migraine that's still open. "))
             }
             append(
-                if (finalReminder) "Tap to add how it ended. We won't ask about this one again."
-                else "Tap to add how it ended."
+                if (finalReminder) tSync("Tap to add how it ended. We won't ask about this one again.")
+                else tSync("Tap to add how it ended.")
             )
         }
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Is your migraine over?")
+            .setContentTitle(tSync("Is your migraine over?"))
             .setContentText(body)
             .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
             .setContentIntent(pi)
@@ -344,9 +343,9 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
 
         // Create channel (no-op if already exists)
         val channel = android.app.NotificationChannel(
-            channelId, "Trigger alerts",
+            channelId, tSync("Trigger alerts"),
             android.app.NotificationManager.IMPORTANCE_DEFAULT
-        ).apply { description = "Alerts when an item you follow becomes a trigger for the day" }
+        ).apply { description = tSync("Alerts when an item you follow becomes a trigger for the day") }
         nm.createNotificationChannel(channel)
 
         // Tap opens the journal, where the fired item shows on today's log
@@ -359,7 +358,7 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (itemType == "prodrome") "Early warning detected" else "Trigger detected"
+        val title = if (itemType == "prodrome") tSync("Early warning detected") else tSync("Trigger detected")
         val body = if (notes.isNotBlank()) notes else label
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)

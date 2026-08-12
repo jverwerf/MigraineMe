@@ -95,13 +95,13 @@ fun QuickLogTriggerScreen(
                 // Hero Card - Trigger Selection
                 HeroCard {
                     Text(
-                        "Quick Log Trigger",
+                        t("Quick Log Trigger"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     
                     Text(
-                        "Log a trigger without a migraine",
+                        t("Log a trigger without a migraine"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -114,7 +114,7 @@ fun QuickLogTriggerScreen(
                             value = selectedTrigger ?: "Select trigger...",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Trigger", color = AppTheme.SubtleTextColor) },
+                            label = { Text(t("Trigger"), color = AppTheme.SubtleTextColor) },
                             trailingIcon = {
                                 IconButton(onClick = { menuOpen = true }) {
                                     Text("▼", color = Color.White)
@@ -135,7 +135,7 @@ fun QuickLogTriggerScreen(
                         ) {
                             if (frequentLabels.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("Frequent", fontWeight = FontWeight.Bold) },
+                                    text = { Text(t("Frequent"), fontWeight = FontWeight.Bold) },
                                     onClick = {},
                                     enabled = false
                                 )
@@ -143,7 +143,7 @@ fun QuickLogTriggerScreen(
                                     val icon = TriggerIcons.forKey(iconKeyByLabel[label])
                                     val brainyId = TriggerIcons.drawableForKey(iconKeyByLabel[label])
                                     DropdownMenuItem(
-                                        text = { Text(label) },
+                                        text = { Text(t(label)) },
                                         leadingIcon = if (brainyId != null || icon != null) {{ LogIconImage(drawableId = brainyId, fallback = icon, size = 20.dp, tint = LocalContentColor.current) }} else null,
                                         onClick = {
                                             selectedTrigger = label
@@ -156,7 +156,7 @@ fun QuickLogTriggerScreen(
                             
                             if (allLabels.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("All", fontWeight = FontWeight.Bold) },
+                                    text = { Text(t("All"), fontWeight = FontWeight.Bold) },
                                     onClick = {},
                                     enabled = false
                                 )
@@ -164,7 +164,7 @@ fun QuickLogTriggerScreen(
                                     val icon = TriggerIcons.forKey(iconKeyByLabel[label])
                                     val brainyId = TriggerIcons.drawableForKey(iconKeyByLabel[label])
                                     DropdownMenuItem(
-                                        text = { Text(label) },
+                                        text = { Text(t(label)) },
                                         leadingIcon = if (brainyId != null || icon != null) {{ LogIconImage(drawableId = brainyId, fallback = icon, size = 20.dp, tint = LocalContentColor.current) }} else null,
                                         onClick = {
                                             selectedTrigger = label
@@ -181,7 +181,7 @@ fun QuickLogTriggerScreen(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = { navController.navigate(Routes.ADJUST_TRIGGERS) }) {
-                            Text("Manage Triggers", color = AppTheme.AccentPurple)
+                            Text(t("Manage Triggers"), color = AppTheme.AccentPurple)
                         }
                     }
                 }
@@ -189,17 +189,17 @@ fun QuickLogTriggerScreen(
                 // Details Card
                 BaseCard {
                     Text(
-                        "Details",
+                        t("Details"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     
                     // Time picker
                     Column(Modifier.fillMaxWidth()) {
-                        Text("When did this happen?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("When did this happen?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(4.dp))
                         AppDateTimePicker(
-                            label = startAtIso?.let { formatIsoForDisplay(it) } ?: "Select time..."
+                            label = startAtIso?.let { formatIsoForDisplay(it) } ?: t("Select time...")
                         ) { iso ->
                             startAtIso = iso
                         }
@@ -211,7 +211,7 @@ fun QuickLogTriggerScreen(
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        label = { Text("Notes (optional)", color = AppTheme.SubtleTextColor) },
+                        label = { Text(t("Notes (optional)"), color = AppTheme.SubtleTextColor) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
@@ -235,7 +235,7 @@ fun QuickLogTriggerScreen(
                                 contentColor = Color.White
                             )
                         ) {
-                            Text("Cancel")
+                            Text(t("Cancel"))
                         }
                         
                         Button(
@@ -274,7 +274,7 @@ fun QuickLogTriggerScreen(
                                 containerColor = AppTheme.AccentPurple
                             )
                         ) {
-                            Text(if (saving) "Saving..." else "Log Trigger")
+                            Text(if (saving) t("Saving...") else t("Log Trigger"))
                         }
                     }
                 }

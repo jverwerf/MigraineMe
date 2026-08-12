@@ -130,14 +130,14 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { selectedDate = selectedDate.minusDays(1) }) {
-                    Icon(Icons.Default.ChevronLeft, "Previous day", tint = AppTheme.AccentPurple)
+                    Icon(Icons.Default.ChevronLeft, t("Previous day"), tint = AppTheme.AccentPurple)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         when (selectedDate) {
-                            today -> "Today"
-                            today.minusDays(1) -> "Yesterday"
-                            today.plusDays(1) -> "Tomorrow"
+                            today -> t("Today")
+                            today.minusDays(1) -> t("Yesterday")
+                            today.plusDays(1) -> t("Tomorrow")
                             else -> selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
                         },
                         color = AppTheme.TitleColor,
@@ -154,7 +154,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                     enabled = selectedDate < maxForecastDate
                 ) {
                     Icon(
-                        Icons.Default.ChevronRight, "Next day",
+                        Icons.Default.ChevronRight, t("Next day"),
                         tint = if (selectedDate < maxForecastDate) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                     )
                 }
@@ -168,7 +168,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                 }
             } else if (riskRow == null && forecastScore == null) {
-                Text("No risk data for this day", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                Text(t("No risk data for this day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             } else {
                 // Derive values from daily row or forecast
                 val score = riskRow?.score ?: forecastScore ?: 0.0
@@ -183,15 +183,15 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("%.1f".format(score), color = slotColors[0], style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                        Text(if (isForecast) "Forecast" else "Score", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(if (isForecast) t("Forecast") else t("Score"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(zone, color = slotColors[1], style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                        Text("Zone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Zone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${triggers.size}", color = slotColors[2], style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                        Text("Triggers", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Triggers"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
 
@@ -204,7 +204,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                         favs.take(3).forEachIndexed { i, fav ->
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(resolveValue(fav.key), color = slotColors.getOrElse(i) { slotColors.last() }, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-                                Text(fav.label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                                Text(t(fav.label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -236,7 +236,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                     Spacer(Modifier.height(8.dp))
-                    Text("Triggers", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Triggers"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
                     triggers.forEach { trigger ->
                         val sevColor = when (trigger.severity.uppercase()) {
@@ -263,7 +263,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
 @Composable
 private fun RiskMetricRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         Text(value, color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
     }
 }

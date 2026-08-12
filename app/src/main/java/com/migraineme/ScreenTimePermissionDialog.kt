@@ -17,23 +17,23 @@ fun ScreenTimePermissionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Screen Time Access") },
+        title = { Text(t("Screen Time Access")) },
         text = {
             Text(
-                "To show screen time insights, MigraineMe needs Usage Access permission.\n\n" +
-                        "This lets Android share app usage totals with MigraineMe. " +
-                        "MigraineMe does not read your content.\n\n" +
-                        "You'll be taken to Settings where you can grant this permission."
+                t("To show screen time insights, MigraineMe needs Usage Access permission.\n\n") +
+                        t("This lets Android share app usage totals with MigraineMe. ") +
+                        t("MigraineMe does not read your content.\n\n") +
+                        t("You'll be taken to Settings where you can grant this permission.")
             )
         },
         confirmButton = {
             TextButton(onClick = onOpenSettings) {
-                Text("Open Settings")
+                Text(t("Open Settings"))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Not Now")
+                Text(t("Not Now"))
             }
         }
     )

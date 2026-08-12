@@ -204,8 +204,8 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
     if (showStopConfirm) {
         AlertDialog(
             onDismissRequest = { showStopConfirm = false },
-            title = { Text("Stop this treatment?") },
-            text = { Text("It will move to Past. You can still see the data.") },
+            title = { Text(t("Stop this treatment?")) },
+            text = { Text(t("It will move to Past. You can still see the data.")) },
             confirmButton = {
                 TextButton(onClick = {
                     showStopConfirm = false
@@ -221,10 +221,10 @@ fun MonitorTreatmentDetailScreen(navController: NavController, regimenId: String
                         }
                         navController.popBackStack()
                     }
-                }) { Text("Stop now", color = Color(0xFFE0492B)) }
+                }) { Text(t("Stop now"), color = Color(0xFFE0492B)) }
             },
             dismissButton = {
-                TextButton(onClick = { showStopConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showStopConfirm = false }) { Text(t("Cancel")) }
             }
         )
     }
@@ -239,10 +239,10 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
             .padding(20.dp)
     ) {
-        Text("MIGRAINE DAYS PER MONTH", color = Color.White.copy(alpha = 0.62f), letterSpacing = androidx.compose.ui.unit.TextUnit(0.5f, androidx.compose.ui.unit.TextUnitType.Sp), style = MaterialTheme.typography.labelSmall)
+        Text(t("MIGRAINE DAYS PER MONTH"), color = Color.White.copy(alpha = 0.62f), letterSpacing = androidx.compose.ui.unit.TextUnit(0.5f, androidx.compose.ui.unit.TextUnitType.Sp), style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(6.dp))
         if (e == null) {
-            Text("Loading...", color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodyMedium)
+            Text(t("Loading..."), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodyMedium)
             return@Column
         }
         val pct = e.pctChangeMmd
@@ -253,13 +253,13 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
         Spacer(Modifier.height(8.dp))
         val b = e.baselineMmd; val r = e.rollingMmd
         if (b != null && r != null && b > 0) {
-            Text("You went from ${b.toInt()} to ${r.toInt()} migraine days a month, averaged since you started.",
+            Text(t("You went from %1\$s to %2\$s migraine days a month, averaged since you started.", b.toInt(), r.toInt()),
                 color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodyMedium)
         }
         val t = e.trailing4wMmd
         if (t != null) {
             Spacer(Modifier.height(2.dp))
-            Text("Last 4 weeks: ${t.toInt()} days",
+            Text(t("Last 4 weeks: %s days", t.toInt()),
                 color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
         }
 
@@ -268,7 +268,7 @@ private fun HeadlineCard(e: SupabaseDbService.TreatmentEfficacyRow?) {
         Spacer(Modifier.height(12.dp))
 
         val trustNote = if (e.rampComplete) " · enough data to trust this" else " · still in 8-week ramp"
-        Text("${e.weeksActive} weeks in · ${e.nAttacksRolling} attacks tracked$trustNote",
+        Text(t("%1\$s weeks in · %2\$s attacks tracked%3\$s", e.weeksActive, e.nAttacksRolling, trustNote),
             color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
     }
 }
@@ -316,7 +316,7 @@ private fun ClinicalBandScale(pct: Double?, hasData: Boolean) {
         Spacer(Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             labels.forEach { l ->
-                Text(l, color = Color.White.copy(alpha = 0.60f),
+                Text(t(l), color = Color.White.copy(alpha = 0.60f),
                     style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
         }
@@ -333,9 +333,9 @@ private fun MmdChartCard(series: List<SupabaseDbService.TreatmentMmdSeriesPoint>
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Monthly migraine days", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Monthly migraine days"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
-            Text("last ${series.size} wks", color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
+            Text(t("last %s wks", series.size), color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
         }
         Spacer(Modifier.height(10.dp))
         androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxWidth().height(170.dp)) {
@@ -429,15 +429,15 @@ private fun LegendDot(color: Color, label: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         androidx.compose.foundation.Canvas(modifier = Modifier.size(7.dp)) { drawCircle(color) }
         Spacer(Modifier.width(4.dp))
-        Text(label, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
     }
 }
 
 @Composable
 private fun SeverityDurationRow(e: SupabaseDbService.TreatmentEfficacyRow) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        MiniMetric(label = "mean severity", rolling = e.rollingSeverity, baseline = e.baselineSeverity, unit = " / 10", modifier = Modifier.weight(1f))
-        MiniMetric(label = "mean duration", rolling = e.rollingDurationH, baseline = e.baselineDurationH, unit = "h", modifier = Modifier.weight(1f))
+        MiniMetric(label = t("mean severity"), rolling = e.rollingSeverity, baseline = e.baselineSeverity, unit = " / 10", modifier = Modifier.weight(1f))
+        MiniMetric(label = t("mean duration"), rolling = e.rollingDurationH, baseline = e.baselineDurationH, unit = "h", modifier = Modifier.weight(1f))
     }
 }
 
@@ -449,7 +449,7 @@ private fun MiniMetric(label: String, rolling: Double?, baseline: Double?, unit:
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(12.dp)
     ) {
-        Text(label, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall)
         Row(verticalAlignment = Alignment.Bottom) {
             Text(rolling?.let { String.format("%.1f%s", it, unit) } ?: "-",
                 color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
@@ -462,7 +462,7 @@ private fun MiniMetric(label: String, rolling: Double?, baseline: Double?, unit:
             }
         }
         baseline?.let {
-            Text("was ${String.format("%.1f%s", it, unit)}", color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
+            Text(t("was %s", String.format("%.1f%s", it, unit)), color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -476,7 +476,7 @@ private fun TriggerShiftCard(shifts: List<SupabaseDbService.TreatmentTriggerShif
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(14.dp)
     ) {
-        Text("Trigger profile shift", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+        Text(t("Trigger profile shift"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(4.dp))
         shifts.forEach { t ->
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -484,7 +484,7 @@ private fun TriggerShiftCard(shifts: List<SupabaseDbService.TreatmentTriggerShif
                     color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.weight(1f))
                 val (label, color) = triggerChangeLabel(t)
-                Text(label, color = color, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
+                Text(t(label), color = color, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
             }
             Divider(color = Color.White.copy(alpha = 0.08f))
         }
@@ -519,9 +519,9 @@ private fun LeaderboardCard(rows: List<SupabaseDbService.TreatmentLeaderboardRow
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Compared to other treatments", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Compared to other treatments"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
-            Text("% MMD change", color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
+            Text(t("% MMD change"), color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
         }
         Spacer(Modifier.height(4.dp))
         sorted.forEach { row ->
@@ -549,7 +549,7 @@ private fun LeaderboardRow(row: SupabaseDbService.TreatmentLeaderboardRow, maxPc
                 if (isCurrent) {
                     Spacer(Modifier.width(4.dp))
                     Surface(shape = RoundedCornerShape(10.dp), color = Color(0xFFB97BFF).copy(alpha = 0.20f)) {
-                        Text("active", color = Color(0xFFB97BFF), modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp), style = MaterialTheme.typography.labelSmall)
+                        Text(t("active"), color = Color(0xFFB97BFF), modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -580,17 +580,17 @@ private fun ConfoundersCard(
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("What else changed", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("What else changed"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
             IconButton(onClick = onCustomize, modifier = Modifier.size(28.dp)) {
-                Icon(Icons.Outlined.Tune, contentDescription = "Customize", tint = Color(0xFFB97BFF))
+                Icon(Icons.Outlined.Tune, contentDescription = t("Customize"), tint = Color(0xFFB97BFF))
             }
         }
         Spacer(Modifier.height(4.dp))
         if (confounders.isEmpty()) {
             Text(
-                if (hasFilteredAll) "Tap the slider to pick what you want to see."
-                else "No data yet for the metrics you picked.",
+                if (hasFilteredAll) t("Tap the slider to pick what you want to see.")
+                else t("No data yet for the metrics you picked."),
                 color = Color.White.copy(alpha = 0.62f),
                 style = MaterialTheme.typography.bodySmall
             )
@@ -603,9 +603,9 @@ private fun ConfoundersCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowPair.forEach { c ->
                     val label = when (c.direction) {
-                        "up"   -> c.pctChange?.let { String.format("+%.0f%%", it) } ?: "up"
-                        "down" -> c.pctChange?.let { String.format("%.0f%%", it) } ?: "down"
-                        "stable" -> "stable"
+                        "up"   -> c.pctChange?.let { String.format("+%.0f%%", it) } ?: t("up")
+                        "down" -> c.pctChange?.let { String.format("%.0f%%", it) } ?: t("down")
+                        "stable" -> t("stable")
                         "concurrent" -> {
                             val n = (c.rollingValue ?: 0.0).toInt()
                             if (n == 1) "1 added" else "$n added"
@@ -628,7 +628,7 @@ private fun ConfoundersCard(
                         Text(prettyMetric(c.metric), color = Color.White.copy(alpha = 0.86f),
                             style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.weight(1f))
-                        Text(label, color = color, fontWeight = FontWeight.SemiBold,
+                        Text(t(label), color = color, fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -639,7 +639,7 @@ private fun ConfoundersCard(
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text("Correlations during the window, not effects of the drug.",
+        Text(t("Correlations during the window, not effects of the drug."),
             color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall)
     }
 }
@@ -681,7 +681,7 @@ private fun SideEffectsCard(
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Text("Side effects", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Side effects"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
             Surface(
                 shape = RoundedCornerShape(9.dp),
@@ -689,14 +689,14 @@ private fun SideEffectsCard(
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB97BFF).copy(alpha = 0.35f)),
                 onClick = onAdd
             ) {
-                Text("+ note", color = Color(0xFFB97BFF), fontWeight = FontWeight.SemiBold,
+                Text(t("+ note"), color = Color(0xFFB97BFF), fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                     style = MaterialTheme.typography.labelSmall)
             }
         }
         Spacer(Modifier.height(6.dp))
         if (sideEffects.isEmpty()) {
-            Text("None logged yet for this regimen.",
+            Text(t("None logged yet for this regimen."),
                 color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
         } else {
             sideEffects.forEach { s ->
@@ -739,12 +739,12 @@ private fun NarrativeCard(narrative: String?, loading: Boolean, onRegenerate: ()
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Summary", color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Summary"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
             if (loading) CircularProgressIndicator(color = Color(0xFFB97BFF), modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
         }
         Spacer(Modifier.height(8.dp))
-        Text(narrative ?: if (loading) "Generating..." else "Tap regenerate to build your summary.",
+        Text(narrative ?: if (loading) t("Generating...") else t("Tap regenerate to build your summary."),
             color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodyMedium, lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp))
         Spacer(Modifier.height(10.dp))
         Surface(
@@ -753,7 +753,7 @@ private fun NarrativeCard(narrative: String?, loading: Boolean, onRegenerate: ()
             border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
             onClick = { if (!loading) onRegenerate() }
         ) {
-            Text("Regenerate", color = Color.White,
+            Text(t("Regenerate"), color = Color.White,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                 style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
         }
@@ -770,7 +770,7 @@ private fun ActionButton(label: String, modifier: Modifier = Modifier, color: Co
         enabled = enabled,
         modifier = modifier
     ) {
-        Text(label, color = if (enabled) color else color.copy(alpha = 0.4f), fontWeight = FontWeight.SemiBold,
+        Text(t(label), color = if (enabled) color else color.copy(alpha = 0.4f), fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(vertical = 11.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium)
     }
@@ -846,12 +846,12 @@ private fun LinkRegimenDialog(
     AlertDialog(
         onDismissRequest = { if (!saving) onDismiss() },
         containerColor = Color(0xFF2A0C3C),
-        title = { Text("Link treatments", color = Color(0xFFDCCEFF)) },
+        title = { Text(t("Link treatments"), color = Color(0xFFDCCEFF)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 460.dp).verticalScroll(rememberScrollState())
             ) {
-                Text("Group regimens together (e.g. titration of the same drug) so the chart spans the journey.",
+                Text(t("Group regimens together (e.g. titration of the same drug) so the chart spans the journey."),
                     color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(8.dp))
                 if (loading) {
@@ -859,17 +859,17 @@ private fun LinkRegimenDialog(
                         CircularProgressIndicator(color = Color(0xFFB97BFF))
                     }
                 } else if (candidates.isEmpty()) {
-                    Text("No other treatments to link to.", color = Color.White.copy(alpha = 0.62f))
+                    Text(t("No other treatments to link to."), color = Color.White.copy(alpha = 0.62f))
                 } else {
                     if (suggested.isNotEmpty()) {
-                        Text("Suggested · same name", color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
+                        Text(t("Suggested · same name"), color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
                         suggested.forEach { r ->
                             LinkRow(r = r, isSelected = selected.contains(r.id), onClick = { toggle(r.id) })
                         }
                         Spacer(Modifier.height(6.dp))
                     }
                     if (others.isNotEmpty()) {
-                        Text("Other treatments", color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
+                        Text(t("Other treatments"), color = Color(0xFFDCCEFF), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
                         others.forEach { r ->
                             LinkRow(r = r, isSelected = selected.contains(r.id), onClick = { toggle(r.id) })
                         }
@@ -879,12 +879,12 @@ private fun LinkRegimenDialog(
         },
         confirmButton = {
             TextButton(onClick = { save() }, enabled = !saving) {
-                Text(if (saving) "Saving..." else confirmLabel, color = Color(0xFFB97BFF))
+                Text(if (saving) t("Saving...") else confirmLabel, color = Color(0xFFB97BFF))
             }
         },
         dismissButton = {
             TextButton(onClick = { if (!saving) onDismiss() }) {
-                Text("Cancel", color = Color.White.copy(alpha = 0.82f))
+                Text(t("Cancel"), color = Color.White.copy(alpha = 0.82f))
             }
         }
     )
@@ -899,11 +899,11 @@ private fun ConfounderConfigDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF2A0C3C),
-        title = { Text("Customize 'What else changed'", color = Color(0xFFDCCEFF)) },
+        title = { Text(t("Customize 'What else changed'"), color = Color(0xFFDCCEFF)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Each metric is compared between the 4 weeks before the regimen started and the most recent 4 weeks. Pick the ones that matter to you.",
+                    t("Each metric is compared between the 4 weeks before the regimen started and the most recent 4 weeks. Pick the ones that matter to you."),
                     color = Color.White.copy(alpha = 0.62f),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -919,12 +919,12 @@ private fun ConfounderConfigDialog(
                             color = if (enabled.contains(key)) Color(0xFFB97BFF) else Color.White.copy(alpha = 0.40f),
                             fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp)
                         )
-                        Text(label, color = Color.White, fontWeight = FontWeight.SemiBold)
+                        Text(t(label), color = Color.White, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done", color = Color(0xFFB97BFF)) } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(t("Done"), color = Color(0xFFB97BFF)) } }
     )
 }
 
@@ -1015,7 +1015,7 @@ private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
     AlertDialog(
         onDismissRequest = { if (!saving) onDismiss() },
         containerColor = Color(0xFF2A0C3C),
-        title = { Text("Note a side effect", color = Color(0xFFDCCEFF)) },
+        title = { Text(t("Note a side effect"), color = Color(0xFFDCCEFF)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1029,7 +1029,7 @@ private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                                 if (isSel) selected.remove(label) else selected.add(label)
                             }
                         ) {
-                            Text(label,
+                            Text(t(label),
                                 color = if (isSel) Color(0xFFDCCEFF) else Color.White.copy(alpha = 0.86f),
                                 fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Normal,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
@@ -1040,7 +1040,7 @@ private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = notes, onValueChange = { notes = it },
-                    label = { Text("Extra notes (optional)") },
+                    label = { Text(t("Extra notes (optional)")) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 90.dp)
                 )
                 Spacer(Modifier.height(6.dp))
@@ -1054,7 +1054,7 @@ private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                         Icon(Icons.Outlined.Mic, contentDescription = null,
                             tint = Color(0xFFB97BFF), modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Voice", color = Color(0xFFB97BFF), fontWeight = FontWeight.SemiBold,
+                        Text(t("Voice"), color = Color(0xFFB97BFF), fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -1062,11 +1062,11 @@ private fun AddSideEffectDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
         },
         confirmButton = {
             TextButton(onClick = { save() }, enabled = !saving && (selected.isNotEmpty() || notes.isNotBlank())) {
-                Text(if (saving) "Saving..." else "Save", color = Color(0xFFB97BFF))
+                Text(if (saving) t("Saving...") else t("Save"), color = Color(0xFFB97BFF))
             }
         },
         dismissButton = {
-            TextButton(onClick = { if (!saving) onDismiss() }) { Text("Cancel", color = Color.White.copy(alpha = 0.82f)) }
+            TextButton(onClick = { if (!saving) onDismiss() }) { Text(t("Cancel"), color = Color.White.copy(alpha = 0.82f)) }
         }
     )
 }

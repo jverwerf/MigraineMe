@@ -87,13 +87,13 @@ fun PostdromesScreen(
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Back", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Back"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -101,10 +101,10 @@ fun PostdromesScreen(
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawMigraineStarburst(accent) }
                 })
-                Text("Postdrome", color = Color.White,
+                Text(t("Postdrome"), color = Color.White,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center)
-                Text("Recovery symptoms that lingered after the attack ended",
+                Text(t("Recovery symptoms that lingered after the attack ended"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center)
             }
@@ -115,7 +115,7 @@ fun PostdromesScreen(
             val selectedPostdromes = selectedSymptoms.filter { sym -> postdromeItems.any { it.label == sym } }
             if (selectedPostdromes.isNotEmpty()) {
                 BaseCard {
-                    Text("${selectedPostdromes.size} selected", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("%s selected", selectedPostdromes.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     selectedPostdromes.forEach { sym ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(sym, color = Color.White.copy(alpha = 0.82f),
@@ -135,8 +135,8 @@ fun PostdromesScreen(
             // Manage card
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Postdrome", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Postdrome"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_SYMPTOMS) })
                 }
             }
@@ -144,7 +144,7 @@ fun PostdromesScreen(
             WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = accent)
 
             BaseCard {
-                Text("Recovery symptoms", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Recovery symptoms"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 if (frequent.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         frequent.forEach { symptom ->
@@ -168,7 +168,7 @@ fun PostdromesScreen(
                         }
                     }
                 } else if (frequent.isEmpty()) {
-                    Text("No postdrome items in your pool. Tap Manage above to add some.",
+                    Text(t("No postdrome items in your pool. Tap Manage above to add some."),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -179,11 +179,11 @@ fun PostdromesScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
                 Button(
                     onClick = { navController.navigate(Routes.MISSED_ACTIVITIES) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(t("Next")) }
             }
             Spacer(Modifier.height(32.dp))
         }

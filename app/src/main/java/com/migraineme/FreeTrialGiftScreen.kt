@@ -47,7 +47,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
             Spacer(Modifier.height(20.dp))
 
             Text(
-                "Enjoy 14 days on us",
+                t("Enjoy 14 days on us"),
                 color = Color.White,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
@@ -59,7 +59,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
             Spacer(Modifier.height(10.dp))
 
             Text(
-                "Premium is unlocked. No card needed, no strings attached.",
+                t("Premium is unlocked. No card needed, no strings attached."),
                 color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -71,10 +71,10 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
             // Same language as the paywall: blob perks in a card that carries
             // the page watermark.
             BrainyWatermarkCard(resId = R.drawable.brainy_recs, flipWatermark = true) {
-                GiftPerk(R.drawable.brainy_risk_small, "7-day risk outlook")
-                GiftPerk(R.drawable.brainy_detective_small, "AI daily insights")
-                GiftPerk(R.drawable.brainy_ask_small, "Ask MigraineMe chat")
-                GiftPerk(R.drawable.brainy_briefcase_small, "PDF reports for your doctor")
+                GiftPerk(R.drawable.brainy_risk_small, t("7-day risk outlook"))
+                GiftPerk(R.drawable.brainy_detective_small, t("AI daily insights"))
+                GiftPerk(R.drawable.brainy_ask_small, t("Ask MigraineMe chat"))
+                GiftPerk(R.drawable.brainy_briefcase_small, t("PDF reports for your doctor"))
             }
 
             Spacer(Modifier.weight(1f))
@@ -85,7 +85,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
-                Text("Let's go", fontWeight = FontWeight.SemiBold)
+                Text(t("Let's go"), fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.width(6.dp))
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowForward,
@@ -97,7 +97,7 @@ fun FreeTrialGiftScreen(onContinue: () -> Unit) {
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "You can subscribe anytime from Settings.",
+                t("You can subscribe anytime from Settings."),
                 color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                 style = MaterialTheme.typography.labelSmall
             )

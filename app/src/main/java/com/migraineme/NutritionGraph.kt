@@ -148,12 +148,12 @@ fun NutritionHistoryGraph(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "$days-Day History",
+                t("%s-Day History", days),
                 color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
             if (onClick != null) {
-                Text("View Full →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                Text(t("View Full →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
             }
         }
         
@@ -169,7 +169,7 @@ fun NutritionHistoryGraph(
             }
         } else if (historyData.isEmpty()) {
             Text(
-                "No data available",
+                t("No data available"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -177,7 +177,7 @@ fun NutritionHistoryGraph(
             )
         } else if (selectedMetrics.isEmpty()) {
             Text(
-                "Select a metric below",
+                t("Select a metric below"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -192,7 +192,7 @@ fun NutritionHistoryGraph(
             ) {
                 selectedMetrics.forEach { metric ->
                     val color = metricColors[metric] ?: AppTheme.AccentPurple
-                    val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                    val label = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
                     val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
                     val values = daysWithLogs.map { getDayValue(it, metric) }
                     
@@ -206,7 +206,7 @@ fun NutritionHistoryGraph(
                             Text("$label [${minVal.toInt()}-${maxVal.toInt()}$unit]", color = color, style = MaterialTheme.typography.labelSmall)
                         } else {
                             val avg = values.average().toInt()
-                            Text("$label (avg: $avg$unit)", color = color, style = MaterialTheme.typography.labelSmall)
+                            Text(t("%1\$s (avg: %2\$s%3\$s)", label, avg, unit), color = color, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -214,10 +214,10 @@ fun NutritionHistoryGraph(
             
             if (isNormalized) {
                 Spacer(Modifier.height(4.dp))
-                Text("⚠️ Normalized 0-1 scale • Dotted = last $days days avg", color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
+                Text(t("⚠️ Normalized 0-1 scale • Dotted = last %s days avg", days), color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
             } else if (daysWithLogs.isNotEmpty()) {
                 Spacer(Modifier.height(4.dp))
-                Text("Dotted line = last $days days average", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                Text(t("Dotted line = last %s days average", days), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
             }
 
             if (migraineDates.isNotEmpty()) {
@@ -225,7 +225,7 @@ fun NutritionHistoryGraph(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
                     Spacer(Modifier.width(4.dp))
-                    Text("Red bands = migraine days", color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
+                    Text(t("Red bands = migraine days"), color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
                 }
             }
             
@@ -233,7 +233,7 @@ fun NutritionHistoryGraph(
             
             if (daysWithLogs.isEmpty()) {
                 Text(
-                    "No logged days in this period",
+                    t("No logged days in this period"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 16.dp)
@@ -377,7 +377,7 @@ fun NutritionHistoryGraph(
         
         // Metric selector - multi-select
         Text(
-            "Select Metrics${if (selectedMetrics.size > 1) " (${selectedMetrics.size} selected)" else ""}",
+            t("Select Metrics") + (if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else ""),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )
@@ -391,7 +391,7 @@ fun NutritionHistoryGraph(
             MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
                 val isSelected = metric in selectedMetrics
                 val chipColor = metricColors[metric] ?: AppTheme.AccentPurple
-                val chipLabel = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                val chipLabel = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
                 
                 FilterChip(
                     selected = isSelected,

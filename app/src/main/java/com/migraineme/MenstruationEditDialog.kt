@@ -23,7 +23,7 @@ fun MenstruationEditDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Menstruation Settings") },
+        title = { Text(t("Edit Menstruation Settings")) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -35,8 +35,8 @@ fun MenstruationEditDialog(
                         lastDateInput = it
                         errorMessage = null
                     },
-                    label = { Text("Last Period Date") },
-                    placeholder = { Text("YYYY-MM-DD (e.g., 2026-01-15)") },
+                    label = { Text(t("Last Period Date")) },
+                    placeholder = { Text(t("YYYY-MM-DD (e.g., 2026-01-15)")) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = errorMessage != null
@@ -50,14 +50,14 @@ fun MenstruationEditDialog(
                             errorMessage = null
                         }
                     },
-                    label = { Text("Average Cycle (days)") },
+                    label = { Text(t("Average Cycle (days)")) },
                     placeholder = { Text("28") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
 
                 Text(
-                    "Weighted average of last 6 cycles",
+                    t("Weighted average of last 6 cycles"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -99,12 +99,12 @@ fun MenstruationEditDialog(
                     onConfirm(lastDate, avgCycle)
                 }
             ) {
-                Text("Save")
+                Text(t("Save"))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(t("Cancel"))
             }
         }
     )

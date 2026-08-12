@@ -86,14 +86,14 @@ fun InsightsExploreScreen(
                     .clickable { navController.navigate(Routes.INSIGHTS_TIMELINE) }
                 ) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text("Migraine Timeline", color = AppTheme.TitleColor,
+                        Text(t("Migraine Timeline"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                             modifier = Modifier.weight(1f))
                         Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                     }
 
                 if (sorted.isEmpty()) {
-                    Text("No migraines logged yet", color = AppTheme.SubtleTextColor,
+                    Text(t("No migraines logged yet"), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall)
                 } else {
                     Spacer(Modifier.height(4.dp))
@@ -151,7 +151,7 @@ fun InsightsExploreScreen(
                     }
 
                     Spacer(Modifier.height(4.dp))
-                    Text("Tap for full timeline with graph & filters",
+                    Text(t("Tap for full timeline with graph & filters"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
                 }
@@ -164,7 +164,7 @@ fun InsightsExploreScreen(
                 ) {
                         Icon(
                             Icons.Outlined.Info,
-                            contentDescription = "About Migraine Timeline",
+                            contentDescription = t("About Migraine Timeline"),
                             tint = AppTheme.SubtleTextColor,
                             modifier = Modifier.size(20.dp)
                         )
@@ -175,11 +175,11 @@ fun InsightsExploreScreen(
                     onDismissRequest = { showTimelineInfo = false },
                     confirmButton = {
                         TextButton(onClick = { showTimelineInfo = false }) {
-                            Text("Got it", color = AppTheme.AccentPurple)
+                            Text(t("Got it"), color = AppTheme.AccentPurple)
                         }
                     },
                     title = {
-                        Text("About Migraine Timeline", color = AppTheme.TitleColor,
+                        Text(t("About Migraine Timeline"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                     },
                     text = {
@@ -204,7 +204,7 @@ fun InsightsExploreScreen(
                     navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/Migraines")
                 }
             } else {
-                EmptyInsightCard("Migraines", "Log migraines with symptoms to see patterns here")
+                EmptyInsightCard("Migraines", t("Log migraines with symptoms to see patterns here"))
             }
 
             // Prodromes
@@ -213,7 +213,7 @@ fun InsightsExploreScreen(
                     navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${prodromeSpider!!.logType}")
                 })
             } else {
-                EmptyInsightCard("Prodromes", "Track early warning signs to spot them sooner")
+                EmptyInsightCard("Prodromes", t("Track early warning signs to spot them sooner"))
             }
 
             // Triggers
@@ -222,7 +222,7 @@ fun InsightsExploreScreen(
                     navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${triggerSpider!!.logType}")
                 })
             } else {
-                EmptyInsightCard("Triggers", "Record what triggers your migraines to find patterns")
+                EmptyInsightCard("Triggers", t("Record what triggers your migraines to find patterns"))
             }
 
             // Medicines
@@ -239,9 +239,9 @@ fun InsightsExploreScreen(
                             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawMedicinePill(color) } }
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("Medicines", color = AppTheme.TitleColor,
+                                Text(t("Medicines"), color = AppTheme.TitleColor,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Text("${medicineSpider!!.totalLogged} logged \u2022 ${medicineSpider!!.breakdown.size} categories",
+                                Text(t("%1\$s logged \u2022 %2\$s categories", medicineSpider!!.totalLogged, medicineSpider!!.breakdown.size),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                             Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
@@ -257,7 +257,7 @@ fun InsightsExploreScreen(
                         }
                     }
                 } else {
-                    EmptyInsightCard("Medicines", "Log treatments to track what helps most")
+                    EmptyInsightCard("Medicines", t("Log treatments to track what helps most"))
                 }
 
             // Reliefs
@@ -274,9 +274,9 @@ fun InsightsExploreScreen(
                             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawReliefLeaf(color) } }
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("Reliefs", color = AppTheme.TitleColor,
+                                Text(t("Reliefs"), color = AppTheme.TitleColor,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Text("${reliefSpider!!.totalLogged} logged \u2022 ${reliefSpider!!.breakdown.size} categories",
+                                Text(t("%1\$s logged \u2022 %2\$s categories", reliefSpider!!.totalLogged, reliefSpider!!.breakdown.size),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                             Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
@@ -292,7 +292,7 @@ fun InsightsExploreScreen(
                         }
                     }
                 } else {
-                    EmptyInsightCard("Reliefs", "Track what brings relief to find your best strategies")
+                    EmptyInsightCard("Reliefs", t("Track what brings relief to find your best strategies"))
                 }
 
             // Locations
@@ -301,7 +301,7 @@ fun InsightsExploreScreen(
                     navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${locationSpider!!.logType}")
                 })
             } else {
-                EmptyInsightCard("Locations", "Add locations to your migraines to spot hotspots")
+                EmptyInsightCard("Locations", t("Add locations to your migraines to spot hotspots"))
             }
 
             // Activities
@@ -310,7 +310,7 @@ fun InsightsExploreScreen(
                     navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${activitySpider!!.logType}")
                 })
             } else {
-                EmptyInsightCard("Activities", "Log activities to see how they relate to migraines")
+                EmptyInsightCard("Activities", t("Log activities to see how they relate to migraines"))
             }
 
             // Missed Activities
@@ -319,7 +319,7 @@ fun InsightsExploreScreen(
                     navController.navigate("${Routes.INSIGHTS_BREAKDOWN}/${missedActivitySpider!!.logType}")
                 })
             } else {
-                EmptyInsightCard("Missed Activities", "Track skipped routines to uncover hidden patterns")
+                EmptyInsightCard("Missed Activities", t("Track skipped routines to uncover hidden patterns"))
             }
         }
     }
@@ -343,7 +343,7 @@ private fun CompactMigraineSelector(
                 style = MaterialTheme.typography.titleMedium)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-            Text(sel?.label ?: "Migraine", color = Color.White,
+            Text(sel?.label ?: t("Migraine"), color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sel != null) {
@@ -353,11 +353,11 @@ private fun CompactMigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("${hStr}${d.minusHours(d.toHours()).toMinutes()}m \u2022 Severity: ${sel.severity ?: "\u2014"}/10",
+                    Text(t("%1\$s%2\$sm \u2022 Severity: %3\$s/10", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: "\u2014"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Text("${idx + 1} of ${sorted.size}", color = AppTheme.AccentPurple,
+            Text(t("%1\$s of %2\$s", idx + 1, sorted.size), color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
         }
         IconButton(onClick = onNext, enabled = idx > 0, modifier = Modifier.size(32.dp)) {
@@ -376,7 +376,7 @@ private fun CompactChip(n: Int, label: String, color: Color) {
         Text("$n", color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.width(2.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -419,9 +419,9 @@ fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys
             BrainyBlobIcon(R.drawable.brainy_recs_small)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("Recommendations", color = AppTheme.TitleColor,
+                Text(t("Recommendations"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                Text("Built from your Insights patterns", color = AppTheme.SubtleTextColor,
+                Text(t("Built from your Insights patterns"), color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall)
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
@@ -436,11 +436,11 @@ fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys
                 Icon(section.icon, contentDescription = null,
                     tint = section.color, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(section.title, color = section.color,
+                Text(t(section.title), color = section.color,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f))
                 if (extra > 0) {
-                    Text("+$extra more", color = AppTheme.SubtleTextColor,
+                    Text(t("+%s more", extra), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall)
                 }
             }
@@ -487,9 +487,9 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                             BrainyBlobIcon(R.drawable.brainy_recs_small)
                             Spacer(Modifier.width(10.dp))
                             Column {
-                                Text("Recommendations", color = AppTheme.TitleColor,
+                                Text(t("Recommendations"), color = AppTheme.TitleColor,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Text("Built from your Insights patterns, with a next step for each",
+                                Text(t("Built from your Insights patterns, with a next step for each"),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                         }
@@ -499,7 +499,7 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                         Icon(section.icon, contentDescription = null,
                             tint = section.color, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(section.title, color = section.color,
+                        Text(t(section.title), color = section.color,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     }
                     Spacer(Modifier.height(8.dp))
@@ -529,7 +529,7 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                             ) {
                                 Icon(
                                     androidx.compose.material.icons.Icons.Outlined.Close,
-                                    contentDescription = "Dismiss recommendation",
+                                    contentDescription = t("Dismiss recommendation"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -544,5 +544,5 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
 }
 
 object MigraineTimelineInfoCopy {
-    const val text = "A scrollable record of every migraine you've logged. Use the arrows on the card to flip through them one at a time, left for older and right for newer. The compact view shows the type, date, duration, severity, and how many of each linked item (triggers, prodromes, medicines, reliefs, locations, activities) you tagged on that attack, with a coloured dot per category.\n\nTap the card to open the full Migraine Timeline screen, where you can:\n• Filter the list by time range (last 7 days, last month, custom range) and by category tags.\n• See each attack as a window of days around it, with every linked event plotted on a timeline so you can see what built up before, during, and lingered after.\n• Switch which migraine sits at the centre of the window using the same arrows.\n\nThis is the place to dig into a specific attack: what was going on the day before, what you took, when you took it, what helped, and what symptoms lingered after."
+    val text: String get() = tSync("A scrollable record of every migraine you've logged. Use the arrows on the card to flip through them one at a time, left for older and right for newer. The compact view shows the type, date, duration, severity, and how many of each linked item (triggers, prodromes, medicines, reliefs, locations, activities) you tagged on that attack, with a coloured dot per category.\n\nTap the card to open the full Migraine Timeline screen, where you can:\n• Filter the list by time range (last 7 days, last month, custom range) and by category tags.\n• See each attack as a window of days around it, with every linked event plotted on a timeline so you can see what built up before, during, and lingered after.\n• Switch which migraine sits at the centre of the window using the same arrows.\n\nThis is the place to dig into a specific attack: what was going on the day before, what you took, when you took it, what helped, and what symptoms lingered after.")
 }

@@ -27,21 +27,21 @@ fun MicrophonePermissionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Microphone Permission Required") },
+        title = { Text(t("Microphone Permission Required")) },
         text = {
             Text(
-                "To record ambient noise levels, MigraineMe needs microphone access.\n\n" +
-                "The app only records noise levels (decibels), not conversations or identifiable audio."
+                t("To record ambient noise levels, MigraineMe needs microphone access.\n\n") +
+                t("The app only records noise levels (decibels), not conversations or identifiable audio.")
             )
         },
         confirmButton = {
             TextButton(onClick = onOpenSettings) {
-                Text("Open Settings")
+                Text(t("Open Settings"))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(t("Cancel"))
             }
         }
     )
@@ -57,16 +57,16 @@ fun StressDependencyDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Missing Dependencies") },
+        title = { Text(t("Missing Dependencies")) },
         text = {
             Text(
-                "Stress Index requires both HRV and Resting Heart Rate to be enabled.\n\n" +
-                "Please enable these metrics first, then you can enable Stress Index."
+                t("Stress Index requires both HRV and Resting Heart Rate to be enabled.\n\n") +
+                t("Please enable these metrics first, then you can enable Stress Index.")
             )
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("OK")
+                Text(t("OK"))
             }
         }
     )
@@ -88,7 +88,7 @@ fun DataSettingsErrorDialog(
         text = { Text(message) },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("OK")
+                Text(t("OK"))
             }
         }
     )

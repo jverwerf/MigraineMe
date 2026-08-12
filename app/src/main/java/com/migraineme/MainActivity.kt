@@ -38,6 +38,7 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
@@ -202,6 +203,7 @@ object Routes {
     const val LOGIN = "login"
     const val SIGNUP = "signup"
     const val LOGOUT = "logout"
+    const val LANGUAGE = "language"
     const val HELP = "help"
     const val HELP_ARTICLE = "help_article/{slug}"
 
@@ -712,6 +714,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
+        DrawerItem("Language", Routes.LANGUAGE, Icons.Outlined.Language),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout),
         DrawerItem("Help", Routes.HELP, Icons.Outlined.HelpOutline)
     )
@@ -741,13 +744,13 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
                         Text(
-                            "Settings",
+                            t("Settings"),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = AppTheme.TitleColor
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Your account and app preferences",
+                            t("Your account and app preferences"),
                             style = MaterialTheme.typography.bodySmall,
                             color = AppTheme.SubtleTextColor
                         )
@@ -771,7 +774,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 unselectedTextColor = if (isLogout) AppTheme.AccentPink else AppTheme.BodyTextColor,
                                 unselectedIconColor = accent
                             ),
-                            label = { Text(item.title) },
+                            label = { Text(t(item.title)) },
                             selected = drawerRoute == item.route,
                             onClick = {
                                 val ts = TourManager.state.value
@@ -785,7 +788,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 scope.launch { drawerState.close() }
                                 nav.navigate(item.route) { launchSingleTop = true }
                             },
-                            icon = { Icon(item.icon, contentDescription = item.title) }
+                            icon = { Icon(item.icon, contentDescription = t(item.title)) }
                         )
                     }
                 }
@@ -1073,7 +1076,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         else -> ""
                                     }
                                 }
-                            Text(titleText)
+                            Text(t(titleText))
                         },
                         navigationIcon = {
                             if (current != Routes.LOGIN && current != Routes.SIGNUP) {
@@ -1096,14 +1099,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                                         .background(AppTheme.AccentPink.copy(alpha = topBarPulseAlpha), CircleShape)
                                                 )
                                             }
-                                            Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                                            Icon(Icons.Outlined.Settings, contentDescription = t("Settings"))
                                         }
                                     }
                                 } else {
                                     IconButton(onClick = { nav.popBackStack() }) {
                                         Icon(
                                             Icons.AutoMirrored.Outlined.ArrowBack,
-                                            contentDescription = "Back"
+                                            contentDescription = t("Back")
                                         )
                                     }
                                 }
@@ -1131,10 +1134,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         }
                                         if (communityUnreadCount > 0) {
                                             BadgedBox(badge = { Badge { Text(communityUnreadCount.toString()) } }) {
-                                                Icon(Icons.Outlined.Groups, contentDescription = "Community")
+                                                Icon(Icons.Outlined.Groups, contentDescription = t("Community"))
                                             }
                                         } else {
-                                            Icon(Icons.Outlined.Groups, contentDescription = "Community")
+                                            Icon(Icons.Outlined.Groups, contentDescription = t("Community"))
                                         }
                                     }
                                 }
@@ -1778,8 +1781,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Triggers",
-                                subtitle = "Add, star, or remove triggers",
+                                title = t("Triggers"),
+                                subtitle = t("Add, star, or remove triggers"),
                                 iconColor = Color(0xFFFFB74D),
                                 drawHeroIcon = { HubIcons.run { drawTriggerBolt(it) } },
                                 items = items,
@@ -1873,8 +1876,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Medicines",
-                                subtitle = "Add, star, or remove medicines",
+                                title = t("Medicines"),
+                                subtitle = t("Add, star, or remove medicines"),
                                 iconColor = Color(0xFF4FC3F7),
                                 drawHeroIcon = { HubIcons.run { drawMedicinePill(it) } },
                                 items = items,
@@ -1931,8 +1934,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Reliefs",
-                                subtitle = "Add, star, or remove reliefs",
+                                title = t("Reliefs"),
+                                subtitle = t("Add, star, or remove reliefs"),
                                 iconColor = Color(0xFF81C784),
                                 drawHeroIcon = { HubIcons.run { drawReliefLeaf(it) } },
                                 items = items,
@@ -2020,8 +2023,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Prodromes",
-                                subtitle = "Early warning signs before a migraine",
+                                title = t("Prodromes"),
+                                subtitle = t("Early warning signs before a migraine"),
                                 iconColor = Color(0xFFCE93D8),
                                 drawHeroIcon = { HubIcons.run { drawProdromeEye(it) } },
                                 items = items,
@@ -2108,8 +2111,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Locations",
-                                subtitle = "Where were you?",
+                                title = t("Locations"),
+                                subtitle = t("Where were you?"),
                                 iconColor = Color(0xFF64B5F6),
                                 drawHeroIcon = { HubIcons.run { drawLocationPin(it) } },
                                 items = items,
@@ -2155,8 +2158,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Activities",
-                                subtitle = "What were you doing?",
+                                title = t("Activities"),
+                                subtitle = t("What were you doing?"),
                                 iconColor = Color(0xFFFF8A65),
                                 drawHeroIcon = { HubIcons.run { drawActivityPulse(it) } },
                                 items = items,
@@ -2203,8 +2206,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Missed Activities",
-                                subtitle = "What did you miss?",
+                                title = t("Missed Activities"),
+                                subtitle = t("What did you miss?"),
                                 iconColor = Color(0xFFEF9A9A),
                                 drawHeroIcon = { HubIcons.run { drawMissedActivity(it) } },
                                 items = items,
@@ -2251,8 +2254,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
-                                title = "Treatment side effects",
-                                subtitle = "Symptoms you flag as caused by your treatments",
+                                title = t("Treatment side effects"),
+                                subtitle = t("Symptoms you flag as caused by your treatments"),
                                 iconColor = AppTheme.AccentPurple,
                                 drawHeroIcon = { HubIcons.run { drawCapsulePlus(it) } },
                                 items = items,
@@ -2392,6 +2395,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         DataSettingsScreen(onBack = { nav.popBackStack() }, onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) })
                     }
 
+                    composable(Routes.LANGUAGE) {
+                        LanguageScreen(onBack = { nav.popBackStack() })
+                    }
                     composable(Routes.HELP) {
                         HelpScreen(
                             onBack = { nav.popBackStack() },
@@ -2652,8 +2658,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 )
 
                                 Text(
-                                    if (showContinueButton) "Your data is still being processed.\nThis will complete in the background."
-                                    else "Setting up your personalised migraine predictions",
+                                    if (showContinueButton) t("Your data is still being processed.\nThis will complete in the background.")
+                                    else t("Setting up your personalised migraine predictions"),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = AppTheme.SubtleTextColor,
                                     textAlign = TextAlign.Center
@@ -2671,7 +2677,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
-                                        Text("Continue")
+                                        Text(t("Continue"))
                                     }
                                 }
                             }
@@ -2748,7 +2754,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 Box(Modifier.fillMaxSize().background(Color(0xFF1A0029)),
                     contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.logo), contentDescription = null, modifier = Modifier.size(80.dp))
+                        Box(modifier = Modifier.size(117.dp).background(Color.White.copy(alpha = 0.06f), CircleShape), contentAlignment = Alignment.Center) { Image(painter = painterResource(id = R.drawable.logo), contentDescription = null, modifier = Modifier.size(80.dp)) }
                         Spacer(Modifier.height(16.dp))
                         CircularProgressIndicator(color = AppTheme.AccentPurple, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
                     }
@@ -2916,7 +2922,7 @@ private fun BottomBar(
                         }
                     }
                 },
-                label = { Text(item.label) },
+                label = { Text(t(item.label)) },
                 alwaysShowLabel = true,
                 colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.White,

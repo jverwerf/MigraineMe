@@ -146,19 +146,19 @@ fun MedicinesScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Triggers", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(t("Triggers"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                     }
                 } else {
                     Spacer(Modifier.size(28.dp))
@@ -172,10 +172,10 @@ fun MedicinesScreen(
                         .size(40.dp)
                         .drawBehind { HubIcons.run { drawMedicinePill(Color(0xFF4FC3F7)) } }
                 )
-                Text("Medicines", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Medicines"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    if (draft.meds.isEmpty()) "Add medicines you've taken"
-                    else "${draft.meds.size} medicine${if (draft.meds.size > 1) "s" else ""} added",
+                    if (draft.meds.isEmpty()) t("Add medicines you've taken")
+                    else (if (draft.meds.size == 1) t("1 medicine added") else t("%s medicines added", draft.meds.size)),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -202,7 +202,7 @@ fun MedicinesScreen(
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Text(
-                                        if (m.startAtIso == null) "Same as migraine start"
+                                        if (m.startAtIso == null) t("Same as migraine start")
                                         else formatMedTime(m.startAtIso),
                                         color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                                         style = MaterialTheme.typography.labelSmall
@@ -217,14 +217,14 @@ fun MedicinesScreen(
                                 }
                                 // Relief scale chip
                                 Text(
-                                    "Relief: ${relief.display}",
+                                    t("Relief: %s", relief.display),
                                     color = relief.color,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                                 )
                             }
                             Icon(
                                 Icons.Outlined.Edit,
-                                contentDescription = "Edit",
+                                contentDescription = t("Edit"),
                                 tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -236,7 +236,7 @@ fun MedicinesScreen(
                             Spacer(Modifier.width(8.dp))
                             Icon(
                                 Icons.Outlined.Close,
-                                contentDescription = "Remove",
+                                contentDescription = t("Remove"),
                                 tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -257,8 +257,8 @@ fun MedicinesScreen(
             // Manage card (own card)
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Medicines", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Medicines"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_MEDICINES) })
                 }
             }
@@ -274,7 +274,7 @@ fun MedicinesScreen(
             BaseCard {
                 // Frequent section
                 if (frequentLabels.isNotEmpty()) {
-                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { med ->
                             MedicineButton(med.label, med.label in selectedLabels, med.category) {
@@ -306,7 +306,7 @@ fun MedicinesScreen(
                 }
 
                 if (pool.isEmpty()) {
-                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -319,12 +319,12 @@ fun MedicinesScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Cancel" else "Back") }
+                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
                     onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.RELIEFS) },
                     enabled = !quickLogMode || draft.meds.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Save" else "Next") }
+                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -361,7 +361,7 @@ private fun MedicineAddDialog(
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
-                    label = { Text("Amount (e.g. 50mg, 2 tablets)") },
+                    label = { Text(t("Amount (e.g. 50mg, 2 tablets)")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -376,18 +376,18 @@ private fun MedicineAddDialog(
                 )
 
                 // Time
-                Text("When did you take it?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Text("Time: ${formatMedTime(pickedIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select time", onDateTimeSelected = { iso -> pickedIso = iso })
+                Text(t("When did you take it?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Time: %s", formatMedTime(pickedIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select time"), onDateTimeSelected = { iso -> pickedIso = iso })
 
                 // Relief scale
-                Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReliefScale.entries.forEach { scale ->
                         FilterChip(
                             selected = selectedRelief == scale,
                             onClick = { selectedRelief = scale },
-                            label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                 selectedLabelColor = Color.White,
@@ -415,16 +415,16 @@ private fun MedicineAddDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
-                Text("Add", color = AppTheme.AccentPurple)
+                Text(t("Add"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
                 TextButton(onClick = onSkip) {
-                    Text("Skip", color = Color(0xFF4FC3F7))
+                    Text(t("Skip"), color = Color(0xFF4FC3F7))
                 }
             }
         }
@@ -457,13 +457,13 @@ private fun MedicineEditDialog(
         containerColor = Color(0xFF1E0A2E),
         titleContentColor = Color.White,
         textContentColor = AppTheme.BodyTextColor,
-        title = { Text("Edit $title") },
+        title = { Text(t("Edit %s", title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
-                    label = { Text("Amount") },
+                    label = { Text(t("Amount")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -477,16 +477,16 @@ private fun MedicineEditDialog(
                     )
                 )
 
-                Text("Time: ${formatMedTime(pickedIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select time", onDateTimeSelected = { iso -> pickedIso = iso })
+                Text(t("Time: %s", formatMedTime(pickedIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select time"), onDateTimeSelected = { iso -> pickedIso = iso })
 
-                Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReliefScale.entries.forEach { scale ->
                         FilterChip(
                             selected = selectedRelief == scale,
                             onClick = { selectedRelief = scale },
-                            label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                 selectedLabelColor = Color.White,
@@ -514,12 +514,12 @@ private fun MedicineEditDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
-                Text("Save", color = AppTheme.AccentPurple)
+                Text(t("Save"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppTheme.SubtleTextColor)
+                Text(t("Cancel"), color = AppTheme.SubtleTextColor)
             }
         }
     )
@@ -563,8 +563,7 @@ private fun MedicineButton(label: String, isSelected: Boolean, category: String?
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            label,
+        Text(t(label),
             color = textColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,

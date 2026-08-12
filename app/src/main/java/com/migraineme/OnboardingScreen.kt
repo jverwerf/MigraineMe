@@ -389,13 +389,13 @@ fun OnboardingScreen(
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth().height(52.dp)
                         ) {
-                            Text(if (noSeed) "Set Up My Data" else "Take the Tour", fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
+                            Text(if (noSeed) t("Set Up My Data") else t("Take the Tour"), fontWeight = FontWeight.SemiBold); Spacer(Modifier.width(4.dp))
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            if (noSeed) "We'll take you straight to your data settings to choose what to track."
-                            else "We'll prepare your example data first — this takes up to a minute.",
+                            if (noSeed) t("We'll take you straight to your data settings to choose what to track.")
+                            else t("We'll prepare your example data first — this takes up to a minute."),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall,
                             textAlign = TextAlign.Center
@@ -411,12 +411,12 @@ fun OnboardingScreen(
                 when (currentPage) {
                     PageId.LOADING_DATA -> {
                         TextButton(onClick = { showSkipDataDialog = true }) {
-                            Text("Skip", color = AppTheme.SubtleTextColor)
+                            Text(t("Skip"), color = AppTheme.SubtleTextColor)
                         }
                     }
                     PageId.SETUP_LANDING -> {
                         TextButton(onClick = { skipOnboarding { onComplete() } }) {
-                            Text("Skip", color = AppTheme.SubtleTextColor)
+                            Text(t("Skip"), color = AppTheme.SubtleTextColor)
                         }
                     }
                     else -> {}
@@ -444,11 +444,11 @@ fun OnboardingScreen(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             if (canStart) {
-                                Text("Start Tour"); Spacer(Modifier.width(4.dp))
+                                Text(t("Start Tour")); Spacer(Modifier.width(4.dp))
                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                             } else {
                                 CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                                Spacer(Modifier.width(8.dp)); Text("Loading…")
+                                Spacer(Modifier.width(8.dp)); Text(t("Loading…"))
                             }
                         }
                     }
@@ -458,7 +458,7 @@ fun OnboardingScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Let's go"); Spacer(Modifier.width(4.dp))
+                            Text(t("Let's go")); Spacer(Modifier.width(4.dp))
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                         }
                     }
@@ -473,10 +473,10 @@ fun OnboardingScreen(
             onDismissRequest = { showSkipDataDialog = false },
             containerColor = Color(0xFF2A003D),
             shape = RoundedCornerShape(20.dp),
-            title = { Text("Skip loading?", color = Color.White, fontWeight = FontWeight.SemiBold) },
+            title = { Text(t("Skip loading?"), color = Color.White, fontWeight = FontWeight.SemiBold) },
             text = {
                 Text(
-                    "If you skip now, only limited demo data will be shown. The app will work perfectly fine — you'll just see fewer example insights in the tour.",
+                    t("If you skip now, only limited demo data will be shown. The app will work perfectly fine — you'll just see fewer example insights in the tour."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -492,12 +492,12 @@ fun OnboardingScreen(
                         proceedWithTour { onStartTour() }
                     }
                 }) {
-                    Text("Skip anyway", color = AppTheme.AccentPink, fontWeight = FontWeight.SemiBold)
+                    Text(t("Skip anyway"), color = AppTheme.AccentPink, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSkipDataDialog = false }) {
-                    Text("Keep loading", color = AppTheme.SubtleTextColor)
+                    Text(t("Keep loading"), color = AppTheme.SubtleTextColor)
                 }
             }
         )
@@ -621,7 +621,7 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
                 }
 
                 Text(
-                    if (isComplete) "All set!" else "Getting things ready",
+                    if (isComplete) t("All set!") else t("Getting things ready"),
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center
@@ -636,8 +636,8 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                 ) {
                     Text(
-                        if (isComplete) "The app is ready for the tour."
-                        else "We're preparing your example data — this usually takes up to a minute. After the tour we'll ask a few quick questions and connect your wearables. Just once.",
+                        if (isComplete) t("The app is ready for the tour.")
+                        else t("We're preparing your example data — this usually takes up to a minute. After the tour we'll ask a few quick questions and connect your wearables. Just once."),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center
@@ -694,9 +694,9 @@ private fun SetupLandingPage() {
         )
 
         Spacer(Modifier.height(20.dp))
-        Text("Now let's set up\nyour data", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+        Text(t("Now let's set up\nyour data"), color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
         Spacer(Modifier.height(16.dp))
-        Text("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes a few minutes.",
+        Text(t("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes a few minutes."),
             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
         Spacer(Modifier.height(28.dp))
         SetupStepPreview(Icons.Outlined.Lock, "1. Permissions", "Location, notifications, microphone, calendar")
@@ -709,7 +709,7 @@ private fun SetupLandingPage() {
         Spacer(Modifier.height(14.dp))
         // Pointer to the policy; iOS and the RN apps carry the same line.
         Text(
-            "See our Privacy Policy for details.",
+            t("See our Privacy Policy for details."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,

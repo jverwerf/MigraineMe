@@ -214,7 +214,7 @@ fun EditMigraineScreen(
                         }
                     },
                     enabled = !saving
-                ) { Text(if (step == Step.CORE) "Back" else "Previous") }
+                ) { Text(if (step == Step.CORE) t("Back") else t("Previous")) }
 
                 when (step) {
                     Step.CORE, Step.TRIGGERS, Step.MEDICINES, Step.RELIEFS -> {
@@ -229,7 +229,7 @@ fun EditMigraineScreen(
                                 }
                             },
                             enabled = !saving && !(step == Step.CORE && endBeforeStart)
-                        ) { Text("Next") }
+                        ) { Text(t("Next")) }
                     }
                     Step.REVIEW -> {
                         Button(
@@ -306,7 +306,7 @@ fun EditMigraineScreen(
                                 }
                             },
                             enabled = !saving && !endBeforeStart
-                        ) { Text(if (saving) "Saving..." else "Save") }
+                        ) { Text(if (saving) t("Saving...") else t("Save")) }
                     }
                 }
             }
@@ -320,9 +320,9 @@ fun EditMigraineScreen(
         }
         if (error != null || row == null) {
             Column(Modifier.fillMaxSize().padding(inner).padding(16.dp)) {
-                Text(error ?: "Not found")
+                Text(error ?: t("Not found"))
                 Spacer(Modifier.height(12.dp))
-                OutlinedButton(onClick = { navController.popBackStack() }) { Text("Back") }
+                OutlinedButton(onClick = { navController.popBackStack() }) { Text(t("Back")) }
             }
             return@Scaffold
         }
@@ -419,7 +419,7 @@ fun EditMigraineScreen(
     // Add dialogs (queue only)
     if (showAddTrig != null) {
         TimeAddDialog(
-            title = "Add trigger",
+            title = t("Add trigger"),
             onDismiss = { showAddTrig = null },
             onConfirm = { iso ->
                 val label = showAddTrig ?: return@TimeAddDialog
@@ -430,7 +430,7 @@ fun EditMigraineScreen(
     }
     if (showAddMed != null) {
         MedicineAddDialog(
-            title = "Add medicine",
+            title = t("Add medicine"),
             name = showAddMed!!,
             onDismiss = { showAddMed = null },
             onConfirm = { amount, iso, notesText ->
@@ -442,7 +442,7 @@ fun EditMigraineScreen(
     }
     if (showAddRel != null) {
         ReliefAddDialog(
-            title = "Add relief",
+            title = t("Add relief"),
             typeLabel = showAddRel!!,
             onDismiss = { showAddRel = null },
             onConfirm = { durationMinutes, iso, notesText ->
@@ -507,28 +507,28 @@ private fun CorePage(
                     value = selectedLabel ?: "Migraine",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Migraine selection") },
+                    label = { Text(t("Migraine selection")) },
                     trailingIcon = {
                         IconButton(onClick = { setTypeMenuOpen(true) }) {
-                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose migraine")
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose migraine"))
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
                 DropdownMenu(expanded = typeMenuOpen, onDismissRequest = { setTypeMenuOpen(false) }) {
                     if (mgFrequent.isNotEmpty()) {
-                        DropdownMenuItem(text = { Text("Frequent") }, onClick = {}, enabled = false)
+                        DropdownMenuItem(text = { Text(t("Frequent")) }, onClick = {}, enabled = false)
                         mgFrequent.forEach { label ->
-                            DropdownMenuItem(text = { Text(label) }, onClick = {
+                            DropdownMenuItem(text = { Text(t(label)) }, onClick = {
                                 setTypeMenuOpen(false); onSelectLabel(label)
                             })
                         }
                         HorizontalDivider()
                     }
                     if (mgAll.isNotEmpty()) {
-                        DropdownMenuItem(text = { Text("All") }, onClick = {}, enabled = false)
+                        DropdownMenuItem(text = { Text(t("All")) }, onClick = {}, enabled = false)
                         mgAll.forEach { label ->
-                            DropdownMenuItem(text = { Text(label) }, onClick = {
+                            DropdownMenuItem(text = { Text(t(label)) }, onClick = {
                                 setTypeMenuOpen(false); onSelectLabel(label)
                             })
                         }
@@ -538,7 +538,7 @@ private fun CorePage(
         }
         item {
             Column {
-                Text("Severity: ${severity.toInt()}", style = MaterialTheme.typography.bodyMedium)
+                Text(t("Severity: %s", severity.toInt()), style = MaterialTheme.typography.bodyMedium)
                 Slider(
                     value = severity,
                     onValueChange = setSeverity,
@@ -550,29 +550,29 @@ private fun CorePage(
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                AppDateTimePicker(label = "Start time") { iso -> setBeganAt(iso) }
-                Text("Current: ${formatIsoDdMmYyHm(beganAt)}")
-                AppDateTimePicker(label = "End time") { iso -> setEndedAt(iso) }
-                Text("Current: ${formatIsoDdMmYyHm(endedAt)}")
+                AppDateTimePicker(label = t("Start time")) { iso -> setBeganAt(iso) }
+                Text(t("Current: %s", formatIsoDdMmYyHm(beganAt)))
+                AppDateTimePicker(label = t("End time")) { iso -> setEndedAt(iso) }
+                Text(t("Current: %s", formatIsoDdMmYyHm(endedAt)))
                 if (endBeforeStart) {
-                    Text("End time cannot be before start time", color = MaterialTheme.colorScheme.error)
+                    Text(t("End time cannot be before start time"), color = MaterialTheme.colorScheme.error)
                 }
             }
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Aura", style = MaterialTheme.typography.bodyMedium)
+                Text(t("Aura"), style = MaterialTheme.typography.bodyMedium)
                 val summary = buildList {
                     if (auraZones.isNotEmpty()) add("${auraZones.size} visual area${if (auraZones.size > 1) "s" else ""}")
                     auraDuration?.let { add(formatAuraDuration(it)) }
                 }
                 Text(
-                    if (summary.isEmpty()) "None logged" else summary.joinToString(" · "),
+                    if (summary.isEmpty()) t("None logged") else summary.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
                 OutlinedButton(onClick = onEditAura) {
-                    Text(if (auraZones.isEmpty() && auraDuration == null) "Add aura details" else "Edit aura details")
+                    Text(if (auraZones.isEmpty() && auraDuration == null) t("Add aura details") else t("Edit aura details"))
                 }
             }
         }
@@ -580,7 +580,7 @@ private fun CorePage(
             OutlinedTextField(
                 value = notes,
                 onValueChange = setNotes,
-                label = { Text("Notes") },
+                label = { Text(t("Notes")) },
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -604,7 +604,7 @@ private fun TriggersPage(
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { Text("Triggers", style = MaterialTheme.typography.titleMedium) }
+        item { Text(t("Triggers"), style = MaterialTheme.typography.titleMedium) }
         items(linked, key = { it.id }) { t ->
             val mark = deleteIds.contains(t.id)
             val isPredicted = t.type == "menstruation_predicted"
@@ -617,13 +617,13 @@ private fun TriggersPage(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text("Type: ${t.type ?: "-"}")
-                        Text("Time: ${formatIsoDdMmYyHm(t.startAt)}")
-                        if (!t.notes.isNullOrBlank()) Text("Notes: ${t.notes}")
-                        if (mark) Text("Marked for deletion", color = MaterialTheme.colorScheme.error)
+                        Text(t("Type: %s", t.type ?: "-"))
+                        Text(t("Time: %s", formatIsoDdMmYyHm(t.startAt)))
+                        if (!t.notes.isNullOrBlank()) Text(t("Notes: %s", t.notes))
+                        if (mark) Text(t("Marked for deletion"), color = MaterialTheme.colorScheme.error)
                         if (isPredicted) {
                             Text(
-                                "Predicted",
+                                t("Predicted"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.outline
                             )
@@ -632,9 +632,9 @@ private fun TriggersPage(
                     // Only show Edit/Delete for non-predicted triggers
                     if (!isPredicted) {
                         Row {
-                            TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
+                            TextButton(onClick = { /* optional edit route */ }) { Text(t("Edit")) }
                             IconButton(onClick = { toggleDelete(t.id) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Toggle delete trigger")
+                                Icon(Icons.Filled.Delete, contentDescription = t("Toggle delete trigger"))
                             }
                         }
                     }
@@ -644,18 +644,18 @@ private fun TriggersPage(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (trigFreq.isNotEmpty()) {
-                    Text("Frequent", style = MaterialTheme.typography.titleSmall)
-                    FlowRowWrap { trigFreq.forEach { label -> AssistChip(onClick = { setShowAddTrig(label) }, label = { Text(label) }) } }
+                    Text(t("Frequent"), style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { trigFreq.forEach { label -> AssistChip(onClick = { setShowAddTrig(label) }, label = { Text(t(label)) }) } }
                 }
                 val remaining = trigPool.filter { it !in trigFreq }
                 if (remaining.isNotEmpty()) {
-                    Text("All", style = MaterialTheme.typography.titleSmall)
-                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddTrig(label) }, label = { Text(label) }) } }
+                    Text(t("All"), style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddTrig(label) }, label = { Text(t(label)) }) } }
                 }
             }
         }
         if (addQueue.isNotEmpty()) {
-            item { Text("Pending triggers", style = MaterialTheme.typography.titleSmall) }
+            item { Text(t("Pending triggers"), style = MaterialTheme.typography.titleSmall) }
             items(addQueue) { pt ->
                 ElevatedCard(Modifier.fillMaxWidth()) {
                     Row(
@@ -665,10 +665,10 @@ private fun TriggersPage(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Type: ${pt.type}")
-                            Text("Time: ${formatIsoDdMmYyHm(pt.startIso)}")
+                            Text(t("Type: %s", pt.type))
+                            Text(t("Time: %s", formatIsoDdMmYyHm(pt.startIso)))
                         }
-                        TextButton(onClick = { onQueueRemove(pt) }) { Text("Remove") }
+                        TextButton(onClick = { onQueueRemove(pt) }) { Text(t("Remove")) }
                     }
                 }
             }
@@ -693,7 +693,7 @@ private fun MedicinesPage(
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { Text("Medicines", style = MaterialTheme.typography.titleMedium) }
+        item { Text(t("Medicines"), style = MaterialTheme.typography.titleMedium) }
         items(linked, key = { it.id }) { m ->
             val mark = deleteIds.contains(m.id)
             ElevatedCard(Modifier.fillMaxWidth()) {
@@ -704,16 +704,16 @@ private fun MedicinesPage(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text("Name: ${m.name ?: "-"}")
-                        Text("Amount: ${m.amount ?: "-"}")
-                        Text("Time: ${formatIsoDdMmYyHm(m.startAt)}")
-                        if (!m.notes.isNullOrBlank()) Text("Notes: ${m.notes}")
-                        if (mark) Text("Marked for deletion", color = MaterialTheme.colorScheme.error)
+                        Text(t("Name: %s", m.name ?: "-"))
+                        Text(t("Amount: %s", m.amount ?: "-"))
+                        Text(t("Time: %s", formatIsoDdMmYyHm(m.startAt)))
+                        if (!m.notes.isNullOrBlank()) Text(t("Notes: %s", m.notes))
+                        if (mark) Text(t("Marked for deletion"), color = MaterialTheme.colorScheme.error)
                     }
                     Row {
-                        TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
+                        TextButton(onClick = { /* optional edit route */ }) { Text(t("Edit")) }
                         IconButton(onClick = { toggleDelete(m.id) }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Toggle delete medicine")
+                            Icon(Icons.Filled.Delete, contentDescription = t("Toggle delete medicine"))
                         }
                     }
                 }
@@ -722,18 +722,18 @@ private fun MedicinesPage(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (medFreq.isNotEmpty()) {
-                    Text("Frequent", style = MaterialTheme.typography.titleSmall)
-                    FlowRowWrap { medFreq.forEach { label -> AssistChip(onClick = { setShowAddMed(label) }, label = { Text(label) }) } }
+                    Text(t("Frequent"), style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { medFreq.forEach { label -> AssistChip(onClick = { setShowAddMed(label) }, label = { Text(t(label)) }) } }
                 }
                 val remaining = medPool.filter { it !in medFreq }
                 if (remaining.isNotEmpty()) {
-                    Text("All", style = MaterialTheme.typography.titleSmall)
-                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddMed(label) }, label = { Text(label) }) } }
+                    Text(t("All"), style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddMed(label) }, label = { Text(t(label)) }) } }
                 }
             }
         }
         if (addQueue.isNotEmpty()) {
-            item { Text("Pending medicines", style = MaterialTheme.typography.titleSmall) }
+            item { Text(t("Pending medicines"), style = MaterialTheme.typography.titleSmall) }
             items(addQueue) { pm ->
                 ElevatedCard(Modifier.fillMaxWidth()) {
                     Row(
@@ -743,12 +743,12 @@ private fun MedicinesPage(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Name: ${pm.name}")
-                            Text("Amount: ${pm.amount ?: "-"}")
-                            Text("Time: ${formatIsoDdMmYyHm(pm.startIso)}")
-                            if (!pm.notes.isNullOrBlank()) Text("Notes: ${pm.notes}")
+                            Text(t("Name: %s", pm.name))
+                            Text(t("Amount: %s", pm.amount ?: "-"))
+                            Text(t("Time: %s", formatIsoDdMmYyHm(pm.startIso)))
+                            if (!pm.notes.isNullOrBlank()) Text(t("Notes: %s", pm.notes))
                         }
-                        TextButton(onClick = { onQueueRemove(pm) }) { Text("Remove") }
+                        TextButton(onClick = { onQueueRemove(pm) }) { Text(t("Remove")) }
                     }
                 }
             }
@@ -773,7 +773,7 @@ private fun ReliefsPage(
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { Text("Reliefs", style = MaterialTheme.typography.titleMedium) }
+        item { Text(t("Reliefs"), style = MaterialTheme.typography.titleMedium) }
         items(linked, key = { it.id }) { r ->
             val mark = deleteIds.contains(r.id)
             ElevatedCard(Modifier.fillMaxWidth()) {
@@ -784,16 +784,16 @@ private fun ReliefsPage(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text("Type: ${r.type ?: "-"}")
-                        Text("Duration: ${r.durationMinutes ?: 0} min")
-                        Text("Time: ${formatIsoDdMmYyHm(r.startAt)}")
-                        if (!r.notes.isNullOrBlank()) Text("Notes: ${r.notes}")
-                        if (mark) Text("Marked for deletion", color = MaterialTheme.colorScheme.error)
+                        Text(t("Type: %s", r.type ?: "-"))
+                        Text(t("Duration: %s min", r.durationMinutes ?: 0))
+                        Text(t("Time: %s", formatIsoDdMmYyHm(r.startAt)))
+                        if (!r.notes.isNullOrBlank()) Text(t("Notes: %s", r.notes))
+                        if (mark) Text(t("Marked for deletion"), color = MaterialTheme.colorScheme.error)
                     }
                     Row {
-                        TextButton(onClick = { /* optional edit route */ }) { Text("Edit") }
+                        TextButton(onClick = { /* optional edit route */ }) { Text(t("Edit")) }
                         IconButton(onClick = { toggleDelete(r.id) }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Toggle delete relief")
+                            Icon(Icons.Filled.Delete, contentDescription = t("Toggle delete relief"))
                         }
                     }
                 }
@@ -802,18 +802,18 @@ private fun ReliefsPage(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (relFreq.isNotEmpty()) {
-                    Text("Frequent", style = MaterialTheme.typography.titleSmall)
-                    FlowRowWrap { relFreq.forEach { label -> AssistChip(onClick = { setShowAddRel(label) }, label = { Text(label) }) } }
+                    Text(t("Frequent"), style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { relFreq.forEach { label -> AssistChip(onClick = { setShowAddRel(label) }, label = { Text(t(label)) }) } }
                 }
                 val remaining = relPool.filter { it !in relFreq }
                 if (remaining.isNotEmpty()) {
-                    Text("All", style = MaterialTheme.typography.titleSmall)
-                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddRel(label) }, label = { Text(label) }) } }
+                    Text(t("All"), style = MaterialTheme.typography.titleSmall)
+                    FlowRowWrap { remaining.forEach { label -> AssistChip(onClick = { setShowAddRel(label) }, label = { Text(t(label)) }) } }
                 }
             }
         }
         if (addQueue.isNotEmpty()) {
-            item { Text("Pending reliefs", style = MaterialTheme.typography.titleSmall) }
+            item { Text(t("Pending reliefs"), style = MaterialTheme.typography.titleSmall) }
             items(addQueue) { pr ->
                 ElevatedCard(Modifier.fillMaxWidth()) {
                     Row(
@@ -823,12 +823,12 @@ private fun ReliefsPage(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Type: ${pr.type}")
-                            Text("Duration: ${pr.durationMinutes ?: 0} min")
-                            Text("Time: ${formatIsoDdMmYyHm(pr.startIso)}")
-                            if (!pr.notes.isNullOrBlank()) Text("Notes: ${pr.notes}")
+                            Text(t("Type: %s", pr.type))
+                            Text(t("Duration: %s min", pr.durationMinutes ?: 0))
+                            Text(t("Time: %s", formatIsoDdMmYyHm(pr.startIso)))
+                            if (!pr.notes.isNullOrBlank()) Text(t("Notes: %s", pr.notes))
                         }
-                        TextButton(onClick = { onQueueRemove(pr) }) { Text("Remove") }
+                        TextButton(onClick = { onQueueRemove(pr) }) { Text(t("Remove")) }
                     }
                 }
             }
@@ -848,16 +848,16 @@ private fun ReviewPage(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Review", style = MaterialTheme.typography.titleLarge)
-        Text("Migraine: ${label ?: "Migraine"}")
-        Text("Severity: $severity")
-        Text("Start: ${formatIsoDdMmYyHm(beganAt)}")
-        Text("End: ${formatIsoDdMmYyHm(endedAt)}")
-        if (!notes.isNullOrBlank()) Text("Notes: $notes")
+        Text(t("Review"), style = MaterialTheme.typography.titleLarge)
+        Text(t("Migraine: %s", label ?: t("Migraine")))
+        Text(t("Severity: %s", severity))
+        Text(t("Start: %s", formatIsoDdMmYyHm(beganAt)))
+        Text(t("End: %s", formatIsoDdMmYyHm(endedAt)))
+        if (!notes.isNullOrBlank()) Text(t("Notes: %s", notes))
         Spacer(Modifier.height(8.dp))
-        Text("Queued changes:", style = MaterialTheme.typography.titleMedium)
-        Text("Delete → Triggers: ${deletes.first}, Medicines: ${deletes.second}, Reliefs: ${deletes.third}")
-        Text("Add → Triggers: ${adds.first}, Medicines: ${adds.second}, Reliefs: ${adds.third}")
+        Text(t("Queued changes:"), style = MaterialTheme.typography.titleMedium)
+        Text(t("Delete → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s", deletes.first, deletes.second, deletes.third))
+        Text(t("Add → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s", adds.first, adds.second, adds.third))
     }
 }
 
@@ -909,13 +909,13 @@ private fun TimeAddDialog(
     AlertDialog(
         onDismissRequest = {},
         modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
-        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text("Add") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text(t("Add")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(t("Cancel")) } },
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Time: ${formatIsoDdMmYyHm(pickedIso)}")
-                AppDateTimePicker(label = "Select time") { iso -> pickedIso = iso }
+                Text(t("Time: %s", formatIsoDdMmYyHm(pickedIso)))
+                AppDateTimePicker(label = t("Select time")) { iso -> pickedIso = iso }
             }
         }
     )
@@ -937,25 +937,25 @@ private fun MedicineAddDialog(
         modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
         confirmButton = {
             TextButton(onClick = { onConfirm(amount.ifBlank { null }, pickedIso, notes.ifBlank { null }) }) {
-                Text("Add")
+                Text(t("Add"))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(t("Cancel")) } },
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Medicine: $name")
+                Text(t("Medicine: %s", name))
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
-                    label = { Text("Amount") },
+                    label = { Text(t("Amount")) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                AppDateTimePicker(label = "Select time") { iso -> pickedIso = iso }
+                AppDateTimePicker(label = t("Select time")) { iso -> pickedIso = iso }
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes") },
+                    label = { Text(t("Notes")) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -983,24 +983,24 @@ private fun ReliefAddDialog(
                     val dur = durationText.toIntOrNull()
                     onConfirm(dur, pickedIso, notes.ifBlank { null })
                 }
-            ) { Text("Add") }
+            ) { Text(t("Add")) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(t("Cancel")) } },
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Relief: $typeLabel")
+                Text(t("Relief: %s", typeLabel))
                 OutlinedTextField(
                     value = durationText,
                     onValueChange = { v -> durationText = v.filter { it.isDigit() }.take(4) },
-                    label = { Text("Duration minutes") },
+                    label = { Text(t("Duration minutes")) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                AppDateTimePicker(label = "Select time") { iso -> pickedIso = iso }
+                AppDateTimePicker(label = t("Select time")) { iso -> pickedIso = iso }
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes") },
+                    label = { Text(t("Notes")) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

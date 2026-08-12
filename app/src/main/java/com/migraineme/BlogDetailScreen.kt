@@ -54,7 +54,7 @@ fun BlogDetailScreen(
                 .background(AppTheme.FadeColor),
             contentAlignment = Alignment.Center
         ) {
-            Text("Blog not found", color = AppTheme.SubtleTextColor)
+            Text(t("Blog not found"), color = AppTheme.SubtleTextColor)
         }
         return
     }
@@ -126,7 +126,7 @@ fun BlogDetailScreen(
         if (!blog.faq.isNullOrEmpty()) {
             BaseCard {
                 Text(
-                    "FAQ",
+                    t("FAQ"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -176,7 +176,7 @@ private fun FaqRow(item: BlogFaq) {
             )
             Icon(
                 if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand",
+                contentDescription = if (expanded) t("Collapse") else t("Expand"),
                 tint = AppTheme.AccentPurple,
                 modifier = Modifier.size(20.dp)
             )

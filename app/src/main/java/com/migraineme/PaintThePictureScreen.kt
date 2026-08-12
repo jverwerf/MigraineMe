@@ -354,13 +354,13 @@ fun PaintThePictureScreen(
             // Top bar
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Timing", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Timing"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -368,18 +368,18 @@ fun PaintThePictureScreen(
             HeroCard {
                 Icon(
                     imageVector = Icons.Outlined.Notes,
-                    contentDescription = "Paint the picture",
+                    contentDescription = t("Paint the picture"),
                     tint = AppTheme.AccentPink,
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
-                    "Paint the picture",
+                    t("Paint the picture"),
                     color = Color.White,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    "Type or speak freely — we'll pre-fill your entire log",
+                    t("Type or speak freely — we'll pre-fill your entire log"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -400,7 +400,7 @@ fun PaintThePictureScreen(
                             editSeverity = null
                         }
                     },
-                    placeholder = { Text("e.g. \"woke up with pounding left temple, felt nauseous, took sumatriptan and lay in dark room…\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+                    placeholder = { Text(t("e.g. \"woke up with pounding left temple, felt nauseous, took sumatriptan and lay in dark room…\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
@@ -422,7 +422,7 @@ fun PaintThePictureScreen(
                     ) {
                         Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Voice", style = MaterialTheme.typography.bodySmall)
+                        Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
                     }
 
                     if (dayNote.isNotBlank() && !aiParsed) {
@@ -437,9 +437,9 @@ fun PaintThePictureScreen(
                                 if (aiLoading) {
                                     CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Analysing…", style = MaterialTheme.typography.bodySmall)
+                                    Text(t("Analysing…"), style = MaterialTheme.typography.bodySmall)
                                 } else {
-                                    Text("Find matches", style = MaterialTheme.typography.bodySmall)
+                                    Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         } else {
@@ -454,9 +454,9 @@ fun PaintThePictureScreen(
                                 if (aiLoading) {
                                     CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Analysing…", style = MaterialTheme.typography.bodySmall)
+                                    Text(t("Analysing…"), style = MaterialTheme.typography.bodySmall)
                                 } else {
-                                    Text("Find matches", style = MaterialTheme.typography.bodySmall)
+                                    Text(t("Find matches"), style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
@@ -471,7 +471,7 @@ fun PaintThePictureScreen(
                     if (totalFound > 0) {
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            "Found $totalFound match${if (totalFound > 1) "es" else ""} — added to your log:",
+                            if (totalFound == 1) t("Found 1 match — added to your log:") else t("Found %s matches — added to your log:", totalFound),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -495,7 +495,7 @@ fun PaintThePictureScreen(
                                 )
                             } else {
                                 EditableMatchPill(
-                                    label = "Severity: ${sev.value}/10",
+                                    label = t("Severity: %s/10", sev.value),
                                     category = "severity",
                                     color = Color(0xFFEF5350),
                                     inferred = sev.inferred,
@@ -610,7 +610,7 @@ fun PaintThePictureScreen(
                                 )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    "Italic items are suggestions — remove any that don't apply",
+                                    t("Italic items are suggestions — remove any that don't apply"),
                                     color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                                     style = MaterialTheme.typography.labelSmall
                                 )
@@ -619,7 +619,7 @@ fun PaintThePictureScreen(
 
                     } else if (dayNote.isNotBlank()) {
                         Spacer(Modifier.height(8.dp))
-                        Text("No matches found — you can add items manually in the next steps", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("No matches found — you can add items manually in the next steps"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -628,7 +628,7 @@ fun PaintThePictureScreen(
             if (!aiParsed && dayNote.isBlank()) {
                 BaseCard {
                     Text(
-                        "This is optional — you can skip straight to logging manually",
+                        t("This is optional — you can skip straight to logging manually"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
@@ -646,7 +646,7 @@ fun PaintThePictureScreen(
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
                 Button(
                     onClick = {
                         // Auto-parse if text entered but not yet parsed
@@ -656,7 +656,7 @@ fun PaintThePictureScreen(
                         navController.navigate(Routes.LOG_MIGRAINE)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -701,8 +701,7 @@ private fun EditableMatchPill(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
-            Text(
-                label,
+            Text(t(label),
                 color = if (inferred) Color.White.copy(alpha = 0.7f) else Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = if (inferred) FontWeight.Normal else FontWeight.Medium,
@@ -719,7 +718,7 @@ private fun EditableMatchPill(
         }
         if (inferred) {
             Text(
-                "suggested",
+                t("suggested"),
                 color = color.copy(alpha = 0.6f),
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                 modifier = Modifier.padding(end = 2.dp)
@@ -741,7 +740,7 @@ private fun EditableMatchPill(
         ) {
             Icon(
                 Icons.Outlined.Close,
-                contentDescription = "Remove",
+                contentDescription = t("Remove"),
                 tint = Color.White.copy(alpha = 0.5f),
                 modifier = Modifier.size(14.dp)
             )
@@ -776,13 +775,13 @@ private fun SeverityEditorPill(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Severity: ${sliderValue.toInt()}/10",
+                t("Severity: %s/10", sliderValue.toInt()),
                 color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
             )
             Row {
                 Text(
-                    "Done",
+                    t("Done"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier
@@ -800,7 +799,7 @@ private fun SeverityEditorPill(
                         .clickable { onRemove() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Outlined.Close, "Remove", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.Outlined.Close, t("Remove"), tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
                 }
             }
         }
@@ -817,8 +816,8 @@ private fun SeverityEditorPill(
             modifier = Modifier.fillMaxWidth()
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Mild", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
-            Text("Severe", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Mild"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Severe"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -854,13 +853,13 @@ private fun TimingEditorPill(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "$label: %02d:%02d".format(hour, minute),
+                "${t(label)}: " + "%02d:%02d".format(hour, minute),
                 color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
             )
             Row {
                 Text(
-                    "Done",
+                    t("Done"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier
@@ -875,7 +874,7 @@ private fun TimingEditorPill(
                     Modifier.size(28.dp).clip(CircleShape).clickable { onRemove() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Outlined.Close, "Remove", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.Outlined.Close, t("Remove"), tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
                 }
             }
         }
@@ -887,7 +886,7 @@ private fun TimingEditorPill(
         ) {
             // Hour slider
             Column(Modifier.weight(1f)) {
-                Text("Hour", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("Hour"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = hour.toFloat(),
                     onValueChange = { hour = it.toInt() },
@@ -901,7 +900,7 @@ private fun TimingEditorPill(
             }
             // Minute slider
             Column(Modifier.weight(1f)) {
-                Text("Min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("Min"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = minute.toFloat(),
                     onValueChange = { minute = (it.toInt() / 5) * 5 },
@@ -975,8 +974,7 @@ private fun ItemEditorPill(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                match.label,
+            Text(t(match.label),
                 color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
             )
@@ -988,7 +986,7 @@ private fun ItemEditorPill(
                     modifier = Modifier.padding(end = 4.dp)
                 )
                 Text(
-                    "Done",
+                    t("Done"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier
@@ -1000,7 +998,7 @@ private fun ItemEditorPill(
                     Modifier.size(28.dp).clip(CircleShape).clickable { onRemove() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Outlined.Close, "Remove", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.Outlined.Close, t("Remove"), tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
                 }
             }
         }
@@ -1008,7 +1006,7 @@ private fun ItemEditorPill(
         Spacer(Modifier.height(10.dp))
 
         // Date + Time editor
-        Text("When?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t("When?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(2.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -1047,11 +1045,11 @@ private fun ItemEditorPill(
                             showDatePicker = false
                         },
                         enabled = datePickerState.selectedDateMillis != null
-                    ) { Text("OK", color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
+                    ) { Text(t("OK"), color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDatePicker = false }) {
-                        Text("Cancel", color = AppTheme.SubtleTextColor)
+                        Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                     }
                 },
                 colors = DatePickerDefaults.colors(containerColor = Color(0xFF1E0A2E))
@@ -1059,7 +1057,7 @@ private fun ItemEditorPill(
                 DatePicker(
                     state = datePickerState,
                     colors = appDatePickerColors(),
-                    title = { Text("Select date", color = Color.White, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) },
+                    title = { Text(t("Select date"), color = Color.White, modifier = Modifier.padding(start = 24.dp, top = 16.dp)) },
                     headline = null,
                     showModeToggle = false
                 )
@@ -1072,7 +1070,7 @@ private fun ItemEditorPill(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text("Hour", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("Hour"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = hour.toFloat(),
                     onValueChange = { hour = it.toInt() },
@@ -1085,7 +1083,7 @@ private fun ItemEditorPill(
                 )
             }
             Column(Modifier.weight(1f)) {
-                Text("Min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("Min"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = minute.toFloat(),
                     onValueChange = { minute = (it.toInt() / 5) * 5 },
@@ -1101,12 +1099,12 @@ private fun ItemEditorPill(
 
         // Amount (medicine only)
         if (match.category == "medicine") {
-            Text("Amount / dosage", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Amount / dosage"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(4.dp))
             OutlinedTextField(
                 value = amount,
                 onValueChange = { amount = it },
-                placeholder = { Text("e.g. 2 tablets, 400mg", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                placeholder = { Text(t("e.g. 2 tablets, 400mg"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -1122,7 +1120,7 @@ private fun ItemEditorPill(
         // Relief scale + side effects (medicine and relief only)
         if (match.category == "medicine" || match.category == "relief") {
         // Relief scale
-        Text("How much did it help?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t("How much did it help?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             reliefOptions.forEachIndexed { idx, scale ->
@@ -1157,7 +1155,7 @@ private fun ItemEditorPill(
         Spacer(Modifier.height(10.dp))
 
         // Side effect scale
-        Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t("Any side effects?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             sideEffectOptions.forEachIndexed { idx, scale ->
@@ -1192,12 +1190,12 @@ private fun ItemEditorPill(
         // Side effect notes (only if side effects aren't NONE)
         if (sideEffectScale != "NONE") {
             Spacer(Modifier.height(10.dp))
-            Text("Side effect details", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Side effect details"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(4.dp))
             OutlinedTextField(
                 value = sideEffectNotes,
                 onValueChange = { sideEffectNotes = it },
-                placeholder = { Text("e.g. drowsy, nauseous", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                placeholder = { Text(t("e.g. drowsy, nauseous"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                 colors = OutlinedTextFieldDefaults.colors(

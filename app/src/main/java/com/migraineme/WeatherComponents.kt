@@ -22,7 +22,7 @@ fun WeatherMetricRow(label: String, value: Double?, unit: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
         Text(
             if (value != null && value != 0.0) {
                 if (unit == "hPa") String.format("%.0f%s", value, unit)
@@ -44,7 +44,7 @@ fun TodayWeatherSummary(
 ) {
     if (weather == null) {
         Text(
-            "No weather data for today",
+            t("No weather data for today"),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall
         )
@@ -55,14 +55,14 @@ fun TodayWeatherSummary(
         // Weather condition
         val condition = weatherCodeToCondition(weather.weatherCode)
         Text(
-            condition,
+            t(condition),
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
 
         if (weather.isThunderstormDay) {
             Text(
-                "⚡ Thunderstorm detected",
+                t("⚡ Thunderstorm detected"),
                 color = Color(0xFFFFB74D),
                 style = MaterialTheme.typography.bodySmall
             )
@@ -70,7 +70,7 @@ fun TodayWeatherSummary(
 
         // Display selected metrics
         displayMetrics.forEach { metric ->
-            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+            val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
             val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
             val value = getWeatherValue(weather, metric)
             WeatherMetricRow(label, value, unit)

@@ -125,11 +125,11 @@ fun MonitorMentalScreen(
             // Customize HeroCard
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.MENTAL_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Tune, contentDescription = "Configure", tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Outlined.Tune, contentDescription = t("Configure"), tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Customize Monitor Card", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Choose 3 metrics for the Mental Health card on Monitor", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Customize Monitor Card"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Choose 3 metrics for the Mental Health card on Monitor"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
@@ -139,19 +139,19 @@ fun MonitorMentalScreen(
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
                 BaseCard {
                     Text(
-                        "Mental health tracking is disabled",
+                        t("Mental health tracking is disabled"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Enable cognitive metrics in Data Settings to start tracking.",
+                        t("Enable cognitive metrics in Data Settings to start tracking."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Go to Data Settings →",
+                        t("Go to Data Settings →"),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.DATA) }
@@ -168,13 +168,13 @@ fun MonitorMentalScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Today's Data", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Today's Data"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         if (PremiumManager.isPremium) {
-                            Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                            Text(t("History →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
-                                Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                                Icon(Icons.Outlined.Lock, contentDescription = t("Premium"), tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
+                                Text(t("History"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -185,9 +185,9 @@ fun MonitorMentalScreen(
                             CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                         }
                     } else if (mentalDetail == null) {
-                        Text("No cognitive data for today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("No cognitive data for today"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(4.dp))
-                        Text("Enable metrics in Data Settings to start tracking", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Enable metrics in Data Settings to start tracking"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                     } else {
                         val detail = mentalDetail!!
 
@@ -203,7 +203,7 @@ fun MonitorMentalScreen(
                                 val label = metric?.label ?: key
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
@@ -214,7 +214,7 @@ fun MonitorMentalScreen(
                             Spacer(Modifier.height(4.dp))
                             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                             Spacer(Modifier.height(8.dp))
-                            Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                             Spacer(Modifier.height(4.dp))
 
                             remainingMetrics.forEach { m ->
@@ -227,7 +227,7 @@ fun MonitorMentalScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(m.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                                    Text(t(m.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
                                     Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                                 }
                             }
@@ -237,8 +237,8 @@ fun MonitorMentalScreen(
 
                 // History Graph — premium only
                 PremiumGate(
-                    message = "Unlock Mental Health Trends",
-                    subtitle = "Track your cognitive patterns over time",
+                    message = t("Unlock Mental Health Trends"),
+                    subtitle = t("Track your cognitive patterns over time"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     MentalHistoryGraph(

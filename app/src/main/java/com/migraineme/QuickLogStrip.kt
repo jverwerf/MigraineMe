@@ -219,7 +219,7 @@ fun QuickLogStrip(
                         catch (e: Exception) { e.printStackTrace() }
                     }
                 }
-                savedLabel = "${cat.label}: ${label ?: cat.label}"
+                savedLabel = "${tSync(cat.label)}: ${label ?: tSync(cat.label)}"
                 activeCategory = null
                 onLogComplete()
             } catch (e: Exception) {
@@ -251,7 +251,7 @@ fun QuickLogStrip(
                 Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Logged: ${savedLabel ?: ""}",
+                    t("Logged: %s", savedLabel ?: ""),
                     color = Color.White,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                 )
@@ -262,7 +262,7 @@ fun QuickLogStrip(
         Box(modifier = Modifier.fillMaxWidth()) {
             BaseCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Quick log",
+                    t("Quick log"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     textAlign = TextAlign.Center,
@@ -296,7 +296,7 @@ fun QuickLogStrip(
             ) {
                 Icon(
                     Icons.Outlined.Info,
-                    contentDescription = "About Quick log",
+                    contentDescription = t("About Quick log"),
                     tint = AppTheme.SubtleTextColor,
                     modifier = Modifier.size(20.dp)
                 )
@@ -342,11 +342,11 @@ fun QuickLogStrip(
             onDismissRequest = { showInfo = false },
             confirmButton = {
                 TextButton(onClick = { showInfo = false }) {
-                    Text("Got it", color = AppTheme.AccentPurple)
+                    Text(t("Got it"), color = AppTheme.AccentPurple)
                 }
             },
             title = {
-                Text("About Quick log", color = AppTheme.TitleColor,
+                Text(t("About Quick log"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = {
@@ -399,8 +399,7 @@ private fun QuickLogButton(
             )
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            category.label,
+        Text(t(category.label),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
             textAlign = TextAlign.Center,
@@ -452,13 +451,13 @@ private fun QuickLogFavoritesSheet(
         ) {
             // Header
             Text(
-                "Quick ${category.label}",
+                t("Quick %s", category.label),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Tap a favourite to log it now",
+                t("Tap a favourite to log it now"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -490,7 +489,7 @@ private fun QuickLogFavoritesSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onDismiss, enabled = !saving) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
                 Button(
                     onClick = onSkip,
@@ -498,7 +497,7 @@ private fun QuickLogFavoritesSheet(
                     colors = ButtonDefaults.buttonColors(containerColor = category.color.copy(alpha = 0.8f))
                 ) {
                     Text(
-                        if (saving) "Saving…" else "Skip — just log \"${category.label}\"",
+                        if (saving) t("Saving…") else t("Skip — just log \"%s\"", category.label),
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
@@ -569,8 +568,7 @@ private fun FavoriteCircleButton(
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            label,
+        Text(t(label),
             color = textColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,

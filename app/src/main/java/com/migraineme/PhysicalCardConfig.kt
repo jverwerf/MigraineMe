@@ -30,7 +30,8 @@ object PhysicalCardConfig {
         METRIC_STRAIN, METRIC_HIGH_HR_ZONES, METRIC_STEPS
     )
 
-    fun labelFor(metric: String): String = when (metric) {
+    fun labelFor(metric: String): String = tSync(rawLabelFor(metric))
+    private fun rawLabelFor(metric: String): String = when (metric) {
         METRIC_RECOVERY -> "Recovery"
         METRIC_HRV -> "HRV"
         METRIC_RESTING_HR -> "Resting HR"

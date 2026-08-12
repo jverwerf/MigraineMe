@@ -62,7 +62,7 @@ fun buildFavoritesPool(context: Context): List<FavPoolEntry> {
         }
     } else {
         WeatherCardConfigStore.load(context).weatherDisplayMetrics.forEach {
-            pool.add(FavPoolEntry("weather:$it", WeatherCardConfig.WEATHER_METRIC_LABELS[it] ?: it, "Weather"))
+            pool.add(FavPoolEntry("weather:$it", tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[it] ?: it), "Weather"))
         }
     }
 
@@ -72,7 +72,7 @@ fun buildFavoritesPool(context: Context): List<FavPoolEntry> {
 
     // Nutrition stays on old system
     MonitorCardConfigStore.load(context).nutritionDisplayMetrics.forEach {
-        pool.add(FavPoolEntry("nutrition:$it", MonitorCardConfig.NUTRITION_METRIC_LABELS[it] ?: it, "Diet"))
+        pool.add(FavPoolEntry("nutrition:$it", tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[it] ?: it), "Diet"))
     }
     return pool
 }

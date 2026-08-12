@@ -100,7 +100,11 @@ enum class GaugeAlertLevel(
         /** Interprets a notification_settings row. Null row = never configured = MILD. */
         fun from(enabled: Boolean?, threshold: String?): GaugeAlertLevel {
             if (enabled == false) return OFF
-            return entries.firstOrNull { it.dbValue == threshold?.uppercase() } ?: MILD
+            // Return early on a null threshold rather than falling through to the
+            // lookup: OFF.dbValue is itself null, so a never-configured user
+            // matched OFF and the "?: MILD" fallback could never be reached.
+            val wanted = threshold?.uppercase() ?: return MILD
+            return entries.firstOrNull { it.dbValue == wanted } ?: MILD
         }
     }
 }
@@ -129,7 +133,7 @@ fun GaugeAlertLevelSelector(
         ) {
             GaugeAlertLevel.entries.forEach { level ->
                 DropdownMenuItem(
-                    text = { Text(level.label, color = Color.White) },
+                    text = { Text(t(level.label), color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(level)
@@ -161,8 +165,8 @@ enum class OngoingReminderInterval(val label: String, val days: Int?) {
 
     val description: String
         get() = when (this) {
-            OFF -> "No reminders about migraines you haven't closed"
-            else -> "Remind me every $label while a migraine is still open"
+            OFF -> tSync("No reminders about migraines you haven't closed")
+            else -> tSync("Remind me every %s while a migraine is still open", tSync(label))
         }
 
     companion object {
@@ -200,7 +204,7 @@ fun OngoingReminderSelector(
         ) {
             OngoingReminderInterval.entries.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option.label, color = Color.White) },
+                    text = { Text(t(option.label), color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(option)
@@ -239,7 +243,7 @@ fun PhoneSourceSelector(
         ) {
             options.forEach { opt ->
                 DropdownMenuItem(
-                    text = { Text(opt.label, color = Color.White) },
+                    text = { Text(t(opt.label), color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(opt)
@@ -281,7 +285,7 @@ fun HybridSourceSelector(
         ) {
             options.forEach { (key: String, label: String) ->
                 DropdownMenuItem(
-                    text = { Text(label, color = Color.White) },
+                    text = { Text(t(label), color = Color.White) },
                     onClick = {
                         expanded = false
                         onSelected(key)
@@ -321,7 +325,7 @@ fun SourceBadge(
                 .size(6.dp)
                 .background(badgeColor, RoundedCornerShape(3.dp))
         )
-        Text(label, color = badgeColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = badgeColor, style = MaterialTheme.typography.labelSmall)
         if (hasMultiple) {
             Icon(
                 Icons.Filled.KeyboardArrowDown, null,
@@ -356,8 +360,7 @@ fun PermissionSubRow(
                 .weight(1f)
                 .padding(end = 10.dp)
         ) {
-            Text(
-                label,
+            Text(t(label),
                 color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.alpha(0.75f)
@@ -376,17 +379,24 @@ fun PermissionSubRow(
             modifier = Modifier.width(toggleColWidth),
             horizontalAlignment = Alignment.End
         ) {
-            Switch(
-                checked = isGranted,
-                modifier = Modifier.scale(0.8f),
-                onCheckedChange = { newVal ->
-                    if (newVal && !isGranted) {
-                        onRequestPermission()
-                    }
-                },
-                enabled = !isGranted,
-                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTheme.AccentPurple)
-            )
+            // A switch here was misleading: it cannot revoke a granted
+            // permission, so it sat disabled-but-on and read as a control the
+            // user could work. The RN apps show the state and the action
+            // instead — matched here.
+            if (isGranted) {
+                Text(
+                    t("✓ Granted"),
+                    color = Color(0xFF81C784),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            } else {
+                Text(
+                    t("Allow"),
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.clickable { onRequestPermission() }
+                )
+            }
         }
     }
 }
@@ -406,7 +416,7 @@ fun AmbientNoisePermissionRows(
     onRequestBatteryExemption: () -> Unit
 ) {
     PermissionSubRow(
-        label = "Microphone permission",
+        label = t("Microphone permission"),
         isGranted = micPermissionGranted,
         alpha = alpha,
         providerColWidth = providerColWidth,
@@ -415,7 +425,7 @@ fun AmbientNoisePermissionRows(
     )
 
     PermissionSubRow(
-        label = "Battery optimization exemption",
+        label = t("Battery optimization exemption"),
         isGranted = batteryOptimizationExempt,
         alpha = alpha,
         providerColWidth = providerColWidth,
@@ -437,7 +447,7 @@ fun ScreenTimePermissionRow(
     onRequestPermission: () -> Unit
 ) {
     PermissionSubRow(
-        label = "Usage access permission",
+        label = t("Usage access permission"),
         isGranted = screenTimePermissionGranted,
         alpha = alpha,
         providerColWidth = providerColWidth,
@@ -473,18 +483,18 @@ fun MenstruationDetailCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Last Period",
+                        t("Last Period"),
                         style = MaterialTheme.typography.labelMedium,
                         color = AppTheme.SubtleTextColor
                     )
                     Text(
-                        settings.lastMenstruationDate?.toString() ?: "Not set",
+                        settings.lastMenstruationDate?.toString() ?: t("Not set"),
                         style = MaterialTheme.typography.bodyLarge,
                         color = AppTheme.AccentPurple
                     )
                 }
                 TextButton(onClick = onEdit) {
-                    Text("Edit", color = AppTheme.AccentPurple)
+                    Text(t("Edit"), color = AppTheme.AccentPurple)
                 }
             }
 
@@ -500,24 +510,24 @@ fun MenstruationDetailCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Average Cycle",
+                        t("Average Cycle"),
                         style = MaterialTheme.typography.labelMedium,
                         color = AppTheme.SubtleTextColor
                     )
                     Text(
-                        "${settings.avgCycleLength} days",
+                        t("%s days", settings.avgCycleLength),
                         style = MaterialTheme.typography.bodyLarge,
                         color = AppTheme.AccentPurple
                     )
                     Text(
-                        "Weighted average of last 6 cycles",
+                        t("Weighted average of last 6 cycles"),
                         style = MaterialTheme.typography.bodySmall,
                         color = AppTheme.SubtleTextColor,
                         modifier = Modifier.alpha(0.7f)
                     )
                 }
                 TextButton(onClick = onEdit) {
-                    Text("Edit", color = AppTheme.AccentPurple)
+                    Text(t("Edit"), color = AppTheme.AccentPurple)
                 }
             }
 
@@ -533,12 +543,12 @@ fun MenstruationDetailCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Auto-update average",
+                        t("Auto-update average"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = AppTheme.BodyTextColor
                     )
                     Text(
-                        "Recalculate when new periods logged",
+                        t("Recalculate when new periods logged"),
                         style = MaterialTheme.typography.bodySmall,
                         color = AppTheme.SubtleTextColor,
                         modifier = Modifier.alpha(0.7f)
@@ -558,7 +568,7 @@ fun MenstruationDetailCard(
             settings.lastMenstruationDate?.let { lastDate ->
                 val nextPeriod = lastDate.plusDays(settings.avgCycleLength.toLong())
                 Text(
-                    "Next expected: $nextPeriod",
+                    t("Next expected: %s", nextPeriod),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.AccentPurple
                 )
@@ -590,7 +600,10 @@ fun NotificationsCard(
     // Non-blank while the user is searching the Data screen: each row survives
     // only if its label or description contains the query, and the whole card
     // disappears when nothing in it matches.
-    searchQuery: String = ""
+    searchQuery: String = "",
+    // Reported up so the Data hero can show how many notifications are live.
+    // Search filtering must not change it — the hero summarises the whole card.
+    onEnabledCountChange: (enabled: Int, total: Int) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     val appContext = context.applicationContext
@@ -606,6 +619,10 @@ fun NotificationsCard(
             true // Not needed pre-Android 13
         }
     }
+
+    // Every row in this card is inert without POST_NOTIFICATIONS, so the whole
+    // card reads as off until it is granted rather than advertising settings
+    // that cannot fire. Granting seeds the defaults — see grantDefaults below.
 
     // Check if evening check-in channel is enabled
     val eveningCheckinEnabled = remember(refreshTick) {
@@ -632,9 +649,10 @@ fun NotificationsCard(
     val showOngoing = hit("Ongoing migraine reminder", "migraine is still open")
     val showTriggerAlerts = hit("Trigger alerts", "When an item you follow becomes a trigger for the day")
     val showRecs = hit("Recommendation alerts", "Get notified each morning when your new recommendations are ready")
+    val showDeviceOutcome = hit("Device check-ins", "Ask how a neuromodulation device session went, 2 hours after you log it")
     val showCompanion = hit("AI companion", "Get notified when an AI companion adds to your community feed")
     val showPermission = hit("Notification permission")
-    if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showCompanion && !showPermission) return
+    if (!showEvening && !showGauge && !showOngoing && !showTriggerAlerts && !showRecs && !showDeviceOutcome && !showCompanion && !showPermission) return
 
     // Dividers only make sense on the full card — a filtered result list would
     // otherwise start or end with a stray rule.
@@ -649,7 +667,7 @@ fun NotificationsCard(
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                "Notifications",
+                t("Notifications"),
                 color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.SemiBold
@@ -658,6 +676,23 @@ fun NotificationsCard(
         }
 
         HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+
+        // Permission comes first and stands alone: every row below it is inert
+        // until notifications are granted, so burying it under the toggles it
+        // gates read as "these settings work" when they did not.
+        if (showPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            PermissionSubRow(
+                label = t("Notification permission"),
+                isGranted = notificationPermissionGranted,
+                alpha = 1.0f,
+                providerColWidth = 0.dp,
+                toggleColWidth = toggleColWidth,
+                onRequestPermission = onRequestNotificationPermission
+            )
+            if (showDividers) {
+                HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+            }
+        }
 
         // Evening check-in row
         if (showEvening) {
@@ -671,12 +706,12 @@ fun NotificationsCard(
                         .padding(end = 10.dp)
                 ) {
                     Text(
-                        "Evening check-in",
+                        t("Evening check-in"),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "Daily reminder at 8pm to log your day",
+                        t("Daily reminder at 8pm to log your day"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -728,6 +763,7 @@ fun NotificationsCard(
             gaugeThreshold = GaugeAlertLevel.from(row?.enabled, row?.threshold)
             gaugeLoaded = true
         }
+        val shownGauge = if (notificationPermissionGranted) gaugeThreshold else GaugeAlertLevel.OFF
 
         if (showGauge) {
             Row(
@@ -740,20 +776,20 @@ fun NotificationsCard(
                         .padding(end = 10.dp)
                 ) {
                     Text(
-                        "Daily risk alerts",
+                        t("Daily risk alerts"),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        gaugeThreshold.description,
+                        t(shownGauge.description),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
 
                 GaugeAlertLevelSelector(
-                    selected = gaugeThreshold,
-                    enabled = gaugeLoaded,
+                    selected = shownGauge,
+                    enabled = gaugeLoaded && notificationPermissionGranted,
                     onSelected = { level ->
                         val previous = gaugeThreshold
                         gaugeThreshold = level
@@ -789,6 +825,8 @@ fun NotificationsCard(
             ongoingInterval = OngoingReminderInterval.from(row?.enabled, row?.intervalDays)
             ongoingLoaded = true
         }
+        val shownOngoing = if (notificationPermissionGranted) ongoingInterval else OngoingReminderInterval.OFF
+
 
         if (showOngoing) {
             Row(
@@ -801,20 +839,20 @@ fun NotificationsCard(
                         .padding(end = 10.dp)
                 ) {
                     Text(
-                        "Ongoing migraine reminder",
+                        t("Ongoing migraine reminder"),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        ongoingInterval.description,
+                        shownOngoing.description,
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
 
                 OngoingReminderSelector(
-                    selected = ongoingInterval,
-                    enabled = ongoingLoaded,
+                    selected = shownOngoing,
+                    enabled = ongoingLoaded && notificationPermissionGranted,
                     onSelected = { option ->
                         val previous = ongoingInterval
                         ongoingInterval = option
@@ -862,12 +900,12 @@ fun NotificationsCard(
                         .padding(end = 10.dp)
                 ) {
                     Text(
-                        "Trigger alerts",
+                        t("Trigger alerts"),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "When an item you follow becomes a trigger for the day",
+                        t("When an item you follow becomes a trigger for the day"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -878,7 +916,7 @@ fun NotificationsCard(
                     horizontalAlignment = Alignment.End
                 ) {
                     Switch(
-                        checked = triggerAlertEnabled,
+                        checked = notificationPermissionGranted && triggerAlertEnabled,
                         enabled = triggerAlertLoaded,
                         modifier = Modifier.scale(0.8f),
                         onCheckedChange = { newValue ->
@@ -923,12 +961,12 @@ fun NotificationsCard(
                         .padding(end = 10.dp)
                 ) {
                     Text(
-                        "Recommendation alerts",
+                        t("Recommendation alerts"),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "Get notified each morning when your new recommendations are ready",
+                        t("Get notified each morning when your new recommendations are ready"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -939,7 +977,7 @@ fun NotificationsCard(
                     horizontalAlignment = Alignment.End
                 ) {
                     Switch(
-                        checked = newInsightEnabled,
+                        checked = notificationPermissionGranted && newInsightEnabled,
                         enabled = newInsightLoaded,
                         modifier = Modifier.scale(0.8f),
                         onCheckedChange = { newValue ->
@@ -969,6 +1007,11 @@ fun NotificationsCard(
             deviceOutcomeLoaded = true
         }
 
+        if (showDividers) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        }
+
+        if (showDeviceOutcome) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -979,12 +1022,12 @@ fun NotificationsCard(
                     .padding(end = 10.dp)
             ) {
                 Text(
-                    "Device check-ins",
+                    t("Device check-ins"),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    "Ask how a neuromodulation device session went, 2 hours after you log it",
+                    t("Ask how a neuromodulation device session went, 2 hours after you log it"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -995,7 +1038,7 @@ fun NotificationsCard(
                 horizontalAlignment = Alignment.End
             ) {
                 Switch(
-                    checked = deviceOutcomeEnabled,
+                    checked = notificationPermissionGranted && deviceOutcomeEnabled,
                     enabled = deviceOutcomeLoaded,
                     modifier = Modifier.scale(0.8f),
                     onCheckedChange = { newValue ->
@@ -1011,6 +1054,11 @@ fun NotificationsCard(
                 )
             }
         }
+        }
+
+        if (showDividers) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), modifier = Modifier.padding(vertical = 4.dp))
+        }
 
         // AI companion / community activity push — DB-backed (notification_settings.community).
         // Default ON; toggling writes to Supabase so the backend trigger skips the push when off.
@@ -1024,6 +1072,56 @@ fun NotificationsCard(
             communityLoaded = true
         }
 
+        // Every row here is off without the permission, so the hero count is too.
+        val notificationStates = listOf(
+            eveningCheckinEnabled,
+            gaugeThreshold != GaugeAlertLevel.OFF,
+            ongoingInterval != OngoingReminderInterval.OFF,
+            triggerAlertEnabled,
+            newInsightEnabled,
+            deviceOutcomeEnabled,
+            communityEnabled
+        )
+        val notificationsEnabledCount =
+            if (!notificationPermissionGranted) 0 else notificationStates.count { it }
+        LaunchedEffect(notificationsEnabledCount) {
+            onEnabledCountChange(notificationsEnabledCount, notificationStates.size)
+        }
+
+        // Granting the permission is the moment this card starts working, so seed
+        // the defaults on that edge: everything on, risk alerts at Mild, ongoing
+        // reminder at 3 days. Keyed on the granted flag rather than refreshTick so
+        // it fires once per transition, not on every recomposition of the screen.
+        var seededOnGrant by remember { mutableStateOf(notificationPermissionGranted) }
+        LaunchedEffect(notificationPermissionGranted) {
+            if (!notificationPermissionGranted) {
+                seededOnGrant = false
+                return@LaunchedEffect
+            }
+            if (seededOnGrant) return@LaunchedEffect
+            seededOnGrant = true
+            gaugeThreshold = GaugeAlertLevel.MILD
+            ongoingInterval = OngoingReminderInterval.DEFAULT
+            triggerAlertEnabled = true
+            newInsightEnabled = true
+            deviceOutcomeEnabled = true
+            communityEnabled = true
+            withContext(Dispatchers.IO) {
+                edge.upsertNotificationSetting(
+                    appContext, "daily_gauge",
+                    enabled = true, threshold = GaugeAlertLevel.MILD.dbValue
+                )
+                edge.upsertNotificationSetting(
+                    appContext, "ongoing_migraine",
+                    enabled = true, intervalDays = OngoingReminderInterval.DEFAULT.days
+                )
+                edge.upsertNotificationSetting(appContext, "trigger_alert", true)
+                edge.upsertNotificationSetting(appContext, "new_insight", true)
+                edge.upsertNotificationSetting(appContext, "device_relief_outcome", true)
+                edge.upsertNotificationSetting(appContext, "community", true)
+            }
+        }
+
         if (showCompanion) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1035,12 +1133,12 @@ fun NotificationsCard(
                         .padding(end = 10.dp)
                 ) {
                     Text(
-                        "AI companion",
+                        t("AI companion"),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "Get notified when an AI companion adds to your community feed",
+                        t("Get notified when an AI companion adds to your community feed"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -1051,7 +1149,7 @@ fun NotificationsCard(
                     horizontalAlignment = Alignment.End
                 ) {
                     Switch(
-                        checked = communityEnabled,
+                        checked = notificationPermissionGranted && communityEnabled,
                         enabled = communityLoaded,
                         modifier = Modifier.scale(0.8f),
                         onCheckedChange = { newValue ->
@@ -1069,22 +1167,10 @@ fun NotificationsCard(
             }
         }
 
-        // Permission sub-row (Android 13+)
-        if (showPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            PermissionSubRow(
-                label = "Notification permission",
-                isGranted = notificationPermissionGranted,
-                alpha = 1.0f,
-                providerColWidth = 0.dp,
-                toggleColWidth = toggleColWidth,
-                onRequestPermission = onRequestNotificationPermission
-            )
-        }
-
         // Channel warning
         if (showEvening && notificationPermissionGranted && !eveningCheckinEnabled) {
             Text(
-                "Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings.",
+                t("Evening Check-in notifications are disabled in system settings. Tap the toggle to open settings."),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(top = 4.dp)
@@ -1128,7 +1214,7 @@ fun CalendarCard(
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                "Calendar",
+                t("Calendar"),
                 color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
@@ -1140,9 +1226,9 @@ fun CalendarCard(
         if (showEvents) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
-                    Text("Calendar events", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Calendar events"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        "Map your events to activities, reliefs, and triggers",
+                        t("Map your events to activities, reliefs, and triggers"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -1162,7 +1248,7 @@ fun CalendarCard(
         // Permission sub-row
         if (showPermission) {
             PermissionSubRow(
-                label = "Calendar permission",
+                label = t("Calendar permission"),
                 isGranted = permissionGranted,
                 alpha = 1.0f,
                 providerColWidth = 0.dp,

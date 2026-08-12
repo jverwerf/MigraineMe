@@ -54,7 +54,10 @@ object SupabaseAuthService {
     data class PasswordGrantRequest(val email: String, val password: String)
 
     @Serializable
-    data class SignUpRequest(val email: String, val password: String)
+    data class SignUpRequest(val email: String, val password: String, val data: SignUpData? = null)
+
+    @Serializable
+    data class SignUpData(val lang: String)
 
     @Serializable
     data class IdTokenGrantRequest(
@@ -137,7 +140,11 @@ object SupabaseAuthService {
         val response = client.post(url) {
             header("apikey", anonKey)
             contentType(ContentType.Application.Json)
-            setBody(SignUpRequest(email, password))
+            // data.lang lands in raw_user_meta_data, which the auth email
+            // templates read as {{ .Data.lang }} — this is what makes the
+            // CONFIRMATION email arrive in the picked language, before any
+            // profile row exists.
+            setBody(SignUpRequest(email, password, SignUpData(lang = LangPrefs.get().code)))
         }
         val rawBody = response.bodyAsText()
         android.util.Log.d("SupabaseAuth", "signUp status: ${response.status}")

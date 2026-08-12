@@ -54,7 +54,7 @@ fun ArticleDetailScreen(
                 .background(AppTheme.FadeColor),
             contentAlignment = Alignment.Center
         ) {
-            Text("Article not found", color = AppTheme.SubtleTextColor)
+            Text(t("Article not found"), color = AppTheme.SubtleTextColor)
         }
         return
     }
@@ -83,7 +83,7 @@ fun ArticleDetailScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = t("Back"),
                     tint = Color.White
                 )
             }
@@ -111,7 +111,7 @@ fun ArticleDetailScreen(
                 }) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Unlike" else "Me too",
+                        contentDescription = if (isFavorite) t("Unlike") else t("Me too"),
                         tint = if (isFavorite) AppTheme.AccentPink else AppTheme.SubtleTextColor
                     )
                 }
@@ -127,7 +127,7 @@ fun ArticleDetailScreen(
             }) {
                 Icon(
                     Icons.Outlined.Share,
-                    contentDescription = "Share",
+                    contentDescription = t("Share"),
                     tint = AppTheme.SubtleTextColor
                 )
             }
@@ -187,7 +187,7 @@ fun ArticleDetailScreen(
             // Tags
             if (sortedTags.isNotEmpty()) {
                 Text(
-                    "Topics",
+                    t("Topics"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -242,7 +242,7 @@ fun ArticleDetailScreen(
                 }
             ) {
                 Text(
-                    "Read full article",
+                    t("Read full article"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )

@@ -106,7 +106,7 @@ fun WeatherHistoryGraph(
     val isNormalized = selectedMetrics.size >= 2
     val daysWithData = historyData.filter { hasData(it) }
 
-    val title = if (forecastStartDate != null) "History + Forecast" else "$days-Day History"
+    val title = if (forecastStartDate != null) t("History + Forecast") else t("%s-Day History", days)
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
         Text(
@@ -127,7 +127,7 @@ fun WeatherHistoryGraph(
             }
         } else if (historyData.isEmpty()) {
             Text(
-                "No data available",
+                t("No data available"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -135,7 +135,7 @@ fun WeatherHistoryGraph(
             )
         } else if (selectedMetrics.isEmpty()) {
             Text(
-                "Select a metric below",
+                t("Select a metric below"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -150,7 +150,7 @@ fun WeatherHistoryGraph(
             ) {
                 selectedMetrics.forEach { metric ->
                     val color = metricColors[metric] ?: AppTheme.AccentPurple
-                    val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                    val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
                     val unit = WeatherCardConfig.WEATHER_METRIC_UNITS[metric] ?: ""
                     val values = daysWithData.map { getDayValue(it, metric) }
 
@@ -163,7 +163,7 @@ fun WeatherHistoryGraph(
                             Text("$label [${formatValue(minVal, unit)}-${formatValue(maxVal, unit)}]", color = color, style = MaterialTheme.typography.labelSmall)
                         } else {
                             val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
-                            Text("$label (avg: ${formatValue(avg, unit)})", color = color, style = MaterialTheme.typography.labelSmall)
+                            Text(t("%1\$s (avg: %2\$s)", label, formatValue(avg, unit)), color = color, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -172,7 +172,7 @@ fun WeatherHistoryGraph(
             val avgLabel = if (forecastStartDate != null) "Dotted = history average" else "Dotted line = $days-day average"
             if (isNormalized) {
                 Spacer(Modifier.height(4.dp))
-                Text("⚠️ Normalized 0-1 scale • $avgLabel", color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
+                Text(t("⚠️ Normalized 0-1 scale • %s", avgLabel), color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall)
             } else if (daysWithData.isNotEmpty()) {
                 Spacer(Modifier.height(4.dp))
                 Text(avgLabel, color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
@@ -183,7 +183,7 @@ fun WeatherHistoryGraph(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
                     Spacer(Modifier.width(4.dp))
-                    Text("Red bands = migraine days", color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
+                    Text(t("Red bands = migraine days"), color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall)
                 }
             }
 
@@ -192,7 +192,7 @@ fun WeatherHistoryGraph(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFF4FC3F7).copy(alpha = 0.15f)) }
                     Spacer(Modifier.width(4.dp))
-                    Text("Blue zone = forecast", color = Color(0xFF4FC3F7), style = MaterialTheme.typography.labelSmall)
+                    Text(t("Blue zone = forecast"), color = Color(0xFF4FC3F7), style = MaterialTheme.typography.labelSmall)
                 }
             }
 
@@ -200,7 +200,7 @@ fun WeatherHistoryGraph(
 
             if (daysWithData.isEmpty()) {
                 Text(
-                    "No logged days in this period",
+                    t("No logged days in this period"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 16.dp)
@@ -375,7 +375,7 @@ fun WeatherHistoryGraph(
 
         // Metric selector - multi-select
         Text(
-            "Select Metrics${if (selectedMetrics.size > 1) " (${selectedMetrics.size} selected)" else ""}",
+            t("Select Metrics") + (if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else ""),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )
@@ -389,7 +389,7 @@ fun WeatherHistoryGraph(
             WeatherCardConfig.ALL_WEATHER_METRICS.forEach { metric ->
                 val isSelected = metric in selectedMetrics
                 val chipColor = metricColors[metric] ?: AppTheme.AccentPurple
-                val chipLabel = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                val chipLabel = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
 
                 FilterChip(
                     selected = isSelected,

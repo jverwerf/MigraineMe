@@ -76,14 +76,14 @@ fun SideEffectChips(
     }
 
     Column(modifier) {
-        Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t("Any side effects?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SideEffectScale.entries.forEach { scale ->
                 FilterChip(
                     selected = sideEffectScale == scale.key,
                     onClick = { onScaleChange(scale.key) },
-                    label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = scale.color.copy(alpha = 0.3f),
                         selectedLabelColor = Color.White,
@@ -104,8 +104,8 @@ fun SideEffectChips(
         OutlinedTextField(
             value = sideEffectNotes,
             onValueChange = { if (it.length <= 400) onNotesChange(it) else onNotesChange(it.take(400)) },
-            label = { Text("Notes", color = AppTheme.SubtleTextColor) },
-            placeholder = { Text("e.g. drowsiness, nausea, brain fog…", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
+            label = { Text(t("Notes"), color = AppTheme.SubtleTextColor) },
+            placeholder = { Text(t("e.g. drowsiness, nausea, brain fog…"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f)) },
             supportingText = {
                 Text(
                     "${sideEffectNotes.length}/400",
@@ -126,7 +126,7 @@ fun SideEffectChips(
                 IconButton(onClick = { launchVoice() }) {
                     Icon(
                         Icons.Outlined.Mic,
-                        contentDescription = "Voice input",
+                        contentDescription = t("Voice input"),
                         tint = AppTheme.AccentPurple,
                         modifier = Modifier.size(20.dp)
                     )

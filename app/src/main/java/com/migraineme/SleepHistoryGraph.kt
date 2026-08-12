@@ -105,12 +105,12 @@ fun SleepHistoryGraph(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "$days-Day Sleep History",
+                text = t("%s-Day Sleep History", days),
                 color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
             if (onClick != null) {
-                Text("View Full →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                Text(t("View Full →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
             }
         }
 
@@ -131,7 +131,7 @@ fun SleepHistoryGraph(
             }
         } else if (historyData.isEmpty() || daysWithData.isEmpty()) {
             Text(
-                text = "No sleep data available",
+                text = t("No sleep data available"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -139,7 +139,7 @@ fun SleepHistoryGraph(
             )
         } else if (selectedMetrics.isEmpty()) {
             Text(
-                text = "Select a metric below",
+                text = t("Select a metric below"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(150.dp).padding(vertical = 60.dp),
@@ -172,7 +172,7 @@ fun SleepHistoryGraph(
                         } else {
                             val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
                             Text(
-                                text = "$label (avg: ${formatSleepValue(avg, unit)})",
+                                text = t("%1\$s (avg: %2\$s)", label, formatSleepValue(avg, unit)),
                                 color = color,
                                 style = MaterialTheme.typography.labelSmall
                             )
@@ -184,14 +184,14 @@ fun SleepHistoryGraph(
             if (isNormalized) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "⚠️ Normalized 0-1 scale • Dotted = $days days avg",
+                    text = t("⚠️ Normalized 0-1 scale • Dotted = %s days avg", days),
                     color = Color(0xFFFFB74D),
                     style = MaterialTheme.typography.labelSmall
                 )
             } else if (daysWithData.isNotEmpty()) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Dotted line = $days-day average",
+                    text = t("Dotted line = %s-day average", days),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -203,7 +203,7 @@ fun SleepHistoryGraph(
                     Canvas(Modifier.size(8.dp)) { drawRect(Color(0xFFE57373).copy(alpha = 0.35f)) }
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        text = "Red bands = migraine days",
+                        text = t("Red bands = migraine days"),
                         color = Color(0xFFE57373),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -214,7 +214,7 @@ fun SleepHistoryGraph(
 
             if (daysWithData.isEmpty()) {
                 Text(
-                    text = "No logged days in this period",
+                    text = t("No logged days in this period"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 16.dp)
@@ -353,7 +353,7 @@ fun SleepHistoryGraph(
         Spacer(Modifier.height(12.dp))
 
         Text(
-            text = "Select Metrics" + if (selectedMetrics.size > 1) " (${selectedMetrics.size} selected)" else "",
+            text = t("Select Metrics") + if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else "",
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )

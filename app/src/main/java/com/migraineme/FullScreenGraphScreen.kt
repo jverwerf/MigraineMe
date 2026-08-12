@@ -83,11 +83,11 @@ fun FullScreenGraphScreen(
     val dateRangeLabel = "${startDate.format(dateFormat)} – ${endDate.format(dateFormat)}"
 
     val title = when (graphType) {
-        "sleep" -> "Sleep History"
-        "weather" -> if (isWeatherForecast) "Weather History + Forecast" else "Weather History"
-        "nutrition" -> "Nutrition History"
-        "risk" -> "Risk History"
-        else -> "History"
+        "sleep" -> t("Sleep History")
+        "weather" -> if (isWeatherForecast) t("Weather History + Forecast") else t("Weather History")
+        "nutrition" -> t("Nutrition History")
+        "risk" -> t("Risk History")
+        else -> t("History")
     }
 
     Column(
@@ -112,7 +112,7 @@ fun FullScreenGraphScreen(
                         selectedDays = days
                         periodOffset = 0
                     },
-                    label = { Text(text = label, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(text = t(label), style = MaterialTheme.typography.labelSmall) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AppTheme.AccentPurple.copy(alpha = 0.3f),
                         selectedLabelColor = AppTheme.AccentPurple,
@@ -135,7 +135,7 @@ fun FullScreenGraphScreen(
             onClick = { showCustomPicker = true },
             label = {
                 Text(
-                    text = if (isCustomRange) "Custom: ${startDate.format(dateFormat)} – ${endDate.format(dateFormat)}" else "Custom range…",
+                    text = if (isCustomRange) t("Custom: %1\$s – %2\$s", startDate.format(dateFormat), endDate.format(dateFormat)) else t("Custom range…"),
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1
                 )
@@ -166,7 +166,7 @@ fun FullScreenGraphScreen(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = "Earlier",
+                    contentDescription = t("Earlier"),
                     tint = if (isCustomRange) AppTheme.SubtleTextColor.copy(alpha = 0.3f) else AppTheme.AccentPurple,
                     modifier = Modifier.size(28.dp)
                 )
@@ -184,7 +184,7 @@ fun FullScreenGraphScreen(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Later",
+                    contentDescription = t("Later"),
                     tint = if (!canGoForward) AppTheme.SubtleTextColor.copy(alpha = 0.3f) else AppTheme.AccentPurple,
                     modifier = Modifier.size(28.dp)
                 )
@@ -243,15 +243,15 @@ fun FullScreenGraphScreen(
                     },
                     enabled = dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null
                 ) {
-                    Text(text = "Apply", color = if (dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
+                    Text(text = t("Apply"), color = if (dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCustomPicker = false }) {
-                    Text(text = "Cancel", color = AppTheme.SubtleTextColor)
+                    Text(text = t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
-            title = { Text(text = "Select date range") },
+            title = { Text(text = t("Select date range")) },
             text = {
                 DateRangePicker(
                     state = dateRangePickerState,

@@ -40,13 +40,13 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
             // Top bar: <- Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Notes", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Notes"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
-                Text("Review Log", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Review Log"), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -57,9 +57,9 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                         .size(40.dp)
                         .drawBehind { HubIcons.run { drawReviewCheck(AppTheme.AccentPurple) } }
                 )
-                Text("Review Log", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Review Log"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    "Review your entries before saving",
+                    t("Review your entries before saving"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -72,9 +72,9 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Migraine
             draft.migraine?.let { m ->
-                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = "Migraine", iconTint = AppTheme.AccentPink) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Migraine"), iconTint = AppTheme.AccentPink) {
                     if (attackSymptoms.isNotEmpty()) {
-                        Text("Symptoms", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Symptoms"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Text(
                             attackSymptoms.joinToString(" • "),
                             color = AppTheme.BodyTextColor,
@@ -91,10 +91,10 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
             // Pain (timestamped entries)
             val painEntriesWithLocs = draft.painEntries.filter { it.locations.isNotEmpty() }
             if (painEntriesWithLocs.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = "Pain (${painEntriesWithLocs.size})", iconTint = AppTheme.AccentPink) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Pain (%s)", painEntriesWithLocs.size), iconTint = AppTheme.AccentPink) {
                     painEntriesWithLocs.forEach { entry ->
                         Text(
-                            entry.startAtIso?.let { formatIsoDdMmYyHm(it) } ?: "At attack start",
+                            entry.startAtIso?.let { formatIsoDdMmYyHm(it) } ?: t("At attack start"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -110,7 +110,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Aura
             if (draft.auraLocations.isNotEmpty() || draft.auraDurationMinutes != null) {
-                ReviewSection(drawIcon = { HubIcons.run { drawProdromeEye(it) } }, title = "Aura", iconTint = AppTheme.AccentPurple) {
+                ReviewSection(drawIcon = { HubIcons.run { drawProdromeEye(it) } }, title = t("Aura"), iconTint = AppTheme.AccentPurple) {
                     if (draft.auraLocations.isNotEmpty()) {
                         Text(
                             draft.auraLocations.joinToString(" • ") { AuraZones.label(it) },
@@ -124,7 +124,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Triggers
             if (draft.triggers.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawTriggerBolt(it) } }, title = "Triggers (${draft.triggers.size})", iconTint = Color(0xFFFFB74D)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawTriggerBolt(it) } }, title = t("Triggers (%s)", draft.triggers.size), iconTint = Color(0xFFFFB74D)) {
                     draft.triggers.forEach { t ->
                         ReviewRow(t.type, formatIsoDdMmYyHm(t.startAtIso))
                     }
@@ -133,7 +133,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Medicines
             if (draft.meds.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMedicinePill(it) } }, title = "Medicines (${draft.meds.size})", iconTint = Color(0xFF4FC3F7)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMedicinePill(it) } }, title = t("Medicines (%s)", draft.meds.size), iconTint = Color(0xFF4FC3F7)) {
                     draft.meds.forEach { m ->
                         ReviewRow(m.name ?: "?", "${m.amount ?: "-"} · ${formatIsoDdMmYyHm(m.startAtIso)}")
                     }
@@ -142,7 +142,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Reliefs
             if (draft.rels.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawReliefLeaf(it) } }, title = "Reliefs (${draft.rels.size})", iconTint = Color(0xFF81C784)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawReliefLeaf(it) } }, title = t("Reliefs (%s)", draft.rels.size), iconTint = Color(0xFF81C784)) {
                     draft.rels.forEach { r ->
                         ReviewRow(r.type, "${formatIsoDdMmYyHm(r.startAtIso)}${if (r.endAtIso != null) " -> ${formatIsoDdMmYyHm(r.endAtIso)}" else ""}")
                     }
@@ -151,7 +151,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Locations
             if (draft.locations.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawLocationPin(it) } }, title = "Locations (${draft.locations.size})", iconTint = Color(0xFF78909C)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawLocationPin(it) } }, title = t("Locations (%s)", draft.locations.size), iconTint = Color(0xFF78909C)) {
                     draft.locations.forEach { loc ->
                         ReviewRow(loc.type, formatIsoDdMmYyHm(loc.startAtIso))
                     }
@@ -160,7 +160,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Activities
             if (draft.activities.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawActivityPulse(it) } }, title = "Activities (${draft.activities.size})", iconTint = Color(0xFFFF8A65)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawActivityPulse(it) } }, title = t("Activities (%s)", draft.activities.size), iconTint = Color(0xFFFF8A65)) {
                     draft.activities.forEach { act ->
                         ReviewRow(act.type, formatIsoDdMmYyHm(act.startAtIso))
                     }
@@ -169,7 +169,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Postdrome
             if (postdromeSymptoms.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = "Postdrome (${postdromeSymptoms.size})", iconTint = Color(0xFFCE93D8)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMigraineStarburst(it) } }, title = t("Postdrome (%s)", postdromeSymptoms.size), iconTint = Color(0xFFCE93D8)) {
                     Text(
                         postdromeSymptoms.joinToString(" • "),
                         color = AppTheme.BodyTextColor,
@@ -180,7 +180,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
 
             // Missed Activities
             if (draft.missedActivities.isNotEmpty()) {
-                ReviewSection(drawIcon = { HubIcons.run { drawMissedActivity(it) } }, title = "Missed (${draft.missedActivities.size})", iconTint = Color(0xFFFF7043)) {
+                ReviewSection(drawIcon = { HubIcons.run { drawMissedActivity(it) } }, title = t("Missed (%s)", draft.missedActivities.size), iconTint = Color(0xFFFF7043)) {
                     draft.missedActivities.forEach { ma ->
                         ReviewRow(ma.type, formatIsoDdMmYyHm(ma.startAtIso))
                     }
@@ -190,7 +190,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
             // Empty state
             if (draft.migraine == null && draft.triggers.isEmpty() && draft.meds.isEmpty() && draft.rels.isEmpty() && draft.locations.isEmpty() && draft.activities.isEmpty() && draft.missedActivities.isEmpty()) {
                 BaseCard {
-                    Text("Nothing to review yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    Text(t("Nothing to review yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             }
 
@@ -239,7 +239,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
             ) {
                 val editId by vm.editMigraineId.collectAsState()
                 val isEdit = editId != null || draft.editMigraineId != null
-                Text(if (isEdit) "Update Log" else "Save Log", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(if (isEdit) t("Update Log") else t("Save Log"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             }
 
             // Back
@@ -248,7 +248,7 @@ fun ReviewLogScreen(navController: NavHostController, authVm: AuthViewModel, vm:
                     onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -283,7 +283,7 @@ private fun ReviewRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
         Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
     }
 }

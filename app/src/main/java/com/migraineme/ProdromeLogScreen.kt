@@ -204,19 +204,19 @@ fun ProdromeLogScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Pain", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(t("Pain"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                     }
                 } else {
                     Spacer(Modifier.size(28.dp))
@@ -230,10 +230,10 @@ fun ProdromeLogScreen(
                         .size(40.dp)
                         .drawBehind { HubIcons.run { drawProdromeEye(Color(0xFFCE93D8)) } }
                 )
-                Text("Prodromes", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Prodromes"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    if (draft.prodromes.isEmpty()) "Select early warning signs"
-                    else "${draft.prodromes.size} prodrome${if (draft.prodromes.size > 1) "s" else ""} selected",
+                    if (draft.prodromes.isEmpty()) t("Select early warning signs")
+                    else (if (draft.prodromes.size == 1) t("1 prodrome selected") else t("%s prodromes selected", draft.prodromes.size)),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -271,7 +271,7 @@ fun ProdromeLogScreen(
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                                 )
                                 Text(
-                                    if (p.startAtIso == null) "Same as migraine start"
+                                    if (p.startAtIso == null) t("Same as migraine start")
                                     else formatProdromeTime(p.startAtIso),
                                     color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                                     style = MaterialTheme.typography.labelSmall
@@ -279,7 +279,7 @@ fun ProdromeLogScreen(
                             }
                             Icon(
                                 Icons.Outlined.Edit,
-                                contentDescription = "Edit time",
+                                contentDescription = t("Edit time"),
                                 tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -291,7 +291,7 @@ fun ProdromeLogScreen(
                             Spacer(Modifier.width(8.dp))
                             Icon(
                                 Icons.Outlined.Close,
-                                contentDescription = "Remove",
+                                contentDescription = t("Remove"),
                                 tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -312,8 +312,8 @@ fun ProdromeLogScreen(
             // Manage card
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Prodromes", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Prodromes"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_PRODROMES) })
                 }
             }
@@ -328,7 +328,7 @@ fun ProdromeLogScreen(
             // ── Prodromes card: Frequent, then categories ──
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
-                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { prod ->
                             ProdromeButton(prod.label, prod.label in selectedLabels, prod.iconKey, daysAgo = recent.daysAgo[prod.label]) {
@@ -359,7 +359,7 @@ fun ProdromeLogScreen(
                 }
 
                 if (pool.isEmpty()) {
-                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -372,12 +372,12 @@ fun ProdromeLogScreen(
                     onClick = { navController.popBackStack() },
                     border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Cancel" else "Back") }
+                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(
                     onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.TRIGGERS) },
                     enabled = !quickLogMode || draft.prodromes.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Save" else "Next") }
+                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -409,33 +409,33 @@ private fun ProdromeTimeDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "When did this start?",
+                    t("When did this start?"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    "Time: ${formatProdromeTime(pickedIso)}",
+                    t("Time: %s", formatProdromeTime(pickedIso)),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 AppDateTimePicker(
-                    label = "Select time",
+                    label = t("Select time"),
                     onDateTimeSelected = { iso -> pickedIso = iso }
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(pickedIso) }) {
-                Text("Set time", color = AppTheme.AccentPurple)
+                Text(t("Set time"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
                 TextButton(onClick = onSkip) {
-                    Text("Skip", color = Color(0xFFCE93D8))
+                    Text(t("Skip"), color = Color(0xFFCE93D8))
                 }
             }
         }
@@ -502,8 +502,7 @@ private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? 
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            label,
+        Text(t(label),
             color = textColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
@@ -513,9 +512,9 @@ private fun ProdromeButton(label: String, isSelected: Boolean, iconKey: String? 
         if (isSelected && daysAgo != null && daysAgo > 0) {
             Text(
                 when (daysAgo) {
-                    1 -> "yesterday"
-                    2 -> "2d ago"
-                    3 -> "3d ago"
+                    1 -> t("yesterday")
+                    2 -> t("2d ago")
+                    3 -> t("3d ago")
                     else -> ""
                 },
                 color = Color.White.copy(alpha = 0.5f),

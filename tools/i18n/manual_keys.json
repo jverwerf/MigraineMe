@@ -1,0 +1,3390 @@
+{
+  "entries": [
+    {
+      "en": "Acupressure",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Acupuncture",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Alcohol exposure high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Alcohol exposure low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Allay Lamp",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Allergies",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Almotriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Altitude change high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Altitude change low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Altitude high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Altitude low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Amitriptyline",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Anger",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Anxiety",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Apollo Neuro",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Appetite",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Aspirin",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Atogepant (Qulipta)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Avulux glasses",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Bar / pub",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Bath",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Beach",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Bedroom",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Bedtime early",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Bedtime late",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Better focus",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Better mood",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Better sleep",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Biotin high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Biotin low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Blood glucose high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Blood glucose low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Blood pressure high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Blood pressure low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Blurred vision",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Body aches lingering",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Body fat high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Body fat low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Botox",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Box breathing",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Brain fog",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Brain fog (after)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Brightness high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Brightness low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Bus",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Butterbur",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Caffeine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Caffeine high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Caffeine low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Café",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Calcium high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Calcium low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Calmer",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "CalmiGo",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Calories high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Calories low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Candesartan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Car",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Carbs high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Carbs low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cefaly",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Celecoxib",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cervicogenic headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Childcare",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cholesterol high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cholesterol low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Chores",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Chronic migraine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Church",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cinema",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cleaning",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cluster headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "CoQ10",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Codeine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cold pack",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cold sensation",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Commuting",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Computer / screen",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Concert / event",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Confusion",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Constipation",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Contraceptive",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cooking",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Copper high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Copper low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Cycling",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dark mode high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dark mode low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dark room",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Date",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Deep breathing",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Deep sleep high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Deep sleep low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dehydration",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Depression",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Diclofenac",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Difficulty concentrating",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Difficulty focusing",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Difficulty speaking",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dihydroergotamine (DHE)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dizziness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dizziness (after)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Doctor",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Domperidone",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Driving",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Drowsiness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Dry mouth",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Eating out",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Electrolytes",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Eletriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Eptinezumab (Vyepti)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Erenumab (Aimovig)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ergotamine (Cafergot)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Euphoria",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Excedrin",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Exercise",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Exercising",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Exertional headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Eye mask",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Family event",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fat high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fat low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fatigue",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Feverfew",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fibre high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fibre low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fluid retention",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Flunarizine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fluorescent light",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Flying",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Folate high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Folate low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Food cravings",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Forest",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fremanezumab (Ajovy)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Frequent urination",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Fresh air",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Friend's house",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Frovatriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Galcanezumab (Emgality)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Gaming",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Garden",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Gentle walk",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ginger tea",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Gluten exposure high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Gluten exposure low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Gym",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "HRV high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "HRV low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Hangover feeling",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Heart palpitations",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "HeartMath",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Heat pack",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Hemiplegic migraine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "High HR zones high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "High HR zones low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Hiking",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Histamine exposure high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Histamine exposure low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Hobbies",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Home",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Hospital",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Humidity high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Humidity low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ibuprofen",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ice on neck",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Illness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Increased appetite",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Indomethacin",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Insomnia",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Iron high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Iron low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Irritability",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Jet lag",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Lasmiditan (Reyvow)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Late screen time high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Late screen time low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Less anxious",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Less nausea",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Less pain",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Let-down",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Lie down",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Light sensitivity",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Light sensitivity lingering",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Light sleep high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Light sleep low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Lingering fatigue",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Loss of appetite",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Low blood sugar",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Low mood",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Magnesium",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Magnesium high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Magnesium low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Manganese high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Manganese low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Medication change",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Medication overuse headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Meditation",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Meeting",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Melatonin",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Memory trouble",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Menstrual migraine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Mental clarity",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Metoclopramide",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Migraine with aura",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Migraine without aura",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Migraleve",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Mood change",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Mood crash",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Mood lift",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Mood shift",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "More energy",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Motion sickness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Mountains",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Muscle tension",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Muscle weakness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Nap",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Napping",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Naproxen",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Naratriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Nasal congestion",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Neck massage",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Neck stiffness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Neck stiffness (after)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Neck stretch",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Nerivio",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Niacin high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Niacin low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Night out",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Noise cancelling headphones",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Noise high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Noise low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Nortriptyline",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Numbness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ocular migraine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Office",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ondansetron",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Outdoors",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ovulation",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Oxygen therapy",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Pantothenic acid high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Pantothenic acid low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Paracetamol",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Park",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Partying",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Peppermint oil",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Pet care",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Phone unlocks high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Phone unlocks low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Phosphorus high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Phosphorus low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Pizotifen",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Plane",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Potassium high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Potassium low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Prednisone",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Presenting",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Pressure high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Pressure low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Prochlorperazine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Progressive relaxation",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Propranolol",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Protein high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Protein low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Quell",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Quiet environment",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "REM sleep high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "REM sleep low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Reading",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Rebound headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Recovery high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Recovery low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Regular Migraine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Reliefband",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Relivion",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Resp rate high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Resp rate low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Restaurant",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Resting HR high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Resting HR low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Riboflavin (B2)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Riboflavin high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Riboflavin low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Rimegepant (Nurtec)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Rizatriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Running",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Saturated fat high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Saturated fat low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Scalp massage",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "School",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Screen break",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Screen time",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Screen time high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Screen time low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Seeing spots",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Selenium high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Selenium low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Self-care",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sensitivity to light",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sensitivity to smell",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sensitivity to sound",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sexual activity",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Shop",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Shopping",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Shower",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Silent migraine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sinus headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Skin temp high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Skin temp low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Skipped meals",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep apnea",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep disturbances high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep disturbances low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep duration high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep duration low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep efficiency high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep efficiency low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep score high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleep score low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sleeping",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Slowed thinking",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Smoke",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Social plans",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Socialising",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sodium high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sodium low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sound sensitivity",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sound sensitivity lingering",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "SpO2 high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "SpO2 low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sport",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Steps high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Steps low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Stress",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Stress high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Stress low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Strong smell",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Study",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Studying",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sugar high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sugar low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sumatriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sunglasses",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Supermarket",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Sweating",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Swimming",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Symbravo",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "TV / film",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tearing",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Temperature high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Temperature low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Temple massage",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tension headache",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "TheraSpecs",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "ThermaZone",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Thiamin high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Thiamin low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Thirst",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Thunderstorm",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tingling",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tobacco",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Topiramate",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Train",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tramadol",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Trans fat high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Trans fat low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Travel",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tremor",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Treximet",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tyramine exposure high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Tyramine exposure low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "UV index high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "UV index low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Ubrogepant (Ubrelvy)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Unsaturated fat high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Unsaturated fat low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Valproate",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Venlafaxine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Verapamil",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vestibular migraine",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin A high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin A low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin B12 high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin B12 low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin B6 high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin B6 low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin C high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin C low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin D",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin D high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin D low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin E high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin E low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin K high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vitamin K low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vivid dreams",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Volume high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Volume low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Vomiting",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Wake time early",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Wake time late",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Walk",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Walking",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Warm compress",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Water",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Weakness",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Weight high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Weight low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Wind speed high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Wind speed low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Word-finding trouble",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Work",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Working",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Working from home",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Yawning",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Yoga",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zavzpret",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zinc high",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zinc low",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "Zolmitriptan",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "gammaCore",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    },
+    {
+      "en": "sTMS (SAVI Dual)",
+      "class": "hard",
+      "sites": [
+        "pool:seeded-template"
+      ],
+      "max_len": 32
+    }
+  ],
+  "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",
+  "_budgets": "class is hard because these render in chips and grid cells that cannot wrap; max_len is a flat 32, the widest such cell."
+}

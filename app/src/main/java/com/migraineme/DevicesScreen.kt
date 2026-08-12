@@ -51,14 +51,28 @@ private data class DeviceInfo(
     val link: String? = null,
     val linkNote: String? = null,
     /** Real product shot from the brand's own partner assets, shown in the card corner. */
-    @DrawableRes val photo: Int? = null
+    @DrawableRes val photo: Int? = null,
+    /** Short, real bullets pulled from the brand's own review base. Optional —
+     * a device with no review coverage yet simply renders no community block. */
+    val communityPros: List<String>? = null,
+    val communityCons: List<String>? = null,
+    /** Short rating badge, e.g. "4.2/5", shown top-right of the community block. */
+    val communityRating: String? = null,
+    val communitySource: String? = null,
+    val communitySourceURL: String? = null,
+    /** Brand mark to use instead of a Relief icon, for partners we haven't
+     * commissioned custom art for yet. Takes priority over iconKey lookup. */
+    @DrawableRes val iconImage: Int? = null,
+    /** A caution that belongs on its own, below the commission line, rather
+     * than mixed into the migraine-relevance evidence paragraph above. */
+    val safetyNote: String? = null
 )
 
 private data class DeviceGroup(val title: String, val blurb: String, val devices: List<DeviceInfo>)
 
 private val DEVICE_GROUPS = listOf(
     DeviceGroup(
-        title = "Nerve stimulation",
+        title = tSync("Nerve stimulation"),
         blurb = "Send a small electrical or magnetic signal to a nerve involved in migraine.",
         devices = listOf(
             DeviceInfo(
@@ -106,7 +120,7 @@ private val DEVICE_GROUPS = listOf(
         )
     ),
     DeviceGroup(
-        title = "Light and glare",
+        title = tSync("Light and glare"),
         blurb = "For light sensitivity between and during attacks.",
         devices = listOf(
             DeviceInfo(
@@ -133,7 +147,62 @@ private val DEVICE_GROUPS = listOf(
         )
     ),
     DeviceGroup(
-        title = "Nausea",
+        title = tSync("Prodrome management"),
+        blurb = "For the early warning signs, before an attack fully arrives.",
+        devices = listOf(
+            DeviceInfo(
+                name = "Breo See 7",
+                iconKey = "breo_see7",
+                access = DeviceAccess.OTC,
+                what = "Heated eye massager with hot and cold compress and gentle vibration, for eye strain and light sensitivity.",
+                evidence = "Eases eye strain and light sensitivity with heat and gentle pressure around the eyes, right when an attack is building.",
+                link = "https://us.breo.com/?ref=ME-SERIES",
+                linkNote = "$25 off with code ME-SERIES",
+                photo = R.drawable.device_photo_breo_see7,
+                communityPros = listOf("Adjustable heat and pressure", "Easy returns, responsive support", "Good build quality"),
+                communityCons = listOf("Tight at the sides at first", "Overuse can trigger a headache", "Units failing just past warranty"),
+                communityRating = "4.2/5",
+                communitySource = "Trustpilot, 137 reviews",
+                communitySourceURL = "https://www.trustpilot.com/review/us.breo.com",
+                iconImage = R.drawable.icon_breo,
+                safetyNote = "Compression-based eye massagers raise pressure inside the eye, so anyone with glaucoma, ocular hypertension or a history of eye surgery should check with their doctor first."
+            ),
+            DeviceInfo(
+                name = "Breo iDream 5S",
+                iconKey = "breo_idream",
+                access = DeviceAccess.OTC,
+                what = "Full-head massager with air pressure, kneading and heat across scalp, temples and eyes, run from your phone.",
+                evidence = "Eases head and temple pressure with kneading and heat across the scalp, right where tension builds during an attack.",
+                link = "https://us.breo.com/?ref=ME-SERIES",
+                linkNote = "$25 off with code ME-SERIES",
+                photo = R.drawable.device_photo_breo_idream,
+                communityPros = listOf("Covers scalp, temples and eyes", "Detachable eye cover", "Good build quality"),
+                communityCons = listOf("Bulky to wear", "Battery charging issues reported", "Shipping can be slow"),
+                communityRating = "4.2/5",
+                communitySource = "Trustpilot, 137 reviews",
+                communitySourceURL = "https://www.trustpilot.com/review/us.breo.com",
+                iconImage = R.drawable.icon_breo
+            ),
+            DeviceInfo(
+                name = "Breo iNeck 3 Pro",
+                iconKey = "breo_neck",
+                access = DeviceAccess.OTC,
+                what = "Wraparound neck massager with deep kneading, air pressure and heat, controlled from your phone.",
+                evidence = "Eases neck tension, one of the most common migraine triggers, with kneading and heat before it escalates.",
+                link = "https://us.breo.com/?ref=ME-SERIES",
+                linkNote = "$25 off with code ME-SERIES",
+                photo = R.drawable.device_photo_breo_neck,
+                communityPros = listOf("Kneading + heat combo", "Adjustable via the app", "Cordless, easy to wear", "Responsive customer service"),
+                communityCons = listOf("Some units stop working early", "Battery charging issues reported", "Shipping can be slow"),
+                communityRating = "4.2/5",
+                communitySource = "Trustpilot, 137 reviews",
+                communitySourceURL = "https://www.trustpilot.com/review/us.breo.com",
+                iconImage = R.drawable.icon_breo
+            )
+        )
+    ),
+    DeviceGroup(
+        title = tSync("Nausea"),
         blurb = "For when the sickness is the worst part.",
         devices = listOf(
             DeviceInfo(
@@ -146,7 +215,7 @@ private val DEVICE_GROUPS = listOf(
         )
     ),
     DeviceGroup(
-        title = "Trigger management",
+        title = tSync("Trigger management"),
         blurb = "Aimed at stress and recovery, which for a lot of people is the trigger rather than the attack.",
         devices = listOf(
             DeviceInfo(
@@ -176,7 +245,7 @@ private val DEVICE_GROUPS = listOf(
         )
     ),
     DeviceGroup(
-        title = "Heat and cold",
+        title = tSync("Heat and cold"),
         blurb = "The oldest idea on this page, done with a machine.",
         devices = listOf(
             DeviceInfo(
@@ -212,7 +281,7 @@ fun DevicesScreen(onBack: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
-                "Devices",
+                t("Devices"),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -224,17 +293,40 @@ fun DevicesScreen(onBack: () -> Unit) {
                     .size(28.dp)
             ) {
                 Icon(
-                    Icons.Outlined.Info, contentDescription = "About devices",
+                    Icons.Outlined.Info, contentDescription = t("About devices"),
                     tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)
                 )
             }
         }
 
         Text(
-            "Devices that complement or integrate with MigraineMe.",
+            t("Devices that complement or integrate with MigraineMe."),
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.bodySmall
         )
+
+        Spacer(Modifier.height(14.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                .padding(14.dp)
+        ) {
+            Text(
+                t("We test what we recommend."),
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+            Text(
+                t("Every device on this page, we've tried ourselves — and negotiated a discount for MigraineMe users on each one."),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
 
         Spacer(Modifier.height(20.dp))
 
@@ -245,7 +337,7 @@ fun DevicesScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
             )
             Text(
-                group.blurb,
+                t(group.blurb),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(top = 2.dp, bottom = 10.dp)
@@ -275,27 +367,27 @@ fun DevicesScreen(onBack: () -> Unit) {
             containerColor = Color(0xFF241035),
             title = {
                 Text(
-                    "About devices",
+                    t("About devices"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                 )
             },
             text = {
                 Text(
-                    "Migraine devices are hard to judge from a website, because the marketing all sounds " +
-                        "the same whether there are ten trials behind it or none.\n\n" +
-                        "This page lists what each one physically does and how solid the evidence is, " +
-                        "including the ones where it's thin. Prescription devices are marked as such.\n\n" +
-                        "Once you own one, logging it is the point: MigraineMe compares how your attacks go " +
-                        "with and without it, so after a few weeks you have your own answer rather than the " +
-                        "manufacturer's.",
+                    t("Migraine devices are hard to judge from a website, because the marketing all sounds ") +
+                        t("the same whether there are ten trials behind it or none.\n\n") +
+                        t("This page lists what each one physically does and how solid the evidence is, ") +
+                        t("including the ones where it's thin. Prescription devices are marked as such.\n\n") +
+                        t("Once you own one, logging it is the point: MigraineMe compares how your attacks go ") +
+                        t("with and without it, so after a few weeks you have your own answer rather than the ") +
+                        t("manufacturer's."),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
             },
             confirmButton = {
                 TextButton(onClick = { showInfo = false }) {
-                    Text("Got it", color = AppTheme.AccentPurple)
+                    Text(t("Got it"), color = AppTheme.AccentPurple)
                 }
             }
         )
@@ -323,7 +415,13 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                     .background(Color.White.copy(alpha = 0.06f)),
                 contentAlignment = Alignment.Center
             ) {
-                if (drawable != null) {
+                if (device.iconImage != null) {
+                    androidx.compose.foundation.Image(
+                        painter = painterResource(device.iconImage),
+                        contentDescription = null,
+                        modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp))
+                    )
+                } else if (drawable != null) {
                     androidx.compose.foundation.Image(
                         painter = painterResource(drawable),
                         contentDescription = null,
@@ -341,7 +439,7 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Text(
-                    if (device.access == DeviceAccess.PRESCRIPTION) "Prescription only" else "Available without a prescription",
+                    if (device.access == DeviceAccess.PRESCRIPTION) t("Prescription only") else t("Available without a prescription"),
                     color = if (device.access == DeviceAccess.PRESCRIPTION) AppTheme.AccentPink else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -351,7 +449,7 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
             device.photo?.let { photo ->
                 androidx.compose.foundation.Image(
                     painter = painterResource(photo),
-                    contentDescription = "${device.name} product photo",
+                    contentDescription = t("%s product photo", device.name),
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -361,15 +459,79 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
 
         Spacer(Modifier.height(10.dp))
 
-        Text(device.what, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(device.what), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
 
         Spacer(Modifier.height(6.dp))
 
         Text(
-            device.evidence,
+            t(device.evidence),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall
         )
+
+        if (device.communityPros != null || device.communityCons != null) {
+            Spacer(Modifier.height(10.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.04f))
+                    .border(1.dp, Color(0xFF81C784).copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                    .padding(12.dp)
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Text(
+                        t("WHAT PEOPLE REPORT"),
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.weight(1f)
+                    )
+                    device.communityRating?.let { rating ->
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                rating,
+                                color = Color.White,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            device.communitySource?.let { source ->
+                                Text(
+                                    t(source),
+                                    color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                                    modifier = Modifier.clickable {
+                                        device.communitySourceURL?.let(onOpenLink)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        device.communityPros?.forEach { line ->
+                            Row {
+                                Text("+", color = Color(0xFF81C784), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                                Spacer(Modifier.width(6.dp))
+                                Text(t(line), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                            }
+                            Spacer(Modifier.height(4.dp))
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        device.communityCons?.forEach { line ->
+                            Row {
+                                Text("–", color = AppTheme.AccentPink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                                Spacer(Modifier.width(6.dp))
+                                Text(t(line), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                            }
+                            Spacer(Modifier.height(4.dp))
+                        }
+                    }
+                }
+            }
+        }
 
         if (device.link != null) {
             Spacer(Modifier.height(12.dp))
@@ -384,12 +546,12 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(
-                        "Visit ${device.name}",
+                        t("Visit %s", device.name),
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     device.linkNote?.let {
-                        Text(it, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t(it), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Icon(
@@ -398,11 +560,18 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                 )
             }
             Text(
-                "We earn a commission.",
+                t("We earn a commission."),
                 color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(top = 6.dp)
             )
+            device.safetyNote?.let {
+                Text(
+                    t(it),
+                    color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
         }
     }
 }
@@ -431,9 +600,9 @@ private fun DevicesDisclaimerCard() {
         verticalAlignment = Alignment.Top
     ) {
         Text(
-            "MigraineMe is not a medical device and does not recommend treatments. " +
-                "Prescription devices need a conversation with your doctor. " +
-                "We earn a commission on links to devices.",
+            t("MigraineMe is not a medical device and does not recommend treatments. ") +
+                t("Prescription devices need a conversation with your doctor. ") +
+                t("We earn a commission on links to devices."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.weight(1f)
@@ -447,7 +616,7 @@ private fun DevicesDisclaimerCard() {
         ) {
             Icon(
                 Icons.Outlined.Close,
-                contentDescription = "Dismiss disclaimer",
+                contentDescription = t("Dismiss disclaimer"),
                 tint = AppTheme.SubtleTextColor,
                 modifier = Modifier.size(16.dp)
             )

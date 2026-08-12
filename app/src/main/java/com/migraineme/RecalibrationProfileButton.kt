@@ -97,11 +97,11 @@ fun RecalibrationProfileButton(
                     color = Color.White,
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("Analysing your data...")
+                Text(t("Analysing your data..."))
             } else {
                 Icon(Icons.Outlined.AutoAwesome, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Re-assess my profile")
+                Text(t("Re-assess my profile"))
             }
         }
 

@@ -98,7 +98,7 @@ fun EditReliefScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Edit Relief")
+        Text(t("Edit Relief"))
 
         // Type dropdown with Frequent / All
         if (frequent.isNotEmpty() || all.isNotEmpty()) {
@@ -107,10 +107,10 @@ fun EditReliefScreen(
                     value = type,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Type") },
+                    label = { Text(t("Type")) },
                     trailingIcon = {
                         IconButton(onClick = { typeMenuOpen = true }) {
-                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose type")
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose type"))
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -121,7 +121,7 @@ fun EditReliefScreen(
                 ) {
                     if (frequent.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("Frequent", fontWeight = FontWeight.Bold) },
+                            text = { Text(t("Frequent"), fontWeight = FontWeight.Bold) },
                             onClick = {},
                             enabled = false
                         )
@@ -138,7 +138,7 @@ fun EditReliefScreen(
                     }
                     if (all.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("All", fontWeight = FontWeight.Bold) },
+                            text = { Text(t("All"), fontWeight = FontWeight.Bold) },
                             onClick = {},
                             enabled = false
                         )
@@ -158,25 +158,25 @@ fun EditReliefScreen(
             OutlinedTextField(
                 value = type,
                 onValueChange = { type = it },
-                label = { Text("Type") },
+                label = { Text(t("Type")) },
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
         // Start time using shared picker
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Start time: ${formatIsoDdMmHm(startAt)}")
+            Text(t("Start time: %s", formatIsoDdMmHm(startAt)))
             AppDateTimePicker(
-                label = "Select start time",
+                label = t("Select start time"),
                 onDateTimeSelected = { iso -> startAt = iso ?: "" }
             )
         }
 
         // End time using shared picker
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("End time: ${formatIsoDdMmHm(endAt)}")
+            Text(t("End time: %s", formatIsoDdMmHm(endAt)))
             AppDateTimePicker(
-                label = "Select end time",
+                label = t("Select end time"),
                 onDateTimeSelected = { iso -> endAt = iso ?: "" }
             )
         }
@@ -184,19 +184,19 @@ fun EditReliefScreen(
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text(t("Notes")) },
             modifier = Modifier.fillMaxWidth()
         )
 
         // Relief scale
         Spacer(Modifier.height(4.dp))
-        Text("How much relief?")
+        Text(t("How much relief?"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ReliefScale.entries.forEach { scale ->
                 androidx.compose.material3.FilterChip(
                     selected = reliefScale == scale.name,
                     onClick = { reliefScale = scale.name },
-                    label = { Text(scale.display) },
+                    label = { Text(t(scale.display)) },
                     colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
                         selectedContainerColor = scale.color.copy(alpha = 0.3f),
                         selectedLabelColor = androidx.compose.ui.graphics.Color.White,
@@ -221,10 +221,10 @@ fun EditReliefScreen(
                 value = selectedMigraineLabel,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Linked Migraine") },
+                label = { Text(t("Linked Migraine")) },
                 trailingIcon = {
                     IconButton(onClick = { migraineMenuOpen = true }) {
-                        Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose migraine")
+                        Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose migraine"))
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -234,7 +234,7 @@ fun EditReliefScreen(
                 onDismissRequest = { migraineMenuOpen = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("None") },
+                    text = { Text(t("None")) },
                     onClick = {
                         migraineId = ""
                         migraineMenuOpen = false
@@ -245,7 +245,7 @@ fun EditReliefScreen(
                     .forEach { m ->
                         val label = labelForMigraine(m.startAt)
                         DropdownMenuItem(
-                            text = { Text(label) },
+                            text = { Text(t(label)) },
                             onClick = {
                                 migraineId = m.id
                                 migraineMenuOpen = false
@@ -278,14 +278,14 @@ fun EditReliefScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Save")
+            Text(t("Save"))
         }
 
         TextButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Cancel")
+            Text(t("Cancel"))
         }
     }
 }

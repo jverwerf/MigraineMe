@@ -69,9 +69,9 @@ fun GraphAttachmentPicker(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Attach graph", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Attach graph"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
                 }
             }
 
@@ -79,8 +79,8 @@ fun GraphAttachmentPicker(
 
             if (!premiumState.isPremium) {
                 PremiumGate(
-                    message = "Share your migraine graphs",
-                    subtitle = "Attach detailed graphs to community posts",
+                    message = t("Share your migraine graphs"),
+                    subtitle = t("Attach detailed graphs to community posts"),
                     onUpgrade = onDismiss
                 ) {}
             } else {
@@ -104,8 +104,7 @@ fun GraphAttachmentPicker(
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                label,
+                            Text(t(label),
                                 color = if (isSel) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium)
                             )
@@ -211,7 +210,7 @@ private fun InsightsGraphTab(
     }
 
     if (sorted.isEmpty()) {
-        Text("No migraines logged yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(t("No migraines logged yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
     } else {
         // ── Migraine selector ──
         PickerMigraineSelector(sorted, selIdx, sel,
@@ -274,10 +273,10 @@ private fun InsightsGraphTab(
         // Metric picker chips
         if (available.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
-            Text("Overlay Metrics", color = AppTheme.TitleColor,
+            Text(t("Overlay Metrics"), color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(2.dp))
-            Text("Tap to toggle. \u26A1 = auto-detected.",
+            Text(t("Tap to toggle. \u26A1 = auto-detected."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(6.dp))
@@ -324,7 +323,7 @@ private fun InsightsGraphTab(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
-            Text("Attach to comment", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("Attach to comment"), style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
         }
     }
 }
@@ -448,7 +447,7 @@ private fun RiskGraphTab(
             CircularProgressIndicator(Modifier.size(24.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
         }
     } else if (riskDays.isEmpty()) {
-        Text("No risk data yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(t("No risk data yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
     } else {
         // ── Day range selector ──
         Row(
@@ -456,7 +455,7 @@ private fun RiskGraphTab(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Range:", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Range:"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             listOf(7, 14, 30).forEach { d ->
                 val isSel = selectedDays == d
                 Box(
@@ -495,7 +494,7 @@ private fun RiskGraphTab(
 
         // ── Metric chips ──
         if (chips.size > 1) {
-            Text("Overlay Metrics", color = AppTheme.TitleColor,
+            Text(t("Overlay Metrics"), color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(6.dp))
 
@@ -511,7 +510,7 @@ private fun RiskGraphTab(
                         onClick = {
                             selectedMetrics = if (sel) selectedMetrics - chip.key else selectedMetrics + chip.key
                         },
-                        label = { Text(chip.label, style = MaterialTheme.typography.labelSmall) },
+                        label = { Text(t(chip.label), style = MaterialTheme.typography.labelSmall) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = chip.color.copy(alpha = 0.3f),
                             selectedLabelColor = chip.color,
@@ -542,7 +541,7 @@ private fun RiskGraphTab(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
-            Text("Attach to comment", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("Attach to comment"), style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
         }
     }
 }
@@ -791,13 +790,13 @@ private fun PickerMigraineSelector(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Older",
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Older"),
                 tint = if (idx < sorted.size - 1) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-            Text(sel?.label ?: "Migraine", color = Color.White,
+            Text(sel?.label ?: t("Migraine"), color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sel != null) {
@@ -807,18 +806,18 @@ private fun PickerMigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m \u2022 Severity: ${sel.severity ?: "\u2014"}/10",
+                    Text(t("%1\$s%2\$sm \u2022 Severity: %3\$s/10", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: "\u2014"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "\u2014"}/10",
+                    Text(t("Severity: %s/10", sel.severity ?: "\u2014"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Text("${idx + 1} of ${sorted.size}", color = AppTheme.AccentPurple,
+            Text(t("%1\$s of %2\$s", idx + 1, sorted.size), color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
         }
         IconButton(onClick = onNext, enabled = idx > 0) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, "Newer",
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, t("Newer"),
                 tint = if (idx > 0) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
@@ -834,7 +833,7 @@ private fun PickerChip(n: Int, label: String, color: Color) {
         Text("$n", color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.width(2.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -860,7 +859,7 @@ private fun PickerMetricToggle(
                 .background(if (active) color else color.copy(alpha = 0.3f)))
         }
         Spacer(Modifier.width(4.dp))
-        Text(label, color = tc,
+        Text(t(label), color = tc,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
     }
 }

@@ -1364,6 +1364,10 @@ object BrainyLogManifest {
             Regex("head turn|head movement|quick head") to "vm_head_movement_sudden",
             Regex("rolling in bed|roll over") to "vm_rolling_in_bed",
             Regex("skipped meal|missed meal|hypoglycemia|hypoglycaemia|fasting") to "trig_skipped_meals",
+            // "Wake time early" / "Wake time late" carry no icon_key, and the
+            // alias table only covers the bare key, so both fell through to the
+            // generic fallback despite the art existing.
+            Regex("wake time|wake.?up time") to "trig_wake_time",
             Regex("hrv|heart rate variability") to "metric_hrv",
             Regex("hr zone|heart rate zone") to "trig_hr_zones",
             Regex("recovery score|consistent recovery|\\brecovery\\b") to "trig_recovery",

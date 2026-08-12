@@ -51,7 +51,7 @@ fun AdjustMedicinesScreen(
                 OutlinedTextField(
                     value = newLabel,
                     onValueChange = { newLabel = it },
-                    label = { Text("New medicine label") },
+                    label = { Text(t("New medicine label")) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -67,15 +67,15 @@ fun AdjustMedicinesScreen(
                     },
                     enabled = newLabel.isNotBlank()
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add to Pool")
+                    Icon(Icons.Default.Add, contentDescription = t("Add to Pool"))
                     Spacer(Modifier.width(8.dp))
-                    Text("Add to list")
+                    Text(t("Add to list"))
                 }
             }
         }
 
         // Frequent
-        item { Text("Frequent", style = MaterialTheme.typography.titleMedium) }
+        item { Text(t("Frequent"), style = MaterialTheme.typography.titleMedium) }
         items(frequent, key = { it.id }) { pref ->
             ElevatedCard(
                 shape = MaterialTheme.shapes.medium,
@@ -96,14 +96,14 @@ fun AdjustMedicinesScreen(
                         val token = authState.accessToken ?: return@IconButton
                         vm.removeFromFrequent(token, pref.id)
                     }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Remove from Frequent")
+                        Icon(Icons.Default.Delete, contentDescription = t("Remove from Frequent"))
                     }
                 }
             }
         }
 
         // All medicines
-        item { Text("All Medicines", style = MaterialTheme.typography.titleMedium) }
+        item { Text(t("All Medicines"), style = MaterialTheme.typography.titleMedium) }
 
         val frequentIds = frequent.map { it.medicineId }.toSet()
         val remaining = pool.filter { it.id !in frequentIds }
@@ -140,7 +140,7 @@ fun AdjustMedicinesScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(med.label, style = MaterialTheme.typography.bodyLarge)
+                        Text(t(med.label), style = MaterialTheme.typography.bodyLarge)
                         IconButton(onClick = {
                             val token = authState.accessToken ?: run {
                                 Log.d("AdjustMedicines", "token null on + click")
@@ -149,7 +149,7 @@ fun AdjustMedicinesScreen(
                             Log.d("AdjustMedicines", "addToFrequent id=${med.id}")
                             vm.addToFrequent(token, med.id)
                         }) {
-                            Icon(Icons.Default.Add, contentDescription = "Add to Frequent")
+                            Icon(Icons.Default.Add, contentDescription = t("Add to Frequent"))
                         }
                     }
                 }

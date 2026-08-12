@@ -48,7 +48,7 @@ fun HealthConnectMissingDataBanner(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    "Missing Data from Health Connect",
+                    t("Missing Data from Health Connect"),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -58,16 +58,16 @@ fun HealthConnectMissingDataBanner(
             if (!hasNutritionData) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "• Nutrition - No data found",
+                        t("• Nutrition - No data found"),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "  We suggest: Cronometer or MyFitnessPal (totals only)",
+                        t("  We suggest: Cronometer or MyFitnessPal (totals only)"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        "  Note: Data syncs every 15 minutes after logging",
+                        t("  Note: Data syncs every 15 minutes after logging"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -78,16 +78,16 @@ fun HealthConnectMissingDataBanner(
             if (!hasMenstruationData) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "• Menstruation - No data found",
+                        t("• Menstruation - No data found"),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "  No compatible apps available yet",
+                        t("  No compatible apps available yet"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        "  Set up manual tracking in Data Settings",
+                        t("  Set up manual tracking in Data Settings"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

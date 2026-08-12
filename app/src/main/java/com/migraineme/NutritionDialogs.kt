@@ -62,7 +62,7 @@ fun AddFoodDialog(
     
     AlertDialog(
         onDismissRequest = { if (!isAdding && !isLoadingDetails) onDismiss() },
-        title = { Text("Add Food", color = AppTheme.TitleColor) },
+        title = { Text(t("Add Food"), color = AppTheme.TitleColor) },
         text = {
             Column(
                 modifier = Modifier
@@ -88,10 +88,10 @@ fun AddFoodDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Servings", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t("Servings"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                     if (food.servingSize != null && food.servingSizeUnit != null) {
                         Text(
-                            "1 serving = ${food.servingSize.toInt()} ${food.servingSizeUnit}",
+                            t("1 serving = %1\$s %2\$s", food.servingSize.toInt(), food.servingSizeUnit),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -152,7 +152,7 @@ fun AddFoodDialog(
                     ) {
                         CircularProgressIndicator(Modifier.size(24.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
-                        Text("Loading nutrients...", color = AppTheme.SubtleTextColor)
+                        Text(t("Loading nutrients..."), color = AppTheme.SubtleTextColor)
                     }
                 } else if (foodDetails != null) {
                     val nutrients = foodDetails.foodNutrients.associate { it.nutrient.id to (it.amount ?: 0.0) }
@@ -200,7 +200,7 @@ fun AddFoodDialog(
                     
                     // Favorite metrics
                     Text(
-                        "Nutrition (per serving × $servings)",
+                        t("Nutrition (per serving × %s)", servings),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
@@ -209,7 +209,7 @@ fun AddFoodDialog(
                     monitorMetrics.forEach { metric ->
                         if (metric != MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE) {
                             val value = getValue(metric)
-                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                            val label = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
                             val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
                             NutrientRow(label, value, unit)
                         }
@@ -223,11 +223,11 @@ fun AddFoodDialog(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Food Risks", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(t("Food Risks"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 CircularProgressIndicator(Modifier.size(12.dp), AppTheme.AccentPurple, strokeWidth = 1.5.dp)
                                 Spacer(Modifier.width(4.dp))
-                                Text("Classifying…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t("Classifying…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     } else {
@@ -241,14 +241,14 @@ fun AddFoodDialog(
                     Spacer(Modifier.height(8.dp))
                     androidx.compose.material3.HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                     Spacer(Modifier.height(6.dp))
-                    Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("All Nutrients"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
                     val shownMetrics = monitorMetrics.toSet()
                     MonitorCardConfig.ALL_NUTRITION_METRICS.forEach { metric ->
                         if (!MonitorCardConfig.isRiskMetric(metric) && metric !in shownMetrics) {
                             val value = getValue(metric)
-                            val label = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric
+                            val label = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric)
                             val unit = MonitorCardConfig.NUTRITION_METRIC_UNITS[metric] ?: ""
                             NutrientRow(label, value, unit)
                         }
@@ -257,7 +257,7 @@ fun AddFoodDialog(
                 
                 Spacer(Modifier.height(16.dp))
                 
-                Text("Meal Type", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Meal Type"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
                 
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -294,13 +294,13 @@ fun AddFoodDialog(
                 if (isAdding) {
                     CircularProgressIndicator(Modifier.size(16.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
                 } else {
-                    Text("Add", color = AppTheme.AccentPurple)
+                    Text(t("Add"), color = AppTheme.AccentPurple)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isAdding) {
-                Text("Cancel", color = AppTheme.SubtleTextColor)
+                Text(t("Cancel"), color = AppTheme.SubtleTextColor)
             }
         },
         containerColor = Color(0xFF1E0A2E)
@@ -323,7 +323,7 @@ fun EditFoodDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Food", color = AppTheme.TitleColor) },
+        title = { Text(t("Edit Food"), color = AppTheme.TitleColor) },
         text = {
             Column {
                 Text(item.foodName, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
@@ -331,7 +331,7 @@ fun EditFoodDialog(
                 item.calories?.let {
                     val adjustedCalories = (it * servingsMultiplier).toInt()
                     Text(
-                        "$adjustedCalories calories${if (servingsMultiplier != 1.0) " (was ${it.toInt()})" else ""}",
+                        t("%s calories", adjustedCalories) + (if (servingsMultiplier != 1.0) t(" (was %s)", it.toInt()) else ""),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -339,7 +339,7 @@ fun EditFoodDialog(
                 
                 Spacer(Modifier.height(16.dp))
                 
-                Text("Adjust Servings", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Adjust Servings"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
                 
                 Row(
@@ -374,7 +374,7 @@ fun EditFoodDialog(
                 
                 Spacer(Modifier.height(16.dp))
                 
-                Text("Meal Type", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Meal Type"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
                 
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -408,7 +408,7 @@ fun EditFoodDialog(
                 Spacer(Modifier.height(16.dp))
                 
                 Text(
-                    "Delete this entry",
+                    t("Delete this entry"),
                     color = Color(0xFFE57373),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickable { onDelete() }.padding(vertical = 8.dp)
@@ -417,12 +417,12 @@ fun EditFoodDialog(
         },
         confirmButton = {
             TextButton(onClick = { onSave(servingsMultiplier) }) {
-                Text("Save", color = AppTheme.AccentPurple)
+                Text(t("Save"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppTheme.SubtleTextColor)
+                Text(t("Cancel"), color = AppTheme.SubtleTextColor)
             }
         },
         containerColor = Color(0xFF1E0A2E)
@@ -452,7 +452,7 @@ private fun DialogRiskRowWithIcon(
         Row(verticalAlignment = Alignment.CenterVertically) {
             icon(color, 14.dp)
             Spacer(Modifier.width(6.dp))
-            Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
         }
         Row(verticalAlignment = Alignment.Bottom) {
             Text(display, color = color, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))

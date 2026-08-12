@@ -56,17 +56,17 @@ fun CompanionsSettingsScreen(
         // Header
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, t("Back"), tint = Color.White)
             }
             Text(
-                "AI Companions",
+                t("AI Companions"),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
             )
         }
 
         Text(
-            "AI Companions are curators that flag relevant articles for your migraine profile. Subscribe to the ones that match you and they'll surface useful content directly to your feed.",
+            t("AI Companions are curators that flag relevant articles for your migraine profile. Subscribe to the ones that match you and they'll surface useful content directly to your feed."),
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp)
         )
@@ -143,14 +143,14 @@ fun CompanionsOnboardingScreen(
                 modifier = Modifier.size(28.dp)
             )
             Text(
-                "Meet Your AI Companions",
+                t("Meet Your AI Companions"),
                 color = Color.White,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         }
 
         Text(
-            "These AI curators will flag relevant articles for your migraine profile and add them to your feed automatically. We've pre-selected the ones that best match your profile.",
+            t("These AI curators will flag relevant articles for your migraine profile and add them to your feed automatically. We've pre-selected the ones that best match your profile."),
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp)
         )
@@ -198,7 +198,7 @@ fun CompanionsOnboardingScreen(
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
         ) {
             Text(
-                if (selectedIds.isEmpty()) "Continue without companions" else "Continue with ${selectedIds.size} companion${if (selectedIds.size != 1) "s" else ""}",
+                if (selectedIds.isEmpty()) t("Continue without companions") else (if (selectedIds.size == 1) t("Continue with 1 companion") else t("Continue with %s companions", selectedIds.size)),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
             )
         }
@@ -348,7 +348,7 @@ private fun CompanionSelectCard(
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    "Recommended",
+                                    t("Recommended"),
                                     color = AppTheme.AccentPurple,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 9.sp,
@@ -440,7 +440,7 @@ fun BotAvatar(slug: String, size: Int) {
                     .data(avatarUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = "${slug} avatar",
+                contentDescription = t("%s avatar", slug),
                 contentScale = ContentScale.Crop,
                 onError = { loadFailed = true },
                 modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
@@ -448,7 +448,7 @@ fun BotAvatar(slug: String, size: Int) {
         } else {
             Icon(
                 Icons.Outlined.SmartToy,
-                contentDescription = "${slug} bot",
+                contentDescription = t("%s bot", slug),
                 tint = color,
                 modifier = Modifier.size((size * 0.55f).dp)
             )

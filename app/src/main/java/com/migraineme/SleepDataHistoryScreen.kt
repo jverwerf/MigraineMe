@@ -235,22 +235,22 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
         val entry = editEntry!!
         AlertDialog(
             onDismissRequest = { editEntry = null },
-            title = { Text("Edit ${entry.label}", color = AppTheme.TitleColor) },
+            title = { Text(t("Edit %s", entry.label), color = AppTheme.TitleColor) },
             text = {
                 Column {
                     Text(
-                        "Current: ${entry.value}",
+                        t("Current: %s", entry.value),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(12.dp))
                     Text(
                         when (entry.table) {
-                            "sleep_duration_daily" -> "Enter hours (e.g. 7.5)"
-                            "fell_asleep_time_daily", "woke_up_time_daily" -> "Enter time (e.g. 23:30)"
-                            "sleep_score_daily", "sleep_efficiency_daily" -> "Enter percentage (e.g. 85)"
-                            "sleep_disturbances_daily" -> "Enter count (e.g. 3)"
-                            else -> "Enter value"
+                            "sleep_duration_daily" -> t("Enter hours (e.g. 7.5)")
+                            "fell_asleep_time_daily", "woke_up_time_daily" -> t("Enter time (e.g. 23:30)")
+                            "sleep_score_daily", "sleep_efficiency_daily" -> t("Enter percentage (e.g. 85)")
+                            "sleep_disturbances_daily" -> t("Enter count (e.g. 3)")
+                            else -> t("Enter value")
                         },
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall
@@ -271,7 +271,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
 
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        "Delete this entry",
+                        t("Delete this entry"),
                         color = Color(0xFFE57373),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
@@ -306,11 +306,11 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                         editEntry = null
                         loadEntries()
                     }
-                }) { Text("Save", color = AppTheme.AccentPurple) }
+                }) { Text(t("Save"), color = AppTheme.AccentPurple) }
             },
             dismissButton = {
                 TextButton(onClick = { editEntry = null }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
             containerColor = Color(0xFF1E0A2E)
@@ -333,13 +333,13 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { selectedDateStr = selectedDate.minusDays(1).toString() }) {
-                        Icon(Icons.Default.ChevronLeft, contentDescription = "Previous day", tint = AppTheme.AccentPurple)
+                        Icon(Icons.Default.ChevronLeft, contentDescription = t("Previous day"), tint = AppTheme.AccentPurple)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             when {
-                                selectedDate == today -> "Today"
-                                selectedDate == today.minusDays(1) -> "Yesterday"
+                                selectedDate == today -> t("Today")
+                                selectedDate == today.minusDays(1) -> t("Yesterday")
                                 else -> selectedDate.format(dateFormatter)
                             },
                             color = AppTheme.TitleColor,
@@ -352,7 +352,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                     ) {
                         Icon(
                             Icons.Default.ChevronRight,
-                            contentDescription = "Next day",
+                            contentDescription = t("Next day"),
                             tint = if (selectedDate < today) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                         )
                     }
@@ -370,7 +370,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                     }
                 } else if (entries.isEmpty()) {
                     Text(
-                        "No sleep data for this day",
+                        t("No sleep data for this day"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
@@ -414,7 +414,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                             val label = SleepCardConfig.labelFor(metric)
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -422,7 +422,7 @@ fun SleepDataHistoryScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(4.dp))
                     HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                     Spacer(Modifier.height(8.dp))
-                    Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
                     // All metrics — flat list, no source headers
@@ -476,7 +476,7 @@ private fun SleepDataRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(entry.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(t(entry.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             Text(entry.value, color = valueColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
         }
         if (onEdit != null) {

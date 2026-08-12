@@ -55,31 +55,31 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             // Missing sides count as zero; both-zero rows never arrive here.
             if (attacks.isNotEmpty()) {
                 BrainyWatermarkCard(resId = R.drawable.brainy_migraines) {
-                    Text("Your migraines", color = Color.White,
+                    Text(t("Your migraines"), color = Color.White,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Last 30 days vs the 30 before", color = AppTheme.SubtleTextColor,
+                    Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall)
                     attacks.forEach { t -> AttackTrendRow(t) }
                 }
             }
 
             if (changed.isNotEmpty()) {
-                Text("Occurrences on your attacks, last 30 days vs the 30 before.",
+                Text(t("Occurrences on your attacks, last 30 days vs the 30 before."),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
                 BrainyWatermarkCard(resId = R.drawable.brainy_risk, flipWatermark = true) {
                     if (unwanted.isNotEmpty()) {
-                        Text("Triggers, prodromes, medicines & symptoms", color = TrendAmber,
+                        Text(t("Triggers, prodromes, medicines & symptoms"), color = TrendAmber,
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         unwanted.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
                         if (medRising) {
-                            Text("Acute medication use rising — worth an overuse check.",
+                            Text(t("Acute medication use rising — worth an overuse check."),
                                 color = TrendAmber, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     if (helpful.isNotEmpty()) {
                         if (unwanted.isNotEmpty()) Spacer(Modifier.height(6.dp))
-                        Text("Reliefs", color = TrendGreen,
+                        Text(t("Reliefs"), color = TrendGreen,
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         helpful.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
                     }
@@ -91,9 +91,9 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             // no metric has data in either window.
             if (habits.isNotEmpty()) {
                 BrainyWatermarkCard(resId = R.drawable.brainy_gardener) {
-                    Text("Daily habits", color = Color.White,
+                    Text(t("Daily habits"), color = Color.White,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Last 30 days vs the 30 before", color = AppTheme.SubtleTextColor,
+                    Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall)
                     habits.forEach { h -> DailyHabitRow(h) }
                 }
@@ -112,7 +112,7 @@ private fun AttackTrendRow(t: InsightsViewModel.AttackTrend) {
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(t.label, color = Color.White,
+        Text(t(t.label), color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(122.dp))
@@ -120,7 +120,7 @@ private fun AttackTrendRow(t: InsightsViewModel.AttackTrend) {
         DivergingTrendBar(fill = spec.fill, positive = spec.positive, color = spec.color,
             modifier = Modifier.weight(1f))
         Spacer(Modifier.width(8.dp))
-        Text(spec.caption, color = AppTheme.SubtleTextColor,
+        Text(t(spec.caption), color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall)
     }
 }
@@ -179,7 +179,7 @@ private fun DailyHabitRow(h: InsightsViewModel.HabitTrend) {
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(h.label, color = Color.White,
+        Text(t(h.label), color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(122.dp))
@@ -187,7 +187,7 @@ private fun DailyHabitRow(h: InsightsViewModel.HabitTrend) {
         DivergingTrendBar(fill = spec.fill, positive = spec.positive, color = spec.color,
             modifier = Modifier.weight(1f))
         Spacer(Modifier.width(8.dp))
-        Text(spec.caption, color = AppTheme.SubtleTextColor,
+        Text(t(spec.caption), color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall)
     }
 }

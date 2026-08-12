@@ -56,7 +56,7 @@ fun AdjustReliefsScreen(
                     OutlinedTextField(
                         value = newLabel,
                         onValueChange = { newLabel = it },
-                        label = { Text("New relief label") },
+                        label = { Text(t("New relief label")) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -76,14 +76,14 @@ fun AdjustReliefsScreen(
                         },
                         enabled = newLabel.isNotBlank()
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add to Pool")
+                        Icon(Icons.Filled.Add, contentDescription = t("Add to Pool"))
                         Spacer(Modifier.width(8.dp))
-                        Text("Add to list")
+                        Text(t("Add to list"))
                     }
                 }
             }
 
-            item { Text("Frequent", style = MaterialTheme.typography.titleMedium) }
+            item { Text(t("Frequent"), style = MaterialTheme.typography.titleMedium) }
             items(frequent, key = { it.id }) { pref ->
                 ElevatedCard(
                     shape = MaterialTheme.shapes.medium,
@@ -105,13 +105,13 @@ fun AdjustReliefsScreen(
                                     scope.launch { snackbar.showSnackbar("Failed to remove: ${e.message ?: "error"}") }
                                 }
                         }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Remove from Frequent")
+                            Icon(Icons.Filled.Delete, contentDescription = t("Remove from Frequent"))
                         }
                     }
                 }
             }
 
-            item { Text("All Reliefs", style = MaterialTheme.typography.titleMedium) }
+            item { Text(t("All Reliefs"), style = MaterialTheme.typography.titleMedium) }
 
             val frequentIds = frequent.map { it.reliefId }.toSet()
             val remaining = pool.filter { it.id !in frequentIds }
@@ -149,7 +149,7 @@ fun AdjustReliefsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(rel.label, style = MaterialTheme.typography.bodyLarge)
+                            Text(t(rel.label), style = MaterialTheme.typography.bodyLarge)
                             IconButton(onClick = {
                                 val token = authState.accessToken ?: return@IconButton
                                 runCatching { vm.addToFrequent(token, rel.id) }
@@ -158,7 +158,7 @@ fun AdjustReliefsScreen(
                                         scope.launch { snackbar.showSnackbar("Add failed: ${e.message ?: "error"}") }
                                     }
                             }) {
-                                Icon(Icons.Filled.Add, contentDescription = "Add to Frequent")
+                                Icon(Icons.Filled.Add, contentDescription = t("Add to Frequent"))
                             }
                         }
                     }

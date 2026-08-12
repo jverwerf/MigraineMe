@@ -134,11 +134,11 @@ fun MonitorPhysicalScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.PHYSICAL_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Tune, contentDescription = "Configure", tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Outlined.Tune, contentDescription = t("Configure"), tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Customize Monitor Card", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Choose 3 metrics for the Physical Health card on Monitor", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Customize Monitor Card"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Choose 3 metrics for the Physical Health card on Monitor"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
@@ -146,11 +146,11 @@ fun MonitorPhysicalScreen(
 
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
                 BaseCard {
-                    Text("Physical health tracking is disabled", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Physical health tracking is disabled"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
-                    Text("Enable physical health metrics in Data Settings to start tracking.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Enable physical health metrics in Data Settings to start tracking."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
-                    Text("Go to Data Settings →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.clickable { navController.navigate(Routes.DATA) })
+                    Text(t("Go to Data Settings →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.clickable { navController.navigate(Routes.DATA) })
                 }
             } else {
                 BrainyWatermarkCard(resId = R.drawable.brainy_physical, flipWatermark = true) {
@@ -162,13 +162,13 @@ fun MonitorPhysicalScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Today's Data", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Today's Data"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         if (PremiumManager.isPremium) {
-                            Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                            Text(t("History →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
-                                Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                                Icon(Icons.Outlined.Lock, contentDescription = t("Premium"), tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
+                                Text(t("History"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -179,9 +179,9 @@ fun MonitorPhysicalScreen(
                             CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppTheme.AccentPurple, strokeWidth = 2.dp)
                         }
                     } else if (physicalDetail == null) {
-                        Text("No physical health data for today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("No physical health data for today"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         Spacer(Modifier.height(4.dp))
-                        Text("Connect a wearable or enable Health Connect in Data Settings", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Connect a wearable or enable Health Connect in Data Settings"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                     } else {
                         val detail = physicalDetail!!
 
@@ -193,7 +193,7 @@ fun MonitorPhysicalScreen(
                                     ?: PhysicalCardConfig.labelFor(PhysicalCardConfig.ALL_PHYSICAL_METRICS.firstOrNull { PhysicalCardConfig.metricToTable(it) == key } ?: key)
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
@@ -203,7 +203,7 @@ fun MonitorPhysicalScreen(
                             Spacer(Modifier.height(4.dp))
                             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                             Spacer(Modifier.height(8.dp))
-                            Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                             Spacer(Modifier.height(4.dp))
 
                             remainingMetrics.forEach { (tableKey, label) ->
@@ -213,7 +213,7 @@ fun MonitorPhysicalScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(label), color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
                                     Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                                 }
                             }
@@ -229,8 +229,8 @@ fun MonitorPhysicalScreen(
                 }
 
                 PremiumGate(
-                    message = "Unlock Physical Trends",
-                    subtitle = "Track your health metrics over time",
+                    message = t("Unlock Physical Trends"),
+                    subtitle = t("Track your health metrics over time"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     PhysicalHistoryGraph(

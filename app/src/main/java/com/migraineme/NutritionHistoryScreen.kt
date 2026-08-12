@@ -130,13 +130,13 @@ fun NutritionHistoryScreen(
             // Header
             HeroCard {
                 Text(
-                    "Nutrition History",
+                    t("Nutrition History"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "View and manage your food log",
+                    t("View and manage your food log"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -154,7 +154,7 @@ fun NutritionHistoryScreen(
                     ) {
                         Icon(
                             Icons.Default.ChevronLeft,
-                            contentDescription = "Previous day",
+                            contentDescription = t("Previous day"),
                             tint = AppTheme.AccentPurple
                         )
                     }
@@ -162,8 +162,8 @@ fun NutritionHistoryScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             when {
-                                selectedDate == today -> "Today"
-                                selectedDate == today.minusDays(1) -> "Yesterday"
+                                selectedDate == today -> t("Today")
+                                selectedDate == today.minusDays(1) -> t("Yesterday")
                                 else -> selectedDate.format(dateFormatter)
                             },
                             color = AppTheme.TitleColor,
@@ -184,7 +184,7 @@ fun NutritionHistoryScreen(
                     ) {
                         Icon(
                             Icons.Default.ChevronRight,
-                            contentDescription = "Next day",
+                            contentDescription = t("Next day"),
                             tint = if (selectedDate < today) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                         )
                     }
@@ -208,7 +208,7 @@ fun NutritionHistoryScreen(
                     }
                 } else if (items.isEmpty()) {
                     Text(
-                        "No food logged for this day",
+                        t("No food logged for this day"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
@@ -280,7 +280,7 @@ fun NutritionHistoryScreen(
                     // All metrics breakdown
                     HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                     Spacer(Modifier.height(8.dp))
-                    Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("All Nutrients"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
                     val allNutritionKeys = MetricRegistry.byGroup("nutrition").map { it.key }
@@ -309,7 +309,7 @@ fun NutritionHistoryScreen(
                                         "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
                                     }
                                     Spacer(Modifier.width(5.dp))
-                                    Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                                 }
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
@@ -327,7 +327,7 @@ fun NutritionHistoryScreen(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                                 Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                         }
@@ -359,14 +359,14 @@ private fun HistoryLogItem(
             Row {
                 item.calories?.let {
                     Text(
-                        "${it.toInt()} cal",
+                        t("%s cal", it.toInt()),
                         color = Color(0xFFFFB74D),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 if (item.source == "manual_usda") {
                     Text(
-                        " • Manual",
+                        t(" • Manual"),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -420,7 +420,7 @@ private fun HistoryEditFoodDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Food", color = AppTheme.TitleColor) },
+        title = { Text(t("Edit Food"), color = AppTheme.TitleColor) },
         text = {
             Column {
                 Text(
@@ -432,7 +432,7 @@ private fun HistoryEditFoodDialog(
                 item.calories?.let {
                     val adjustedCalories = (it * servingsMultiplier).toInt()
                     Text(
-                        "$adjustedCalories calories${if (servingsMultiplier != 1.0) " (was ${it.toInt()})" else ""}",
+                        t("%s calories", adjustedCalories) + (if (servingsMultiplier != 1.0) t(" (was %s)", it.toInt()) else ""),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -440,7 +440,7 @@ private fun HistoryEditFoodDialog(
                 
                 Spacer(Modifier.height(16.dp))
                 
-                Text("Adjust Servings", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Adjust Servings"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
                 
                 Row(
@@ -477,7 +477,7 @@ private fun HistoryEditFoodDialog(
                 
                 Spacer(Modifier.height(16.dp))
                 
-                Text("Meal Type", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Meal Type"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
                 
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -508,7 +508,7 @@ private fun HistoryEditFoodDialog(
                 Spacer(Modifier.height(16.dp))
                 
                 Text(
-                    "Delete this entry",
+                    t("Delete this entry"),
                     color = Color(0xFFE57373),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickable { onDelete() }.padding(vertical = 8.dp)
@@ -517,12 +517,12 @@ private fun HistoryEditFoodDialog(
         },
         confirmButton = {
             TextButton(onClick = { onSave(servingsMultiplier) }) {
-                Text("Save", color = AppTheme.AccentPurple)
+                Text(t("Save"), color = AppTheme.AccentPurple)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppTheme.SubtleTextColor)
+                Text(t("Cancel"), color = AppTheme.SubtleTextColor)
             }
         },
         containerColor = Color(0xFF1E0A2E)
@@ -533,7 +533,7 @@ private fun HistoryEditFoodDialog(
 private fun HistorySummaryValue(value: String, label: String, color: Color = AppTheme.TitleColor) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 

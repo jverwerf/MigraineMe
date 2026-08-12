@@ -28,6 +28,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -35,10 +39,16 @@ import androidx.compose.ui.unit.dp
 // ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
-private fun QPageHeader(icon: ImageVector, title: String, subtitle: String, pageNum: Int, totalPages: Int) {
+private fun QPageHeader(icon: ImageVector, title: String, subtitle: String, pageNum: Int, totalPages: Int, brainy: Int? = null) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(48.dp).background(Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
+        if (brainy != null) {
+            // Brainy carries the section rather than a generic glyph. No gradient
+            // tile behind him — the art already reads as a badge.
+            Image(painter = painterResource(id = brainy), contentDescription = null, modifier = Modifier.size(72.dp))
+        } else {
+            Box(Modifier.size(48.dp).background(Brush.linearGradient(listOf(AppTheme.AccentPurple.copy(alpha = 0.3f), AppTheme.AccentPink.copy(alpha = 0.2f))), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
+            }
         }
         Spacer(Modifier.height(12.dp))
         Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
@@ -50,13 +60,55 @@ private fun QPageHeader(icon: ImageVector, title: String, subtitle: String, page
     }
 }
 
+/** Blue, deliberately not the purple used for the user's own answers. */
+internal val SuggestionStarColor = Color(0xFF4FC3F7)
+
+/** Which fields the profile pass filled, and why. Empty when nothing was suggested. */
+data class AiSuggestions(
+    val fields: Set<String> = emptySet(),
+    val reasons: Map<String, String> = emptyMap()
+)
+
+val LocalAiSuggestions = staticCompositionLocalOf { AiSuggestions() }
+
 @Composable
-private fun QCard(label: String, icon: ImageVector? = null, subtitle: String? = null, content: @Composable ColumnScope.() -> Unit) {
+private fun QCard(label: String, icon: ImageVector? = null, subtitle: String? = null, fieldKey: String? = null, content: @Composable ColumnScope.() -> Unit) {
+    // An answer the profile pass put forward rather than one the user gave us.
+    // Starred so it is obviously not their own words, and tappable for why.
+    val suggestions = LocalAiSuggestions.current
+    val reason = fieldKey?.let { suggestions.reasons[it] }
+    val isSuggested = fieldKey != null && fieldKey in suggestions.fields
+    var showWhy by remember { mutableStateOf(false) }
+
+    if (showWhy) {
+        AlertDialog(
+            onDismissRequest = { showWhy = false },
+            confirmButton = { TextButton(onClick = { showWhy = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } },
+            icon = { Icon(Icons.Filled.Star, null, tint = SuggestionStarColor) },
+            title = { Text(t("Why we suggested this"), color = Color.White, style = MaterialTheme.typography.titleSmall) },
+            text = {
+                Text(
+                    reason ?: t("This one came from your profile rather than something you told us — worth tracking to find out."),
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall
+                )
+            },
+            containerColor = Color(0xFF1E0A2E)
+        )
+    }
+
     Card(colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (icon != null) { Icon(icon, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)) }
-                Text(label, color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t(label), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f, fill = false))
+                if (isSuggested) {
+                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        Icons.Filled.Star, t("Why we suggested this"),
+                        tint = SuggestionStarColor,
+                        modifier = Modifier.size(18.dp).clickable { showWhy = true }
+                    )
+                }
             }
             if (subtitle != null) { Spacer(Modifier.height(4.dp)); Text(subtitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall) }
             Spacer(Modifier.height(12.dp))
@@ -74,7 +126,7 @@ private fun QSingleChips(options: List<String>, selected: String?, onSelect: (St
                 for (option in row) {
                     val sel = option == selected
                     Box(Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (sel) AppTheme.AccentPurple.copy(alpha = 0.3f) else AppTheme.TrackColor.copy(alpha = 0.3f)).border(1.dp, if (sel) AppTheme.AccentPurple else Color.Transparent, RoundedCornerShape(10.dp)).clickable { onSelect(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(option, color = if (sel) Color.White else AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
+                        Text(t(option), color = if (sel) Color.White else AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -92,7 +144,7 @@ private fun QMultiChips(options: List<String>, selected: Set<String>, onToggle: 
                 for (option in row) {
                     val sel = option in selected
                     Box(Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (sel) AppTheme.AccentPink.copy(alpha = 0.25f) else AppTheme.TrackColor.copy(alpha = 0.3f)).border(1.dp, if (sel) AppTheme.AccentPink else Color.Transparent, RoundedCornerShape(10.dp)).clickable { onToggle(option) }.padding(vertical = 10.dp, horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(option, color = if (sel) Color.White else AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
+                        Text(t(option), color = if (sel) Color.White else AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -122,15 +174,15 @@ private fun QPoolMultiSelect(
     val grouped: Map<String, List<AiSetupService.PoolLabel>> = restItems.groupBy { item -> item.category ?: "Other" }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (matchedItems.isNotEmpty()) {
-            Text("From what you told us", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("From what you told us"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
             QPoolChipGrid(matchedItems, selected, onToggle, accentColor, poolType)
         }
         if (suggestedItems.isNotEmpty()) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("✦ Suggested for your profile", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("✦ Suggested for your profile"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                 if (onDeselectSuggested != null) {
                     Text(
-                        "Deselect all",
+                        t("Deselect all"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
                         modifier = Modifier.clickable { onDeselectSuggested() }
@@ -204,8 +256,7 @@ private fun QPoolChipGrid(poolItems: List<AiSetupService.PoolLabel>, selected: S
                                 }
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text(
-                                item.label,
+                            Text(t(item.label),
                                 color = textColor,
                                 style = MaterialTheme.typography.labelSmall,
                                 textAlign = TextAlign.Center,
@@ -271,7 +322,7 @@ private fun QFreeText(value: String, onValueChange: (String) -> Unit, hint: Stri
     ) {
         Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
         Spacer(Modifier.width(4.dp))
-        Text("Voice", style = MaterialTheme.typography.bodySmall)
+        Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -293,31 +344,31 @@ fun AiQuestionsPage1(
     seasonalPattern: String?, onSeasonalPattern: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Psychology, "About You & Your Migraines", "Help us personalise your experience", 1, 17)
-        QCard("What is your gender?", Icons.Outlined.Person, "Used to personalise thresholds (e.g. nutrition, body composition)") { QSingleChips(listOf("Female", "Male", "Prefer not to say"), gender, onGender) }
-        QCard("What is your age range?", Icons.Outlined.Cake) { QSingleChips(listOf("18-25", "26-35", "36-45", "46-55", "56+"), ageRange, onAgeRange) }
-        QCard("How often do you get migraines?", Icons.Outlined.CalendarMonth) {
+        QPageHeader(Icons.Outlined.Psychology, t("About You & Your Migraines"), t("Help us personalise your experience"), 1, 17, brainy = R.drawable.brainy_migraines)
+        QCard(t("What is your gender?"), Icons.Outlined.Person, t("Used to personalise thresholds (e.g. nutrition, body composition)")) { QSingleChips(listOf("Female", "Male", "Prefer not to say"), gender, onGender) }
+        QCard(t("What is your age range?"), Icons.Outlined.Cake) { QSingleChips(listOf("18-25", t("26-35"), "36-45", "46-55", "56+"), ageRange, onAgeRange) }
+        QCard(t("How often do you get migraines?"), Icons.Outlined.CalendarMonth, fieldKey = "frequency") {
             QSingleChips(listOf("A few per year", "Every 1-2 months", "1-3 per month", "Weekly", "Chronic"), frequency, onFrequency)
         }
-        QCard("How long do they usually last?", Icons.Outlined.Timer) {
+        QCard(t("How long do they usually last?"), Icons.Outlined.Timer, fieldKey = "duration") {
             QSingleChips(listOf("< 4 hours", "4-12 hours", "12-24 hours", "1-3 days", "3+ days"), duration, onDuration)
         }
-        QCard("How long have you been getting migraines?", Icons.Outlined.History) {
+        QCard(t("How long have you been getting migraines?"), Icons.Outlined.History, fieldKey = "experience") {
             QSingleChips(listOf("New / recent", "1-5 years", "5-10 years", "10+ years"), experience, onExperience)
         }
-        QCard("Have they been getting better, worse, or the same?", Icons.Outlined.TrendingUp) {
+        QCard(t("Have they been getting better, worse, or the same?"), Icons.Outlined.TrendingUp, fieldKey = "trajectory") {
             QSingleChips(listOf("Getting worse", "Getting better", "About the same", "Just started"), trajectory, onTrajectory)
         }
-        QCard("Do you get warning signs before a migraine?", Icons.Outlined.Sensors) {
+        QCard(t("Do you get warning signs before a migraine?"), Icons.Outlined.Sensors, fieldKey = "warning_before") {
             QSingleChips(listOf("Yes, always", "Sometimes", "Rarely", "Never"), warningBefore, onWarningBefore)
         }
-        QCard("After a trigger, how quickly does the migraine come?", Icons.Outlined.Speed) {
+        QCard(t("After a trigger, how quickly does the migraine come?"), Icons.Outlined.Speed, fieldKey = "trigger_delay") {
             QSingleChips(listOf("Within hours", "Next day", "Within 2-3 days", "Up to a week", "Not sure"), triggerDelay, onTriggerDelay)
         }
-        QCard("What best describes your daily routine?", Icons.Outlined.Work) {
+        QCard(t("What best describes your daily routine?"), Icons.Outlined.Work, fieldKey = "daily_routine") {
             QSingleChips(listOf("Regular 9-5", "Shift work / rotating", "Irregular / freelance", "Student", "Stay at home"), dailyRoutine, onDailyRoutine)
         }
-        QCard("Do your migraines follow a seasonal pattern?", Icons.Outlined.WbSunny) {
+        QCard(t("Do your migraines follow a seasonal pattern?"), Icons.Outlined.WbSunny, fieldKey = "seasonal_pattern") {
             QSingleChips(listOf("Worse in winter", "Worse in summer", "Worse in spring", "No pattern", "Not sure"), seasonalPattern, onSeasonalPattern)
         }
         Spacer(Modifier.height(80.dp))
@@ -338,15 +389,15 @@ fun AiQuestionsPage2(
     sleepIssues: Set<String>, onToggleSleepIssue: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Bedtime, "Sleep", "Sleep is one of the most common migraine triggers", 2, 17)
-        QCard("How many hours do you usually sleep?", Icons.Outlined.Schedule) { QSingleChips(listOf("< 5h", "5-6h", "6-7h", "7-8h", "8-9h", "9+h"), sleepHours, onSleepHours) }
-        QCard("How would you rate your sleep quality?", Icons.Outlined.NightsStay) { QSingleChips(listOf("Good", "OK", "Poor", "Varies a lot"), sleepQuality, onSleepQuality) }
-        QCard("Does POOR QUALITY sleep trigger a migraine?", Icons.Outlined.Bolt, "Restless, waking up, light sleep") { SingleCertaintySelect(poorQualityTriggers, onPoorQualityTriggers) }
-        QCard("Does TOO LITTLE sleep trigger a migraine?", Icons.Outlined.Bolt, "Not enough hours") { SingleCertaintySelect(tooLittleSleepTriggers, onTooLittleSleepTriggers) }
-        QCard("Does TOO MUCH sleep trigger a migraine?", Icons.Outlined.HotelClass) { SingleCertaintySelect(oversleepTriggers, onOversleepTriggers) }
+        QPageHeader(Icons.Outlined.Bedtime, t("Sleep"), t("Sleep is one of the most common migraine triggers"), 2, 17, brainy = R.drawable.brainy_sleep)
+        QCard(t("How many hours do you usually sleep?"), Icons.Outlined.Schedule, fieldKey = "sleep_hours") { QSingleChips(listOf("< 5h", "5-6h", "6-7h", "7-8h", "8-9h", "9+h"), sleepHours, onSleepHours) }
+        QCard(t("How would you rate your sleep quality?"), Icons.Outlined.NightsStay, fieldKey = "sleep_quality") { QSingleChips(listOf("Good", "OK", "Poor", "Varies a lot"), sleepQuality, onSleepQuality) }
+        QCard(t("Does POOR QUALITY sleep trigger a migraine?"), Icons.Outlined.Bolt, t("Restless, waking up, light sleep"), fieldKey = "poor_quality_triggers") { SingleCertaintySelect(poorQualityTriggers, onPoorQualityTriggers) }
+        QCard(t("Does TOO LITTLE sleep trigger a migraine?"), Icons.Outlined.Bolt, t("Not enough hours"), fieldKey = "too_little_sleep_triggers") { SingleCertaintySelect(tooLittleSleepTriggers, onTooLittleSleepTriggers) }
+        QCard(t("Does TOO MUCH sleep trigger a migraine?"), Icons.Outlined.HotelClass, fieldKey = "oversleep_triggers") { SingleCertaintySelect(oversleepTriggers, onOversleepTriggers) }
         val anySleepTrigger = listOf(poorQualityTriggers, tooLittleSleepTriggers, oversleepTriggers).any { it != null && it != DeterministicMapper.Certainty.NO }
         AnimatedVisibility(visible = anySleepTrigger, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("Any specific sleep issues?", Icons.Outlined.Warning, "Select all that apply") { QMultiChips(listOf("Irregular schedule", "Sleep apnea", "Jet lag", "None of these"), sleepIssues, onToggleSleepIssue) }
+            QCard(t("Any specific sleep issues?"), Icons.Outlined.Warning, t("Select all that apply"), fieldKey = "sleep_issues") { QMultiChips(listOf("Irregular schedule", "Sleep apnea", "Jet lag", "None of these"), sleepIssues, onToggleSleepIssue) }
         }
         Spacer(Modifier.height(80.dp))
     }
@@ -366,18 +417,18 @@ fun AiQuestionsPage3(
     lateScreenTriggers: DeterministicMapper.Certainty?, onLateScreenTriggers: (DeterministicMapper.Certainty) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Psychology, "Stress & Screen", "Emotional and cognitive triggers", 3, 17)
-        QCard("How would you describe your general stress level?", Icons.Outlined.Whatshot) { QSingleChips(listOf("Low", "Moderate", "High", "Very high"), stressLevel, onStressLevel) }
-        QCard("Does a CHANGE in your stress level trigger migraines?", Icons.Outlined.Bolt) { SingleCertaintySelect(stressChangeTriggers, onStressChangeTriggers) }
+        QPageHeader(Icons.Outlined.Psychology, t("Stress & Screen"), t("Emotional and cognitive triggers"), 3, 17, brainy = R.drawable.brainy_cognitive)
+        QCard(t("How would you describe your general stress level?"), Icons.Outlined.Whatshot, fieldKey = "stress_level") { QSingleChips(listOf("Low", "Moderate", "High", "Very high"), stressLevel, onStressLevel) }
+        QCard(t("Does a CHANGE in your stress level trigger migraines?"), Icons.Outlined.Bolt, fieldKey = "stress_change_triggers") { SingleCertaintySelect(stressChangeTriggers, onStressChangeTriggers) }
         AnimatedVisibility(visible = stressChangeTriggers != null && stressChangeTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("Which emotional patterns?", Icons.Outlined.Mood, "Select all, set certainty") {
+            QCard(t("Which emotional patterns?"), Icons.Outlined.Mood, t("Select all, set certainty"), fieldKey = "emotional_patterns") {
                 CertaintyMultiSelect(items = listOf(CertaintyItem("Spike in stress", "A spike in stress", "Work pressure, deadlines"), CertaintyItem("Anxiety", "Anxiety or worry"), CertaintyItem("Anger", "Anger or frustration"), CertaintyItem("Let-down", "After stress ENDS", "Weekend/holiday let-down"), CertaintyItem("Feeling low", "Feeling low or depressed")), selections = emotionalPatterns, onSelectionChanged = onEmotionalPatterns, showNoneOption = false)
             }
         }
-        QCard("How much screen time do you have daily?", Icons.Outlined.PhoneAndroid) { QSingleChips(listOf("< 2h", "2-4h", "4-8h", "8-12h", "12h+"), screenTimeDaily, onScreenTimeDaily) }
-        QCard("Does screen time trigger migraines?", Icons.Outlined.Bolt) { SingleCertaintySelect(screenTimeTriggers, onScreenTimeTriggers) }
+        QCard(t("How much screen time do you have daily?"), Icons.Outlined.PhoneAndroid, fieldKey = "screen_time_daily") { QSingleChips(listOf("< 2h", "2-4h", "4-8h", "8-12h", "12h+"), screenTimeDaily, onScreenTimeDaily) }
+        QCard(t("Does screen time trigger migraines?"), Icons.Outlined.Bolt, fieldKey = "screen_time_triggers") { SingleCertaintySelect(screenTimeTriggers, onScreenTimeTriggers) }
         AnimatedVisibility(visible = screenTimeTriggers != null && screenTimeTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("Does late-night screen use make it worse?", Icons.Outlined.DarkMode) { SingleCertaintySelect(lateScreenTriggers, onLateScreenTriggers) }
+            QCard(t("Does late-night screen use make it worse?"), Icons.Outlined.DarkMode, fieldKey = "late_screen_triggers") { SingleCertaintySelect(lateScreenTriggers, onLateScreenTriggers) }
         }
         Spacer(Modifier.height(80.dp))
     }
@@ -404,36 +455,36 @@ fun AiQuestionsPage4(
     tracksNutrition: String?, onTracksNutrition: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Restaurant, "Diet & Substances", "Food, drink, and nutrition triggers", 4, 17)
-        QCard("How much caffeine do you have daily?", Icons.Outlined.LocalCafe) { QSingleChips(listOf("None", "1-2 cups", "3-4 cups", "5+ cups"), caffeineIntake, onCaffeineIntake) }
-        QCard("Does caffeine affect your migraines?", Icons.Outlined.Bolt) { QSingleChips(listOf("Too much triggers it", "Missing caffeine triggers it", "Both ways", "Not sure", "No"), caffeineDirection, onCaffeineDirection) }
+        QPageHeader(Icons.Outlined.Restaurant, t("Diet & Substances"), t("Food, drink, and nutrition triggers"), 4, 17, brainy = R.drawable.brainy_diet)
+        QCard(t("How much caffeine do you have daily?"), Icons.Outlined.LocalCafe, fieldKey = "caffeine_intake") { QSingleChips(listOf("None", "1-2 cups", "3-4 cups", "5+ cups"), caffeineIntake, onCaffeineIntake) }
+        QCard(t("Does caffeine affect your migraines?"), Icons.Outlined.Bolt, fieldKey = "caffeine_direction") { QSingleChips(listOf("Too much triggers it", "Missing caffeine triggers it", "Both ways", "Not sure", "No"), caffeineDirection, onCaffeineDirection) }
         AnimatedVisibility(visible = caffeineDirection != null && caffeineDirection != "No", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("How certain about the caffeine link?", Icons.Outlined.TrendingUp) { SingleCertaintySelect(caffeineCertainty, onCaffeineCertainty) }
+            QCard(t("How certain about the caffeine link?"), Icons.Outlined.TrendingUp, fieldKey = "caffeine_certainty") { SingleCertaintySelect(caffeineCertainty, onCaffeineCertainty) }
         }
-        QCard("How often do you drink alcohol?", Icons.Outlined.LocalBar) { QSingleChips(listOf("Never", "Occasionally", "Weekly", "Daily"), alcoholFrequency, onAlcoholFrequency) }
+        QCard(t("How often do you drink alcohol?"), Icons.Outlined.LocalBar, fieldKey = "alcohol_frequency") { QSingleChips(listOf("Never", "Occasionally", "Weekly", "Daily"), alcoholFrequency, onAlcoholFrequency) }
         AnimatedVisibility(visible = alcoholFrequency != null && alcoholFrequency != "Never", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                QCard("Does alcohol trigger migraines?", Icons.Outlined.Bolt) { SingleCertaintySelect(alcoholTriggers, onAlcoholTriggers) }
+                QCard(t("Does alcohol trigger migraines?"), Icons.Outlined.Bolt, fieldKey = "alcohol_triggers") { SingleCertaintySelect(alcoholTriggers, onAlcoholTriggers) }
                 AnimatedVisibility(visible = alcoholTriggers != null && alcoholTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                    QCard("Are specific drinks worse?", Icons.Outlined.WineBar, "Select all that apply") { QMultiChips(listOf("Red wine", "Beer", "White wine", "Spirits", "Any alcohol"), specificDrinks, onToggleDrink) }
+                    QCard(t("Are specific drinks worse?"), Icons.Outlined.WineBar, t("Select all that apply"), fieldKey = "specific_drinks") { QMultiChips(listOf("Red wine", "Beer", "White wine", "Spirits", "Any alcohol"), specificDrinks, onToggleDrink) }
                 }
             }
         }
-        QCard("Do any of these foods trigger migraines?", Icons.Outlined.Fastfood, "Select all, set certainty") {
+        QCard(t("Do any of these foods trigger migraines?"), Icons.Outlined.Fastfood, t("Select all, set certainty"), fieldKey = "tyramine_foods") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Aged cheese", "Aged cheese", "Parmesan, brie, blue cheese"), CertaintyItem("Chocolate", "Chocolate"), CertaintyItem("Cured meats", "Cured or processed meats", "Salami, bacon, hot dogs"), CertaintyItem("Fermented foods", "Fermented foods", "Soy sauce, kimchi, miso")), selections = tyramineFoods, onSelectionChanged = onTyramineFoods)
         }
-        QCard("Any high-histamine foods trigger migraines?", Icons.Outlined.Science, "Select all, set certainty") {
+        QCard(t("Any high-histamine foods trigger migraines?"), Icons.Outlined.Science, t("Select all, set certainty"), fieldKey = "histamine_foods") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Aged or smoked fish", "Aged or smoked fish", "Tuna, mackerel, sardines, anchovies"), CertaintyItem("Avocado", "Avocado"), CertaintyItem("Spinach", "Spinach or aubergine"), CertaintyItem("Tomatoes", "Tomatoes (esp. tinned/cooked)"), CertaintyItem("Strawberries", "Strawberries or citrus"), CertaintyItem("Vinegar", "Vinegar or pickled foods")), selections = histamineFoods, onSelectionChanged = onHistamineFoods)
         }
-        QCard("Are you sensitive to gluten?", Icons.Outlined.SetMeal) { QSingleChips(listOf("Yes, diagnosed", "I suspect so", "No", "Not sure"), glutenSensitivity, onGlutenSensitivity) }
+        QCard(t("Are you sensitive to gluten?"), Icons.Outlined.SetMeal, fieldKey = "gluten_sensitivity") { QSingleChips(listOf("Yes, diagnosed", "I suspect so", "No", "Not sure"), glutenSensitivity, onGlutenSensitivity) }
         AnimatedVisibility(visible = glutenSensitivity == "Yes, diagnosed" || glutenSensitivity == "I suspect so", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("Does eating gluten trigger migraines?", Icons.Outlined.Bolt) { SingleCertaintySelect(glutenTriggers, onGlutenTriggers) }
+            QCard(t("Does eating gluten trigger migraines?"), Icons.Outlined.Bolt, fieldKey = "gluten_triggers") { SingleCertaintySelect(glutenTriggers, onGlutenTriggers) }
         }
-        QCard("Do any eating patterns trigger migraines?", Icons.Outlined.NoMeals, "Select all, set certainty") {
+        QCard(t("Do any eating patterns trigger migraines?"), Icons.Outlined.NoMeals, t("Select all, set certainty"), fieldKey = "eating_patterns") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Skipping meals", "Skipping meals or fasting"), CertaintyItem("Sugar", "Eating too much sugar"), CertaintyItem("Salty food", "Eating very salty food"), CertaintyItem("Overeating", "Overeating"), CertaintyItem("Dehydration", "Dehydration / not drinking enough")), selections = eatingPatterns, onSelectionChanged = onEatingPatterns)
         }
-        QCard("How much water do you drink daily?", Icons.Outlined.WaterDrop) { QSingleChips(listOf("< 1L", "1-2L", "2-3L", "3L+"), waterIntake, onWaterIntake) }
-        QCard("Do you track your nutrition?", Icons.Outlined.Inventory, "Food diary, MyFitnessPal, etc.") { QSingleChips(listOf("Yes, regularly", "Sometimes", "No"), tracksNutrition, onTracksNutrition) }
+        QCard(t("How much water do you drink daily?"), Icons.Outlined.WaterDrop, fieldKey = "water_intake") { QSingleChips(listOf("< 1L", "1-2L", "2-3L", "3L+"), waterIntake, onWaterIntake) }
+        QCard(t("Do you track your nutrition?"), Icons.Outlined.Inventory, t("Food diary, MyFitnessPal, etc."), fieldKey = "tracks_nutrition") { QSingleChips(listOf("Yes, regularly", "Sometimes", "No"), tracksNutrition, onTracksNutrition) }
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -450,17 +501,17 @@ fun AiQuestionsPage5(
     physicalFactors: Map<String, DeterministicMapper.Certainty>, onPhysicalFactors: (Map<String, DeterministicMapper.Certainty>) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Cloud, "Weather, Environment & Physical", "External and physical triggers", 5, 17)
-        QCard("Does weather affect your migraines?", Icons.Outlined.Thunderstorm) { SingleCertaintySelect(weatherTriggers, onWeatherTriggers) }
+        QPageHeader(Icons.Outlined.Cloud, t("Weather, Environment & Physical"), t("External and physical triggers"), 5, 17, brainy = R.drawable.brainy_environment)
+        QCard(t("Does weather affect your migraines?"), Icons.Outlined.Thunderstorm, fieldKey = "weather_triggers") { SingleCertaintySelect(weatherTriggers, onWeatherTriggers) }
         AnimatedVisibility(visible = weatherTriggers != null && weatherTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("Which weather changes?", Icons.Outlined.Air, "Select all, set certainty") {
+            QCard(t("Which weather changes?"), Icons.Outlined.Air, t("Select all, set certainty"), fieldKey = "specific_weather") {
                 CertaintyMultiSelect(items = listOf(CertaintyItem("Pressure changes", "Pressure/barometric changes", "Before storms"), CertaintyItem("Hot weather", "Hot weather or heat waves"), CertaintyItem("Cold weather", "Cold weather"), CertaintyItem("Humidity", "Humid or muggy weather"), CertaintyItem("Dry air", "Dry air"), CertaintyItem("Wind", "Strong wind"), CertaintyItem("Sunshine", "Bright sunshine / strong UV"), CertaintyItem("Thunderstorms", "Thunderstorms / electrical storms"), CertaintyItem("Not sure which", "Not sure — weather just affects me")), selections = specificWeather, onSelectionChanged = onSpecificWeather, showNoneOption = false)
             }
         }
-        QCard("Are you sensitive to any of these?", Icons.Outlined.Visibility, "Select all, set certainty") {
+        QCard(t("Are you sensitive to any of these?"), Icons.Outlined.Visibility, t("Select all, set certainty"), fieldKey = "environment_sensitivities") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Fluorescent lights", "Bright or fluorescent lights"), CertaintyItem("Strong smells", "Strong smells (perfume, cleaning products)"), CertaintyItem("Loud noise", "Loud noise or sudden sounds"), CertaintyItem("Smoke", "Smoke or fumes"), CertaintyItem("Altitude", "High altitude or altitude changes")), selections = environmentSensitivities, onSelectionChanged = onEnvironmentSensitivities)
         }
-        QCard("Do any physical factors trigger migraines?", Icons.Outlined.Healing, "Select all, set certainty") {
+        QCard(t("Do any physical factors trigger migraines?"), Icons.Outlined.Healing, t("Select all, set certainty"), fieldKey = "physical_factors") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Allergies", "Allergies or hayfever"), CertaintyItem("Being ill", "Being ill (cold, flu, infection)"), CertaintyItem("Low blood sugar", "Low blood sugar (shaky, faint)"), CertaintyItem("Medication change", "Changing or missing medication"), CertaintyItem("Motion sickness", "Motion sickness or travel"), CertaintyItem("Tobacco", "Tobacco or nicotine"), CertaintyItem("Sexual activity", "Sexual activity")), selections = physicalFactors, onSelectionChanged = onPhysicalFactors)
         }
         Spacer(Modifier.height(80.dp))
@@ -485,20 +536,20 @@ fun AiQuestionsPage6(
     contraceptionEffect: String?, onContraceptionEffect: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.FitnessCenter, "Exercise & Hormones", "Physical activity and hormonal triggers", 6, 17)
-        QCard("How often do you exercise?", Icons.Outlined.DirectionsRun) { QSingleChips(listOf("Daily", "Few times/week", "Weekly", "Rarely", "Never"), exerciseFrequency, onExerciseFrequency) }
-        QCard("Does exercise trigger migraines?", Icons.Outlined.Bolt) { SingleCertaintySelect(exerciseTriggers, onExerciseTriggers) }
+        QPageHeader(Icons.Outlined.FitnessCenter, t("Exercise & Hormones"), t("Physical activity and hormonal triggers"), 6, 17, brainy = R.drawable.brainy_runner)
+        QCard(t("How often do you exercise?"), Icons.Outlined.DirectionsRun, fieldKey = "exercise_frequency") { QSingleChips(listOf("Daily", "Few times/week", "Weekly", "Rarely", "Never"), exerciseFrequency, onExerciseFrequency) }
+        QCard(t("Does exercise trigger migraines?"), Icons.Outlined.Bolt, fieldKey = "exercise_triggers") { SingleCertaintySelect(exerciseTriggers, onExerciseTriggers) }
         AnimatedVisibility(visible = exerciseTriggers != null && exerciseTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard("Which pattern?", Icons.Outlined.Loop, "Select all that apply") { QMultiChips(listOf("During or after intense exercise", "When I haven't exercised"), exercisePattern, onToggleExercisePattern) }
+            QCard(t("Which pattern?"), Icons.Outlined.Loop, t("Select all that apply"), fieldKey = "exercise_pattern") { QMultiChips(listOf("During or after intense exercise", "When I haven't exercised"), exercisePattern, onToggleExercisePattern) }
         }
-        QCard("Do you track your menstrual cycle?", Icons.Outlined.Female) { QSingleChips(listOf("Yes", "No", "Not applicable"), tracksCycle, onTracksCycle) }
+        QCard(t("Do you track your menstrual cycle?"), Icons.Outlined.Female) { QSingleChips(listOf("Yes", t("No"), "Not applicable"), tracksCycle, onTracksCycle) }
         AnimatedVisibility(visible = tracksCycle == "Yes", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                QCard("Do migraines relate to your cycle?", Icons.Outlined.Loop, "Select all, set certainty") {
+                QCard(t("Do migraines relate to your cycle?"), Icons.Outlined.Loop, t("Select all, set certainty"), fieldKey = "cycle_patterns") {
                     CertaintyMultiSelect(items = listOf(CertaintyItem("Around my period", "Around my period"), CertaintyItem("Around ovulation", "Around ovulation (mid-cycle)")), selections = cyclePatterns, onSelectionChanged = onCyclePatterns, showNoneOption = true)
                 }
-                QCard("How long is your average cycle?", Icons.Outlined.CalendarMonth) { QSingleChips(listOf("< 25 days", "25-28 days", "28-32 days", "32-35 days", "> 35 days", "Irregular"), cycleLength, onCycleLength) }
-                QCard("When did your last period start?", Icons.Outlined.DateRange, "Helps us predict your next one") {
+                QCard(t("How long is your average cycle?"), Icons.Outlined.CalendarMonth) { QSingleChips(listOf("< 25 days", t("25-28 days"), "28-32 days", "32-35 days", "> 35 days", "Irregular"), cycleLength, onCycleLength) }
+                QCard(t("When did your last period start?"), Icons.Outlined.DateRange, t("Helps us predict your next one")) {
                     val ctx = LocalContext.current
                     val parsed = lastPeriodDate?.takeIf { it.isNotBlank() }?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
                     val initial = parsed ?: java.time.LocalDate.now()
@@ -509,15 +560,15 @@ fun AiQuestionsPage6(
                                     initial.year, initial.monthValue - 1, initial.dayOfMonth).show()
                             },
                             shape = RoundedCornerShape(12.dp)
-                        ) { Text(if (lastPeriodDate.isNullOrBlank()) "Select date" else lastPeriodDate, color = Color.White) }
+                        ) { Text(if (lastPeriodDate.isNullOrBlank()) t("Select date") else lastPeriodDate, color = Color.White) }
                         if (!lastPeriodDate.isNullOrBlank()) {
-                            TextButton(onClick = { onLastPeriodDate("") }) { Text("Clear", color = AppTheme.AccentPurple) }
+                            TextButton(onClick = { onLastPeriodDate("") }) { Text(t("Clear"), color = AppTheme.AccentPurple) }
                         }
                     }
-                    if (lastPeriodDate.isNullOrBlank()) Text("Optional — you can set this later", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    if (lastPeriodDate.isNullOrBlank()) Text(t("Optional — you can set this later"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
                 AnimatedVisibility(visible = cyclePatterns.any { it.key == "Around my period" && it.value != DeterministicMapper.Certainty.NO }, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                    QCard("When relative to your period?", Icons.Outlined.Schedule, "Select all that apply") {
+                    QCard(t("When relative to your period?"), Icons.Outlined.Schedule, t("Select all that apply"), fieldKey = "cycle_migraine_timing") {
                         QMultiChips(listOf("1-2 days before", "3-5 days before", "During my period", "1-2 days after"), cycleMigraineTiming, onToggleCycleMigraineTiming)
                     }
                 }
@@ -525,9 +576,9 @@ fun AiQuestionsPage6(
         }
         AnimatedVisibility(visible = tracksCycle != "Not applicable" && tracksCycle != null, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                QCard("Do you use hormonal contraception?", Icons.Outlined.Medication) { QSingleChips(listOf("Yes", "No"), usesContraception, onUsesContraception) }
+                QCard(t("Do you use hormonal contraception?"), Icons.Outlined.Medication) { QSingleChips(listOf("Yes", t("No")), usesContraception, onUsesContraception) }
                 AnimatedVisibility(visible = usesContraception == "Yes", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                    QCard("Has contraception affected your migraines?", Icons.Outlined.Bolt) { QSingleChips(listOf("Worse — every time", "Worse — sometimes", "No change", "Actually helps"), contraceptionEffect, onContraceptionEffect) }
+                    QCard(t("Has contraception affected your migraines?"), Icons.Outlined.Bolt) { QSingleChips(listOf("Worse — every time", t("Worse — sometimes"), "No change", "Actually helps"), contraceptionEffect, onContraceptionEffect) }
                 }
             }
         }
@@ -546,14 +597,14 @@ fun AiQuestionsPage7(
     sensoryProdromes: Map<String, DeterministicMapper.Certainty>, onSensoryProdromes: (Map<String, DeterministicMapper.Certainty>) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.Sensors, "Warning Signs", "Subtle changes before a migraine can help predict attacks", 7, 17)
-        QCard("Before a migraine, do you notice physical changes?", Icons.Outlined.AccessibilityNew, "Select all, set certainty") {
+        QPageHeader(Icons.Outlined.Sensors, t("Warning Signs"), t("Subtle changes before a migraine can help predict attacks"), 7, 17, brainy = R.drawable.brainy_detective)
+        QCard(t("Before a migraine, do you notice physical changes?"), Icons.Outlined.AccessibilityNew, t("Select all, set certainty"), fieldKey = "physical_prodromes") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Neck stiffness", "Neck stiffness or tension"), CertaintyItem("Yawning", "Excessive yawning"), CertaintyItem("Urination", "Frequent need to urinate"), CertaintyItem("Stuffy nose", "Stuffy or runny nose"), CertaintyItem("Watery eyes", "Watery eyes"), CertaintyItem("Muscle tension", "General muscle tension (shoulders, jaw)")), selections = physicalProdromes, onSelectionChanged = onPhysicalProdromes)
         }
-        QCard("Mood or thinking changes?", Icons.Outlined.Mood, "Select all, set certainty") {
+        QCard(t("Mood or thinking changes?"), Icons.Outlined.Mood, t("Select all, set certainty"), fieldKey = "mood_prodromes") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Concentrating", "Difficulty concentrating"), CertaintyItem("Words", "Can't find the right words"), CertaintyItem("Irritability", "Irritability or short temper"), CertaintyItem("Mood swings", "Mood swings"), CertaintyItem("Feeling low", "Feeling unusually low or sad"), CertaintyItem("Unusually happy", "Unusually happy or energetic"), CertaintyItem("Food cravings", "Intense food cravings"), CertaintyItem("Loss of appetite", "Loss of appetite")), selections = moodProdromes, onSelectionChanged = onMoodProdromes)
         }
-        QCard("Sensory changes?", Icons.Outlined.Visibility, "Select all, set certainty") {
+        QCard(t("Sensory changes?"), Icons.Outlined.Visibility, t("Select all, set certainty"), fieldKey = "sensory_prodromes") {
             CertaintyMultiSelect(items = listOf(CertaintyItem("Light", "Sensitivity to light"), CertaintyItem("Sound", "Sensitivity to sound"), CertaintyItem("Smell", "Sensitivity to smell"), CertaintyItem("Tingling", "Tingling or pins and needles"), CertaintyItem("Numbness", "Numbness")), selections = sensoryProdromes, onSelectionChanged = onSensoryProdromes)
         }
         Spacer(Modifier.height(80.dp))
@@ -579,13 +630,13 @@ fun AiQuestionsPage8(
     additionalNotes: String?, onAdditionalNotes: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        QPageHeader(Icons.Outlined.MedicalServices, "Symptoms, Medicines & More", "Select what you experience and use", 8, 8)
-        QCard("What symptoms do you experience?", Icons.Outlined.Healing, "Tap all that apply") { QPoolMultiSelect(symptomPool, selectedSymptoms, onToggleSymptom, AppTheme.AccentPink, PoolType.SYMPTOM) }
-        QCard("What medicines do you take?", Icons.Outlined.Medication, "Tap all that apply") { QPoolMultiSelect(medicinePool, selectedMedicines, onToggleMedicine, Color(0xFF4FC3F7), PoolType.MEDICINE) }
-        QCard("What helps relieve your migraines?", Icons.Outlined.Spa, "Tap all that apply") { QPoolMultiSelect(reliefPool, selectedReliefs, onToggleRelief, Color(0xFF81C784), PoolType.RELIEF) }
-        QCard("What are you usually doing when migraines hit?", Icons.Outlined.DirectionsRun, "Tap all that apply") { QPoolMultiSelect(activityPool, selectedActivities, onToggleActivity, Color(0xFFFF8A65), PoolType.ACTIVITY) }
-        QCard("What do you miss because of migraines?", Icons.Outlined.EventBusy, "Tap all that apply") { QPoolMultiSelect(missedActivityPool, selectedMissedActivities, onToggleMissed, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY) }
-        QCard("Anything else we should know?", Icons.Outlined.Mic, "Type or speak — helps AI understand you better") { QFreeText(additionalNotes ?: "", onAdditionalNotes, "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...") }
+        QPageHeader(Icons.Outlined.MedicalServices, t("Symptoms, Medicines & More"), t("Select what you experience and use"), 8, 8, brainy = R.drawable.brainy_treatments)
+        QCard(t("What symptoms do you experience?"), Icons.Outlined.Healing, t("Tap all that apply")) { QPoolMultiSelect(symptomPool, selectedSymptoms, onToggleSymptom, AppTheme.AccentPink, PoolType.SYMPTOM) }
+        QCard(t("What medicines do you take?"), Icons.Outlined.Medication, t("Tap all that apply")) { QPoolMultiSelect(medicinePool, selectedMedicines, onToggleMedicine, Color(0xFF4FC3F7), PoolType.MEDICINE) }
+        QCard(t("What helps relieve your migraines?"), Icons.Outlined.Spa, t("Tap all that apply")) { QPoolMultiSelect(reliefPool, selectedReliefs, onToggleRelief, Color(0xFF81C784), PoolType.RELIEF) }
+        QCard(t("What are you usually doing when migraines hit?"), Icons.Outlined.DirectionsRun, t("Tap all that apply")) { QPoolMultiSelect(activityPool, selectedActivities, onToggleActivity, Color(0xFFFF8A65), PoolType.ACTIVITY) }
+        QCard(t("What do you miss because of migraines?"), Icons.Outlined.EventBusy, t("Tap all that apply")) { QPoolMultiSelect(missedActivityPool, selectedMissedActivities, onToggleMissed, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY) }
+        QCard(t("Anything else we should know?"), Icons.Outlined.Mic, t("Type or speak — helps AI understand you better")) { QFreeText(additionalNotes ?: "", onAdditionalNotes, "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...") }
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -646,9 +697,9 @@ fun AiQuestionsPageStory(
                     Icon(Icons.Outlined.Chat, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                 }
                 Spacer(Modifier.height(12.dp))
-                Text("Tell us about your migraines", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+                Text(t("Tell us about your migraines"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
                 Spacer(Modifier.height(4.dp))
-                Text("Tap the mic and talk, or type below. AI will use this to pre-fill your profile.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                Text(t("Tap the mic and talk, or type below. We'll fill in what you tell us directly, then suggest what else is worth tracking based on your profile — you can adjust it all on the next pages."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
         }
 
@@ -660,15 +711,15 @@ fun AiQuestionsPageStory(
             colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.15f)),
             contentPadding = PaddingValues(0.dp)
         ) {
-            Icon(Icons.Outlined.Mic, contentDescription = "Tap to speak", tint = AppTheme.AccentPurple, modifier = Modifier.size(36.dp))
+            Icon(Icons.Outlined.Mic, contentDescription = t("Tap to speak"), tint = AppTheme.AccentPurple, modifier = Modifier.size(36.dp))
         }
-        Text("Tap to speak", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t("Tap to speak"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
 
         // Text input area
         OutlinedTextField(
             value = text,
             onValueChange = onTextChange,
-            placeholder = { Text("e.g. \"I get migraines about twice a month, usually triggered by poor sleep and stress. They last about a day. I take sumatriptan and lie in a dark room. I notice neck stiffness before they start…\"", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall) },
+            placeholder = { Text(t("e.g. \"I'm 34, female, and I've had migraines for six years — 2 to 4 a month, one-sided and throbbing, lasting 12 to 24 hours. The day before I yawn a lot and get irritable. During one I'm nauseous and light and sound are unbearable, so I lie in a dark room. My triggers are work stress, under 6 hours' sleep, and red wine. I sleep badly, drink 2 coffees a day, skip lunch when I'm busy, and I'm on screens 8 hours. They're worse around my period. I take sumatriptan at the first sign and it works within 2 hours.\""), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall) },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
@@ -678,7 +729,7 @@ fun AiQuestionsPageStory(
                 focusedContainerColor = Color.White.copy(alpha = 0.06f)
             ),
             shape = RoundedCornerShape(12.dp),
-            minLines = 5, maxLines = 10,
+            minLines = 10, maxLines = 14,
             textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White)
         )
 
@@ -687,7 +738,7 @@ fun AiQuestionsPageStory(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                 CircularProgressIndicator(Modifier.size(16.dp), Color.White, strokeWidth = 2.dp)
                 Spacer(Modifier.width(8.dp))
-                Text("Analysing…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Analysing…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
 
@@ -707,14 +758,15 @@ fun AiQuestionsPageTriggers(
     matched: Set<String> = emptySet(),
     suggested: Set<String> = emptySet(),
     onDeselectSuggested: (() -> Unit)? = null,
+    brainy: Int? = null,
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(Icons.Outlined.Whatshot, "Your Triggers", "Tap anything that triggers your migraines — we've pre-selected what we found", 8, 17)
+        QPageHeader(Icons.Outlined.Whatshot, t("Your Triggers"), t("Tap anything that triggers your migraines — we've pre-selected what we found"), 8, 17, brainy = R.drawable.brainy_trigger)
         if (selected.isNotEmpty()) {
-            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+            Text(t("%s selected", selected.size), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
         QPoolMultiSelect(triggerPool, selected, onToggle, Color(0xFFFFB74D), PoolType.TRIGGER, matched, suggested, onDeselectSuggested)
         Spacer(Modifier.height(80.dp))
@@ -736,9 +788,9 @@ fun AiQuestionsPageProdromes(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(Icons.Outlined.Sensors, "Warning Signs", "Tap any signs you notice before a migraine — we've pre-selected what we found", 9, 17)
+        QPageHeader(Icons.Outlined.Sensors, t("Warning Signs"), t("Tap any signs you notice before a migraine — we've pre-selected what we found"), 9, 17, brainy = R.drawable.brainy_risk)
         if (selected.isNotEmpty()) {
-            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+            Text(t("%s selected", selected.size), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
         QPoolMultiSelect(prodromePool, selected, onToggle, Color(0xFF9575CD), PoolType.PRODROME, matched)
         Spacer(Modifier.height(80.dp))
@@ -762,12 +814,12 @@ fun AiQuestionsPageLocations(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(Icons.Outlined.Place, "Where They Hit", "Tap places where you usually get migraines — patterns here can point to specific triggers", 12, 17)
+        QPageHeader(Icons.Outlined.Place, t("Where They Hit"), t("Tap places where you usually get migraines — patterns here can point to specific triggers"), 12, 17, brainy = R.drawable.brainy_archer)
         if (selected.isNotEmpty()) {
-            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+            Text(t("%s selected", selected.size), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
         if (locationPool.isEmpty()) {
-            Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
             QPoolMultiSelect(locationPool, selected, onToggle, Color(0xFF4FC3F7), PoolType.LOCATION, matched, suggested, onDeselectSuggested)
         }
@@ -790,12 +842,12 @@ fun AiQuestionsPagePostdromes(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(Icons.Outlined.Bedtime, "After the Attack", "Tap anything that lingers once the migraine is over — fatigue, brain fog, mood crash", 11, 17)
+        QPageHeader(Icons.Outlined.Bedtime, t("After the Attack"), t("Tap anything that lingers once the migraine is over — fatigue, brain fog, mood crash"), 11, 17, brainy = R.drawable.brainy_recover)
         if (selected.isNotEmpty()) {
-            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+            Text(t("%s selected", selected.size), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
         if (postdromePool.isEmpty()) {
-            Text("No postdrome symptoms in the pool yet — you can add your own later from Manage Items.",
+            Text(t("No postdrome symptoms in the pool yet — you can add your own later from Manage Items."),
                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
             QPoolMultiSelect(postdromePool, selected, onToggle, Color(0xFF4DB6AC), PoolType.POSTDROME, matched)
@@ -825,20 +877,21 @@ private fun AiPoolPage(
     matched: Set<String> = emptySet(),
     suggested: Set<String> = emptySet(),
     onDeselectSuggested: (() -> Unit)? = null,
+    brainy: Int? = null,
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(icon, title, subtitle, pageNum, totalPages)
+        QPageHeader(icon, title, subtitle, pageNum, totalPages, brainy)
         if (selected.isNotEmpty()) {
-            Text("${selected.size} selected", color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
+            Text(t("%s selected", selected.size), color = AppTheme.AccentPurple, style = MaterialTheme.typography.labelSmall)
         }
         if (pool.isEmpty()) {
             if (emptyMessage != null) {
                 Text(emptyMessage, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             } else {
-                Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         } else {
             QPoolMultiSelect(pool, selected, onToggle, accent, poolType, matched, suggested, onDeselectSuggested)
@@ -856,43 +909,43 @@ fun AiQuestionsPageSymptomsCore(pool: List<AiSetupService.PoolLabel>, selected: 
             .map { it.copy(category = "Accompanying Signs") }
         pain + accompanying
     }
-    AiPoolPage(Icons.Outlined.MedicalServices, "Symptoms During an Attack",
-        "Tap the migraine type you usually get under Pain Character, plus anything that tags along under Accompanying.",
+    AiPoolPage(Icons.Outlined.MedicalServices, t("Symptoms During an Attack"),
+        t("Tap the migraine type you usually get under Pain Character, plus anything that tags along under Accompanying."),
         10, 17, bucketed, selected, onToggle, AppTheme.AccentPink, PoolType.SYMPTOM,
-        emptyMessage = "No symptoms in the pool yet.",
-        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested)
+        emptyMessage = t("No symptoms in the pool yet."),
+        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested, brainy = R.drawable.brainy_physical)
 }
 
 @Composable
 fun AiQuestionsPageActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet(), suggested: Set<String> = emptySet(), onDeselectSuggested: (() -> Unit)? = null) {
-    AiPoolPage(Icons.Outlined.DirectionsRun, "What You Were Doing",
-        "Tap what you're usually doing when a migraine hits.",
+    AiPoolPage(Icons.Outlined.DirectionsRun, t("What You Were Doing"),
+        t("Tap what you're usually doing when a migraine hits."),
         15, 17, pool, selected, onToggle, Color(0xFFFF8A65), PoolType.ACTIVITY,
-        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested)
+        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested, brainy = R.drawable.brainy_gardener)
 }
 
 @Composable
 fun AiQuestionsPageMissedActivities(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet()) {
-    AiPoolPage(Icons.Outlined.EventBusy, "What You Missed",
-        "Tap anything you regularly miss because of migraines.",
+    AiPoolPage(Icons.Outlined.EventBusy, t("What You Missed"),
+        t("Tap anything you regularly miss because of migraines."),
         16, 17, pool, selected, onToggle, Color(0xFFFF7043), PoolType.MISSED_ACTIVITY,
-        matched = matched)
+        matched = matched, brainy = R.drawable.brainy_briefcase)
 }
 
 @Composable
 fun AiQuestionsPageMedicines(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet()) {
-    AiPoolPage(Icons.Outlined.Medication, "Your Medicines",
-        "Anything you take to prevent or stop a migraine.",
+    AiPoolPage(Icons.Outlined.Medication, t("Your Medicines"),
+        t("Anything you take to prevent or stop a migraine."),
         13, 17, pool, selected, onToggle, Color(0xFF4FC3F7), PoolType.MEDICINE,
-        matched = matched)
+        matched = matched, brainy = R.drawable.brainy_medicines)
 }
 
 @Composable
 fun AiQuestionsPageReliefs(pool: List<AiSetupService.PoolLabel>, selected: Set<String>, onToggle: (String) -> Unit, matched: Set<String> = emptySet(), suggested: Set<String> = emptySet(), onDeselectSuggested: (() -> Unit)? = null) {
-    AiPoolPage(Icons.Outlined.Spa, "What Brings Relief",
-        "Tap anything that helps — dark room, cold compress, sleep, caffeine.",
+    AiPoolPage(Icons.Outlined.Spa, t("What Brings Relief"),
+        t("Tap anything that helps — dark room, cold compress, sleep, caffeine."),
         14, 17, pool, selected, onToggle, Color(0xFF81C784), PoolType.RELIEF,
-        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested)
+        matched = matched, suggested = suggested, onDeselectSuggested = onDeselectSuggested, brainy = R.drawable.brainy_shield)
 }
 
 @Composable
@@ -901,8 +954,9 @@ fun AiQuestionsPageNotes(notes: String?, onNotesChange: (String) -> Unit) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QPageHeader(Icons.Outlined.Notes, "Anything Else?",
-            "Anything we should know that didn't fit elsewhere — type or speak.", 17, 17)
+        QPageHeader(Icons.Outlined.Notes, t("Anything Else?"),
+            t("Anything we should know that didn't fit elsewhere — type or speak."), 17, 17,
+            brainy = R.drawable.brainy_recs)
         AiNotesCard(notes ?: "", onNotesChange)
         Spacer(Modifier.height(80.dp))
     }
@@ -915,10 +969,10 @@ private fun AiNotesCard(value: String, onChange: (String) -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Edit, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Notes", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Notes"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
             }
             Spacer(Modifier.height(4.dp))
-            Text("Optional", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Optional"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(12.dp))
             QFreeText(value, onChange,
                 "e.g. chocolate is really bad, I work night shifts, migraines always come after flying...")
@@ -940,22 +994,22 @@ fun AiProcessingPage(isLoading: Boolean, error: String?, onRetry: () -> Unit) {
         }
         Spacer(Modifier.height(24.dp))
         if (isLoading) {
-            Text("Personalising your app...", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+            Text(t("Personalising your app..."), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
             Spacer(Modifier.height(8.dp))
-            Text("MigraineMe is analysing your migraine profile to configure everything.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+            Text(t("MigraineMe is analysing your migraine profile to configure everything."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
             Spacer(Modifier.height(32.dp))
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth(0.6f).height(4.dp).clip(RoundedCornerShape(2.dp)), color = AppTheme.AccentPink, trackColor = AppTheme.TrackColor)
             Spacer(Modifier.height(12.dp))
-            Text("This takes about 5 seconds", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
+            Text(t("This takes about 5 seconds"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
         }
         if (error != null) {
-            Text("Something went wrong", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+            Text(t("Something went wrong"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
             Spacer(Modifier.height(8.dp))
             Text(error, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             Spacer(Modifier.height(24.dp))
-            Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(12.dp)) { Text("Try Again") }
+            Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple), shape = RoundedCornerShape(12.dp)) { Text(t("Try Again")) }
             Spacer(Modifier.height(8.dp))
-            Text("Or press Next to skip AI setup", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
+            Text(t("Or press Next to skip AI setup"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
         }
     }
 }

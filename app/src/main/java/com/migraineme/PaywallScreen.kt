@@ -110,12 +110,12 @@ fun PaywallScreen(
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    "You're Premium!",
+                    t("You're Premium!"),
                     color = Color.White,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
-                    "All features are unlocked.",
+                    t("All features are unlocked."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -140,7 +140,7 @@ fun PaywallScreen(
                 IconButton(onClick = { if (onDismiss != null) onDismiss() else navController.popBackStack() }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        "Back",
+                        t("Back"),
                         tint = Color.White
                     )
                 }
@@ -207,7 +207,7 @@ fun PaywallScreen(
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            "PREMIUM",
+                            t("PREMIUM"),
                             color = AppTheme.AccentPurple,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
@@ -217,14 +217,14 @@ fun PaywallScreen(
                     }
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "Your data is ready to talk",
+                        t("Your data is ready to talk"),
                         color = Color.White,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Unlock the patterns hidden in your migraine history",
+                        t("Unlock the patterns hidden in your migraine history"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
@@ -282,7 +282,7 @@ fun PaywallScreen(
                                 Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            if (pkg.isAnnual) "Annual" else "Monthly",
+                                            if (pkg.isAnnual) t("Annual") else t("Monthly"),
                                             color = Color.White,
                                             style = MaterialTheme.typography.titleMedium.copy(
                                                 fontWeight = FontWeight.SemiBold
@@ -291,7 +291,7 @@ fun PaywallScreen(
                                         if (pkg.isAnnual) {
                                             Spacer(Modifier.width(8.dp))
                                             Text(
-                                                "BEST VALUE",
+                                                t("BEST VALUE"),
                                                 color = AppTheme.AccentPurple,
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontWeight = FontWeight.Bold
@@ -307,7 +307,7 @@ fun PaywallScreen(
                                     }
                                     if (pkg.pricePerMonth != null) {
                                         Text(
-                                            "Just ${pkg.pricePerMonth}/month",
+                                            t("Just %s/month", pkg.pricePerMonth),
                                             color = AppTheme.SubtleTextColor,
                                             style = MaterialTheme.typography.bodySmall
                                         )
@@ -360,7 +360,7 @@ fun PaywallScreen(
                             )
                         } else {
                             Text(
-                                "Subscribe Now",
+                                t("Subscribe Now"),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -382,7 +382,7 @@ fun PaywallScreen(
             // Last card on the page, so it carries the watermark (see MaybeWatermarkCard).
             BrainyWatermarkCard(resId = R.drawable.brainy_recs, flipWatermark = true) {
                 Text(
-                    "What you get",
+                    t("What you get"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -407,12 +407,12 @@ fun PaywallScreen(
                         Spacer(Modifier.width(10.dp))
                         Column {
                             Text(
-                                feat.title,
+                                t(feat.title),
                                 color = Color.White,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                             )
                             Text(
-                                feat.subtitle,
+                                t(feat.subtitle),
                                 color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -424,7 +424,7 @@ fun PaywallScreen(
             // ── Promo Code ──
             TextButton(onClick = { promoExpanded = !promoExpanded }) {
                 Text(
-                    if (promoExpanded) "Hide promo code" else "Have a promo code?",
+                    if (promoExpanded) t("Hide promo code") else t("Have a promo code?"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -439,7 +439,7 @@ fun PaywallScreen(
                     OutlinedTextField(
                         value = promoCode,
                         onValueChange = { promoCode = it.uppercase().take(30); promoSuccess = null; error = null },
-                        placeholder = { Text("Enter code", color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
+                        placeholder = { Text(t("Enter code"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -484,7 +484,7 @@ fun PaywallScreen(
                         if (promoLoading) {
                             CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                         } else {
-                            Text("Apply", fontWeight = FontWeight.SemiBold)
+                            Text(t("Apply"), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -511,7 +511,7 @@ fun PaywallScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Restore Purchases",
+                    t("Restore Purchases"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -519,7 +519,7 @@ fun PaywallScreen(
 
             // Subscription terms (clear auto-renewal disclosure)
             Text(
-                "Subscription auto-renews at the price shown until cancelled. Cancel anytime in Play Store settings.",
+                t("Subscription auto-renews at the price shown until cancelled. Cancel anytime in Play Store settings."),
                 color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
@@ -531,7 +531,7 @@ fun PaywallScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    "Terms of Service",
+                    t("Terms of Service"),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall.copy(
                         textDecoration = TextDecoration.Underline
@@ -546,7 +546,7 @@ fun PaywallScreen(
                     style = MaterialTheme.typography.labelSmall
                 )
                 Text(
-                    "Privacy Policy",
+                    t("Privacy Policy"),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall.copy(
                         textDecoration = TextDecoration.Underline
@@ -563,7 +563,7 @@ fun PaywallScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        "Not now",
+                        t("Not now"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )

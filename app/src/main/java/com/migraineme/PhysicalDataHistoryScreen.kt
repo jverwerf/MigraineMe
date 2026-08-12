@@ -106,13 +106,13 @@ fun PhysicalDataHistoryScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { selectedDateStr = selectedDate.minusDays(1).toString() }) {
-                    Icon(Icons.Default.ChevronLeft, contentDescription = "Previous day", tint = AppTheme.AccentPurple)
+                    Icon(Icons.Default.ChevronLeft, contentDescription = t("Previous day"), tint = AppTheme.AccentPurple)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         when {
-                            selectedDate == today -> "Today"
-                            selectedDate == today.minusDays(1) -> "Yesterday"
+                            selectedDate == today -> t("Today")
+                            selectedDate == today.minusDays(1) -> t("Yesterday")
                             else -> selectedDate.format(dateFormatter)
                         },
                         color = AppTheme.TitleColor,
@@ -125,7 +125,7 @@ fun PhysicalDataHistoryScreen(
                 ) {
                     Icon(
                         Icons.Default.ChevronRight,
-                        contentDescription = "Next day",
+                        contentDescription = t("Next day"),
                         tint = if (selectedDate < today) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                     )
                 }
@@ -143,7 +143,7 @@ fun PhysicalDataHistoryScreen(
                 }
             } else if (entries.isEmpty()) {
                 Text(
-                    "No physical health data for this day",
+                    t("No physical health data for this day"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
@@ -188,7 +188,7 @@ fun PhysicalDataHistoryScreen(
                         val label = PhysicalCardConfig.labelFor(metric)
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -196,7 +196,7 @@ fun PhysicalDataHistoryScreen(
                 Spacer(Modifier.height(4.dp))
                 HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                 Spacer(Modifier.height(8.dp))
-                Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
 
                 // All metrics — flat list, no source grouping
@@ -220,7 +220,7 @@ fun PhysicalDataHistoryScreen(
                     Spacer(Modifier.height(4.dp))
                     HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                     Spacer(Modifier.height(8.dp))
-                    Text("Activities", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
                     Row(
                         modifier = Modifier
@@ -234,12 +234,12 @@ fun PhysicalDataHistoryScreen(
                             Text("💪", style = MaterialTheme.typography.bodyMedium)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "$activityCount ${if (activityCount == 1) "activity" else "activities"}",
+                                if (activityCount == 1) t("1 activity") else t("%s activities", activityCount),
                                 color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                        Text("View →", color = Color(0xFFFF7043), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+                        Text(t("View →"), color = Color(0xFFFF7043), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                     }
                 }
             }
@@ -256,7 +256,7 @@ private fun PhysicalDataRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(entry.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(t(entry.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             Text(entry.value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
         }
     }

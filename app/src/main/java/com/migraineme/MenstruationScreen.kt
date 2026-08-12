@@ -239,10 +239,10 @@ fun MenstruationScreen() {
     if (showLogPeriodDialog) {
         AlertDialog(
             onDismissRequest = { showLogPeriodDialog = false },
-            title = { Text("Log Period") },
+            title = { Text(t("Log Period")) },
             text = {
                 Column {
-                    Text("When did your period start?")
+                    Text(t("When did your period start?"))
                     Spacer(Modifier.height(16.dp))
                     MenstruationDatePicker(
                         isoDate = logPeriodDate,
@@ -257,7 +257,7 @@ fun MenstruationScreen() {
                     onClick = { logPeriod(logPeriodDate) },
                     enabled = !loggingPeriod
                 ) {
-                    Text(if (loggingPeriod) "Logging..." else "Log Period")
+                    Text(if (loggingPeriod) t("Logging...") else t("Log Period"))
                 }
             },
             dismissButton = {
@@ -265,7 +265,7 @@ fun MenstruationScreen() {
                     onClick = { showLogPeriodDialog = false },
                     enabled = !loggingPeriod
                 ) {
-                    Text("Cancel")
+                    Text(t("Cancel"))
                 }
             }
         )
@@ -276,7 +276,7 @@ fun MenstruationScreen() {
             // Main card
             HeroCard {
                 Text(
-                    "Menstruation Tracking",
+                    t("Menstruation Tracking"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
@@ -301,12 +301,12 @@ fun MenstruationScreen() {
                 } else if (!menstruationEnabled || settings?.lastMenstruationDate == null) {
                     // First time setup
                     Text(
-                        "Set up cycle tracking",
+                        t("Set up cycle tracking"),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "Track your menstrual cycle to identify migraine patterns.",
+                        t("Track your menstrual cycle to identify migraine patterns."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -348,7 +348,7 @@ fun MenstruationScreen() {
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            if (showEditForm) "Hide Settings" else "Configure Settings",
+                            if (showEditForm) t("Hide Settings") else t("Configure Settings"),
                             color = Color.White
                         )
                     }
@@ -402,19 +402,19 @@ private fun CurrentValuesSection(
     ) {
         // Last Period
         DataRow(
-            label = "Last Period",
+            label = t("Last Period"),
             value = settings.lastMenstruationDate?.toString() ?: "Not set"
         )
 
         // Average Cycle
         DataRow(
-            label = "Average Cycle",
+            label = t("Average Cycle"),
             value = "${settings.avgCycleLength} days"
         )
 
         // Auto-update
         DataRow(
-            label = "Auto-update",
+            label = t("Auto-update"),
             value = if (settings.autoUpdateAverage) "On" else "Off"
         )
 
@@ -429,7 +429,7 @@ private fun CurrentValuesSection(
             Spacer(Modifier.height(12.dp))
 
             DataRow(
-                label = "Next Expected",
+                label = t("Next Expected"),
                 value = nextExpected.toString()
             )
 
@@ -440,10 +440,10 @@ private fun CurrentValuesSection(
             ) {
                 Text(
                     text = when {
-                        daysUntil < 0 -> "${-daysUntil} days ago"
-                        daysUntil == 0L -> "Today"
-                        daysUntil == 1L -> "Tomorrow"
-                        else -> "In $daysUntil days"
+                        daysUntil < 0 -> t("%s days ago", -daysUntil)
+                        daysUntil == 0L -> t("Today")
+                        daysUntil == 1L -> t("Tomorrow")
+                        else -> t("In %s days", daysUntil)
                     },
                     color = when {
                         daysUntil in -2..2 -> Color(0xFFFF6B6B) // Red when close
@@ -462,7 +462,7 @@ private fun CurrentValuesSection(
                             containerColor = Color(0xFFE57373)
                         )
                     ) {
-                        Text("Log Period", style = MaterialTheme.typography.bodySmall)
+                        Text(t("Log Period"), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -482,7 +482,7 @@ private fun CurrentValuesSection(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Log Period", color = Color.White)
+                Text(t("Log Period"), color = Color.White)
             }
         }
     }
@@ -508,7 +508,7 @@ private fun EditFormContent(
             Spacer(Modifier.height(20.dp))
 
             Text(
-                "Edit Settings",
+                t("Edit Settings"),
                 color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
@@ -518,7 +518,7 @@ private fun EditFormContent(
 
         // Last period date picker
         Text(
-            "Last Period Date",
+            t("Last Period Date"),
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.labelLarge
         )
@@ -539,7 +539,7 @@ private fun EditFormContent(
                     onClick = { onLastDateChange("") },
                     enabled = !saving
                 ) {
-                    Text("Clear", color = AppTheme.BodyTextColor)
+                    Text(t("Clear"), color = AppTheme.BodyTextColor)
                 }
             }
         }
@@ -548,7 +548,7 @@ private fun EditFormContent(
 
         // Average cycle length
         Text(
-            "Average Cycle Length (days)",
+            t("Average Cycle Length (days)"),
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.labelLarge
         )
@@ -572,7 +572,7 @@ private fun EditFormContent(
             )
         )
         Text(
-            "Typical range: 21–35 days",
+            t("Typical range: 21–35 days"),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall
         )
@@ -587,12 +587,12 @@ private fun EditFormContent(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Auto-update Average",
+                    t("Auto-update Average"),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Text(
-                    "Recalculate from logged periods",
+                    t("Recalculate from logged periods"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -622,7 +622,7 @@ private fun EditFormContent(
                     enabled = !saving,
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Cancel", color = Color.White)
+                    Text(t("Cancel"), color = Color.White)
                 }
 
                 Button(
@@ -634,7 +634,7 @@ private fun EditFormContent(
                         containerColor = AppTheme.AccentPurple
                     )
                 ) {
-                    Text(if (saving) "Saving..." else saveButtonText)
+                    Text(if (saving) t("Saving...") else saveButtonText)
                 }
             }
         } else {
@@ -648,7 +648,7 @@ private fun EditFormContent(
                     containerColor = AppTheme.AccentPurple
                 )
             ) {
-                Text(if (saving) "Saving..." else saveButtonText)
+                Text(if (saving) t("Saving...") else saveButtonText)
             }
         }
     }
@@ -664,8 +664,7 @@ private fun DataRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            label,
+        Text(t(label),
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.bodyMedium
         )

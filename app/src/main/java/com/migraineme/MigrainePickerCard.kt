@@ -85,14 +85,14 @@ fun MigrainePickerCard(
     val suggestedIds = remember(suggested) { suggested.map { it.id }.toSet() }
 
     BaseCard {
-        Text("Link to migraine", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+        Text(t("Link to migraine"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
 
         if (loading) {
             Box(Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             }
         } else if (suggested.isEmpty() && !expanded) {
-            Text("No nearby migraines found", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t("No nearby migraines found"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
             suggested.forEach { m ->
                 PickerMigraineRow(m, selectedMigraineId == m.id, today) {
@@ -108,7 +108,7 @@ fun MigrainePickerCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Browse all", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("Browse all"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
             Icon(
                 if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp)
@@ -123,7 +123,7 @@ fun MigrainePickerCard(
             } else {
                 val extra = allRecent.filter { it.id !in suggestedIds }
                 if (extra.isEmpty()) {
-                    Text("No other migraines in the last 30 days", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No other migraines in the last 30 days"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 } else {
                     extra.forEach { m ->
                         PickerMigraineRow(m, selectedMigraineId == m.id, today) {

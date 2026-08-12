@@ -30,7 +30,7 @@ android {
         applicationId = if (project.hasProperty("newPackage")) "app.migraineme" else "com.migraineme"
         minSdk = 26
         targetSdk = 36
-        versionCode = 57
+        versionCode = 58
         versionName = "5.0.9"
 
         // ── All keys loaded from local.properties ──

@@ -68,13 +68,13 @@ fun NotesScreen(
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { syncDraft(); navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Reliefs", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Reliefs"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -85,9 +85,9 @@ fun NotesScreen(
                         .size(40.dp)
                         .drawBehind { HubIcons.run { drawNotesIcon(AppTheme.AccentPink) } }
                 )
-                Text("Notes", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Notes"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    "Add any additional notes about this migraine",
+                    t("Add any additional notes about this migraine"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -105,13 +105,13 @@ fun NotesScreen(
                             .drawBehind { HubIcons.run { drawNotesIcon(AppTheme.AccentPurple) } }
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Your notes", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Your notes"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { v -> notes = v; syncDraft() },
-                    placeholder = { Text("What were you doing? How did it feel? Any patterns you noticed…", color = AppTheme.SubtleTextColor) },
+                    placeholder = { Text(t("What were you doing? How did it feel? Any patterns you noticed…"), color = AppTheme.SubtleTextColor) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
@@ -128,11 +128,11 @@ fun NotesScreen(
                     onClick = { syncDraft(); navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
                 Button(
                     onClick = { syncDraft(); navController.navigate(Routes.REVIEW) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))

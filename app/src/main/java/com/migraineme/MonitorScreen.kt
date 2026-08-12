@@ -197,7 +197,7 @@ fun MonitorScreen(
                 val unit = MetricRegistry.unit(registryKey)
                 val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure", "histamine_exposure")
                 if (isRisk) {
-                    when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" }
+                    tSync(when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" })
                 } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
             }
             else -> "-"
@@ -346,19 +346,19 @@ fun MonitorScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Tune,
-                        contentDescription = "Configure",
+                        contentDescription = t("Configure"),
                         tint = AppTheme.AccentPurple,
                         modifier = Modifier.size(28.dp)
                     )
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Configure Monitor",
+                            t("Configure Monitor"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
-                            "Show, hide, and reorder cards",
+                            t("Show, hide, and reorder cards"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -475,15 +475,15 @@ private fun NutritionCard(
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_diet,
         brainySmallRes = R.drawable.brainy_diet_small,
-        title = "Diet",
+        title = t("Diet"),
         // chef art already faces left, so the blob flips and the watermark doesn't
         flipBlob = true,
         flipWatermark = false,
-        infoBody = "Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten and histamine. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods.",
+        infoBody = t("Today's nutrition totals + the three metrics you've pinned. We track classic migraine-relevant ones: caffeine, sodium, sugar, tyramine, alcohol, gluten and histamine. Both excess AND deficiency matter — skipping your usual coffee triggers attacks as often as too much.\n\nAutomatic classification depends on what your nutrition app sends to Health Connect. Not all apps forward per-food data — some send only daily nutrient totals, which we can use for numbers but not classify by name. The barcode scanner and USDA search on the detail page always classify correctly, so those are the most reliable way to log known trigger foods."),
         onClick = onClick
     ) {
         if (nutritionLoading) {
-            Text("Loading...", color = AppTheme.SubtleTextColor)
+            Text(t("Loading..."), color = AppTheme.SubtleTextColor)
         } else {
             val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
             Row(
@@ -504,7 +504,7 @@ private fun NutritionCard(
 
             val mealTypes = nutritionItems.mapNotNull { it.mealType?.takeIf { m -> m.isNotBlank() && m != "unknown" } }.toSet()
             Text(
-                "${mealTypes.size} meals • ${nutritionItems.size} items today",
+                t("%1\$s meals • %2\$s items today", mealTypes.size, nutritionItems.size),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -522,14 +522,14 @@ private fun EnvironmentCard(
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_environment,
         brainySmallRes = R.drawable.brainy_environment_small,
-        title = "Environment",
-        infoBody = "Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief.",
+        title = t("Environment"),
+        infoBody = t("Barometric pressure, humidity and temperature. Falling pressure (the day before a storm) is one of the best-studied weather triggers — many migraineurs reliably attack 12-24h before a front passes. Hot, humid days and sudden temperature swings also matter.\n\nUse this card to plan: if you see a sharp pressure drop forecast, treat it like any other high-risk window — sleep well, stay hydrated, and consider pre-emptive relief."),
         onClick = onClick
     ) {
         if (weatherLoading) {
-            Text("Loading...", color = AppTheme.SubtleTextColor)
+            Text(t("Loading..."), color = AppTheme.SubtleTextColor)
         } else if (weatherSummary == null) {
-            Text("No weather data", color = AppTheme.SubtleTextColor)
+            Text(t("No weather data"), color = AppTheme.SubtleTextColor)
         } else {
             val weather = weatherSummary
             // Observe units so the card recomposes when the preference flips.
@@ -556,7 +556,7 @@ private fun EnvironmentCard(
                 ) {
                     val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
                     displayMetrics.take(3).forEachIndexed { index, metric ->
-                        val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                        val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
                         val value = getWeatherMetricValue(weather, metric)
                         val unit = weatherDisplayUnit(metric)
                         // fixed-width block: labels share a left edge, values share a right edge
@@ -565,7 +565,7 @@ private fun EnvironmentCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.Bottom
                         ) {
-                            Text(label, color = AppTheme.SubtleTextColor,
+                            Text(t(label), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall, maxLines = 1)
                             Text("$value$unit",
                                 color = slotColors.getOrElse(index) { slotColors.last() },
@@ -614,19 +614,19 @@ private fun PhysicalHealthCard(
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_physical,
         brainySmallRes = R.drawable.brainy_physical_small,
-        title = "Physical Health",
-        infoBody = "Resting heart rate, HRV, steps and activity. Low HRV and elevated resting HR often precede a migraine by 12-48 hours — your autonomic nervous system shifts before the attack starts. Sudden bursts of intense exercise can also trigger.\n\nUseful as an early-warning signal: if HRV drops well below your baseline, treat that day as higher-risk even if you feel fine.",
+        title = t("Physical Health"),
+        infoBody = t("Resting heart rate, HRV, steps and activity. Low HRV and elevated resting HR often precede a migraine by 12-48 hours — your autonomic nervous system shifts before the attack starts. Sudden bursts of intense exercise can also trigger.\n\nUseful as an early-warning signal: if HRV drops well below your baseline, treat that day as higher-risk even if you feel fine."),
         onClick = onClick
     ) {
         if (physicalLoading) {
-            Text("Loading...", color = AppTheme.SubtleTextColor)
+            Text(t("Loading..."), color = AppTheme.SubtleTextColor)
         } else if (physicalSummary == null) {
             Text(
-                if (hasHealthSource) "No recent data" else "No physical health data",
+                if (hasHealthSource) t("No recent data") else t("No physical health data"),
                 color = AppTheme.SubtleTextColor
             )
             if (!hasHealthSource) {
-                Text("Connect a wearable to see data", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                Text(t("Connect a wearable to see data"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
             }
         } else {
             val physical = physicalSummary
@@ -670,19 +670,19 @@ private fun SleepCard(
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_sleep,
         brainySmallRes = R.drawable.brainy_sleep_small,
-        title = "Sleep",
-        infoBody = "Total hours, quality and timing. Sleep is one of the top three migraine triggers — and BOTH too little AND too much can set one off. Irregular schedules (weekend lie-ins, jet-lag, shift work) are especially bad: it's the change vs your baseline that matters.\n\nUse this card to spot patterns: aim for a consistent window every night, not just \"7 hours on average\".",
+        title = t("Sleep"),
+        infoBody = t("Total hours, quality and timing. Sleep is one of the top three migraine triggers — and BOTH too little AND too much can set one off. Irregular schedules (weekend lie-ins, jet-lag, shift work) are especially bad: it's the change vs your baseline that matters.\n\nUse this card to spot patterns: aim for a consistent window every night, not just \"7 hours on average\"."),
         onClick = onClick
     ) {
         if (sleepLoading) {
-            Text("Loading...", color = AppTheme.SubtleTextColor)
+            Text(t("Loading..."), color = AppTheme.SubtleTextColor)
         } else if (sleepSummary == null) {
             Text(
-                if (hasHealthSource) "No recent sleep data" else "No sleep data",
+                if (hasHealthSource) t("No recent sleep data") else t("No sleep data"),
                 color = AppTheme.SubtleTextColor
             )
             if (!hasHealthSource) {
-                Text("Enable phone sleep or connect a wearable", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                Text(t("Enable phone sleep or connect a wearable"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
             }
         } else {
             val sleep = sleepSummary
@@ -715,15 +715,15 @@ private fun MentalHealthCard(
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_cognitive,
         brainySmallRes = R.drawable.brainy_cognitive_small,
-        title = "Cognitive",
-        infoBody = "Stress score, mood, screen time. \"Let-down\" migraines are real, relaxing after high stress (weekend, after a deadline, on holiday) triggers an attack in many people. Sustained high stress is also a top trigger.\n\nUse this card to spot let-down patterns: if you see migraines clustered on Fridays / Saturdays, that's often the signal.\n\nNoise: sampled from your phone mic. Shown as Quiet, Moderate, Loud, or Very loud so you can read it at a glance. The underlying score is kept for correlations and trigger detection.",
+        title = t("Cognitive"),
+        infoBody = t("Stress score, mood, screen time. \"Let-down\" migraines are real, relaxing after high stress (weekend, after a deadline, on holiday) triggers an attack in many people. Sustained high stress is also a top trigger.\n\nUse this card to spot let-down patterns: if you see migraines clustered on Fridays / Saturdays, that's often the signal.\n\nNoise: sampled from your phone mic. Shown as Quiet, Moderate, Loud, or Very loud so you can read it at a glance. The underlying score is kept for correlations and trigger detection."),
         onClick = onClick
     ) {
         if (mentalLoading) {
-            Text("Loading...", color = AppTheme.SubtleTextColor)
+            Text(t("Loading..."), color = AppTheme.SubtleTextColor)
         } else if (mentalSummary == null) {
-            Text("No cognitive data", color = AppTheme.SubtleTextColor)
-            Text("Enable metrics in Data Settings", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            Text(t("No cognitive data"), color = AppTheme.SubtleTextColor)
+            Text(t("Enable metrics in Data Settings"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
         } else {
             val mental = mentalSummary
             val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
@@ -737,7 +737,8 @@ private fun MentalHealthCard(
                     // Noise rows use band color (Quiet/Moderate/Loud/Very loud) instead of slot palette.
                     val color = if (metric.startsWith("noise")) noiseSlotColor(value)
                                 else slotColors.getOrElse(index) { slotColors.last() }
-                    MetricTile(value, label, color, Modifier.weight(1f))
+                    // Colour is keyed on the RAW band label; only the shown text is translated.
+                    MetricTile(if (metric.startsWith("noise")) t(value) else value, label, color, Modifier.weight(1f))
                 }
             }
         }
@@ -763,15 +764,15 @@ private fun MenstruationCard(
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_menstruation,
         brainySmallRes = R.drawable.brainy_menstruation_small,
-        title = "Menstruation",
-        infoBody = "Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment.",
+        title = t("Menstruation"),
+        infoBody = t("Cycle phase and predicted period. Up to 60% of women with migraine report cycle-linked attacks — most commonly in the 2 days before and the first 3 days of bleeding, when oestrogen falls sharply.\n\nLog your last period to get predictions. If you see clustering around that window, you and your clinician can plan pre-emptive treatment."),
         onClick = onClick
     ) {
         if (menstruationLoading) {
-            Text("Loading...", color = AppTheme.SubtleTextColor)
+            Text(t("Loading..."), color = AppTheme.SubtleTextColor)
         } else if (menstruationSettings == null || menstruationSettings.lastMenstruationDate == null) {
-            Text("Not configured", color = AppTheme.SubtleTextColor)
-            Text("Tap to set up cycle tracking", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            Text(t("Not configured"), color = AppTheme.SubtleTextColor)
+            Text(t("Tap to set up cycle tracking"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
         } else {
             val settings = menstruationSettings
             val lastDate = settings.lastMenstruationDate!!
@@ -800,7 +801,7 @@ private fun MenstruationCard(
                 MetricTile("${settings.avgCycleLength}d", "Avg cycle", Color(0xFF4FC3F7), Modifier.weight(1f))
             }
             Text(
-                "Last period: ${lastDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))}",
+                t("Last period: %s", lastDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale()))),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -886,7 +887,7 @@ internal fun MetricTile(value: String, label: String, valueColor: Color, modifie
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(value, color = valueColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), maxLines = 1)
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 1)
     }
 }
 
@@ -945,7 +946,7 @@ private fun MonitorCategoryCard(
             ) {
                 Icon(
                     Icons.Outlined.Info,
-                    contentDescription = "About $title",
+                    contentDescription = t("About %s", title),
                     tint = AppTheme.SubtleTextColor,
                     modifier = Modifier.size(20.dp)
                 )
@@ -957,14 +958,14 @@ private fun MonitorCategoryCard(
             onDismissRequest = { showInfo = false },
             confirmButton = {
                 TextButton(onClick = { showInfo = false }) {
-                    Text("Got it", color = AppTheme.AccentPurple)
+                    Text(t("Got it"), color = AppTheme.AccentPurple)
                 }
             },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(brainySmallRes), contentDescription = null, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("About $title", color = AppTheme.TitleColor,
+                    Text(t("About %s", title), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
             },
@@ -1670,14 +1671,14 @@ private fun RiskCard(
     MonitorCategoryCard(
         brainyRes = R.drawable.brainy_risk,
         brainySmallRes = R.drawable.brainy_risk_small,
-        title = "Risk",
-        infoBody = "Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief.",
+        title = t("Risk"),
+        infoBody = t("Your migraine likelihood as a single score. We sum your last 7 days of logged triggers and prodromes, weighting recent days more heavily than older ones (today counts most). Each item's weight comes from how severe you marked it in your settings; menstruation_predicted uses a symmetric window around your predicted period date.\n\nThe card shows: the score, your zone (LOW / MILD / HIGH — thresholds are personalised), today's trigger count, and the three favourite metrics you've pinned. Tap to see the contributing triggers in order and a 14-day score history (premium).\n\nUse it as a daily check: amber/red means today is the day to avoid stacking new triggers and consider pre-emptive relief."),
         onClick = onClick
     ) {
         if (isLoading) {
-            Text("Loading...", color = AppTheme.SubtleTextColor)
+            Text(t("Loading..."), color = AppTheme.SubtleTextColor)
         } else if (riskLive == null) {
-            Text("No risk data yet", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t("No risk data yet"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         } else {
             // Risk's own data: score + zone fuse into one zone-tinted hero tile
             val zoneColor = when (riskLive.zone.uppercase()) {

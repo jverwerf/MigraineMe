@@ -63,7 +63,7 @@ fun RecalibrationReviewScreen(
                             color = AppTheme.AccentPurple
                         )
                         Spacer(Modifier.width(12.dp))
-                        Text("Analysing your data...", color = AppTheme.BodyTextColor)
+                        Text(t("Analysing your data..."), color = AppTheme.BodyTextColor)
                     }
                 }
                 return@ScrollableScreenContent
@@ -72,7 +72,7 @@ fun RecalibrationReviewScreen(
             // ── Error ──
             if (state.error != null) {
                 BaseCard {
-                    Text("Something went wrong", color = AppTheme.AccentPink, fontWeight = FontWeight.SemiBold)
+                    Text(t("Something went wrong"), color = AppTheme.AccentPink, fontWeight = FontWeight.SemiBold)
                     Text(state.error ?: "", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                 }
                 return@ScrollableScreenContent
@@ -83,9 +83,9 @@ fun RecalibrationReviewScreen(
                 BaseCard {
                     Icon(Icons.Outlined.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(40.dp))
                     Spacer(Modifier.height(8.dp))
-                    Text("Recalibration applied!", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(t("Recalibration applied!"), color = Color.White, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Your trigger settings, gauge thresholds, and favorites have been updated.",
+                        t("Your trigger settings, gauge thresholds, and favorites have been updated."),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -95,7 +95,7 @@ fun RecalibrationReviewScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("Back to Home")
+                        Text(t("Back to Home"))
                     }
                 }
                 return@ScrollableScreenContent
@@ -104,10 +104,10 @@ fun RecalibrationReviewScreen(
             // ── No proposals ──
             if (state.proposals.isEmpty()) {
                 BaseCard {
-                    Text("No learning this month", color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)
+                    Text(t("No learning this month"), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "We don't have enough data yet to suggest changes. Keep logging your migraines, triggers, and symptoms — once we spot patterns, we'll have personalised suggestions for you here.",
+                        t("We don't have enough data yet to suggest changes. Keep logging your migraines, triggers, and symptoms — once we spot patterns, we'll have personalised suggestions for you here."),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -117,7 +117,7 @@ fun RecalibrationReviewScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("Got it")
+                        Text(t("Got it"))
                     }
                 }
                 return@ScrollableScreenContent
@@ -126,13 +126,13 @@ fun RecalibrationReviewScreen(
             // ── Intro card — pinned to top ──
             BaseCard {
                 Text(
-                    "Your monthly recalibration",
+                    t("Your monthly recalibration"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "We've reviewed your recent migraines and logs and prepared the suggestions below. Use the buttons to accept or reject everything in one tap, or scroll down and pick the ones you want yourself.",
+                    t("We've reviewed your recent migraines and logs and prepared the suggestions below. Use the buttons to accept or reject everything in one tap, or scroll down and pick the ones you want yourself."),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -150,14 +150,14 @@ fun RecalibrationReviewScreen(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                 ) {
-                    Text("Accept all", color = Color.White)
+                    Text(t("Accept all"), color = Color.White)
                 }
                 OutlinedButton(
                     onClick = { vm.rejectAll() },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                 ) {
-                    Text("Reject all", color = Color.White)
+                    Text(t("Reject all"), color = Color.White)
                 }
             }
 
@@ -165,7 +165,7 @@ fun RecalibrationReviewScreen(
             if (state.clinicalAssessment.isNotBlank()) {
                 BaseCard {
                     Text(
-                        "What we found",
+                        t("What we found"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
@@ -182,7 +182,7 @@ fun RecalibrationReviewScreen(
             if (state.calibrationNotes.isNotBlank()) {
                 BaseCard {
                     Text(
-                        "Gauge performance",
+                        t("Gauge performance"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
@@ -225,7 +225,7 @@ fun RecalibrationReviewScreen(
                     if (type != "data_warning") {
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            "Keep checked to accept, untap to reject.",
+                            t("Keep checked to accept, untap to reject."),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall,
                         )
@@ -273,10 +273,10 @@ fun RecalibrationReviewScreen(
                         color = Color.White,
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Applying...")
+                    Text(t("Applying..."))
                 } else {
-                    Text("Apply $acceptedCount change${if (acceptedCount != 1) "s" else ""}" +
-                            if (rejectedCount > 0) " ($rejectedCount rejected)" else "")
+                    Text((if (acceptedCount == 1) t("Apply 1 change") else t("Apply %s changes", acceptedCount)) +
+                            if (rejectedCount > 0) t(" (%s rejected)", rejectedCount) else "")
                 }
             }
 
@@ -319,8 +319,7 @@ private fun ProposalRow(
         Column(modifier = Modifier.weight(1f)) {
             // Label + change
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    proposal.label,
+                Text(t(proposal.label),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     maxLines = 1,
@@ -332,7 +331,7 @@ private fun ProposalRow(
                     proposal.type !in listOf("data_warning", "clinical_assessment", "gauge_decay", "menstruation_decay")) {
                     Spacer(Modifier.width(8.dp))
                     if (proposal.type == "gauge_threshold") {
-                        Text("Was ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Was "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         Text(proposal.fromValue, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                         Text(" → ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         Text(proposal.toValue, color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
@@ -361,13 +360,13 @@ private fun ProposalRow(
             // Favorite indicator
             if (proposal.shouldFavorite && proposal.toValue == "favorite") {
                 Text(
-                    "★ Add to favorites",
+                    t("★ Add to favorites"),
                     color = Color(0xFFFFD54F),
                     style = MaterialTheme.typography.bodySmall,
                 )
             } else if (!proposal.shouldFavorite && proposal.fromValue == "favorite") {
                 Text(
-                    "Remove from favorites",
+                    t("Remove from favorites"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -393,7 +392,7 @@ private fun ProposalRow(
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
-                    if (expanded) "Show less" else "Read full assessment",
+                    if (expanded) t("Show less") else t("Read full assessment"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier
@@ -442,7 +441,7 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
                     "LOW" -> Color(0xFF81C784)
                     else -> AppTheme.SubtleTextColor
                 }
-                Text(p.label.uppercase(), color = zoneColor,
+                Text(t(p.label).uppercase(), color = zoneColor,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.width(56.dp), textAlign = TextAlign.Center)
             }
@@ -450,7 +449,7 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
 
         // Was row
         Row {
-            Text("Was", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+            Text(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.width(36.dp))
             for (p in sorted) {
                 Text(p.fromValue ?: "–", color = AppTheme.SubtleTextColor,
@@ -461,7 +460,7 @@ private fun GaugeThresholdTable(proposals: List<RecalibrationViewModel.Proposal>
 
         // New row
         Row {
-            Text("New", color = Color(0xFF81C784),
+            Text(t("New"), color = Color(0xFF81C784),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.width(36.dp))
             for (p in sorted) {
@@ -488,7 +487,7 @@ private fun DecayCurveComparison(fromJson: String, toJson: String, accepted: Boo
     Column {
         // Header
         Row {
-            Text("Day", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+            Text(t("Day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.width(36.dp))
             for (i in 0..6) {
                 Text("$i", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
@@ -498,7 +497,7 @@ private fun DecayCurveComparison(fromJson: String, toJson: String, accepted: Boo
 
         // "Was" row
         Row {
-            Text("Was", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+            Text(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.width(36.dp))
             for (i in 0..6) {
                 val v = fromDays.getOrNull(i)
@@ -513,7 +512,7 @@ private fun DecayCurveComparison(fromJson: String, toJson: String, accepted: Boo
 
         // "New" row
         Row {
-            Text("New", color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            Text(t("New"), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.width(36.dp))
             for (i in 0..6) {
                 val newV = toDays.getOrElse(i) { 0.0 }
@@ -570,19 +569,19 @@ private fun MenstrualDecayComparison(fromJson: String, toJson: String, accepted:
     val scroll = rememberScrollState()
     Column(modifier = Modifier.horizontalScroll(scroll)) {
         Row {
-            Text("Day", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
+            Text(t("Day"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
             MENSTRUAL_LABELS.forEach { lbl ->
                 Text(lbl, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(28.dp))
             }
         }
         Row {
-            Text("Was", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
+            Text(t("Was"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(32.dp))
             fromVals.forEach { v ->
                 Text(formatDecayVal(v), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(28.dp))
             }
         }
         Row {
-            Text("New", color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), modifier = Modifier.width(32.dp))
+            Text(t("New"), color = Color(0xFF81C784), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), modifier = Modifier.width(32.dp))
             toVals.forEachIndexed { i, newV ->
                 val oldV = fromVals.getOrNull(i)
                 val effective = if (accepted) newV else (oldV ?: newV)
@@ -615,8 +614,7 @@ private fun WarningRow(proposal: RecalibrationViewModel.Proposal) {
         )
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                proposal.label,
+            Text(t(proposal.label),
                 color = Color.White,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             )

@@ -58,13 +58,13 @@ private fun RationaleScreen(
             Spacer(Modifier.weight(0.3f))
 
             Text(
-                "App Permissions",
+                t("App Permissions"),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                "MigraineMe collects various data to help identify your migraine triggers. Here's what we use and why:",
+                t("MigraineMe collects various data to help identify your migraine triggers. Here's what we use and why:"),
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -72,12 +72,12 @@ private fun RationaleScreen(
 
             // Location Section
             Text(
-                "📍 Location",
+                t("📍 Location"),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                "Used to get local weather data (temperature, pressure, humidity) which can trigger migraines. Requires \"Allow all the time\" for background updates.",
+                t("Used to get local weather data (temperature, pressure, humidity) which can trigger migraines. Requires \"Allow all the time\" for background updates."),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -86,12 +86,12 @@ private fun RationaleScreen(
 
             // Microphone Section
             Text(
-                "🎤 Microphone",
+                t("🎤 Microphone"),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                "Used to sample ambient noise levels. We only measure volume (decibels), not actual audio content.",
+                t("Used to sample ambient noise levels. We only measure volume (decibels), not actual audio content."),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -100,12 +100,12 @@ private fun RationaleScreen(
 
             // Health Connect Section
             Text(
-                "❤️ Health Connect",
+                t("❤️ Health Connect"),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                "Used to read nutrition, sleep, heart rate, HRV, steps, menstruation, and other health data from apps like Cronometer, Fitbit, Samsung Health, etc.",
+                t("Used to read nutrition, sleep, heart rate, HRV, steps, menstruation, and other health data from apps like Cronometer, Fitbit, Samsung Health, etc."),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -114,12 +114,12 @@ private fun RationaleScreen(
 
             // Screen Time Section
             Text(
-                "📱 Usage Access",
+                t("📱 Usage Access"),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                "Used to track screen time which may correlate with migraines.",
+                t("Used to track screen time which may correlate with migraines."),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -131,7 +131,7 @@ private fun RationaleScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties.",
+                t("Your data is stored securely and used only to analyze your migraine patterns. We never share your data with third parties."),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -146,7 +146,7 @@ private fun RationaleScreen(
                     onClick = onCancel,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Cancel")
+                    Text(t("Cancel"))
                 }
 
                 Button(
@@ -156,7 +156,7 @@ private fun RationaleScreen(
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Continue")
+                    Text(t("Continue"))
                 }
             }
 

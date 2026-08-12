@@ -49,7 +49,8 @@ object MentalCardConfig {
         METRIC_DARK_MODE, METRIC_UNLOCKS
     )
 
-    fun labelFor(metric: String): String = when (metric) {
+    fun labelFor(metric: String): String = tSync(rawLabelFor(metric))
+    private fun rawLabelFor(metric: String): String = when (metric) {
         METRIC_STRESS -> "Stress"
         METRIC_SCREEN_TIME -> "Screen Time"
         METRIC_LATE_SCREEN_TIME -> "Late Screen"

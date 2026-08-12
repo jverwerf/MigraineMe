@@ -100,13 +100,13 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { selectedDateStr = selectedDate.minusDays(1).toString() }) {
-                    Icon(Icons.Default.ChevronLeft, contentDescription = "Previous day", tint = AppTheme.AccentPurple)
+                    Icon(Icons.Default.ChevronLeft, contentDescription = t("Previous day"), tint = AppTheme.AccentPurple)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         when {
-                            selectedDate == today -> "Today"
-                            selectedDate == today.minusDays(1) -> "Yesterday"
+                            selectedDate == today -> t("Today")
+                            selectedDate == today.minusDays(1) -> t("Yesterday")
                             else -> selectedDate.format(dateFormatter)
                         },
                         color = AppTheme.TitleColor,
@@ -119,7 +119,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                 ) {
                     Icon(
                         Icons.Default.ChevronRight,
-                        contentDescription = "Next day",
+                        contentDescription = t("Next day"),
                         tint = if (selectedDate < today) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                     )
                 }
@@ -172,7 +172,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                         val label = MentalCardConfig.labelFor(metric)
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -180,7 +180,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
                 Spacer(Modifier.height(4.dp))
                 HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                 Spacer(Modifier.height(8.dp))
-                Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
 
                 val bestByTable = mutableMapOf<String, MentalDataEntry>()
@@ -219,7 +219,7 @@ private fun MentalDataRow(entry: MentalDataEntry) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(entry.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(t(entry.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
             Text(entry.value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
         }
     }

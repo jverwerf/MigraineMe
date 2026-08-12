@@ -224,7 +224,7 @@ fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
                 modifier = Modifier.size(16.dp)
             )
             Spacer(Modifier.width(4.dp))
-            Text("Back", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Back"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -233,7 +233,7 @@ fun WizardStepNav(onBack: () -> Unit, onSkip: () -> Unit) {
                 .clickable(onClick = onSkip)
                 .padding(horizontal = 8.dp, vertical = 6.dp)
         ) {
-            Text("Skip", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
+            Text(t("Skip"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.width(4.dp))
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
@@ -258,12 +258,12 @@ fun WizardSearchField(
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
-        placeholder = { Text("Search…", color = AppTheme.SubtleTextColor) },
+        placeholder = { Text(t("Search…"), color = AppTheme.SubtleTextColor) },
         leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Outlined.Close, t("Clear"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
                 }
             }
         },

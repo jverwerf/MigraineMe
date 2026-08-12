@@ -54,7 +54,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 MonitorBlobIcon(resId = R.drawable.brainy_migraines_small)
                 Spacer(Modifier.width(10.dp))
-                Text("Migraines", color = AppTheme.TitleColor,
+                Text(t("Migraines"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f))
                 Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
@@ -85,7 +85,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                 }
             } else {
                 Spacer(Modifier.height(4.dp))
-                Text("Your weekly overview will appear after your first week of tracking.",
+                Text(t("Your weekly overview will appear after your first week of tracking."),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Start)
             }
@@ -108,11 +108,11 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                     Column {
-                        Text("days migraine-free", color = AppTheme.BodyTextColor,
+                        Text(t("days migraine-free"), color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                         Text(
-                            if (s.streakDays >= s.longestRunDaysThisYear) "your longest run this year"
-                            else "longest run this year: ${s.longestRunDaysThisYear}",
+                            if (s.streakDays >= s.longestRunDaysThisYear) t("your longest run this year")
+                            else t("longest run this year: %s", s.longestRunDaysThisYear),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall
                         )
@@ -128,7 +128,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                 .offset(x = 10.dp, y = (-14).dp)
                 .size(34.dp)
         ) {
-            Icon(Icons.Outlined.Info, contentDescription = "About Migraines",
+            Icon(Icons.Outlined.Info, contentDescription = t("About Migraines"),
                 tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
         }
     }
@@ -136,29 +136,29 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
     if (showInfo) {
         AlertDialog(
             onDismissRequest = { showInfo = false },
-            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.brainy_migraines_small), contentDescription = null, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("About Migraines", color = AppTheme.TitleColor,
+                    Text(t("About Migraines"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
             },
             text = {
                 Text(
-                    "Your overview of logged migraine attacks. The card shows three things side-by-side: " +
-                    "the number of attacks this week (with an up/down arrow comparing to last week), " +
-                    "your average severity this week (green / amber / red), and your all-time total.\n\n" +
-                    "Tap into the detail screen and you'll get:\n" +
-                    "• The full weekly summary hero (this week vs last week, average per month)\n" +
-                    "• Frequency charts — by month, week, day-of-week, and severity\n" +
-                    "• The Migraine Timeline: scroll through every attack you've logged, with " +
-                    "category-count chips showing how many triggers / prodromes / medicines / reliefs / " +
-                    "activities / locations were linked to each one\n" +
-                    "• Spider cards breaking down what was happening around each attack\n\n" +
-                    "Use the card for a quick weekly trend read; tap in when you want to understand " +
-                    "the pattern behind a specific attack.",
+                    t("Your overview of logged migraine attacks. The card shows three things side-by-side: ") +
+                    t("the number of attacks this week (with an up/down arrow comparing to last week), ") +
+                    t("your average severity this week (green / amber / red), and your all-time total.\n\n") +
+                    t("Tap into the detail screen and you'll get:\n") +
+                    t("• The full weekly summary hero (this week vs last week, average per month)\n") +
+                    t("• Frequency charts — by month, week, day-of-week, and severity\n") +
+                    t("• The Migraine Timeline: scroll through every attack you've logged, with ") +
+                    t("category-count chips showing how many triggers / prodromes / medicines / reliefs / ") +
+                    t("activities / locations were linked to each one\n") +
+                    t("• Spider cards breaking down what was happening around each attack\n\n") +
+                    t("Use the card for a quick weekly trend read; tap in when you want to understand ") +
+                    t("the pattern behind a specific attack."),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
                 )
             },

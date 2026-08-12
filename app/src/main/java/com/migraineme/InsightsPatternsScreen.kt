@@ -58,7 +58,7 @@ fun InsightsPatternsScreen(
                         verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
                         Spacer(Modifier.width(12.dp))
-                        Text("Loading patterns…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Loading patterns…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -78,10 +78,10 @@ fun InsightsPatternsScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Canvas(Modifier.size(36.dp)) { HubIcons.run { drawPatternsVenn(Color(0xFFCE93D8)) } }
                         Spacer(Modifier.height(8.dp))
-                        Text("No patterns yet", color = AppTheme.TitleColor,
+                        Text(t("No patterns yet"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
-                        Text("Log more migraines and your patterns will appear here.",
+                        Text(t("Log more migraines and your patterns will appear here."),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center)
                     }
@@ -112,9 +112,9 @@ private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.Correlatio
     BrainyWatermarkCard {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("What These Triggers Do to You", color = AppTheme.TitleColor,
+                Text(t("What These Triggers Do to You"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("The symptoms that tend to follow each trigger",
+                Text(t("The symptoms that tend to follow each trigger"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             SortChipMenu(sortMode,
@@ -147,14 +147,14 @@ private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.Correlatio
                             color = if (stat.liftRatio >= 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         Spacer(Modifier.width(8.dp))
-                        Text("${condPct.toInt()}% vs ${baselinePct.toInt()}% of days",
+                        Text(t("%1\$s%% vs %2\$s%% of days", condPct.toInt(), baselinePct.toInt()),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
             Spacer(Modifier.height(6.dp))
         }
-        Text("Percentages compare days after the trigger with your ordinary days.",
+        Text(t("Percentages compare days after the trigger with your ordinary days."),
             color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
             style = MaterialTheme.typography.labelSmall)
     }

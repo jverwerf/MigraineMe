@@ -268,8 +268,8 @@ fun HomeScreenRoot(
 
                 // ── Ask MigraineMe — chat assistant (premium only) ──
                 PremiumGate(
-                    message = "Unlock AI Chat",
-                    subtitle = "Ask questions about your health data",
+                    message = t("Unlock AI Chat"),
+                    subtitle = t("Ask questions about your health data"),
                     onUpgrade = onNavigateToPaywall
                 ) {
                     Box(
@@ -309,12 +309,12 @@ fun HomeScreenRoot(
                                     Spacer(Modifier.width(10.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(
-                                            "Ask MigraineMe",
+                                            t("Ask MigraineMe"),
                                             color = AppTheme.TitleColor,
                                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                                         )
                                         Text(
-                                            "Chat with your health data",
+                                            t("Chat with your health data"),
                                             color = AppTheme.SubtleTextColor,
                                             style = MaterialTheme.typography.bodySmall
                                         )
@@ -333,7 +333,7 @@ fun HomeScreenRoot(
                         ) {
                             Icon(
                                 Icons.Outlined.Info,
-                                contentDescription = "About Ask MigraineMe",
+                                contentDescription = t("About Ask MigraineMe"),
                                 tint = AppTheme.SubtleTextColor,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -345,11 +345,11 @@ fun HomeScreenRoot(
                         onDismissRequest = { showAskInfo = false },
                         confirmButton = {
                             TextButton(onClick = { showAskInfo = false }) {
-                                Text("Got it", color = AppTheme.AccentPurple)
+                                Text(t("Got it"), color = AppTheme.AccentPurple)
                             }
                         },
                         title = {
-                            Text("About Ask MigraineMe", color = AppTheme.TitleColor,
+                            Text(t("About Ask MigraineMe"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {
@@ -369,8 +369,8 @@ fun HomeScreenRoot(
                     }
 
                     PremiumGate(
-                        message = "Unlock Daily Insights",
-                        subtitle = "Personalised advice based on your data",
+                        message = t("Unlock Daily Insights"),
+                        subtitle = t("Personalised advice based on your data"),
                         onUpgrade = onNavigateToPaywall
                     ) {
                         AiInsightCard(
@@ -382,8 +382,8 @@ fun HomeScreenRoot(
 
                 // ── Active triggers — blurred for free users ──
                 PremiumGate(
-                    message = "Unlock trigger breakdown",
-                    subtitle = "See what\u2019s driving your risk score",
+                    message = t("Unlock trigger breakdown"),
+                    subtitle = t("See what\u2019s driving your risk score"),
                     onUpgrade = onNavigateToPaywall
                 ) {
                     ActiveTriggersCard(
@@ -428,10 +428,10 @@ private fun RiskHeroCard(
     }
 
     // Day label for selected day
-    val dayLabel = if (selectedDay == 0) "Risk today" else {
+    val dayLabel = if (selectedDay == 0) t("Risk today") else {
         val date = dayRisks.getOrNull(selectedDay)?.date
-        if (date != null) "Risk · ${date.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM"))}"
-        else "Risk"
+        if (date != null) t("Risk · %s", date.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM", rememberAppLocale())))
+        else t("Risk")
     }
 
     Box(modifier = modifier) {
@@ -445,7 +445,7 @@ private fun RiskHeroCard(
             )
             if (onHistoryTap != null) {
                 Text(
-                    "History →",
+                    t("History →"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -472,8 +472,7 @@ private fun RiskHeroCard(
                         color = Color.White,
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
                     )
-                    Text(
-                        riskZone.label,
+                    Text(t(riskZone.label),
                         color = zoneColor,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
@@ -493,7 +492,7 @@ private fun RiskHeroCard(
                 ) {
                     Icon(
                         Icons.Outlined.KeyboardArrowLeft,
-                        contentDescription = "Previous day",
+                        contentDescription = t("Previous day"),
                         tint = if (selectedDay > 0) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                     )
                 }
@@ -506,7 +505,7 @@ private fun RiskHeroCard(
                 ) {
                     Icon(
                         Icons.Outlined.KeyboardArrowRight,
-                        contentDescription = "Next day",
+                        contentDescription = t("Next day"),
                         tint = if (selectedDay < maxDay) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                     )
                 }
@@ -539,7 +538,7 @@ private fun RiskHeroCard(
             ) {
                 Icon(
                     Icons.Outlined.Info,
-                    contentDescription = "About Risk today",
+                    contentDescription = t("About Risk today"),
                     tint = AppTheme.SubtleTextColor,
                     modifier = Modifier.size(20.dp)
                 )
@@ -552,11 +551,11 @@ private fun RiskHeroCard(
             onDismissRequest = { showInfo = false },
             confirmButton = {
                 TextButton(onClick = { showInfo = false }) {
-                    Text("Got it", color = AppTheme.AccentPurple)
+                    Text(t("Got it"), color = AppTheme.AccentPurple)
                 }
             },
             title = {
-                Text("About Risk today", color = AppTheme.TitleColor,
+                Text(t("About Risk today"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = {
@@ -567,14 +566,14 @@ private fun RiskHeroCard(
     }
 }
 
-private const val MEDICAL_NOTE = "\n\nMigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. This is not medical advice, always consult a qualified healthcare professional."
+private val MEDICAL_NOTE: String get() = "\n\n" + tSync("MigraineMe is not a medical device and does not diagnose, treat, cure, or prevent any condition. This is not medical advice, always consult a qualified healthcare professional.")
 
 object RiskInfoCopy {
-    const val text = "Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve." + MEDICAL_NOTE
+    val text: String get() = tSync("Your migraine risk for today, calculated from every trigger and prodrome you've logged over the last 7 days. It's based on the bucket theory of migraine: triggers stack up inside your personal bucket, and once the level gets high enough, you tip over into an attack.\n\nProdromes count too. When you're in one (yawning, neck stiffness, mood shifts and the rest), an attack is already on the way, so logging a prodrome pushes the bucket up just like a fresh trigger.\n\nEach item's weight depends on two things: how severe you marked it (HIGH items count for more than MILD or LOW, NONE doesn't count), and how recent it was. Contributions decay each day after, so a trigger from this morning counts a lot more than one from six days ago.\n\nThe big number is your raw score (your current bucket level). The colour comes from your three personal thresholds: cross the LOW threshold and the gauge turns green; cross MILD it turns amber; cross HIGH it goes red and the bucket is close to overflowing. Thresholds start at sensible defaults and recalibrate over time so the colour reflects what a risky day actually looks like for you, not the average person.\n\nBelow the gauge, the Active Triggers card shows the top 3 things pushing on your bucket right now. Tap the gauge itself to open the Risk detail screen, which lists every contributor in order with how much each is adding. From there, tap \"History →\" at the top of the gauge to open the 14-day graph and see how your bucket level rose and fell day by day over the past two weeks (handy for spotting which days your score peaked before an attack).\n\nEverything is tunable. Open the menu and tap Manage Items to change which triggers and prodromes you care about and how severe each one is. Tap Risk Model to adjust the thresholds and the day-by-day decay curve.") + MEDICAL_NOTE
 }
 
 object AskMigraineMeInfoCopy {
-    const val text = "Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP."
+    val text: String get() = tSync("Your personal AI assistant with read access to your health data: sleep, HRV, resting heart rate, stress, steps, weather, attacks, triggers, prodromes, medicines, reliefs and aura detail. Ask it anything in plain English and it answers from what it actually sees in your data, not generic advice.\n\nWondering about a treatment or medicine? You can ask here too. We'll check your data and give you something to think about.\n\nGreat prompts to try: \"What triggered my last migraine?\", \"How's my sleep been lately?\", \"Is my rescue medication actually working?\", \"Where does my aura usually show up?\", \"Are there preventive treatments I should ask my doctor about?\"\n\nHeads up: the assistant can spot patterns and suggest things to consider, but it's not a doctor and can't prescribe. For actual treatment decisions, talk to your neurologist or GP.")
 }
 
 @Composable
@@ -587,7 +586,7 @@ private fun SevenDayOutlook(
 ) {
     val zone = ZoneId.systemDefault()
     val today = LocalDate.now(zone)
-    val dayFmt = DateTimeFormatter.ofPattern("EEE")
+    val dayFmt = DateTimeFormatter.ofPattern("EEE", rememberAppLocale())
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -601,7 +600,7 @@ private fun SevenDayOutlook(
             for (i in 0 until 7) {
                 val percent = values.getOrNull(i)?.coerceIn(0, 100) ?: 0
                 val date = today.plusDays(i.toLong())
-                val dayLabel = if (i == 0) "Today" else date.format(dayFmt)
+                val dayLabel = if (i == 0) t("Today") else date.format(dayFmt)
                 val isSelected = i == selectedDay
 
                 Column(
@@ -638,7 +637,7 @@ private fun SevenDayOutlook(
         }
 
         Text(
-            "7-day outlook",
+            t("7-day outlook"),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )
@@ -690,7 +689,7 @@ private fun ActiveTriggersCard(
     Box(modifier = Modifier.fillMaxWidth().clickable { onTap() }) {
     MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_risk, flipWatermark = true) {
         Text(
-            "Top contributors",
+            t("Top contributors"),
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
@@ -782,7 +781,7 @@ private fun ActiveTriggersCard(
 
                     // Bottom row: points + days active
                     Text(
-                        "${pctOfTotal}% of risk · ${t.score} pts · ${if (t.daysActive == 1) "today only" else "${t.daysActive} days active"}",
+                        Strings.t("%1\$s%% of risk · %2\$s pts · %3\$s", pctOfTotal, t.score, if (t.daysActive == 1) Strings.t("today only") else Strings.t("%s days active", t.daysActive)),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -799,7 +798,7 @@ private fun ActiveTriggersCard(
         ) {
             Icon(
                 Icons.Outlined.Info,
-                contentDescription = "About Active triggers",
+                contentDescription = t("About Active triggers"),
                 tint = AppTheme.SubtleTextColor,
                 modifier = Modifier.size(20.dp)
             )
@@ -811,11 +810,11 @@ private fun ActiveTriggersCard(
             onDismissRequest = { showInfo = false },
             confirmButton = {
                 TextButton(onClick = { showInfo = false }) {
-                    Text("Got it", color = AppTheme.AccentPurple)
+                    Text(t("Got it"), color = AppTheme.AccentPurple)
                 }
             },
             title = {
-                Text("About Active triggers", color = AppTheme.TitleColor,
+                Text(t("About Active triggers"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = {
@@ -828,7 +827,7 @@ private fun ActiveTriggersCard(
 }
 
 object ActiveTriggersInfoCopy {
-    const val text = "The three things pushing hardest on your bucket today, ordered by how much each is contributing to your risk score. Could be triggers you've logged (caffeine, poor sleep, stress) or prodromes you're currently in (yawning, mood shifts, neck stiffness).\n\nEach row shows the item's name, its severity tag (HIGH / MILD / LOW), and a bar showing how much it's adding compared to a fully-overflowing bucket. The more recent and the more severe, the bigger the contribution.\n\nTap the card to open the Risk detail screen and see every contributor in order, not just the top 3." + MEDICAL_NOTE
+    val text: String get() = tSync("The three things pushing hardest on your bucket today, ordered by how much each is contributing to your risk score. Could be triggers you've logged (caffeine, poor sleep, stress) or prodromes you're currently in (yawning, mood shifts, neck stiffness).\n\nEach row shows the item's name, its severity tag (HIGH / MILD / LOW), and a bar showing how much it's adding compared to a fully-overflowing bucket. The more recent and the more severe, the bigger the contribution.\n\nTap the card to open the Risk detail screen and see every contributor in order, not just the top 3.") + MEDICAL_NOTE
 }
 
 @Composable
@@ -852,7 +851,7 @@ private fun WellDoneCard(text: String) {
             )
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    "Well done",
+                    t("Well done"),
                     color = Color(0xFF81C784),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -899,7 +898,7 @@ private fun AiInsightCard(insight: String, watermark: Boolean = false) {
             )
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    "MigraineMe Recommendation",
+                    t("MigraineMe Recommendation"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                 )

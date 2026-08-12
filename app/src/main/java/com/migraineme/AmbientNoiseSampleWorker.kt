@@ -134,8 +134,8 @@ class AmbientNoiseSampleWorker(
 
         val notif = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Measuring ambient sound level")
-            .setContentText("MigraineMe is sampling loudness (no audio stored).")
+            .setContentTitle(tSync("Measuring ambient sound level"))
+            .setContentText(tSync("MigraineMe is sampling loudness (no audio stored)."))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()
@@ -155,7 +155,7 @@ class AmbientNoiseSampleWorker(
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val ch = NotificationChannel(
                 CHANNEL_ID,
-                "MigraineMe sensor sampling",
+                tSync("MigraineMe sensor sampling"),
                 NotificationManager.IMPORTANCE_LOW
             )
             nm.createNotificationChannel(ch)

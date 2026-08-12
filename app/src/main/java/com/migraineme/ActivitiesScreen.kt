@@ -185,18 +185,18 @@ fun ActivitiesScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 if (!quickLogMode) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Location", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(t("Location"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
                 Spacer(Modifier.weight(1f))
                 if (!quickLogMode) {
-                    IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp)) }
+                    IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
                 } else {
                     Spacer(Modifier.size(28.dp))
                 }
@@ -206,9 +206,9 @@ fun ActivitiesScreen(
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawActivityPulse(Color(0xFFFF8A65)) }
                 })
-                Text("What were you doing?", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("What were you doing?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    if (draft.activities.isEmpty()) "Log your activity" else "${draft.activities.size} activit${if (draft.activities.size > 1) "ies" else "y"} added",
+                    if (draft.activities.isEmpty()) t("Log your activity") else if (draft.activities.size == 1) t("1 activity added") else t("%s activities added", draft.activities.size),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
                 )
                 if (draft.activities.isNotEmpty()) {
@@ -222,7 +222,7 @@ fun ActivitiesScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(prettyLabel(act.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
                                 Text(
-                                    if (act.startAtIso == null) "Same as migraine start" else formatActTime(act.startAtIso),
+                                    if (act.startAtIso == null) t("Same as migraine start") else formatActTime(act.startAtIso),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
                                 )
                                 if (act.endAtIso != null) {
@@ -241,9 +241,9 @@ fun ActivitiesScreen(
                                 }
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Icon(Icons.Outlined.Edit, "Edit time", tint = AppTheme.AccentPurple.copy(alpha = 0.6f),
+                                Icon(Icons.Outlined.Edit, t("Edit time"), tint = AppTheme.AccentPurple.copy(alpha = 0.6f),
                                     modifier = Modifier.size(18.dp).clickable { editIndex = index; showEditTimeDialog = true })
-                                Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                                Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                     modifier = Modifier.size(18.dp).clickable {
                                         rebuildDraftWithActivities(draft.activities.toMutableList().apply { removeAt(index) })
                                     })
@@ -259,8 +259,8 @@ fun ActivitiesScreen(
 
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Activities", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_ACTIVITIES) })
                 }
             }
@@ -274,7 +274,7 @@ fun ActivitiesScreen(
 
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
-                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { act ->
                             ActCircleButton(act.label, act.label in selectedLabels, act.iconKey, daysAgo = daysAgoByLabel[act.label]) { onTap(act.label) }
@@ -294,18 +294,18 @@ fun ActivitiesScreen(
                             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                     }
                 }
-                if (pool.isEmpty()) Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
 
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Cancel" else "Back") }
+                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.POSTDROMES) },
                     enabled = !quickLogMode || draft.activities.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Save" else "Next") }
+                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
             }
             Spacer(Modifier.height(32.dp))
         }
@@ -342,11 +342,11 @@ private fun ActCircleButton(label: String, isSelected: Boolean, iconKey: String?
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = textColor,
+        Text(t(label), color = textColor,
             style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
         if (isSelected && daysAgo != null && daysAgo > 0) {
             Text(
-                when (daysAgo) { 1 -> "yesterday"; 2 -> "2d ago"; 3 -> "3d ago"; else -> "" },
+                when (daysAgo) { 1 -> t("yesterday"); 2 -> t("2d ago"); 3 -> t("3d ago"); else -> "" },
                 color = Color.White.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                 textAlign = TextAlign.Center,
@@ -366,23 +366,23 @@ private fun ActTimeDialog(title: String, initialIso: String? = null, initialEndI
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Start: ${formatActTime(pickedIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Set start time", onDateTimeSelected = { pickedIso = it })
+                Text(t("Start: %s", formatActTime(pickedIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Set start time"), onDateTimeSelected = { pickedIso = it })
                 Spacer(Modifier.height(4.dp))
-                Text("End: ${formatActTime(pickedEndIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Set end time (optional)", onDateTimeSelected = { pickedEndIso = it })
+                Text(t("End: %s", formatActTime(pickedEndIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Set end time (optional)"), onDateTimeSelected = { pickedEndIso = it })
                 if (pickedIso != null && pickedEndIso != null) {
                     deriveDurationMinutes(pickedIso!!, pickedEndIso!!)?.let { mins ->
-                        Text("Duration: ${if (mins >= 60) "${mins / 60}h ${mins % 60}m" else "${mins}m"}", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Duration: %s", if (mins >= 60) "${mins / 60}h ${mins % 60}m" else "${mins}m"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(pickedIso, pickedEndIso) }) { Text(if (onSkip != null) "Add" else "Save", color = AppTheme.AccentPurple) } },
+        confirmButton = { TextButton(onClick = { onConfirm(pickedIso, pickedEndIso) }) { Text(if (onSkip != null) t("Add") else t("Save"), color = AppTheme.AccentPurple) } },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) { Text("Cancel", color = AppTheme.SubtleTextColor) }
-                if (onSkip != null) TextButton(onClick = onSkip) { Text("Skip", color = Color(0xFFFF8A65)) }
+                TextButton(onClick = onDismiss) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
+                if (onSkip != null) TextButton(onClick = onSkip) { Text(t("Skip"), color = Color(0xFFFF8A65)) }
             }
         }
     )

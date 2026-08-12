@@ -267,7 +267,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Edit Environment Data", color = AppTheme.TitleColor) },
+            title = { Text(t("Edit Environment Data"), color = AppTheme.TitleColor) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     WeatherEditField("Temperature (${UnitsPrefs.tempLabel()})", editTemp) { editTemp = it }
@@ -282,7 +282,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     val hasManual = entries.any { it.source == "manual" }
                     if (hasManual) {
                         Text(
-                            "Delete manual entry",
+                            t("Delete manual entry"),
                             color = Color(0xFFE57373),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
@@ -318,11 +318,11 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                         showEditDialog = false
                         loadEntries()
                     }
-                }) { Text("Save", color = AppTheme.AccentPurple) }
+                }) { Text(t("Save"), color = AppTheme.AccentPurple) }
             },
             dismissButton = {
                 TextButton(onClick = { showEditDialog = false }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             },
             containerColor = Color(0xFF1E0A2E)
@@ -345,14 +345,14 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { selectedDateStr = selectedDate.minusDays(1).toString() }) {
-                        Icon(Icons.Default.ChevronLeft, contentDescription = "Previous day", tint = AppTheme.AccentPurple)
+                        Icon(Icons.Default.ChevronLeft, contentDescription = t("Previous day"), tint = AppTheme.AccentPurple)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             when {
-                                selectedDate == today -> "Today"
-                                selectedDate == today.minusDays(1) -> "Yesterday"
-                                selectedDate == today.plusDays(1) -> "Tomorrow"
+                                selectedDate == today -> t("Today")
+                                selectedDate == today.minusDays(1) -> t("Yesterday")
+                                selectedDate == today.plusDays(1) -> t("Tomorrow")
                                 else -> selectedDate.format(dateFormatter)
                             },
                             color = AppTheme.TitleColor,
@@ -365,7 +365,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     ) {
                         Icon(
                             Icons.Default.ChevronRight,
-                            contentDescription = "Next day",
+                            contentDescription = t("Next day"),
                             tint = if (selectedDate < maxForecastDate) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                         )
                     }
@@ -416,10 +416,10 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                         selectedMetrics.forEachIndexed { index, metric ->
                             val entry = bestByMetric[metric]
                             val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "-"
-                            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                            val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(value, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -427,7 +427,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(4.dp))
                     HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                     Spacer(Modifier.height(8.dp))
-                    Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
 
                     // Show ALL metrics with "-" for missing
@@ -435,12 +435,12 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                         if (metric !in selectedMetrics) {
                             val entry = bestByMetric[metric]
                             val value = if (entry != null) "${entry.value}${if (entry.unit.isNotEmpty()) entry.unit else ""}" else "-"
-                            val label = WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric
+                            val label = tSync(WeatherCardConfig.WEATHER_METRIC_LABELS[metric] ?: metric)
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                                Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
                                 Text(value, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                             }
                         }
@@ -466,7 +466,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(entry.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                                Text(t(entry.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
                                 Text(
                                     "${entry.value}${if (entry.unit.isNotEmpty()) " ${entry.unit}" else ""}",
                                     color = AppTheme.SubtleTextColor,
@@ -479,7 +479,7 @@ fun EnvironmentDataHistoryScreen(onBack: () -> Unit) {
                         if (entries.any { it.source == "manual" }) {
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                "✎ Edit manual entry",
+                                t("✎ Edit manual entry"),
                                 color = AppTheme.AccentPurple,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.clickable {
@@ -503,7 +503,7 @@ private fun WeatherEditField(label: String, value: String, onValueChange: (Strin
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+        label = { Text(t(label), style = MaterialTheme.typography.labelSmall) },
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = AppTheme.AccentPurple,

@@ -76,11 +76,11 @@ fun ActivitySessionsScreen(
         // Header
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = AppTheme.BodyTextColor)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = AppTheme.BodyTextColor)
             }
             Spacer(Modifier.width(8.dp))
             Column {
-                Text("Activities", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Text(displayDate, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -93,7 +93,7 @@ fun ActivitySessionsScreen(
             }
         } else if (sessions.isEmpty()) {
             Text(
-                "No activities recorded for this day",
+                t("No activities recorded for this day"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -132,7 +132,7 @@ fun ActivitySessionsScreen(
 private fun SummaryItem(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -160,7 +160,7 @@ private fun ActivitySessionCard(session: ActivitySession) {
                 }
             }
             Text(
-                "${session.durationMinutes.toInt()} min",
+                t("%s min", session.durationMinutes.toInt()),
                 color = Color(0xFFFF7043),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
             )
@@ -186,8 +186,7 @@ private fun ActivitySessionCard(session: ActivitySession) {
                 Modifier.fillMaxWidth().padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    zone.label,
+                Text(t(zone.label),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.width(48.dp)
@@ -209,7 +208,7 @@ private fun ActivitySessionCard(session: ActivitySession) {
                 }
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    "${String.format("%.1f", zone.minutes)} min",
+                    t("%s min", String.format("%.1f", zone.minutes)),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.width(52.dp),
@@ -226,9 +225,9 @@ private fun ActivitySessionCard(session: ActivitySession) {
             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
             Spacer(Modifier.height(4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("High HR Zones (3-6)", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("High HR Zones (3-6)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Text(
-                    "${String.format("%.1f", highTotal)} min",
+                    t("%s min", String.format("%.1f", highTotal)),
                     color = Color(0xFFE57373),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                 )
@@ -238,9 +237,9 @@ private fun ActivitySessionCard(session: ActivitySession) {
             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.15f))
             Spacer(Modifier.height(4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Session Duration", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t("Session Duration"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 Text(
-                    "${String.format("%.1f", session.durationMinutes)} min",
+                    t("%s min", String.format("%.1f", session.durationMinutes)),
                     color = Color(0xFF4FC3F7),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                 )
@@ -251,7 +250,7 @@ private fun ActivitySessionCard(session: ActivitySession) {
         if (session.source != null) {
             Spacer(Modifier.height(4.dp))
             Text(
-                "Source: ${session.source.uppercase()}",
+                t("Source: %s", session.source.uppercase()),
                 color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.labelSmall
             )

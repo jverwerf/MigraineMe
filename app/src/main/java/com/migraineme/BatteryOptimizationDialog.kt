@@ -17,23 +17,23 @@ fun BatteryOptimizationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Battery Optimization") },
+        title = { Text(t("Battery Optimization")) },
         text = {
             Text(
-                "To ensure ambient noise sampling works reliably (even after phone restarts), " +
-                "MigraineMe needs to be exempt from battery optimization.\n\n" +
-                "This allows the app to run background tasks without being killed by Android.\n\n" +
-                "You'll be taken to Settings where you can grant this permission."
+                t("To ensure ambient noise sampling works reliably (even after phone restarts), ") +
+                t("MigraineMe needs to be exempt from battery optimization.\n\n") +
+                t("This allows the app to run background tasks without being killed by Android.\n\n") +
+                t("You'll be taken to Settings where you can grant this permission.")
             )
         },
         confirmButton = {
             TextButton(onClick = onOpenSettings) {
-                Text("Open Settings")
+                Text(t("Open Settings"))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Not Now")
+                Text(t("Not Now"))
             }
         }
     )

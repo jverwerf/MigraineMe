@@ -50,6 +50,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Box
 
 private const val PASSWORD_RECOVERY_REDIRECT_URL = "https://migraineme.app/reset-password"
 private const val LOG_TAG = "LoginScreen"
@@ -148,6 +150,11 @@ fun LoginScreen(
                 Log.w(LOG_TAG, "Profile hydration failed (non-blocking)", t)
             }
 
+            // The language picker sits on this screen, before an account
+            // exists, so a choice made here has had nowhere to go until now.
+            // Runs after ensureProfile so there is a row to write to.
+            withContext(Dispatchers.IO) { LangPrefs.syncAfterSignIn(appCtx) }
+
             MetricsSyncManager.onLogin(appCtx, token, snackbarHostState)
 
             val fine = ContextCompat.checkSelfPermission(appCtx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -245,14 +252,14 @@ fun LoginScreen(
         AlertDialog(
             onDismissRequest = { if (!forgotBusy) { showForgotDialog = false; forgotError = null } },
             containerColor = Color(0xFF1E0A2E),
-            title = { Text("Reset password", color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold) },
+            title = { Text(t("Reset password"), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Enter your email and we'll send you a reset link.", color = AppTheme.BodyTextColor)
+                    Text(t("Enter your email and we'll send you a reset link."), color = AppTheme.BodyTextColor)
                     OutlinedTextField(
                         value = forgotEmail,
                         onValueChange = { forgotEmail = it },
-                        label = { Text("Email") },
+                        label = { Text(t("Email")) },
                         singleLine = true,
                         enabled = !forgotBusy,
                         modifier = Modifier.fillMaxWidth(),
@@ -284,11 +291,11 @@ fun LoginScreen(
                             }
                         }
                     }
-                ) { Text(if (forgotBusy) "Sending…" else "Send link", color = AppTheme.AccentPurple) }
+                ) { Text(if (forgotBusy) t("Sending…") else t("Send link"), color = AppTheme.AccentPurple) }
             },
             dismissButton = {
                 TextButton(enabled = !forgotBusy, onClick = { showForgotDialog = false; forgotError = null }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             }
         )
@@ -317,29 +324,48 @@ fun LoginScreen(
             ) {
                 Spacer(Modifier.height(60.dp))
 
-                // Logo
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "MigraineMe",
-                    modifier = Modifier.size(90.dp)
-                )
+                // Logo, sitting in a translucent grey blob like everywhere else
+                // in the app. Kept translucent rather than a solid fill so the
+                // screen's purple gradient still reads through it.
+                Box(
+                    modifier = Modifier
+                        .size(132.dp)
+                        .background(Color.White.copy(alpha = 0.06f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = t("MigraineMe"),
+                        modifier = Modifier.size(90.dp)
+                    )
+                }
 
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    "Welcome back",
+                    t("Welcome back"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Sign in to continue tracking",
+                    t("Sign in to continue tracking"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(Modifier.height(36.dp))
+                Spacer(Modifier.height(20.dp))
+
+                // Language picker on the sign-in screen itself. LangPrefs already
+                // defaults to the device language, so a German phone lands in
+                // German unaided — but someone on an English phone who wants
+                // another language had no way to switch before signing in, since
+                // the drawer only exists after auth. Listed in endonyms, because
+                // a user in the wrong language cannot read a translated list.
+                LanguagePickerRow()
+
+                Spacer(Modifier.height(28.dp))
 
                 // Social sign-in buttons
                 AnimatedVisibility(
@@ -356,10 +382,10 @@ fun LoginScreen(
                             onClick = { showEmailForm = true; error = null },
                             enabled = !busy,
                             icon = {
-                                Icon(Icons.Default.Email, contentDescription = "Email",
+                                Icon(Icons.Default.Email, contentDescription = t("Email"),
                                     modifier = Modifier.size(18.dp), tint = AppTheme.TitleColor)
                             },
-                            text = "Continue with email"
+                            text = t("Continue with email")
                         )
 
                         AuthButton(
@@ -368,11 +394,11 @@ fun LoginScreen(
                             icon = {
                                 Image(
                                     painter = painterResource(id = R.drawable.facebook_logo_primary),
-                                    contentDescription = "Facebook",
+                                    contentDescription = t("Facebook"),
                                     modifier = Modifier.size(18.dp)
                                 )
                             },
-                            text = "Continue with Facebook"
+                            text = t("Continue with Facebook")
                         )
 
                         AuthButton(
@@ -381,11 +407,11 @@ fun LoginScreen(
                             icon = {
                                 Image(
                                     painter = painterResource(id = R.drawable.ic_google_logo),
-                                    contentDescription = "Google",
+                                    contentDescription = t("Google"),
                                     modifier = Modifier.size(18.dp)
                                 )
                             },
-                            text = "Continue with Google"
+                            text = t("Continue with Google")
                         )
 
                         if (busy) {
@@ -407,10 +433,10 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Text("Don't have an account?", color = AppTheme.SubtleTextColor,
+                            Text(t("Don't have an account?"), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodyMedium)
                             TextButton(onClick = onNavigateToSignUp, enabled = !busy) {
-                                Text("Sign up", color = AppTheme.AccentPurple,
+                                Text(t("Sign up"), color = AppTheme.AccentPurple,
                                     fontWeight = FontWeight.SemiBold)
                             }
                         }
@@ -430,7 +456,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
-                            label = { Text("Email") },
+                            label = { Text(t("Email")) },
                             singleLine = true,
                             enabled = !busy,
                             modifier = Modifier.fillMaxWidth(),
@@ -440,7 +466,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
-                            label = { Text("Password") },
+                            label = { Text(t("Password")) },
                             singleLine = true,
                             enabled = !busy,
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -448,7 +474,7 @@ fun LoginScreen(
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
                                         if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Toggle password",
+                                        contentDescription = t("Toggle password"),
                                         tint = AppTheme.SubtleTextColor
                                     )
                                 }
@@ -462,7 +488,7 @@ fun LoginScreen(
                             onClick = { forgotEmail = email.trim(); forgotError = null; showForgotDialog = true },
                             modifier = Modifier.align(Alignment.End)
                         ) {
-                            Text("Forgot password?", color = AppTheme.AccentPurple,
+                            Text(t("Forgot password?"), color = AppTheme.AccentPurple,
                                 style = MaterialTheme.typography.bodySmall)
                         }
 
@@ -500,7 +526,7 @@ fun LoginScreen(
                             if (busy) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                             } else {
-                                Text("Sign in", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                Text(t("Sign in"), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                             }
                         }
 
@@ -509,7 +535,7 @@ fun LoginScreen(
                             enabled = !busy,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("← Back to sign in options", color = AppTheme.SubtleTextColor)
+                            Text(t("← Back to sign in options"), color = AppTheme.SubtleTextColor)
                         }
                     }
                 }

@@ -1,0 +1,610 @@
+[
+  {
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:540",
+    "line": "                Text(t(\"MigraineMe Setup — %1\\$s of %2\\$s\", pageNum, totalPages), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:558",
+    "line": "                                t(\"We filled in %s from what you told us\", pf.directFieldCount) +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/AiSetupScreen.kt:559",
+    "line": "                                    if (pf.suggestedFieldCount > 0) t(\", and suggested %s more\", pf.suggestedFieldCount) else \"\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/AuraDetailSheet.kt:219",
+    "line": "                        t(\"Earlier (%1\\$s)%2\\$s%3\\$s: %4\\$s\", i + 1, atLabel, durLabel, prev.zones.joinToString(\", \") { AuraZones.label(it) }),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/AutoTriggersTab.kt:98",
+    "line": "                    t(\"Configure which health patterns should automatically create triggers. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/AutoTriggersTab.kt:99",
+    "line": "                            t(\"These triggers are checked daily at 9 AM your local time.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/BatteryOptimizationDialog.kt:23",
+    "line": "                t(\"To ensure ambient noise sampling works reliably (even after phone restarts), \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/BatteryOptimizationDialog.kt:24",
+    "line": "                t(\"MigraineMe needs to be exempt from battery optimization.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/BatteryOptimizationDialog.kt:25",
+    "line": "                t(\"This allows the app to run background tasks without being killed by Android.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/BatteryOptimizationDialog.kt:26",
+    "line": "                t(\"You'll be taken to Settings where you can grant this permission.\")"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/CalendarCheckInPage.kt:286",
+    "line": "                if (isUndone) t(\"Removed\") else t(\"Saved as %1\\$s: %2\\$s\", type, label),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/CustomizeTriggersScreen.kt:104",
+    "line": "                    t(\"Configure which health patterns should automatically create triggers. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/CustomizeTriggersScreen.kt:105",
+    "line": "                            t(\"These triggers are checked every hour as new data arrives.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:33",
+    "line": "                t(\"To record ambient noise levels, MigraineMe needs microphone access.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:34",
+    "line": "                t(\"The app only records noise levels (decibels), not conversations or identifiable audio.\")"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:63",
+    "line": "                t(\"Stress Index requires both HRV and Resting Heart Rate to be enabled.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsDialogs.kt:64",
+    "line": "                t(\"Please enable these metrics first, then you can enable Stress Index.\")"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsRow.kt:320",
+    "line": "                        t(\"Last: %1\\$s • Avg: %2\\$s days\", menstruationSettings.lastMenstruationDate, menstruationSettings.avgCycleLength),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:331",
+    "line": "                            t(\"Toggle the metrics MigraineMe collects each day. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:332",
+    "line": "                            t(\"Enabled metrics feed into your daily risk score and AI insights. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DataSettingsScreen.kt:333",
+    "line": "                            t(\"Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:377",
+    "line": "                    t(\"Migraine devices are hard to judge from a website, because the marketing all sounds \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:378",
+    "line": "                        t(\"the same whether there are ten trials behind it or none.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:379",
+    "line": "                        t(\"This page lists what each one physically does and how solid the evidence is, \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:380",
+    "line": "                        t(\"including the ones where it's thin. Prescription devices are marked as such.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:381",
+    "line": "                        t(\"Once you own one, logging it is the point: MigraineMe compares how your attacks go \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:382",
+    "line": "                        t(\"with and without it, so after a few weeks you have your own answer rather than the \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:383",
+    "line": "                        t(\"manufacturer's.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:603",
+    "line": "            t(\"MigraineMe is not a medical device and does not recommend treatments. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:604",
+    "line": "                t(\"Prescription devices need a conversation with your doctor. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:605",
+    "line": "                t(\"We earn a commission on links to devices.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:859",
+    "line": "        Text(t(\"Delete → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", deletes.first, deletes.second, deletes.third))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:860",
+    "line": "        Text(t(\"Add → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", adds.first, adds.second, adds.third))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:273",
+    "line": "                    WeatherEditField(\"Temperature (${UnitsPrefs.tempLabel()})\", editTemp) { editTemp = it }"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EnvironmentDataHistoryScreen.kt:471",
+    "line": "                                    \"${entry.value}${if (entry.unit.isNotEmpty()) \" ${entry.unit}\" else \"\"}\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1169",
+    "line": "                    NoteMatchPill(\"Pain update · ${p.severity}/10\", \"pain\", AppTheme.AccentPink, false, p.startAtIso,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1313",
+    "line": "                    \"Pain update · $painNowSeverity/10\", AppTheme.AccentPink, false, false,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1320",
+    "line": "                    subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2278",
+    "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:602",
+    "line": "            t(\"Evening Check-in — %1\\$s of %2\\$s\", pageIndex + 1, pages.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:176",
+    "line": "                        Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", worst.dayName, worst.count, String.format(\"%.0f\", worst.pct)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:327",
+    "line": "                        Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], counts[worstIdx], String.format(\"%.0f\", pct)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/FullScreenGraphScreen.kt:138",
+    "line": "                    text = if (isCustomRange) t(\"Custom: %1\\$s – %2\\$s\", startDate.format(dateFormat), endDate.format(dateFormat)) else t(\"Custom range…\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:809",
+    "line": "                    Text(t(\"%1\\$s%2\\$sm \\u2022 Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"\\u2014\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:816",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsBreakdownScreen.kt:206",
+    "line": "                                t(\"%1\\$s logged • %2\\$s types\", cat.totalCount, cat.items.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsBreakdownScreen.kt:534",
+    "line": "            t(\"%1\\$s logged • %2\\$s types\", spider.totalLogged, spider.axes.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:372",
+    "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:756",
+    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:763",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:244",
+    "line": "                                Text(t(\"%1\\$s logged \\u2022 %2\\$s categories\", medicineSpider!!.totalLogged, medicineSpider!!.breakdown.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:279",
+    "line": "                                Text(t(\"%1\\$s logged \\u2022 %2\\$s categories\", reliefSpider!!.totalLogged, reliefSpider!!.breakdown.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:356",
+    "line": "                    Text(t(\"%1\\$s%2\\$sm \\u2022 Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"\\u2014\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsExploreScreen.kt:360",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:147",
+    "line": "                                Text(t(\"%1\\$s%% · %2\\$s attacks\", pct, s.totalCount),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:292",
+    "line": "                                t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), count),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:150",
+    "line": "                        Text(t(\"%1\\$s%% vs %2\\$s%% of days\", condPct.toInt(), baselinePct.toInt()),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1269",
+    "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1701",
+    "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1803",
+    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1810",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2243",
+    "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:732",
+    "line": "                            Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], seasonalCounts[worstIdx], String.format(\"%.0f\", pct)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:970",
+    "line": "                        t(\"Showing %1\\$s of %2\\$s attacks · the PDF includes all %3\\$s\", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1060",
+    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1067",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1149",
+    "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2628",
+    "line": "                        Text(t(\"%1\\$s migraines (%2\\$s%%)\", item.count, item.pctOfMigraines.toInt()),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2782",
+    "line": "                    Text(t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), timed),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3386",
+    "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 %3\\$s\\u00D7 the average day.\", w.dayName, String.format(\"%.0f\", w.pct), String.format(\"%.1f\", ratio)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsTreatmentsScreen.kt:158",
+    "line": "                        Text(t(\"With %1\\$s: %2\\$s · Without: %3\\$s\", prettyLabel(stat.symptomSegment), reliefLabel(withRelief), reliefLabel(withoutRelief)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsWeatherPanel.kt:81",
+    "line": "                        t(\"Nearest: %s\", city.label) + (city.timezone?.let { \"  •  $it\" } ?: \"\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsWhatsHelpingScreen.kt:162",
+    "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:215",
+    "line": "                        t(\"Your predicted period date gets a single trigger. The risk curve controls \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:216",
+    "line": "                        t(\"how many points it contributes on each day relative to the predicted date. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:217",
+    "line": "                        t(\"When the predicted date arrives, it auto-converts to a real period log and \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:218",
+    "line": "                        t(\"the next prediction moves forward by one cycle.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:168",
+    "line": "                                text = t(\"%1\\$s (avg: %2\\$s)\", label, formatMentalValue(avg, unit)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:372",
+    "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:150",
+    "line": "                    t(\"Your overview of logged migraine attacks. The card shows three things side-by-side: \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:151",
+    "line": "                    t(\"the number of attacks this week (with an up/down arrow comparing to last week), \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:152",
+    "line": "                    t(\"your average severity this week (green / amber / red), and your all-time total.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:153",
+    "line": "                    t(\"Tap into the detail screen and you'll get:\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:154",
+    "line": "                    t(\"• The full weekly summary hero (this week vs last week, average per month)\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:155",
+    "line": "                    t(\"• Frequency charts — by month, week, day-of-week, and severity\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:156",
+    "line": "                    t(\"• The Migraine Timeline: scroll through every attack you've logged, with \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:157",
+    "line": "                    t(\"category-count chips showing how many triggers / prodromes / medicines / reliefs / \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:158",
+    "line": "                    t(\"activities / locations were linked to each one\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:159",
+    "line": "                    t(\"• Spider cards breaking down what was happening around each attack\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:160",
+    "line": "                    t(\"Use the card for a quick weekly trend read; tap in when you want to understand \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:161",
+    "line": "                    t(\"the pattern behind a specific attack.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:73",
+    "line": "                        \"this week (vs ${wsValue.lastWeekCount})\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:427",
+    "line": "                    t(\"Your medicine usage over the last 30 days. Each row shows a medicine name + the \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:428",
+    "line": "                    t(\"category you've set on it (if any), with three numbers on the right: Day (today), \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:429",
+    "line": "                    t(\"Week (last 7d) and Month (last 30d) totals in the units you logged — e.g. 1200mg, \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:430",
+    "line": "                    t(\"2×, or 1200mg + if you mixed units. \\\"—\\\" means nothing logged in that window.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:431",
+    "line": "                    t(\"Which medicines appear here is driven by what you've favourited in Customize; if \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:432",
+    "line": "                    t(\"you haven't picked favourites, the most-logged medicines from the past week show \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:433",
+    "line": "                    t(\"up. Below those, the most-used categories appear as their own D/W/M totals.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:434",
+    "line": "                    t(\"Tap to open the detail screen with: Customize Medicines (pick favourites and \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:435",
+    "line": "                    t(\"highlighted categories), a full breakdown across every medicine and category, \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:436",
+    "line": "                    t(\"and a 14-day stacked-bar history chart you can filter by medicine or category.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:507",
+    "line": "                t(\"%1\\$s meals • %2\\$s items today\", mealTypes.size, nutritionItems.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:256",
+    "line": "            Text(t(\"You went from %1\\$s to %2\\$s migraine days a month, averaged since you started.\", b.toInt(), r.toInt()),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:271",
+    "line": "        Text(t(\"%1\\$s weeks in · %2\\$s attacks tracked%3\\$s\", e.weeksActive, e.nAttacksRolling, trustNote),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:562",
+    "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:563",
+    "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:564",
+    "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:565",
+    "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:566",
+    "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:567",
+    "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:568",
+    "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:569",
+    "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
+    "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:571",
+    "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/NutritionDialogs.kt:334",
+    "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/NutritionDialogs.kt:94",
+    "line": "                            t(\"1 serving = %1\\$s %2\\$s\", food.servingSize.toInt(), food.servingSizeUnit),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:209",
+    "line": "                            Text(t(\"%1\\$s (avg: %2\\$s%3\\$s)\", label, avg, unit), color = color, style = MaterialTheme.typography.labelSmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:380",
+    "line": "            t(\"Select Metrics\") + (if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/NutritionHistoryScreen.kt:435",
+    "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:508",
+    "line": "                                    t(\"%1\\$s/%2\\$s — Tap to expand\", tourState.stepIndex + 1, steps.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:584",
+    "line": "                                            Text(t(\"%1\\$s of %2\\$s\", tourState.stepIndex + 1, steps.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PairGarminScreen.kt:213",
+    "line": "                    if (remaining > 0) t(\"Expires in %1\\$s:%2\\$s\", mins, \"%02d\".format(secs)) else t(\"Expired\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:178",
+    "line": "                                text = t(\"%1\\$s (avg: %2\\$s)\", label, formatPhysicalValue(avg, unit)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:359",
+    "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PremiumGate.kt:302",
+    "line": "            t(\"You have %1\\$s migraines, %2\\$s triggers, and %3\\$s treatments logged.\", migraineCount, triggerCount, treatmentCount),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:755",
+    "line": "                    t(\"What you told us during the AI Setup questionnaire when you onboarded. At signup, your answers shaped the initial state of the app: which triggers, prodromes, medicines, reliefs, symptoms, and activities got added to your pool, the severity weight on each one, your starting LOW / MILD / HIGH gauge thresholds, your day-by-day decay curve, and your menstruation config if you tracked your cycle.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:756",
+    "line": "                    t(\"Trigger Areas are the broad categories you flagged as relevant (sleep, hormones, weather, diet, etc.) and Clinical Assessment captures any diagnosis you mentioned. Both are kept as a snapshot of what you said; they're useful as a reference for you and any clinician you share data with, but they don't actively change how the app behaves day-to-day.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:757",
+    "line": "                    t(\"The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The monthly AI Calibration card in Insights nudges those values over time as the app learns from your data.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:932",
+    "line": "                    t(\"Free Plan covers the basics: full logging (wizard + Quick Log + Daily Check-In), today's risk score with the top 3 contributors, and all Monitor cards.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:933",
+    "line": "                    t(\"Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and monthly AI Calibration of your gauge.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:934",
+    "line": "                    t(\"Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:278",
+    "line": "                    Text((if (acceptedCount == 1) t(\"Apply 1 change\") else t(\"Apply %s changes\", acceptedCount)) +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/RecalibrationReviewScreen.kt:279",
+    "line": "                            if (rejectedCount > 0) t(\" (%s rejected)\", rejectedCount) else \"\")"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:263",
+    "line": "                            Text(t(\"%1\\$s (avg %2\\$s)\", chip.label, fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:672",
+    "line": "                            Text(t(\"%1\\$s · %2\\$s pts\", bar.trigger.severity.uppercase(), bar.trigger.score), color = sevColor, style = MaterialTheme.typography.labelSmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:694",
+    "line": "        Text(t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ScreenTimePermissionDialog.kt:23",
+    "line": "                t(\"To show screen time insights, MigraineMe needs Usage Access permission.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ScreenTimePermissionDialog.kt:24",
+    "line": "                        t(\"This lets Android share app usage totals with MigraineMe. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ScreenTimePermissionDialog.kt:25",
+    "line": "                        t(\"MigraineMe does not read your content.\\n\\n\") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ScreenTimePermissionDialog.kt:26",
+    "line": "                        t(\"You'll be taken to Settings where you can grant this permission.\")"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:175",
+    "line": "                                text = t(\"%1\\$s (avg: %2\\$s)\", label, formatSleepValue(avg, unit)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:356",
+    "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/StoreUnavailableNotice.kt:50",
+    "line": "            t(\"We couldn't load the plans from the store, so there's nothing to show you \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/StoreUnavailableNotice.kt:51",
+    "line": "                t(\"yet. You haven't been charged. This is usually temporary.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:107",
+    "line": "                    t(\"Triggers are events or conditions that may contribute to your migraines. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:108",
+    "line": "                    t(\"You can log triggers manually when recording a migraine, or enable automatic \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:109",
+    "line": "                    t(\"trigger detection based on your health data.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:115",
+    "line": "                    t(\"Automatic triggers are checked daily at 9 AM your local time and will \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:116",
+    "line": "                    t(\"be added to your journal when conditions are met.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/WeatherGraph.kt:166",
+    "line": "                            Text(t(\"%1\\$s (avg: %2\\$s)\", label, formatValue(avg, unit)), color = color, style = MaterialTheme.typography.labelSmall)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/WeatherGraph.kt:378",
+    "line": "            t(\"Select Metrics\") + (if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\"),"
+  }
+]

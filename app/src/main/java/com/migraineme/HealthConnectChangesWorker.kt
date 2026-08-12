@@ -106,10 +106,10 @@ class HealthConnectChangesWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                "Health Data Sync",
+                tSync("Health Data Sync"),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Syncing health data from Health Connect"
+                description = tSync("Syncing health data from Health Connect")
             }
             val notificationManager = applicationContext.getSystemService(NotificationManager::class.java)
             notificationManager?.createNotificationChannel(channel)
@@ -125,8 +125,8 @@ class HealthConnectChangesWorker(
         
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Syncing Health Data")
-            .setContentText("Reading data from Health Connect...")
+            .setContentTitle(tSync("Syncing Health Data"))
+            .setContentText(tSync("Reading data from Health Connect..."))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .build()

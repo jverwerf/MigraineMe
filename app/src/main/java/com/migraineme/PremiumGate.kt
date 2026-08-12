@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
  *
  * Usage:
  *   PremiumGate(
- *       message = "Unlock all treatment insights",
+ *       message = t("Unlock all treatment insights"),
  *       onUpgrade = { navController.navigate("paywall") }
  *   ) {
  *       SpiderChart(data)  // your premium content
@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun PremiumGate(
     modifier: Modifier = Modifier,
-    message: String = "Unlock with Premium",
+    message: String = t("Unlock with Premium"),
     subtitle: String? = null,
     blurRadius: Dp = 10.dp,
     showTeaser: Boolean = true,
@@ -83,7 +83,7 @@ fun PremiumGate(
             ) {
                 Icon(
                     Icons.Outlined.Lock,
-                    contentDescription = "Locked",
+                    contentDescription = t("Locked"),
                     tint = Color.White.copy(alpha = 0.9f),
                     modifier = Modifier.size(32.dp)
                 )
@@ -123,7 +123,7 @@ fun PremiumGate(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("Upgrade", fontWeight = FontWeight.SemiBold)
+                    Text(t("Upgrade"), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -156,7 +156,7 @@ fun PremiumFeatureButton(
             ),
             shape = RoundedCornerShape(24.dp)
         ) {
-            Text(label, fontWeight = FontWeight.SemiBold)
+            Text(t(label), fontWeight = FontWeight.SemiBold)
         }
     } else {
         // Locked button → opens paywall
@@ -178,7 +178,7 @@ fun PremiumFeatureButton(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                "$label (Premium)",
+                t("%s (Premium)", label),
                 color = AppTheme.AccentPurple,
                 fontWeight = FontWeight.SemiBold
             )
@@ -211,10 +211,10 @@ fun TrialBanner(
     val textColor = if (isUrgent) Color(0xFFFF8A65) else AppTheme.AccentPurple
 
     val text = when {
-        days <= 1 -> "Trial ends today \u2014 subscribe to keep your insights"
-        days <= 3 -> "$days days left \u2014 subscribe to keep your insights"
-        days <= 7 -> "$days days of Premium remaining \u2014 subscribe to keep access"
-        else -> "Premium trial \u2014 $days days left"
+        days <= 1 -> t("Trial ends today \u2014 subscribe to keep your insights")
+        days <= 3 -> t("%s days left \u2014 subscribe to keep your insights", days)
+        days <= 7 -> t("%s days of Premium remaining \u2014 subscribe to keep access", days)
+        else -> t("Premium trial \u2014 %s days left", days)
     }
 
     Row(
@@ -253,7 +253,7 @@ fun TrialBanner(
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
             ) {
                 Text(
-                    "Subscribe",
+                    t("Subscribe"),
                     color = textColor,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                 )
@@ -299,13 +299,13 @@ fun PremiumRecoveryPrompt(
             modifier = Modifier.size(24.dp)
         )
         Text(
-            "You have $migraineCount migraines, $triggerCount triggers, and $treatmentCount treatments logged.",
+            t("You have %1\$s migraines, %2\$s triggers, and %3\$s treatments logged.", migraineCount, triggerCount, treatmentCount),
             color = Color.White.copy(alpha = 0.8f),
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center
         )
         Text(
-            "Unlock Premium to see what your data reveals.",
+            t("Unlock Premium to see what your data reveals."),
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.Center

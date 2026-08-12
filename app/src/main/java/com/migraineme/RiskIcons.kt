@@ -206,26 +206,26 @@ fun FoodRiskLegend() {
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
-            "What the icons mean",
+            t("What the icons mean"),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
         )
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            LegendCompound("Tyramine") { CheeseIcon(AppTheme.BodyTextColor, 12.dp) }
-            LegendCompound("Alcohol") { WineGlassIcon(AppTheme.BodyTextColor, 12.dp) }
+            LegendCompound(t("Tyramine")) { CheeseIcon(AppTheme.BodyTextColor, 12.dp) }
+            LegendCompound(t("Alcohol")) { WineGlassIcon(AppTheme.BodyTextColor, 12.dp) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            LegendCompound("Gluten") { WheatIcon(AppTheme.BodyTextColor, 12.dp) }
-            LegendCompound("Histamine") { FlaskIcon(AppTheme.BodyTextColor, 12.dp) }
+            LegendCompound(t("Gluten")) { WheatIcon(AppTheme.BodyTextColor, 12.dp) }
+            LegendCompound(t("Histamine")) { FlaskIcon(AppTheme.BodyTextColor, 12.dp) }
         }
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Level", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            Text(t("Level"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             LegendLevel("low", "Low")
             LegendLevel("medium", "Medium")
             LegendLevel("high", "High")
         }
         Text(
-            "A taller, warmer bar means more of that compound in this food.",
+            t("A taller, warmer bar means more of that compound in this food."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall
         )
@@ -250,7 +250,7 @@ private fun LegendLevel(level: String, label: String) {
         horizontalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         RiskBar(riskLevelColor(level), level, 11.dp)
-        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 

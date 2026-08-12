@@ -231,8 +231,8 @@ fun RiskHistoryGraph(
 
     BaseCard(modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("$days-Day Risk History", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-            if (onClick != null) Text("View Full \u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+            Text(t("%s-Day Risk History", days), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+            if (onClick != null) Text(t("View Full \u2192"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.height(8.dp))
 
@@ -241,10 +241,10 @@ fun RiskHistoryGraph(
                 CircularProgressIndicator(Modifier.size(24.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
             }
         } else if (daysWithData.isEmpty()) {
-            Text("No data available", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
+            Text(t("No data available"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(180.dp).padding(vertical = 70.dp), textAlign = TextAlign.Center)
         } else if (selectedMetrics.isEmpty()) {
-            Text("Select a metric below", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
+            Text(t("Select a metric below"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().height(180.dp).padding(vertical = 70.dp), textAlign = TextAlign.Center)
         } else {
             // Legend
@@ -260,7 +260,7 @@ fun RiskHistoryGraph(
                             Text("${chip.label} [${fmtV(mn)}\u2013${fmtV(mx)}]", color = chip.color, style = MaterialTheme.typography.labelSmall)
                         } else {
                             val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
-                            Text("${chip.label} (avg ${fmtV(avg)})", color = chip.color, style = MaterialTheme.typography.labelSmall)
+                            Text(t("%1\$s (avg %2\$s)", chip.label, fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -298,8 +298,7 @@ fun RiskHistoryGraph(
                                 .padding(vertical = 2.dp)
                         ) {
                             Canvas(Modifier.size(10.dp)) { item.draw(this) }
-                            Text(
-                                item.label,
+                            Text(t(item.label),
                                 color = if (visible) AppTheme.SubtleTextColor else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                                 style = MaterialTheme.typography.labelSmall,
                                 textDecoration = if (!visible) TextDecoration.LineThrough else TextDecoration.None
@@ -615,7 +614,7 @@ fun RiskHistoryGraph(
 
                 // Tooltip overlay — show actual logged items
                 tappedIcon?.let { icon ->
-                    val typeLabel = hubTypeLabels.getOrElse(icon.typeIdx) { "" }
+                    val typeLabel = tSync(hubTypeLabels.getOrElse(icon.typeIdx) { "" })
                     val dateLabel = try { LocalDate.parse(icon.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d")) } catch (_: Exception) { icon.date }
                     // Get actual item names from the maps
                     val itemNames: List<String> = when (icon.typeIdx) {
@@ -643,7 +642,7 @@ fun RiskHistoryGraph(
                                 Text("• $name", color = Color.White, style = MaterialTheme.typography.labelSmall)
                             }
                             if (itemNames.size > 6) {
-                                Text("+ ${itemNames.size - 6} more", color = Color.White.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
+                                Text(t("+ %s more", itemNames.size - 6), color = Color.White.copy(alpha = 0.5f), style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -670,7 +669,7 @@ fun RiskHistoryGraph(
                         Column {
                             Text(dateLabel, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
                             Text(prettyLabel(bar.trigger.name), color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
-                            Text("${bar.trigger.severity.uppercase()} · ${bar.trigger.score} pts", color = sevColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("%1\$s · %2\$s pts", bar.trigger.severity.uppercase(), bar.trigger.score), color = sevColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -692,7 +691,7 @@ fun RiskHistoryGraph(
 
         // Chips — Favs first, divider, then grouped by category
         Spacer(Modifier.height(12.dp))
-        Text("Select Metrics" + if (selectedMetrics.size > 1) " (${selectedMetrics.size} selected)" else "", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+        Text(t("Select Metrics") + if (selectedMetrics.size > 1) t(" (%s selected)", selectedMetrics.size) else "", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
         Spacer(Modifier.height(8.dp))
 
         // Favourites section — only Risk Score + the user's 3 fav-of-favs in the
@@ -705,7 +704,7 @@ fun RiskHistoryGraph(
                 FilterChip(
                     selected = sel,
                     onClick = { selectedMetrics = if (sel) selectedMetrics - chip.key else selectedMetrics + chip.key },
-                    label = { Text(chip.label, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(t(chip.label), style = MaterialTheme.typography.labelSmall) },
                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = chip.color.copy(alpha = 0.3f), selectedLabelColor = chip.color, containerColor = AppTheme.BaseCardContainer, labelColor = AppTheme.SubtleTextColor),
                     border = FilterChipDefaults.filterChipBorder(borderColor = if (sel) chip.color else AppTheme.SubtleTextColor.copy(alpha = 0.3f), selectedBorderColor = chip.color, enabled = true, selected = sel)
                 )
@@ -736,7 +735,7 @@ fun RiskHistoryGraph(
                 .sortedBy { catOrder.indexOf(it.name).let { i -> if (i < 0) 99 else i } }
         }
         groups.forEach { group ->
-            Text(group.name, color = group.color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+            Text(t(group.name), color = group.color, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 group.keys.forEach { key ->
@@ -745,7 +744,7 @@ fun RiskHistoryGraph(
                     FilterChip(
                         selected = sel,
                         onClick = { selectedMetrics = if (sel) selectedMetrics - key else selectedMetrics + key },
-                        label = { Text(chip.label, style = MaterialTheme.typography.labelSmall) },
+                        label = { Text(t(chip.label), style = MaterialTheme.typography.labelSmall) },
                         colors = FilterChipDefaults.filterChipColors(selectedContainerColor = group.color.copy(alpha = 0.3f), selectedLabelColor = group.color, containerColor = AppTheme.BaseCardContainer, labelColor = AppTheme.SubtleTextColor),
                         border = FilterChipDefaults.filterChipBorder(borderColor = if (sel) group.color else AppTheme.SubtleTextColor.copy(alpha = 0.3f), selectedBorderColor = group.color, enabled = true, selected = sel)
                     )

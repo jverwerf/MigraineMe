@@ -105,13 +105,13 @@ fun SleepConfigScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             HeroCard {
                 Text(
-                    text = "Customize Sleep",
+                    text = t("Customize Sleep"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Choose which sleep metrics to display on the Monitor screen.",
+                    text = t("Choose which sleep metrics to display on the Monitor screen."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -120,13 +120,13 @@ fun SleepConfigScreen(
             if (settingsLoaded && availableMetrics.isEmpty()) {
                 BaseCard {
                     Text(
-                        text = "No sleep source enabled",
+                        text = t("No sleep source enabled"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Enable sleep tracking in Data Settings to customize metrics.",
+                        text = t("Enable sleep tracking in Data Settings to customize metrics."),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -134,13 +134,13 @@ fun SleepConfigScreen(
             } else {
                 BaseCard {
                     Text(
-                        text = "Display Metrics (${selectedMetrics.size}/3)",
+                        text = t("Display Metrics (%s/3)", selectedMetrics.size),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Select up to 3 sleep metrics to show on the Monitor card.",
+                        text = t("Select up to 3 sleep metrics to show on the Monitor card."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -196,7 +196,7 @@ fun SleepConfigScreen(
                                         {
                                             Icon(
                                                 Icons.Default.Watch,
-                                                contentDescription = "External",
+                                                contentDescription = t("External"),
                                                 modifier = Modifier.size(14.dp),
                                                 tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
                                             )
@@ -206,7 +206,7 @@ fun SleepConfigScreen(
                                         {
                                             Icon(
                                                 Icons.Default.PhoneAndroid,
-                                                contentDescription = "Phone",
+                                                contentDescription = t("Phone"),
                                                 modifier = Modifier.size(14.dp),
                                                 tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
                                             )
@@ -237,11 +237,11 @@ fun SleepConfigScreen(
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.Watch, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                            Text(text = "External", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(text = t("External"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                            Text(text = "Phone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(text = t("Phone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

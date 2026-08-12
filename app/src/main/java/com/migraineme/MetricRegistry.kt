@@ -105,7 +105,7 @@ object MetricRegistry {
 
     fun get(key: String): Metric? = byKey[key]
 
-    fun label(key: String): String = byKey[key]?.label ?: key
+    fun label(key: String): String = tSync(byKey[key]?.label ?: key)
 
     fun unit(key: String): String = byKey[key]?.unit ?: ""
 

@@ -127,18 +127,18 @@ fun QuickMigraineScreen(
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Spacer(Modifier.width(48.dp))
-                Text("Quick Log", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Quick Log"), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
             // Hero (matches iOS symptomContent header)
             HeroCard {
                 Box(Modifier.size(40.dp).drawBehind { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } })
-                Text("Log Migraine", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Log Migraine"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    "Pain character, symptom",
+                    t("Pain character, symptom"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -173,7 +173,7 @@ fun QuickMigraineScreen(
                                     auraDuration?.let { add(formatAuraDuration(it)) }
                                 }
                                 Text(
-                                    parts.joinToString(" · ") + " — tap to edit",
+                                    t("%s — tap to edit", parts.joinToString(" · ")),
                                     color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall
                                 )
@@ -181,13 +181,13 @@ fun QuickMigraineScreen(
                         }
                         Spacer(Modifier.weight(1f))
                         IconButton(onClick = { selectedSymptom = null; auraZones.clear(); auraDuration = null }, modifier = Modifier.size(24.dp)) {
-                            Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.AccentPink.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+                            Icon(Icons.Outlined.Close, t("Clear"), tint = AppTheme.AccentPink.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
                         }
                     }
                 }
 
                 if (frequentItems.isNotEmpty()) {
-                    SectionHeader("Frequent")
+                    SectionHeader(t("Frequent"))
                     frequentItems.forEach { s ->
                         SymptomRow(
                             label = s.label,
@@ -200,7 +200,7 @@ fun QuickMigraineScreen(
                 }
 
                 if (painNonFav.isNotEmpty()) {
-                    SectionHeader("Pain character")
+                    SectionHeader(t("Pain character"))
                     painNonFav.forEach { s ->
                         SymptomRow(s.label, s.iconKey, selectedSymptom == s.label, AppTheme.AccentPink) {
                             onPick(s.label)
@@ -209,9 +209,9 @@ fun QuickMigraineScreen(
                 }
 
                 if (accompNonFav.isNotEmpty()) {
-                    SectionHeader("Accompanying experience")
+                    SectionHeader(t("Accompanying experience"))
                     accompGrouped.forEach { (sub, items) ->
-                        val subLabel = if (sub == "accompanying") "General" else sub
+                        val subLabel = if (sub == "accompanying") t("General") else t(sub)
                         Text(
                             subLabel,
                             color = AppTheme.SubtleTextColor,
@@ -231,14 +231,14 @@ fun QuickMigraineScreen(
 
             // Details card (matches iOS detailsCard)
             BaseCard {
-                Text("Details", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Details"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(8.dp))
 
                 Column(Modifier.fillMaxWidth()) {
-                    Text("When did this happen?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("When did this happen?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Spacer(Modifier.height(4.dp))
                     AppDateTimePicker(
-                        label = formatQuickTime(beganAtIso) ?: "Now",
+                        label = formatQuickTime(beganAtIso) ?: t("Now"),
                         onDateTimeSelected = { beganAtIso = it }
                     )
                 }
@@ -248,7 +248,7 @@ fun QuickMigraineScreen(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes (optional)", color = AppTheme.SubtleTextColor) },
+                    label = { Text(t("Notes (optional)"), color = AppTheme.SubtleTextColor) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
@@ -270,7 +270,7 @@ fun QuickMigraineScreen(
                     onClick = onClose,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("Cancel")
+                    Text(t("Cancel"))
                 }
 
                 Button(
@@ -278,7 +278,7 @@ fun QuickMigraineScreen(
                     enabled = !saving && selectedSymptom != null,
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPink)
                 ) {
-                    Text(if (saving) "Saving…" else "Log Migraine", fontWeight = FontWeight.SemiBold)
+                    Text(if (saving) t("Saving…") else t("Log Migraine"), fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -339,7 +339,7 @@ private fun SymptomRow(
             LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 24.dp else 18.dp, tint = if (selected) color else AppTheme.SubtleTextColor)
             Spacer(Modifier.width(10.dp))
         }
-        Text(label, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+        Text(t(label), color = Color.White, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.weight(1f))
         if (selected) {
             Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))

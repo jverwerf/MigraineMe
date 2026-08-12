@@ -268,7 +268,7 @@ class NutritionDiagnosticActivity : ComponentActivity() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(label, style = MaterialTheme.typography.bodyMedium)
+            Text(t(label), style = MaterialTheme.typography.bodyMedium)
             Text(value, style = MaterialTheme.typography.bodyMedium, color = color)
         }
     }

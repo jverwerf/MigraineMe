@@ -141,9 +141,9 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
                 ) {
                     Icon(Icons.Outlined.CalendarMonth, null, tint = Color(0xFF64B5F6),
                         modifier = Modifier.size(36.dp))
-                    Text("Calendar opt-outs", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(t("Calendar opt-outs"), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        "Titles you've removed from the calendar mapper. Delete one to let it be auto-saved again.",
+                        t("Titles you've removed from the calendar mapper. Delete one to let it be auto-saved again."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
@@ -157,7 +157,7 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
                         .offset(x = 10.dp, y = (-14).dp)
                         .size(34.dp)
                 ) {
-                    Icon(Icons.Outlined.Info, contentDescription = "About Calendar opt-outs",
+                    Icon(Icons.Outlined.Info, contentDescription = t("About Calendar opt-outs"),
                         tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                 }
             }
@@ -168,7 +168,7 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
                 error != null -> Text(error!!, color = Color(0xFFE57373),
                     style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
                 groups.isEmpty() -> Text(
-                    "Nothing here. When you tap Undo on a calendar event during your check-in, the title shows up here so you can revive it later.",
+                    t("Nothing here. When you tap Undo on a calendar event during your check-in, the title shows up here so you can revive it later."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
@@ -209,11 +209,11 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
             onDismissRequest = { showInfo = false },
             containerColor = Color(0xFF1E0A2E),
             title = {
-                Text("About Calendar opt-outs", color = AppTheme.TitleColor,
+                Text(t("About Calendar opt-outs"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = { Text(infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 }
@@ -233,7 +233,7 @@ private fun SkipRowCard(group: SkipGroup, onDelete: () -> Unit) {
             Text(group.displayTitle, color = Color.White, fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.bodyMedium)
             Text(
-                if (group.count == 1) "1 event" else "${group.count} events",
+                if (group.count == 1) t("1 event") else t("%s events", group.count),
                 color = AppTheme.SubtleTextColor, fontSize = 10.sp,
             )
         }

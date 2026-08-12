@@ -26,7 +26,7 @@ object DataSettingsSections {
      */
     fun getAllSections(): List<DataSection> = listOf(
         DataSection(
-            title = "Sleep",
+            title = tSync("Sleep"),
             rows = listOf(
                 phoneOrWearableRow("sleep_duration_daily", "Sleep duration"),
                 wearableRow("sleep_score_daily", "Sleep score"),
@@ -38,7 +38,7 @@ object DataSettingsSections {
             )
         ),
         DataSection(
-            title = "Physical Health",
+            title = tSync("Physical Health"),
             rows = listOf(
                 wearableRow("recovery_score_daily", "Recovery score"),
                 wearableRow("resting_hr_daily", "Resting heart rate"),
@@ -52,7 +52,7 @@ object DataSettingsSections {
             )
         ),
         DataSection(
-            title = "Cognitive",
+            title = tSync("Cognitive"),
             rows = listOf(
                 wearableRow("stress_index_daily", "Stress index"),
                 phoneRow("screen_time_daily", "Phone screen time tracking"),
@@ -65,7 +65,7 @@ object DataSettingsSections {
             )
         ),
         DataSection(
-            title = "Environment",
+            title = tSync("Environment"),
             rows = listOf(
                 phoneRow("user_location_daily", "Location"),
                 referenceRow("temperature_daily", "Temperature"),
@@ -77,13 +77,13 @@ object DataSettingsSections {
             )
         ),
         DataSection(
-            title = "Diet",
+            title = tSync("Diet"),
             rows = listOf(
                 phoneRow("nutrition", "Diet")
             )
         ),
         DataSection(
-            title = "Menstruation",
+            title = tSync("Menstruation"),
             rows = listOf(
                 phoneRow("menstruation", "Menstruation")
             )

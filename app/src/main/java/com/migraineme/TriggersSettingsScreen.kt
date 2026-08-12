@@ -70,19 +70,19 @@ fun TriggersSettingsScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Tune,
-                        contentDescription = "Customize",
+                        contentDescription = t("Customize"),
                         tint = AppTheme.AccentPurple,
                         modifier = Modifier.size(28.dp)
                     )
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Customize Triggers",
+                            t("Customize Triggers"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
-                            "Configure automatic trigger detection",
+                            t("Configure automatic trigger detection"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -98,22 +98,22 @@ fun TriggersSettingsScreen(
             // Summary Card
             HeroCard {
                 Text(
-                    "About Triggers",
+                    t("About Triggers"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Triggers are events or conditions that may contribute to your migraines. " +
-                    "You can log triggers manually when recording a migraine, or enable automatic " +
-                    "trigger detection based on your health data.",
+                    t("Triggers are events or conditions that may contribute to your migraines. ") +
+                    t("You can log triggers manually when recording a migraine, or enable automatic ") +
+                    t("trigger detection based on your health data."),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Automatic triggers are checked daily at 9 AM your local time and will " +
-                    "be added to your journal when conditions are met.",
+                    t("Automatic triggers are checked daily at 9 AM your local time and will ") +
+                    t("be added to your journal when conditions are met."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )

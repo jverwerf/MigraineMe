@@ -135,7 +135,7 @@ object MenstruationTrackingHelper {
             if (menstruationEntry == null) {
                 db.upsertTriggerToPool(
                     accessToken = accessToken,
-                    label = "Menstruation",
+                    label = tSync("Menstruation"),
                     category = "Menstrual Cycle",
                     predictionValue = severity
                 )

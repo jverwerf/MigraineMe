@@ -178,13 +178,13 @@ fun MigraineHubScreen(navController: NavController) {
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            "Log Migraine",
+                            t("Log Migraine"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
 
                         Text(
-                            "A guided entry of the whole attack. Skipping steps is fine, share as much as you care to.",
+                            t("A guided entry of the whole attack. Skipping steps is fine, share as much as you care to."),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -192,7 +192,7 @@ fun MigraineHubScreen(navController: NavController) {
                         Spacer(Modifier.height(6.dp))
 
                         Text(
-                            "Tap to start",
+                            t("Tap to start"),
                             color = AppTheme.AccentPurple,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
@@ -207,7 +207,7 @@ fun MigraineHubScreen(navController: NavController) {
                 ) {
                     Icon(
                         Icons.Outlined.Info,
-                        contentDescription = "About Log Migraine",
+                        contentDescription = t("About Log Migraine"),
                         tint = AppTheme.SubtleTextColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -233,12 +233,12 @@ fun MigraineHubScreen(navController: NavController) {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Daily Check-In",
+                                t("Daily Check-In"),
                                 color = Color.White,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                             )
                             Text(
-                                "Review your day",
+                                t("Review your day"),
                                 color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -254,7 +254,7 @@ fun MigraineHubScreen(navController: NavController) {
                 ) {
                     Icon(
                         Icons.Outlined.Info,
-                        contentDescription = "About Daily Check-In",
+                        contentDescription = t("About Daily Check-In"),
                         tint = AppTheme.SubtleTextColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -267,12 +267,12 @@ fun MigraineHubScreen(navController: NavController) {
                 BaseCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            "Quick Log",
+                            t("Quick Log"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
-                            "Log a single item without a full migraine entry",
+                            t("Log a single item without a full migraine entry"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -287,7 +287,7 @@ fun MigraineHubScreen(navController: NavController) {
                 ) {
                     Icon(
                         Icons.Outlined.Info,
-                        contentDescription = "About Quick Log",
+                        contentDescription = t("About Quick Log"),
                         tint = AppTheme.SubtleTextColor,
                         modifier = Modifier.size(20.dp)
                     )
@@ -298,11 +298,11 @@ fun MigraineHubScreen(navController: NavController) {
                     onDismissRequest = { showQuickLogInfo = false },
                     confirmButton = {
                         TextButton(onClick = { showQuickLogInfo = false }) {
-                            Text("Got it", color = AppTheme.AccentPurple)
+                            Text(t("Got it"), color = AppTheme.AccentPurple)
                         }
                     },
                     title = {
-                        Text("About Quick Log", color = AppTheme.TitleColor,
+                        Text(t("About Quick Log"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                     },
                     text = {
@@ -320,8 +320,8 @@ fun MigraineHubScreen(navController: NavController) {
             ) {
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = "Migraine",
-                    subtitle = "Pain character, symptom",
+                    title = t("Migraine"),
+                    subtitle = t("Pain character, symptom"),
                     iconColor = AppTheme.AccentPink,
                     drawIcon = { HubIcons.run { drawMigraineStarburst(it) } },
                     onClick = { navController.navigate(Routes.QUICK_LOG_MIGRAINE) }
@@ -329,8 +329,8 @@ fun MigraineHubScreen(navController: NavController) {
 
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = "Prodrome",
-                    subtitle = "Log prodrome",
+                    title = t("Prodrome"),
+                    subtitle = t("Log prodrome"),
                     iconColor = AppTheme.AccentPurple,
                     drawIcon = { drawProdromeIcon(it) },
                     onClick = { navController.navigate(Routes.QUICK_LOG_PRODROME) }
@@ -344,8 +344,8 @@ fun MigraineHubScreen(navController: NavController) {
             ) {
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = "Trigger",
-                    subtitle = "Log a trigger",
+                    title = t("Trigger"),
+                    subtitle = t("Log a trigger"),
                     iconColor = Color(0xFFFFB74D),
                     drawIcon = { drawTriggerIcon(it) },
                     onClick = { navController.navigate(Routes.QUICK_LOG_TRIGGER) }
@@ -353,8 +353,8 @@ fun MigraineHubScreen(navController: NavController) {
 
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = "Medicine",
-                    subtitle = "Log a medicine",
+                    title = t("Medicine"),
+                    subtitle = t("Log a medicine"),
                     iconColor = Color(0xFF4FC3F7),
                     drawIcon = { drawMedicineIcon(it) },
                     onClick = { navController.navigate(Routes.QUICK_LOG_MEDICINE) }
@@ -368,8 +368,8 @@ fun MigraineHubScreen(navController: NavController) {
             ) {
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = "Relief",
-                    subtitle = "Log a relief",
+                    title = t("Relief"),
+                    subtitle = t("Log a relief"),
                     iconColor = Color(0xFF81C784),
                     drawIcon = { drawReliefIcon(it) },
                     onClick = { navController.navigate(Routes.QUICK_LOG_RELIEF) }
@@ -377,8 +377,8 @@ fun MigraineHubScreen(navController: NavController) {
 
                 QuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = "Activity",
-                    subtitle = "Log activity",
+                    title = t("Activity"),
+                    subtitle = t("Log activity"),
                     iconColor = Color(0xFFFF8A65),
                     drawIcon = { HubIcons.run { drawActivityPulse(it) } },
                     onClick = { navController.navigate(Routes.QUICK_LOG_ACTIVITY) }
@@ -392,11 +392,11 @@ fun MigraineHubScreen(navController: NavController) {
             onDismissRequest = { showLogMigraineInfo = false },
             confirmButton = {
                 TextButton(onClick = { showLogMigraineInfo = false }) {
-                    Text("Got it", color = AppTheme.AccentPurple)
+                    Text(t("Got it"), color = AppTheme.AccentPurple)
                 }
             },
             title = {
-                Text("About Log Migraine", color = AppTheme.TitleColor,
+                Text(t("About Log Migraine"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = {
@@ -412,11 +412,11 @@ fun MigraineHubScreen(navController: NavController) {
             onDismissRequest = { showCheckInInfo = false },
             confirmButton = {
                 TextButton(onClick = { showCheckInInfo = false }) {
-                    Text("Got it", color = AppTheme.AccentPurple)
+                    Text(t("Got it"), color = AppTheme.AccentPurple)
                 }
             },
             title = {
-                Text("About Daily Check-In", color = AppTheme.TitleColor,
+                Text(t("About Daily Check-In"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = {
@@ -493,13 +493,13 @@ private fun QuickLogCard(
 
 
 object LogQuickLogInfoCopy {
-    const val text = "Still quick, but with a bit more choice. The home strip is one-tap-and-done; this Quick Log lets you pick any item from your full pool (not just your favourites), set the time to something other than right now, and add notes.\n\nFor medicines and reliefs you can also log the amount, how much it helped, and any side effects, so this is the right place when you've taken something specific and want it recorded properly.\n\nActivity logging lives here too. For a full attack with everything that goes around it (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities and notes), use the \"Log Migraine\" hero card above."
+    val text: String get() = tSync("Still quick, but with a bit more choice. The home strip is one-tap-and-done; this Quick Log lets you pick any item from your full pool (not just your favourites), set the time to something other than right now, and add notes.\n\nFor medicines and reliefs you can also log the amount, how much it helped, and any side effects, so this is the right place when you've taken something specific and want it recorded properly.\n\nActivity logging lives here too. For a full attack with everything that goes around it (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities and notes), use the \"Log Migraine\" hero card above.")
 }
 
 object LogMigraineInfoCopy {
-    const val text = "The full attack log. Tap to walk through every step that goes into recording a migraine: timing, paint-the-picture AI shortcut, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, and a final review.\n\nUse this when you want the complete record of an attack and have a few minutes to fill it in. Every step is optional, so skip what doesn't apply.\n\nFor one-tap or single-item logging during an attack, use the Quick Log strip on the Home tab or the Quick Log section below."
+    val text: String get() = tSync("The full attack log. Tap to walk through every step that goes into recording a migraine: timing, paint-the-picture AI shortcut, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities, notes, and a final review.\n\nUse this when you want the complete record of an attack and have a few minutes to fill it in. Every step is optional, so skip what doesn't apply.\n\nFor one-tap or single-item logging during an attack, use the Quick Log strip on the Home tab or the Quick Log section below.")
 }
 
 object CheckInInfoCopy {
-    const val text = "A guided evening review of your day in one go. Walks you through a free-text note about how the day went, anything notable from your calendar, and a quick pass over your triggers, prodromes, medicines, reliefs and activities so nothing slips through.\n\nWhen you have an open migraine, it also asks about postdrome symptoms.\n\nIf you're on any treatments, it checks in about side effects from each one.\n\nUse it once a day to keep your log complete without remembering everything at the moment it happens."
+    val text: String get() = tSync("A guided evening review of your day in one go. Walks you through a free-text note about how the day went, anything notable from your calendar, and a quick pass over your triggers, prodromes, medicines, reliefs and activities so nothing slips through.\n\nWhen you have an open migraine, it also asks about postdrome symptoms.\n\nIf you're on any treatments, it checks in about side effects from each one.\n\nUse it once a day to keep your log complete without remembering everything at the moment it happens.")
 }

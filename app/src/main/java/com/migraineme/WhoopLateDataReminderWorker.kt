@@ -65,7 +65,7 @@ class WhoopLateDataReminderWorker(
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val ch = NotificationChannel(
                 channelId,
-                "MigraineMe data reminders",
+                tSync("MigraineMe data reminders"),
                 NotificationManager.IMPORTANCE_DEFAULT
             )
             nm.createNotificationChannel(ch)
@@ -73,8 +73,8 @@ class WhoopLateDataReminderWorker(
 
         val notif = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Whoop data still missing")
-            .setContentText("We haven’t received today’s Whoop data yet. Open MigraineMe to retry.")
+            .setContentTitle(tSync("Whoop data still missing"))
+            .setContentText(tSync("We haven’t received today’s Whoop data yet. Open MigraineMe to retry."))
             .setAutoCancel(true)
             .build()
 

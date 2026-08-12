@@ -99,22 +99,22 @@ fun PhysicalConfigScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             HeroCard {
-                Text("Customize Physical Health", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Customize Physical Health"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
-                Text("Choose which physical health metrics to display on the Monitor screen.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Choose which physical health metrics to display on the Monitor screen."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
 
             if (settingsLoaded && availableMetrics.isEmpty()) {
                 BaseCard {
-                    Text("No physical health source enabled", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("No physical health source enabled"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
-                    Text("Enable physical health tracking in Data Settings to customize metrics.", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                    Text(t("Enable physical health tracking in Data Settings to customize metrics."), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
                 }
             } else {
                 BaseCard {
-                    Text("Display Metrics (${selectedMetrics.size}/3)", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Display Metrics (%s/3)", selectedMetrics.size), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(4.dp))
-                    Text("Select up to 3 metrics to show on the Monitor card.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Select up to 3 metrics to show on the Monitor card."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(12.dp))
 
                     FlowRow(
@@ -146,16 +146,16 @@ fun PhysicalConfigScreen(
                                     saveConfig()
                                 },
                                 enabled = true,
-                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(label), style = MaterialTheme.typography.labelSmall) },
                                 leadingIcon = if (isSelected) {
                                     { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
                                 } else null,
                                 trailingIcon = when (source) {
                                     "external" -> {
-                                        { Icon(Icons.Default.Watch, contentDescription = "External", modifier = Modifier.size(14.dp), tint = if (isSelected) slotColor else AppTheme.SubtleTextColor) }
+                                        { Icon(Icons.Default.Watch, contentDescription = t("External"), modifier = Modifier.size(14.dp), tint = if (isSelected) slotColor else AppTheme.SubtleTextColor) }
                                     }
                                     "phone" -> {
-                                        { Icon(Icons.Default.PhoneAndroid, contentDescription = "Phone", modifier = Modifier.size(14.dp), tint = if (isSelected) slotColor else AppTheme.SubtleTextColor) }
+                                        { Icon(Icons.Default.PhoneAndroid, contentDescription = t("Phone"), modifier = Modifier.size(14.dp), tint = if (isSelected) slotColor else AppTheme.SubtleTextColor) }
                                     }
                                     else -> null
                                 },
@@ -180,11 +180,11 @@ fun PhysicalConfigScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.Watch, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                            Text("External", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("External"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                            Text("Phone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("Phone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

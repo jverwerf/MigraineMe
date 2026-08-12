@@ -61,7 +61,18 @@ object AuraZones {
         }.toMap()
     }
 
-    fun label(id: String): String = ALL_LABELS[id] ?: id
+    /** Display label, composed from translated pieces at call time so a
+     *  language switch is picked up. The id (and ALL_LABELS keys) stay
+     *  English — they are the stored values. */
+    fun label(id: String): String {
+        for ((eyeId, eyeLabel) in EYES) {
+            if (id.startsWith("${eyeId}_")) {
+                val cell = CELL_LABELS[id.removePrefix("${eyeId}_")] ?: return id
+                return "${tSync(eyeLabel)} \u00b7 ${tSync(cell)}"
+            }
+        }
+        return id
+    }
 }
 
 /** True for symptom labels that should open the aura detail sheet when tapped. */
@@ -160,13 +171,13 @@ fun AuraDetailSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Aura",
+                t("Aura"),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Where in your vision did it appear? Tap the areas as you saw them through your own eyes.",
+                t("Where in your vision did it appear? Tap the areas as you saw them through your own eyes."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center
@@ -205,7 +216,7 @@ fun AuraDetailSheet(
                     val atLabel = prev.startAtIso?.let { " · ${formatAuraMomentIso(it)}" } ?: ""
                     val durLabel = prev.durationMinutes?.let { " · ${formatAuraDuration(it)}" } ?: ""
                     Text(
-                        "Earlier (${i + 1})$atLabel$durLabel: ${prev.zones.joinToString(", ") { AuraZones.label(it) }}",
+                        t("Earlier (%1\$s)%2\$s%3\$s: %4\$s", i + 1, atLabel, durLabel, prev.zones.joinToString(", ") { AuraZones.label(it) }),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall,
                     )
@@ -215,7 +226,7 @@ fun AuraDetailSheet(
             if (zones.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "${zones.size} area${if (zones.size > 1) "s" else ""} selected",
+                    (if (zones.size == 1) t("1 area selected") else t("%s areas selected", zones.size)),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -224,14 +235,14 @@ fun AuraDetailSheet(
             if (onAddMoment != null) {
                 Spacer(Modifier.height(14.dp))
                 Text(
-                    "When did it appear?",
+                    t("When did it appear?"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
                 AppDateTimePicker(
-                    label = momentAtIso?.let { "When: ${formatAuraMomentIso(it)}" } ?: "Now (tap to change)"
+                    label = momentAtIso?.let { "When: ${formatAuraMomentIso(it)}" } ?: t("Now (tap to change)")
                 ) { momentAtIso = it }
             }
 
@@ -240,8 +251,8 @@ fun AuraDetailSheet(
             // Duration: per stage once the user starts staging moments; the
             // attack's overall duration is the sum of the stages.
             Text(
-                if (previousEntries.isNotEmpty()) "How long did this stage last?"
-                else "How long did the aura last?",
+                if (previousEntries.isNotEmpty()) t("How long did this stage last?")
+                else t("How long did the aura last?"),
                 color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.fillMaxWidth()
@@ -255,7 +266,7 @@ fun AuraDetailSheet(
                 // Unknown is the default: duration stays null and is excluded
                 // from every duration statistic until the user picks a value.
                 DurationChip(
-                    text = "Don't know yet",
+                    text = t("Don't know yet"),
                     selected = !customMode && duration == null,
                     onClick = {
                         customMode = false
@@ -275,7 +286,7 @@ fun AuraDetailSheet(
                     )
                 }
                 DurationChip(
-                    text = "Custom",
+                    text = t("Custom"),
                     selected = customMode,
                     onClick = {
                         customMode = !customMode
@@ -292,7 +303,7 @@ fun AuraDetailSheet(
                         customText = v.filter { it.isDigit() }.take(4)
                         duration = customText.toIntOrNull()
                     },
-                    label = { Text("Minutes") },
+                    label = { Text(t("Minutes")) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -323,23 +334,23 @@ fun AuraDetailSheet(
                         customMode = false
                         customText = ""
                     }) {
-                        Text("It moved — add another", color = AppTheme.AccentPurple,
+                        Text(t("It moved — add another"), color = AppTheme.AccentPurple,
                             style = MaterialTheme.typography.labelLarge)
                     }
                 }
                 TextButton(onClick = { onSave(emptyList(), null, null) }) {
-                    Text("Skip for now", color = AppTheme.SubtleTextColor)
+                    Text(t("Skip for now"), color = AppTheme.SubtleTextColor)
                 }
                 Button(
                     onClick = { onSave(zones.toList(), duration, momentAtIso) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Save") }
+                ) { Text(t("Save")) }
             }
 
             if (onRemove != null) {
                 TextButton(onClick = onRemove) {
                     Text(
-                        "Remove aura from this log",
+                        t("Remove aura from this log"),
                         color = AppTheme.AccentPink.copy(alpha = 0.9f),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -531,7 +542,7 @@ fun AuraHeatMap(
                     }
                 }
                 Spacer(Modifier.height(4.dp))
-                Text(eyeLabel, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                Text(t(eyeLabel), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             }
         }
     }

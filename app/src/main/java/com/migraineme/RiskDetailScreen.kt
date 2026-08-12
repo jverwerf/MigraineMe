@@ -111,10 +111,10 @@ private fun DetailHeroCard(
     }
 
     // Day label for selected day
-    val dayLabel = if (selectedDay == 0) "Risk today" else {
+    val dayLabel = if (selectedDay == 0) t("Risk today") else {
         val date = dayRisks.getOrNull(selectedDay)?.date
-        if (date != null) "Risk · ${date.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM"))}"
-        else "Risk"
+        if (date != null) t("Risk · %s", date.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM", rememberAppLocale())))
+        else t("Risk")
     }
 
     Box(modifier = modifier) {
@@ -128,7 +128,7 @@ private fun DetailHeroCard(
             )
             if (onHistoryTap != null) {
                 Text(
-                    "History →",
+                    t("History →"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -150,7 +150,7 @@ private fun DetailHeroCard(
             ) {
                 Icon(
                     Icons.Outlined.KeyboardArrowLeft,
-                    contentDescription = "Previous day",
+                    contentDescription = t("Previous day"),
                     tint = if (selectedDay > 0) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                 )
             }
@@ -169,7 +169,7 @@ private fun DetailHeroCard(
             ) {
                 Icon(
                     Icons.Outlined.KeyboardArrowRight,
-                    contentDescription = "Next day",
+                    contentDescription = t("Next day"),
                     tint = if (selectedDay < maxDay) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.3f)
                 )
             }
@@ -183,8 +183,7 @@ private fun DetailHeroCard(
         )
 
         // Zone label
-        Text(
-            riskZone.label,
+        Text(t(riskZone.label),
             color = zoneColor,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
         )
@@ -216,7 +215,7 @@ private fun DetailOutlook(
 ) {
     val zone = ZoneId.systemDefault()
     val today = LocalDate.now(zone)
-    val dayFmt = DateTimeFormatter.ofPattern("EEE")
+    val dayFmt = DateTimeFormatter.ofPattern("EEE", rememberAppLocale())
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -224,7 +223,7 @@ private fun DetailOutlook(
         horizontalAlignment = Alignment.Start
     ) {
         Text(
-            "7-day forecast",
+            t("7-day forecast"),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelMedium
         )
@@ -236,7 +235,7 @@ private fun DetailOutlook(
             for (i in 0 until 7) {
                 val percent = values.getOrNull(i)?.coerceIn(0, 100) ?: 0
                 val date = today.plusDays(i.toLong())
-                val dayLabel = if (i == 0) "Today" else date.format(dayFmt)
+                val dayLabel = if (i == 0) t("Today") else date.format(dayFmt)
                 val isSelected = i == selectedDay
 
                 Column(
@@ -321,12 +320,12 @@ private fun DetailTriggersCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "All contributors",
+                t("All contributors"),
                 color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
             Text(
-                "Risk history \u2192",
+                t("Risk history \u2192"),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.clickable { onViewGraph() }
@@ -420,7 +419,7 @@ private fun DetailTriggersCard(
 
                     // Bottom row: points + days active
                     Text(
-                        "${pctOfTotal}% of risk · ${t.score} pts · ${if (t.daysActive == 1) "today only" else "${t.daysActive} days active"}",
+                        Strings.t("%1\$s%% of risk · %2\$s pts · %3\$s", pctOfTotal, t.score, if (t.daysActive == 1) Strings.t("today only") else Strings.t("%s days active", t.daysActive)),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall
                     )

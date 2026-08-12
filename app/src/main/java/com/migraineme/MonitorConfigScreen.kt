@@ -89,13 +89,13 @@ fun MonitorConfigScreen(
         item {
             HeroCard {
                 Text(
-                    "Customize your Monitor",
+                    t("Customize your Monitor"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Long-press and drag to reorder cards",
+                    t("Long-press and drag to reorder cards"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -155,7 +155,7 @@ private fun CardConfigItem(
             // Drag handle
             Icon(
                 imageVector = Icons.Default.DragHandle,
-                contentDescription = "Drag to reorder",
+                contentDescription = t("Drag to reorder"),
                 tint = AppTheme.SubtleTextColor,
                 modifier = Modifier.size(24.dp)
             )

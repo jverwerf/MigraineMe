@@ -93,13 +93,13 @@ fun WeatherConfigScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             HeroCard {
                 Text(
-                    text = "Customize Environment",
+                    text = t("Customize Environment"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Choose which environment metrics to display on the Monitor screen.",
+                    text = t("Choose which environment metrics to display on the Monitor screen."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -108,13 +108,13 @@ fun WeatherConfigScreen(
             if (settingsLoaded && availableMetrics.isEmpty()) {
                 BaseCard {
                     Text(
-                        text = "No environment source enabled",
+                        text = t("No environment source enabled"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Enable environment tracking in Data Settings to customize metrics.",
+                        text = t("Enable environment tracking in Data Settings to customize metrics."),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -122,13 +122,13 @@ fun WeatherConfigScreen(
             } else {
                 BaseCard {
                     Text(
-                        text = "Display Metrics (${selectedMetrics.size}/3)",
+                        text = t("Display Metrics (%s/3)", selectedMetrics.size),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Select up to 3 environment metrics to show on the Monitor card.",
+                        text = t("Select up to 3 environment metrics to show on the Monitor card."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -177,7 +177,7 @@ fun WeatherConfigScreen(
                                 trailingIcon = {
                                     Icon(
                                         Icons.Default.PhoneAndroid,
-                                        contentDescription = "Phone",
+                                        contentDescription = t("Phone"),
                                         modifier = Modifier.size(14.dp),
                                         tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
                                     )
@@ -202,7 +202,7 @@ fun WeatherConfigScreen(
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                        Text(text = "Phone (API)", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = t("Phone (API)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

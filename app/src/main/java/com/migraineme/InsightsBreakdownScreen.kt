@@ -85,7 +85,7 @@ fun InsightsBreakdownScreen(
                 } else {
                     BaseCard {
                         Text(
-                            "No data yet — log migraines with symptoms to see breakdowns here.",
+                            t("No data yet — log migraines with symptoms to see breakdowns here."),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -97,7 +97,7 @@ fun InsightsBreakdownScreen(
             if (spiderData == null || spiderData.breakdown.isEmpty()) {
                 BaseCard {
                     Text(
-                        "No data yet — log items linked to a migraine to see breakdowns here.",
+                        t("No data yet — log items linked to a migraine to see breakdowns here."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -108,7 +108,7 @@ fun InsightsBreakdownScreen(
             // Overall spider chart (categories)
             HeroCard {
                 Text(
-                    "Categories Overview",
+                    t("Categories Overview"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -149,7 +149,7 @@ fun InsightsBreakdownScreen(
                     val reliefCol = accentCol.copy(alpha = 0.5f)
                     BaseCard {
                         Text(
-                            "Usage vs Effectiveness",
+                            t("Usage vs Effectiveness"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                         )
@@ -159,11 +159,11 @@ fun InsightsBreakdownScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(accentCol))
                             Spacer(Modifier.width(6.dp))
-                            Text("Count", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("Count"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             Spacer(Modifier.width(16.dp))
                             Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.6f)))
                             Spacer(Modifier.width(6.dp))
-                            Text("Avg Relief", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(t("Avg Relief"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
 
                         Spacer(Modifier.height(8.dp))
@@ -203,7 +203,7 @@ fun InsightsBreakdownScreen(
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                             )
                             Text(
-                                "${cat.totalCount} logged • ${cat.items.size} types",
+                                t("%1\$s logged • %2\$s types", cat.totalCount, cat.items.size),
                                 color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -338,8 +338,7 @@ private fun CategoryBarRow(label: String, count: Int, maxCount: Int, color: Colo
             verticalAlignment = Alignment.CenterVertically
         ) {
             BrainyRowIcon(label, size = 18.dp)
-            Text(
-                label,
+            Text(t(label),
                 color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f)
@@ -393,28 +392,28 @@ private fun SymptomsBreakdownContent(
 
     // Pain Character
     if (painCharSpider != null && painCharSpider!!.axes.isNotEmpty()) {
-        SpiderSection(title = "Pain Character", spider = painCharSpider!!, color = painCharColor)
+        SpiderSection(title = t("Pain Character"), spider = painCharSpider!!, color = painCharColor)
     }
 
     // Accompanying Experience
     if (accompSpider != null && accompSpider!!.axes.isNotEmpty()) {
-        SpiderSection(title = "Accompanying Experience", spider = accompSpider!!, color = accompColor)
+        SpiderSection(title = t("Accompanying Experience"), spider = accompSpider!!, color = accompColor)
     }
 
     // Postdrome
     if (postdromeSpider != null && postdromeSpider!!.axes.isNotEmpty()) {
-        SpiderSection(title = "Postdrome", spider = postdromeSpider!!, color = postdromeColor)
+        SpiderSection(title = t("Postdrome"), spider = postdromeSpider!!, color = postdromeColor)
     }
 
     // Pain Locations
     if (painLocSpider != null && painLocSpider!!.axes.isNotEmpty()) {
-        SpiderSection(title = "Pain Locations", spider = painLocSpider!!, color = painLocColor)
+        SpiderSection(title = t("Pain Locations"), spider = painLocSpider!!, color = painLocColor)
     }
 
     // Severity Distribution
     if (severityCounts.isNotEmpty()) {
         val sevAxes = severityCounts.map { (sev, count) ->
-            SpiderAxis(label = "Level $sev", value = count.toFloat())
+            SpiderAxis(label = t("Level %s", sev), value = count.toFloat())
         }
         val sevTotal = severityCounts.sumOf { it.second }
         val allSevValues = severityCounts.flatMap { (sev, count) -> List(count) { sev } }
@@ -424,13 +423,13 @@ private fun SymptomsBreakdownContent(
 
         BaseCard {
             Text(
-                "Severity Distribution",
+                t("Severity Distribution"),
                 color = severityColor,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "$sevTotal migraines rated",
+                t("%s migraines rated", sevTotal),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -440,9 +439,9 @@ private fun SymptomsBreakdownContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                SeverityStat(label = "Lowest", value = sevMin, color = Color(0xFF81C784))
-                SeverityStat(label = "Average", value = sevAvg, color = severityColor)
-                SeverityStat(label = "Highest", value = sevMax, color = Color(0xFFEF5350))
+                SeverityStat(label = t("Lowest"), value = sevMin, color = Color(0xFF81C784))
+                SeverityStat(label = t("Average"), value = sevAvg, color = severityColor)
+                SeverityStat(label = t("Highest"), value = sevMax, color = Color(0xFFEF5350))
             }
 
             Spacer(Modifier.height(16.dp))
@@ -462,13 +461,13 @@ private fun SymptomsBreakdownContent(
         val stats = durationStats!!
         BaseCard {
             Text(
-                "Duration",
+                t("Duration"),
                 color = durationColor,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "${stats.durations.size} migraines with end time",
+                t("%s migraines with end time", stats.durations.size),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -479,9 +478,9 @@ private fun SymptomsBreakdownContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                DurationStat(label = "Shortest", hours = stats.minHours, color = Color(0xFF81C784))
-                DurationStat(label = "Average", hours = stats.avgHours, color = durationColor)
-                DurationStat(label = "Longest", hours = stats.maxHours, color = Color(0xFFEF5350))
+                DurationStat(label = t("Shortest"), hours = stats.minHours, color = Color(0xFF81C784))
+                DurationStat(label = t("Average"), hours = stats.avgHours, color = durationColor)
+                DurationStat(label = t("Longest"), hours = stats.maxHours, color = Color(0xFFEF5350))
             }
 
             // Bucket distribution as spider/bar/card
@@ -532,7 +531,7 @@ private fun SpiderSection(title: String, spider: SpiderData, color: Color) {
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            "${spider.totalLogged} logged • ${spider.axes.size} types",
+            t("%1\$s logged • %2\$s types", spider.totalLogged, spider.axes.size),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall
         )
@@ -556,7 +555,7 @@ private fun SpiderSection(title: String, spider: SpiderData, color: Color) {
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Side effects: ", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                Text(t("Side effects: "), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
                 listOf(
                     Color(0xFF81C784) to "none",
                     Color(0xFFFFB74D) to "soft",
@@ -568,7 +567,7 @@ private fun SpiderSection(title: String, spider: SpiderData, color: Color) {
                         drawCircle(c.copy(alpha = 0.7f), size.minDimension / 2f, style = Stroke(width = 2f))
                     }
                     Spacer(Modifier.width(3.dp))
-                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                    Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
                 }
             }
         }
@@ -583,8 +582,7 @@ private fun DurationStat(label: String, hours: Float, color: Color) {
             color = color,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
         )
-        Text(
-            label,
+        Text(t(label),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall
         )
@@ -605,8 +603,7 @@ private fun SeverityStat(label: String, value: Number, color: Color) {
             color = color,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
         )
-        Text(
-            label,
+        Text(t(label),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall
         )

@@ -50,13 +50,13 @@ fun AppDropdown(
     onSelected: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val label = options.getOrNull(selectedIndex) ?: "None"
+    val label = options.getOrNull(selectedIndex) ?: t("None")
 
     Box {
         OutlinedButton(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(label) }
+        ) { Text(t(label)) }
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEachIndexed { idx, text ->

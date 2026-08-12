@@ -8,6 +8,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -24,6 +25,7 @@ import kotlinx.serialization.json.Json
  * - display_name text
  * - avatar_url text
  * - migraine_type migraine_type enum (nullable)
+ * - lang text ('en' default) — display language for SERVER-rendered text
  */
 object SupabaseProfileService {
 
@@ -141,6 +143,76 @@ object SupabaseProfileService {
         )
     }
 
+    /**
+     * Mirror the on-device display language onto the profile row.
+     *
+     * The picker is on-device state (LangPrefs) and stays that way — the app
+     * translates at the render boundary and needs no round trip. This exists
+     * for the text the app never gets to render: push notification titles and
+     * bodies, and the messages edge functions hand back for immediate display.
+     * Without it those stay English no matter what the user picked.
+     *
+     * Fire-and-forget by design, and separate from patchProfile() because it
+     * must survive the two states patchProfile() cannot:
+     *
+     *  - No session. The picker sits on the sign-in screen, before an account
+     *    exists. Nothing to write to yet, so this no-ops and the choice is
+     *    pushed again after sign-in (see LoginScreen / SignupScreen).
+     *  - No row yet. PATCH matching zero rows is a no-op rather than an error;
+     *    patchProfile() would throw on rows.first(). The next sign-in runs
+     *    ensureProfile() and then this, so the value lands.
+     *
+     * Returns true only if a row was actually updated, so a caller can tell
+     * "wrote it" from "nothing to write to".
+     */
+    suspend fun syncLang(context: android.content.Context): Boolean {
+        return try {
+            val appCtx = context.applicationContext
+            val token = SessionStore.getValidAccessToken(appCtx) ?: return false
+            val userId = SessionStore.readUserId(appCtx)
+                ?: JwtUtils.extractUserIdFromAccessToken(token)
+                ?: return false
+
+            val url = "$baseUrl/rest/v1/profiles?user_id=eq.$userId&select=user_id"
+            val rows: List<LangRow> = client.patch(url) {
+                header("apikey", anonKey)
+                header("Authorization", "Bearer $token")
+                header("Prefer", "return=representation")
+                contentType(ContentType.Application.Json)
+                setBody(PatchLangBody(lang = LangPrefs.get().code))
+            }.body()
+
+            // Mirror into auth user metadata too: GoTrue's email templates
+            // read {{ .Data.lang }} from raw_user_meta_data, so this is what
+            // keeps PASSWORD RESET and other auth emails in the right language
+            // after the user changes it. profiles.lang serves pushes and edge
+            // functions; both mirrors carry the same two-letter code.
+            try {
+                client.put("$baseUrl/auth/v1/user") {
+                    header("apikey", anonKey)
+                    header("Authorization", "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(AuthMetaBody(data = AuthMetaLang(lang = LangPrefs.get().code)))
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("SupabaseProfileService", "auth meta lang sync failed", e)
+            }
+
+            rows.isNotEmpty()
+        } catch (e: Exception) {
+            // Non-fatal. A language that failed to reach the server costs an
+            // English push, not a broken app, and the next sign-in retries.
+            android.util.Log.w("SupabaseProfileService", "lang sync failed", e)
+            false
+        }
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class AuthMetaBody(val data: AuthMetaLang)
+
+    @kotlinx.serialization.Serializable
+    private data class AuthMetaLang(val lang: String)
+
     // ---- Wire format (PostgREST JSON) ----
 
     @Serializable
@@ -165,6 +237,16 @@ object SupabaseProfileService {
         @SerialName("display_name") val displayName: String? = null,
         @SerialName("avatar_url") val avatarUrl: String? = null,
         @SerialName("migraine_type") val migraineType: String? = null
+    )
+
+    @Serializable
+    private data class LangRow(
+        @SerialName("user_id") val userId: String
+    )
+
+    @Serializable
+    private data class PatchLangBody(
+        @SerialName("lang") val lang: String
     )
 
     @Serializable

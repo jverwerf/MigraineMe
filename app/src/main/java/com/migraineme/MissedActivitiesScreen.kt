@@ -118,21 +118,21 @@ fun MissedActivitiesScreen(
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Activity", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Activity"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp)) }
+                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
             }
 
             HeroCard {
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawMissedActivity(Color(0xFFFF7043)) }
                 })
-                Text("What did you miss?", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("What did you miss?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    if (draft.missedActivities.isEmpty()) "Activities you couldn't do" else "${draft.missedActivities.size} missed activit${if (draft.missedActivities.size > 1) "ies" else "y"}",
+                    if (draft.missedActivities.isEmpty()) t("Activities you couldn't do") else if (draft.missedActivities.size == 1) t("1 missed activity") else t("%s missed activities", draft.missedActivities.size),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
                 )
                 if (draft.missedActivities.isNotEmpty()) {
@@ -144,7 +144,7 @@ fun MissedActivitiesScreen(
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(prettyLabel(ma.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
-                            Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                            Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier.size(18.dp).clickable {
                                     rebuildDraftWithMissed(draft.missedActivities.toMutableList().apply { removeAt(index) })
                                 })
@@ -157,8 +157,8 @@ fun MissedActivitiesScreen(
 
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Missed Activities", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Missed Activities"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_MISSED_ACTIVITIES) })
                 }
             }
@@ -167,7 +167,7 @@ fun MissedActivitiesScreen(
 
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
-                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { ma ->
                             MissedCircleButton(ma.label, ma.label in selectedLabels, ma.iconKey) { onTap(ma.label) }
@@ -187,17 +187,17 @@ fun MissedActivitiesScreen(
                             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                     }
                 }
-                if (pool.isEmpty()) Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
 
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
                 Button(onClick = { navController.navigate(Routes.REVIEW) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(t("Next")) }
             }
             Spacer(Modifier.height(32.dp))
         }
@@ -224,7 +224,7 @@ private fun MissedCircleButton(label: String, isSelected: Boolean, iconKey: Stri
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = if (isSelected) Color.White else AppTheme.BodyTextColor,
+        Text(t(label), color = if (isSelected) Color.White else AppTheme.BodyTextColor,
             style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
     }
 }
@@ -238,15 +238,15 @@ private fun MissedTimeDialog(title: String, initialIso: String? = null, onDismis
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Time: ${formatMissedTime(pickedIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select time", onDateTimeSelected = { pickedIso = it })
+                Text(t("Time: %s", formatMissedTime(pickedIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select time"), onDateTimeSelected = { pickedIso = it })
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text(if (onSkip != null) "Add" else "Save", color = AppTheme.AccentPurple) } },
+        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text(if (onSkip != null) t("Add") else t("Save"), color = AppTheme.AccentPurple) } },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) { Text("Cancel", color = AppTheme.SubtleTextColor) }
-                if (onSkip != null) TextButton(onClick = onSkip) { Text("Skip", color = Color(0xFFEF9A9A)) }
+                TextButton(onClick = onDismiss) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
+                if (onSkip != null) TextButton(onClick = onSkip) { Text(t("Skip"), color = Color(0xFFEF9A9A)) }
             }
         }
     )

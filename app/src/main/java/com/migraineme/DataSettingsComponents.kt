@@ -78,7 +78,7 @@ fun MenstruationSection(
 ) {
     if (settings == null || settings.lastMenstruationDate == null) {
         TextButton(onClick = onSetup) {
-            Text("Set up menstruation tracking", color = AppTheme.AccentPurple)
+            Text(t("Set up menstruation tracking"), color = AppTheme.AccentPurple)
         }
     } else {
         Row(
@@ -88,23 +88,23 @@ fun MenstruationSection(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Menstruation",
+                    t("Menstruation"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.BodyTextColor
                 )
                 Text(
-                    "Last: ${settings.lastMenstruationDate}",
+                    t("Last: %s", settings.lastMenstruationDate),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.SubtleTextColor
                 )
                 Text(
-                    "Cycle: ${settings.avgCycleLength} days",
+                    t("Cycle: %s days", settings.avgCycleLength),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.SubtleTextColor
                 )
             }
             TextButton(onClick = onEdit) {
-                Text("Edit", color = AppTheme.AccentPurple)
+                Text(t("Edit"), color = AppTheme.AccentPurple)
             }
         }
     }

@@ -142,13 +142,13 @@ fun LogHomeScreen(
             // Top bar: ← Previous | Title | X Close
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Back", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Back"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, contentDescription = t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -160,14 +160,14 @@ fun LogHomeScreen(
                         .drawBehind { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
                 )
                 Text(
-                    "What are you experiencing?",
+                    t("What are you experiencing?"),
                     color = Color.White,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    if (selectedSymptoms.isEmpty()) "Select all that apply"
-                    else "${selectedSymptoms.size} symptom${if (selectedSymptoms.size > 1) "s" else ""} selected",
+                    if (selectedSymptoms.isEmpty()) t("Select all that apply")
+                    else (if (selectedSymptoms.size == 1) t("1 symptom selected") else t("%s symptoms selected", selectedSymptoms.size)),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -209,7 +209,7 @@ fun LogHomeScreen(
                             Spacer(Modifier.weight(1f))
                             Icon(
                                 Icons.Outlined.Close,
-                                contentDescription = "Remove",
+                                contentDescription = t("Remove"),
                                 tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier
                                     .size(18.dp)
@@ -227,8 +227,8 @@ fun LogHomeScreen(
             // Manage card (always on top)
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Symptoms", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Symptoms"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_SYMPTOMS) })
                 }
             }
@@ -239,7 +239,7 @@ fun LogHomeScreen(
 
             // Pain character card
             BaseCard {
-                Text("Pain character", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Pain character"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
 
                 // Frequent pain symptoms first
                 if (freqPainIds.isNotEmpty()) {
@@ -268,13 +268,13 @@ fun LogHomeScreen(
                         }
                     }
                 } else if (freqPainIds.isEmpty()) {
-                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
             // Accompanying experience card
             BaseCard {
-                Text("Accompanying experience", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Accompanying experience"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
 
                 // Frequent accompanying symptoms first
                 if (freqAccompIds.isNotEmpty()) {
@@ -303,7 +303,7 @@ fun LogHomeScreen(
                         }
                     }
                 } else if (freqAccompIds.isEmpty()) {
-                    Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -316,11 +316,11 @@ fun LogHomeScreen(
                     onClick = { navController.popBackStack() },
                     border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
                 Button(
                     onClick = { syncDraft(); navController.navigate(Routes.PAIN_LOCATION) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text("Next") }
+                ) { Text(t("Next")) }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -444,8 +444,7 @@ internal fun SymptomButton(label: String, isSelected: Boolean, iconKey: String? 
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            label,
+        Text(t(label),
             color = textColor,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
@@ -498,13 +497,12 @@ fun SymptomSeveritySheet(
                 .padding(bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text(
-                label,
+            Text(t(label),
                 color = Color.White,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
             Text(
-                "How bad was it?",
+                t("How bad was it?"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -527,12 +525,12 @@ fun SymptomSeveritySheet(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
-                        title,
+                        t(title),
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Text(
-                        blurb,
+                        t(blurb),
                         color = if (isOn) Color.White.copy(alpha = 0.85f) else AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -543,7 +541,7 @@ fun SymptomSeveritySheet(
 
             // Timing — collapsed by default, so it costs nothing to ignore
             Text(
-                if (time == null) "+ Add a time" else "Started ${formatSymptomTime(time)}",
+                if (time == null) t("+ Add a time") else t("Started %s", formatSymptomTime(time)),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.fillMaxWidth().clickable { showTimePicker = !showTimePicker },
@@ -551,11 +549,11 @@ fun SymptomSeveritySheet(
             )
             if (showTimePicker) {
                 AppDateTimePicker(
-                    label = if (time == null) "Set time" else formatSymptomTime(time)
+                    label = if (time == null) t("Set time") else formatSymptomTime(time)
                 ) { onSetTime(it) }
                 if (time != null) {
                     Text(
-                        "Clear time",
+                        t("Clear time"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().clickable { onSetTime(null) },
@@ -566,14 +564,14 @@ fun SymptomSeveritySheet(
 
             Spacer(Modifier.height(6.dp))
             Text(
-                "Skip — I'd rather not rate it",
+                t("Skip — I'd rather not rate it"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().clickable { onDismiss() },
                 textAlign = TextAlign.Center
             )
             Text(
-                "Remove $label from this log",
+                t("Remove %s from this log", label),
                 color = AppTheme.AccentPink.copy(alpha = 0.9f),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().clickable { onRemove() },

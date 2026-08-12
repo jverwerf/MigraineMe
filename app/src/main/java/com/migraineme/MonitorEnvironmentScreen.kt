@@ -139,19 +139,19 @@ fun MonitorEnvironmentScreen(
                 ) {
                     Icon(
                         Icons.Outlined.Tune,
-                        contentDescription = "Configure",
+                        contentDescription = t("Configure"),
                         tint = AppTheme.AccentPurple,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Customize Monitor Card",
+                            t("Customize Monitor Card"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
-                            "Choose 3 metrics for the Weather card on Monitor",
+                            t("Choose 3 metrics for the Weather card on Monitor"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -167,19 +167,19 @@ fun MonitorEnvironmentScreen(
             if (settingsLoaded && enabledRegistryKeys.isEmpty()) {
                 BaseCard {
                     Text(
-                        "Environment tracking is disabled",
+                        t("Environment tracking is disabled"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Enable environment tracking in Data Settings to see weather data and correlations.",
+                        t("Enable environment tracking in Data Settings to see weather data and correlations."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Go to Data Settings →",
+                        t("Go to Data Settings →"),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.DATA) }
@@ -194,11 +194,11 @@ fun MonitorEnvironmentScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Today's Weather",
+                            t("Today's Weather"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                         )
-                        if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
+                        if (PremiumManager.isPremium) { Text(t("History →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = t("Premium"), tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text(t("History"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
                     }
                     Spacer(Modifier.height(8.dp))
 
@@ -215,7 +215,7 @@ fun MonitorEnvironmentScreen(
                         }
                     } else if (todayWeather == null) {
                         Text(
-                            "No weather data for today",
+                            t("No weather data for today"),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -230,7 +230,7 @@ fun MonitorEnvironmentScreen(
 
                         if (todayWeather!!.isThunderstormDay) {
                             Text(
-                                "⚡ Thunderstorm detected",
+                                t("⚡ Thunderstorm detected"),
                                 color = Color(0xFFFFB74D),
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -250,7 +250,7 @@ fun MonitorEnvironmentScreen(
                                 val label = metric?.label ?: key
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(formatted, color = slotColors.getOrElse(index) { slotColors.last() }, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                    Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
@@ -261,7 +261,7 @@ fun MonitorEnvironmentScreen(
                             Spacer(Modifier.height(4.dp))
                             HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                             Spacer(Modifier.height(8.dp))
-                            Text("All Metrics", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("All Metrics"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                             Spacer(Modifier.height(4.dp))
 
                             remainingMetrics.forEach { m ->
@@ -273,7 +273,7 @@ fun MonitorEnvironmentScreen(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(m.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(m.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                                     Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
                                 }
                             }
@@ -284,13 +284,13 @@ fun MonitorEnvironmentScreen(
                 // 7-Day Forecast — premium only
                 if (forecastDays.isNotEmpty()) {
                     PremiumGate(
-                        message = "Unlock 7-Day Forecast",
-                        subtitle = "See weather conditions ahead of time",
+                        message = t("Unlock 7-Day Forecast"),
+                        subtitle = t("See weather conditions ahead of time"),
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
                     BaseCard {
                         Text(
-                            "7-Day Forecast",
+                            t("7-Day Forecast"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                         )
@@ -358,8 +358,8 @@ fun MonitorEnvironmentScreen(
                 // its own title, so we render it directly (no outer wrapper)
                 // and forward the tap to the full-screen graph.
                 PremiumGate(
-                    message = "Unlock Weather Trends",
-                    subtitle = "Track environmental patterns over time",
+                    message = t("Unlock Weather Trends"),
+                    subtitle = t("Track environmental patterns over time"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     WeatherHistoryGraph(

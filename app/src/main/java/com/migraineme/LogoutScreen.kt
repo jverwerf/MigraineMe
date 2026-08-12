@@ -42,14 +42,14 @@ fun LogoutScreen(
             shape = RoundedCornerShape(20.dp),
             title = {
                 Text(
-                    "Sign out?",
+                    t("Sign out?"),
                     color = AppTheme.TitleColor,
                     fontWeight = FontWeight.SemiBold
                 )
             },
             text = {
                 Text(
-                    "You'll need to sign in again to access your migraine data.",
+                    t("You'll need to sign in again to access your migraine data."),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -66,12 +66,12 @@ fun LogoutScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373)),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Sign out", fontWeight = FontWeight.SemiBold)
+                    Text(t("Sign out"), fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Cancel", color = AppTheme.SubtleTextColor)
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
                 }
             }
         )
@@ -120,13 +120,13 @@ fun LogoutScreen(
                 }
 
                 Text(
-                    "Sign out",
+                    t("Sign out"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
 
                 Text(
-                    "Sign out of your account on this device.\nYour data will still be safe in the cloud.",
+                    t("Sign out of your account on this device.\nYour data will still be safe in the cloud."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
@@ -146,7 +146,7 @@ fun LogoutScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Sign out", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text(t("Sign out"), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 }
             }
         }

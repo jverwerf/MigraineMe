@@ -95,7 +95,7 @@ fun GarminConnectionCard(
                     contentPadding = PaddingValues(vertical = 8.dp),
                     modifier = Modifier.width(buttonWidth)
                 ) {
-                    Text(if (isConnected) "Connected" else "Connect",
+                    Text(if (isConnected) t("Connected") else t("Connect"),
                         color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
                 Button(
@@ -108,7 +108,7 @@ fun GarminConnectionCard(
                     Icon(Icons.Outlined.Watch, contentDescription = null,
                         modifier = Modifier.size(16.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
-                    Text("Pair watch", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(t("Pair watch"), color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -118,14 +118,14 @@ fun GarminConnectionCard(
             Spacer(Modifier.height(8.dp))
             if (claimed) {
                 Text(
-                    "✓ Watch paired",
+                    t("✓ Watch paired"),
                     color = Color(0xFF81C784), fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             } else {
                 Text(
-                    "Open MigraineMe on your watch, tap Pair, and enter the code it shows:",
+                    t("Open MigraineMe on your watch, tap Pair, and enter the code it shows:"),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.62f),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -171,7 +171,7 @@ fun GarminConnectionCard(
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = accent)
                     ) {
-                        Text(if (claiming) "…" else "Link",
+                        Text(if (claiming) "…" else t("Link"),
                             color = Color.White, fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -186,8 +186,8 @@ fun GarminConnectionCard(
                 // one on the watch instead — mint it here for them.
                 TextButton(onClick = { scope.launch { loadCode() } }, enabled = !loading) {
                     Text(
-                        if (loading) "Getting code…"
-                        else "Watch asks you to type a code instead? Tap here",
+                        if (loading) t("Getting code…")
+                        else t("Watch asks you to type a code instead? Tap here"),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.62f)
                     )
@@ -210,7 +210,7 @@ fun GarminConnectionCard(
                 val mins = remaining / 60
                 val secs = remaining % 60
                 Text(
-                    if (remaining > 0) "Expires in $mins:${"%02d".format(secs)}" else "Expired",
+                    if (remaining > 0) t("Expires in %1\$s:%2\$s", mins, "%02d".format(secs)) else t("Expired"),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (remaining > 0) Color.White.copy(alpha = 0.62f) else Color.Red,
                     modifier = Modifier.fillMaxWidth(),

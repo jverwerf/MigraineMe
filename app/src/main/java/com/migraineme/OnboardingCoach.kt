@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -290,6 +291,26 @@ fun CoachOverlay(
     val ctx = LocalContext.current
     val density = LocalDensity.current
 
+    /// Back from the coach's FIRST step. There is no previous coach step, so
+    /// return to the permission page the setup phase was entered from rather
+    /// than hiding Back and trapping the user in the walkthrough.
+    fun backOutOfCoach() {
+        val wasTour = tourState.phase == CoachPhase.TOUR
+        val dest = if (wasTour) Routes.HOME else Routes.ONBOARDING
+        TourManager.endPhase()
+        if (wasTour && !OnboardingMode.noSeed) {
+            // Leaving the tour means the demo rows must go, exactly as the
+            // Skip path does. clearDemoData joins any in-flight seed first, so
+            // late inserts cannot survive the delete.
+            CoroutineScope(Dispatchers.IO).launch {
+                DemoDataSeeder.clearDemoData(ctx, logVm, insightsVm)
+                kotlinx.coroutines.withContext(Dispatchers.Main) { navigateTo(dest) }
+            }
+        } else {
+            navigateTo(dest)
+        }
+    }
+
     fun finishAndClean() {
         val wasTour = tourState.phase == CoachPhase.TOUR
         TourManager.endPhase()
@@ -484,7 +505,7 @@ fun CoachOverlay(
                                     Icon(step.icon, null, tint = Color.White, modifier = Modifier.size(14.dp))
                                 }
                                 Text(
-                                    "${tourState.stepIndex + 1}/${steps.size} — Tap to expand",
+                                    t("%1\$s/%2\$s — Tap to expand", tourState.stepIndex + 1, steps.size),
                                     color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
@@ -509,7 +530,7 @@ fun CoachOverlay(
                                 shape = RoundedCornerShape(18.dp),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                                 modifier = Modifier.fillMaxWidth()
-                                    .then(if (isWearableStep) Modifier.height(220.dp) else Modifier.heightIn(max = maxCardHeight).animateContentSize(spring(dampingRatio = 0.8f)))
+                                    .then(if (isWearableStep) Modifier.height(205.dp) else Modifier.heightIn(max = maxCardHeight).animateContentSize(spring(dampingRatio = 0.8f)))
                                     .border(
                                         2.dp,
                                         if (isInteractive) Brush.linearGradient(listOf(Color(0xFFFF7BB0).copy(alpha = pulseAlpha), Color(0xFFFF7BB0).copy(alpha = pulseAlpha)))
@@ -545,7 +566,8 @@ fun CoachOverlay(
                                         )
                                     }
                                 }
-                                Column(Modifier.padding(16.dp).verticalScroll(bodyScrollState)) {
+                                Column(Modifier.padding(16.dp)) {
+                                Column(Modifier.weight(1f, fill = false).verticalScroll(bodyScrollState)) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         val headerBrainy = brainyForCoachTitle(step.title)
                                         if (headerBrainy != null) {
@@ -558,38 +580,99 @@ fun CoachOverlay(
                                             }
                                         }
                                         Column(Modifier.weight(1f)) {
-                                            Text(step.title, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                            Text("${tourState.stepIndex + 1} of ${steps.size}", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                            Text(t(step.title), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                            Text(t("%1\$s of %2\$s", tourState.stepIndex + 1, steps.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                                         }
                                         IconButton(onClick = { isCollapsed = true }, modifier = Modifier.size(28.dp)) {
-                                            Icon(Icons.Outlined.UnfoldLess, "Minimize", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                                            Icon(Icons.Outlined.UnfoldLess, t("Minimize"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
                                         }
                                         if (tourState.phase == CoachPhase.TOUR) {
                                             // Exit runs the same cleanup as finishing: clearDemoData joins
                                             // the seed job before deleting, then lands on setup landing.
                                             IconButton(onClick = { finishAndClean() }, modifier = Modifier.size(28.dp)) {
-                                                Icon(Icons.Outlined.Close, "Exit tour", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                                                Icon(Icons.Outlined.Close, t("Exit tour"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                                             }
                                         }
                                     }
 
                                     Spacer(Modifier.height(10.dp))
-                                    Text(step.body, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, lineHeight = MaterialTheme.typography.bodyMedium.lineHeight)
+                                    Text(t(step.body), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium, lineHeight = MaterialTheme.typography.bodyMedium.lineHeight)
                                     Spacer(Modifier.height(8.dp))
-                                    Text(step.highlight, color = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    Text(t(step.highlight), color = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
 
-                                    if (isInteractive && step.spotlightKey == null && !(tourState.phase == CoachPhase.TOUR && tourState.stepIndex == 2)) {
-                                        Spacer(Modifier.height(4.dp))
-                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                                            Icon(Icons.Filled.KeyboardArrowDown, "Scroll down",
-                                                tint = AppTheme.AccentPink.copy(alpha = pulseAlpha),
-                                                modifier = Modifier.size(28.dp).offset(y = arrowOffset.dp))
-                                        }
-                                    }
+                                    // No bouncing scroll-down chevron here. Once the
+                                    // action row moved inside the card it sat directly
+                                    // above Skip and read as an arrow pointing at it —
+                                    // the opposite of what it meant. The highlight line
+                                    // above already says what to do, and VertigoMe,
+                                    // MeSeries and iOS carry no arrow either.
 
                                     Spacer(Modifier.height(if (isInteractive) 6.dp else 14.dp))
 
-                                    // Step dots only — Back/Next now live outside the card
+                                    } // end scrollable body — actions stay pinned below
+                                    // Back · Skip · Next on one row inside the card, the
+                                    // way VertigoMe does it. They used to straddle the card
+                                    // border, which left no room for Skip in the middle and
+                                    // meant Back was hidden on the first step — so the coach
+                                    // was a one-way corridor with no route back to the
+                                    // permission pages behind it.
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                val route = TourManager.prevStep()
+                                                if (route != null) navigateTo(route) else backOutOfCoach()
+                                            },
+                                            shape = RoundedCornerShape(50),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                            border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.SubtleTextColor.copy(alpha = 0.35f)),
+                                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                                        ) {
+                                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(14.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(t("Back"), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+                                        }
+
+                                        Text(
+                                            t("Skip"),
+                                            color = AppTheme.SubtleTextColor,
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                            modifier = Modifier.clickable { finishAndClean() }
+                                        )
+
+                                        if (tourState.stepIndex < steps.size - 1) {
+                                            Button(
+                                                onClick = { val route = TourManager.nextStep(); if (route != null) navigateTo(route) },
+                                                colors = ButtonDefaults.buttonColors(containerColor = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple),
+                                                shape = RoundedCornerShape(50),
+                                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
+                                            ) {
+                                                Text(t("Next"), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                                                Spacer(Modifier.width(6.dp))
+                                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(14.dp))
+                                            }
+                                        } else {
+                                            Button(
+                                                onClick = { finishAndClean() },
+                                                colors = ButtonDefaults.buttonColors(containerColor = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple),
+                                                shape = RoundedCornerShape(50),
+                                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
+                                            ) {
+                                                Text(t("Done"), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    // Step dots — hidden on the wearable step, where the card
+                                    // is height-capped to clear the cards it points at and the
+                                    // header already says "N of 3".
+                                    if (!isWearableStep)
+                                    // Step dots
                                     Row(
                                         Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.Center,
@@ -611,81 +694,6 @@ fun CoachOverlay(
                                 }
                             }
 
-                            // Back button anchored to the card's bottom-left, half-overlapping the edge
-                            if (tourState.stepIndex > 0) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomStart)
-                                        .offset(x = 16.dp, y = 22.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = { val route = TourManager.prevStep(); if (route != null) navigateTo(route) },
-                                        shape = RoundedCornerShape(50),
-                                        colors = ButtonDefaults.outlinedButtonColors(
-                                            containerColor = Color(0xFF1E0A2E).copy(alpha = 0.95f),
-                                            contentColor = Color.White
-                                        ),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.SubtleTextColor.copy(alpha = 0.35f)),
-                                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
-                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-                                    ) {
-                                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(14.dp))
-                                        Spacer(Modifier.width(6.dp))
-                                        Text("Back", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-                                    }
-                                }
-                            }
-
-                            // Next button anchored to the card's bottom-right, half-overlapping the edge
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .offset(x = (-16).dp, y = 22.dp)
-                            ) {
-                                if (tourState.stepIndex < steps.size - 1) {
-                                    Button(
-                                        onClick = { val route = TourManager.nextStep(); if (route != null) navigateTo(route) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple),
-                                        shape = RoundedCornerShape(50),
-                                        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp),
-                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-                                    ) {
-                                        Text("Next", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                                        Spacer(Modifier.width(6.dp))
-                                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(16.dp))
-                                    }
-                                } else {
-                                    val isTour = tourState.phase == CoachPhase.TOUR
-                                    // Data step: gate Done until the user has scrolled to the
-                                    // very bottom of the data list (scrollPosition == -1).
-                                    val isDataStep = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 2
-                                    val gateScroll = isDataStep && SetupScrollState.scrollPosition != -1
-                                    Button(
-                                        onClick = { if (!gateScroll) finishAndClean() },
-                                        enabled = !gateScroll,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = AppTheme.AccentPink,
-                                            disabledContainerColor = AppTheme.AccentPink.copy(alpha = 0.35f),
-                                            disabledContentColor = Color.White.copy(alpha = 0.8f)
-                                        ),
-                                        shape = RoundedCornerShape(50),
-                                        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp),
-                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-                                    ) {
-                                        if (isTour) {
-                                            Text("Set up my data", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                                            Spacer(Modifier.width(6.dp))
-                                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(16.dp))
-                                        } else if (gateScroll) {
-                                            Text("Scroll down to continue", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                                        } else {
-                                            Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp))
-                                            Spacer(Modifier.width(6.dp))
-                                            Text("Done!", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                                        }
-                                    }
-                                }
-                            }
                             } // end Box wrapping Card + Next overlap
                         }
                     }

@@ -89,6 +89,14 @@ data class OnboardingPreFill(
     val matchedMissedActivities: Set<String> = emptySet(),
     val matchedLocations: Set<String> = emptySet(),
     val matchedPostdromes: Set<String> = emptySet(),
+    // How the setup was arrived at, for the confirmation banner: how many fields
+    // came straight from the user's own words vs how many the profile pass
+    // suggested. Both are returned by the ai-setup function.
+    val directFieldCount: Int = 0,
+    val suggestedFieldCount: Int = 0,
+    // Which fields the profile pass filled, and the one-line why for each.
+    val suggestedFields: Set<String> = emptySet(),
+    val suggestionReasons: Map<String, String> = emptyMap(),
 )
 
 object AiOnboardingParser {
@@ -464,6 +472,18 @@ object AiOnboardingParser {
             matchedMissedActivities = matchArray("missed_activities", missedActivityLabels),
             matchedLocations = matchArray("locations", locationLabels),
             matchedPostdromes = matchArray("postdromes", postdromeLabels),
+            // Set by the ai-setup function: how many fields came from the user's
+            // own words vs how many the profile pass put forward.
+            directFieldCount = obj.optInt("direct_field_count", 0),
+            suggestedFieldCount = obj.optInt("suggested_field_count", 0),
+            suggestedFields = obj.optJSONArray("suggested_fields")?.let { arr ->
+                (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) }.toSet()
+            } ?: emptySet(),
+            suggestionReasons = obj.optJSONObject("suggestion_reasons")?.let { ro ->
+                ro.keys().asSequence().mapNotNull { k ->
+                    ro.optString(k).takeIf(String::isNotBlank)?.let { k to it }
+                }.toMap()
+            } ?: emptyMap(),
         )
     }
 
@@ -474,6 +494,11 @@ object AiOnboardingParser {
     fun merge(deter: OnboardingPreFill, gpt: OnboardingPreFill?): OnboardingPreFill {
         if (gpt == null) return deter
         return OnboardingPreFill(
+            // Counts only exist on the GPT side — carry them through the merge.
+            directFieldCount = gpt.directFieldCount,
+            suggestedFieldCount = gpt.suggestedFieldCount,
+            suggestedFields = gpt.suggestedFields,
+            suggestionReasons = gpt.suggestionReasons,
             // Page 1
             gender = gpt.gender ?: deter.gender,
             ageRange = gpt.ageRange ?: deter.ageRange,

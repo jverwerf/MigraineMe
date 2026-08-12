@@ -34,7 +34,8 @@ object SleepCardConfig {
         METRIC_STAGES_DEEP, METRIC_STAGES_REM, METRIC_STAGES_LIGHT
     )
 
-    fun labelFor(metric: String): String = when (metric) {
+    fun labelFor(metric: String): String = tSync(rawLabelFor(metric))
+    private fun rawLabelFor(metric: String): String = when (metric) {
         METRIC_DURATION -> "Duration"
         METRIC_FELL_ASLEEP -> "Fell Asleep"
         METRIC_WOKE_UP -> "Woke Up"

@@ -131,7 +131,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
             // ── Day-of-week (moved earlier per spec) ──
             run {
                 BaseCard {
-                    Text("Day of Week", color = AppTheme.TitleColor,
+                    Text(t("Day of Week"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(8.dp))
                     val maxPct = (dayOfWeek.maxOfOrNull { it.pct } ?: 1f).coerceAtLeast(1f)
@@ -173,7 +173,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                     val worst = dayOfWeek.maxByOrNull { it.count }
                     if (worst != null && worst.count > 0) {
                         Spacer(Modifier.height(8.dp))
-                        Text("Most frequent: ${worst.dayName} (${worst.count} migraines, ${String.format("%.0f", worst.pct)}%)",
+                        Text(t("Most frequent: %1\$s (%2\$s migraines, %3\$s%%)", worst.dayName, worst.count, String.format("%.0f", worst.pct)),
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.labelSmall,
                             textAlign = TextAlign.Center,
@@ -186,7 +186,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
             run {
                 Spacer(Modifier.height(4.dp))
                 BaseCard {
-                    Text("Weekly (last 12 weeks)", color = AppTheme.TitleColor,
+                    Text(t("Weekly (last 12 weeks)"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(8.dp))
                     val today = LocalDate.now()
@@ -211,7 +211,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
             run {
                 Spacer(Modifier.height(4.dp))
                 BaseCard {
-                    Text("Monthly", color = AppTheme.TitleColor,
+                    Text(t("Monthly"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(8.dp))
 
@@ -282,7 +282,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
 
                 Spacer(Modifier.height(4.dp))
                 BaseCard {
-                    Text("Seasonal", color = AppTheme.TitleColor,
+                    Text(t("Seasonal"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(Modifier.height(8.dp))
                     Row(
@@ -315,7 +315,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                                     }
                                 }
                                 Spacer(Modifier.height(4.dp))
-                                Text(labels[i], color = AppTheme.SubtleTextColor,
+                                Text(t(labels[i]), color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall)
                             }
                         }
@@ -324,7 +324,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                     if (worstIdx != null && counts[worstIdx] > 0 && total > 0) {
                         val pct = counts[worstIdx].toFloat() / total * 100f
                         Spacer(Modifier.height(8.dp))
-                        Text("Most frequent: ${labels[worstIdx]} (${counts[worstIdx]} migraines, ${String.format("%.0f", pct)}%)",
+                        Text(t("Most frequent: %1\$s (%2\$s migraines, %3\$s%%)", labels[worstIdx], counts[worstIdx], String.format("%.0f", pct)),
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.labelSmall,
                             textAlign = TextAlign.Center,
@@ -350,7 +350,7 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text("Average Severity", color = AppTheme.TitleColor,
+                            Text(t("Average Severity"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         }
                         Spacer(Modifier.height(8.dp))
@@ -370,7 +370,7 @@ internal fun StatColumn(value: String, label: String, sub: String? = null, color
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
         if (sub != null) {
             Text(sub, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }

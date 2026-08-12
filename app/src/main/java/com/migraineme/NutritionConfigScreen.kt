@@ -84,13 +84,13 @@ fun NutritionConfigScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             HeroCard {
                 Text(
-                    text = "Customize Diet Display",
+                    text = t("Customize Diet Display"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Choose which 3 metrics appear on the Monitor screen",
+                    text = t("Choose which 3 metrics appear on the Monitor screen"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -99,13 +99,13 @@ fun NutritionConfigScreen(
             if (hideNutrition) {
                 BaseCard {
                     Text(
-                        text = "No nutrition source enabled",
+                        text = t("No nutrition source enabled"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Enable nutrition tracking in Data Settings to customize metrics.",
+                        text = t("Enable nutrition tracking in Data Settings to customize metrics."),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -113,7 +113,7 @@ fun NutritionConfigScreen(
             } else {
                 BaseCard {
                     Text(
-                        text = "Select 3 Metrics",
+                        text = t("Select 3 Metrics"),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
@@ -141,7 +141,7 @@ fun NutritionConfigScreen(
                                 },
                                 label = {
                                     Text(
-                                        text = MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric,
+                                        text = tSync(MonitorCardConfig.NUTRITION_METRIC_LABELS[metric] ?: metric),
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 },
@@ -159,7 +159,7 @@ fun NutritionConfigScreen(
                                         {
                                             Icon(
                                                 Icons.Default.Watch,
-                                                contentDescription = "External",
+                                                contentDescription = t("External"),
                                                 modifier = Modifier.size(14.dp),
                                                 tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
                                             )
@@ -169,7 +169,7 @@ fun NutritionConfigScreen(
                                         {
                                             Icon(
                                                 Icons.Default.PhoneAndroid,
-                                                contentDescription = "Phone",
+                                                contentDescription = t("Phone"),
                                                 modifier = Modifier.size(14.dp),
                                                 tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
                                             )
@@ -197,7 +197,7 @@ fun NutritionConfigScreen(
                     Spacer(Modifier.height(12.dp))
 
                     Text(
-                        text = "${config.nutritionDisplayMetrics.size}/3 selected",
+                        text = t("%s/3 selected", config.nutritionDisplayMetrics.size),
                         color = if (config.nutritionDisplayMetrics.size == 3)
                             AppTheme.AccentPurple
                         else
@@ -209,11 +209,11 @@ fun NutritionConfigScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.Watch, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                            Text(text = "External", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(text = t("External"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                            Text(text = "Phone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Text(text = t("Phone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

@@ -209,13 +209,13 @@ fun JournalEditScreen(
             // ── Amount (medicine only) ──
             if (itemType == "medicine") {
                 BaseCard {
-                    Text("Amount", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t("Amount"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = extraLabel ?: "",
                         onValueChange = { extraLabel = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("e.g. 500mg, 2 tablets…", color = AppTheme.SubtleTextColor) },
+                        placeholder = { Text(t("e.g. 500mg, 2 tablets…"), color = AppTheme.SubtleTextColor) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
@@ -229,7 +229,7 @@ fun JournalEditScreen(
 
             // ── Date & Time ──
             BaseCard {
-                Text("When", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("When"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
 
                 Row(
@@ -261,10 +261,10 @@ fun JournalEditScreen(
                                         selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                                     }
                                     showDatePicker = false
-                                }) { Text("OK") }
+                                }) { Text(t("OK")) }
                             },
                             dismissButton = {
-                                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                                TextButton(onClick = { showDatePicker = false }) { Text(t("Cancel")) }
                             },
                         ) {
                             DatePicker(state = datePickerState)
@@ -295,10 +295,10 @@ fun JournalEditScreen(
                                 TextButton(onClick = {
                                     selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
                                     showTimePicker = false
-                                }) { Text("OK") }
+                                }) { Text(t("OK")) }
                             },
                             dismissButton = {
-                                TextButton(onClick = { showTimePicker = false }) { Text("Cancel") }
+                                TextButton(onClick = { showTimePicker = false }) { Text(t("Cancel")) }
                             },
                             text = { TimePicker(state = timePickerState) },
                         )
@@ -318,7 +318,7 @@ fun JournalEditScreen(
                 }
 
                 BaseCard {
-                    Text("End time", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t("End time"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(8.dp))
 
                     Row(
@@ -349,10 +349,10 @@ fun JournalEditScreen(
                                             selectedEndDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                                         }
                                         showEndDatePicker = false
-                                    }) { Text("OK") }
+                                    }) { Text(t("OK")) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showEndDatePicker = false }) { Text("Cancel") }
+                                    TextButton(onClick = { showEndDatePicker = false }) { Text(t("Cancel")) }
                                 },
                             ) {
                                 DatePicker(state = endDatePickerState)
@@ -382,10 +382,10 @@ fun JournalEditScreen(
                                     TextButton(onClick = {
                                         selectedEndTime = LocalTime.of(endTimePickerState.hour, endTimePickerState.minute)
                                         showEndTimePicker = false
-                                    }) { Text("OK") }
+                                    }) { Text(t("OK")) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showEndTimePicker = false }) { Text("Cancel") }
+                                    TextButton(onClick = { showEndTimePicker = false }) { Text(t("Cancel")) }
                                 },
                                 text = { TimePicker(state = endTimePickerState) },
                             )
@@ -397,13 +397,13 @@ fun JournalEditScreen(
             // ── Notes (migraine only — medicines & reliefs use side effect notes) ──
             if (itemType == "migraine") {
             BaseCard {
-                Text("Notes", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                Text(t("Notes"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Add notes…", color = AppTheme.SubtleTextColor) },
+                    placeholder = { Text(t("Add notes…"), color = AppTheme.SubtleTextColor) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -420,14 +420,14 @@ fun JournalEditScreen(
             // ── Relief scale + Side effects (medicine & relief only) ──
             if (itemType == "medicine" || itemType == "relief") {
                 BaseCard {
-                    Text("How much relief?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ReliefScale.entries.forEach { scale ->
                             FilterChip(
                                 selected = reliefScale == scale,
                                 onClick = { reliefScale = scale },
-                                label = { Text(scale.display, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(scale.display), style = MaterialTheme.typography.labelSmall) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = scale.color.copy(alpha = 0.3f),
                                     selectedLabelColor = Color.White,
@@ -446,7 +446,7 @@ fun JournalEditScreen(
 
                     Spacer(Modifier.height(16.dp))
 
-                    Text("Any side effects?", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t("Any side effects?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("NONE" to "None", "SOFT" to "Soft", "MODERATE" to "Moderate", "SEVERE" to "Severe").forEach { (key, display) ->
@@ -476,8 +476,8 @@ fun JournalEditScreen(
                         value = sideEffectNotes,
                         onValueChange = { sideEffectNotes = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Side effect notes", color = AppTheme.SubtleTextColor) },
-                        placeholder = { Text("e.g. drowsiness, nausea…", color = AppTheme.SubtleTextColor) },
+                        label = { Text(t("Side effect notes"), color = AppTheme.SubtleTextColor) },
+                        placeholder = { Text(t("e.g. drowsiness, nausea…"), color = AppTheme.SubtleTextColor) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
@@ -495,7 +495,7 @@ fun JournalEditScreen(
                                     android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             }) {
-                                Icon(Icons.Outlined.Mic, contentDescription = "Voice input", tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
                             }
                         },
                         minLines = 1,
@@ -554,7 +554,7 @@ fun JournalEditScreen(
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
                     Spacer(Modifier.width(8.dp))
                 }
-                Text("Save changes", color = Color.White)
+                Text(t("Save changes"), color = Color.White)
             }
 
             // ── Delete button ──
@@ -566,14 +566,14 @@ fun JournalEditScreen(
             ) {
                 Icon(Icons.Outlined.Delete, contentDescription = null, tint = Color(0xFFE57373), modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Delete")
+                Text(t("Delete"))
             }
 
             if (confirmDelete) {
                 AlertDialog(
                     onDismissRequest = { confirmDelete = false },
-                    title = { Text("Delete $typeTitle?") },
-                    text = { Text("This can't be undone.") },
+                    title = { Text(t("Delete %s?", typeTitle)) },
+                    text = { Text(t("This can't be undone.")) },
                     confirmButton = {
                         TextButton(onClick = {
                             scope.launch {
@@ -595,10 +595,10 @@ fun JournalEditScreen(
                                 auth.accessToken?.let { logVm?.loadJournal(it) }
                                 onDeleted()
                             }
-                        }) { Text("Delete", color = Color(0xFFE57373)) }
+                        }) { Text(t("Delete"), color = Color(0xFFE57373)) }
                     },
                     dismissButton = {
-                        TextButton(onClick = { confirmDelete = false }) { Text("Cancel") }
+                        TextButton(onClick = { confirmDelete = false }) { Text(t("Cancel")) }
                     },
                 )
             }

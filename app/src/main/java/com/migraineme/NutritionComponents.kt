@@ -53,7 +53,7 @@ fun FoodSearchResultItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 food.calories?.let {
                     Text(
-                        "${it.toInt()} cal",
+                        t("%s cal", it.toInt()),
                         color = Color(0xFFFFB74D),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -86,7 +86,7 @@ fun FoodSearchResultItem(
         
         Icon(
             Icons.Default.Add,
-            contentDescription = "Add",
+            contentDescription = t("Add"),
             tint = AppTheme.AccentPurple,
             modifier = Modifier.size(24.dp)
         )
@@ -129,10 +129,10 @@ fun TodayLogItem(
             Row {
                 Text(item.mealType.replaceFirstChar { it.uppercase() }, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 item.calories?.let {
-                    Text(" • ${it.toInt()} cal", color = Color(0xFFFFB74D), style = MaterialTheme.typography.bodySmall)
+                    Text(t(" • %s cal", it.toInt()), color = Color(0xFFFFB74D), style = MaterialTheme.typography.bodySmall)
                 }
                 if (item.source == "manual_usda") {
-                    Text(" • Manual", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                    Text(t(" • Manual"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -155,7 +155,7 @@ fun NutrientRow(label: String, value: Double?, unit: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.TitleColor, style = MaterialTheme.typography.bodySmall)
         Text(
             if (value != null && value > 0) {
                 if (value < 1) String.format("%.2f%s", value, unit) else String.format("%.1f%s", value, unit)

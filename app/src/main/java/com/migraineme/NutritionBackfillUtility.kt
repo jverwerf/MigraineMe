@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
  *         NutritionBackfillUtility.forceReBackfill(context)
  *     }
  * }) {
- *     Text("Force Re-Backfill (Debug)")
+ *     Text(t("Force Re-Backfill (Debug)"))
  * }
  * ```
  */

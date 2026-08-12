@@ -54,7 +54,7 @@ fun InsightsTreatmentsScreen(
                         verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = AppTheme.AccentPurple)
                         Spacer(Modifier.width(12.dp))
-                        Text("Loading treatment data…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Loading treatment data…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -80,10 +80,10 @@ fun InsightsTreatmentsScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Canvas(Modifier.size(36.dp)) { HubIcons.run { drawShieldCheck(Color(0xFF81C784)) } }
                         Spacer(Modifier.height(8.dp))
-                        Text("No treatment data yet", color = AppTheme.TitleColor,
+                        Text(t("No treatment data yet"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
-                        Text("Log medicines and reliefs with your migraines to see what works best.",
+                        Text(t("Log medicines and reliefs with your migraines to see what works best."),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center)
                     }
@@ -119,9 +119,9 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
     BrainyWatermarkCard(resId = R.drawable.brainy_shield, flipWatermark = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Works Best When…", color = AppTheme.TitleColor,
+                Text(t("Works Best When…"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("How relief changes depending on which symptoms are present",
+                Text(t("How relief changes depending on which symptoms are present"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             SortChipMenu(sortMode, listOf("Strongest effect", "A to Z", "Newest", "Oldest")) { sortMode = it }
@@ -155,7 +155,7 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
                             Text(direction, color = color,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
-                        Text("With ${prettyLabel(stat.symptomSegment)}: ${reliefLabel(withRelief)} · Without: ${reliefLabel(withoutRelief)}",
+                        Text(t("With %1\$s: %2\$s · Without: %3\$s", prettyLabel(stat.symptomSegment), reliefLabel(withRelief), reliefLabel(withoutRelief)),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall, maxLines = 2,
                             overflow = TextOverflow.Ellipsis)
                     }
@@ -163,7 +163,7 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
             }
             Spacer(Modifier.height(6.dp))
         }
-        Text("Relief levels come from what you logged after using the treatment.",
+        Text(t("Relief levels come from what you logged after using the treatment."),
             color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
             style = MaterialTheme.typography.labelSmall)
     }
@@ -191,7 +191,7 @@ fun TreatmentTimingCard(rows: List<EdgeFunctionsService.TreatmentTimingStat>) {
     BaseCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "Timing",
+                t("Timing"),
                 color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
             )
@@ -207,15 +207,15 @@ fun TreatmentTimingCard(rows: List<EdgeFunctionsService.TreatmentTimingStat>) {
             )
             Spacer(Modifier.height(6.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TimingBucket("Within ${cutoffText(row.cutoffMinutes)}", row.earlyAvgPeak, row.earlyCount, earlierIsBetter, Modifier.weight(1f))
-                TimingBucket("Later", row.lateAvgPeak, row.lateCount, !earlierIsBetter, Modifier.weight(1f))
+                TimingBucket(t("Within %s", cutoffText(row.cutoffMinutes)), row.earlyAvgPeak, row.earlyCount, earlierIsBetter, Modifier.weight(1f))
+                TimingBucket(t("Later"), row.lateAvgPeak, row.lateCount, !earlierIsBetter, Modifier.weight(1f))
             }
             Spacer(Modifier.height(6.dp))
             Text(
                 if (earlierIsBetter)
-                    "In your logged attacks, taking ${row.treatmentName} sooner went with a lower peak."
+                    t("In your logged attacks, taking %s sooner went with a lower peak.", row.treatmentName)
                 else
-                    "In your logged attacks, the earlier doses went with a higher peak — often a sign the worst attacks get treated fastest.",
+                    t("In your logged attacks, the earlier doses went with a higher peak — often a sign the worst attacks get treated fastest."),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -223,7 +223,7 @@ fun TreatmentTimingCard(rows: List<EdgeFunctionsService.TreatmentTimingStat>) {
         }
 
         Text(
-            "Based on attacks where you set a time for the dose.",
+            t("Based on attacks where you set a time for the dose."),
             color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
             style = MaterialTheme.typography.labelSmall
         )
@@ -246,9 +246,9 @@ private fun TimingBucket(title: String, peak: Float, count: Int, highlight: Bool
             color = if (highlight) good else Color.White.copy(alpha = 0.75f),
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
         )
-        Text("avg peak", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t("avg peak"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Text(
-            "$count attack${if (count == 1) "" else "s"}",
+            (if (count == 1) t("1 attack") else t("%s attacks", count)),
             color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
             style = MaterialTheme.typography.labelSmall
         )

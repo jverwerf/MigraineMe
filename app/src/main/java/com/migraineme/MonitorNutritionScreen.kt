@@ -333,9 +333,9 @@ fun MonitorNutritionScreen(
     if (addSuccess != null) {
         AlertDialog(
             onDismissRequest = { addSuccess = null },
-            title = { Text("Food Added!", color = AppTheme.TitleColor) },
-            text = { Text("$addSuccess has been added to your nutrition log.", color = AppTheme.BodyTextColor) },
-            confirmButton = { TextButton(onClick = { addSuccess = null }) { Text("OK", color = AppTheme.AccentPurple) } },
+            title = { Text(t("Food Added!"), color = AppTheme.TitleColor) },
+            text = { Text(t("%s has been added to your nutrition log.", addSuccess), color = AppTheme.BodyTextColor) },
+            confirmButton = { TextButton(onClick = { addSuccess = null }) { Text(t("OK"), color = AppTheme.AccentPurple) } },
             containerColor = Color(0xFF1E0A2E)
         )
     }
@@ -343,9 +343,9 @@ fun MonitorNutritionScreen(
     if (addError != null) {
         AlertDialog(
             onDismissRequest = { addError = null },
-            title = { Text("Error", color = Color(0xFFE57373)) },
+            title = { Text(t("Error"), color = Color(0xFFE57373)) },
             text = { Text(addError!!, color = AppTheme.BodyTextColor) },
-            confirmButton = { TextButton(onClick = { addError = null }) { Text("OK", color = AppTheme.AccentPurple) } },
+            confirmButton = { TextButton(onClick = { addError = null }) { Text(t("OK"), color = AppTheme.AccentPurple) } },
             containerColor = Color(0xFF1E0A2E)
         )
     }
@@ -390,16 +390,16 @@ fun MonitorNutritionScreen(
     if (barcodeNotFound != null) {
         AlertDialog(
             onDismissRequest = { barcodeNotFound = null },
-            title = { Text("Product not found", color = AppTheme.TitleColor) },
+            title = { Text(t("Product not found"), color = AppTheme.TitleColor) },
             text = {
                 Text(
-                    "Barcode ${barcodeNotFound} is not in the Open Food Facts database. Try searching by name instead.",
+                    t("Barcode %s is not in the Open Food Facts database. Try searching by name instead.", barcodeNotFound),
                     color = AppTheme.BodyTextColor
                 )
             },
             confirmButton = {
                 TextButton(onClick = { barcodeNotFound = null }) {
-                    Text("OK", color = AppTheme.AccentPurple)
+                    Text(t("OK"), color = AppTheme.AccentPurple)
                 }
             },
             containerColor = Color(0xFF1E0A2E)
@@ -446,12 +446,12 @@ fun MonitorNutritionScreen(
                             tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Automated tyramine, alcohol, gluten & histamine classification",
+                            Text(t("Automated tyramine, alcohol, gluten & histamine classification"),
                                 color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                "We can only classify foods if your nutrition app writes per-item entries to Health Connect (with a food name). Apps that only send daily totals can't be classified automatically. Log trigger foods via the barcode/search above to get classification.",
+                                t("We can only classify foods if your nutrition app writes per-item entries to Health Connect (with a food name). Apps that only send daily totals can't be classified automatically. Log trigger foods via the barcode/search above to get classification."),
                                 color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -463,7 +463,7 @@ fun MonitorNutritionScreen(
                             },
                             modifier = Modifier.size(28.dp)
                         ) {
-                            Icon(Icons.Outlined.Close, contentDescription = "Dismiss",
+                            Icon(Icons.Outlined.Close, contentDescription = t("Dismiss"),
                                 tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
                         }
                     }
@@ -472,20 +472,20 @@ fun MonitorNutritionScreen(
 
             HeroCard(modifier = Modifier.clickable { navController.navigate(Routes.NUTRITION_CONFIG) }) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Tune, "Configure", tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Outlined.Tune, t("Configure"), tint = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Customize Display", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Choose metrics to show on Monitor", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Customize Display"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Choose metrics to show on Monitor"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
                 }
             }
             // Search
             BaseCard {
-                Text("Add Food", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Add Food"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(4.dp))
-                Text("Search USDA database or scan a barcode", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                Text(t("Search USDA database or scan a barcode"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(12.dp))
 
                 Row(
@@ -496,7 +496,7 @@ fun MonitorNutritionScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it; if (it.isBlank()) { searchResults = emptyList(); searchError = null } },
-                        placeholder = { Text("Search foods") },
+                        placeholder = { Text(t("Search foods")) },
                         leadingIcon = { Icon(Icons.Default.Search, null, tint = AppTheme.SubtleTextColor) },
                         trailingIcon = { if (isSearching) CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp) },
                         singleLine = true,
@@ -527,7 +527,7 @@ fun MonitorNutritionScreen(
                         } else {
                             Icon(
                                 Icons.Outlined.QrCodeScanner,
-                                contentDescription = "Scan barcode",
+                                contentDescription = t("Scan barcode"),
                                 tint = AppTheme.AccentPurple,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -545,7 +545,7 @@ fun MonitorNutritionScreen(
             if (searchResults.isNotEmpty()) {
                 BaseCard {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Search Results", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Search Results"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Text("✕", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.titleMedium, modifier = Modifier.clickable { searchResults = emptyList() })
                     }
                     Spacer(Modifier.height(8.dp))
@@ -569,8 +569,8 @@ fun MonitorNutritionScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Today's Log", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    if (PremiumManager.isPremium) { Text("History →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = "Premium", tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text("History", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
+                    Text(t("Today's Log"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    if (PremiumManager.isPremium) { Text(t("History →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = t("Premium"), tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text(t("History"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
                 }
                 Spacer(Modifier.height(8.dp))
                 
@@ -578,7 +578,7 @@ fun MonitorNutritionScreen(
                     isLoadingToday -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                         CircularProgressIndicator(Modifier.size(20.dp), AppTheme.AccentPurple, strokeWidth = 2.dp)
                     }
-                    todayItems.isEmpty() -> Text("No food logged today", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    todayItems.isEmpty() -> Text(t("No food logged today"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     else -> {
                         val selectedMetrics = displayKeys.take(3)
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
@@ -615,7 +615,7 @@ fun MonitorNutritionScreen(
                         Spacer(Modifier.height(4.dp))
                         HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                         Spacer(Modifier.height(8.dp))
-                        Text("All Nutrients", color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("All Nutrients"), color = AppTheme.TitleColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
 
                         val allNutritionKeys = MetricRegistry.byGroup("nutrition").map { it.key }
@@ -645,7 +645,7 @@ fun MonitorNutritionScreen(
                                             "histamine_exposure" -> FlaskIcon(valueColor, 12.dp)
                                         }
                                         Spacer(Modifier.width(5.dp))
-                                        Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                        Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                                     }
                                     Row(verticalAlignment = Alignment.Bottom) {
                                         Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
@@ -663,7 +663,7 @@ fun MonitorNutritionScreen(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                                    Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                                     Text(formatted, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
@@ -674,8 +674,8 @@ fun MonitorNutritionScreen(
             
             // History Graph — premium only
             PremiumGate(
-                message = "Unlock Diet Trends",
-                subtitle = "Track your diet patterns over time",
+                message = t("Unlock Diet Trends"),
+                subtitle = t("Track your diet patterns over time"),
                 onUpgrade = { navController.navigate(Routes.PAYWALL) }
             ) {
                 NutritionHistoryGraph(
@@ -691,7 +691,7 @@ fun MonitorNutritionScreen(
 private fun NutritionSummaryValue(value: String, label: String, color: Color = AppTheme.TitleColor) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 

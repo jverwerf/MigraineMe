@@ -663,13 +663,13 @@ fun ThirdPartyConnectionsScreen(
         val isPending = whoopAccessStatus.value == WhoopAccessGate.AccessStatus.PENDING
         AlertDialog(
             onDismissRequest = { showWhoopAccessDialog.value = false },
-            title = { Text("WHOOP Integration") },
+            title = { Text(t("WHOOP Integration")) },
             text = {
                 Text(
                     if (isPending)
-                        "Your request is being reviewed. We\u2019ll enable WHOOP for your account shortly."
+                        t("Your request is being reviewed. We\u2019ll enable WHOOP for your account shortly.")
                     else
-                        "WHOOP integration is currently invite-only. Request access and we\u2019ll enable it for your account."
+                        t("WHOOP integration is currently invite-only. Request access and we\u2019ll enable it for your account.")
                 )
             },
             confirmButton = {
@@ -691,15 +691,15 @@ fun ThirdPartyConnectionsScreen(
                         },
                         enabled = !whoopAccessRequesting.value
                     ) {
-                        Text(if (whoopAccessRequesting.value) "Requesting\u2026" else "Request Access")
+                        Text(if (whoopAccessRequesting.value) t("Requesting\u2026") else t("Request Access"))
                     }
                 } else {
-                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text("OK") }
+                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text(t("OK")) }
                 }
             },
             dismissButton = {
                 if (!isPending) {
-                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text("Cancel") }
+                    TextButton(onClick = { showWhoopAccessDialog.value = false }) { Text(t("Cancel")) }
                 }
             }
         )
@@ -708,17 +708,17 @@ fun ThirdPartyConnectionsScreen(
     whoopErrorDialog.value?.let { msg ->
         AlertDialog(
             onDismissRequest = { whoopErrorDialog.value = null },
-            title = { Text("WHOOP connection failed") },
+            title = { Text(t("WHOOP connection failed")) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { whoopErrorDialog.value = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { whoopErrorDialog.value = null }) { Text(t("OK")) } }
         )
     }
 
     if (showWhoopDisconnectDialog.value) {
         AlertDialog(
             onDismissRequest = { showWhoopDisconnectDialog.value = false },
-            title = { Text("Disconnect WHOOP?") },
-            text = { Text("Are you sure you want to disconnect WHOOP?") },
+            title = { Text(t("Disconnect WHOOP?")) },
+            text = { Text(t("Are you sure you want to disconnect WHOOP?")) },
             confirmButton = {
                 TextButton(onClick = {
                     showWhoopDisconnectDialog.value = false
@@ -753,9 +753,9 @@ fun ThirdPartyConnectionsScreen(
                             android.widget.Toast.makeText(context, "WHOOP disconnected.", android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
-                }) { Text("Disconnect") }
+                }) { Text(t("Disconnect")) }
             },
-            dismissButton = { TextButton(onClick = { showWhoopDisconnectDialog.value = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showWhoopDisconnectDialog.value = false }) { Text(t("Cancel")) } }
         )
     }
 
@@ -763,17 +763,17 @@ fun ThirdPartyConnectionsScreen(
     ouraErrorDialog.value?.let { msg ->
         AlertDialog(
             onDismissRequest = { ouraErrorDialog.value = null },
-            title = { Text("Oura connection failed") },
+            title = { Text(t("Oura connection failed")) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { ouraErrorDialog.value = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { ouraErrorDialog.value = null }) { Text(t("OK")) } }
         )
     }
 
     if (showOuraDisconnectDialog.value) {
         AlertDialog(
             onDismissRequest = { showOuraDisconnectDialog.value = false },
-            title = { Text("Disconnect Oura?") },
-            text = { Text("Are you sure you want to disconnect Oura?") },
+            title = { Text(t("Disconnect Oura?")) },
+            text = { Text(t("Are you sure you want to disconnect Oura?")) },
             confirmButton = {
                 TextButton(onClick = {
                     showOuraDisconnectDialog.value = false
@@ -808,9 +808,9 @@ fun ThirdPartyConnectionsScreen(
                             android.widget.Toast.makeText(context, "Oura disconnected.", android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
-                }) { Text("Disconnect") }
+                }) { Text(t("Disconnect")) }
             },
-            dismissButton = { TextButton(onClick = { showOuraDisconnectDialog.value = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showOuraDisconnectDialog.value = false }) { Text(t("Cancel")) } }
         )
     }
 
@@ -818,17 +818,17 @@ fun ThirdPartyConnectionsScreen(
     polarErrorDialog.value?.let { msg ->
         AlertDialog(
             onDismissRequest = { polarErrorDialog.value = null },
-            title = { Text("Polar connection failed") },
+            title = { Text(t("Polar connection failed")) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { polarErrorDialog.value = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { polarErrorDialog.value = null }) { Text(t("OK")) } }
         )
     }
 
     if (showPolarDisconnectDialog.value) {
         AlertDialog(
             onDismissRequest = { showPolarDisconnectDialog.value = false },
-            title = { Text("Disconnect Polar?") },
-            text = { Text("Are you sure you want to disconnect Polar?") },
+            title = { Text(t("Disconnect Polar?")) },
+            text = { Text(t("Are you sure you want to disconnect Polar?")) },
             confirmButton = {
                 TextButton(onClick = {
                     showPolarDisconnectDialog.value = false
@@ -863,26 +863,26 @@ fun ThirdPartyConnectionsScreen(
                             android.widget.Toast.makeText(context, "Polar disconnected.", android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
-                }) { Text("Disconnect") }
+                }) { Text(t("Disconnect")) }
             },
-            dismissButton = { TextButton(onClick = { showPolarDisconnectDialog.value = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showPolarDisconnectDialog.value = false }) { Text(t("Cancel")) } }
         )
     }
 
     garminErrorDialog.value?.let { msg ->
         AlertDialog(
             onDismissRequest = { garminErrorDialog.value = null },
-            title = { Text("Garmin connection failed") },
+            title = { Text(t("Garmin connection failed")) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { garminErrorDialog.value = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { garminErrorDialog.value = null }) { Text(t("OK")) } }
         )
     }
 
     if (showGarminDisconnectDialog.value) {
         AlertDialog(
             onDismissRequest = { showGarminDisconnectDialog.value = false },
-            title = { Text("Disconnect Garmin?") },
-            text = { Text("Are you sure you want to disconnect Garmin?") },
+            title = { Text(t("Disconnect Garmin?")) },
+            text = { Text(t("Are you sure you want to disconnect Garmin?")) },
             confirmButton = {
                 TextButton(onClick = {
                     showGarminDisconnectDialog.value = false
@@ -917,9 +917,9 @@ fun ThirdPartyConnectionsScreen(
                             android.widget.Toast.makeText(context, "Garmin disconnected.", android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
-                }) { Text("Disconnect") }
+                }) { Text(t("Disconnect")) }
             },
-            dismissButton = { TextButton(onClick = { showGarminDisconnectDialog.value = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showGarminDisconnectDialog.value = false }) { Text(t("Cancel")) } }
         )
     }
 
@@ -944,8 +944,8 @@ fun ThirdPartyConnectionsScreen(
     if (showHealthConnectDisconnectDialog.value) {
         AlertDialog(
             onDismissRequest = { showHealthConnectDisconnectDialog.value = false },
-            title = { Text("Disconnect?") },
-            text = { Text("This will stop syncing Health Connect data. To fully disconnect, revoke permissions in Health Connect settings.") },
+            title = { Text(t("Disconnect?")) },
+            text = { Text(t("This will stop syncing Health Connect data. To fully disconnect, revoke permissions in Health Connect settings.")) },
             confirmButton = {
                 TextButton(onClick = {
                     NutritionSyncScheduler.cancel(context)
@@ -999,9 +999,9 @@ fun ThirdPartyConnectionsScreen(
                     menstruationEnabled.value = false
 
                     android.widget.Toast.makeText(context, "Disconnected.", android.widget.Toast.LENGTH_LONG).show()
-                }) { Text("Disconnect") }
+                }) { Text(t("Disconnect")) }
             },
-            dismissButton = { TextButton(onClick = { showHealthConnectDisconnectDialog.value = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showHealthConnectDisconnectDialog.value = false }) { Text(t("Cancel")) } }
         )
     }
 
@@ -1025,7 +1025,7 @@ fun ThirdPartyConnectionsScreen(
         // Connected Services section
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Connected Services",
+                    t("Connected Services"),
                     color = AppTheme.AccentPurple,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -1036,7 +1036,7 @@ fun ThirdPartyConnectionsScreen(
                         .align(Alignment.TopEnd)
                         .size(28.dp)
                 ) {
-                    Icon(Icons.Outlined.Info, contentDescription = "About Connections",
+                    Icon(Icons.Outlined.Info, contentDescription = t("About Connections"),
                         tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
                 }
             }
@@ -1176,11 +1176,11 @@ fun ThirdPartyConnectionsScreen(
             onDismissRequest = { showInfo = false },
             containerColor = Color(0xFF1E0A2E),
             title = {
-                Text("About Connections", color = AppTheme.TitleColor,
+                Text(t("About Connections"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = { Text(connectionsInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 }
@@ -1232,9 +1232,9 @@ private fun ConnectionRowLogoOnly(
 
             // Connect/Connected/Custom status Button
             val buttonLabel = when {
-                isConnected -> "Connected"
+                isConnected -> t("Connected")
                 statusLabel != null -> statusLabel
-                else -> "Connect"
+                else -> t("Connect")
             }
             val buttonColor = when {
                 isConnected -> AppTheme.AccentPurple.copy(alpha = 0.3f)
@@ -1248,7 +1248,7 @@ private fun ConnectionRowLogoOnly(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
-                    buttonLabel,
+                    t(buttonLabel),
                     color = Color.White,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -1285,7 +1285,7 @@ private fun HealthConnectRow(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Health Connect",
+                    t("Health Connect"),
                     color = Color.White.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -1300,7 +1300,7 @@ private fun HealthConnectRow(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
-                    if (isConnected) "Connected" else "Connect",
+                    if (isConnected) t("Connected") else t("Connect"),
                     color = Color.White,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -1358,14 +1358,14 @@ private fun ConnectionRow(
             // Title only
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    title,
+                    t(title),
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 if (warningText != null) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        warningText,
+                        t(warningText),
                         color = Color(0xFFFFB74D),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -1384,7 +1384,7 @@ private fun ConnectionRow(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
-                    if (isConnected) "Connected" else "Connect",
+                    if (isConnected) t("Connected") else t("Connect"),
                     color = Color.White,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -1519,12 +1519,12 @@ fun GarminDevicePickerDialog(
         title = {
             Column {
                 Text(
-                    "Which Garmin device?",
+                    t("Which Garmin device?"),
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Shown on your Monitor badges per Garmin's brand guidelines.",
+                    t("Shown on your Monitor badges per Garmin's brand guidelines."),
                     color = AppTheme.SubtleTextColor,
                     fontSize = 12.sp
                 )
@@ -1535,7 +1535,7 @@ fun GarminDevicePickerDialog(
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
-                    placeholder = { Text("Search models", color = AppTheme.SubtleTextColor) },
+                    placeholder = { Text(t("Search models"), color = AppTheme.SubtleTextColor) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -1551,7 +1551,7 @@ fun GarminDevicePickerDialog(
                     filtered.forEach { (section, models) ->
                         item(key = "h_$section") {
                             Text(
-                                section,
+                                t(section),
                                 color = AppTheme.SubtleTextColor,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -1586,12 +1586,12 @@ fun GarminDevicePickerDialog(
                 onClick = { selected?.let { onPick(it) } },
                 enabled = selected != null
             ) {
-                Text("Confirm", color = if (selected != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
+                Text(t("Confirm"), color = if (selected != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Skip", color = AppTheme.SubtleTextColor)
+                Text(t("Skip"), color = AppTheme.SubtleTextColor)
             }
         }
     )

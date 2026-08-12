@@ -95,14 +95,14 @@ fun CustomizeTriggersScreen() {
             // Info Card
             HeroCard {
                 Text(
-                    "Automatic Triggers",
+                    t("Automatic Triggers"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Configure which health patterns should automatically create triggers. " +
-                            "These triggers are checked every hour as new data arrives.",
+                    t("Configure which health patterns should automatically create triggers. ") +
+                            t("These triggers are checked every hour as new data arrives."),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -120,7 +120,7 @@ fun CustomizeTriggersScreen() {
             } else if (sections.isEmpty()) {
                 HeroCard {
                     Text(
-                        "No trigger definitions found.",
+                        t("No trigger definitions found."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -194,8 +194,7 @@ private fun CustomizeTriggerRowUi(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    def.label,
+                Text(t(def.label),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -228,7 +227,7 @@ private fun CustomizeTriggerRowUi(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Threshold:",
+                    t("Threshold:"),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.width(80.dp)

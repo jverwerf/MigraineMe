@@ -237,7 +237,7 @@ fun DataSettingsRow(
                 Spacer(Modifier.height(3.dp))
                 when {
                     isComputedRow -> {
-                        SourceBadge(label = "Computed", hasMultiple = false, enabled = false, onClick = {})
+                        SourceBadge(label = t("Computed"), hasMultiple = false, enabled = false, onClick = {})
                     }
                     isPhoneOrWearableRow -> {
                         HybridSourceSelector(
@@ -271,7 +271,7 @@ fun DataSettingsRow(
                         )
                     }
                     isWearableRow && allowedWearables.isEmpty() -> {
-                        SourceBadge(label = "Not available", hasMultiple = false, enabled = false, onClick = {})
+                        SourceBadge(label = t("Not available"), hasMultiple = false, enabled = false, onClick = {})
                     }
                     isMenstruationRow -> {
                         PhoneSourceSelector(
@@ -300,7 +300,7 @@ fun DataSettingsRow(
                         )
                     }
                     isAmbientNoiseRow -> {
-                        SourceBadge(label = "Phone", hasMultiple = false, enabled = false, onClick = {})
+                        SourceBadge(label = t("Phone"), hasMultiple = false, enabled = false, onClick = {})
                     }
                     else -> {
                         val providerLabel = when (row.collectedByKind) {
@@ -317,7 +317,7 @@ fun DataSettingsRow(
                 // Additional info hints
                 if (isMenstruationRow && enabledBySupabase && menstruationSettings?.lastMenstruationDate != null) {
                     Text(
-                        "Last: ${menstruationSettings.lastMenstruationDate} • Avg: ${menstruationSettings.avgCycleLength} days",
+                        t("Last: %1\$s • Avg: %2\$s days", menstruationSettings.lastMenstruationDate, menstruationSettings.avgCycleLength),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -325,19 +325,19 @@ fun DataSettingsRow(
                 if (isMenstruationRow && enabledBySupabase &&
                     (menstruationSettings == null || menstruationSettings.lastMenstruationDate == null)
                 ) {
-                    Text("Please go to Monitor to complete setup.", style = MaterialTheme.typography.bodySmall, color = AppTheme.AccentPurple)
+                    Text(t("Please go to Monitor to complete setup."), style = MaterialTheme.typography.bodySmall, color = AppTheme.AccentPurple)
                 }
                 if (isMenstruationRow) {
-                    Text("Note: Many apps no longer share menstruation data with Health Connect.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Note: Many apps no longer share menstruation data with Health Connect."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
                 if (isStressRow && !isStressWithWearableSource && !depsOkForStress) {
-                    Text("Enable HRV and Resting HR to compute Stress, or select a wearable source.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Enable HRV and Resting HR to compute Stress, or select a wearable source."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
                 if (row.table in weatherMetrics && finalGreyOut) {
-                    Text("Enable Location to use weather data.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Enable Location to use weather data."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
                 if (isHybridPhoneSource && !usageStatsPermissionGranted) {
-                    Text("Usage access permission needed for phone sleep.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("Usage access permission needed for phone sleep."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 }
 
                 // Oura conversion info cards — shown when Oura is selected for metrics that involve data mapping

@@ -60,18 +60,18 @@ fun AutoTriggersTab() {
     val sections = remember {
         listOf(
             TriggerSection(
-                title = "Recovery",
-                description = "Get notified when your recovery score indicates potential issues.",
+                title = tSync("Recovery"),
+                description = tSync("Get notified when your recovery score indicates potential issues."),
                 rows = listOf(
                     TriggerRow(
                         triggerType = "recovery_low",
-                        label = "Low recovery",
-                        description = "Recovery below 33%"
+                        label = tSync("Low recovery"),
+                        description = tSync("Recovery below 33%")
                     ),
                     TriggerRow(
                         triggerType = "recovery_unusually_low",
-                        label = "Unusually low recovery",
-                        description = "Recovery 2 standard deviations below your average"
+                        label = tSync("Unusually low recovery"),
+                        description = tSync("Recovery 2 standard deviations below your average")
                     )
                 )
             )
@@ -90,13 +90,13 @@ fun AutoTriggersTab() {
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text(
-                    "Automatic Triggers",
+                    t("Automatic Triggers"),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Configure which health patterns should automatically create triggers. " +
-                            "These triggers are checked daily at 9 AM your local time.",
+                    t("Configure which health patterns should automatically create triggers. ") +
+                            t("These triggers are checked daily at 9 AM your local time."),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -176,7 +176,7 @@ private fun TriggerRowUi(
                 .weight(1f)
                 .padding(end = 10.dp)
         ) {
-            Text(row.label, style = MaterialTheme.typography.bodyMedium)
+            Text(t(row.label), style = MaterialTheme.typography.bodyMedium)
             if (row.description.isNotEmpty()) {
                 Spacer(Modifier.height(2.dp))
                 Text(

@@ -90,14 +90,13 @@ fun CertaintyMultiSelect(
                     }
 
                     Column(Modifier.weight(1f)) {
-                        Text(
-                            item.label,
+                        Text(t(item.label),
                             color = Color.White,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                         )
                         if (item.description != null) {
-                            Text(item.description, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            Text(t(item.description), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -142,7 +141,7 @@ fun CertaintyMultiSelect(
                         Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(14.dp))
                     }
                 }
-                Text("None of these", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                Text(t("None of these"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -183,8 +182,7 @@ private fun CertaintySelector(
                     .clickable { onSelected(certainty) }
                     .padding(horizontal = 10.dp, vertical = 6.dp),
             ) {
-                Text(
-                    label,
+                Text(t(label),
                     color = textColor,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
@@ -236,8 +234,7 @@ fun SingleCertaintySelect(
                     .padding(horizontal = 4.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    label,
+                Text(t(label),
                     color = textColor,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,

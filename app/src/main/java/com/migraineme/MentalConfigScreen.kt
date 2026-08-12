@@ -104,13 +104,13 @@ fun MentalConfigScreen(
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
             HeroCard {
                 Text(
-                    text = "Customize Cognitive",
+                    text = t("Customize Cognitive"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Choose which cognitive metrics to display on the Monitor screen.",
+                    text = t("Choose which cognitive metrics to display on the Monitor screen."),
                     color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -119,13 +119,13 @@ fun MentalConfigScreen(
             if (settingsLoaded && availableMetrics.isEmpty()) {
                 BaseCard {
                     Text(
-                        text = "No cognitive source enabled",
+                        text = t("No cognitive source enabled"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Enable cognitive tracking in Data Settings to customize metrics.",
+                        text = t("Enable cognitive tracking in Data Settings to customize metrics."),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -133,13 +133,13 @@ fun MentalConfigScreen(
             } else {
                 BaseCard {
                     Text(
-                        text = "Display Metrics (${selectedMetrics.size}/3)",
+                        text = t("Display Metrics (%s/3)", selectedMetrics.size),
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Select up to 3 metrics to show on the Monitor card.",
+                        text = t("Select up to 3 metrics to show on the Monitor card."),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -188,7 +188,7 @@ fun MentalConfigScreen(
                                 trailingIcon = {
                                     Icon(
                                         Icons.Default.PhoneAndroid,
-                                        contentDescription = "Phone",
+                                        contentDescription = t("Phone"),
                                         modifier = Modifier.size(14.dp),
                                         tint = if (isSelected) slotColor else AppTheme.SubtleTextColor
                                     )
@@ -213,7 +213,7 @@ fun MentalConfigScreen(
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(14.dp), tint = AppTheme.SubtleTextColor)
-                        Text(text = "Phone", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(text = t("Phone"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

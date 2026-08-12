@@ -166,9 +166,8 @@ private fun CoreCanvas(
                     // Show month on first label or when month changes
                     val showMonth = dayIdx == 0 || day.dayOfMonth <= labelEveryN
                     val label = if (showMonth) "$monthStr $dayStr" else dayStr
-                    val tw = datePaint.measureText(label)
-                    drawContext.canvas.nativeCanvas.drawText(
-                        label, xi - tw / 2f, h - 6f, datePaint
+                    val tw = datePaint.measureText(tSync(label))
+                    drawContext.canvas.nativeCanvas.drawText(tSync(label), xi - tw / 2f, h - 6f, datePaint
                     )
                 }
                 day = day.plusDays(1)
@@ -254,7 +253,7 @@ private fun CoreCanvas(
         }
         popup?.let { hit -> val offX = (hit.x - 120f).roundToInt().coerceAtLeast(0); val offY = (hit.y - 70f).roundToInt().coerceAtLeast(0)
             Card(Modifier.offset { IntOffset(offX, offY) }, colors = CardDefaults.cardColors(containerColor = PopupBg), shape = RoundedCornerShape(10.dp), elevation = CardDefaults.cardElevation(8.dp)) {
-                Text(hit.label, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f)) } }
+                Text(t(hit.label), Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f)) } }
     }
 }
 

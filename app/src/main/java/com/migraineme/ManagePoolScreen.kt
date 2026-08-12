@@ -163,7 +163,7 @@ fun ManagePoolScreen(
                     if (isDirty) showUnsavedDialog = true
                     else navController.popBackStack()
                 }) {
-                    Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
 
@@ -187,7 +187,7 @@ fun ManagePoolScreen(
                             .offset(x = 10.dp, y = (-14).dp)
                             .size(34.dp)
                     ) {
-                        Icon(Icons.Outlined.Info, contentDescription = "About ${effectiveConfig.title}",
+                        Icon(Icons.Outlined.Info, contentDescription = t("About %s", effectiveConfig.title),
                             tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                     }
                 }
@@ -197,12 +197,12 @@ fun ManagePoolScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search…", color = AppTheme.SubtleTextColor) },
+                placeholder = { Text(t("Search…"), color = AppTheme.SubtleTextColor) },
                 leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Outlined.Close, "Clear", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Outlined.Close, t("Clear"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp))
                         }
                     }
                 },
@@ -225,9 +225,9 @@ fun ManagePoolScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Pool", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Pool"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Outlined.Add, "Add", tint = effectiveConfig.iconColor, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.Add, t("Add"), tint = effectiveConfig.iconColor, modifier = Modifier.size(20.dp))
                     }
                 }
 
@@ -237,8 +237,8 @@ fun ManagePoolScreen(
 
                 if (visibleItems.isEmpty()) {
                     Text(
-                        if (isSearching) "No matches for \"${searchQuery.trim()}\""
-                        else "No items yet — tap + to add",
+                        if (isSearching) t("No matches for \"%s\"", searchQuery.trim())
+                        else t("No items yet — tap + to add"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -270,7 +270,7 @@ fun ManagePoolScreen(
                             )
                             Icon(
                                 if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                contentDescription = if (isExpanded) t("Collapse") else t("Expand"),
                                 tint = effectiveConfig.iconColor.copy(alpha = 0.5f),
                                 modifier = Modifier.size(20.dp)
                             )
@@ -326,13 +326,13 @@ fun ManagePoolScreen(
                                 // Group name + member count
                                 Column(Modifier.weight(1f)) {
                                     Text(groupName, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
-                                    Text("${members.size} metrics", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                                    Text(t("%s metrics", members.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                                 }
 
                                 // Expand indicator
                                 Icon(
                                     if (isGroupExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                                    contentDescription = if (isGroupExpanded) "Collapse" else "Expand",
+                                    contentDescription = if (isGroupExpanded) t("Collapse") else t("Expand"),
                                     tint = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -397,7 +397,7 @@ fun ManagePoolScreen(
                     },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text("Back") }
+                ) { Text(t("Back")) }
 
                 if (isDirty) {
                     Button(
@@ -432,9 +432,9 @@ fun ManagePoolScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text("Saving...", color = Color.White)
+                            Text(t("Saving..."), color = Color.White)
                         } else {
-                            Text("Save & Recalculate", color = Color.White)
+                            Text(t("Save & Recalculate"), color = Color.White)
                         }
                     }
                 }
@@ -450,11 +450,11 @@ fun ManagePoolScreen(
             onDismissRequest = { showHeroInfo = false },
             containerColor = Color(0xFF1E0A2E),
             title = {
-                Text("About ${effectiveConfig.title}", color = AppTheme.TitleColor,
+                Text(t("About %s", effectiveConfig.title), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
-            text = { Text(effectiveConfig.infoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            text = { Text(t(effectiveConfig.infoText), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = { TextButton(onClick = { showHeroInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 
@@ -465,16 +465,16 @@ fun ManagePoolScreen(
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text("Unsaved Changes") },
-            text = { Text("You have unsaved changes to prediction values or thresholds. Discard them?") },
+            title = { Text(t("Unsaved Changes")) },
+            text = { Text(t("You have unsaved changes to prediction values or thresholds. Discard them?")) },
             confirmButton = {
                 TextButton(onClick = {
                     showUnsavedDialog = false
                     navController.popBackStack()
-                }) { Text("Discard", color = AppTheme.AccentPink) }
+                }) { Text(t("Discard"), color = AppTheme.AccentPink) }
             },
             dismissButton = {
-                TextButton(onClick = { showUnsavedDialog = false }) { Text("Keep Editing", color = AppTheme.SubtleTextColor) }
+                TextButton(onClick = { showUnsavedDialog = false }) { Text(t("Keep Editing"), color = AppTheme.SubtleTextColor) }
             }
         )
     }
@@ -492,14 +492,14 @@ fun ManagePoolScreen(
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text("Add ${config.title.lowercase().removeSuffix("s")}") },
+            title = { Text(t("Add %s", config.title.lowercase().removeSuffix("s"))) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     // Name
                     OutlinedTextField(
                         value = newLabel,
                         onValueChange = { newLabel = it },
-                        placeholder = { Text("Name", color = AppTheme.SubtleTextColor) },
+                        placeholder = { Text(t("Name"), color = AppTheme.SubtleTextColor) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -513,7 +513,7 @@ fun ManagePoolScreen(
 
                     // Category dropdown
                     if (config.categories.isNotEmpty()) {
-                        Text("Category", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Category"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         ExposedDropdownMenuBox(
                             expanded = categoryExpanded,
                             onExpandedChange = { categoryExpanded = it }
@@ -540,7 +540,7 @@ fun ManagePoolScreen(
                             ) {
                                 config.categories.forEach { cat ->
                                     DropdownMenuItem(
-                                        text = { Text(cat, color = Color.White) },
+                                        text = { Text(t(cat), color = Color.White) },
                                         onClick = { newCategory = cat; categoryExpanded = false },
                                         colors = MenuDefaults.itemColors(
                                             textColor = Color.White
@@ -554,7 +554,7 @@ fun ManagePoolScreen(
 
                     // Prediction value
                     if (config.showPrediction) {
-                        Text("Prediction value", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Prediction value"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             PredictionValue.entries.forEach { pv ->
                                 PredictionChip(
@@ -568,7 +568,7 @@ fun ManagePoolScreen(
 
                     // ── Icon picker (only shown when pickerIcons is provided) ──
                     if (config.pickerIcons.isNotEmpty()) {
-                        Text("Pick an icon", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Pick an icon"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -593,7 +593,7 @@ fun ManagePoolScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        picker.icon, contentDescription = picker.label,
+                                        picker.icon, contentDescription = t(picker.label),
                                         tint = if (isChosen) Color.White else AppTheme.SubtleTextColor,
                                         modifier = Modifier.size(22.dp)
                                     )
@@ -612,10 +612,10 @@ fun ManagePoolScreen(
                         }
                     },
                     enabled = newLabel.isNotBlank()
-                ) { Text("Add", color = if (newLabel.isNotBlank()) config.iconColor else AppTheme.SubtleTextColor) }
+                ) { Text(t("Add"), color = if (newLabel.isNotBlank()) config.iconColor else AppTheme.SubtleTextColor) }
             },
             dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) { Text("Cancel", color = AppTheme.SubtleTextColor) }
+                TextButton(onClick = { showAddDialog = false }) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
             }
         )
     }
@@ -627,13 +627,13 @@ fun ManagePoolScreen(
             containerColor = Color(0xFF1E0A2E),
             titleContentColor = Color.White,
             textContentColor = AppTheme.BodyTextColor,
-            title = { Text("Remove \"${item.label}\"?") },
-            text = { Text("This will remove it from your pool. Past logged entries won't be affected.") },
+            title = { Text(t("Remove \"%s\"?", item.label)) },
+            text = { Text(t("This will remove it from your pool. Past logged entries won't be affected.")) },
             confirmButton = {
-                TextButton(onClick = { config.onDelete(item.id); showDeleteDialog = null }) { Text("Delete", color = AppTheme.AccentPink) }
+                TextButton(onClick = { config.onDelete(item.id); showDeleteDialog = null }) { Text(t("Delete"), color = AppTheme.AccentPink) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) { Text("Cancel", color = AppTheme.SubtleTextColor) }
+                TextButton(onClick = { showDeleteDialog = null }) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
             }
         )
     }
@@ -661,7 +661,7 @@ private fun PredictionChip(
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 5.dp)
     ) {
-        Text(value.display, color = textColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+        Text(t(value.display), color = textColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
     }
 }
 
@@ -713,12 +713,12 @@ private fun PoolItemRow(
             }
 
             // Label
-            Text(item.label, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+            Text(t(item.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
 
             // (i) for noise rows — explains Quiet/Moderate/Loud/Very loud
             if (item.label == "Noise high" || item.label == "Noise low") {
                 IconButton(onClick = { showNoiseInfo = true }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Outlined.Info, "Noise levels", tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Outlined.Info, t("Noise levels"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(14.dp))
                 }
             }
 
@@ -741,7 +741,7 @@ private fun PoolItemRow(
                 IconButton(onClick = { config.onToggleAlert.invoke(item.id, !item.alertEnabled) }, modifier = Modifier.size(28.dp)) {
                     Icon(
                         if (item.alertEnabled) Icons.Filled.Notifications else Icons.Outlined.NotificationsNone,
-                        contentDescription = if (item.alertEnabled) "Turn off alerts" else "Turn on alerts",
+                        contentDescription = if (item.alertEnabled) t("Turn off alerts") else t("Turn on alerts"),
                         tint = if (item.alertEnabled) AppTheme.AccentPurple else AppTheme.SubtleTextColor.copy(alpha = 0.4f),
                         modifier = Modifier.size(18.dp)
                     )
@@ -752,7 +752,7 @@ private fun PoolItemRow(
             IconButton(onClick = { config.onToggleFavorite(item.id, !item.isFavorite) }, modifier = Modifier.size(28.dp)) {
                 Icon(
                     if (item.isFavorite) Icons.Outlined.Star else Icons.Outlined.StarBorder,
-                    contentDescription = if (item.isFavorite) "Unstar" else "Star",
+                    contentDescription = if (item.isFavorite) t("Unstar") else t("Star"),
                     tint = if (item.isFavorite) Color(0xFFFDD835) else AppTheme.SubtleTextColor.copy(alpha = 0.4f),
                     modifier = Modifier.size(18.dp)
                 )
@@ -760,7 +760,7 @@ private fun PoolItemRow(
 
             // Delete
             IconButton(onClick = { showDeleteDialog(item) }, modifier = Modifier.size(28.dp)) {
-                Icon(Icons.Outlined.Delete, "Delete", tint = AppTheme.SubtleTextColor.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+                Icon(Icons.Outlined.Delete, t("Delete"), tint = AppTheme.SubtleTextColor.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
             }
         }
 
@@ -774,7 +774,7 @@ private fun PoolItemRow(
             ) {
                 // Prediction chips
                 if (config.showPrediction) {
-                    Text("Prediction", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Prediction"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         PredictionValue.entries.forEach { pv ->
                             PredictionChip(value = pv, isSelected = item.prediction == pv, onClick = { config.onSetPrediction(item.id, pv) })
@@ -784,7 +784,7 @@ private fun PoolItemRow(
 
                 // Category selector
                 if (config.categories.isNotEmpty()) {
-                    Text("Category", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Text(t("Category"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     var catExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = catExpanded, onExpandedChange = { catExpanded = it }) {
                         OutlinedTextField(
@@ -803,7 +803,7 @@ private fun PoolItemRow(
                         ExposedDropdownMenu(expanded = catExpanded, onDismissRequest = { catExpanded = false }, modifier = Modifier.background(Color(0xFF2A0C3C))) {
                             config.categories.forEach { cat ->
                                 DropdownMenuItem(
-                                    text = { Text(cat, color = Color.White, style = MaterialTheme.typography.bodySmall) },
+                                    text = { Text(t(cat), color = Color.White, style = MaterialTheme.typography.bodySmall) },
                                     onClick = { config.onSetCategory(item.id, cat); catExpanded = false },
                                     modifier = if (item.category == cat) Modifier.background(config.iconColor.copy(alpha = 0.15f)) else Modifier
                                 )
@@ -819,7 +819,7 @@ private fun PoolItemRow(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Auto-detect", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+                        Text(t("Auto-detect"), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
                         Switch(
                             checked = item.isAutomated,
                             onCheckedChange = { config.onToggleAutomation(item.id, it) },
@@ -844,7 +844,7 @@ private fun PoolItemRow(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                if (item.direction == "high") "Fires above" else "Fires below",
+                                if (item.direction == "high") t("Fires above") else t("Fires below"),
                                 color = AppTheme.SubtleTextColor.copy(alpha = dimAlpha),
                                 style = MaterialTheme.typography.labelSmall
                             )
@@ -860,7 +860,7 @@ private fun PoolItemRow(
                                             .background(Color.White.copy(alpha = 0.06f), MaterialTheme.shapes.small)
                                             .padding(horizontal = 10.dp, vertical = 6.dp)
                                     ) {
-                                        Text(selectedLabel, color = Color.White, style = MaterialTheme.typography.bodySmall)
+                                        Text(t(selectedLabel), color = Color.White, style = MaterialTheme.typography.bodySmall)
                                         Text("▾", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                                     }
                                     DropdownMenu(
@@ -870,7 +870,7 @@ private fun PoolItemRow(
                                     ) {
                                         NOISE_BUCKETS.forEach { (label, threshold) ->
                                             DropdownMenuItem(
-                                                text = { Text(label, color = Color.White, style = MaterialTheme.typography.bodySmall) },
+                                                text = { Text(t(label), color = Color.White, style = MaterialTheme.typography.bodySmall) },
                                                 onClick = { config.onThresholdChange(item.id, threshold); noiseExpanded = false }
                                             )
                                         }
@@ -970,8 +970,7 @@ private fun ThresholdUnitToggle(
                     .padding(horizontal = 8.dp, vertical = 3.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    label,
+                Text(t(label),
                     color = if (active) Color(0xFF06343B) else AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                 )
@@ -1010,20 +1009,20 @@ private fun noiseLabelForThreshold(v: Double): String =
 private fun NoiseInfoDialog(iconColor: Color, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Got it", color = iconColor) } },
-        title = { Text("How noise is measured", color = Color.White) },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(t("Got it"), color = iconColor) } },
+        title = { Text(t("How noise is measured"), color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Ambient noise is sampled from your phone mic. The number we store is a relative loudness score; for the threshold we group it into four bands you can pick from:",
+                    t("Ambient noise is sampled from your phone mic. The number we store is a relative loudness score; for the threshold we group it into four bands you can pick from:"),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
                 )
-                NoiseBandRow("Quiet", "Under 50 dB: library, quiet home")
-                NoiseBandRow("Moderate", "50–70 dB: conversation, office")
-                NoiseBandRow("Loud", "70–85 dB: vacuum, busy street")
-                NoiseBandRow("Very loud", "85 dB+: NIOSH hazard threshold")
+                NoiseBandRow(t("Quiet"), t("Under 50 dB: library, quiet home"))
+                NoiseBandRow(t("Moderate"), t("50–70 dB: conversation, office"))
+                NoiseBandRow(t("Loud"), t("70–85 dB: vacuum, busy street"))
+                NoiseBandRow(t("Very loud"), t("85 dB+: NIOSH hazard threshold"))
                 Text(
-                    "\"Noise high\" fires when the day's average reaches the band you pick; \"Noise low\" fires when it drops below it.",
+                    t("\"Noise high\" fires when the day's average reaches the band you pick; \"Noise low\" fires when it drops below it."),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall
                 )
             }

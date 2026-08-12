@@ -70,7 +70,7 @@ fun MenstruationSetupDialog(
 
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismiss() },
-        title = { Text("Menstruation Tracking Setup") },
+        title = { Text(t("Menstruation Tracking Setup")) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -85,11 +85,11 @@ fun MenstruationSetupDialog(
                     ) {
                         CircularProgressIndicator()
                         Text(
-                            "Analyzing your cycle history...",
+                            t("Analyzing your cycle history..."),
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            "This may take up to 30 seconds",
+                            t("This may take up to 30 seconds"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -106,13 +106,13 @@ fun MenstruationSetupDialog(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        "✓ Found ${data.periods.size} periods in your history!",
+                                        t("✓ Found %s periods in your history!", data.periods.size),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                     Spacer(Modifier.height(4.dp))
                                     Text(
-                                        "We've pre-filled your information below. You can edit if needed.",
+                                        t("We've pre-filled your information below. You can edit if needed."),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
@@ -126,13 +126,13 @@ fun MenstruationSetupDialog(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        "We couldn't find any period data",
+                                        t("We couldn't find any period data"),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )
                                     Spacer(Modifier.height(4.dp))
                                     Text(
-                                        "Please enter your information manually below.",
+                                        t("Please enter your information manually below."),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )
@@ -144,14 +144,14 @@ fun MenstruationSetupDialog(
 
                     // Form fields
                     Text(
-                        "Help us track your cycle by providing some basic information:",
+                        t("Help us track your cycle by providing some basic information:"),
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     // Date picker button for last period
                     Column {
                         Text(
-                            "Last Period Start Date",
+                            t("Last Period Start Date"),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -187,7 +187,7 @@ fun MenstruationSetupDialog(
                             avgCycleText = it
                             error = null
                         },
-                        label = { Text("Average Cycle Length (days)") },
+                        label = { Text(t("Average Cycle Length (days)")) },
                         placeholder = { Text("28") },
                         modifier = Modifier.fillMaxWidth(),
                         isError = error != null
@@ -200,11 +200,11 @@ fun MenstruationSetupDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Auto-update average",
+                                t("Auto-update average"),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                "Recalculate when new periods are logged",
+                                t("Recalculate when new periods are logged"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -239,14 +239,14 @@ fun MenstruationSetupDialog(
                         onConfirm(lastDate, avgCycle, autoUpdate)
                     }
                 ) {
-                    Text("Start Tracking")
+                    Text(t("Start Tracking"))
                 }
             }
         },
         dismissButton = {
             if (!isLoading) {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(t("Cancel"))
                 }
             }
         }

@@ -153,9 +153,9 @@ fun RiskWeightsScreen(
                     HeroCard {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Outlined.Speed, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                            Text("Gauge Thresholds", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Gauge Thresholds"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         }
-                        Text("Minimum score to enter each risk zone. Tap to edit.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("Minimum score to enter each risk zone. Tap to edit."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
 
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             // NONE is always 0 — not editable
@@ -164,7 +164,7 @@ fun RiskWeightsScreen(
                                     Text("0", color = Color(0xFF666666), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                                 Spacer(Modifier.height(4.dp))
-                                Text("None", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                                Text(t("None"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                             }
                             GaugeThresholdCircle("Low", thresholdLow, Color(0xFF81C784)) { thresholdLow = it }
                             GaugeThresholdCircle("Mild", thresholdMild, Color(0xFFFFB74D)) { thresholdMild = it }
@@ -178,7 +178,7 @@ fun RiskWeightsScreen(
                             .offset(x = 10.dp, y = (-14).dp)
                             .size(34.dp)
                     ) {
-                        Icon(Icons.Outlined.Info, contentDescription = "About Gauge Thresholds",
+                        Icon(Icons.Outlined.Info, contentDescription = t("About Gauge Thresholds"),
                             tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                     }
                 }
@@ -190,9 +190,9 @@ fun RiskWeightsScreen(
                     BaseCard {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Outlined.TrendingDown, null, tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
-                            Text("Decay Curves", color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Decay Curves"), color = Color.White, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         }
-                        Text("How quickly trigger risk fades over days. Tap a bar to edit.", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Text(t("How quickly trigger risk fades over days. Tap a bar to edit."), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                     IconButton(
                         onClick = { showDecayInfo = true },
@@ -201,7 +201,7 @@ fun RiskWeightsScreen(
                             .offset(x = 10.dp, y = (-14).dp)
                             .size(34.dp)
                     ) {
-                        Icon(Icons.Outlined.Info, contentDescription = "About Decay Curves",
+                        Icon(Icons.Outlined.Info, contentDescription = t("About Decay Curves"),
                             tint = AppTheme.SubtleTextColor, modifier = Modifier.size(20.dp))
                     }
                 }
@@ -223,7 +223,7 @@ fun RiskWeightsScreen(
                     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2A1A)), shape = RoundedCornerShape(12.dp)) {
                         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Outlined.CheckCircle, null, tint = Color(0xFF81C784), modifier = Modifier.size(18.dp))
-                            Text("Saved — risk scores recalculated", color = Color(0xFF81C784), style = MaterialTheme.typography.bodySmall)
+                            Text(t("Saved — risk scores recalculated"), color = Color(0xFF81C784), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -233,13 +233,13 @@ fun RiskWeightsScreen(
                     OutlinedButton(
                         onClick = { resetDefaults() }, modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-                    ) { Text("Reset Defaults") }
+                    ) { Text(t("Reset Defaults")) }
                     Button(
                         onClick = { save() }, modifier = Modifier.weight(1f), enabled = !saving,
                         colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                     ) {
                         if (saving) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                        else Text("Save")
+                        else Text(t("Save"))
                     }
                 }
             }
@@ -251,11 +251,11 @@ fun RiskWeightsScreen(
             onDismissRequest = { showThresholdsInfo = false },
             containerColor = Color(0xFF1E0A2E),
             title = {
-                Text("About Gauge Thresholds", color = AppTheme.TitleColor,
+                Text(t("About Gauge Thresholds"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = { Text(thresholdsInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showThresholdsInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showThresholdsInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 
@@ -264,11 +264,11 @@ fun RiskWeightsScreen(
             onDismissRequest = { showDecayInfo = false },
             containerColor = Color(0xFF1E0A2E),
             title = {
-                Text("About Decay Curves", color = AppTheme.TitleColor,
+                Text(t("About Decay Curves"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
             },
             text = { Text(decayInfoText, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium) },
-            confirmButton = { TextButton(onClick = { showDecayInfo = false }) { Text("Got it", color = AppTheme.AccentPurple) } }
+            confirmButton = { TextButton(onClick = { showDecayInfo = false }) { Text(t("Got it"), color = AppTheme.AccentPurple) } }
         )
     }
 }
@@ -307,7 +307,7 @@ private fun GaugeThresholdCircle(label: String, value: Double, color: Color, onC
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -379,7 +379,7 @@ private fun DecayCurveCard(severity: String, color: Color, values: List<Double>,
                                 .clickable { editingIndex = i; editText = fmt(v) }
                         )
                         // Day label
-                        Text(labels[i], color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                        Text(t(labels[i]), color = AppTheme.SubtleTextColor.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     }
                 }
             }

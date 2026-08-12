@@ -65,9 +65,9 @@ fun InsightsImpactScreen(
                         BrainyBlobIcon(R.drawable.brainy_recover_small)
                         Spacer(Modifier.width(10.dp))
                         Column {
-                            Text("Severity", color = AppTheme.TitleColor,
+                            Text(t("Severity"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("How hard your migraines hit, across all of them",
+                            Text(t("How hard your migraines hit, across all of them"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -86,7 +86,7 @@ fun InsightsImpactScreen(
                                 style = MaterialTheme.typography.headlineLarge.copy(
                                     fontWeight = FontWeight.Bold, fontSize = 48.sp),
                             )
-                            Text("avg /10", color = AppTheme.SubtleTextColor,
+                            Text(t("avg /10"), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall)
                         }
 
@@ -116,9 +116,9 @@ fun InsightsImpactScreen(
                 MaybeWatermarkCard(watermark = lastCard == "symptoms", resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Your Symptoms", color = AppTheme.TitleColor,
+                            Text(t("Your Symptoms"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("How often each shows up, and how bad those attacks are",
+                            Text(t("How often each shows up, and how bad those attacks are"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                         SortChipMenu(symptomSort, listOf("Most frequent", "Most severe", "Longest", "A to Z")) { symptomSort = it }
@@ -144,20 +144,20 @@ fun InsightsImpactScreen(
                                 Text(prettyLabel(s.symptomLabel), color = Color(0xFFF3EAFB),
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     overflow = TextOverflow.Ellipsis, maxLines = 1, modifier = Modifier.weight(1f))
-                                Text("$pct% · ${s.totalCount} attacks",
+                                Text(t("%1\$s%% · %2\$s attacks", pct, s.totalCount),
                                     color = Color(0xFFCE93D8),
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                             }
                             Spacer(Modifier.height(6.dp))
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                                 if (sev != null) {
-                                    Text("avg severity ${String.format("%.1f", sev)}", color = sevColor,
+                                    Text(t("avg severity %s", String.format("%.1f", sev)), color = sevColor,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                                 }
                                 val dur = s.avgDurationHours
                                 if (dur != null) {
                                     if (sev != null) Text("\u00b7", color = Color(0xFF9C8BB0), style = MaterialTheme.typography.labelSmall)
-                                    Text("avg duration ~${String.format("%.0f", dur)}h", color = Color(0xFF9C8BB0),
+                                    Text(t("avg duration ~%sh", String.format("%.0f", dur)), color = Color(0xFF9C8BB0),
                                         style = MaterialTheme.typography.labelSmall)
                                 }
                             }
@@ -172,9 +172,9 @@ fun InsightsImpactScreen(
                 MaybeWatermarkCard(watermark = lastCard == "pain", resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text("Pain Locations", color = AppTheme.TitleColor,
+                            Text(t("Pain Locations"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Where your migraines hurt most",
+                            Text(t("Where your migraines hurt most"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -220,7 +220,7 @@ fun InsightsImpactScreen(
                                     .background(Color(0xFFE57373).copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text(label, color = Color.White,
+                            Text(t(label), color = Color.White,
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                                 modifier = Modifier.weight(1f),
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -241,9 +241,9 @@ fun InsightsImpactScreen(
                 MaybeWatermarkCard(watermark = lastCard == "aura", resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text("Aura Location", color = AppTheme.TitleColor,
+                            Text(t("Aura Location"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("Where in your vision it shows up, as seen through your own eyes",
+                            Text(t("Where in your vision it shows up, as seen through your own eyes"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -286,10 +286,10 @@ fun InsightsImpactScreen(
                     auraDurationStats?.let { (avgMin, count) ->
                         Spacer(Modifier.height(8.dp))
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text("Average aura duration", color = AppTheme.SubtleTextColor,
+                            Text(t("Average aura duration"), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                             Text(
-                                "${formatAuraDuration(avgMin)} · $count timed",
+                                t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), count),
                                 color = AppTheme.AccentPurple,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                             )
@@ -299,7 +299,7 @@ fun InsightsImpactScreen(
                     // Server-computed findings — the patterns, not just the counts.
                     if (auraInsights.isNotEmpty()) {
                         Spacer(Modifier.height(10.dp))
-                        Text("What we've spotted", color = AppTheme.TitleColor,
+                        Text(t("What we've spotted"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(6.dp))
                         val insightTileShape = RoundedCornerShape(18.dp)
@@ -328,7 +328,7 @@ fun InsightsImpactScreen(
                     // actually matters clinically (a single 90-minute aura).
                     if (auraDurationBuckets.isNotEmpty()) {
                         Spacer(Modifier.height(10.dp))
-                        Text("How long they last", color = AppTheme.TitleColor,
+                        Text(t("How long they last"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(6.dp))
                         val maxBucket = auraDurationBuckets.maxOf { it.second }
@@ -337,7 +337,7 @@ fun InsightsImpactScreen(
                                 Modifier.fillMaxWidth().padding(vertical = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(label, color = AppTheme.BodyTextColor,
+                                Text(t(label), color = AppTheme.BodyTextColor,
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.width(64.dp))
                                 Box(
@@ -377,9 +377,9 @@ fun InsightsImpactScreen(
                 BrainyWatermarkCard(resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Missed Activities", color = AppTheme.TitleColor,
+                            Text(t("Missed Activities"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text("What you couldn't do because of migraines",
+                            Text(t("What you couldn't do because of migraines"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                         SortChipMenu(missedSort, listOf("Most missed", "A to Z")) { missedSort = it }
@@ -401,16 +401,16 @@ fun InsightsImpactScreen(
                                 Text(prettyLabel(item.name), color = Color(0xFFF3EAFB),
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                                Text("${item.totalMissed}\u00D7 missed", color = Color(0xFFE8A0A0),
+                                Text(t("%s\u00D7 missed", item.totalMissed), color = Color(0xFFE8A0A0),
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text("missed during ${item.pctOfMigraines.toInt()}% of migraines",
+                            Text(t("missed during %s%% of migraines", item.pctOfMigraines.toInt()),
                                 color = Color(0xFF9C8BB0), style = MaterialTheme.typography.labelSmall)
                         }
                         Spacer(Modifier.height(6.dp))
                     }
-                    Text("Counts are the total times you logged the activity as missed.",
+                    Text(t("Counts are the total times you logged the activity as missed."),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
                         style = MaterialTheme.typography.labelSmall)
                 }
@@ -422,10 +422,10 @@ fun InsightsImpactScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Canvas(Modifier.size(36.dp)) { HubIcons.run { drawRipple(Color(0xFFE57373)) } }
                         Spacer(Modifier.height(8.dp))
-                        Text("No impact data yet", color = AppTheme.TitleColor,
+                        Text(t("No impact data yet"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(4.dp))
-                        Text("Log pain locations, severity, and missed activities to see your impact summary.",
+                        Text(t("Log pain locations, severity, and missed activities to see your impact summary."),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center)
                     }
@@ -458,12 +458,12 @@ fun PainMigrationCard(stat: EdgeFunctionsService.PainMigrationStat) {
 
     BaseCard {
         Text(
-            "How your pain moves",
+            t("How your pain moves"),
             color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
         )
         Text(
-            "Across ${stat.attacksAnalysed} attacks where you logged more than one pain entry",
+            t("Across %s attacks where you logged more than one pain entry", stat.attacksAnalysed),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall
         )
@@ -479,11 +479,11 @@ fun PainMigrationCard(stat: EdgeFunctionsService.PainMigrationStat) {
                 PainStageMap(onset, spread, Modifier.weight(1f))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
                     if (onset.isNotEmpty()) {
-                        PainStageLegend("1 · Usually starts", onset, AppTheme.AccentPink.copy(alpha = 0.75f))
+                        PainStageLegend(t("1 · Usually starts"), onset, AppTheme.AccentPink.copy(alpha = 0.75f))
                         Spacer(Modifier.height(8.dp))
                     }
                     if (spread.isNotEmpty()) {
-                        PainStageLegend("2 · Then spreads to", spread, AppTheme.AccentPink)
+                        PainStageLegend(t("2 · Then spreads to"), spread, AppTheme.AccentPink)
                     }
                 }
             }
@@ -492,7 +492,7 @@ fun PainMigrationCard(stat: EdgeFunctionsService.PainMigrationStat) {
         stat.medianMinutesToPeak?.let { mins ->
             Spacer(Modifier.height(10.dp))
             Text(
-                "Typically peaks about ${peakText(mins)} in",
+                t("Typically peaks about %s in", peakText(mins)),
                 color = AppTheme.BodyTextColor,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -554,7 +554,7 @@ private fun PainStageMap(onset: List<String>, spread: List<String>, modifier: Mo
                         .border(1.dp, AppTheme.AccentPink, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(label, color = Color.White,
+                    Text(t(label), color = Color.White,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
             }

@@ -128,10 +128,10 @@ fun ChangePasswordScreen(
     errorDialog.value?.let { msg ->
         AlertDialog(
             onDismissRequest = { errorDialog.value = null },
-            title = { Text("Error") },
+            title = { Text(t("Error")) },
             text = { Text(msg) },
             confirmButton = {
-                TextButton(onClick = { errorDialog.value = null }) { Text("OK") }
+                TextButton(onClick = { errorDialog.value = null }) { Text(t("OK")) }
             }
         )
     }
@@ -139,13 +139,13 @@ fun ChangePasswordScreen(
     if (successDialog.value) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Password updated") },
-            text = { Text("Your password has been changed.") },
+            title = { Text(t("Password updated")) },
+            text = { Text(t("Your password has been changed.")) },
             confirmButton = {
                 TextButton(onClick = {
                     successDialog.value = false
                     onDone()
-                }) { Text("Done") }
+                }) { Text(t("Done")) }
             }
         )
     }
@@ -156,13 +156,13 @@ fun ChangePasswordScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Change password", style = MaterialTheme.typography.titleLarge)
+        Text(t("Change password"), style = MaterialTheme.typography.titleLarge)
         Divider()
 
         OutlinedTextField(
             value = currentPassword.value,
             onValueChange = { currentPassword.value = it },
-            label = { Text("Current password") },
+            label = { Text(t("Current password")) },
             singleLine = true,
             enabled = !loading.value && canUse.value,
             visualTransformation = PasswordVisualTransformation(),
@@ -172,7 +172,7 @@ fun ChangePasswordScreen(
         OutlinedTextField(
             value = newPassword.value,
             onValueChange = { newPassword.value = it },
-            label = { Text("New password") },
+            label = { Text(t("New password")) },
             singleLine = true,
             enabled = !loading.value && canUse.value,
             visualTransformation = PasswordVisualTransformation(),
@@ -182,7 +182,7 @@ fun ChangePasswordScreen(
         OutlinedTextField(
             value = confirmPassword.value,
             onValueChange = { confirmPassword.value = it },
-            label = { Text("Confirm new password") },
+            label = { Text(t("Confirm new password")) },
             singleLine = true,
             enabled = !loading.value && canUse.value,
             visualTransformation = PasswordVisualTransformation(),
@@ -196,7 +196,7 @@ fun ChangePasswordScreen(
             enabled = !loading.value && canUse.value,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (loading.value) "Updating..." else "Update password")
+            Text(if (loading.value) t("Updating...") else t("Update password"))
         }
     }
 }

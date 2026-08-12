@@ -32,6 +32,9 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 
 @Composable
 fun SignupScreen(
@@ -74,22 +77,30 @@ fun SignupScreen(
             Spacer(Modifier.height(60.dp))
 
             // Logo
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "MigraineMe",
-                modifier = Modifier.size(90.dp)
-            )
+            // Logo in a translucent grey blob, matching the sign-in screen.
+            Box(
+                modifier = Modifier
+                    .size(132.dp)
+                    .background(Color.White.copy(alpha = 0.06f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = t("MigraineMe"),
+                    modifier = Modifier.size(90.dp)
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
             Text(
-                "Create account",
+                t("Create account"),
                 color = AppTheme.TitleColor,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Start tracking your migraines today",
+                t("Start tracking your migraines today"),
                 color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center
@@ -117,13 +128,13 @@ fun SignupScreen(
                             modifier = Modifier.size(48.dp)
                         )
                         Text(
-                            "Check your email",
+                            t("Check your email"),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            "We sent a confirmation link to $email.\nClick it to activate your account, then sign in.",
+                            t("We sent a confirmation link to %s.\nClick it to activate your account, then sign in.", email),
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center
@@ -137,7 +148,7 @@ fun SignupScreen(
                         ) {
                             Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Go to sign in", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            Text(t("Go to sign in"), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                         }
                     }
                 }
@@ -151,7 +162,7 @@ fun SignupScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it; error = null },
-                        label = { Text("Email") },
+                        label = { Text(t("Email")) },
                         singleLine = true,
                         enabled = !busy,
                         modifier = Modifier.fillMaxWidth(),
@@ -161,7 +172,7 @@ fun SignupScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it; error = null },
-                        label = { Text("Password") },
+                        label = { Text(t("Password")) },
                         singleLine = true,
                         enabled = !busy,
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -169,13 +180,13 @@ fun SignupScreen(
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = "Toggle password",
+                                    contentDescription = t("Toggle password"),
                                     tint = AppTheme.SubtleTextColor
                                 )
                             }
                         },
                         supportingText = if (password.isNotEmpty() && !passwordStrong) {
-                            { Text("At least 6 characters", color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall) }
+                            { Text(t("At least 6 characters"), color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelSmall) }
                         } else null,
                         modifier = Modifier.fillMaxWidth(),
                         colors = themedTextFieldColors()
@@ -184,7 +195,7 @@ fun SignupScreen(
                     OutlinedTextField(
                         value = confirm,
                         onValueChange = { confirm = it; error = null },
-                        label = { Text("Confirm password") },
+                        label = { Text(t("Confirm password")) },
                         singleLine = true,
                         enabled = !busy,
                         visualTransformation = if (confirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -192,14 +203,14 @@ fun SignupScreen(
                             IconButton(onClick = { confirmVisible = !confirmVisible }) {
                                 Icon(
                                     if (confirmVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = "Toggle password",
+                                    contentDescription = t("Toggle password"),
                                     tint = AppTheme.SubtleTextColor
                                 )
                             }
                         },
                         isError = confirm.isNotEmpty() && !passwordsMatch,
                         supportingText = if (confirm.isNotEmpty() && !passwordsMatch) {
-                            { Text("Passwords don't match", color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall) }
+                            { Text(t("Passwords don't match"), color = Color(0xFFE57373), style = MaterialTheme.typography.labelSmall) }
                         } else null,
                         modifier = Modifier.fillMaxWidth(),
                         colors = themedTextFieldColors()
@@ -240,6 +251,11 @@ fun SignupScreen(
                                             obtainedAtMs = System.currentTimeMillis()
                                         )
                                         authVm.setSession(access, userId)
+                                        // Same reason as LoginScreen: the
+                                        // picker runs before the account
+                                        // exists, so this is the first moment
+                                        // the choice can reach the server.
+                                        LangPrefs.syncAfterSignIn(appCtx)
                                         onSignedUpAndLoggedIn()
                                     } else {
                                         // Email confirmation is enabled — show confirmation screen
@@ -265,7 +281,7 @@ fun SignupScreen(
                         if (busy) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                         } else {
-                            Text("Create account", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            Text(t("Create account"), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                         }
                     }
 
@@ -279,10 +295,10 @@ fun SignupScreen(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Already have an account?", color = AppTheme.SubtleTextColor,
+                        Text(t("Already have an account?"), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.bodyMedium)
                         TextButton(onClick = onNavigateToLogin, enabled = !busy) {
-                            Text("Sign in", color = AppTheme.AccentPurple, fontWeight = FontWeight.SemiBold)
+                            Text(t("Sign in"), color = AppTheme.AccentPurple, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }

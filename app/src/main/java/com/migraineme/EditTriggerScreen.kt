@@ -93,7 +93,7 @@ fun EditTriggerScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Edit Trigger")
+        Text(t("Edit Trigger"))
 
         // Type dropdown with Frequent / All
         if (frequent.isNotEmpty() || all.isNotEmpty()) {
@@ -102,10 +102,10 @@ fun EditTriggerScreen(
                     value = type,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Type") },
+                    label = { Text(t("Type")) },
                     trailingIcon = {
                         IconButton(onClick = { typeMenuOpen = true }) {
-                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose type")
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose type"))
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -116,7 +116,7 @@ fun EditTriggerScreen(
                 ) {
                     if (frequent.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("Frequent", fontWeight = FontWeight.Bold) },
+                            text = { Text(t("Frequent"), fontWeight = FontWeight.Bold) },
                             onClick = {},
                             enabled = false
                         )
@@ -133,7 +133,7 @@ fun EditTriggerScreen(
                     }
                     if (all.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("All", fontWeight = FontWeight.Bold) },
+                            text = { Text(t("All"), fontWeight = FontWeight.Bold) },
                             onClick = {},
                             enabled = false
                         )
@@ -153,16 +153,16 @@ fun EditTriggerScreen(
             OutlinedTextField(
                 value = type,
                 onValueChange = { type = it },
-                label = { Text("Type") },
+                label = { Text(t("Type")) },
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
         // Start time using your shared picker
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Start time: ${formatIsoDdMmHm(startAt)}")
+            Text(t("Start time: %s", formatIsoDdMmHm(startAt)))
             AppDateTimePicker(
-                label = "Select time",
+                label = t("Select time"),
                 onDateTimeSelected = { iso -> startAt = iso ?: "" }
             )
         }
@@ -170,7 +170,7 @@ fun EditTriggerScreen(
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text(t("Notes")) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -180,10 +180,10 @@ fun EditTriggerScreen(
                 value = selectedMigraineLabel,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Linked Migraine") },
+                label = { Text(t("Linked Migraine")) },
                 trailingIcon = {
                     IconButton(onClick = { migraineMenuOpen = true }) {
-                        Icon(Icons.Filled.ArrowDropDown, contentDescription = "Choose migraine")
+                        Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose migraine"))
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -193,7 +193,7 @@ fun EditTriggerScreen(
                 onDismissRequest = { migraineMenuOpen = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("None") },
+                    text = { Text(t("None")) },
                     onClick = {
                         migraineId = ""
                         migraineMenuOpen = false
@@ -204,7 +204,7 @@ fun EditTriggerScreen(
                     .forEach { m ->
                         val label = labelForMigraine(m.startAt)
                         DropdownMenuItem(
-                            text = { Text(label) },
+                            text = { Text(t(label)) },
                             onClick = {
                                 migraineId = m.id
                                 migraineMenuOpen = false
@@ -233,14 +233,14 @@ fun EditTriggerScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Save")
+            Text(t("Save"))
         }
 
         TextButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Cancel")
+            Text(t("Cancel"))
         }
     }
 }

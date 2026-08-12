@@ -61,15 +61,15 @@ fun InsightsWeatherPanel(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Local weather", style = MaterialTheme.typography.titleMedium)
+        Text(t("Local weather"), style = MaterialTheme.typography.titleMedium)
 
         when {
             state.loading -> {
-                Text("Loading…", style = MaterialTheme.typography.bodyMedium)
+                Text(t("Loading…"), style = MaterialTheme.typography.bodyMedium)
             }
             state.error != null -> {
                 Text(
-                    state.error ?: "Error",
+                    state.error ?: t("Error"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -78,11 +78,11 @@ fun InsightsWeatherPanel(
                 val city = state.nearestCity
                 if (city != null) {
                     Text(
-                        "Nearest: ${city.label}" + (city.timezone?.let { "  •  $it" } ?: ""),
+                        t("Nearest: %s", city.label) + (city.timezone?.let { "  •  $it" } ?: ""),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 } else {
-                    Text("Nearest city unknown", style = MaterialTheme.typography.bodyMedium)
+                    Text(t("Nearest city unknown"), style = MaterialTheme.typography.bodyMedium)
                 }
 
                 Divider()
@@ -102,7 +102,7 @@ fun InsightsWeatherPanel(
                 }
 
                 if (state.days.isEmpty()) {
-                    Text("No daily data", style = MaterialTheme.typography.bodySmall)
+                    Text(t("No daily data"), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -131,10 +131,10 @@ private fun getLastKnownLocationPreferGps(ctx: Context): Location? {
 @Composable
 private fun HeaderRow() {
     Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp)) {
-        Text("Day", Modifier.weight(1.2f), style = MaterialTheme.typography.labelMedium)
-        Text("Temp ${UnitsPrefs.tempLabel()}", Modifier.weight(0.8f), style = MaterialTheme.typography.labelMedium)
-        Text("Pressure hPa", Modifier.weight(1.0f), style = MaterialTheme.typography.labelMedium)
-        Text("Humidity %", Modifier.weight(0.8f), style = MaterialTheme.typography.labelMedium)
+        Text(t("Day"), Modifier.weight(1.2f), style = MaterialTheme.typography.labelMedium)
+        Text(t("Temp %s", UnitsPrefs.tempLabel()), Modifier.weight(0.8f), style = MaterialTheme.typography.labelMedium)
+        Text(t("Pressure hPa"), Modifier.weight(1.0f), style = MaterialTheme.typography.labelMedium)
+        Text(t("Humidity %"), Modifier.weight(0.8f), style = MaterialTheme.typography.labelMedium)
     }
 }
 

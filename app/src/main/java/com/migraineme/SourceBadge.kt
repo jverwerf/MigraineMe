@@ -39,12 +39,12 @@ fun SourceBadgeRow(sources: List<String>) {
     ) {
         Icon(
             Icons.Outlined.Sensors,
-            contentDescription = "Sources",
+            contentDescription = t("Sources"),
             tint = AppTheme.SubtleTextColor,
             modifier = Modifier.size(12.dp)
         )
         Text(
-            "Sources:",
+            t("Sources:"),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall
         )

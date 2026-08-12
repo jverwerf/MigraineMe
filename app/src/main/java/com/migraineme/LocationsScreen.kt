@@ -82,21 +82,21 @@ fun LocationsScreen(
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Reliefs", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Reliefs"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close", tint = Color.White, modifier = Modifier.size(28.dp)) }
+                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
             }
 
             HeroCard {
                 Box(Modifier.size(40.dp).drawBehind {
                     HubIcons.run { drawLocationPin(Color(0xFF78909C)) }
                 })
-                Text("Where were you?", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(t("Where were you?"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 Text(
-                    if (draft.locations.isEmpty()) "Log your location" else "${draft.locations.size} location${if (draft.locations.size > 1) "s" else ""} added",
+                    if (draft.locations.isEmpty()) t("Log your location") else (if (draft.locations.size == 1) t("1 location added") else t("%s locations added", draft.locations.size)),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
                 )
                 if (draft.locations.isNotEmpty()) {
@@ -108,7 +108,7 @@ fun LocationsScreen(
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(prettyLabel(loc.type), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), modifier = Modifier.weight(1f))
-                            Icon(Icons.Outlined.Close, "Remove", tint = AppTheme.AccentPink.copy(alpha = 0.6f),
+                            Icon(Icons.Outlined.Close, t("Remove"), tint = AppTheme.AccentPink.copy(alpha = 0.6f),
                                 modifier = Modifier.size(18.dp).clickable {
                                     rebuildDraftWithLocations(draft.locations.toMutableList().apply { removeAt(index) })
                                 })
@@ -123,8 +123,8 @@ fun LocationsScreen(
 
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Locations", color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Text("Manage →", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    Text(t("Locations"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_LOCATIONS) })
                 }
             }
@@ -138,7 +138,7 @@ fun LocationsScreen(
 
             BaseCard {
                 if (frequentLabels.isNotEmpty()) {
-                    Text("Frequent", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                    Text(t("Frequent"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         searchPool.filter { it.label in frequentLabels }.forEach { loc ->
                             CircleButton(loc.label, loc.label in selectedLabels, Color(0xFF64B5F6), loc.iconKey) { onTap(loc.label) }
@@ -158,18 +158,18 @@ fun LocationsScreen(
                             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
                     }
                 }
-                if (pool.isEmpty()) Text("Loading…", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                if (pool.isEmpty()) Text(t("Loading…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
 
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Cancel" else "Back") }
+                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
                 Button(onClick = { if (quickLogMode) onSave?.invoke() else navController.navigate(Routes.ACTIVITIES) },
                     enabled = !quickLogMode || draft.locations.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(if (quickLogMode) "Save" else "Next") }
+                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
             }
             Spacer(Modifier.height(32.dp))
         }
@@ -195,7 +195,7 @@ private fun CircleButton(label: String, isSelected: Boolean, accent: Color, icon
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, color = if (isSelected) Color.White else AppTheme.BodyTextColor,
+        Text(t(label), color = if (isSelected) Color.White else AppTheme.BodyTextColor,
             style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.fillMaxWidth())
     }
 }
@@ -209,15 +209,15 @@ private fun SimpleTimeDialog(title: String, initialIso: String? = null, onDismis
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Time: ${formatLocTime(pickedIso)}", color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = "Select time", onDateTimeSelected = { pickedIso = it })
+                Text(t("Time: %s", formatLocTime(pickedIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                AppDateTimePicker(label = t("Select time"), onDateTimeSelected = { pickedIso = it })
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text(if (onSkip != null) "Add" else "Save", color = AppTheme.AccentPurple) } },
+        confirmButton = { TextButton(onClick = { onConfirm(pickedIso) }) { Text(if (onSkip != null) t("Add") else t("Save"), color = AppTheme.AccentPurple) } },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) { Text("Cancel", color = AppTheme.SubtleTextColor) }
-                if (onSkip != null) TextButton(onClick = onSkip) { Text("Skip", color = Color(0xFF64B5F6)) }
+                TextButton(onClick = onDismiss) { Text(t("Cancel"), color = AppTheme.SubtleTextColor) }
+                if (onSkip != null) TextButton(onClick = onSkip) { Text(t("Skip"), color = Color(0xFF64B5F6)) }
             }
         }
     )

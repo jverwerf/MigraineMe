@@ -412,7 +412,7 @@ fun InsightsReportScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        "Generate Report",
+                        t("Generate Report"),
                         color = Color.White,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                     )
@@ -519,13 +519,13 @@ fun InsightsReportScreen(
                 if (isGeneratingPdf) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Text("Generating PDF…", color = Color.White, style = MaterialTheme.typography.titleSmall)
+                    Text(t("Generating PDF…"), color = Color.White, style = MaterialTheme.typography.titleSmall)
                 } else if (spiderLoading) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White.copy(alpha = 0.5f))
                     Spacer(Modifier.width(8.dp))
-                    Text("Loading…", color = Color.White.copy(alpha = 0.5f), style = MaterialTheme.typography.titleSmall)
+                    Text(t("Loading…"), color = Color.White.copy(alpha = 0.5f), style = MaterialTheme.typography.titleSmall)
                 } else {
-                    Text("Download Report", color = Color.White,
+                    Text(t("Download Report"), color = Color.White,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 }
             }
@@ -570,9 +570,9 @@ fun InsightsReportScreen(
                     BrainyBlobIcon(resId = R.drawable.brainy_migraines_small, flip = true)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Frequency Trends", color = AppTheme.TitleColor,
+                        Text(t("Frequency Trends"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text("When the attacks fall and how that is moving",
+                        Text(t("When the attacks fall and how that is moving"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -581,7 +581,7 @@ fun InsightsReportScreen(
                 // 1. Day of Week
                 if (filteredDayOfWeek.any { it.count > 0 }) {
                     BaseCard {
-                        Text("Day of Week", color = AppTheme.TitleColor,
+                        Text(t("Day of Week"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
                         val maxPct = filteredDayOfWeek.maxOf { it.pct }.coerceAtLeast(1f)
@@ -615,7 +615,7 @@ fun InsightsReportScreen(
                 // 2. Weekly
                 if (filteredByWeek.size >= 3) {
                     BaseCard {
-                        Text("Weekly Frequency", color = AppTheme.TitleColor,
+                        Text(t("Weekly Frequency"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
                         val weeks = filteredByWeek.keys.toList()
@@ -630,7 +630,7 @@ fun InsightsReportScreen(
                 // 3. Monthly Frequency
                 if (filteredByMonth.size >= 2) {
                     BaseCard {
-                        Text("Monthly Frequency", color = AppTheme.TitleColor,
+                        Text(t("Monthly Frequency"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
                         val months = filteredByMonth.keys.toList()
@@ -656,7 +656,7 @@ fun InsightsReportScreen(
                 }
                 if (monthsWithDur.isNotEmpty()) {
                     BaseCard {
-                        Text("Monthly Duration", color = AppTheme.TitleColor,
+                        Text(t("Monthly Duration"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
                         val maxAvg = monthsWithDur.maxOf { it.second }.coerceAtLeast(1f)
@@ -698,7 +698,7 @@ fun InsightsReportScreen(
                     val maxSeason = seasonalCounts.max().coerceAtLeast(1)
                     val total = seasonalCounts.sum()
                     BaseCard {
-                        Text("Seasonal", color = AppTheme.TitleColor,
+                        Text(t("Seasonal"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
                         Row(
@@ -720,7 +720,7 @@ fun InsightsReportScreen(
                                         drawRoundRect(barColor.copy(alpha = 0.8f), cornerRadius = CornerRadius(4f, 4f))
                                     }
                                     Spacer(Modifier.height(2.dp))
-                                    Text(labels[i], color = AppTheme.SubtleTextColor,
+                                    Text(t(labels[i]), color = AppTheme.SubtleTextColor,
                                         style = MaterialTheme.typography.labelSmall)
                                 }
                             }
@@ -729,7 +729,7 @@ fun InsightsReportScreen(
                         if (worstIdx != null && seasonalCounts[worstIdx] > 0 && total > 0) {
                             val pct = seasonalCounts[worstIdx].toFloat() / total * 100f
                             Spacer(Modifier.height(8.dp))
-                            Text("Most frequent: ${labels[worstIdx]} (${seasonalCounts[worstIdx]} migraines, ${String.format("%.0f", pct)}%)",
+                            Text(t("Most frequent: %1\$s (%2\$s migraines, %3\$s%%)", labels[worstIdx], seasonalCounts[worstIdx], String.format("%.0f", pct)),
                                 color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.labelSmall,
                                 textAlign = TextAlign.Center,
@@ -760,7 +760,7 @@ fun InsightsReportScreen(
                         interactions = previewInteractions,
                         onShowAll = { navController.navigate(Routes.INSIGHTS_PATTERNS) }
                     )
-                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                 }
@@ -796,7 +796,7 @@ fun InsightsReportScreen(
             if (treatmentTiming.isNotEmpty()) {
                 Column {
                     TreatmentTimingCard(treatmentTiming)
-                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                 }
@@ -818,7 +818,7 @@ fun InsightsReportScreen(
                         treatmentInteractions = previewTreatmentInteractions,
                         onShowAll = { navController.navigate(Routes.INSIGHTS_TREATMENTS) }
                     )
-                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                 }
@@ -843,20 +843,20 @@ fun InsightsReportScreen(
                             BrainyBlobIcon(resId = R.drawable.brainy_gardener_small)
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
-                                Text("What's Helping", color = AppTheme.TitleColor,
+                                Text(t("What's Helping"), color = AppTheme.TitleColor,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Text("Habits that show up on your migraine-free days",
+                                Text(t("Habits that show up on your migraine-free days"),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                             }
                             TextButton(onClick = { navController.navigate(Routes.INSIGHTS_WHATS_HELPING) }) {
-                                Text("All →", color = AppTheme.AccentPurple)
+                                Text(t("All →"), color = AppTheme.AccentPurple)
                             }
                         }
                         Spacer(Modifier.height(4.dp))
                         previewWellDone.forEach { stat -> WellDoneDirectRow(stat) }
                         previewWellDoneChains.forEach { stat -> WellDoneChainRow(stat) }
                     }
-                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                 }
@@ -900,7 +900,7 @@ fun InsightsReportScreen(
             painMigration?.let { pm ->
                 Column {
                     PainMigrationCard(pm)
-                    Text("  Based on all time data", color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
+                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                 }
@@ -913,8 +913,8 @@ fun InsightsReportScreen(
             if (filteredSorted.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
                 ReportSectionHeader(
-                    title = "Attack log",
-                    subtitle = "Every attack in range, in the order things happened",
+                    title = t("Attack log"),
+                    subtitle = t("Every attack in range, in the order things happened"),
                     resId = R.drawable.brainy_briefcase_small,
                 )
                 Spacer(Modifier.height(8.dp))
@@ -967,7 +967,7 @@ fun InsightsReportScreen(
                 }
                 if (filteredSorted.size > ATTACK_CARDS_SHOWN) {
                     Text(
-                        "Showing $ATTACK_CARDS_SHOWN of ${filteredSorted.size} attacks · the PDF includes all ${filteredSorted.size}",
+                        t("Showing %1\$s of %2\$s attacks · the PDF includes all %3\$s", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -986,9 +986,9 @@ fun InsightsReportScreen(
                     BrainyBlobIcon(resId = R.drawable.brainy_migraines_small)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("What You Logged", color = AppTheme.TitleColor,
+                        Text(t("What You Logged"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Every log type across the attacks in range",
+                        Text(t("Every log type across the attacks in range"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -1045,9 +1045,9 @@ fun InsightsReportScreen(
                     BrainyBlobIcon(resId = R.drawable.brainy_physical_small)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Health Metrics", color = AppTheme.TitleColor,
+                        Text(t("Health Metrics"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text("Everything tracked around the attacks in range",
+                        Text(t("Everything tracked around the attacks in range"),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -1086,7 +1086,7 @@ fun InsightsReportScreen(
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                                 if (isAuto) {
                                     Spacer(Modifier.width(8.dp))
-                                    Text("AUTO",
+                                    Text(t("AUTO"),
                                         color = AppTheme.AccentPink,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         modifier = Modifier
@@ -1190,11 +1190,11 @@ fun InsightsReportScreen(
 
                             // Stats row
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Min: ${"%.1f".format(minV)}", color = AppTheme.SubtleTextColor,
+                                Text(t("Min: %s", "%.1f".format(minV)), color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall)
-                                Text("Avg: ${"%.1f".format(avgV)}", color = AppTheme.SubtleTextColor,
+                                Text(t("Avg: %s", "%.1f".format(avgV)), color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall)
-                                Text("Max: ${"%.1f".format(maxV)}", color = AppTheme.SubtleTextColor,
+                                Text(t("Max: %s", "%.1f".format(maxV)), color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall)
                             }
                         }
@@ -1254,25 +1254,25 @@ private fun FilterCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(Icons.Filled.FilterList,
-                contentDescription = "Filter",
+                contentDescription = t("Filter"),
                 tint = if (hasFilters) AppTheme.AccentPurple else AppTheme.SubtleTextColor,
                 modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
                 val totalActive = activeCount + enabledMetricCount
                 Text(
-                    if (hasFilters || enabledMetricCount > 0) "Select Metrics ($totalActive)"
-                    else "Select Metrics",
+                    if (hasFilters || enabledMetricCount > 0) t("Select Metrics (%s)", totalActive)
+                    else t("Select Metrics"),
                     color = if (hasFilters || enabledMetricCount > 0) Color.White else AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 if (hasFilters) {
-                    Text("$filteredCount of $totalCount migraines",
+                    Text(t("%1\$s of %2\$s migraines", filteredCount, totalCount),
                         color = AppTheme.AccentPurple,
                         style = MaterialTheme.typography.labelSmall)
                 }
             }
             if (hasFilters) {
-                Text("Clear",
+                Text(t("Clear"),
                     color = AppTheme.AccentPurple.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier
@@ -1284,7 +1284,7 @@ private fun FilterCard(
             Icon(
                 if (expanded) Icons.Filled.KeyboardArrowUp
                 else Icons.Filled.KeyboardArrowDown,
-                contentDescription = "Expand",
+                contentDescription = t("Expand"),
                 tint = AppTheme.SubtleTextColor,
                 modifier = Modifier.size(20.dp))
         }
@@ -1298,7 +1298,7 @@ private fun FilterCard(
                     val timeLabel = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null) {
                         val df = java.time.format.DateTimeFormatter.ofPattern("MMM d")
                         "${df.format(customRange.from)} — ${df.format(customRange.to)}"
-                    } else timeFrame.label
+                    } else t(timeFrame.label)
                     Row(
                         Modifier
                             .clip(RoundedCornerShape(16.dp))
@@ -1329,7 +1329,7 @@ private fun FilterCard(
         ) {
             Column(Modifier.padding(top = 8.dp)) {
                 // Timeframe selector
-                Text("Time Range", color = AppTheme.AccentPurple.copy(alpha = 0.8f),
+                Text(t("Time Range"), color = AppTheme.AccentPurple.copy(alpha = 0.8f),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(bottom = 2.dp))
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -1371,7 +1371,7 @@ private fun FilterCard(
                     ) {
                         // From button
                         Column(Modifier.weight(1f)) {
-                            Text("From", color = AppTheme.SubtleTextColor,
+                            Text(t("From"), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall)
                             Row(
                                 Modifier
@@ -1391,7 +1391,7 @@ private fun FilterCard(
                             modifier = Modifier.padding(top = 12.dp))
                         // To button
                         Column(Modifier.weight(1f)) {
-                            Text("To", color = AppTheme.SubtleTextColor,
+                            Text(t("To"), color = AppTheme.SubtleTextColor,
                                 style = MaterialTheme.typography.labelSmall)
                             Row(
                                 Modifier
@@ -1426,7 +1426,7 @@ private fun FilterCard(
                         .padding(12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Filter by",
+                        Text(t("Filter by"),
                             color = AppTheme.AccentPurple,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                         IconButton(
@@ -1435,14 +1435,14 @@ private fun FilterCard(
                         ) {
                             Icon(
                                 Icons.Outlined.Info,
-                                contentDescription = "About Filter by",
+                                contentDescription = t("About Filter by"),
                                 tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                     Spacer(Modifier.height(4.dp))
-                    Text("Tap any chip below to limit the report to attacks matching it.",
+                    Text(t("Tap any chip below to limit the report to attacks matching it."),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium)
 
@@ -1476,7 +1476,7 @@ private fun FilterCard(
                             .padding(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Overlay Metrics",
+                            Text(t("Overlay Metrics"),
                                 color = AppTheme.AccentPurple,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                             IconButton(
@@ -1485,14 +1485,14 @@ private fun FilterCard(
                             ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = "About Overlay Metrics",
+                                    contentDescription = t("About Overlay Metrics"),
                                     tint = AppTheme.AccentPurple.copy(alpha = 0.7f),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
                         Spacer(Modifier.height(4.dp))
-                        Text("Tap any metric to add it to the graph. Highlighted ones have been detected in your migraine data.",
+                        Text(t("Tap any metric to add it to the graph. Highlighted ones have been detected in your migraine data."),
                             color = AppTheme.BodyTextColor,
                             style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(4.dp))
@@ -1533,16 +1533,16 @@ private fun FilterCard(
                 onDismissRequest = { showFilterByInfo = false },
                 confirmButton = {
                     TextButton(onClick = { showFilterByInfo = false }) {
-                        Text("Got it", color = AppTheme.AccentPurple)
+                        Text(t("Got it"), color = AppTheme.AccentPurple)
                     }
                 },
                 title = {
-                    Text("About Filter by", color = AppTheme.TitleColor,
+                    Text(t("About Filter by"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 },
                 text = {
                     Text(
-                        "Tap any chip below to narrow the report down to just the migraine attacks that have that severity / symptom / trigger / medicine / etc. Multiple chips stack — picking a Trigger plus a Symptom shows only attacks with both. Chips are grouped by category and only the values that appear in your logs show up here.",
+                        t("Tap any chip below to narrow the report down to just the migraine attacks that have that severity / symptom / trigger / medicine / etc. Multiple chips stack — picking a Trigger plus a Symptom shows only attacks with both. Chips are grouped by category and only the values that appear in your logs show up here."),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium)
                 },
@@ -1554,16 +1554,16 @@ private fun FilterCard(
                 onDismissRequest = { showOverlayMetricsInfo = false },
                 confirmButton = {
                     TextButton(onClick = { showOverlayMetricsInfo = false }) {
-                        Text("Got it", color = AppTheme.AccentPurple)
+                        Text(t("Got it"), color = AppTheme.AccentPurple)
                     }
                 },
                 title = {
-                    Text("About Overlay Metrics", color = AppTheme.TitleColor,
+                    Text(t("About Overlay Metrics"), color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 },
                 text = {
                     Text(
-                        "Toggle metrics on or off to overlay them on the timeline graph below. We only show metrics you actually have data for — if a metric isn't here, that table is empty for your account (e.g. no sleep stages logged means no Deep / REM / Light chips). Highlighted ones were auto-detected from triggers / prodromes you've logged.",
+                        t("Toggle metrics on or off to overlay them on the timeline graph below. We only show metrics you actually have data for — if a metric isn't here, that table is empty for your account (e.g. no sleep stages logged means no Deep / REM / Light chips). Highlighted ones were auto-detected from triggers / prodromes you've logged."),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodyMedium)
                 },
@@ -1589,10 +1589,10 @@ private fun FilterCard(
                         onCustomRange(customFrom, customTo)
                     }
                     showFromPicker = false
-                }) { Text("OK") }
+                }) { Text(t("OK")) }
             },
             dismissButton = {
-                TextButton(onClick = { showFromPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showFromPicker = false }) { Text(t("Cancel")) }
             }
         ) {
             DatePicker(state = state)
@@ -1615,10 +1615,10 @@ private fun FilterCard(
                         onCustomRange(customFrom, customTo)
                     }
                     showToPicker = false
-                }) { Text("OK") }
+                }) { Text(t("OK")) }
             },
             dismissButton = {
-                TextButton(onClick = { showToPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showToPicker = false }) { Text(t("Cancel")) }
             }
         ) {
             DatePicker(state = state)
@@ -1641,7 +1641,7 @@ private fun ActiveFilterChip(
     ) {
         Box(Modifier.size(6.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(4.dp))
-        Text(tag.label, color = color,
+        Text(t(tag.label), color = color,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.width(4.dp))
@@ -1667,7 +1667,7 @@ private fun FilterOptionChip(
         Box(Modifier.size(6.dp).clip(CircleShape)
             .background(if (active) color else color.copy(alpha = 0.3f)))
         Spacer(Modifier.width(4.dp))
-        Text(label, color = tc,
+        Text(t(label), color = tc,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -1698,7 +1698,7 @@ private fun FilteredSpiderCard(data: SpiderData, secondAxes: List<SpiderAxis>? =
             Column(Modifier.weight(1f)) {
                 Text(data.logType, color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                Text("${data.totalLogged} logged • ${data.breakdown.size} categories",
+                Text(t("%1\$s logged • %2\$s categories", data.totalLogged, data.breakdown.size),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
@@ -1728,16 +1728,16 @@ private fun FilteredSymptomsCard(
             Canvas(Modifier.size(24.dp)) { HubIcons.run { drawMigraineStarburst(AppTheme.AccentPink) } }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("Migraines", color = AppTheme.TitleColor,
+                Text(t("Migraines"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                Text("$migCount migraines",
+                Text(t("%s migraines", migCount),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium)
         }
         painChar?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(12.dp))
-            Text("Pain Character", color = Color(0xFFEF5350),
+            Text(t("Pain Character"), color = Color(0xFFEF5350),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
             if (data.axes.size >= 3) {
@@ -1748,7 +1748,7 @@ private fun FilteredSymptomsCard(
         }
         accompanying?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(16.dp))
-            Text("Accompanying Experience", color = Color(0xFFBA68C8),
+            Text(t("Accompanying Experience"), color = Color(0xFFBA68C8),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
             if (data.axes.size >= 3) {
@@ -1759,7 +1759,7 @@ private fun FilteredSymptomsCard(
         }
         postdrome?.takeIf { it.axes.isNotEmpty() }?.let { data ->
             Spacer(Modifier.height(16.dp))
-            Text("Postdrome", color = Color(0xFF4DB6AC),
+            Text(t("Postdrome"), color = Color(0xFF4DB6AC),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(4.dp))
             if (data.axes.size >= 3) {
@@ -1784,13 +1784,13 @@ private fun DetailMigraineSelector(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Older",
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Older"),
                 tint = if (idx < sorted.size - 1) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-            Text(sel?.label ?: "Migraine", color = Color.White,
+            Text(sel?.label ?: t("Migraine"), color = Color.White,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sel != null) {
@@ -1800,18 +1800,18 @@ private fun DetailMigraineSelector(
                 if (e != null) {
                     val d = Duration.between(sel.start, e)
                     val hStr = if (d.toHours() > 0) "${d.toHours()}h " else ""
-                    Text("$hStr${d.minusHours(d.toHours()).toMinutes()}m • Severity: ${sel.severity ?: "-"}/10",
+                    Text(t("%1\$s%2\$sm • Severity: %3\$s/10", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: "-"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 } else {
-                    Text("Severity: ${sel.severity ?: "-"}/10",
+                    Text(t("Severity: %s/10", sel.severity ?: "-"),
                         color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Text("${idx + 1} of ${sorted.size}", color = AppTheme.AccentPurple,
+            Text(t("%1\$s of %2\$s", idx + 1, sorted.size), color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
         }
         IconButton(onClick = onNext, enabled = idx > 0) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, "Newer",
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, t("Newer"),
                 tint = if (idx > 0) AppTheme.AccentPurple
                 else AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(22.dp))
@@ -1827,7 +1827,7 @@ private fun DetailChip(n: Int, label: String, color: Color) {
         Text("$n", color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.width(2.dp))
-        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        Text(t(label), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -1856,7 +1856,7 @@ private fun DetailToggle(
                 .background(if (active) color else color.copy(alpha = 0.3f)))
         }
         Spacer(Modifier.width(4.dp))
-        Text(label, color = tc,
+        Text(t(label), color = tc,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
     }
 }
@@ -1875,7 +1875,7 @@ internal fun WindowDaysControl(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Before control
-        Text("Before", color = AppTheme.SubtleTextColor,
+        Text(t("Before"), color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.width(4.dp))
         SmallStepButton("−") { if (before > 1) onChanged(before - 1, after) }
@@ -1887,7 +1887,7 @@ internal fun WindowDaysControl(
         Spacer(Modifier.width(16.dp))
 
         // After control
-        Text("After", color = AppTheme.SubtleTextColor,
+        Text(t("After"), color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.width(4.dp))
         SmallStepButton("−") { if (after > 1) onChanged(before, after - 1) }
@@ -1908,7 +1908,7 @@ private fun SmallStepButton(label: String, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text(label, color = AppTheme.AccentPurple,
+        Text(t(label), color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
     }
 }
@@ -1990,8 +1990,8 @@ private fun ReportRegimenTreatmentsCard(
 
     BrainyWatermarkCard(resId = R.drawable.brainy_treatments, flipWatermark = true) {
         ReportSectionHeader(
-            title = "Treatments",
-            subtitle = "How each regimen has changed your migraine days",
+            title = t("Treatments"),
+            subtitle = t("How each regimen has changed your migraine days"),
             resId = R.drawable.brainy_treatments_small,
         )
         Spacer(Modifier.height(8.dp))
@@ -2033,7 +2033,7 @@ private fun RegimenRow(
                     style = MaterialTheme.typography.labelSmall)
             }
             if (band == "not_enough_data") {
-                Text("not enough data", color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
+                Text(t("not enough data"), color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f),
                     style = MaterialTheme.typography.labelSmall)
             } else {
                 val mag = r.pctChangeMmd?.let { minOf(Math.abs(it), 100.0) / 100.0 } ?: 0.0
@@ -2059,7 +2059,7 @@ private fun RegimenRow(
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
         if (logs.isNotEmpty()) {
-            Text("Side effects", color = pink, fontWeight = FontWeight.SemiBold,
+            Text(t("Side effects"), color = pink, fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.labelSmall)
             logs.take(5).forEach { log ->
                 val pills = log.selectedSymptoms.joinToString(", ")
@@ -2193,9 +2193,9 @@ private fun AttackLogCard(details: List<ReportAttackDetail>) {
             BrainyBlobIcon(resId = R.drawable.brainy_briefcase_small)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text("Attack Log", color = AppTheme.TitleColor,
+                Text(t("Attack Log"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                Text("How the pain and symptoms moved through each attack",
+                Text(t("How the pain and symptoms moved through each attack"),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -2208,7 +2208,7 @@ private fun AttackLogCard(details: List<ReportAttackDetail>) {
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.weight(1f))
                 mg.severity?.let { s ->
-                    Text("Peak $s/10", color = severityColor(s),
+                    Text(t("Peak %s/10", s), color = severityColor(s),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                 }
             }
@@ -2217,7 +2217,7 @@ private fun AttackLogCard(details: List<ReportAttackDetail>) {
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     Text(
-                        if (i == 0) "Pain" else "Then",
+                        if (i == 0) t("Pain") else t("Then"),
                         color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.width(44.dp)
@@ -2240,7 +2240,7 @@ private fun AttackLogCard(details: List<ReportAttackDetail>) {
             if (d.totalPainEntries > d.painEntries.size) {
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    "Showing ${d.painEntries.size} of ${d.totalPainEntries} pain entries",
+                    t("Showing %1\$s of %2\$s pain entries", d.painEntries.size, d.totalPainEntries),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.labelSmall,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
@@ -2260,7 +2260,7 @@ private fun AttackLogCard(details: List<ReportAttackDetail>) {
                         Spacer(Modifier.width(8.dp))
                     }
                     Text(
-                        (s.type ?: "Symptom").replace("_", " ").replaceFirstChar { it.uppercase() },
+                        (s.type ?: t("Symptom")).replace("_", " ").replaceFirstChar { it.uppercase() },
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f)
@@ -2485,7 +2485,7 @@ private fun AttackSequence(
 
     if (rows.isEmpty()) return
 
-    Text("BY CATEGORY", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+    Text(t("BY CATEGORY"), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
         style = MaterialTheme.typography.labelSmall)
     rows.filter { it.label != "Aura" }
         .groupBy { it.label }
@@ -2504,7 +2504,7 @@ private fun AttackSequence(
     val drawn = metrics.filter { it.points.size >= 2 }
     if (drawn.isNotEmpty()) {
         Spacer(Modifier.height(8.dp))
-        Text("TRACKED DATA", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+        Text(t("TRACKED DATA"), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
             style = MaterialTheme.typography.labelSmall)
         drawn.forEach { series ->
             val values = series.points.map { it.value }
@@ -2512,7 +2512,7 @@ private fun AttackSequence(
             val max = values.max()
             fun fmt(v: Double) = if (kotlin.math.abs(v) >= 100) String.format("%.0f", v) else String.format("%.1f", v)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(series.label + (series.unit.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""),
+                Text(t(series.label) + (series.unit.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""),
                     color = series.color, style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(1f))
                 Text("${fmt(min)}–${fmt(max)}", color = AppTheme.BodyTextColor,
@@ -2522,11 +2522,11 @@ private fun AttackSequence(
     }
 
     Spacer(Modifier.height(8.dp))
-    Text("TIMELINE", color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+    Text(t("TIMELINE"), color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
         style = MaterialTheme.typography.labelSmall)
     rows.forEach { r ->
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-            Text(r.label, color = if (r.pain) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+            Text(t(r.label), color = if (r.pain) AppTheme.AccentPink else AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(74.dp))
             Text(offsetFromStart(mg.start, r.at), color = AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(58.dp))
@@ -2700,11 +2700,11 @@ internal fun AttackChart(
             // window the useful question is "how long before".
             val fromOnset = ((day - mg.start.toEpochMilli()) / dayMs.toDouble()).let { Math.round(it) }
             val label = when {
-                fromOnset == 0L -> "onset"
+                fromOnset == 0L -> tSync("onset")
                 fromOnset > 0 -> "+${fromOnset}d"
                 else -> "${fromOnset}d"
             }
-            nativeCanvas.drawText(label, x, size.height - 2.dp.toPx(), tickPaint)
+            nativeCanvas.drawText(tSync(label), x, size.height - 2.dp.toPx(), tickPaint)
             day += dayMs
             idx++
         }
@@ -2791,7 +2791,7 @@ internal fun AttackChart(
                     textSize = with(density) { 7.sp.toPx() }
                     isAntiAlias = true
                 }
-                nativeCanvas.drawText(series.label, lx, ly, namePaint)
+                nativeCanvas.drawText(tSync(series.label), lx, ly, namePaint)
             }
         }
     }

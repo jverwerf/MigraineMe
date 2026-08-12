@@ -314,15 +314,14 @@ fun StackedProportionalBar(
                     )
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    axis.label,
+                Text(t(axis.label),
                     color = AppTheme.BodyTextColor,
                     style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
                     )
                 )
                 Text(
-                    "100% of total",
+                    t("100% of total"),
                     color = AppTheme.SubtleTextColor,
                     style = androidx.compose.material3.MaterialTheme.typography.labelSmall
                 )
@@ -346,8 +345,7 @@ fun StackedProportionalBar(
                         else -> Alignment.End
                     }
                 ) {
-                    Text(
-                        axis.label,
+                    Text(t(axis.label),
                         color = color,
                         style = androidx.compose.material3.MaterialTheme.typography.bodySmall.copy(
                             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
@@ -397,7 +395,7 @@ fun StackedProportionalBar(
 
         // Total
         Text(
-            "${total.toInt()} total logged",
+            t("%s total logged", total.toInt()),
             color = AppTheme.SubtleTextColor,
             style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
             modifier = Modifier.fillMaxWidth(),
