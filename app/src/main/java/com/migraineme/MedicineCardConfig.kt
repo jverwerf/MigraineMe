@@ -52,22 +52,18 @@ data class MedicineCategorySummary(
 )
 
 /**
- * Parses "400mg", "50 mg", "2.5g", "1 tablet" → (value, unit-lowercased).
- * Returns null when raw is null/blank/unparseable.
+ * Legacy fallback: parses "400mg", "50 mg", "2.5g", "1 tablet" → (value, canonical unit).
+ * Only for rows with no dose_value stamped. Per the one-unit contract a bare
+ * number or tablet/tabs/caps/pill words is an 'amount' COUNT (never silently mg);
+ * g converts to mg and IU to mcg. Returns null when raw is null/blank/unparseable.
  */
-fun parseMedicineAmount(raw: String?): Pair<Double, String>? {
-    if (raw.isNullOrBlank()) return null
-    val trimmed = raw.trim().lowercase()
-    val regex = Regex("""^\s*([\d]+(?:\.[\d]+)?)\s*([a-z]+)?""")
-    val m = regex.find(trimmed) ?: return null
-    val value = m.groupValues[1].toDoubleOrNull() ?: return null
-    val unit = m.groupValues.getOrNull(2)?.takeIf { it.isNotBlank() } ?: "mg"
-    return value to unit
-}
+fun parseMedicineAmount(raw: String?): Pair<Double, String>? = DoseUnits.parseLegacy(raw)
 
 /**
  * Formats a list of (value, unit) pairs as a single human string. Groups by unit, picks the
  * dominant unit's sum. If unparseable entries also exist, appends a "+" marker.
+ * Display per contract: mg → "1200mg", amount → "3×", units → "155 units",
+ * minutes → "45 min", mcg → "100mcg".
  */
 fun formatAmountSum(parsed: List<Pair<Double, String>>, unparseable: Int): String {
     if (parsed.isEmpty() && unparseable == 0) return "-"
@@ -75,10 +71,8 @@ fun formatAmountSum(parsed: List<Pair<Double, String>>, unparseable: Int): Strin
     for ((v, u) in parsed) byUnit[u] = (byUnit[u] ?: 0.0) + v
     val sorted = byUnit.entries.sortedByDescending { it.value }
     val top = sorted.firstOrNull() ?: return if (unparseable > 0) "${unparseable}×" else "-"
-    val valStr = if (top.value % 1.0 == 0.0) top.value.toInt().toString()
-                 else "%.1f".format(top.value)
     val extras = (sorted.size - 1) + (if (unparseable > 0) 1 else 0)
-    return "$valStr${top.key}" + if (extras > 0) " +" else ""
+    return DoseUnits.formatTotal(top.value, top.key) + if (extras > 0) " +" else ""
 }
 
 /**

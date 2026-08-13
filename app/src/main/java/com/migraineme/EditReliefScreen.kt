@@ -61,6 +61,7 @@ fun EditReliefScreen(
     var type by rememberSaveable(row?.id) { mutableStateOf(row?.type ?: "") }
     var startAt by rememberSaveable(row?.id) { mutableStateOf(row?.startAt ?: "") }
     var endAt by rememberSaveable(row?.id) { mutableStateOf(row?.endAt ?: "") }
+    var durationText by rememberSaveable(row?.id) { mutableStateOf("") }
     var notes by rememberSaveable(row?.id) { mutableStateOf(row?.notes ?: "") }
     var migraineId by rememberSaveable(row?.id) { mutableStateOf(row?.migraineId ?: "") }
     var reliefScale by rememberSaveable(row?.id) { mutableStateOf(row?.reliefScale ?: "NONE") }
@@ -172,13 +173,42 @@ fun EditReliefScreen(
             )
         }
 
-        // End time using shared picker
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(t("End time: %s", formatIsoDdMmHm(endAt)))
-            AppDateTimePicker(
-                label = t("Select end time"),
-                onDateTimeSelected = { iso -> endAt = iso ?: "" }
-            )
+        // Duration — hidden entirely for taken-only reliefs (Water,
+        // Electrolytes, …). Minutes and end time are two ways to set
+        // end_at; the latest entry wins.
+        if (!DoseUnits.isTakenOnlyRelief(type)) {
+            // Minutes entry (optional)
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = durationText,
+                        onValueChange = { new ->
+                            if (new.isEmpty() || new.all { it.isDigit() }) {
+                                durationText = new
+                                if (new.isNotEmpty()) endAt = ""
+                            }
+                        },
+                        label = { Text(t("Minutes (optional)")) },
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // End time using shared picker
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(t("End time: %s", formatIsoDdMmHm(endAt)))
+                AppDateTimePicker(
+                    label = t("Select end time"),
+                    onDateTimeSelected = { iso ->
+                        endAt = iso ?: ""
+                        if (!iso.isNullOrBlank()) durationText = ""
+                    }
+                )
+            }
         }
 
         OutlinedTextField(
@@ -261,12 +291,19 @@ fun EditReliefScreen(
             onClick = {
                 val token = authState.accessToken
                 if (!token.isNullOrBlank()) {
+                    // end_at from the picker or start + minutes; never
+                    // defaulted for taken-only reliefs.
+                    val resolvedEnd = if (DoseUnits.isTakenOnlyRelief(type)) null
+                        else endAt.ifBlank { null }
+                            ?: durationText.toIntOrNull()?.takeIf { it > 0 }?.let { mins ->
+                                startAt.ifBlank { null }?.let { addMinutesToIso(it, mins) }
+                            }
                     vm.updateRelief(
                         accessToken = token,
                         id = id,
                         type = type.ifBlank { null },
                         startAt = startAt.ifBlank { null },
-                        endAt = endAt.ifBlank { null },
+                        endAt = resolvedEnd,
                         notes = notes.ifBlank { null },
                         migraineId = migraineId.ifBlank { null },
                         reliefScale = reliefScale,

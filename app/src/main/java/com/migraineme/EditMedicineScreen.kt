@@ -56,10 +56,24 @@ fun EditMedicineScreen(
     val row by vm.editMedicine.collectAsState()
     val frequent by vm.medicineOptionsFrequent.collectAsState()
     val all by vm.medicineOptionsAll.collectAsState()
+    val unitsByLabel by vm.medicineUnitsByLabel.collectAsState()
     val migraines by vm.migraines.collectAsState()
 
     var name by rememberSaveable(row?.id) { mutableStateOf(row?.name ?: "") }
-    var amount by rememberSaveable(row?.id) { mutableStateOf(row?.amount ?: "") }
+    // One-unit system: number only; unit comes from the pool medicine
+    // (falling back to the log's stamped unit / parsed legacy amount).
+    var amount by rememberSaveable(row?.id) {
+        mutableStateOf(
+            row?.doseValue?.let { DoseUnits.formatValue(it) }
+                ?: DoseUnits.parseLegacy(row?.amount)?.first?.let { DoseUnits.formatValue(it) }
+                ?: ""
+        )
+    }
+    val doseUnit = unitsByLabel[name]
+        ?: row?.doseUnit
+        ?: DoseUnits.parseLegacy(row?.amount)?.second
+        ?: DoseUnits.MG
+    var inputUnit by rememberSaveable(row?.id, doseUnit) { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
     var startAt by rememberSaveable(row?.id) { mutableStateOf(row?.startAt ?: "") }
     var notes by rememberSaveable(row?.id) { mutableStateOf(row?.notes ?: "") }
     var migraineId by rememberSaveable(row?.id) { mutableStateOf(row?.migraineId ?: "") }
@@ -163,11 +177,14 @@ fun EditMedicineScreen(
             )
         }
 
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { amount = it },
-            label = { Text(t("Amount")) },
-            modifier = Modifier.fillMaxWidth()
+        DoseAmountInput(
+            doseUnit = doseUnit,
+            valueText = amount,
+            onValueTextChange = { amount = it },
+            inputUnit = inputUnit,
+            onInputUnitChange = { inputUnit = it },
+            accent = AppTheme.AccentPurple,
+            label = t("Amount")
         )
 
         // Start time using shared picker
@@ -259,11 +276,15 @@ fun EditMedicineScreen(
             onClick = {
                 val token = authState.accessToken
                 if (!token.isNullOrBlank()) {
+                    val doseValue = DoseUnits.parseNumber(amount)
+                        ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
                     vm.updateMedicine(
                         accessToken = token,
                         id = id,
                         name = name.ifBlank { null },
-                        amount = amount.ifBlank { null },
+                        amount = null,
+                        doseValue = doseValue,
+                        doseUnit = if (doseValue != null) doseUnit else null,
                         startAt = startAt.ifBlank { null },
                         notes = notes.ifBlank { null },
                         migraineId = migraineId.ifBlank { null },

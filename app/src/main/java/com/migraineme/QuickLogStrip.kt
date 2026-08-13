@@ -142,6 +142,9 @@ fun QuickLogStrip(
     var showInfo by remember { mutableStateOf(false) }
     // Aura favorite tapped: collect visual-field zones + duration before saving
     var pendingAuraLabel by remember { mutableStateOf<String?>(null) }
+    // Medicine favorite tapped: collect the dose number (unit is fixed by the
+    // pool medicine) before saving. Skippable.
+    var pendingMedicineLabel by remember { mutableStateOf<String?>(null) }
 
     val infoText = "Tap any icon to log something in one tap with the timestamp set to right now. Use it mid-attack or whenever you don't have the bandwidth for a full log.\n\nIf you've starred favourites in your pools (your usual triggers, rescue medicines, etc.), the button opens a quick sheet of those so you can pick the specific one and confirm. No favourites set, or no time to choose? Tap \"Skip, just log Migraine\" (or \"Trigger\" / \"Medicine\" / etc.) and it saves immediately with a generic label.\n\nYou'll notice postdrome isn't here. That's on purpose: postdromes are the recovery symptoms that belong to a specific migraine, so we want them linked to an attack rather than floating on their own. We'll prompt you for them in your daily check-in whenever you have an open migraine, and you can also log them via the full wizard or by editing the migraine afterwards.\n\nFor a full attack log with timing, symptoms, pain location, prodromes and medicines, use the Log tab. Quick log is the shortcut for when you can't deal with all of that."
 
@@ -161,7 +164,7 @@ fun QuickLogStrip(
         QuickLogCategory.RELIEF -> reliefFavs
     }
 
-    fun doSave(cat: QuickLogCategory, label: String?, auraLocations: List<String>? = null, auraDurationMinutes: Int? = null) {
+    fun doSave(cat: QuickLogCategory, label: String?, auraLocations: List<String>? = null, auraDurationMinutes: Int? = null, doseValue: Double? = null, doseUnit: String? = null) {
         val token = authState.accessToken ?: return
         saving = true
         scope.launch {
@@ -200,7 +203,9 @@ fun QuickLogStrip(
                             name = label ?: "Unknown",
                             amount = null,
                             startAt = now,
-                            notes = null
+                            notes = null,
+                            doseValue = doseValue,
+                            doseUnit = if (doseValue != null) doseUnit else null
                         )
                         QuickLogCategory.RELIEF -> {
                             val row = db.insertRelief(
@@ -318,6 +323,10 @@ fun QuickLogStrip(
                     // Aura gets its detail sheet before saving
                     activeCategory = null
                     pendingAuraLabel = label
+                } else if (cat == QuickLogCategory.MEDICINE) {
+                    // Medicines collect a dose number first (skippable)
+                    activeCategory = null
+                    pendingMedicineLabel = label
                 } else {
                     doSave(cat, label)
                 }
@@ -334,6 +343,24 @@ fun QuickLogStrip(
                 doSave(QuickLogCategory.MIGRAINE, auraLabel, auraLocations = zones, auraDurationMinutes = dur)
             },
             onDismiss = { pendingAuraLabel = null }
+        )
+    }
+
+    pendingMedicineLabel?.let { medLabel ->
+        val medUnit = medicinePool.find { it.label == medLabel }?.doseUnit ?: DoseUnits.MG
+        QuickLogDoseDialog(
+            label = medLabel,
+            doseUnit = medUnit,
+            saving = saving,
+            onLog = { doseValue ->
+                pendingMedicineLabel = null
+                doSave(QuickLogCategory.MEDICINE, medLabel, doseValue = doseValue, doseUnit = medUnit)
+            },
+            onSkip = {
+                pendingMedicineLabel = null
+                doSave(QuickLogCategory.MEDICINE, medLabel)
+            },
+            onDismiss = { pendingMedicineLabel = null }
         )
     }
 
@@ -506,6 +533,64 @@ private fun QuickLogFavoritesSheet(
             Spacer(Modifier.height(16.dp))
         }
     }
+}
+
+// ─── Medicine dose dialog (one-unit system) ─────────────────────────
+
+@Composable
+private fun QuickLogDoseDialog(
+    label: String,
+    doseUnit: String,
+    saving: Boolean,
+    onLog: (Double?) -> Unit,
+    onSkip: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var valueText by remember { mutableStateOf("") }
+    var inputUnit by remember { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1E0A2E),
+        titleContentColor = Color.White,
+        textContentColor = AppTheme.BodyTextColor,
+        title = { Text(t(label)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(t("How much did you take?"), color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall)
+                DoseAmountInput(
+                    doseUnit = doseUnit,
+                    valueText = valueText,
+                    onValueTextChange = { valueText = it },
+                    inputUnit = inputUnit,
+                    onInputUnitChange = { inputUnit = it },
+                    accent = QuickLogCategory.MEDICINE.color,
+                    label = t("Amount")
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !saving,
+                onClick = {
+                    val dose = DoseUnits.parseNumber(valueText)
+                        ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
+                    onLog(dose)
+                }
+            ) { Text(t("Log"), color = QuickLogCategory.MEDICINE.color) }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onDismiss, enabled = !saving) {
+                    Text(t("Cancel"), color = AppTheme.SubtleTextColor)
+                }
+                TextButton(onClick = onSkip, enabled = !saving) {
+                    Text(t("Skip, just log"), color = AppTheme.SubtleTextColor)
+                }
+            }
+        }
+    )
 }
 
 @Composable

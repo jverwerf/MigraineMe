@@ -90,6 +90,11 @@ fun QuickLogMedicineScreen(
     // Icon lookup: label → category (medicines use category for icon resolution)
     val categoryByLabel = remember(pool) { pool.associate { it.label to it.category } }
 
+    // One-unit system: the unit belongs to the pool medicine, never the log.
+    val unitByLabel = remember(pool) { pool.associate { it.label to (it.doseUnit ?: DoseUnits.MG) } }
+    val doseUnit = selectedMedicine?.let { unitByLabel[it] } ?: DoseUnits.MG
+    var inputUnit by rememberSaveable(selectedMedicine) { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
+
     Box {
         ScrollFadeContainer(scrollState = scrollState) { scroll ->
             ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
@@ -195,17 +200,22 @@ fun QuickLogMedicineScreen(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     
-                    // Amount
-                    OutlinedTextField(
-                        value = amount,
-                        onValueChange = { amount = it },
-                        label = { Text(t("Amount (e.g., 500mg, 2 tablets)"), color = AppTheme.SubtleTextColor) },
-                        modifier = Modifier.fillMaxWidth(),
+                    // Amount — number only, unit is fixed by the medicine
+                    DoseAmountInput(
+                        doseUnit = doseUnit,
+                        valueText = amount,
+                        onValueTextChange = { amount = it },
+                        inputUnit = inputUnit,
+                        onInputUnitChange = { inputUnit = it },
+                        accent = AppTheme.AccentPurple,
+                        label = t("Amount"),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             focusedBorderColor = AppTheme.AccentPurple,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                            focusedLabelColor = AppTheme.SubtleTextColor,
+                            unfocusedLabelColor = AppTheme.SubtleTextColor
                         )
                     )
                     
@@ -340,16 +350,20 @@ fun QuickLogMedicineScreen(
                                                 BuildConfig.SUPABASE_URL,
                                                 BuildConfig.SUPABASE_ANON_KEY
                                             )
+                                            val doseValue = DoseUnits.parseNumber(amount)
+                                                ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
                                             db.insertMedicine(
                                                 accessToken = token,
                                                 migraineId = null, // Standalone medicine
                                                 name = medicine,
-                                                amount = amount.ifBlank { null },
+                                                amount = null,
                                                 startAt = startAtIso ?: Instant.now().toString(),
                                                 notes = notes.ifBlank { null },
                                                 reliefScale = reliefScale,
                                                 sideEffectScale = sideEffectScale,
-                                                sideEffectNotes = sideEffectNotes.ifBlank { null }
+                                                sideEffectNotes = sideEffectNotes.ifBlank { null },
+                                                doseValue = doseValue,
+                                                doseUnit = if (doseValue != null) doseUnit else null
                                             )
                                         }
                                         snackbarHostState.showSnackbar("Medicine logged!")

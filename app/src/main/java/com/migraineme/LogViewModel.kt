@@ -44,11 +44,23 @@ data class ReliefDraft(
     val notes: String? = null,
     val startAtIso: String? = null,
     val endAtIso: String? = null,
+    /** Optional duration entry. Resolved at save as end_at = start_at + minutes
+     *  (start may be "same as migraine start", unknown until save). Only used
+     *  when no explicit endAtIso was picked. */
+    val durationMinutes: Int? = null,
     val reliefScale: String? = "NONE",
     val sideEffectScale: String? = "NONE",
     val sideEffectNotes: String? = null,
     val existingId: String? = null
 )
+
+/** end_at = start_at + minutes, for the reliefs duration entry. */
+fun addMinutesToIso(startIso: String, minutes: Int): String? = try {
+    java.time.OffsetDateTime.parse(startIso).plusMinutes(minutes.toLong()).toInstant().toString()
+} catch (_: Exception) {
+    try { Instant.parse(startIso).plus(minutes.toLong(), ChronoUnit.MINUTES).toString() }
+    catch (_: Exception) { null }
+}
 
 data class ProdromeDraft(
     val type: String,
@@ -328,6 +340,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     val medicineOptionsFrequent: StateFlow<List<String>> = _medicineOptionsFrequent
     private val _medicineOptionsAll = MutableStateFlow<List<String>>(emptyList())
     val medicineOptionsAll: StateFlow<List<String>> = _medicineOptionsAll
+    /** One-unit system: pool label → dose_unit ('mg' default). */
+    private val _medicineUnitsByLabel = MutableStateFlow<Map<String, String>>(emptyMap())
+    val medicineUnitsByLabel: StateFlow<Map<String, String>> = _medicineUnitsByLabel
 
     private val _reliefOptionsFrequent = MutableStateFlow<List<String>>(emptyList())
     val reliefOptionsFrequent: StateFlow<List<String>> = _reliefOptionsFrequent
@@ -487,7 +502,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addReliefDraft(type: String, notes: String? = null, startAtIso: String? = null, endAtIso: String? = null, reliefScale: String? = "NONE", sideEffectScale: String? = "NONE", sideEffectNotes: String? = null) {
         _draft.value = _draft.value.copy(
-            rels = _draft.value.rels + ReliefDraft(type, notes, startAtIso, endAtIso, reliefScale, sideEffectScale, sideEffectNotes)
+            rels = _draft.value.rels + ReliefDraft(type = type, notes = notes, startAtIso = startAtIso, endAtIso = endAtIso, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
         )
     }
 
@@ -735,7 +750,9 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 for (r in rels.filter { it.type.isNotBlank() }) {
                     val rStart = r.startAtIso ?: migraineStart
-                    val rEnd = r.endAtIso ?: rStart
+                    // end_at only when known: explicit end, or start + minutes.
+                    // Skipped duration = end_at stays NULL.
+                    val rEnd = r.endAtIso ?: r.durationMinutes?.let { addMinutesToIso(rStart, it) }
                     if (r.existingId != null) {
                         runCatching { db.updateRelief(accessToken, r.existingId, r.type, rStart, r.notes, endAt = rEnd, reliefScale = r.reliefScale, sideEffectScale = r.sideEffectScale, sideEffectNotes = r.sideEffectNotes) }
                     } else {
@@ -936,7 +953,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             type = r.type,
                             startAt = rStart,
                             notes = r.notes,
-                            endAt = r.endAtIso ?: rStart,
+                            // end_at only when known; skipped = NULL
+                            endAt = r.endAtIso ?: r.durationMinutes?.let { addMinutesToIso(rStart, it) },
                             reliefScale = r.reliefScale,
                             sideEffectScale = r.sideEffectScale,
                             sideEffectNotes = r.sideEffectNotes
@@ -1238,11 +1256,13 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         migraineId: String? = null,
         reliefScale: String? = null,
         sideEffectScale: String? = null,
-        sideEffectNotes: String? = null
+        sideEffectNotes: String? = null,
+        doseValue: Double? = null,
+        doseUnit: String? = null
     ) {
         viewModelScope.launch {
             try {
-                val updated = db.updateMedicine(accessToken, id, name, amount, startAt, notes, migraineId, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
+                val updated = db.updateMedicine(accessToken, id, name, amount, startAt, notes, migraineId, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes, doseValue = doseValue, doseUnit = doseUnit)
                 _editMedicine.value = updated
                 loadJournal(accessToken)
             } catch (e: Exception) { e.printStackTrace() }
@@ -1347,11 +1367,13 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 _medicineOptionsFrequent.value = frequent
                 _medicineOptionsAll.value = allMinusFrequent
                 _medicineOptions.value = buildList { addAll(frequent); addAll(allMinusFrequent) }
+                _medicineUnitsByLabel.value = pool.associate { it.label to (it.doseUnit ?: DoseUnits.MG) }
             } catch (e: Exception) {
                 e.printStackTrace()
                 _medicineOptionsFrequent.value = emptyList()
                 _medicineOptionsAll.value = emptyList()
                 _medicineOptions.value = emptyList()
+                _medicineUnitsByLabel.value = emptyMap()
             }
         }
     }

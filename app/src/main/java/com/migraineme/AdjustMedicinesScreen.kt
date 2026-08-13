@@ -31,6 +31,8 @@ fun AdjustMedicinesScreen(
     val frequent by vm.frequent.collectAsState()
 
     var newLabel by remember { mutableStateOf("") }
+    // One-unit system: custom medicines pick their unit once at creation
+    var newDoseUnit by remember { mutableStateOf(DoseUnits.MG) }
 
     LaunchedEffect(authState.accessToken) {
         Log.d("AdjustMedicines", "token present? ${authState.accessToken != null}")
@@ -56,12 +58,22 @@ fun AdjustMedicinesScreen(
                     singleLine = true
                 )
                 Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(DoseUnits.MG to "Milligrams (mg)", DoseUnits.AMOUNT to "Count").forEach { (value, display) ->
+                        FilterChip(
+                            selected = newDoseUnit == value,
+                            onClick = { newDoseUnit = value },
+                            label = { Text(t(display)) }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = {
                         val token = authState.accessToken ?: return@Button
                         val label = newLabel.trim()
                         if (label.isNotEmpty()) {
-                            vm.addNewToPool(token, label)
+                            vm.addNewToPool(token, label, doseUnit = newDoseUnit)
                             newLabel = ""
                         }
                     },

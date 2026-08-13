@@ -74,6 +74,7 @@ fun QuickLogReliefScreen(
     var menuOpen by rememberSaveable { mutableStateOf(false) }
     var startAtIso by rememberSaveable { mutableStateOf<String?>(null) }
     var endAtIso by rememberSaveable { mutableStateOf<String?>(null) }
+    var durationText by rememberSaveable { mutableStateOf("") }
     var notes by rememberSaveable { mutableStateOf("") }
     var reliefScale by rememberSaveable { mutableStateOf("NONE") }
     var sideEffectScale by rememberSaveable { mutableStateOf("NONE") }
@@ -206,19 +207,58 @@ fun QuickLogReliefScreen(
                     }
                     
                     Spacer(Modifier.height(8.dp))
-                    
-                    // End time picker
-                    Column(Modifier.fillMaxWidth()) {
-                        Text(t("When did you finish?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.height(4.dp))
-                        AppDateTimePicker(
-                            label = endAtIso?.let { formatIsoForDisplay(it) } ?: t("Select end time...")
-                        ) { iso ->
-                            endAtIso = iso
+
+                    // Duration — optional; hidden entirely for taken-only
+                    // reliefs (Water, Electrolytes, …). Minutes and end time
+                    // are two ways to set end_at; the latest entry wins.
+                    if (!DoseUnits.isTakenOnlyRelief(selectedRelief)) {
+                        // Minutes entry (optional)
+                        Column(Modifier.fillMaxWidth()) {
+                            Text(t("How long? (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            Spacer(Modifier.height(4.dp))
+                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                OutlinedTextField(
+                                    value = durationText,
+                                    onValueChange = { new ->
+                                        if (new.isEmpty() || new.all { it.isDigit() }) {
+                                            durationText = new
+                                            if (new.isNotEmpty()) endAtIso = null
+                                        }
+                                    },
+                                    label = { Text(t("Minutes"), color = AppTheme.SubtleTextColor) },
+                                    singleLine = true,
+                                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                                    ),
+                                    modifier = Modifier.weight(1f),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedBorderColor = AppTheme.AccentPurple,
+                                        unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
+                                    )
+                                )
+                                Spacer(Modifier.size(8.dp))
+                                Text("min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        // End time picker (optional)
+                        Column(Modifier.fillMaxWidth()) {
+                            Text(t("When did you finish? (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            Spacer(Modifier.height(4.dp))
+                            AppDateTimePicker(
+                                label = endAtIso?.let { formatIsoForDisplay(it) } ?: t("Select end time...")
+                            ) { iso ->
+                                endAtIso = iso
+                                if (iso != null) durationText = ""
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
                     }
-                    
-                    Spacer(Modifier.height(8.dp))
                     
                     // Notes
                     OutlinedTextField(
@@ -336,13 +376,20 @@ fun QuickLogReliefScreen(
                                                 BuildConfig.SUPABASE_URL,
                                                 BuildConfig.SUPABASE_ANON_KEY
                                             )
+                                            val startIso = startAtIso ?: Instant.now().toString()
+                                            // end_at from the picker or start + minutes;
+                                            // skipped (or taken-only) = NULL
+                                            val endIso = if (DoseUnits.isTakenOnlyRelief(relief)) null
+                                                else endAtIso
+                                                    ?: durationText.toIntOrNull()?.takeIf { it > 0 }
+                                                        ?.let { addMinutesToIso(startIso, it) }
                                             val row = db.insertRelief(
                                                 accessToken = token,
                                                 migraineId = null, // Standalone relief
                                                 type = relief,
-                                                startAt = startAtIso ?: Instant.now().toString(),
+                                                startAt = startIso,
                                                 notes = notes.ifBlank { null },
-                                                endAt = endAtIso,
+                                                endAt = endIso,
                                                 reliefScale = reliefScale,
                                                 sideEffectScale = sideEffectScale,
                                                 sideEffectNotes = sideEffectNotes.ifBlank { null }

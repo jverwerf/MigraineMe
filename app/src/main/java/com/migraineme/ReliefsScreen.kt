@@ -87,17 +87,19 @@ fun ReliefsScreen(
     if (showAddDialog && pendingLabel != null) {
         ReliefAddDialog(
             title = pendingLabel!!,
+            takenOnly = DoseUnits.isTakenOnlyRelief(pendingLabel),
             onDismiss = { showAddDialog = false },
             onSkip = {
                 val updated = draft.rels + ReliefDraft(type = pendingLabel!!, startAtIso = null, endAtIso = null, reliefScale = "NONE")
                 rebuildDraftWithRels(updated)
                 showAddDialog = false
             },
-            onConfirm = { startIso, endIso, relief, seScale, seNotes ->
+            onConfirm = { startIso, endIso, minutes, relief, seScale, seNotes ->
                 val updated = draft.rels + ReliefDraft(
                     type = pendingLabel!!,
                     startAtIso = startIso,
                     endAtIso = endIso,
+                    durationMinutes = minutes,
                     reliefScale = relief,
                     sideEffectScale = seScale,
                     sideEffectNotes = seNotes.ifBlank { null }
@@ -113,17 +115,20 @@ fun ReliefsScreen(
         val editing = draft.rels[editIndex!!]
         ReliefEditDialog(
             title = editing.type,
+            takenOnly = DoseUnits.isTakenOnlyRelief(editing.type),
             initialStartIso = editing.startAtIso,
             initialEndIso = editing.endAtIso,
+            initialDurationMinutes = editing.durationMinutes,
             initialRelief = editing.reliefScale ?: "NONE",
             initialSideEffectScale = editing.sideEffectScale ?: "NONE",
             initialSideEffectNotes = editing.sideEffectNotes ?: "",
             onDismiss = { showEditDialog = false },
-            onConfirm = { startIso, endIso, relief, seScale, seNotes ->
+            onConfirm = { startIso, endIso, minutes, relief, seScale, seNotes ->
                 val updated = draft.rels.toMutableList().apply {
                     set(editIndex!!, editing.copy(
                         startAtIso = startIso,
                         endAtIso = endIso,
+                        durationMinutes = minutes,
                         reliefScale = relief,
                         sideEffectScale = seScale,
                         sideEffectNotes = seNotes.ifBlank { null }
@@ -234,6 +239,12 @@ fun ReliefsScreen(
                                                 style = MaterialTheme.typography.labelSmall
                                             )
                                         }
+                                    } else if (r.endAtIso == null && r.durationMinutes != null) {
+                                        Text(
+                                            t("• %smin", r.durationMinutes),
+                                            color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
                                     }
                                 }
                                 // Relief scale
@@ -358,12 +369,14 @@ fun ReliefsScreen(
 @Composable
 private fun ReliefAddDialog(
     title: String,
+    takenOnly: Boolean,
     onDismiss: () -> Unit,
     onSkip: () -> Unit,
-    onConfirm: (startIso: String?, endIso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
+    onConfirm: (startIso: String?, endIso: String?, durationMinutes: Int?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
     var startIso by remember { mutableStateOf<String?>(null) }
     var endIso by remember { mutableStateOf<String?>(null) }
+    var durationText by remember { mutableStateOf("") }
     var selectedRelief by remember { mutableStateOf(ReliefScale.NONE) }
     var sideEffectScale by remember { mutableStateOf("NONE") }
     var sideEffectNotes by remember { mutableStateOf("") }
@@ -381,10 +394,26 @@ private fun ReliefAddDialog(
                 Text(t("Start: %s", formatReliefTime(startIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
                 AppDateTimePicker(label = t("Select start time"), onDateTimeSelected = { iso -> startIso = iso })
 
-                // End time
-                Text(t("When did you stop? (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                Text(t("End: %s", formatReliefTime(endIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = t("Select end time"), onDateTimeSelected = { iso -> endIso = iso })
+                // Duration — hidden entirely for taken-only reliefs
+                if (!takenOnly) {
+                    // Minutes entry (optional)
+                    Text(t("How long? (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    ReliefMinutesField(
+                        value = durationText,
+                        onValueChange = { new ->
+                            durationText = new
+                            if (new.isNotEmpty()) endIso = null
+                        }
+                    )
+
+                    // End time
+                    Text(t("When did you stop? (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    Text(t("End: %s", formatReliefTime(endIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                    AppDateTimePicker(label = t("Select end time"), onDateTimeSelected = { iso ->
+                        endIso = iso
+                        if (iso != null) durationText = ""
+                    })
+                }
 
                 // Relief scale
                 Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -419,7 +448,10 @@ private fun ReliefAddDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
+            TextButton(onClick = {
+                val minutes = if (takenOnly) null else durationText.toIntOrNull()?.takeIf { it > 0 }
+                onConfirm(startIso, if (takenOnly) null else endIso, minutes, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+            }) {
                 Text(t("Add"), color = AppTheme.AccentPurple)
             }
         },
@@ -443,16 +475,19 @@ private fun ReliefAddDialog(
 @Composable
 private fun ReliefEditDialog(
     title: String,
+    takenOnly: Boolean,
     initialStartIso: String?,
     initialEndIso: String?,
+    initialDurationMinutes: Int? = null,
     initialRelief: String,
     initialSideEffectScale: String = "NONE",
     initialSideEffectNotes: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (startIso: String?, endIso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
+    onConfirm: (startIso: String?, endIso: String?, durationMinutes: Int?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
     var startIso by remember { mutableStateOf(initialStartIso) }
     var endIso by remember { mutableStateOf(initialEndIso) }
+    var durationText by remember { mutableStateOf(initialDurationMinutes?.toString() ?: "") }
     var selectedRelief by remember { mutableStateOf(ReliefScale.fromString(initialRelief)) }
     var sideEffectScale by remember { mutableStateOf(initialSideEffectScale) }
     var sideEffectNotes by remember { mutableStateOf(initialSideEffectNotes) }
@@ -468,8 +503,22 @@ private fun ReliefEditDialog(
                 Text(t("Start: %s", formatReliefTime(startIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
                 AppDateTimePicker(label = t("Select start time"), onDateTimeSelected = { iso -> startIso = iso })
 
-                Text(t("End: %s", formatReliefTime(endIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
-                AppDateTimePicker(label = t("Select end time"), onDateTimeSelected = { iso -> endIso = iso })
+                if (!takenOnly) {
+                    Text(t("How long? (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    ReliefMinutesField(
+                        value = durationText,
+                        onValueChange = { new ->
+                            durationText = new
+                            if (new.isNotEmpty()) endIso = null
+                        }
+                    )
+
+                    Text(t("End: %s", formatReliefTime(endIso)), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+                    AppDateTimePicker(label = t("Select end time"), onDateTimeSelected = { iso ->
+                        endIso = iso
+                        if (iso != null) durationText = ""
+                    })
+                }
 
                 Text(t("How much relief?"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -503,7 +552,10 @@ private fun ReliefEditDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(startIso, endIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
+            TextButton(onClick = {
+                val minutes = if (takenOnly) null else durationText.toIntOrNull()?.takeIf { it > 0 }
+                onConfirm(startIso, if (takenOnly) null else endIso, minutes, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+            }) {
                 Text(t("Save"), color = AppTheme.AccentPurple)
             }
         },
@@ -513,6 +565,33 @@ private fun ReliefEditDialog(
             }
         }
     )
+}
+
+/** Digits-only minutes entry with a "min" suffix, shared by the two dialogs. */
+@Composable
+private fun ReliefMinutesField(value: String, onValueChange: (String) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = { new -> if (new.isEmpty() || new.all { it.isDigit() }) onValueChange(new) },
+            label = { Text(t("Minutes")) },
+            singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+            ),
+            modifier = Modifier.weight(1f),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = AppTheme.AccentPurple,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                focusedLabelColor = AppTheme.AccentPurple,
+                unfocusedLabelColor = AppTheme.SubtleTextColor,
+                cursorColor = Color.White,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
+            )
+        )
+        Text("min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+    }
 }
 
 /* ────────────────────────────────────────────────

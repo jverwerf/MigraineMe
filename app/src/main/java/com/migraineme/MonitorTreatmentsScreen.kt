@@ -621,6 +621,21 @@ private fun AddTreatmentRegimenDialog(
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    // One-unit system: for drug regimens the amount is a number and the unit
+    // comes from the matching pool medicine (default mg).
+    var poolUnits by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(Unit) {
+        poolUnits = withContext(Dispatchers.IO) {
+            try {
+                val token = SessionStore.getValidAccessToken(context) ?: return@withContext emptyMap()
+                val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                db.getAllMedicinePool(token).associate { it.label.lowercase() to (it.doseUnit ?: DoseUnits.MG) }
+            } catch (_: Throwable) { emptyMap() }
+        }
+    }
+    val doseUnit = if (kind == "drug") (poolUnits[name.trim().lowercase()] ?: DoseUnits.MG) else DoseUnits.MG
+    var inputUnit by remember(kind, doseUnit) { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
+
     fun save() {
         if (saving) return
         val trimmedName = name.trim()
@@ -634,15 +649,22 @@ private fun AddTreatmentRegimenDialog(
                     val uid = SessionStore.readUserId(context)
                         ?: JwtUtils.extractUserIdFromAccessToken(token)
                         ?: error("Not signed in")
+                    // Drug regimens dual-write dose_value/dose_unit; the legacy
+                    // amount string is mirrored by insertTreatmentRegimen.
+                    val doseValue = if (kind == "drug") {
+                        DoseUnits.parseNumber(amount)?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
+                    } else null
                     db.insertTreatmentRegimen(
                         accessToken = token,
                         userId = uid,
                         kind = kind,
                         name = trimmedName,
-                        amount = amount.ifBlank { null },
+                        amount = if (kind == "drug") null else amount.ifBlank { null },
                         frequency = frequency.ifBlank { null },
                         startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                        notes = notes.ifBlank { null }
+                        notes = notes.ifBlank { null },
+                        doseValue = doseValue,
+                        doseUnit = if (doseValue != null) doseUnit else null
                     )
                     Result.success(Unit)
                 } catch (t: Throwable) { Result.failure(t) }
@@ -690,16 +712,29 @@ private fun AddTreatmentRegimenDialog(
                 }
                 Spacer(Modifier.height(8.dp))
                 FieldLabel(t("Amount"))
-                OutlinedTextField(
-                    value = amount, onValueChange = { amount = it },
-                    
-                    placeholder = { Text(when (kind) {
-                        "drug" -> t("e.g. 50mg")
-                        "device" -> t("e.g. 20 min session")
-                        else -> t("e.g. 20 min")
-                    }) },
-                    singleLine = true, colors = treatmentFieldColors(), modifier = Modifier.fillMaxWidth()
-                )
+                if (kind == "drug") {
+                    // Number only — the unit is fixed by the pool medicine
+                    DoseAmountInput(
+                        doseUnit = doseUnit,
+                        valueText = amount,
+                        onValueTextChange = { amount = it },
+                        inputUnit = inputUnit,
+                        onInputUnitChange = { inputUnit = it },
+                        accent = Color(0xFFB97BFF),
+                        label = t("Amount"),
+                        colors = treatmentFieldColors()
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = amount, onValueChange = { amount = it },
+
+                        placeholder = { Text(when (kind) {
+                            "device" -> t("e.g. 20 min session")
+                            else -> t("e.g. 20 min")
+                        }) },
+                        singleLine = true, colors = treatmentFieldColors(), modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
                 FieldLabel(t("Frequency"))
                 OutlinedTextField(

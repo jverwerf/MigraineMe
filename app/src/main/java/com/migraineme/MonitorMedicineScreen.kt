@@ -58,6 +58,15 @@ import java.time.format.DateTimeFormatter
 
 data class DailyAmount(val date: String, val value: Double, val unit: String)
 
+/** Reads the stamped dose_value/dose_unit off a medicines row, if present. */
+private fun parsedDose(o: JSONObject): Pair<Double, String>? {
+    if (o.isNull("dose_value")) return null
+    val v = o.optDouble("dose_value")
+    if (v.isNaN()) return null
+    val u = o.optString("dose_unit").takeIf { it.isNotBlank() && it != "null" } ?: DoseUnits.MG
+    return v to u
+}
+
 data class MedicineSummary(
     val all: List<MedicineSummaryEntry> = emptyList(),
     val categories: List<MedicineCategorySummary> = emptyList(),
@@ -81,7 +90,7 @@ suspend fun loadMedicineSummary(context: Context): MedicineSummary = withContext
     val monthAgoIso = monthAgo.atStartOfDay(zone).toOffsetDateTime().toString()
 
     val url = "$base/rest/v1/medicines" +
-        "?select=name,category,amount,start_at" +
+        "?select=name,category,amount,dose_value,dose_unit,start_at" +
         "&start_at=gte.${java.net.URLEncoder.encode(monthAgoIso, "UTF-8")}" +
         "&order=start_at.desc&limit=2000"
 
@@ -139,9 +148,11 @@ suspend fun loadMedicineSummary(context: Context): MedicineSummary = withContext
         // Filter out the literal string "null" as well as JSON null / blank.
         val rawCat = o.optString("category").takeIf { it.isNotBlank() && it != "null" }
         val cat = rawCat ?: poolCategoryMap[name.lowercase()] ?: "Other"
-        val amt = o.optString("amount").takeIf { it.isNotBlank() }
+        val amt = o.optString("amount").takeIf { it.isNotBlank() && it != "null" }
         val startStr = o.optString("start_at").takeIf { it.isNotBlank() } ?: continue
-        val parsed = parseMedicineAmount(amt)
+        // Prefer the stamped dose_value/dose_unit; parse the legacy amount
+        // text only for old rows without one.
+        val parsed = parsedDose(o) ?: parseMedicineAmount(amt)
         val instant = try { OffsetDateTime.parse(startStr, fmt) } catch (_: Exception) { continue }
         val date = instant.atZoneSameInstant(zone).toLocalDate()
         val dayKey = date.toString()
@@ -262,7 +273,7 @@ suspend fun loadMedicineGraphData(
     val endIso = endDate.plusDays(1).atStartOfDay(zone).toOffsetDateTime().toString()
 
     val url = "$base/rest/v1/medicines" +
-        "?select=name,category,amount,start_at" +
+        "?select=name,category,amount,dose_value,dose_unit,start_at" +
         "&start_at=gte.${java.net.URLEncoder.encode(startIso, "UTF-8")}" +
         "&start_at=lt.${java.net.URLEncoder.encode(endIso, "UTF-8")}" +
         "&order=start_at.desc&limit=4000"
@@ -307,9 +318,9 @@ suspend fun loadMedicineGraphData(
         val name = o.optString("name").takeIf { it.isNotBlank() } ?: continue
         val rawCat = o.optString("category").takeIf { it.isNotBlank() && it != "null" }
         val cat = rawCat ?: poolCategoryMap[name.lowercase()] ?: "Other"
-        val amt = o.optString("amount").takeIf { it.isNotBlank() }
+        val amt = o.optString("amount").takeIf { it.isNotBlank() && it != "null" }
         val startStr = o.optString("start_at").takeIf { it.isNotBlank() } ?: continue
-        val parsed = parseMedicineAmount(amt) ?: continue
+        val parsed = parsedDose(o) ?: parseMedicineAmount(amt) ?: continue
         val instant = try { OffsetDateTime.parse(startStr, fmt) } catch (_: Exception) { continue }
         val date = instant.atZoneSameInstant(zone).toLocalDate()
         if (date.isBefore(startDate) || date.isAfter(endDate)) continue
@@ -946,7 +957,7 @@ fun MedicineStackedBarGraph(
                     Text(name, color = AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall)
                     pts.firstOrNull()?.unit?.let {
-                        Text(" ($it)", color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
+                        Text(" (${DoseUnits.suffix(it)})", color = AppTheme.SubtleTextColor.copy(alpha = 0.6f),
                             style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -1102,7 +1113,7 @@ private suspend fun loadUserMedicinesPool(context: Context): List<UserMedicineRo
     val token = SessionStore.getValidAccessToken(context) ?: return@withContext emptyList()
     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
     val key = BuildConfig.SUPABASE_ANON_KEY
-    val url = "$base/rest/v1/user_medicines?select=id,label,category&order=label.asc&limit=500"
+    val url = "$base/rest/v1/user_medicines?select=id,label,category,dose_unit&order=label.asc&limit=500"
     val req = Request.Builder().url(url)
         .addHeader("apikey", key)
         .addHeader("Authorization", "Bearer $token")
@@ -1114,13 +1125,14 @@ private suspend fun loadUserMedicinesPool(context: Context): List<UserMedicineRo
         out.add(UserMedicineRow(
             id = o.optString("id"),
             label = o.optString("label"),
-            category = o.optString("category").takeIf { it.isNotBlank() }
+            category = o.optString("category").takeIf { it.isNotBlank() },
+            doseUnit = o.optString("dose_unit").takeIf { it.isNotBlank() && it != "null" }
         ))
     }
     out
 }
 
-data class UserMedicineRow(val id: String, val label: String, val category: String?)
+data class UserMedicineRow(val id: String, val label: String, val category: String?, val doseUnit: String? = null)
 
 // ════════════════════════════════════════════════════════════════════════════
 // PER-DATE DATA HISTORY SCREEN
@@ -1145,7 +1157,7 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
         val byCatUnp = mutableMapOf<String, Int>()
         for (e in entries) {
             val c = e.category ?: continue
-            val p = parseMedicineAmount(e.amount)
+            val p = e.doseValue?.let { it to (e.doseUnit ?: DoseUnits.MG) } ?: parseMedicineAmount(e.amount)
             if (p != null) byCat.getOrPut(c) { mutableListOf() }.add(p)
             else if (!e.amount.isNullOrBlank()) byCatUnp.merge(c, 1) { a, b -> a + b }
         }
@@ -1224,7 +1236,9 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                                     style = MaterialTheme.typography.labelSmall)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                e.amount?.takeIf { it.isNotBlank() }?.let {
+                                val doseText = e.doseValue?.let { DoseUnits.formatTotal(it, e.doseUnit ?: DoseUnits.MG) }
+                                    ?: e.amount?.takeIf { it.isNotBlank() }
+                                doseText?.let {
                                     Text(it, color = Color(0xFFFFB74D),
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                                     Spacer(Modifier.width(8.dp))
@@ -1254,6 +1268,7 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
 
 data class MedicineLogRow(
     val id: String, val name: String?, val category: String?, val amount: String?,
+    val doseValue: Double? = null, val doseUnit: String? = null,
     val reliefScale: String?, val sideEffectScale: String?, val sideEffectNotes: String?,
     val timeOfDay: String,
 )
@@ -1266,7 +1281,7 @@ private suspend fun loadMedicinesForDate(context: Context, date: LocalDate): Lis
     val start = date.atStartOfDay(zone).toOffsetDateTime().toString()
     val end = date.plusDays(1).atStartOfDay(zone).toOffsetDateTime().toString()
     val url = "$base/rest/v1/medicines" +
-        "?select=id,name,category,amount,relief_scale,side_effect_scale,side_effect_notes,start_at" +
+        "?select=id,name,category,amount,dose_value,dose_unit,relief_scale,side_effect_scale,side_effect_notes,start_at" +
         "&start_at=gte.${java.net.URLEncoder.encode(start, "UTF-8")}" +
         "&start_at=lt.${java.net.URLEncoder.encode(end, "UTF-8")}" +
         "&order=start_at.asc&limit=500"
@@ -1309,11 +1324,14 @@ private suspend fun loadMedicinesForDate(context: Context, date: LocalDate): Lis
         val name = safe("name")
         val rawCat = safe("category")
         val category = rawCat ?: name?.let { poolCategoryMap[it.lowercase()] } ?: "Other"
+        val dose = parsedDose(o)
         out.add(MedicineLogRow(
             id = o.optString("id"),
             name = name,
             category = category,
             amount = safe("amount"),
+            doseValue = dose?.first,
+            doseUnit = dose?.second,
             reliefScale = safe("relief_scale"),
             sideEffectScale = safe("side_effect_scale"),
             sideEffectNotes = safe("side_effect_notes"),

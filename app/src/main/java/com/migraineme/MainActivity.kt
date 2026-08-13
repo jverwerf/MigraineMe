@@ -1868,7 +1868,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     label = row.label,
                                     iconKey = row.category,
                                     category = row.category,
-                                    isFavorite = row.id in frequentIds
+                                    isFavorite = row.id in frequentIds,
+                                    doseUnit = row.doseUnit
                                 )
                             }
                         }
@@ -1902,6 +1903,17 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 },
                                 onSetCategory = { id, category ->
                                     authState.accessToken?.let { medicineVm.setCategory(it, id, category) }
+                                },
+                                // One-unit system: custom medicines pick their unit once
+                                doseUnitChoices = listOf(
+                                    DoseUnits.MG to "Milligrams (mg)",
+                                    DoseUnits.AMOUNT to "Count"
+                                ),
+                                onAddWithUnit = { label, category, doseUnit ->
+                                    authState.accessToken?.let { medicineVm.addNewToPool(it, label, category, doseUnit) }
+                                },
+                                onSetDoseUnit = { id, doseUnit ->
+                                    authState.accessToken?.let { medicineVm.setDoseUnit(it, id, doseUnit) }
                                 }
                             )
                         )

@@ -72,6 +72,9 @@ fun MedicinesScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var editIndex by remember { mutableStateOf<Int?>(null) }
 
+    // One-unit system: the unit belongs to the pool medicine, never the log.
+    val unitByLabel = remember(pool) { pool.associate { it.label to (it.doseUnit ?: DoseUnits.MG) } }
+
     fun onMedicineTap(label: String) {
         val existingIdx = draft.meds.indexOfFirst { it.name == label }
         if (existingIdx >= 0) {
@@ -88,6 +91,7 @@ fun MedicinesScreen(
     if (showAddDialog && pendingLabel != null) {
         MedicineAddDialog(
             title = pendingLabel!!,
+            doseUnit = unitByLabel[pendingLabel!!] ?: DoseUnits.MG,
             onDismiss = { showAddDialog = false },
             onSkip = {
                 val updated = draft.meds + MedicineDraft(name = pendingLabel!!, startAtIso = null, reliefScale = "NONE")
@@ -107,6 +111,7 @@ fun MedicinesScreen(
         val editing = draft.meds[editIndex!!]
         MedicineEditDialog(
             title = editing.name ?: "",
+            doseUnit = unitByLabel[editing.name] ?: DoseUnits.parseLegacy(editing.amount)?.second ?: DoseUnits.MG,
             initialAmount = editing.amount ?: "",
             initialIso = editing.startAtIso,
             initialRelief = editing.reliefScale ?: "NONE",
@@ -339,11 +344,13 @@ fun MedicinesScreen(
 @Composable
 private fun MedicineAddDialog(
     title: String,
+    doseUnit: String,
     onDismiss: () -> Unit,
     onSkip: () -> Unit,
     onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
+    var inputUnit by remember { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
     var pickedIso by remember { mutableStateOf<String?>(null) }
     var selectedRelief by remember { mutableStateOf(ReliefScale.NONE) }
     var sideEffectScale by remember { mutableStateOf("NONE") }
@@ -357,13 +364,15 @@ private fun MedicineAddDialog(
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Amount
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    label = { Text(t("Amount (e.g. 50mg, 2 tablets)")) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                // Amount — number only, unit is fixed by the medicine
+                DoseAmountInput(
+                    doseUnit = doseUnit,
+                    valueText = amount,
+                    onValueTextChange = { amount = it },
+                    inputUnit = inputUnit,
+                    onInputUnitChange = { inputUnit = it },
+                    accent = AppTheme.AccentPurple,
+                    label = t("Amount"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AppTheme.AccentPurple,
                         unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
@@ -414,7 +423,14 @@ private fun MedicineAddDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
+            TextButton(onClick = {
+                // Store the legacy mirror string ("400mg" / "2"); the insert
+                // path re-derives dose_value/dose_unit from it (dual-write).
+                val mirror = DoseUnits.parseNumber(amount)
+                    ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
+                    ?: ""
+                onConfirm(mirror, pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+            }) {
                 Text(t("Add"), color = AppTheme.AccentPurple)
             }
         },
@@ -438,6 +454,7 @@ private fun MedicineAddDialog(
 @Composable
 private fun MedicineEditDialog(
     title: String,
+    doseUnit: String,
     initialAmount: String,
     initialIso: String?,
     initialRelief: String,
@@ -446,7 +463,10 @@ private fun MedicineEditDialog(
     onDismiss: () -> Unit,
     onConfirm: (amount: String, iso: String?, relief: String, sideEffectScale: String, sideEffectNotes: String) -> Unit
 ) {
-    var amount by remember { mutableStateOf(initialAmount) }
+    var amount by remember {
+        mutableStateOf(DoseUnits.parseLegacy(initialAmount)?.first?.let { DoseUnits.formatValue(it) } ?: "")
+    }
+    var inputUnit by remember { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
     var pickedIso by remember { mutableStateOf(initialIso) }
     var selectedRelief by remember { mutableStateOf(ReliefScale.fromString(initialRelief)) }
     var sideEffectScale by remember { mutableStateOf(initialSideEffectScale) }
@@ -460,12 +480,14 @@ private fun MedicineEditDialog(
         title = { Text(t("Edit %s", title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    label = { Text(t("Amount")) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                DoseAmountInput(
+                    doseUnit = doseUnit,
+                    valueText = amount,
+                    onValueTextChange = { amount = it },
+                    inputUnit = inputUnit,
+                    onInputUnitChange = { inputUnit = it },
+                    accent = AppTheme.AccentPurple,
+                    label = t("Amount"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AppTheme.AccentPurple,
                         unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
@@ -513,7 +535,12 @@ private fun MedicineEditDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(amount.trim(), pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim()) }) {
+            TextButton(onClick = {
+                val mirror = DoseUnits.parseNumber(amount)
+                    ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
+                    ?: ""
+                onConfirm(mirror, pickedIso, selectedRelief.name, sideEffectScale, sideEffectNotes.trim())
+            }) {
                 Text(t("Save"), color = AppTheme.AccentPurple)
             }
         },

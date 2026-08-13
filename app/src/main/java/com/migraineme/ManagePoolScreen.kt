@@ -73,7 +73,9 @@ data class PoolItem(
     val defaultThreshold: Double? = null,
     val unit: String? = null,
     val direction: String? = null,
-    val displayGroup: String? = null
+    val displayGroup: String? = null,
+    /** Medicines only: the item's one dose unit ('mg', 'amount', …). */
+    val doseUnit: String? = null
 )
 
 /** Icon entry for the add-dialog picker grid */
@@ -99,6 +101,10 @@ data class PoolConfig(
     val onToggleAlert: ((String, Boolean) -> Unit)? = null,
     val onSave: (suspend () -> Unit)? = null,
     val infoText: String? = null,
+    /** Medicines only: one-time unit choice for custom items, unit value → display label. */
+    val doseUnitChoices: List<Pair<String, String>> = emptyList(),
+    val onAddWithUnit: ((label: String, category: String?, doseUnit: String) -> Unit)? = null,
+    val onSetDoseUnit: (itemId: String, doseUnit: String) -> Unit = { _, _ -> },
 )
 
 /* ────────────────────────────────────────────────
@@ -486,6 +492,7 @@ fun ManagePoolScreen(
         var newPrediction by remember { mutableStateOf(PredictionValue.NONE) }
         var newIconKey by remember { mutableStateOf<String?>(null) }
         var categoryExpanded by remember { mutableStateOf(false) }
+        var newDoseUnit by remember { mutableStateOf(config.doseUnitChoices.firstOrNull()?.first) }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -552,6 +559,27 @@ fun ManagePoolScreen(
                         }
                     }
 
+                    // Dose unit — one-time choice for custom medicines
+                    if (config.doseUnitChoices.isNotEmpty()) {
+                        Text(t("Unit"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            config.doseUnitChoices.forEach { (value, display) ->
+                                val selected = newDoseUnit == value
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(if (selected) config.iconColor.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.06f))
+                                        .border(1.dp, if (selected) config.iconColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(20.dp))
+                                        .clickable { newDoseUnit = value }
+                                        .padding(horizontal = 12.dp, vertical = 5.dp)
+                                ) {
+                                    Text(t(display), color = if (selected) config.iconColor else AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                                }
+                            }
+                        }
+                    }
+
                     // Prediction value
                     if (config.showPrediction) {
                         Text(t("Prediction value"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
@@ -607,7 +635,12 @@ fun ManagePoolScreen(
                 TextButton(
                     onClick = {
                         if (newLabel.isNotBlank()) {
-                            config.onAdd(newLabel.trim(), newCategory, newPrediction)
+                            val unit = newDoseUnit
+                            if (config.onAddWithUnit != null && unit != null) {
+                                config.onAddWithUnit.invoke(newLabel.trim(), newCategory, unit)
+                            } else {
+                                config.onAdd(newLabel.trim(), newCategory, newPrediction)
+                            }
                             showAddDialog = false
                         }
                     },
@@ -810,6 +843,35 @@ private fun PoolItemRow(
                             }
                         }
                     }
+                }
+
+                // Dose unit selector — only for mg/count medicines. Special
+                // units (Botox units, oxygen minutes, Vitamin D mcg) stay
+                // fixed. Old logs keep their stamped unit; no conversion.
+                if (config.doseUnitChoices.isNotEmpty() &&
+                    (item.doseUnit == null || config.doseUnitChoices.any { it.first == item.doseUnit })) {
+                    Text(t("Unit"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        config.doseUnitChoices.forEach { (value, display) ->
+                            val selected = (item.doseUnit ?: config.doseUnitChoices.first().first) == value
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(if (selected) config.iconColor.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.06f))
+                                    .border(1.dp, if (selected) config.iconColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(20.dp))
+                                    .clickable { if (!selected) config.onSetDoseUnit(item.id, value) }
+                                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                            ) {
+                                Text(t(display), color = if (selected) config.iconColor else AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                            }
+                        }
+                    }
+                    Text(
+                        t("Past logs keep the unit they were logged with."),
+                        color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
 
                 // Automation toggle
