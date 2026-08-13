@@ -18,6 +18,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
 
+// Onboarding-tour seed rows are marked source='demo'. Written as an OR group so
+// rows with a NULL source (real data on the nullable tables) are kept.
+const NOT_DEMO_SOURCE = "source.is.null,source.neq.demo";
+
 serve(async (req: Request) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -120,29 +124,51 @@ serve(async (req: Request) => {
 
     if (!profile) return json({ status: "no_profile" });
 
+    // Onboarding-tour demo rows must never reach the AI: the assessment has to
+    // describe the patient, not the tour fixture. Seeded rows carry
+    // source='demo' or notes starting '[demo]'; children of a demo migraine are
+    // excluded by their parent id even when they carry no marker of their own.
+    const isDemoNote = (v: unknown) => String(v ?? "").startsWith("[demo]");
+
     // 2. All migraines
-    const { data: migraines } = await supabase
+    const { data: migraineRows } = await supabase
       .from("migraines")
-      .select("id, start_at, ended_at, severity, type, aura_locations, aura_duration_minutes")
+      .select("id, start_at, ended_at, severity, type, aura_locations, aura_duration_minutes, notes")
       .eq("user_id", userId)
       .not("start_at", "is", null)
       .order("start_at", { ascending: false });
 
-    if (!migraines || migraines.length < 5) {
-      return json({ status: "insufficient_data", migraine_count: migraines?.length ?? 0 });
+    const demoMigraineIds = new Set(
+      (migraineRows ?? []).filter((m: any) => isDemoNote(m.notes)).map((m: any) => m.id)
+    );
+    const migraines = (migraineRows ?? []).filter((m: any) => !demoMigraineIds.has(m.id));
+
+    if (migraines.length < 5) {
+      return json({ status: "insufficient_data", migraine_count: migraines.length });
     }
 
     const migraineIds = new Set(migraines.map((m: any) => m.id));
 
+    const notDemo = <T extends Record<string, any>>(rows: T[] | null | undefined): T[] =>
+      (rows ?? []).filter((r) =>
+        r.source !== "demo" &&
+        !isDemoNote(r.notes) &&
+        !(r.migraine_id && demoMigraineIds.has(r.migraine_id))
+      );
+
     // 3. All linked items
-    const { data: triggers } = await supabase
-      .from("triggers").select("type, migraine_id, source").eq("user_id", userId);
-    const { data: prodromes } = await supabase
-      .from("prodromes").select("type, migraine_id, source").eq("user_id", userId);
-    const { data: medicines } = await supabase
-      .from("medicines").select("name, migraine_id").eq("user_id", userId);
-    const { data: reliefs } = await supabase
-      .from("reliefs").select("type, migraine_id").eq("user_id", userId);
+    const { data: triggerRows } = await supabase
+      .from("triggers").select("type, migraine_id, source, notes").eq("user_id", userId);
+    const triggers = notDemo(triggerRows);
+    const { data: prodromeRows } = await supabase
+      .from("prodromes").select("type, migraine_id, source, notes").eq("user_id", userId);
+    const prodromes = notDemo(prodromeRows);
+    const { data: medicineRows } = await supabase
+      .from("medicines").select("name, migraine_id, source, notes").eq("user_id", userId);
+    const medicines = notDemo(medicineRows);
+    const { data: reliefRows } = await supabase
+      .from("reliefs").select("type, migraine_id, source, notes").eq("user_id", userId);
+    const reliefs = notDemo(reliefRows);
     // Symptoms are stored as comma-joined labels in migraines.type. Unpack into
     // per-label rows so countLinked produces the same shape the rest of this
     // function expects. "Migraine" is the sentinel written when no symptoms
@@ -155,23 +181,28 @@ serve(async (req: Request) => {
         symptoms.push({ type: label, migraine_id: m.id });
       }
     }
-    const { data: activities } = await supabase
-      .from("activities").select("type, migraine_id").eq("user_id", userId);
-    const { data: missedActivities } = await supabase
-      .from("missed_activities").select("type, migraine_id").eq("user_id", userId);
-    const { data: locations } = await supabase
-      .from("locations").select("type, migraine_id").eq("user_id", userId);
+    const { data: activityRows } = await supabase
+      .from("activities").select("type, migraine_id, source, notes").eq("user_id", userId);
+    const activities = notDemo(activityRows);
+    const { data: missedActivityRows } = await supabase
+      .from("missed_activities").select("type, migraine_id, source, notes").eq("user_id", userId);
+    const missedActivities = notDemo(missedActivityRows);
+    const { data: locationRows } = await supabase
+      .from("locations").select("type, migraine_id, source, notes").eq("user_id", userId);
+    const locations = notDemo(locationRows);
 
     // Aura detail: timestamped eye zones live in their own table; the array
     // columns on migraines cover attacks logged before the feature.
-    const { data: auraZoneRows } = await supabase
+    const { data: auraZoneRowsRaw } = await supabase
       .from("migraine_aura_zones").select("migraine_id, zone").eq("user_id", userId);
+    const auraZoneRows = notDemo(auraZoneRowsRaw);
 
     // Typed symptom rows — the symptoms table carries per-row severity and
     // start_at. Merged below with the legacy comma-joined labels that still
     // live in migraines.type (deduped per migraine+label).
-    const { data: typedSymptomRows } = await supabase
+    const { data: typedSymptomRowsRaw } = await supabase
       .from("symptoms").select("type, severity, migraine_id").eq("user_id", userId);
+    const typedSymptomRows = notDemo(typedSymptomRowsRaw);
 
     // The symptoms table is the newer, richer source; add anything the
     // comma-joined labels missed, one row per migraine+label.
@@ -214,38 +245,40 @@ serve(async (req: Request) => {
       nutrition, hydration, steps, restingHr,
       screenTime, lateScreen, bedtime, hrvDaily, mindfulness,
     ] = await Promise.all([
-      supabase.from("sleep_score_daily").select("date, value_pct").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("sleep_duration_daily").select("date, value_hours").eq("user_id", userId).gte("date", last60CutoffIso),
+      supabase.from("sleep_score_daily").select("date, value_pct").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("sleep_duration_daily").select("date, value_hours").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      // stress_index_daily has no `source` column, so demo rows cannot be
+      // filtered here — the tour cleanup drops the table wholesale instead.
       supabase.from("stress_index_daily").select("date, value").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("recovery_score_daily").select("date, value_pct").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("nutrition_daily").select("date, total_calories, total_protein_g, total_carbs_g, total_fat_g, total_fiber_g, total_sugar_g, total_sodium_mg, total_caffeine_mg, max_tyramine_exposure, max_alcohol_exposure, max_gluten_exposure, max_histamine_exposure").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("hydration_daily").select("date, value_ml").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("steps_daily").select("date, value_count").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("resting_hr_daily").select("date, value_bpm").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("screen_time_daily").select("date, total_hours").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("screen_time_late_night").select("date, value_hours").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("fell_asleep_time_daily").select("date, value_at").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("hrv_daily").select("date, value_rmssd_ms").eq("user_id", userId).gte("date", last60CutoffIso),
-      supabase.from("mindfulness_daily").select("date, duration_minutes").eq("user_id", userId).gte("date", last60CutoffIso),
+      supabase.from("recovery_score_daily").select("date, value_pct").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("nutrition_daily").select("date, total_calories, total_protein_g, total_carbs_g, total_fat_g, total_fiber_g, total_sugar_g, total_sodium_mg, total_caffeine_mg, max_tyramine_exposure, max_alcohol_exposure, max_gluten_exposure, max_histamine_exposure").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("hydration_daily").select("date, value_ml").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("steps_daily").select("date, value_count").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("resting_hr_daily").select("date, value_bpm").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("screen_time_daily").select("date, total_hours").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("screen_time_late_night").select("date, value_hours").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("fell_asleep_time_daily").select("date, value_at").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("hrv_daily").select("date, value_rmssd_ms").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
+      supabase.from("mindfulness_daily").select("date, duration_minutes").eq("user_id", userId).gte("date", last60CutoffIso).or(NOT_DEMO_SOURCE),
     ]);
 
     // Correlation engine output + treatment history — new since the original
     // narrative prompt was written; both feed Call 1 only.
     const last90Cutoff = new Date(today); last90Cutoff.setDate(today.getDate() - 90);
     const [
-      { data: corrStats }, { data: regimens }, { data: sideEffectLogs },
-      { data: timingStats }, { data: regimenNarratives },
+      { data: corrStats }, { data: regimenRows }, { data: sideEffectLogRows },
+      { data: timingStats }, { data: regimenNarrativeRows },
     ] = await Promise.all([
       supabase.from("correlation_stats")
         .select("factor_name, factor_type, factor_b, best_lag_days, lift_ratio, pct_migraine_windows, pct_control_windows, sample_size, p_value, lag_details, symptom_outcome")
         .eq("user_id", userId),
       supabase.from("treatment_regimens")
-        .select("id, kind, name, amount, frequency, start_date, stop_date, drug_class")
+        .select("id, kind, name, amount, frequency, start_date, stop_date, drug_class, notes")
         .eq("user_id", userId)
         .order("start_date", { ascending: false })
         .limit(10),
       supabase.from("treatment_side_effect_logs")
-        .select("log_date, selected_symptoms")
+        .select("log_date, selected_symptoms, regimen_id, source, notes")
         .eq("user_id", userId)
         .gte("log_date", ymd(last90Cutoff)),
       supabase.from("treatment_timing_stats")
@@ -255,6 +288,17 @@ serve(async (req: Request) => {
         .select("regimen_id, narrative")
         .eq("user_id", userId),
     ]);
+
+    // Demo treatments carry notes '[demo]…'; their side-effect diary and cached
+    // narrative carry no marker of their own, so drop them by regimen id.
+    const regimens = notDemo(regimenRows);
+    const demoRegimenIds = new Set(
+      (regimenRows ?? []).filter((r: any) => isDemoNote(r.notes)).map((r: any) => r.id)
+    );
+    const sideEffectLogs = notDemo(sideEffectLogRows)
+      .filter((r: any) => !demoRegimenIds.has(r.regimen_id));
+    const regimenNarratives = (regimenNarrativeRows ?? [])
+      .filter((r: any) => !demoRegimenIds.has(r.regimen_id));
 
     // 4. Current config — pools
     const { data: triggerPool } = await supabase
@@ -344,11 +388,14 @@ serve(async (req: Request) => {
       .select("severity, day_0, day_1, day_2, day_3, day_4, day_5, day_6")
       .eq("user_id", userId);
 
-    // 7. Connected data sources
-    const { data: metricSettings } = await supabase
+    // 7. Connected data sources. Tour-seeded rows carry preferred_source='demo'
+    // and must not describe the patient's real setup to the AI.
+    const { data: metricSettingRows } = await supabase
       .from("metric_settings")
       .select("metric, enabled, preferred_source")
       .eq("user_id", userId);
+    const metricSettings = (metricSettingRows ?? [])
+      .filter((s: any) => String(s.preferred_source ?? "").toLowerCase() !== "demo");
 
     // 8. Menstruation data (for Call 3 — cycle-tracking users only)
     const { data: menstrualDecayRow } = await supabase
@@ -363,12 +410,13 @@ serve(async (req: Request) => {
       .eq("user_id", userId)
       .maybeSingle();
 
-    const { data: menstrualEvents } = await supabase
+    const { data: menstrualEventRows } = await supabase
       .from("triggers")
-      .select("start_at")
+      .select("start_at, migraine_id, source, notes")
       .eq("user_id", userId)
       .eq("type", "menstruation")
       .eq("active", true);
+    const menstrualEvents = notDemo(menstrualEventRows);
 
     // ══════════════════════════════════════════════════════════════
     // DETERMINISTIC COMPARISONS (cheap math on already-loaded data)

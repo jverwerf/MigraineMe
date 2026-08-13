@@ -377,10 +377,13 @@ Respond with ONLY valid JSON (no markdown fences, no preamble). Use this exact s
             hc.permissionController.getGrantedPermissions().isNotEmpty()
         } catch (_: Exception) { false }
 
-        // Fetch metric settings
+        // Fetch metric settings. The onboarding tour seeds these with
+        // preferred_source='demo'; those rows must never describe the patient's
+        // real setup to the AI, so they are dropped here.
         val metricSettingsList = try {
             EdgeFunctionsService().getMetricSettings(appCtx)
         } catch (_: Exception) { emptyList() }
+            .filter { !it.preferredSource.equals("demo", ignoreCase = true) }
 
         val metrics = metricSettingsList.associate { it.metric to it.enabled }
         val sources = metricSettingsList
