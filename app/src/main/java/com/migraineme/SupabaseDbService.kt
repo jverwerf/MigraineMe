@@ -583,13 +583,15 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete trigger failed: ${response.bodyAsText()}")
     }
 
-    //  MEDICINES 
+    //  MEDICINES
     @Serializable
     data class MedicineRow(
         val id: String,
         @SerialName("user_id") val userId: String,
         val name: String? = null,
         val amount: String? = null,
+        @SerialName("dose_value") val doseValue: Double? = null,
+        @SerialName("dose_unit") val doseUnit: String? = null,
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
         val category: String? = null,
@@ -603,6 +605,8 @@ class SupabaseDbService(
     data class MedicineInsert(
         val name: String? = null,
         val amount: String? = null,
+        @SerialName("dose_value") val doseValue: Double? = null,
+        @SerialName("dose_unit") val doseUnit: String? = null,
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
         val category: String? = null,
@@ -621,10 +625,24 @@ class SupabaseDbService(
         category: String? = null,
         reliefScale: String? = "NONE",
         sideEffectScale: String? = "NONE",
-        sideEffectNotes: String? = null
+        sideEffectNotes: String? = null,
+        doseValue: Double? = null,
+        doseUnit: String? = null
     ): MedicineRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
-        val payload = MedicineInsert(name, amount, safeStart, notes, category, reliefScale, migraineId, sideEffectScale, sideEffectNotes)
+        // Dual-write (one-unit contract): a structured dose mirrors the legacy
+        // amount text; free text (AI drafts, legacy callers) is parsed into a
+        // structured dose with the contract's fallback rules.
+        var dv = doseValue
+        var du = doseUnit?.takeIf { dv != null }
+        var amt = amount
+        if (dv != null) {
+            du = du ?: DoseUnits.MG
+            amt = amt ?: DoseUnits.legacyAmount(dv, du)
+        } else if (!amt.isNullOrBlank()) {
+            DoseUnits.parseLegacy(amt)?.let { (v, u) -> dv = v; du = u }
+        }
+        val payload = MedicineInsert(name, amt, dv, du, safeStart, notes, category, reliefScale, migraineId, sideEffectScale, sideEffectNotes)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -665,11 +683,25 @@ class SupabaseDbService(
         clearMigraineId: Boolean = false,
         reliefScale: String? = null,
         sideEffectScale: String? = null,
-        sideEffectNotes: String? = null
+        sideEffectNotes: String? = null,
+        doseValue: Double? = null,
+        doseUnit: String? = null
     ): MedicineRow {
+        // Dual-write (one-unit contract) — see insertMedicine.
+        var dv = doseValue
+        var du = doseUnit?.takeIf { dv != null }
+        var amt = amount
+        if (dv != null) {
+            du = du ?: DoseUnits.MG
+            amt = amt ?: DoseUnits.legacyAmount(dv, du)
+        } else if (!amt.isNullOrBlank()) {
+            DoseUnits.parseLegacy(amt)?.let { (v, u) -> dv = v; du = u }
+        }
         val payload = buildJsonObject {
             name?.let { put("name", it) }
-            if (amount != null) put("amount", amount)
+            if (amt != null) put("amount", amt)
+            dv?.let { put("dose_value", it) }
+            du?.let { put("dose_unit", it) }
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
             if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
@@ -704,6 +736,8 @@ class SupabaseDbService(
         val kind: String,
         val name: String,
         val amount: String? = null,
+        @SerialName("dose_value") val doseValue: Double? = null,
+        @SerialName("dose_unit") val doseUnit: String? = null,
         val frequency: String? = null,
         @SerialName("start_date") val startDate: String,
         @SerialName("stop_date") val stopDate: String? = null,
@@ -719,6 +753,8 @@ class SupabaseDbService(
         val kind: String,
         val name: String,
         val amount: String? = null,
+        @SerialName("dose_value") val doseValue: Double? = null,
+        @SerialName("dose_unit") val doseUnit: String? = null,
         val frequency: String? = null,
         @SerialName("start_date") val startDate: String,
         @SerialName("stop_date") val stopDate: String? = null,
@@ -735,9 +771,15 @@ class SupabaseDbService(
         startDate: String,
         stopDate: String? = null,
         notes: String? = null,
-        groupId: String? = null
+        groupId: String? = null,
+        doseValue: Double? = null,
+        doseUnit: String? = null
     ): TreatmentRegimenRow {
-        val payload = TreatmentRegimenInsert(userId, kind, name, amount, frequency, startDate, stopDate, notes, groupId)
+        // Dual-write (one-unit contract): structured dose mirrors the legacy
+        // amount string. Free-text amounts (device/lifestyle) stay text-only.
+        val du = doseUnit?.takeIf { doseValue != null } ?: if (doseValue != null) DoseUnits.MG else null
+        val amt = amount ?: doseValue?.let { DoseUnits.legacyAmount(it, du ?: DoseUnits.MG) }
+        val payload = TreatmentRegimenInsert(userId, kind, name, amt, doseValue, du, frequency, startDate, stopDate, notes, groupId)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/treatment_regimens") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -925,10 +967,16 @@ class SupabaseDbService(
     }
 
     /** Insert a postdrome symptom row linked to a specific migraine. */
-    suspend fun insertMigraineSymptom(accessToken: String, migraineId: String, type: String) {
+    suspend fun insertMigraineSymptom(
+        accessToken: String, migraineId: String, type: String,
+        // 'postdrome' marks check-in after-symptoms; the DB's sync trigger only
+        // manages phase='active' rows, so postdromes survive later type edits.
+        phase: String = "active",
+    ) {
         val payload = buildJsonObject {
             put("migraine_id", migraineId)
             put("type", type)
+            put("phase", phase)
         }
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/symptoms") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -1168,7 +1216,9 @@ class SupabaseDbService(
         sideEffectNotes: String? = null
     ): ReliefRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
-        val safeEnd = endAt?.takeIf { it.isNotBlank() } ?: safeStart
+        // end_at is the single source of truth for duration; a relief with no
+        // end simply has end_at NULL (never defaulted to start_at).
+        val safeEnd = endAt?.takeIf { it.isNotBlank() }
         val payload = ReliefInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId, endAt = safeEnd, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -1369,8 +1419,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete trigger pref failed: ${response.bodyAsText()}")
     }
 
-    //  MEDICINE POOL / PREFS 
-    @Serializable data class UserMedicineRow(val id: String, val label: String, val category: String? = null)
+    //  MEDICINE POOL / PREFS
+    @Serializable data class UserMedicineRow(
+        val id: String,
+        val label: String,
+        val category: String? = null,
+        @SerialName("dose_unit") val doseUnit: String? = null
+    )
     @Serializable
     data class MedicinePrefRow(
         val id: String,
@@ -1380,26 +1435,41 @@ class SupabaseDbService(
         val status: String,
         @SerialName("user_medicines") val medicine: UserMedicineRow? = null
     )
-    @Serializable private data class UserMedicineInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserMedicineInsert(
+        val label: String,
+        val category: String? = null,
+        @SerialName("dose_unit") val doseUnit: String? = null
+    )
 
     suspend fun getAllMedicinePool(accessToken: String): List<UserMedicineRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,label,category"); parameter("order", "label.asc")
+            parameter("select", "id,label,category,dose_unit"); parameter("order", "label.asc")
         }
         if (!response.status.isSuccess()) error("Fetch user_medicines failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertMedicineToPool(accessToken: String, label: String, category: String? = null): UserMedicineRow {
+    suspend fun upsertMedicineToPool(accessToken: String, label: String, category: String? = null, doseUnit: String? = null): UserMedicineRow {
         val response = client.post("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserMedicineInsert(label, category))
+            contentType(ContentType.Application.Json); setBody(UserMedicineInsert(label, category, doseUnit))
         }
         if (!response.status.isSuccess()) error("Upsert user_medicines failed: ${response.bodyAsText()}")
         return response.body()
+    }
+    /** Sets the medicine's one unit ('mg' or 'amount' for custom items). Old
+     *  logs keep their stamped unit — no conversion. */
+    suspend fun setMedicineDoseUnit(accessToken: String, medicineId: String, doseUnit: String) {
+        val payload = buildJsonObject { put("dose_unit", doseUnit) }
+        val response = client.patch("$supabaseUrl/rest/v1/user_medicines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$medicineId")
+            contentType(ContentType.Application.Json); setBody(payload)
+        }
+        if (!response.status.isSuccess()) error("Set medicine dose_unit failed: ${response.bodyAsText()}")
     }
     suspend fun deleteMedicineFromPool(accessToken: String, medicineId: String) {
         client.delete("$supabaseUrl/rest/v1/medicine_preferences") {
@@ -1425,7 +1495,7 @@ class SupabaseDbService(
     suspend fun getMedicinePrefs(accessToken: String): List<MedicinePrefRow> {
         val response = client.get("$supabaseUrl/rest/v1/medicine_preferences") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
-            parameter("select", "id,user_id,medicine_id,position,status,user_medicines(id,label,category)")
+            parameter("select", "id,user_id,medicine_id,position,status,user_medicines(id,label,category,dose_unit)")
             parameter("order", "position.asc")
         }
         if (!response.status.isSuccess()) error("Fetch medicine prefs failed: ${response.bodyAsText()}")

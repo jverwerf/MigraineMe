@@ -469,7 +469,7 @@ fun EveningCheckInScreen(
                     val mid = openMigraine?.id
                     if (mid != null) {
                         for (label in selectedPostdromes) {
-                            runCatching { db.insertMigraineSymptom(token, mid, label) }
+                            runCatching { db.insertMigraineSymptom(token, mid, label, phase = "postdrome") }
                         }
                     }
                     // "How's the migraine now?" — apply updates to the open migraine.
