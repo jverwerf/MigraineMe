@@ -2863,14 +2863,15 @@ internal fun PainHeatMap(
 ) {
     val density = LocalDensity.current
     var imageSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
-    // The wizard writes canonical PainPoint.id values directly. Removed the
-    // fuzzy alias map that was misplotting markers for non-canonical strings
-    // (seeded data is the only source of those; seeder now writes canonical
-    // IDs too — matches iOS PainHeatMapView).
+    // The wizard writes canonical PainPoint.id values directly. Older rows can
+    // still carry a legacy spelling, so keys go through the exact-match
+    // canonicaliser and counts for the same point are summed. Still no fuzzy
+    // matching — that was what misplotted markers before.
     val countsMap = remember(painLocationCounts) {
         val result = mutableMapOf<String, Int>()
         for ((loc, count) in painLocationCounts) {
-            result[loc] = count
+            val id = canonicalPainLocationId(loc)
+            result[id] = (result[id] ?: 0) + count
         }
         result.toMap()
     }

@@ -684,6 +684,7 @@ class InsightsViewModel : ViewModel() {
             .mapNotNull { it.type }
             .filter { (cm.symptom[it.lowercase()] ?: "").equals("postdrome", ignoreCase = true) }
         val allPainLocs = rows.flatMap { it.painLocations ?: emptyList() }
+            .map { canonicalPainLocationId(it) }
 
         // Duration stats
         val durations = rows.mapNotNull { row ->
@@ -717,7 +718,12 @@ class InsightsViewModel : ViewModel() {
             severityCounts = rows.mapNotNull { it.severity }
                 .groupingBy { it }.eachCount().toList().sortedBy { it.first },
             durationStats = durStats,
-            painLocationCounts = allPainLocs.groupingBy { it }.eachCount().toList().sortedByDescending { it.second },
+            // Counted once per migraine, not once per stored string: after
+            // canonicalisation an attack can carry "forehead" and
+            // "forehead_center", and those are one attack, not two.
+            painLocationCounts = rows.flatMap { m ->
+                (m.painLocations ?: emptyList()).map { canonicalPainLocationId(it) }.distinct()
+            }.groupingBy { it }.eachCount().toList().sortedByDescending { it.second },
             medicineEffectiveness = fM
                 .groupBy { cm.medicine[it.name?.lowercase()] ?: "Other" }
                 .map { entry ->
@@ -803,9 +809,13 @@ class InsightsViewModel : ViewModel() {
             )
         }.sortedByDescending { it.totalMissed }
 
-        // Pain location counts (per migraine)
+        // Pain location counts (per migraine), on canonical ids so legacy
+        // spellings don't split one location into two rows.
         val painLocPerMigraine = rows.flatMap { m ->
-            (m.painLocations ?: emptyList()).distinct().map { it to m.id }
+            (m.painLocations ?: emptyList())
+                .map { canonicalPainLocationId(it) }
+                .distinct()
+                .map { it to m.id }
         }.groupBy({ it.first }, { it.second })
         val painLocationCounts = painLocPerMigraine.map { (loc, migIds) ->
             loc to migIds.distinct().size
@@ -1955,12 +1965,19 @@ class InsightsViewModel : ViewModel() {
             _accompSpider.value = buildFlatSpider("Accompanying", accompLabels)
             _postdromeSpider.value = buildFlatSpider("Postdrome", postdromeLabels)
 
+            // Canonicalise first: legacy keys like "right_temple" have to fold
+            // into "temple_right" before anything counts them, or one location
+            // shows up twice with its attacks split between the two spellings.
             val allPainLocs = migs.flatMap { it.painLocations ?: emptyList() }
+                .map { canonicalPainLocationId(it) }
             _painLocationSpider.value = buildFlatSpider("Pain Locations", allPainLocs)
 
             // Pain location counts as % of migraines (how many migraines had each location)
             val painLocPerMigraine = migs.flatMap { m ->
-                (m.painLocations ?: emptyList()).distinct().map { it to m.id }
+                (m.painLocations ?: emptyList())
+                    .map { canonicalPainLocationId(it) }
+                    .distinct()
+                    .map { it to m.id }
             }.groupBy({ it.first }, { it.second })
             _painLocationCounts.value = painLocPerMigraine.map { (loc, migraineIds) ->
                 loc to migraineIds.distinct().size

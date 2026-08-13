@@ -101,6 +101,52 @@ val ALL_PAIN_POINTS_MAP: Map<String, String> by lazy {
         .associate { it.id to it.label }
 }
 
+/**
+ * Maps a stored pain-location key onto the canonical [PainPoint.id].
+ *
+ * `migraines.pain_locations` is a plain text array, and older writers (an
+ * earlier demo seeder in particular) put non-canonical strings in it:
+ * `right_temple` for `temple_right`, bare `forehead` for `forehead_center`.
+ * Left as-is those split one real location across two keys, so Insights showed
+ * "right_temple 55%" and "Right Temple 2%" as if they were different places.
+ *
+ * Resolution is exact, never fuzzy — every candidate has to land on a real
+ * PainPoint id or the input is handed back untouched. That matters because the
+ * silhouette plots by id: a wrong guess doesn't just mislabel a row, it puts a
+ * marker on the wrong side of the head. Applied at read/aggregation only;
+ * stored rows are left alone.
+ */
+fun canonicalPainLocationId(raw: String): String {
+    val id = raw.trim()
+    if (id.isEmpty() || ALL_PAIN_POINTS_MAP.containsKey(id)) return id
+
+    val key = id.lowercase().replace(' ', '_')
+    if (ALL_PAIN_POINTS_MAP.containsKey(key)) return key
+
+    // "right_temple" → "temple_right": side written as a prefix, not a suffix.
+    for (side in listOf("left", "right")) {
+        if (key.startsWith("${side}_")) {
+            val swapped = key.removePrefix("${side}_") + "_" + side
+            if (ALL_PAIN_POINTS_MAP.containsKey(swapped)) return swapped
+        }
+    }
+
+    // Bare region with the midline part dropped: "forehead" → "forehead_center".
+    val centred = "${key}_center"
+    if (ALL_PAIN_POINTS_MAP.containsKey(centred)) return centred
+
+    // A display label that got stored instead of an id ("Right Temple").
+    PAIN_LABEL_TO_ID[id.lowercase()]?.let { return it }
+
+    return id
+}
+
+private val PAIN_LABEL_TO_ID: Map<String, String> by lazy {
+    (FRONT_PAIN_POINTS + BACK_PAIN_POINTS)
+        .distinctBy { it.id }
+        .associate { it.label.lowercase() to it.id }
+}
+
 // ── Main screen composable ─────────────────────────────────────
 @Composable
 fun PainLocationScreen(
