@@ -426,6 +426,10 @@ fun InsightsReportScreen(
             Spacer(Modifier.height(12.dp))
             var isGeneratingPdf by remember { mutableStateOf(false) }
             val scope = rememberCoroutineScope()
+            // Resolved here rather than inside the click handler: t() is a
+            // @Composable and the toast is raised from a coroutine.
+            val emptyRangeMessage =
+                t("No attacks in this range yet — pick a time range or wait for your data to load")
 
             Button(
                 onClick = {
@@ -481,7 +485,7 @@ fun InsightsReportScreen(
                         if (filteredSorted.isEmpty()) {
                             isGeneratingPdf = false
                             android.widget.Toast.makeText(
-                                ctx, t("No attacks in this range yet — pick a time range or wait for your data to load"),
+                                ctx, emptyRangeMessage,
                                 android.widget.Toast.LENGTH_LONG,
                             ).show()
                             return@launch
