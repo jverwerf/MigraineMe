@@ -51,7 +51,11 @@ fun JournalEditScreen(
 
     // Editable state
     var label by remember { mutableStateOf("") }
-    var extraLabel by remember { mutableStateOf<String?>(null) } // amount for medicine
+    // One-unit system: medicine amount is a number; the unit is fixed
+    // (log's stamped unit wins, then legacy text, then the pool medicine's).
+    var doseText by remember { mutableStateOf("") }
+    var doseUnit by remember { mutableStateOf(DoseUnits.MG) }
+    var inputUnit by remember { mutableStateOf(DoseUnits.MG) }
     var startAt by remember { mutableStateOf(Instant.now()) }
     var endAt by remember { mutableStateOf<Instant?>(null) } // end time for relief
     var notes by remember { mutableStateOf("") }
@@ -105,7 +109,13 @@ fun JournalEditScreen(
                         val row = rows.find { it.id == itemId }
                         if (row != null) {
                             label = row.name ?: ""
-                            extraLabel = row.amount
+                            val poolUnit = runCatching { db.getAllMedicinePool(token) }.getOrNull()
+                                ?.find { it.label == row.name }?.doseUnit
+                            doseUnit = DoseUnits.unitForEdit(row.doseUnit, row.amount, poolUnit)
+                            inputUnit = DoseUnits.inputOptions(doseUnit).first()
+                            doseText = row.doseValue?.let { DoseUnits.formatValue(it) }
+                                ?: DoseUnits.parseLegacy(row.amount)?.first?.let { DoseUnits.formatValue(it) }
+                                ?: ""
                             startAt = Instant.parse(row.startAt)
                             notes = row.notes ?: ""
                             reliefScale = ReliefScale.fromString(row.reliefScale)
@@ -206,22 +216,27 @@ fun JournalEditScreen(
                 )
             }
 
-            // ── Amount (medicine only) ──
+            // ── Amount (medicine only) — number only, unit fixed by the medicine ──
             if (itemType == "medicine") {
                 BaseCard {
                     Text(t("Amount"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = extraLabel ?: "",
-                        onValueChange = { extraLabel = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text(t("e.g. 500mg, 2 tablets…"), color = AppTheme.SubtleTextColor) },
+                    DoseAmountInput(
+                        doseUnit = doseUnit,
+                        valueText = doseText,
+                        onValueTextChange = { doseText = it },
+                        inputUnit = inputUnit,
+                        onInputUnitChange = { inputUnit = it },
+                        accent = AppTheme.AccentPurple,
+                        label = t("Amount"),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             focusedBorderColor = AppTheme.AccentPurple,
                             unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                             cursorColor = AppTheme.AccentPurple,
+                            focusedLabelColor = AppTheme.SubtleTextColor,
+                            unfocusedLabelColor = AppTheme.SubtleTextColor,
                         ),
                     )
                 }
@@ -527,7 +542,11 @@ fun JournalEditScreen(
                                     .toInstant().toString()
                                 when (itemType) {
                                     "trigger" -> db.updateTrigger(token, itemId, startAt = newStartAt, notes = notes)
-                                    "medicine" -> db.updateMedicine(token, itemId, startAt = newStartAt, amount = extraLabel?.ifBlank { null }, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null })
+                                    "medicine" -> {
+                                        val doseValue = DoseUnits.parseNumber(doseText)
+                                            ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
+                                        db.updateMedicine(token, itemId, startAt = newStartAt, amount = null, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, doseValue = doseValue, doseUnit = if (doseValue != null) doseUnit else null)
+                                    }
                                     "relief" -> db.updateRelief(token, itemId, startAt = newStartAt, endAt = endAt?.toString(), notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null })
                                     "prodrome" -> db.updateProdromeLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
                                     "activity" -> db.updateActivityLog(token, itemId, type = null, startAt = newStartAt, notes = notes)

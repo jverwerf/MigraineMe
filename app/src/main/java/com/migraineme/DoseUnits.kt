@@ -78,6 +78,15 @@ object DoseUnits {
         else -> doseUnit
     }
 
+    /**
+     * Unit to show when editing an existing log: the log's stamped unit wins
+     * (history keeps its unit, even when the pool's unit has since changed),
+     * then the unit implied by its legacy amount text, then the pool
+     * medicine's unit, then mg.
+     */
+    fun unitForEdit(stampedUnit: String?, legacyAmount: String?, poolUnit: String?): String =
+        stampedUnit ?: parseLegacy(legacyAmount)?.second ?: poolUnit ?: MG
+
     /** Parses a typed number; locale comma accepted. */
     fun parseNumber(text: String): Double? =
         text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }

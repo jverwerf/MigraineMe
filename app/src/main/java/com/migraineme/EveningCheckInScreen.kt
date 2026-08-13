@@ -852,7 +852,8 @@ fun EveningCheckInScreen(
                         val idx = selectedReliefs.indexOfFirst { it.label == updated.label }
                         if (idx >= 0) selectedReliefs[idx] = updated
                     },
-                    onSave = { save() }
+                    onSave = { save() },
+                    medicineUnits = medicinePool.associate { it.label to (it.doseUnit ?: DoseUnits.MG) }
                 )
             } }
         }
@@ -1263,7 +1264,9 @@ private fun ReviewPage(
     rmCalendar: (CalendarService.Mapping) -> Unit,
     onUpdateMedicine: (CheckInMedicineItem) -> Unit,
     onUpdateRelief: (CheckInReliefItem) -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    /** One-unit system: pool label → dose_unit for the medicine editor pills. */
+    medicineUnits: Map<String, String> = emptyMap()
 ) {
     val scrollState = rememberScrollState()
     val today = java.time.LocalDate.now().toString()
@@ -1364,6 +1367,8 @@ private fun ReviewPage(
                 val key = "medicine_${m.label}"
                 if (expandedKey == key) {
                     MedicineEditorPill(m, Color(0xFF4FC3F7),
+                        // Log's implied unit wins over the pool's (history keeps its unit)
+                        doseUnit = DoseUnits.unitForEdit(null, m.amount, medicineUnits[m.label]),
                         onUpdate = onUpdateMedicine,
                         onDone = { expandedKey = null },
                         onRemove = { rmMedicine(m.label); expandedKey = null }
@@ -1645,15 +1650,23 @@ private fun ProdromeEditorPill(item: CheckInProdromeItem, color: Color, onDone: 
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, onUpdate: (CheckInMedicineItem) -> Unit, onDone: () -> Unit, onRemove: () -> Unit) {
+private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, doseUnit: String = DoseUnits.MG, onUpdate: (CheckInMedicineItem) -> Unit, onDone: () -> Unit, onRemove: () -> Unit) {
     var timeIso by remember(item.label) { mutableStateOf(item.startAtIso) }
-    var amount by remember(item.label) { mutableStateOf(item.amount ?: "") }
+    // One-unit system: number only; the unit is fixed by the medicine
+    var amount by remember(item.label) {
+        mutableStateOf(DoseUnits.parseLegacy(item.amount)?.first?.let { DoseUnits.formatValue(it) } ?: "")
+    }
+    var inputUnit by remember(item.label, doseUnit) { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
     var reliefScale by remember(item.label) { mutableStateOf(item.reliefScale ?: "NONE") }
     var sideEffectScale by remember(item.label) { mutableStateOf(item.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(item.label) { mutableStateOf(item.sideEffectNotes ?: "") }
 
     fun commit() {
-        onUpdate(item.copy(startAtIso = timeIso, amount = amount.ifBlank { null }, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }))
+        // Legacy mirror string ("400mg" / "2"); the insert path re-derives
+        // dose_value/dose_unit from it (dual-write).
+        val mirror = DoseUnits.parseNumber(amount)
+            ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
+        onUpdate(item.copy(startAtIso = timeIso, amount = mirror, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }))
     }
 
     Column(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
@@ -1665,13 +1678,15 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, onUpdate
 
         Text(t("Amount / dosage"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
-        OutlinedTextField(
-            value = amount, onValueChange = { amount = it },
-            placeholder = { Text(t("e.g. 2 tablets, 400mg"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
-            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
-            singleLine = true
+        DoseAmountInput(
+            doseUnit = doseUnit,
+            valueText = amount,
+            onValueTextChange = { amount = it },
+            inputUnit = inputUnit,
+            onInputUnitChange = { inputUnit = it },
+            accent = color,
+            label = t("Amount"),
+            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f), focusedLabelColor = color, unfocusedLabelColor = AppTheme.SubtleTextColor)
         )
         Spacer(Modifier.height(10.dp))
 

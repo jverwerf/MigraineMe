@@ -553,6 +553,10 @@ fun PaintThePictureScreen(
                                 ItemEditorPill(
                                     match = m,
                                     color = catColor,
+                                    // Log's implied unit wins over the pool's (history keeps its unit)
+                                    doseUnit = if (m.category == "medicine")
+                                        DoseUnits.unitForEdit(null, m.amount, medicinePool.find { p -> p.label == m.label }?.doseUnit)
+                                    else DoseUnits.MG,
                                     onUpdate = { updated ->
                                         val idx = editMatches.indexOfFirst { it.label == m.label && it.category == m.category }
                                         if (idx >= 0) editMatches[idx] = updated
@@ -925,6 +929,7 @@ private fun TimingEditorPill(
 private fun ItemEditorPill(
     match: AiMatchItemV2,
     color: Color,
+    doseUnit: String = DoseUnits.MG,
     onUpdate: (AiMatchItemV2) -> Unit,
     onDone: () -> Unit,
     onRemove: () -> Unit
@@ -943,7 +948,12 @@ private fun ItemEditorPill(
     var hour by remember(match.label) { mutableStateOf(parsedTime?.hour ?: OffsetDateTime.now().hour) }
     var minute by remember(match.label) { mutableStateOf(parsedTime?.minute ?: 0) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var amount by remember(match.label) { mutableStateOf(match.amount ?: "") }
+    // One-unit system: number only; the unit is fixed (AI free text prefills
+    // the number part; the mirror string is rebuilt on commit).
+    var amount by remember(match.label) {
+        mutableStateOf(DoseUnits.parseLegacy(match.amount)?.first?.let { DoseUnits.formatValue(it) } ?: "")
+    }
+    var inputUnit by remember(match.label, doseUnit) { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
     var reliefScale by remember(match.label) { mutableStateOf(match.reliefScale ?: "NONE") }
     var sideEffectScale by remember(match.label) { mutableStateOf(match.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(match.label) { mutableStateOf(match.sideEffectNotes ?: "") }
@@ -952,9 +962,13 @@ private fun ItemEditorPill(
         val zone = java.time.ZoneId.systemDefault()
         val timeIso = selectedDate.atTime(hour, minute).atZone(zone).toOffsetDateTime()
             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+        // Legacy mirror string ("400mg" / "2"); the insert path re-derives
+        // dose_value/dose_unit from it (dual-write).
+        val mirror = DoseUnits.parseNumber(amount)
+            ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
         onUpdate(match.copy(
             startAtIso = timeIso,
-            amount = amount.ifBlank { null },
+            amount = if (match.category == "medicine") mirror else match.amount,
             reliefScale = reliefScale,
             sideEffectScale = sideEffectScale,
             sideEffectNotes = sideEffectNotes.ifBlank { null }
@@ -1097,22 +1111,24 @@ private fun ItemEditorPill(
             }
         }
 
-        // Amount (medicine only)
+        // Amount (medicine only) — number only, unit fixed by the medicine
         if (match.category == "medicine") {
             Text(t("Amount / dosage"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = amount,
-                onValueChange = { amount = it },
-                placeholder = { Text(t("e.g. 2 tablets, 400mg"), color = AppTheme.SubtleTextColor.copy(alpha = 0.4f)) },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
+            DoseAmountInput(
+                doseUnit = doseUnit,
+                valueText = amount,
+                onValueTextChange = { amount = it },
+                inputUnit = inputUnit,
+                onInputUnitChange = { inputUnit = it },
+                accent = color,
+                label = t("Amount"),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor,
                     cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f),
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
-                ),
-                singleLine = true
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                    focusedLabelColor = color, unfocusedLabelColor = AppTheme.SubtleTextColor
+                )
             )
             Spacer(Modifier.height(10.dp))
         }

@@ -286,12 +286,15 @@ fun EditMigraineScreen(
                                         }
                                         addRels.forEach { r ->
                                             runCatching {
+                                                val rStart = r.startIso ?: beganAt ?: Instant.now().toString()
                                                 db.insertRelief(
                                                     accessToken = token,
                                                     migraineId = id,
                                                     type = r.type,
-                                                    startAt = r.startIso ?: beganAt,
-                                                    notes = r.notes
+                                                    startAt = rStart,
+                                                    notes = r.notes,
+                                                    // Minutes entry resolves to end_at; skipped = NULL
+                                                    endAt = r.durationMinutes?.let { addMinutesToIso(rStart, it) }
                                                 )
                                             }
                                         }
@@ -432,6 +435,7 @@ fun EditMigraineScreen(
         MedicineAddDialog(
             title = t("Add medicine"),
             name = showAddMed!!,
+            doseUnit = medPool.find { it.label == showAddMed }?.doseUnit ?: DoseUnits.MG,
             onDismiss = { showAddMed = null },
             onConfirm = { amount, iso, notesText ->
                 val name = showAddMed ?: return@MedicineAddDialog
@@ -444,6 +448,7 @@ fun EditMigraineScreen(
         ReliefAddDialog(
             title = t("Add relief"),
             typeLabel = showAddRel!!,
+            takenOnly = DoseUnits.isTakenOnlyRelief(showAddRel),
             onDismiss = { showAddRel = null },
             onConfirm = { durationMinutes, iso, notesText ->
                 val type = showAddRel ?: return@ReliefAddDialog
@@ -705,7 +710,9 @@ private fun MedicinesPage(
                 ) {
                     Column {
                         Text(t("Name: %s", m.name ?: "-"))
-                        Text(t("Amount: %s", m.amount ?: "-"))
+                        Text(t("Amount: %s",
+                            m.doseValue?.let { DoseUnits.formatTotal(it, m.doseUnit ?: DoseUnits.MG) }
+                                ?: m.amount ?: "-"))
                         Text(t("Time: %s", formatIsoDdMmYyHm(m.startAt)))
                         if (!m.notes.isNullOrBlank()) Text(t("Notes: %s", m.notes))
                         if (mark) Text(t("Marked for deletion"), color = MaterialTheme.colorScheme.error)
@@ -785,7 +792,15 @@ private fun ReliefsPage(
                 ) {
                     Column {
                         Text(t("Type: %s", r.type ?: "-"))
-                        Text(t("Duration: %s min", r.durationMinutes ?: 0))
+                        // Duration is derived end_at - start_at (duration_minutes is dead)
+                        val derivedMin = r.endAt?.let { end ->
+                            runCatching {
+                                java.time.Duration.between(
+                                    parseInstantFlexible(r.startAt), parseInstantFlexible(end)
+                                ).toMinutes().toInt()
+                            }.getOrNull()?.takeIf { it > 0 }
+                        }
+                        if (derivedMin != null) Text(t("Duration: %s min", derivedMin))
                         Text(t("Time: %s", formatIsoDdMmYyHm(r.startAt)))
                         if (!r.notes.isNullOrBlank()) Text(t("Notes: %s", r.notes))
                         if (mark) Text(t("Marked for deletion"), color = MaterialTheme.colorScheme.error)
@@ -925,10 +940,12 @@ private fun TimeAddDialog(
 private fun MedicineAddDialog(
     title: String,
     name: String,
+    doseUnit: String,
     onDismiss: () -> Unit,
     onConfirm: (amount: String?, startIso: String?, notes: String?) -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
+    var inputUnit by remember { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
     var pickedIso by remember { mutableStateOf<String?>(null) }
     var notes by remember { mutableStateOf("") }
 
@@ -936,7 +953,13 @@ private fun MedicineAddDialog(
         onDismissRequest = {},
         modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
         confirmButton = {
-            TextButton(onClick = { onConfirm(amount.ifBlank { null }, pickedIso, notes.ifBlank { null }) }) {
+            TextButton(onClick = {
+                // Legacy mirror string ("400mg" / "2"); the insert path
+                // re-derives dose_value/dose_unit from it (dual-write).
+                val mirror = DoseUnits.parseNumber(amount)
+                    ?.let { DoseUnits.legacyAmount(DoseUnits.toStored(it, doseUnit, inputUnit), doseUnit) }
+                onConfirm(mirror, pickedIso, notes.ifBlank { null })
+            }) {
                 Text(t("Add"))
             }
         },
@@ -945,11 +968,14 @@ private fun MedicineAddDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(t("Medicine: %s", name))
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    label = { Text(t("Amount")) },
-                    modifier = Modifier.fillMaxWidth()
+                DoseAmountInput(
+                    doseUnit = doseUnit,
+                    valueText = amount,
+                    onValueTextChange = { amount = it },
+                    inputUnit = inputUnit,
+                    onInputUnitChange = { inputUnit = it },
+                    accent = AppTheme.AccentPurple,
+                    label = t("Amount")
                 )
                 AppDateTimePicker(label = t("Select time")) { iso -> pickedIso = iso }
                 OutlinedTextField(
@@ -967,6 +993,7 @@ private fun MedicineAddDialog(
 private fun ReliefAddDialog(
     title: String,
     typeLabel: String,
+    takenOnly: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (durationMinutes: Int?, startIso: String?, notes: String?) -> Unit
 ) {
@@ -980,7 +1007,7 @@ private fun ReliefAddDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val dur = durationText.toIntOrNull()
+                    val dur = if (takenOnly) null else durationText.toIntOrNull()?.takeIf { it > 0 }
                     onConfirm(dur, pickedIso, notes.ifBlank { null })
                 }
             ) { Text(t("Add")) }
@@ -990,12 +1017,15 @@ private fun ReliefAddDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(t("Relief: %s", typeLabel))
-                OutlinedTextField(
-                    value = durationText,
-                    onValueChange = { v -> durationText = v.filter { it.isDigit() }.take(4) },
-                    label = { Text(t("Duration minutes")) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Taken-only reliefs (Water, Electrolytes, …) have no duration
+                if (!takenOnly) {
+                    OutlinedTextField(
+                        value = durationText,
+                        onValueChange = { v -> durationText = v.filter { it.isDigit() }.take(4) },
+                        label = { Text(t("Duration minutes (optional)")) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 AppDateTimePicker(label = t("Select time")) { iso -> pickedIso = iso }
                 OutlinedTextField(
                     value = notes,

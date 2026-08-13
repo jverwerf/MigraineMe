@@ -69,10 +69,13 @@ fun EditMedicineScreen(
                 ?: ""
         )
     }
-    val doseUnit = unitsByLabel[name]
-        ?: row?.doseUnit
-        ?: DoseUnits.parseLegacy(row?.amount)?.second
-        ?: DoseUnits.MG
+    // History keeps its unit: the log's stamped unit wins while editing the
+    // same medicine; picking a different medicine switches to its pool unit.
+    val doseUnit = if (name == (row?.name ?: "")) {
+        DoseUnits.unitForEdit(row?.doseUnit, row?.amount, unitsByLabel[name])
+    } else {
+        unitsByLabel[name] ?: DoseUnits.MG
+    }
     var inputUnit by rememberSaveable(row?.id, doseUnit) { mutableStateOf(DoseUnits.inputOptions(doseUnit).first()) }
     var startAt by rememberSaveable(row?.id) { mutableStateOf(row?.startAt ?: "") }
     var notes by rememberSaveable(row?.id) { mutableStateOf(row?.notes ?: "") }
