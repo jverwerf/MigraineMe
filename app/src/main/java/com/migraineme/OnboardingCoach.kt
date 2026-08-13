@@ -410,21 +410,17 @@ fun CoachOverlay(
             SetupScrollState.scrollPosition = 0
         }
         val currentStep = steps.getOrNull(tourState.stepIndex)
-        if (currentStep?.interactive == true) {
-            when (tourState.phase) {
-                CoachPhase.TOUR -> if (tourState.stepIndex > 0 && tourState.stepIndex != 2) {
-                    kotlinx.coroutines.delay(3000)
-                    if (!userExpanded) isCollapsed = true
-                }
-                CoachPhase.SETUP -> when {
-                    // SETUP cards stay expanded; only the Data step auto-collapses
-                    // once the user scrolls into the data list.
-                    tourState.stepIndex == 2 -> {
-                        kotlinx.coroutines.delay(5000)
-                        if (!userExpanded && SetupScrollState.scrollPosition == 0) {
-                            isCollapsed = true
-                        }
-                    }
+        // TOUR steps never auto-collapse. The interactive ones (Risk Model,
+        // Manage Items, Profile — steps 13/14/15) used to shrink to the
+        // "N/16 — Tap to expand" pill three seconds after landing, which hid
+        // Next behind a pill the user had no reason to think was tappable.
+        // Only the SETUP Data step still collapses, and only because the card
+        // sits on top of the very list it asks the user to scroll.
+        if (currentStep?.interactive == true && tourState.phase == CoachPhase.SETUP) {
+            if (tourState.stepIndex == 2) {
+                kotlinx.coroutines.delay(5000)
+                if (!userExpanded && SetupScrollState.scrollPosition == 0) {
+                    isCollapsed = true
                 }
             }
         }
@@ -569,7 +565,8 @@ fun CoachOverlay(
                                     }
                                 }
                                 Column(Modifier.padding(16.dp)) {
-                                Column(Modifier.weight(1f, fill = false).verticalScroll(bodyScrollState)) {
+                                Box(Modifier.weight(1f, fill = false)) {
+                                Column(Modifier.verticalScroll(bodyScrollState)) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         val headerBrainy = brainyForCoachTitle(step.title)
                                         if (headerBrainy != null) {
@@ -602,16 +599,42 @@ fun CoachOverlay(
                                     Spacer(Modifier.height(8.dp))
                                     Text(t(step.highlight), color = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
 
-                                    // No bouncing scroll-down chevron here. Once the
-                                    // action row moved inside the card it sat directly
-                                    // above Skip and read as an arrow pointing at it —
-                                    // the opposite of what it meant. The highlight line
-                                    // above already says what to do, and VertigoMe,
-                                    // MeSeries and iOS carry no arrow either.
-
                                     Spacer(Modifier.height(if (isInteractive) 6.dp else 14.dp))
 
                                     } // end scrollable body — actions stay pinned below
+
+                                    // The card is height-capped at 40% of the screen, so
+                                    // most steps' bodies are cut mid-sentence. Nothing
+                                    // said so: the old bouncing chevron was dropped and
+                                    // the 08-12 i18n commit left no affordance at all.
+                                    // A static fade + chevron, drawn only while there is
+                                    // more body below, says "keep reading" without any
+                                    // animation (motion is a migraine trigger).
+                                    if (bodyScrollState.canScrollForward) {
+                                        Box(
+                                            Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .fillMaxWidth()
+                                                .height(30.dp)
+                                                .background(
+                                                    Brush.verticalGradient(
+                                                        listOf(
+                                                            Color.Transparent,
+                                                            Color(0xFF1E0A2E).copy(alpha = if (isDataStepCard) 0.8f else 1f)
+                                                        )
+                                                    )
+                                                ),
+                                            contentAlignment = Alignment.BottomCenter
+                                        ) {
+                                            Icon(
+                                                Icons.Filled.KeyboardArrowDown,
+                                                contentDescription = t("Scroll for more"),
+                                                tint = AppTheme.SubtleTextColor,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                    } // end body Box (scroll area + fade affordance)
                                     // Back · Skip · Next on one row inside the card, the
                                     // way VertigoMe does it. They used to straddle the card
                                     // border, which left no room for Skip in the middle and
