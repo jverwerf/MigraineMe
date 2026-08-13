@@ -291,26 +291,11 @@ fun CoachOverlay(
     val ctx = LocalContext.current
     val density = LocalDensity.current
 
-    /// Back from the coach's FIRST step. There is no previous coach step, so
-    /// return to the permission page the setup phase was entered from rather
-    /// than hiding Back and trapping the user in the walkthrough.
-    fun backOutOfCoach() {
-        val wasTour = tourState.phase == CoachPhase.TOUR
-        val dest = if (wasTour) Routes.HOME else Routes.ONBOARDING
-        TourManager.endPhase()
-        if (wasTour && !OnboardingMode.noSeed) {
-            // Leaving the tour means the demo rows must go, exactly as the
-            // Skip path does. clearDemoData joins any in-flight seed first, so
-            // late inserts cannot survive the delete.
-            CoroutineScope(Dispatchers.IO).launch {
-                DemoDataSeeder.clearDemoData(ctx, logVm, insightsVm)
-                kotlinx.coroutines.withContext(Dispatchers.Main) { navigateTo(dest) }
-            }
-        } else {
-            navigateTo(dest)
-        }
-    }
-
+    /// Every way out of the coach: the ✕ in the card corner, Skip, and the
+    /// final Done. In the TOUR phase it clears the demo rows first
+    /// (clearDemoData joins any in-flight seed, so late inserts cannot survive
+    /// the delete) and then hands back through onTourFinished, which lands on
+    /// the setup landing — the boxed step cards — never Home.
     fun finishAndClean() {
         val wasTour = tourState.phase == CoachPhase.TOUR
         TourManager.endPhase()
@@ -324,6 +309,22 @@ fun CoachOverlay(
         } else {
             onSetupFinished()
         }
+    }
+
+    /// Back from the coach's FIRST step. There is no previous coach step, so
+    /// rather than hiding Back and trapping the user in the walkthrough:
+    ///
+    /// - SETUP: return to the permission page the phase was entered from.
+    /// - TOUR: this is an exit like ✕ or Skip, so run the identical path —
+    ///   same demo cleanup, same landing on the setup landing. It used to drop
+    ///   the user on Home instead, which skipped the rest of onboarding.
+    fun backOutOfCoach() {
+        if (tourState.phase == CoachPhase.TOUR) {
+            finishAndClean()
+            return
+        }
+        TourManager.endPhase()
+        navigateTo(Routes.ONBOARDING)
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
