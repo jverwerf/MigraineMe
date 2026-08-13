@@ -39,7 +39,7 @@ fun InsightsTreatmentsScreen(
             .sortedByDescending { it.liftRatio }
     }
     val treatmentInteractionCorrelations = remember(correlationStats) {
-        correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
+        correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f && it.isRealCombo }
             .sortedByDescending { it.liftRatio }
     }
 

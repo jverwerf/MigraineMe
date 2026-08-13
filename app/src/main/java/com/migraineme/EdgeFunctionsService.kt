@@ -1935,6 +1935,19 @@ class EdgeFunctionsService {
         @SerialName("symptom_segment") val symptomSegment: String? = null,
         @SerialName("updated_at") val updatedAt: String = "",
     ) {
+        /**
+         * A combination row is only meaningful when it names two DIFFERENT things.
+         * The engine no longer emits self-pairs, but rows written before that fix
+         * are still stored, so every combination surface checks this before it
+         * renders "X + X". Compared on the trimmed, case-folded label because the
+         * two halves are display labels, not ids.
+         */
+        val isRealCombo: Boolean get() {
+            val b = factorB ?: return false
+            fun norm(s: String) = s.trim().replace(Regex("\\s+"), " ").lowercase()
+            return norm(b) != norm(factorName)
+        }
+
         /** Duration lift from lag_details (treatment/treatment_interaction only) */
         val durationLift: Float get() {
             val v = lagDetails?.get("duration_lift")

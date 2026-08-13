@@ -41,7 +41,7 @@ fun InsightsPatternsScreen(
         significantCorrelations.filter { it.factorType == "metric" }.sortedByDescending { it.liftRatio }
     }
     val interactionCorrelations = remember(significantCorrelations) {
-        significantCorrelations.filter { it.factorType == "interaction" }.sortedByDescending { it.liftRatio }
+        significantCorrelations.filter { it.factorType == "interaction" && it.isRealCombo }.sortedByDescending { it.liftRatio }
     }
     val allPatterns = remember(triggerCorrelations, metricCorrelations) {
         (triggerCorrelations + metricCorrelations).sortedByDescending { it.liftRatio }

@@ -767,7 +767,7 @@ fun InsightsReportScreen(
                     .sortedByDescending { it.liftRatio }.take(3)
             }
             val previewInteractions = remember(correlationStats) {
-                correlationStats.filter { (it.hasGateMode || it.isSignificant()) && it.factorType == "interaction" }
+                correlationStats.filter { (it.hasGateMode || it.isSignificant()) && it.factorType == "interaction" && it.isRealCombo }
                     .sortedByDescending { it.liftRatio }.take(3)
             }
             if (previewTriggers.isNotEmpty() || previewInteractions.isNotEmpty()) {
@@ -825,7 +825,7 @@ fun InsightsReportScreen(
                     .sortedByDescending { it.liftRatio }.take(3)
             }
             val previewTreatmentInteractions = remember(correlationStats) {
-                correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
+                correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f && it.isRealCombo }
                     .sortedByDescending { it.liftRatio }.take(3)
             }
             if (previewTreatments.isNotEmpty() || previewTreatmentInteractions.isNotEmpty()) {

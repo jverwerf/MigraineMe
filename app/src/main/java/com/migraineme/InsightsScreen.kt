@@ -427,7 +427,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             .sortedByDescending { it.liftRatio }
     }
     val interactionCorrelations = remember(significantCorrelations) {
-        significantCorrelations.filter { it.factorType == "interaction" }
+        significantCorrelations.filter { it.factorType == "interaction" && it.isRealCombo }
             .sortedByDescending { it.liftRatio }
     }
     // Treatments use self-reported relief — relax p-value filter, only require lift > 1.2
@@ -436,7 +436,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             .sortedByDescending { it.liftRatio }
     }
     val treatmentInteractionCorrelations = remember(correlations) {
-        correlations.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f }
+        correlations.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f && it.isRealCombo }
             .sortedByDescending { it.liftRatio }
     }
     val thresholdNudges = remember(significantCorrelations) {
