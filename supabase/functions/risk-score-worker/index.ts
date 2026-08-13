@@ -327,12 +327,19 @@ async function calculateRiskForUser(
 
   const triggerSeverityMap: Record<string, string> = {};
   const triggerCategoryMap: Record<string, string | null> = {};
+  // label → display_group. Consolidated metrics (the seven sleep signals all
+  // carry "Poor sleep") describe ONE night, so they must contribute to the
+  // score once, not seven times. Grouping happens here at scoring time, never
+  // when the trigger is logged — the individual trigger stays in the user's
+  // history because "REM sleep low" is more use to them than "Poor sleep".
+  const triggerGroupMap: Record<string, string> = {};
 
   for (const t of (triggerPool || []) as PoolItem[]) {
     const sev = (t.prediction_value || "NONE").toUpperCase();
     triggerSeverityMap[t.label.toLowerCase()] = sev;
     triggerCategoryMap[t.label.toLowerCase()] = t.category;
     if (t.display_group) {
+      triggerGroupMap[t.label.toLowerCase()] = t.display_group;
       const gk = t.display_group.toLowerCase();
       const existing = triggerSeverityMap[gk];
       const sevOrder = ["HIGH", "MILD", "LOW", "NONE"];
@@ -442,14 +449,19 @@ async function calculateRiskForUser(
       }
     }
 
-    // Group contributions by trigger name
+    // Collapse contributions onto their display_group, keeping the strongest
+    // member rather than adding them up — several breached sleep metrics are
+    // one bad night, not several separate risks. Severity resolution matches
+    // the documented pool collapse: highest of HIGH > MILD > LOW > NONE.
+    const sevOrder = ["HIGH", "MILD", "LOW", "NONE"];
     const grouped: Record<string, { total: number; severity: string }> = {};
     for (const c of contributions) {
-      if (!grouped[c.name]) grouped[c.name] = { total: 0, severity: c.severity };
-      grouped[c.name].total += c.contribution;
-      const sevOrder = ["HIGH", "MILD", "LOW", "NONE"];
-      if (sevOrder.indexOf(c.severity) < sevOrder.indexOf(grouped[c.name].severity)) {
-        grouped[c.name].severity = c.severity;
+      const key = triggerGroupMap[c.name.toLowerCase()] ?? c.name;
+      if (!grouped[key]) grouped[key] = { total: 0, severity: c.severity };
+      // Same group, same day: keep the biggest single contribution.
+      grouped[key].total = Math.max(grouped[key].total, c.contribution);
+      if (sevOrder.indexOf(c.severity) < sevOrder.indexOf(grouped[key].severity)) {
+        grouped[key].severity = c.severity;
       }
     }
 
@@ -458,8 +470,9 @@ async function calculateRiskForUser(
     for (const event of events) {
       const daysFromToday = daysBetween(event.eventDate, perspectiveDate);
       if (daysFromToday < 0 || daysFromToday > 6) continue;
-      if (!triggerDatesMap[event.name]) triggerDatesMap[event.name] = new Set();
-      triggerDatesMap[event.name].add(event.eventDate);
+      const dateKey = triggerGroupMap[event.name.toLowerCase()] ?? event.name;
+      if (!triggerDatesMap[dateKey]) triggerDatesMap[dateKey] = new Set();
+      triggerDatesMap[dateKey].add(event.eventDate);
     }
 
     const topTriggers = Object.entries(grouped)

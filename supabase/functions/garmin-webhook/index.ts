@@ -108,6 +108,19 @@ serve(async (req)=>{
   const incomingKeys = Object.keys(body);
   console.log("[garmin-webhook] Received keys:", incomingKeys.join(", "));
   const results = [];
+  // ── Audit: record incoming payload shape ──
+  const counts = {};
+  for (const k of incomingKeys) {
+    counts[k] = Array.isArray(body[k]) ? body[k].length : 1;
+  }
+  try {
+    await supabase.from("edge_audit").insert({
+      fn: "garmin-webhook",
+      stage: "received",
+      ok: true,
+      message: JSON.stringify({ keys: incomingKeys, counts }).slice(0, 500)
+    });
+  } catch (_) {}
   // ════════════════════════════════════════════════════════════════════
   // Helper: resolve garmin_user_id → user_id
   // ════════════════════════════════════════════════════════════════════
@@ -314,6 +327,15 @@ serve(async (req)=>{
   // Process: SLEEPS
   // ════════════════════════════════════════════════════════════════════
   if (body.sleeps && Array.isArray(body.sleeps)) {
+    // Log raw first sleeps payload so we can verify field extraction
+    try {
+      await supabase.from("edge_audit").insert({
+        fn: "garmin-webhook",
+        stage: "raw_sleeps",
+        ok: true,
+        message: JSON.stringify(body.sleeps[0] ?? {}).slice(0, 2000)
+      });
+    } catch (_) {}
     for (const s of body.sleeps){
       try {
         const userId = await resolveUserIdFromUAT(s);
@@ -349,7 +371,15 @@ serve(async (req)=>{
         // sleep_score_daily
         if (await isGarminEnabled(userId, "sleep_score_daily")) {
           const scoreObj = s.sleepScores;
+          console.log("[garmin-webhook] SLEEP_SCORE DEBUG", JSON.stringify({
+            date: localDate,
+            overallSleepScore: s.overallSleepScore,
+            sleepScores: s.sleepScores,
+            sleepQualityTypeName: s.sleepQualityTypeName,
+            overallScore: s.overallScore,
+          }));
           const val = intOrNull(s.overallSleepScore?.value ?? scoreObj?.overall?.value);
+          console.log(`[garmin-webhook] SLEEP_SCORE extracted value=${val} for date=${localDate}`);
           if (val != null && await tryMarkMetricRan(userId, "sleep_score_daily", localDate)) {
             await upsertDailyRow("sleep_score_daily", {
               user_id: userId,
@@ -533,8 +563,9 @@ serve(async (req)=>{
   // ════════════════════════════════════════════════════════════════════
   // Process: PULSE OX
   // ════════════════════════════════════════════════════════════════════
-  if (body.pulseOx && Array.isArray(body.pulseOx)) {
-    for (const po of body.pulseOx){
+  const pulseOxArr = body.pulseOx || body.pulseox;
+  if (pulseOxArr && Array.isArray(pulseOxArr)) {
+    for (const po of pulseOxArr){
       try {
         const userId = await resolveUserIdFromUAT(po);
         if (!userId) continue;
@@ -626,6 +657,7 @@ serve(async (req)=>{
         const localDate = getCalendarDate(h);
         if (!localDate) continue;
         if (await isGarminEnabled(userId, "hrv_daily")) {
+          console.log("[garmin-webhook] HRV payload debug:", JSON.stringify(h));
           const val = numOrNull(h.lastNightAvg ?? h.lastNight5MinHigh ?? h.weeklyAvg);
           if (val != null && val > 0 && await tryMarkMetricRan(userId, "hrv_daily", localDate)) {
             await upsertDailyRow("hrv_daily", {
@@ -847,7 +879,35 @@ serve(async (req)=>{
         if (userId && a?.deviceName) {
           deviceNameCache.set(userId, a.deviceName);
         }
-        results.push({ type: key, status: "device_captured", device: a?.deviceName ?? null });
+
+        const sourceMeasureId = a?.summaryId ?? a?.activityId ?? null;
+        const activityType = a?.activityType ?? null;
+        if (userId && sourceMeasureId && activityType && Number.isFinite(a?.startTimeInSeconds)) {
+          const offsetSec = Number(a?.startTimeOffsetInSeconds ?? 0);
+          const durSec = Number(a?.durationInSeconds ?? 0);
+          const startUtcSec = Number(a.startTimeInSeconds);
+          const startAt = new Date(startUtcSec * 1000).toISOString();
+          const endAt = durSec > 0 ? new Date((startUtcSec + durSec) * 1000).toISOString() : null;
+          const localDate = new Date((startUtcSec + offsetSec) * 1000).toISOString().slice(0, 10);
+          const durationMinutes = durSec > 0 ? Math.round(durSec / 60) : null;
+
+          const { error: sErr } = await supabase.from("activities").upsert({
+            user_id: userId,
+            type: activityType,
+            source: "garmin",
+            source_measure_id: String(sourceMeasureId),
+            start_at: startAt,
+            end_at: endAt,
+            duration_minutes: durationMinutes,
+          }, { onConflict: "user_id,source,source_measure_id" });
+          if (sErr) {
+            results.push({ type: key, status: "session_upsert_error", error: sErr.message });
+          } else {
+            results.push({ type: key, status: "session_written", activity: activityType });
+          }
+        } else {
+          results.push({ type: key, status: "device_captured", device: a?.deviceName ?? null });
+        }
       } catch (err) {
         results.push({ type: key, status: "error", msg: err.message });
       }
@@ -863,6 +923,7 @@ serve(async (req)=>{
     "sleeps",
     "stressDetails",
     "pulseOx",
+    "pulseox",
     "allDayRespiration",
     "hrv",
     "hrvSummaries",
@@ -887,6 +948,20 @@ serve(async (req)=>{
       });
     }
   }
+  // ── Audit: record completion ──
+  try {
+    const summary = {};
+    for (const r of results) {
+      const k = `${r.type}:${r.status}`;
+      summary[k] = (summary[k] ?? 0) + 1;
+    }
+    await supabase.from("edge_audit").insert({
+      fn: "garmin-webhook",
+      stage: "complete",
+      ok: true,
+      message: JSON.stringify({ processed: results.length, summary }).slice(0, 500)
+    });
+  } catch (_) {}
   // Garmin expects HTTP 200 — anything else triggers retries
   return jsonResponse({
     ok: true,

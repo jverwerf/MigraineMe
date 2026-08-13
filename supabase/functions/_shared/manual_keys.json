@@ -1,0 +1,75 @@
+{
+  "_readme": [
+    "Strings the scanner cannot see because they reach t()/rt() as runtime values."
+  ],
+  "keys": [
+    {
+      "en": "All Time",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Last 7 Days",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Last 14 Days",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Last 30 Days",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Last 3 Months",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Last 6 Months",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Last Year",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Custom",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "All time",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Frequency",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Typical duration",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Trajectory",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Age range",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Gender",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Seasonal pattern",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Trigger areas",
+      "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Clinical assessment",
+      "why": "report cover and patient-profile card: runtime values"
+    }
+  ]
+}

@@ -162,7 +162,7 @@ serve(async (req)=>{
         };
       }
       // Get Garmin token (refresh if needed)
-      let { data: tokenRow } = await supabase.from("garmin_tokens").select("access_token,garmin_user_id,access_expires_at").eq("user_id", userId).maybeSingle();
+      let { data: tokenRow } = await supabase.from("garmin_tokens").select("access_token,garmin_user_id,access_expires_at,device_name").eq("user_id", userId).maybeSingle();
       if (!tokenRow?.access_token) {
         await supabase.from("sync_jobs").update({
           status: "error",
@@ -175,6 +175,7 @@ serve(async (req)=>{
         };
       }
       // Check if token needs refresh
+      const garminDeviceName = tokenRow.device_name ?? null;
       let accessToken = tokenRow.access_token;
       const expiresAt = tokenRow.access_expires_at ? new Date(tokenRow.access_expires_at).getTime() : 0;
       if (expiresAt > 0 && expiresAt - Date.now() < 5 * 60 * 1000) {
@@ -212,9 +213,11 @@ serve(async (req)=>{
           user_id: userId,
           local_date: localDate,
           metric,
-          source: "garmin", source_device: d?.deviceName ?? null
+          source: "garmin"
         }).select();
         if (error) {
+          if (error.code === "23505") return false; // duplicate
+          console.warn("tryMarkMetricRan error:", error.message);
           return false;
         }
         return true;
@@ -249,7 +252,7 @@ serve(async (req)=>{
                   user_id: userId,
                   date: calDate,
                   value_count: val,
-                  source: "garmin", source_device: d?.deviceName ?? null
+                  source: "garmin", source_device: d?.deviceName ?? garminDeviceName
                 });
                 anyData = true;
               }
@@ -261,7 +264,7 @@ serve(async (req)=>{
                   user_id: userId,
                   date: calDate,
                   value_bpm: val,
-                  source: "garmin", source_device: d?.deviceName ?? null
+                  source: "garmin", source_device: d?.deviceName ?? garminDeviceName
                 });
                 anyData = true;
               }
@@ -284,9 +287,26 @@ serve(async (req)=>{
                   user_id: userId,
                   date: calDate,
                   value_kilojoule: Math.round(kcal * 4.184),
-                  source: "garmin", source_device: d?.deviceName ?? null
+                  source: "garmin", source_device: d?.deviceName ?? garminDeviceName
                 });
                 anyData = true;
+              }
+            }
+            if (garminEnabled("time_in_high_hr_zones_daily")) {
+              const vigSec = numOrNull(d.vigorousIntensityDurationInSeconds);
+              if (vigSec != null && vigSec > 0) {
+                const minutes = Math.round(vigSec / 60 * 10) / 10;
+                if (await tryMarkMetricRan("time_in_high_hr_zones_daily", calDate)) {
+                  await supabase.from("time_in_high_hr_zones_daily").upsert({
+                    user_id: userId,
+                    date: calDate,
+                    value_minutes: minutes,
+                    source: "garmin",
+                    source_measure_id: `garmin_daily_${calDate}`,
+                    activity_type: "daily_total"
+                  }, { onConflict: "user_id,source,source_measure_id" });
+                  anyData = true;
+                }
               }
             }
           }
@@ -309,20 +329,20 @@ serve(async (req)=>{
                   user_id: userId,
                   date: calDate,
                   value_hours: val,
-                  source: "garmin", source_device: s?.deviceName ?? null
+                  source: "garmin", source_device: s?.deviceName ?? garminDeviceName
                 });
                 anyData = true;
               }
             }
             if (garminEnabled("sleep_score_daily")) {
               const scoreObj = s.sleepScores;
-              const val = intOrNull(scoreObj?.overall?.value ?? scoreObj?.overall ?? s.overallScore);
+              const val = intOrNull(s.overallSleepScore?.value ?? scoreObj?.overall?.value);
               if (val != null && await tryMarkMetricRan("sleep_score_daily", calDate)) {
                 await upsertDailyRow("sleep_score_daily", {
                   user_id: userId,
                   date: calDate,
                   value_pct: val,
-                  source: "garmin", source_device: s?.deviceName ?? null
+                  source: "garmin", source_device: s?.deviceName ?? garminDeviceName
                 });
                 anyData = true;
               }
@@ -337,7 +357,7 @@ serve(async (req)=>{
                     user_id: userId,
                     date: calDate,
                     value_pct: eff,
-                    source: "garmin", source_device: s?.deviceName ?? null
+                    source: "garmin", source_device: s?.deviceName ?? garminDeviceName
                   });
                   anyData = true;
                 }
@@ -352,7 +372,7 @@ serve(async (req)=>{
                 await upsertDailyRow("sleep_stages_daily", {
                   user_id: userId,
                   date: calDate,
-                  source: "garmin", source_device: s?.deviceName ?? null,
+                  source: "garmin", source_device: s?.deviceName ?? garminDeviceName,
                   value_sws_hm: deep,
                   value_rem_hm: rem,
                   value_light_hm: light
@@ -362,24 +382,28 @@ serve(async (req)=>{
             }
             if (garminEnabled("sleep_disturbances_daily")) {
               const awakeSec = numOrNull(s.awakeDurationInSeconds);
-              if (awakeSec != null && await tryMarkMetricRan("sleep_disturbances_daily", calDate)) {
-                await upsertDailyRow("sleep_disturbances_daily", {
-                  user_id: userId,
-                  date: calDate,
-                  value_count: Math.round(awakeSec / 60),
-                  source: "garmin", source_device: s?.deviceName ?? null
-                });
-                anyData = true;
+              if (awakeSec != null) {
+                const awakeMin = awakeSec / 60;
+                const approxCount = Math.max(1, Math.round(awakeMin / 5));
+                if (await tryMarkMetricRan("sleep_disturbances_daily", calDate)) {
+                  await upsertDailyRow("sleep_disturbances_daily", {
+                    user_id: userId,
+                    date: calDate,
+                    value_count: approxCount,
+                    source: "garmin", source_device: s?.deviceName ?? garminDeviceName
+                  });
+                  anyData = true;
+                }
               }
             }
             if (garminEnabled("fell_asleep_time_daily") && startSec != null) {
-              const val = epochToLocalHM(startSec, offsetSec);
-              if (val != null && await tryMarkMetricRan("fell_asleep_time_daily", calDate)) {
+              const val = new Date(startSec * 1000).toISOString();
+              if (await tryMarkMetricRan("fell_asleep_time_daily", calDate)) {
                 await upsertDailyRow("fell_asleep_time_daily", {
                   user_id: userId,
                   date: calDate,
                   value_at: val,
-                  source: "garmin", source_device: s?.deviceName ?? null
+                  source: "garmin", source_device: s?.deviceName ?? garminDeviceName
                 });
                 anyData = true;
               }
@@ -387,42 +411,19 @@ serve(async (req)=>{
             if (garminEnabled("woke_up_time_daily")) {
               const dur = numOrNull(s.durationInSeconds);
               if (startSec != null && dur != null) {
-                const val = epochToLocalHM(startSec + dur, offsetSec);
-                if (val != null && await tryMarkMetricRan("woke_up_time_daily", calDate)) {
+                const val = new Date((startSec + dur) * 1000).toISOString();
+                if (await tryMarkMetricRan("woke_up_time_daily", calDate)) {
                   await upsertDailyRow("woke_up_time_daily", {
                     user_id: userId,
                     date: calDate,
                     value_at: val,
-                    source: "garmin", source_device: s?.deviceName ?? null
+                    source: "garmin", source_device: s?.deviceName ?? garminDeviceName
                   });
                   anyData = true;
                 }
               }
             }
-            if (garminEnabled("respiratory_rate_daily")) {
-              const val = numOrNull(s.averageRespiration);
-              if (val != null && await tryMarkMetricRan("respiratory_rate_daily", calDate)) {
-                await upsertDailyRow("respiratory_rate_daily", {
-                  user_id: userId,
-                  date: calDate,
-                  value_bpm: Math.round(val * 10) / 10,
-                  source: "garmin", source_device: s?.deviceName ?? null
-                });
-                anyData = true;
-              }
-            }
-            if (garminEnabled("spo2_daily")) {
-              const val = numOrNull(s.averageSpO2Value ?? s.averageSpO2);
-              if (val != null && val > 0 && await tryMarkMetricRan("spo2_daily", calDate)) {
-                await upsertDailyRow("spo2_daily", {
-                  user_id: userId,
-                  date: calDate,
-                  value_pct: Math.round(val * 10) / 10,
-                  source: "garmin", source_device: s?.deviceName ?? null
-                });
-                anyData = true;
-              }
-            }
+            // respiratory_rate_daily / spo2_daily come from /respiration and /pulseOx endpoints below.
           }
         }
       } catch (e) {
@@ -445,7 +446,7 @@ serve(async (req)=>{
                       user_id: userId,
                       date: calDate,
                       value_pct: recharge,
-                      source: "garmin", source_device: sd?.deviceName ?? null
+                      source: "garmin", source_device: sd?.deviceName ?? garminDeviceName
                     });
                     anyData = true;
                   }
@@ -472,7 +473,7 @@ serve(async (req)=>{
                     user_id: userId,
                     date: calDate,
                     value_kg: kg,
-                    source: "garmin", source_device: bc?.deviceName ?? null
+                    source: "garmin", source_device: bc?.deviceName ?? garminDeviceName
                   });
                   anyData = true;
                 }
@@ -486,7 +487,7 @@ serve(async (req)=>{
                     user_id: userId,
                     date: calDate,
                     value_pct: Math.round(fatPct * 100) / 100,
-                    source: "garmin", source_device: bc?.deviceName ?? null
+                    source: "garmin", source_device: bc?.deviceName ?? garminDeviceName
                   });
                   anyData = true;
                 }
@@ -496,6 +497,114 @@ serve(async (req)=>{
         }
       } catch (e) {
         console.warn("Garmin bodyComps fetch:", e.message);
+      }
+      // ── Fetch pulseOx (for spo2_daily) ──
+      try {
+        const pulseOx = await garminFetch("/wellness-api/rest/pulseOx", accessToken, timeParams);
+        if (Array.isArray(pulseOx)) {
+          for (const po of pulseOx){
+            const calDate = po.calendarDate || jobLocalDate;
+            if (calDate !== jobLocalDate) continue;
+            if (garminEnabled("spo2_daily")) {
+              const offsets = po.timeOffsetSpo2Values;
+              if (offsets && typeof offsets === "object") {
+                const values = Object.values(offsets).map(Number).filter((v)=>v > 0 && v <= 100);
+                if (values.length > 0) {
+                  const avg = Math.round(values.reduce((a, b)=>a + b, 0) / values.length * 10) / 10;
+                  if (await tryMarkMetricRan("spo2_daily", calDate)) {
+                    await upsertDailyRow("spo2_daily", {
+                      user_id: userId,
+                      date: calDate,
+                      value_pct: avg,
+                      source: "garmin", source_device: po?.deviceName ?? garminDeviceName
+                    });
+                    anyData = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Garmin pulseOx fetch:", e.message);
+      }
+      // ── Fetch respiration (for respiratory_rate_daily) ──
+      try {
+        const respiration = await garminFetch("/wellness-api/rest/respiration", accessToken, timeParams);
+        if (Array.isArray(respiration)) {
+          for (const r of respiration){
+            const calDate = r.calendarDate || jobLocalDate;
+            if (calDate !== jobLocalDate) continue;
+            if (garminEnabled("respiratory_rate_daily")) {
+              const offsets = r.timeOffsetEpochToBreaths;
+              if (offsets && typeof offsets === "object") {
+                const values = Object.values(offsets).map(Number).filter((v)=>v > 0 && v < 60);
+                if (values.length > 0) {
+                  const avg = Math.round(values.reduce((a, b)=>a + b, 0) / values.length * 10) / 10;
+                  if (await tryMarkMetricRan("respiratory_rate_daily", calDate)) {
+                    await upsertDailyRow("respiratory_rate_daily", {
+                      user_id: userId,
+                      date: calDate,
+                      value_bpm: avg,
+                      source: "garmin", source_device: r?.deviceName ?? garminDeviceName
+                    });
+                    anyData = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Garmin respiration fetch:", e.message);
+      }
+      // ── Fetch HRV (for hrv_daily) ──
+      try {
+        const hrv = await garminFetch("/wellness-api/rest/hrv", accessToken, timeParams);
+        if (Array.isArray(hrv)) {
+          for (const h of hrv){
+            const calDate = h.calendarDate || jobLocalDate;
+            if (calDate !== jobLocalDate) continue;
+            if (garminEnabled("hrv_daily")) {
+              const val = numOrNull(h.lastNightAvg ?? h.lastNight5MinHigh ?? h.weeklyAvg);
+              if (val != null && val > 0 && await tryMarkMetricRan("hrv_daily", calDate)) {
+                await upsertDailyRow("hrv_daily", {
+                  user_id: userId,
+                  date: calDate,
+                  value_rmssd_ms: Math.round(val),
+                  source: "garmin", source_device: h?.deviceName ?? garminDeviceName
+                });
+                anyData = true;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Garmin hrv fetch:", e.message);
+      }
+      // ── Fetch skin temperature (for skin_temp_daily) ──
+      try {
+        const skinTemps = await garminFetch("/wellness-api/rest/skinTemperature", accessToken, timeParams);
+        if (Array.isArray(skinTemps)) {
+          for (const st of skinTemps){
+            const calDate = st.calendarDate || jobLocalDate;
+            if (calDate !== jobLocalDate) continue;
+            if (garminEnabled("skin_temp_daily")) {
+              const val = numOrNull(st.deviation ?? st.relativeDeviation ?? st.averageDeviation);
+              if (val != null && await tryMarkMetricRan("skin_temp_daily", calDate)) {
+                await upsertDailyRow("skin_temp_daily", {
+                  user_id: userId,
+                  date: calDate,
+                  value_celsius: Math.round(val * 100) / 100,
+                  source: "garmin", source_device: st?.deviceName ?? garminDeviceName
+                });
+                anyData = true;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Garmin skinTemperature fetch:", e.message);
       }
       // Mark job done
       const doneNote = anyData ? "data_written" : "no_new_data";
