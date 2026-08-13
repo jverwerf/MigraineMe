@@ -313,15 +313,15 @@ class MainActivity : ComponentActivity() {
 
             when {
                 !error.isNullOrBlank() -> {
-                    Toast.makeText(this, "WHOOP auth error: $error", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("WHOOP auth error: %1\$s", error), Toast.LENGTH_SHORT).show()
                 }
 
                 !code.isNullOrBlank() -> {
-                    Toast.makeText(this, "Returning from WHOOP...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Returning from WHOOP..."), Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {
-                    Toast.makeText(this, "WHOOP callback opened.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("WHOOP callback opened."), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -348,15 +348,15 @@ class MainActivity : ComponentActivity() {
 
             when {
                 !error.isNullOrBlank() -> {
-                    Toast.makeText(this, "Oura auth error: $error", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Oura auth error: %1\$s", error), Toast.LENGTH_SHORT).show()
                 }
 
                 !code.isNullOrBlank() -> {
-                    Toast.makeText(this, "Returning from Oura...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Returning from Oura..."), Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {
-                    Toast.makeText(this, "Oura callback opened.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Oura callback opened."), Toast.LENGTH_SHORT).show()
                 }
             }
             // Navigate back to connections screen so the user lands where they started
@@ -382,15 +382,15 @@ class MainActivity : ComponentActivity() {
 
             when {
                 !error.isNullOrBlank() -> {
-                    Toast.makeText(this, "Polar auth error: $error", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Polar auth error: %1\$s", error), Toast.LENGTH_SHORT).show()
                 }
 
                 !code.isNullOrBlank() -> {
-                    Toast.makeText(this, "Returning from Polar...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Returning from Polar..."), Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {
-                    Toast.makeText(this, "Polar callback opened.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Polar callback opened."), Toast.LENGTH_SHORT).show()
                 }
             }
             // Navigate back to connections screen so the user lands where they started
@@ -416,15 +416,15 @@ class MainActivity : ComponentActivity() {
 
             when {
                 !error.isNullOrBlank() -> {
-                    Toast.makeText(this, "Garmin auth error: $error", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Garmin auth error: %1\$s", error), Toast.LENGTH_SHORT).show()
                 }
 
                 !code.isNullOrBlank() -> {
-                    Toast.makeText(this, "Returning from Garmin...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Returning from Garmin..."), Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {
-                    Toast.makeText(this, "Garmin callback opened.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, tSync("Garmin callback opened."), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -441,7 +441,7 @@ class MainActivity : ComponentActivity() {
                 .putString("last_uri", data.toString())
                 .apply()
 
-            Toast.makeText(this, "Returning from sign-in...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, tSync("Returning from sign-in..."), Toast.LENGTH_SHORT).show()
         }
     }
 

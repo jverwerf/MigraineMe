@@ -273,7 +273,7 @@ fun PaintThePictureScreen(
             putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Paint the picture — tell us about your migraine…")
         }
         try { speechLauncher.launch(intent) } catch (_: Exception) {
-            android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 

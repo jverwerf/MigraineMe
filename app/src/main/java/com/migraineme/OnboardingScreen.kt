@@ -663,7 +663,7 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
                         label = "fact"
                     ) { i ->
                         Text(
-                            LOADING_FACTS[i],
+                            t(LOADING_FACTS[i]),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             textAlign = TextAlign.Center,

@@ -398,10 +398,10 @@ fun QuickLogReliefScreen(
                                                 DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, relief)
                                             }
                                         }
-                                        snackbarHostState.showSnackbar("Relief logged!")
+                                        snackbarHostState.showSnackbar(tSync("Relief logged!"))
                                         navController.popBackStack()
                                     } catch (e: Exception) {
-                                        snackbarHostState.showSnackbar("Error: ${e.message}")
+                                        snackbarHostState.showSnackbar(tSync("Error: %1\$s", e.message ?: ""))
                                     } finally {
                                         saving = false
                                     }

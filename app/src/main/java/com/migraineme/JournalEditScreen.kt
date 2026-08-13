@@ -507,7 +507,7 @@ fun JournalEditScreen(
                                     putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
                                 }
                                 try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
-                                    android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             }) {
                                 Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))

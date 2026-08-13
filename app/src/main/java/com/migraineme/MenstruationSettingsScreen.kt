@@ -115,8 +115,8 @@ fun MenstruationSettingsScreen(
             if (ok) {
                 settings = MenstruationSettings(parsedLast, parsedAvg, autoUpdateAvg)
                 saveSuccess = true
-                Toast.makeText(context, "Settings saved", Toast.LENGTH_SHORT).show()
-            } else Toast.makeText(context, "Failed to save.", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, tSync("Settings saved"), Toast.LENGTH_SHORT).show()
+            } else Toast.makeText(context, tSync("Failed to save."), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -141,8 +141,8 @@ fun MenstruationSettingsScreen(
                 saved
             }
             saving = false
-            if (ok) { saveSuccess = true; Toast.makeText(context, "Decay weights saved", Toast.LENGTH_SHORT).show() }
-            else Toast.makeText(context, "Failed to save weights.", Toast.LENGTH_LONG).show()
+            if (ok) { saveSuccess = true; Toast.makeText(context, tSync("Decay weights saved"), Toast.LENGTH_SHORT).show() }
+            else Toast.makeText(context, tSync("Failed to save weights."), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -254,7 +254,7 @@ fun MenstruationSettingsScreen(
                                 }
                                 addingPeriod = false
                                 addPeriodDate = ""
-                                Toast.makeText(context, "Period logged", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, tSync("Period logged"), Toast.LENGTH_SHORT).show()
                             }
                         },
                         enabled = addPeriodDate.isNotBlank() && !addingPeriod,

@@ -116,10 +116,10 @@ private fun CoreCanvas(
                 fun xOf(t: Instant): Float { val cl = t.clamp(windowStart, windowEnd); return x0 + (cl.toEpochMilli() - windowStart.toEpochMilli()).toFloat() / visMs * (x1 - x0) }
                 val migBot = h * 0.16f; val evTop = migBot + 4f; val evBot = if (eventCats.isNotEmpty()) h * 0.48f else evTop; val now = Instant.now()
                 val hits = mutableListOf<HitTarget>()
-                migraines.forEach { m -> val xs = xOf(m.start); val xe = xOf(m.end ?: now); hits += HitTarget((xs + xe) / 2f, migBot / 2f, "${m.label ?: "Migraine"}\nSeverity: ${m.severity ?: "–"}/10\n${hDur(m.start, m.end ?: now)}") }
+                migraines.forEach { m -> val xs = xOf(m.start); val xe = xOf(m.end ?: now); hits += HitTarget((xs + xe) / 2f, migBot / 2f, "${m.label ?: tSync("Migraine")}\n${tSync("Severity:")} ${m.severity ?: "–"}/10\n${hDur(m.start, m.end ?: now)}") }
                 val cc = eventCats.size.coerceAtLeast(1); val rh = (evBot - evTop) / cc; val hitMin = 14f
                 val hitOffsets = mutableListOf<Pair<Float, Float>>() // (cx, cy) of placed dots
-                sortedEvents.forEachIndexed { idx, ev -> val ci = eventCats.indexOf(ev.category).coerceAtLeast(0); val auto = if (ev.isAutomated) " ⚡auto" else ""
+                sortedEvents.forEachIndexed { idx, ev -> val ci = eventCats.indexOf(ev.category).coerceAtLeast(0); val auto = if (ev.isAutomated) " ⚡" + tSync("auto") else ""
                     val rcy = evTop + ci * rh + rh / 2f; val ex = xOf(ev.at)
                     val nearby = hitOffsets.filter { kotlin.math.abs(it.first - ex) < hitMin && kotlin.math.abs(it.second - rcy) < 1f }
                     val ox = if (nearby.isEmpty()) 0f else { val n = nearby.size; val s = if (n % 2 == 0) -1f else 1f; s * ((n + 1) / 2) * hitMin }
@@ -253,7 +253,7 @@ private fun CoreCanvas(
         }
         popup?.let { hit -> val offX = (hit.x - 120f).roundToInt().coerceAtLeast(0); val offY = (hit.y - 70f).roundToInt().coerceAtLeast(0)
             Card(Modifier.offset { IntOffset(offX, offY) }, colors = CardDefaults.cardColors(containerColor = PopupBg), shape = RoundedCornerShape(10.dp), elevation = CardDefaults.cardElevation(8.dp)) {
-                Text(t(hit.label), Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f)) } }
+                Text(hit.label, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f)) } }
     }
 }
 

@@ -366,10 +366,10 @@ fun QuickLogMedicineScreen(
                                                 doseUnit = if (doseValue != null) doseUnit else null
                                             )
                                         }
-                                        snackbarHostState.showSnackbar("Medicine logged!")
+                                        snackbarHostState.showSnackbar(tSync("Medicine logged!"))
                                         navController.popBackStack()
                                     } catch (e: Exception) {
-                                        snackbarHostState.showSnackbar("Error: ${e.message}")
+                                        snackbarHostState.showSnackbar(tSync("Error: %1\$s", e.message ?: ""))
                                     } finally {
                                         saving = false
                                     }

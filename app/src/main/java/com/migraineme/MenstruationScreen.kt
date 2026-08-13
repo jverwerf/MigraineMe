@@ -173,9 +173,9 @@ fun MenstruationScreen() {
                         autoUpdateAverage = autoUpdateAvg
                     )
                     showEditForm = false
-                    Toast.makeText(context, "Settings saved", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, tSync("Settings saved"), Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Failed to save. Please try again.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, tSync("Failed to save. Please try again."), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -190,7 +190,7 @@ fun MenstruationScreen() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     loggingPeriod = false
-                    Toast.makeText(context, "Invalid date format", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, tSync("Invalid date format"), Toast.LENGTH_LONG).show()
                 }
                 return@launch
             }
@@ -225,11 +225,11 @@ fun MenstruationScreen() {
                 loggingPeriod = false
                 showLogPeriodDialog = false
                 if (ok) {
-                    Toast.makeText(context, "Period logged!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, tSync("Period logged!"), Toast.LENGTH_SHORT).show()
                     // Refresh to show updated data
                     refreshTrigger++
                 } else {
-                    Toast.makeText(context, "Failed to log period", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, tSync("Failed to log period"), Toast.LENGTH_LONG).show()
                 }
             }
         }

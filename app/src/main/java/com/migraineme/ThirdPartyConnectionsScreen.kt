@@ -236,7 +236,7 @@ fun ThirdPartyConnectionsScreen(
         withContext(Dispatchers.Main) {
             MetricToggleHelper.toggle(context.applicationContext, "nutrition", true)
             if (showToast) {
-                android.widget.Toast.makeText(context, "Nutrition connected.", android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(context, tSync("Nutrition connected."), android.widget.Toast.LENGTH_LONG).show()
             }
         }
         scope.launch(Dispatchers.IO) {
@@ -261,7 +261,7 @@ fun ThirdPartyConnectionsScreen(
         withContext(Dispatchers.Main) {
             MetricToggleHelper.toggle(context.applicationContext, "menstruation", true)
             if (showToast) {
-                android.widget.Toast.makeText(context, "Menstruation connected.", android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(context, tSync("Menstruation connected."), android.widget.Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -274,7 +274,7 @@ fun ThirdPartyConnectionsScreen(
             HealthConnectSyncManager.markAsConnected(context.applicationContext)
         }
         withContext(Dispatchers.Main) {
-            android.widget.Toast.makeText(context, "Health Connect wearables connected!", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(context, tSync("Health Connect wearables connected!"), android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -684,7 +684,7 @@ fun ThirdPartyConnectionsScreen(
                                 showWhoopAccessDialog.value = false
                                 if (ok) {
                                     withContext(Dispatchers.Main) {
-                                        android.widget.Toast.makeText(context, "Access requested!", android.widget.Toast.LENGTH_SHORT).show()
+                                        android.widget.Toast.makeText(context, tSync("Access requested!"), android.widget.Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -750,7 +750,7 @@ fun ThirdPartyConnectionsScreen(
                         withContext(Dispatchers.Main) {
                             hasWhoop.value = false
                             lastProcessedUri.value = null
-                            android.widget.Toast.makeText(context, "WHOOP disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(context, tSync("WHOOP disconnected."), android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
                 }) { Text(t("Disconnect")) }
@@ -805,7 +805,7 @@ fun ThirdPartyConnectionsScreen(
                         withContext(Dispatchers.Main) {
                             hasOura.value = false
                             ouraLastProcessedUri.value = null
-                            android.widget.Toast.makeText(context, "Oura disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(context, tSync("Oura disconnected."), android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
                 }) { Text(t("Disconnect")) }
@@ -860,7 +860,7 @@ fun ThirdPartyConnectionsScreen(
                         withContext(Dispatchers.Main) {
                             hasPolar.value = false
                             polarLastProcessedUri.value = null
-                            android.widget.Toast.makeText(context, "Polar disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(context, tSync("Polar disconnected."), android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
                 }) { Text(t("Disconnect")) }
@@ -914,7 +914,7 @@ fun ThirdPartyConnectionsScreen(
                         withContext(Dispatchers.Main) {
                             hasGarmin.value = false
                             garminLastProcessedUri.value = null
-                            android.widget.Toast.makeText(context, "Garmin disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(context, tSync("Garmin disconnected."), android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
                 }) { Text(t("Disconnect")) }
@@ -998,7 +998,7 @@ fun ThirdPartyConnectionsScreen(
                     nutritionEnabled.value = false
                     menstruationEnabled.value = false
 
-                    android.widget.Toast.makeText(context, "Disconnected.", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(context, tSync("Disconnected."), android.widget.Toast.LENGTH_LONG).show()
                 }) { Text(t("Disconnect")) }
             },
             dismissButton = { TextButton(onClick = { showHealthConnectDisconnectDialog.value = false }) { Text(t("Cancel")) } }
@@ -1047,7 +1047,7 @@ fun ThirdPartyConnectionsScreen(
                     isConnected = anyHCConnected,
                     onClick = {
                         if (!healthConnectAvailable.value) {
-                            android.widget.Toast.makeText(context, "Health Connect not available.", android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(context, tSync("Health Connect not available."), android.widget.Toast.LENGTH_LONG).show()
                             return@HealthConnectRow
                         }
                         scope.launch { runCatching { healthConnectLauncher.launch(allHealthConnectPermissions) } }

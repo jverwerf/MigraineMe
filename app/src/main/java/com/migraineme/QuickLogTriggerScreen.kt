@@ -260,10 +260,10 @@ fun QuickLogTriggerScreen(
                                                 notes = notes.ifBlank { null }
                                             )
                                         }
-                                        snackbarHostState.showSnackbar("Trigger logged!")
+                                        snackbarHostState.showSnackbar(tSync("Trigger logged!"))
                                         navController.popBackStack()
                                     } catch (e: Exception) {
-                                        snackbarHostState.showSnackbar("Error: ${e.message}")
+                                        snackbarHostState.showSnackbar(tSync("Error: %1\$s", e.message ?: ""))
                                     } finally {
                                         saving = false
                                     }

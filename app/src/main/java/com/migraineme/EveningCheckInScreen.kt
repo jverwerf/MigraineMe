@@ -1089,7 +1089,7 @@ private fun NotePage(noteText: String, onNoteChange: (String) -> Unit, aiLoading
             putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "One thing at a time — what happened today?")
         }
         try { speechLauncher.launch(intent) } catch (_: Exception) {
-            android.widget.Toast.makeText(context, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -2407,7 +2407,7 @@ private fun SideEffectsPageV2(
                 putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Any extra notes on side effects?")
             }
             try { voiceLauncher.launch(intent) } catch (_: Exception) {
-                android.widget.Toast.makeText(sideEffectsCtx, "Voice input not available", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(sideEffectsCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
             }
         }
         Spacer(Modifier.height(8.dp))

@@ -71,7 +71,7 @@ fun AdjustReliefsScreen(
                                 newLabel = ""
                             }.onFailure { e ->
                                 e.printStackTrace()
-                                scope.launch { snackbar.showSnackbar("Failed to add: ${e.message ?: "error"}") }
+                                scope.launch { snackbar.showSnackbar(tSync("Failed to add: %1\$s", e.message ?: tSync("error"))) }
                             }
                         },
                         enabled = newLabel.isNotBlank()
@@ -102,7 +102,7 @@ fun AdjustReliefsScreen(
                             runCatching { vm.removeFromFrequent(token, pref.id) }
                                 .onFailure { e ->
                                     e.printStackTrace()
-                                    scope.launch { snackbar.showSnackbar("Failed to remove: ${e.message ?: "error"}") }
+                                    scope.launch { snackbar.showSnackbar(tSync("Failed to remove: %1\$s", e.message ?: tSync("error"))) }
                                 }
                         }) {
                             Icon(Icons.Filled.Delete, contentDescription = t("Remove from Frequent"))
@@ -127,7 +127,7 @@ fun AdjustReliefsScreen(
                                 true
                             }.onFailure { e ->
                                 e.printStackTrace()
-                                scope.launch { snackbar.showSnackbar("Delete failed: ${e.message ?: "error"}") }
+                                scope.launch { snackbar.showSnackbar(tSync("Delete failed: %1\$s", e.message ?: tSync("error"))) }
                             }.getOrDefault(false)
                         } else false
                     }
@@ -155,7 +155,7 @@ fun AdjustReliefsScreen(
                                 runCatching { vm.addToFrequent(token, rel.id) }
                                     .onFailure { e ->
                                         e.printStackTrace()
-                                        scope.launch { snackbar.showSnackbar("Add failed: ${e.message ?: "error"}") }
+                                        scope.launch { snackbar.showSnackbar(tSync("Add failed: %1\$s", e.message ?: tSync("error"))) }
                                     }
                             }) {
                                 Icon(Icons.Filled.Add, contentDescription = t("Add to Frequent"))

@@ -122,7 +122,7 @@ fun LoginScreen(
     ) {
         val userId = JwtUtils.extractUserIdFromAccessToken(token)
         if (userId.isNullOrBlank()) {
-            scope.launch { snackbarHostState.showSnackbar("Login failed: no userId in access token") }
+            scope.launch { snackbarHostState.showSnackbar(tSync("Login failed: no userId in access token")) }
             return
         }
         SessionStore.saveSession(
@@ -283,7 +283,7 @@ fun LoginScreen(
                                     SupabaseAuthService.requestPasswordReset(email = e, redirectTo = PASSWORD_RECOVERY_REDIRECT_URL)
                                 }
                                 showForgotDialog = false
-                                snackbarHostState.showSnackbar("Password reset email sent (if the account exists).")
+                                snackbarHostState.showSnackbar(tSync("Password reset email sent (if the account exists)."))
                             } catch (t: Throwable) {
                                 forgotError = t.message ?: "Failed to send reset email."
                             } finally {
