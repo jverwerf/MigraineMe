@@ -317,22 +317,22 @@ object DemoDataSeeder {
                     })
                 upsertRow(client, "$base/rest/v1/phone_unlock_daily", token, key, "user_id,date",
                     buildJsonObject {
-                        put("date",d); put("user_id",userId)
+                        put("date",d); put("user_id",userId); put("source",SOURCE)
                         put("value_count", if (bad) 80+Random.nextInt(80) else 20+Random.nextInt(50))
                     })
                 upsertRow(client, "$base/rest/v1/phone_brightness_daily", token, key, "user_id,date",
                     buildJsonObject {
-                        put("date",d); put("user_id",userId)
+                        put("date",d); put("user_id",userId); put("source",SOURCE)
                         put("value_mean", if (bad) 60.0+Random.nextDouble(35.0) else 25.0+Random.nextDouble(35.0))
                     })
                 upsertRow(client, "$base/rest/v1/phone_volume_daily", token, key, "user_id,date",
                     buildJsonObject {
-                        put("date",d); put("user_id",userId)
+                        put("date",d); put("user_id",userId); put("source",SOURCE)
                         put("value_mean_pct", if (bad) 55.0+Random.nextDouble(40.0) else 15.0+Random.nextDouble(35.0))
                     })
                 upsertRow(client, "$base/rest/v1/phone_dark_mode_daily", token, key, "user_id,date",
                     buildJsonObject {
-                        put("date",d); put("user_id",userId)
+                        put("date",d); put("user_id",userId); put("source",SOURCE)
                         put("value_hours", if (bad) 2.0+Random.nextDouble(4.0) else 8.0+Random.nextDouble(8.0))
                     })
             }
@@ -977,33 +977,28 @@ object DemoDataSeeder {
         currentSeedJob = null
         Log.d(TAG, "═══ clearDemoData START (userId=$userId) ═══")
 
-        // All tables the seeder writes to — delete everything for this user
-        val allTables = listOf(
-            // Sleep & physical
-            "sleep_duration_daily","sleep_score_daily","sleep_efficiency_daily","sleep_disturbances_daily",
-            "fell_asleep_time_daily","woke_up_time_daily","recovery_score_daily","resting_hr_daily",
-            "hrv_daily","spo2_daily","skin_temp_daily",
-            // Activity & screen
-            "screen_time_daily","steps_daily","time_in_high_hr_zones_daily",
-            // Mental
-            "stress_index_daily","ambient_noise_index_daily","screen_time_late_night",
-            "phone_unlock_daily","phone_brightness_daily","phone_volume_daily","phone_dark_mode_daily",
-            // Weather & nutrition
-            "user_weather_daily","nutrition_daily","nutrition_records",
-            // Migraines & linked items
-            "triggers","medicines","reliefs","migraines","locations","prodromes",
-            // AI & analytics
+        // DATA-LOSS FIX (2026-08-13). This used to blanket-delete ~40 tables by
+        // user_id. On first onboarding that is indistinguishable from removing
+        // the demo seed — but on "Redo onboarding", tour exit or Skip it
+        // destroyed every real row the user had ever logged (it is what emptied
+        // the af8ac4f8 QA fixture). Seeded rows all carry markers
+        // (source='demo' / notes '[demo]…'), so removal is marker-scoped now.
+        purgeOrphanDemoRows(context)
+
+        // Derived caches are safe to drop wholesale: they are recomputed from
+        // whatever source rows remain (stress worker, risk worker, insights
+        // engine, weather worker), and after a purge they would otherwise keep
+        // reflecting deleted demo rows until the next recompute.
+        val derivedTables = listOf(
             "correlation_stats","recalibration_proposals","gauge_accuracy","daily_insights",
-            // Risk
-            "risk_score_daily",
-            // Treatments — children first (cache + side-effect logs FK to regimens)
-            "treatment_narrative_cache","treatment_side_effect_logs","treatment_regimens"
+            "risk_score_daily","stress_index_daily","user_weather_daily",
+            "treatment_narrative_cache"
         )
 
         withContext(Dispatchers.IO) {
             val client = HttpClient()
             try {
-                for (t in allTables) {
+                for (t in derivedTables) {
                     try {
                         val resp = client.delete("$base/rest/v1/$t") {
                             header("Authorization","Bearer $token"); header("apikey",key)
@@ -1111,6 +1106,15 @@ object DemoDataSeeder {
                     }
                 } catch (e: Exception) { Log.e(TAG, "purge triggers by notes failed: ${e.message}") }
 
+                // HR-zone rows are seeded with source='manual' but notes='[demo]',
+                // so they need the notes marker rather than the source one.
+                try {
+                    client.delete("$base/rest/v1/time_in_high_hr_zones_daily") {
+                        header("Authorization", "Bearer $token"); header("apikey", key)
+                        parameter("user_id", "eq.$userId"); parameter("notes", "like.[demo]*")
+                    }
+                } catch (e: Exception) { Log.e(TAG, "purge hr zones by notes failed: ${e.message}") }
+
                 // source='demo' rows across all daily / log tables
                 val sourceDemoTables = listOf(
                     "sleep_duration_daily","sleep_score_daily","sleep_efficiency_daily",
@@ -1118,7 +1122,12 @@ object DemoDataSeeder {
                     "fell_asleep_time_daily","woke_up_time_daily",
                     "recovery_score_daily","resting_hr_daily","hrv_daily",
                     "spo2_daily","skin_temp_daily","steps_daily","respiratory_rate_daily",
-                    "nutrition_daily","medicines","reliefs","nutrition_records"
+                    "nutrition_daily","medicines","reliefs","nutrition_records",
+                    // Everything else the seeder writes with source='demo'; these were
+                    // previously only removed by clearDemoData's blanket delete.
+                    "locations","prodromes","screen_time_daily","phone_unlock_daily",
+                    "phone_brightness_daily","phone_volume_daily","phone_dark_mode_daily",
+                    "ambient_noise_index_daily","screen_time_late_night"
                 )
                 for (t in sourceDemoTables) {
                     try {
