@@ -959,7 +959,8 @@ object DemoDataSeeder {
     suspend fun clearDemoData(
         context: Context,
         logVm: LogViewModel? = null,
-        insightsVm: InsightsViewModel? = null
+        insightsVm: InsightsViewModel? = null,
+        homeVm: HomeViewModel? = null,
     ) {
         val ctx = context.applicationContext
         val token = SessionStore.getValidAccessToken(ctx)
@@ -1019,6 +1020,9 @@ object DemoDataSeeder {
                 // accuracy) doesn't linger in-memory until the app process is killed.
                 logVm?.loadJournal(token)
                 insightsVm?.load(ctx, token)
+                // Home's gauge/state is activity-scoped and would otherwise keep
+                // painting the seeded numbers until a process restart.
+                withContext(Dispatchers.Main) { homeVm?.loadRisk(ctx) }
             } finally { client.close() }
         }
     }

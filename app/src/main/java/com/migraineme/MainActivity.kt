@@ -2813,6 +2813,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         },
         logVm = logVm,
         insightsVm = insightsVm,
+        homeVm = homeVm,
     )
     } // end outer Box wrapping drawer + overlay
 }
