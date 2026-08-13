@@ -30,8 +30,8 @@ android {
         applicationId = if (project.hasProperty("newPackage")) "app.migraineme" else "com.migraineme"
         minSdk = 26
         targetSdk = 36
-        versionCode = 58
-        versionName = "5.0.9"
+        versionCode = 59
+        versionName = "5.0.10"
 
         // ── All keys loaded from local.properties ──
         buildConfigField("String", "SUPABASE_URL",
