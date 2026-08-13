@@ -137,7 +137,9 @@ class HomeViewModel : ViewModel() {
             Log.d(TAG, "Live score ${if (live == null) "missing" else "stale (updatedAt=${live.updatedAt})"}, triggering on-demand calculation")
             if (userId != null) {
                 try {
-                    edge.triggerRiskCalculation(appCtx, userId)
+                    // calculate-risk-score no longer exists (404'd on every call);
+                    // recalc-risk-scores is the real recompute.
+                    edge.triggerRecalcRiskScores(appCtx)
                     // Re-read after calculation
                     live = db.getRiskScoreLive(accessToken)
                     Log.d(TAG, "After on-demand: ${if (live != null) "score=${live.score}" else "still NULL"}")
