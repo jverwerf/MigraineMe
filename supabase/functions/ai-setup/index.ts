@@ -6,6 +6,7 @@
 //
 // Deploy: supabase functions deploy ai-setup --no-verify-jwt
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getLang, translatorFor, type Lang } from "../_shared/i18n.ts";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 // Default model. Per-context overrides below — onboarding_parser uses a smarter model
 // because it runs ONCE per user and needs richer inference (vague stories → pool labels).
@@ -572,6 +573,142 @@ async function fetchCompanionRoster(supabaseUrl, serviceKey) {
     return "";
   }
 }
+// ── Insufficient-input guard for the calibration calls ───────────────────────
+//
+// calibration_call1 asks for a 2-3 paragraph clinical assessment. When the user
+// answered nothing in the onboarding questionnaire the model writes one anyway:
+// it improvises off the scaffolding that is always in the message (metric names,
+// data-source lines, the full label pools) and invents claims about the
+// patient's stress, steps, heart rate and screen time. With no real input there
+// is nothing to assess, so we do not ask — we answer honestly instead.
+//
+// Clients only ever send { context_type, user_message, app_id }, so "real input"
+// has to be measured off the message the client builders produce (Android
+// AiCalibrationService.kt, iOS AiCalibrationService.swift, RN services/
+// aiSetup.ts). All three emit the same shape:
+//   - a narrative profile whose every unanswered slot is an "unknown ..." /
+//     "not sure" / "no known ..." placeholder,
+//   - "- Label: value" lifestyle bullets (Android/iOS omit unanswered ones, RN
+//     writes them as "unknown"),
+//   - an optional "PATIENT'S OWN NOTES:" block with the patient's free text,
+//   - HIGH / MILD / LOW lines listing the items the questionnaire actually
+//     selected, written as "none" when empty.
+// The NONE line is deliberately NOT counted: it is the whole unselected pool.
+//
+// Floor of 3: a "2-3 paragraph clinical assessment" cannot be written from one
+// or two facts without inventing the rest. Free text is real input in its own
+// right and clears the floor on its own.
+const CALIBRATION_INPUT_FLOOR = 3;
+const PROFILE_PLACEHOLDER = /\b(unknown|not sure|no known|not applicable|n\/a)\b/i;
+// Where the narrative/lifestyle preamble ends in each builder's message.
+const PROFILE_END_MARKERS = [
+  "=== LOCKED",
+  "=== CLINICAL ASSESSMENT",
+  "=== CONNECTED DATA SOURCES",
+  "=== AUTO",
+  "PATIENT'S OWN NOTES:"
+];
+// Labels on a "HIGH (3): a, b, c" / "AUTO MILD: none" style line.
+function countLabelLine(value: string): number {
+  const v = value.trim();
+  if (!v || /^none$/i.test(v)) return 0;
+  return v.split(",").map((s)=>s.trim()).filter((s)=>s.length > 0).length;
+}
+function measureCalibrationInput(msg: string): {
+  selectedItems: number;
+  profileFacts: number;
+  hasNotes: boolean;
+  score: number;
+} {
+  // Patient's own words.
+  const notesMatch = msg.match(/PATIENT'S OWN NOTES:\s*\n([\s\S]*?)(?:\n\s*\n|\n===|$)/);
+  const hasNotes = (notesMatch?.[1] ?? "").trim().length >= 10;
+  // Items the questionnaire actually selected, across every locked / auto /
+  // manual / prodrome block in the message.
+  let selectedItems = 0;
+  for (const line of msg.split("\n")){
+    const m = line.match(/^\s*(?:AUTO |MANUAL )?(?:HIGH|MILD|LOW)\s*(?:\(\d+\))?\s*:\s*(.*)$/);
+    if (m) selectedItems += countLabelLine(m[1]);
+  }
+  // Narrative + lifestyle facts, counted only where a real value is present.
+  let profileEnd = msg.length;
+  for (const marker of PROFILE_END_MARKERS){
+    const i = msg.indexOf(marker);
+    if (i >= 0 && i < profileEnd) profileEnd = i;
+  }
+  let profileFacts = 0;
+  for (const rawLine of msg.slice(0, profileEnd).split("\n")){
+    const line = rawLine.trim();
+    if (!line) continue;
+    if (line.startsWith("===")) continue;
+    if (/^[A-Z][A-Z'’ ]+:$/.test(line)) continue; // "LIFESTYLE DETAIL:"
+    if (line.startsWith("- ")) {
+      // Lifestyle bullet: everything after the first colon is the answer.
+      const colon = line.indexOf(":");
+      const value = colon >= 0 ? line.slice(colon + 1).trim() : "";
+      if (value && !PROFILE_PLACEHOLDER.test(value)) profileFacts += 1;
+      continue;
+    }
+    // Narrative. One sentence per fact-cluster; a sentence with any placeholder
+    // in it has an unanswered slot and does not count.
+    for (const sentence of line.split(/(?<=\.)\s+/)){
+      const s = sentence.trim();
+      if (!s) continue;
+      if (!PROFILE_PLACEHOLDER.test(s)) profileFacts += 1;
+    }
+  }
+  // Free text is real input in its own right, so it clears the floor alone.
+  const score = selectedItems + profileFacts + (hasNotes ? CALIBRATION_INPUT_FLOOR : 0);
+  return { selectedItems, profileFacts, hasNotes, score };
+}
+// Stand-in for calibration_call1 below the floor: an honest POPULATION-DEFAULT
+// assessment instead of an invented personal one. It says plainly that we do not
+// have their information, names the triggers that are well established for
+// migraine generally, and states that the profile, gauge and thresholds are set
+// for a regular person with regular migraines until their own tracking says
+// otherwise. Hand-written rather than generated, so it is fixed text that
+// translates through the server i18n table like any other backend string, and
+// the same JSON contract as the model path so every client version renders it as
+// an ordinary assessment.
+function baselineAssessmentPayload(lang: Lang): string {
+  const t = translatorFor(lang);
+  const assessment = [
+    t("We don't know you yet, so there's nothing personal to read into here."),
+    t("What we can tell you is what tends to set migraines off for most people: disrupted or short sleep, stress and the let-down after it, dehydration, skipped meals, hormonal shifts, bright light and long screen sessions, drops in air pressure, and changes in alcohol or caffeine. We suggest keeping an eye on those to begin with."),
+    t("So that is what we have set you up for: a regular person with regular migraines. Your profile, your risk gauge and its thresholds all start on those typical settings, and they stay that way until your own tracking teaches the app otherwise. Log for a couple of weeks, tap 'Re-assess my profile', and this becomes about you.")
+  ].join("\n\n");
+  return JSON.stringify({
+    clinical_assessment: assessment,
+    adjustments: [],
+    data_warnings: []
+  });
+}
+// Stand-in for calibration_call2 below the floor. Follows the clients' own
+// fallback convention (Android AiCalibrationService.buildFallbackConfig
+// L768-790, RN aiSetup.buildFallbackConfig): gauge thresholds tiered by active
+// trigger count and the standard decay curves — the population defaults, never
+// numbers the model made up out of an empty profile — and calibration_notes says
+// so in as many words.
+function populationDefaultCalibrationPayload(lang: Lang, activeCount: number): string {
+  const t = translatorFor(lang);
+  const gauge = activeCount > 30
+    ? { low: 12, mild: 25, high: 40 }
+    : activeCount > 15
+      ? { low: 8, mild: 18, high: 30 }
+      : { low: 5, mild: 12, high: 20 };
+  const reasoning = t("Population default thresholds for {0} active triggers.", activeCount);
+  const decayReason = t("Population default decay curve.");
+  return JSON.stringify({
+    gauge_thresholds: { ...gauge, reasoning },
+    decay_weights: [
+      { severity: "HIGH", day0: 10, day1: 5, day2: 2.5, day3: 1, day4: 0, day5: 0, day6: 0, reasoning: decayReason },
+      { severity: "MILD", day0: 6, day1: 3, day2: 1.5, day3: 0.5, day4: 0, day5: 0, day6: 0, reasoning: decayReason },
+      { severity: "LOW", day0: 3, day1: 1.5, day2: 0, day3: 0, day4: 0, day5: 0, day6: 0, reasoning: decayReason }
+    ],
+    calibration_notes: t("Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log."),
+    summary: t("Set up on population defaults for now. Log a few days, then re-assess your profile to have these tuned to you.")
+  });
+}
 // ── Handler ───────────────────────────────────────────────────────────────────
 Deno.serve(async (req)=>{
   if (req.method === "OPTIONS") {
@@ -705,6 +842,27 @@ Deno.serve(async (req)=>{
           "Content-Type": "application/json"
         }
       });
+    }
+    // ── Insufficient input: answer honestly instead of improvising ──
+    // Below the floor there is nothing to reason from, so we skip the model
+    // entirely and return the population-default result. See
+    // measureCalibrationInput above for how the floor is measured.
+    if (context_type === "calibration_call1" || context_type === "calibration_call2") {
+      const signal = measureCalibrationInput(user_message);
+      if (signal.score < CALIBRATION_INPUT_FLOOR) {
+        const lang = await getLang(supabaseAdmin, user.id);
+        const payload = context_type === "calibration_call1"
+          ? baselineAssessmentPayload(lang)
+          : populationDefaultCalibrationPayload(lang, signal.selectedItems);
+        console.log(`AI setup [${context_type}] for ${user.id} — below input floor (items:${signal.selectedItems} facts:${signal.profileFacts} notes:${signal.hasNotes}); population defaults, no model call`);
+        return new Response(payload, {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        });
+      }
     }
     // ── Call OpenAI ──
     const model = MODEL_BY_CONTEXT[context_type] ?? DEFAULT_MODEL;
