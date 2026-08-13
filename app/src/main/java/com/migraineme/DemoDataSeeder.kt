@@ -58,6 +58,9 @@ object DemoDataSeeder {
     }
 
     private const val PREFS = "demo_seeder"
+    /** Date written into menstruation_settings by the demo seed — see seedMenstruation. */
+    private const val KEY_DEMO_PERIOD_DATE = "demo_last_period_date"
+    private const val DEMO_CYCLE_LENGTH = 28
     private fun isDemoCleared(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("cleared", false)
     private fun markCleared(c: Context) { c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("cleared", true).apply() }
 
@@ -138,6 +141,11 @@ object DemoDataSeeder {
                 // Monitor cards read metric_settings, not the data tables — without
                 // an enabled row per metric they show "No data" however much we seed.
                 seedMetricSettings(token, userId, base, key); Log.d(TAG, "✓ Metric settings done")
+                // Two rows, and tour step 8 is dead without them. Seeded up
+                // front rather than at the end: the bulk daily writes below take
+                // over a minute, and "Skip loading" cancels whatever is still
+                // queued behind them.
+                seedMenstruation(token, userId, base, key, today, ctx); Log.d(TAG, "✓ Menstruation done")
                 seedSleep(token, metrics, today);            Log.d(TAG, "✓ Sleep done")
                 prog("Seeding physical data…", 0.15f)
                 seedPhysical(token, physical, today);        Log.d(TAG, "✓ Physical done")
@@ -954,6 +962,87 @@ object DemoDataSeeder {
         }
     }
 
+    // ── Menstrual cycle ─────────────────────────────────────────────────
+
+    /**
+     * Tour step 8 walks the user through the Menstrual Cycle screen, whose hero
+     * reads `menstruation_settings.last_menstruation_date` — a per-user config
+     * row, not a log table. With nothing seeded the step talked about
+     * predictions over a card reading "No cycle data yet".
+     *
+     * Two rows, both removable:
+     *  - the period itself is a `triggers` row (type=menstruation, source=manual)
+     *    marked `notes='[demo]'`, which purgeOrphanDemoRows already deletes.
+     *  - `menstruation_settings` has no source/notes column to mark, so the
+     *    seeded date is remembered in prefs and only cleared again if the row
+     *    still holds exactly that date. If the user edited it during the tour,
+     *    their value is theirs and we leave it alone.
+     */
+    private suspend fun seedMenstruation(token: String, userId: String?, base: String, key: String, today: LocalDate, ctx: Context) {
+        if (userId.isNullOrBlank()) return
+        val lastPeriod = today.minusDays(20)   // next predicted period 8 days out
+        val client = HttpClient()
+        try {
+            val ok = upsertRow(client, "$base/rest/v1/menstruation_settings", token, key, "user_id",
+                buildJsonObject {
+                    put("user_id", userId)
+                    put("last_menstruation_date", lastPeriod.toString())
+                    put("avg_cycle_length", DEMO_CYCLE_LENGTH)
+                    put("auto_update_average", true)
+                })
+            if (ok) {
+                ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    .putString(KEY_DEMO_PERIOD_DATE, lastPeriod.toString()).apply()
+                Log.d(TAG, "✓ Menstruation settings (last=$lastPeriod)")
+            }
+            // The period log itself, so the screen's history section and the
+            // prediction both have something real behind them.
+            insertRow(client, "$base/rest/v1/triggers", token, key,
+                buildJsonObject {
+                    put("user_id", userId)
+                    put("type", "menstruation")
+                    put("start_at", "${lastPeriod}T09:00:00Z")
+                    put("source", "manual")
+                    put("notes", "[demo]")
+                    put("active", true)
+                })
+        } catch (e: Exception) {
+            Log.w(TAG, "seedMenstruation failed: ${e.message}")
+        } finally { client.close() }
+    }
+
+    /**
+     * Undo [seedMenstruation]'s config row. Only nulls the date when it still
+     * matches what the seeder wrote, so a cycle the user entered themselves
+     * during the tour survives the cleanup.
+     */
+    private suspend fun clearDemoMenstruationSettings(client: HttpClient, base: String, token: String, key: String, userId: String, ctx: Context) {
+        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val seededDate = prefs.getString(KEY_DEMO_PERIOD_DATE, null) ?: return
+        try {
+            val resp = client.get("$base/rest/v1/menstruation_settings") {
+                header("Authorization", "Bearer $token"); header("apikey", key)
+                parameter("user_id", "eq.$userId"); parameter("select", "last_menstruation_date")
+            }
+            val current = Json.parseToJsonElement(resp.bodyAsText()).jsonArray
+                .firstOrNull()?.jsonObject?.get("last_menstruation_date")?.jsonPrimitive?.contentOrNull
+            if (current != seededDate) {
+                Log.d(TAG, "menstruation_settings edited by user ($current) — leaving it")
+                prefs.edit().remove(KEY_DEMO_PERIOD_DATE).apply()
+                return
+            }
+            client.patch("$base/rest/v1/menstruation_settings") {
+                header("Authorization", "Bearer $token"); header("apikey", key)
+                header("Prefer", "return=minimal")
+                parameter("user_id", "eq.$userId")
+                contentType(ContentType.Application.Json)
+                setBody(buildJsonObject { put("last_menstruation_date", JsonNull) }.toString())
+            }
+            prefs.edit().remove(KEY_DEMO_PERIOD_DATE).apply()
+            Log.d(TAG, "✓ Cleared demo menstruation settings")
+        } catch (e: Exception) { Log.e(TAG, "clear menstruation_settings failed: ${e.message}") }
+    }
+
     // ── Clear ALL ───────────────────────────────────────────────────────
 
     suspend fun clearDemoData(
@@ -1052,6 +1141,12 @@ object DemoDataSeeder {
         withContext(Dispatchers.IO) {
             val client = HttpClient()
             try {
+                // Before the probe: menstruation_settings has no source column,
+                // so the source='demo' probe below can't speak for it, and a
+                // partial seed (no sleep rows) would otherwise strand the demo
+                // cycle date on the account. Self-guards on the prefs marker.
+                clearDemoMenstruationSettings(client, base, token, key, userId, ctx)
+
                 // Probe: bail if no source='demo' rows exist
                 val probe = try {
                     client.get("$base/rest/v1/sleep_duration_daily") {
@@ -1102,7 +1197,9 @@ object DemoDataSeeder {
                     } catch (e: Exception) { Log.e(TAG, "purge treatment_regimens failed: ${e.message}") }
                 }
 
-                // Standalone seeder triggers (not linked to a demo migraine)
+                // Standalone seeder triggers (not linked to a demo migraine).
+                // This also takes the seeded menstruation period log, which is a
+                // triggers row marked the same way.
                 try {
                     client.delete("$base/rest/v1/triggers") {
                         header("Authorization", "Bearer $token"); header("apikey", key)
