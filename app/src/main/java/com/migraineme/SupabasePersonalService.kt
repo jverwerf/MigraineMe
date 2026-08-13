@@ -88,11 +88,17 @@ class SupabasePersonalService(context: Context) {
         val timezone: String? = null
     )
 
+    // NOTE: `source` must NOT have a Kotlin default here. The Json config below
+    // uses encodeDefaults = false, so a defaulted property is dropped from the
+    // request body — and sleep_duration_daily / fell_asleep_time_daily /
+    // woke_up_time_daily all declare `source` NOT NULL with no DB default, so
+    // the insert dies with a 23502 not-null violation. That is exactly why phone
+    // sleep never produced a single row. Keep it a required constructor arg.
     @Serializable
     private data class PhoneSleepDurationWrite(
         val date: String,
         val value_hours: Double,
-        val source: String = "phone",
+        val source: String,
         val source_measure_id: String? = null
     )
 
@@ -100,7 +106,7 @@ class SupabasePersonalService(context: Context) {
     private data class PhoneSleepTimeWrite(
         val date: String,
         val value_at: String,
-        val source: String = "phone",
+        val source: String,
         val source_measure_id: String? = null
     )
 
@@ -393,24 +399,25 @@ class SupabasePersonalService(context: Context) {
         durationHours: Double,
         fellAsleepIso: String,
         wokeUpIso: String,
-        timezone: String? = null
+        timezone: String? = null,
+        source: String = "phone"
     ) {
         postgrestInsert(
             accessToken = accessToken,
             table = "sleep_duration_daily",
-            body = listOf(PhoneSleepDurationWrite(date, durationHours)),
+            body = listOf(PhoneSleepDurationWrite(date, durationHours, source)),
             onConflict = "user_id,source,date"
         )
         postgrestInsert(
             accessToken = accessToken,
             table = "fell_asleep_time_daily",
-            body = listOf(PhoneSleepTimeWrite(date, fellAsleepIso)),
+            body = listOf(PhoneSleepTimeWrite(date, fellAsleepIso, source)),
             onConflict = "user_id,source,date"
         )
         postgrestInsert(
             accessToken = accessToken,
             table = "woke_up_time_daily",
-            body = listOf(PhoneSleepTimeWrite(date, wokeUpIso)),
+            body = listOf(PhoneSleepTimeWrite(date, wokeUpIso, source)),
             onConflict = "user_id,source,date"
         )
     }
