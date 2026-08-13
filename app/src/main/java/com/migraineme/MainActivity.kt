@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import com.google.firebase.messaging.FirebaseMessaging
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -482,6 +483,16 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
     val communityState by communityVm.state.collectAsState()
     val communityUnreadCount = communityState.unreadCount
+
+    // Back closes the drawer instead of falling through to the NavHost.
+    // Nothing installed a handler for this, so with the drawer open a Back
+    // press popped the screen UNDERNEATH it: the drawer stayed on screen, the
+    // back stack silently unwound, and the user landed somewhere they never
+    // chose once they finally closed the drawer. In-memory back stack, which
+    // is why a force-stop appeared to "fix" it.
+    BackHandler(enabled = drawerState.isOpen) {
+        scope.launch { drawerState.close() }
+    }
 
     // Open the side drawer when the tour reaches the "Settings" step so the user
     // sees the hamburger menu instead of a pushed Risk Model screen.
