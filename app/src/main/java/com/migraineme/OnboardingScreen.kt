@@ -571,12 +571,12 @@ private fun LoadingDataPage(progress: Float, statusText: String, isComplete: Boo
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (!isComplete) {
-                        // Slow, calm ring — one revolution every 4s instead of the
+                        // Slow, calm ring — one revolution every 6s instead of the
                         // default indeterminate spinner's frantic pace.
                         val ringTransition = rememberInfiniteTransition(label = "ring")
                         val ringAngle by ringTransition.animateFloat(
                             0f, 360f,
-                            infiniteRepeatable(tween(4000, easing = LinearEasing)),
+                            infiniteRepeatable(tween(6000, easing = LinearEasing)),
                             label = "ringAngle"
                         )
                         androidx.compose.foundation.Canvas(

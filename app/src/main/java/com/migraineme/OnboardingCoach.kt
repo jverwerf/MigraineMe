@@ -622,6 +622,15 @@ fun CoachOverlay(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        // The tour's first step has nothing behind it: Back
+                                        // here used to exit the whole tour (landing the user
+                                        // on setup out of nowhere). Hide it, matching iOS;
+                                        // the setup phase keeps Back on step 0 as its route
+                                        // to the permission pages.
+                                        val hideBack = tourState.phase == CoachPhase.TOUR && tourState.stepIndex == 0
+                                        if (hideBack) {
+                                            Spacer(Modifier.width(1.dp))
+                                        } else {
                                         OutlinedButton(
                                             onClick = {
                                                 val route = TourManager.prevStep()
@@ -635,6 +644,7 @@ fun CoachOverlay(
                                             Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(14.dp))
                                             Spacer(Modifier.width(6.dp))
                                             Text(t("Back"), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+                                        }
                                         }
 
                                         Text(
@@ -656,8 +666,15 @@ fun CoachOverlay(
                                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(14.dp))
                                             }
                                         } else {
+                                            // Data step: gate Done until the user has scrolled to
+                                            // the very bottom of the data list (scrollPosition ==
+                                            // -1). This gate was silently dropped by the 08-12
+                                            // i18n commit; it is the designed behaviour.
+                                            val isDataStepDone = tourState.phase == CoachPhase.SETUP && tourState.stepIndex == 2
+                                            val gateScroll = isDataStepDone && SetupScrollState.scrollPosition != -1
                                             Button(
-                                                onClick = { finishAndClean() },
+                                                onClick = { if (!gateScroll) finishAndClean() },
+                                                enabled = !gateScroll,
                                                 colors = ButtonDefaults.buttonColors(containerColor = if (isInteractive) AppTheme.AccentPink else AppTheme.AccentPurple),
                                                 shape = RoundedCornerShape(50),
                                                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
