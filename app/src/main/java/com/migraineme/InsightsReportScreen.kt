@@ -473,6 +473,19 @@ fun InsightsReportScreen(
                         "$timeLabel · ${activeFilters.joinToString(", ") { it.label }}"
                     } else null
                     scope.launch {
+                        // Generate tapped before the episode list finished
+                        // loading (or the range is genuinely empty): an empty
+                        // episodeIds list reads as "exactly these attacks,
+                        // i.e. none" server-side and builds a doctor-ready PDF
+                        // claiming zero migraines. Refuse instead of lying.
+                        if (filteredSorted.isEmpty()) {
+                            isGeneratingPdf = false
+                            android.widget.Toast.makeText(
+                                ctx, t("No attacks in this range yet — pick a time range or wait for your data to load"),
+                                android.widget.Toast.LENGTH_LONG,
+                            ).show()
+                            return@launch
+                        }
                         try {
                             // The document is built by the `build-report-html`
                             // edge function and printed here, so every surface
