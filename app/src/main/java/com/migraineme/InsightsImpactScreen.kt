@@ -125,7 +125,7 @@ fun InsightsImpactScreen(
                     }
                     Spacer(Modifier.height(6.dp))
                     sortedSymptoms.take(10).forEach { s ->
-                        val pct = (s.pctOfAttacks * 100f).toInt()
+                        val pct = s.displayPct
                         val sev = s.avgSeverity
                         val sevColor = if (sev == null) AppTheme.SubtleTextColor
                             else if (sev >= 7f) Color(0xFFE59A9A)

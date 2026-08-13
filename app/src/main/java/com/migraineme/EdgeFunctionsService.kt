@@ -2195,7 +2195,16 @@ class EdgeFunctionsService {
         @SerialName("avg_severity") val avgSeverity: Float? = null,
         @SerialName("avg_duration_hours") val avgDurationHours: Float? = null,
         @SerialName("sample_size") val sampleSize: Int = 0,
-    )
+    ) {
+        /**
+         * The percentage as rendered. A symptom cannot occur in more attacks
+         * than the user logged, so anything over 100 is a row left behind by an
+         * engine run that divided per-attack counts by the distinct-DAY count.
+         * The engine is the fix; this keeps a stale row from printing "121%"
+         * on screen while it waits to be recomputed.
+         */
+        val displayPct: Int get() = (pctOfAttacks * 100f).toInt().coerceIn(0, 100)
+    }
 
     /**
      * Aura findings computed server-side: side match against pain, whether the

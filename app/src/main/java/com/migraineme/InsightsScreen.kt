@@ -2833,7 +2833,7 @@ private fun TopSymptomsSection(topSymptoms: List<EdgeFunctionsService.SymptomSta
     Text(t("Top Symptoms"), color = Color(0xFFCE93D8),
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
     topSymptoms.forEach { s ->
-        val pct = (s.pctOfAttacks * 100f).toInt()
+        val pct = s.displayPct
         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
             BrainyRowIcon(s.symptomLabel, size = 18.dp)
             Text(prettyLabel(s.symptomLabel), color = Color.White,
