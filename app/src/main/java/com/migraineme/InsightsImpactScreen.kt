@@ -45,9 +45,17 @@ fun InsightsImpactScreen(
         if (severities.isEmpty()) 5f else severities.average().toFloat()
     }
 
+    // The zone heat map needs logged aura LOCATIONS, but the findings and the
+    // duration spread don't — they come from timings and from the server-side
+    // engine. Gating all three on zones hid "What we've spotted" and "How long
+    // they last" from anyone who timed an aura without drawing where it sat.
+    val hasAuraZones = auraZoneCounts.isNotEmpty() && auraAttackCount > 0
+    val hasAuraCard = hasAuraZones || auraInsights.isNotEmpty() ||
+        auraDurationBuckets.isNotEmpty() || auraDurationStats != null
+
     val lastCard = when {
         impactItems.isNotEmpty() -> "missed"
-        auraZoneCounts.isNotEmpty() && auraAttackCount > 0 -> "aura"
+        hasAuraCard -> "aura"
         painLocationCounts.isNotEmpty() && totalMigraineCount > 0 -> "pain"
         symptomStats.isNotEmpty() -> "symptoms"
         else -> "severity"
@@ -234,52 +242,58 @@ fun InsightsImpactScreen(
             // ── Card 2a: How the pain moves — needs timelined attacks ──
             painMigration?.let { pm -> PainMigrationCard(pm) }
 
-            // ── Card 2b: Aura Location ──
-            if (auraZoneCounts.isNotEmpty() && auraAttackCount > 0) {
+            // ── Card 2b: Aura ──
+            if (hasAuraCard) {
                 // watermark lives on the page's last card; that's this one when
                 // there are no missed activities below
                 MaybeWatermarkCard(watermark = lastCard == "aura", resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text(t("Aura Location"), color = AppTheme.TitleColor,
+                            Text(if (hasAuraZones) t("Aura Location") else t("Your Aura"),
+                                color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(t("Where in your vision it shows up, as seen through your own eyes"),
+                            Text(
+                                if (hasAuraZones)
+                                    t("Where in your vision it shows up, as seen through your own eyes")
+                                else t("What your aura has been doing across your attacks"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
+                    if (hasAuraZones) {
+                        Spacer(Modifier.height(12.dp))
 
-                    AuraHeatMap(
-                        auraZoneCounts = auraZoneCounts,
-                        totalAuraAttacks = auraAttackCount,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                        AuraHeatMap(
+                            auraZoneCounts = auraZoneCounts,
+                            totalAuraAttacks = auraAttackCount,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
-                    Spacer(Modifier.height(12.dp))
-                    auraZoneCounts.forEach { (zoneId, count) ->
-                        val pct = (count.toFloat() / auraAttackCount * 100).toInt()
-                        val pctColor = when {
-                            pct >= 60 -> Color(0xFFE57373)
-                            pct >= 30 -> Color(0xFFFFB74D)
-                            else -> AppTheme.SubtleTextColor
-                        }
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                Modifier.size(10.dp)
-                                    .clip(CircleShape)
-                                    .background(AppTheme.AccentPurple.copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(AuraZones.label(zoneId), color = Color.White,
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("$pct%", color = pctColor,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        Spacer(Modifier.height(12.dp))
+                        auraZoneCounts.forEach { (zoneId, count) ->
+                            val pct = (count.toFloat() / auraAttackCount * 100).toInt()
+                            val pctColor = when {
+                                pct >= 60 -> Color(0xFFE57373)
+                                pct >= 30 -> Color(0xFFFFB74D)
+                                else -> AppTheme.SubtleTextColor
+                            }
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    Modifier.size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(AppTheme.AccentPurple.copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(AuraZones.label(zoneId), color = Color.White,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("$pct%", color = pctColor,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            }
                         }
                     }
 
