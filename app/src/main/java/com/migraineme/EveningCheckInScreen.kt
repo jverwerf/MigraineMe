@@ -2224,7 +2224,7 @@ private fun MigraineNowStep(
                         .background(Color.White.copy(alpha = 0.08f)).padding(3.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    listOf("Front" to false, "Back" to true).forEach { (label, isBack) ->
+                    listOf("Front##bodymap" to false, "Back##bodymap" to true).forEach { (label, isBack) ->
                         val sel = showBack == isBack
                         Surface(
                             modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)),

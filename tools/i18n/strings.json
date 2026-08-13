@@ -8496,6 +8496,15 @@
     "count": 1
   },
   {
+    "en": "Back##bodymap",
+    "class": "hard",
+    "sites": [
+      "EveningCheckInScreen.kt:bodymap-toggle"
+    ],
+    "max_len": 16,
+    "count": 1
+  },
+  {
     "en": "Band worn on the calf that delivers TENS-style stimulation.",
     "class": "soft",
     "sites": [
@@ -13281,6 +13290,15 @@
       "app/src/main/java/com/migraineme/PainLocationScreen.kt:318"
     ],
     "max_len": 14,
+    "count": 1
+  },
+  {
+    "en": "Front##bodymap",
+    "class": "hard",
+    "sites": [
+      "EveningCheckInScreen.kt:bodymap-toggle"
+    ],
+    "max_len": 16,
     "count": 1
   },
   {

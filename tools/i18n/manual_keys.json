@@ -153,6 +153,14 @@
       "max_len": 32
     },
     {
+      "en": "Back##bodymap",
+      "class": "hard",
+      "sites": [
+        "EveningCheckInScreen.kt:bodymap-toggle"
+      ],
+      "max_len": 16
+    },
+    {
       "en": "Bar / pub",
       "class": "hard",
       "sites": [
@@ -1103,6 +1111,14 @@
         "pool:seeded-template"
       ],
       "max_len": 32
+    },
+    {
+      "en": "Front##bodymap",
+      "class": "hard",
+      "sites": [
+        "EveningCheckInScreen.kt:bodymap-toggle"
+      ],
+      "max_len": 16
     },
     {
       "en": "Frovatriptan",

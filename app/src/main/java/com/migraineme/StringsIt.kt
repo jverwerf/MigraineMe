@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3145 entries.
+ * 3147 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -474,6 +474,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Back Upper Left" to "Nuca sinistra",
     "Back Upper Right" to "Nuca destra",
     "Back to Home" to "Alla home",
+    "Back##bodymap" to "Dietro",
     "Band worn on the calf that delivers TENS-style stimulation." to "Fascia da mettere sul polpaccio che dà una stimolazione tipo TENS.",
     "Bar / pub" to "Bar / pub",
     "Barcode %s is not in the Open Food Facts database. Try searching by name instead." to "Il codice %s non è in Open Food Facts. Prova a cercarlo per nome.",
@@ -1087,6 +1088,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "From what you told us" to "Da ciò che ci hai detto",
     "From your calendar" to "Dal tuo calendario",
     "Front" to "Davanti",
+    "Front##bodymap" to "Davanti",
     "Frovatriptan" to "Frovatriptan",
     "Full History & Journal" to "Cronologia e diario",
     "Full Insights & Spider Charts" to "Analisi e grafici a ragnatela",

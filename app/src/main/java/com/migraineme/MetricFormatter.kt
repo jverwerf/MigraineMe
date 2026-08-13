@@ -207,5 +207,11 @@ object MetricFormatter {
 fun prettyLabel(raw: String?): String {
     if (raw.isNullOrBlank()) return ""
     val spaced = raw.trim().replace('_', ' ').replace(Regex("\\s+"), " ")
-    return spaced.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    val pretty = spaced.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    // Pool items arrive from the database seeded in English, so without this the
+    // user's triggers, prodromes, symptoms and reliefs stay English while the
+    // chrome around them translates. The English text IS the key, so a seeded
+    // name resolves and a name the user typed themselves passes through
+    // unchanged — exactly the behaviour we want for custom items.
+    return Strings.tSync(pretty)
 }
