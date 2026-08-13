@@ -70,6 +70,174 @@
     {
       "en": "Clinical assessment",
       "why": "report cover and patient-profile card: runtime values"
+    },
+    {
+      "en": "Profile",
+      "why": "report narrative section titles: rendered via rt(def.title) runtime value"
+    },
+    {
+      "en": "Trigger Profile",
+      "why": "report narrative section titles: rendered via rt(def.title) runtime value"
+    },
+    {
+      "en": "Burden Profile",
+      "why": "report narrative section titles: rendered via rt(def.title) runtime value"
+    },
+    {
+      "en": "Coping Profile",
+      "why": "report narrative section titles: rendered via rt(def.title) runtime value"
+    },
+    {
+      "en": "Lifestyle",
+      "why": "report narrative section titles: rendered via rt(def.title) runtime value"
+    },
+    {
+      "en": "Trend",
+      "why": "report narrative section titles: rendered via rt(def.title) runtime value"
+    },
+    {
+      "en": "Trigger",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Prodrome",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Medicine",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Relief",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Activity",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Location",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Missed",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Symptom",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Postdrome",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Pain",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Pain location",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Aura",
+      "why": "report attack-log row labels: stored English, translated at output"
+    },
+    {
+      "en": "Years with migraine",
+      "why": "report patient-profile row label: runtime value"
+    },
+    {
+      "en": "Mon",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Tue",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Wed",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Thu",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Fri",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Sat",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Sun",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Winter",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Spring",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Summer",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Autumn",
+      "why": "report frequency page: day/season tick labels translated at display"
+    },
+    {
+      "en": "Working well",
+      "why": "report treatments page: band labels looked up by enum, translated at display"
+    },
+    {
+      "en": "Showing progress",
+      "why": "report treatments page: band labels looked up by enum, translated at display"
+    },
+    {
+      "en": "Some effect",
+      "why": "report treatments page: band labels looked up by enum, translated at display"
+    },
+    {
+      "en": "Not noticeable yet",
+      "why": "report treatments page: band labels looked up by enum, translated at display"
+    },
+    {
+      "en": "Triggers",
+      "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Prodromes",
+      "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Medicines",
+      "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Reliefs",
+      "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Activities",
+      "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Locations",
+      "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Missed activities",
+      "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Symptoms",
+      "why": "report breakdown block titles: runtime values translated at display"
     }
   ]
 }
