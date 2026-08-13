@@ -8,6 +8,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -304,16 +306,30 @@ class SupabaseDbService(
             }
             return if (r.status.isSuccess()) r.body() else emptyList()
         }
-        return MigraineLinkedItems(
-            triggers = fetchTriggers("triggers"),
-            medicines = fetchMedicines("medicines"),
-            reliefs = fetchReliefs("reliefs"),
-            prodromes = fetchProdromes("prodromes"),
-            postdromes = fetchPostdromes(),
-            activities = fetchActivities("time_in_high_hr_zones_daily"),
-            locations = fetchLocations("locations"),
-            painPoints = getPainPoints(accessToken, migraineId)
-        )
+        // Eight independent single-row-set queries. Run them together: called
+        // once per migraine from loadJournal, the sequential version cost 8
+        // serial round-trips per attack, which is what left the Journal blank
+        // for tens of seconds behind the onboarding tour card.
+        return coroutineScope {
+            val triggers = async { fetchTriggers("triggers") }
+            val medicines = async { fetchMedicines("medicines") }
+            val reliefs = async { fetchReliefs("reliefs") }
+            val prodromes = async { fetchProdromes("prodromes") }
+            val postdromes = async { fetchPostdromes() }
+            val activities = async { fetchActivities("time_in_high_hr_zones_daily") }
+            val locations = async { fetchLocations("locations") }
+            val painPoints = async { getPainPoints(accessToken, migraineId) }
+            MigraineLinkedItems(
+                triggers = triggers.await(),
+                medicines = medicines.await(),
+                reliefs = reliefs.await(),
+                prodromes = prodromes.await(),
+                postdromes = postdromes.await(),
+                activities = activities.await(),
+                locations = locations.await(),
+                painPoints = painPoints.await()
+            )
+        }
     }
 
     suspend fun insertMigraine(

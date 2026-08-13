@@ -75,7 +75,10 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     }
 
     if (journalLoading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // Top-aligned, not centred: the onboarding tour parks its card over the
+        // lower half of the screen, and a centred spinner sat exactly behind it,
+        // so a still-loading Journal read as a blank page during the tour step.
+        Box(Modifier.fillMaxSize().padding(top = 56.dp), contentAlignment = Alignment.TopCenter) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = AppTheme.AccentPurple)
                 Spacer(Modifier.height(8.dp))

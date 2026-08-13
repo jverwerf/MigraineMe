@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -1047,25 +1050,41 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _journalLoading.value = true
             try {
+                // The seven whole-table reads don't depend on each other, and the
+                // per-migraine linked-item read is a fan-out over the attack list.
+                // Serially this was one round-trip per attack per child table —
+                // ~160 of them on a tour-seeded account, which is why the Journal
+                // sat blank behind the onboarding card for the best part of a
+                // minute. Batched, it is a handful of round-trips.
                 val migraineRows = db.getMigraines(accessToken)
-                val migraines = migraineRows.map { row ->
-                    val linked = try { db.getLinkedItems(accessToken, row.id) } catch (_: Exception) { SupabaseDbService.MigraineLinkedItems() }
-                    JournalEvent.Migraine(row, linked)
+                val migraines = coroutineScope {
+                    migraineRows.chunked(5).flatMap { chunk ->
+                        chunk.map { row ->
+                            async {
+                                val linked = try { db.getLinkedItems(accessToken, row.id) } catch (_: Exception) { SupabaseDbService.MigraineLinkedItems() }
+                                JournalEvent.Migraine(row, linked)
+                            }
+                        }.awaitAll()
+                    }
                 }
-                val triggers = db.getAllTriggers(accessToken).map { JournalEvent.Trigger(it) }
-                val medicines = db.getAllMedicines(accessToken).map { JournalEvent.Medicine(it) }
-                val reliefs = db.getAllReliefs(accessToken).map { JournalEvent.Relief(it) }
-                val prodromes = db.getAllProdromeLog(accessToken).map { JournalEvent.Prodrome(it) }
-                val locations = db.getAllLocationLog(accessToken).map { JournalEvent.Location(it) }
-                val activities = db.getAllActivityLog(accessToken).map { JournalEvent.Activity(it) }
-                val missedActivities = db.getAllMissedActivityLog(accessToken).map { JournalEvent.MissedActivity(it) }
+                val flat = coroutineScope {
+                    listOf(
+                        async { db.getAllTriggers(accessToken).map { JournalEvent.Trigger(it) } },
+                        async { db.getAllMedicines(accessToken).map { JournalEvent.Medicine(it) } },
+                        async { db.getAllReliefs(accessToken).map { JournalEvent.Relief(it) } },
+                        async { db.getAllProdromeLog(accessToken).map { JournalEvent.Prodrome(it) } },
+                        async { db.getAllLocationLog(accessToken).map { JournalEvent.Location(it) } },
+                        async { db.getAllActivityLog(accessToken).map { JournalEvent.Activity(it) } },
+                        async { db.getAllMissedActivityLog(accessToken).map { JournalEvent.MissedActivity(it) } },
+                    ).awaitAll().flatten()
+                }
 
                 // Load trigger definitions for label lookup
                 val context = getApplication<android.app.Application>().applicationContext
                 val defs = edge.getTriggerDefinitions(context)
                 _triggerLabelMap.value = defs.associate { it.triggerType to it.label }
 
-                val merged = (migraines + triggers + medicines + reliefs + prodromes + locations + activities + missedActivities).sortedByDescending { ev ->
+                val merged = (migraines + flat).sortedByDescending { ev ->
                     when (ev) {
                         is JournalEvent.Migraine -> ev.row.startAt
                         is JournalEvent.Trigger -> ev.row.startAt
