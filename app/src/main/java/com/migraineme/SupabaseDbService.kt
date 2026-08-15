@@ -38,6 +38,36 @@ class SupabaseDbService(
 
     private fun HttpStatusCode.isSuccess(): Boolean = value in 200..299
 
+    /**
+     * One window of the Journal feed, pushed down to PostgREST.
+     *
+     * The feed is a merge of eight tables ordered by start_at descending, so a
+     * page is expressed as a time cursor rather than an offset: everything
+     * strictly older than [beforeIso] (null = start at the newest entry), no
+     * older than [sinceIso], capped at [limit] rows per table. Taking the
+     * newest [limit] of the merged result and using its last timestamp as the
+     * next cursor is complete — at most [limit] - 1 merged rows sit above that
+     * cursor, so no single table can have hidden one inside its own window.
+     *
+     * Without this a thousand-entry account read every row of every table, plus
+     * one linked-items fan-out per attack, just to draw the first screenful.
+     */
+    data class JournalWindow(
+        val beforeIso: String? = null,
+        val sinceIso: String? = null,
+        val limit: Int = 60
+    )
+
+    private fun HttpRequestBuilder.journalWindow(w: JournalWindow?) {
+        if (w == null) return
+        // Repeated filters on one column are ANDed by PostgREST, so the two
+        // bounds compose into the half-open window the cursor walk needs.
+        w.beforeIso?.let { parameter("start_at", "lt.$it") }
+        w.sinceIso?.let { parameter("start_at", "gte.$it") }
+        header("Range-Unit", "items")
+        header("Range", "0-${(w.limit - 1).coerceAtLeast(0)}")
+    }
+
     //  MIGRAINES 
     @Serializable
     data class MigraineRow(
@@ -356,11 +386,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Insert migraine failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun getMigraines(accessToken: String): List<MigraineRow> {
+    suspend fun getMigraines(accessToken: String, window: JournalWindow? = null): List<MigraineRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("select", "*")
+            parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) error("Fetch migraines failed: ${response.bodyAsText()}")
         return response.body()
@@ -547,11 +579,13 @@ class SupabaseDbService(
         return response.body()
     }
 
-    suspend fun getAllTriggers(accessToken: String): List<TriggerRow> {
+    suspend fun getAllTriggers(accessToken: String, window: JournalWindow? = null): List<TriggerRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("select", "*")
+            parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) error("Fetch triggers failed: ${response.bodyAsText()}")
         return response.body()
@@ -670,11 +704,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Insert medicine failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun getAllMedicines(accessToken: String): List<MedicineRow> {
+    suspend fun getAllMedicines(accessToken: String, window: JournalWindow? = null): List<MedicineRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("select", "*")
+            parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) error("Fetch medicines failed: ${response.bodyAsText()}")
         return response.body()
@@ -1247,11 +1283,13 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Insert relief failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun getAllReliefs(accessToken: String): List<ReliefRow> {
+    suspend fun getAllReliefs(accessToken: String, window: JournalWindow? = null): List<ReliefRow> {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("select", "*")
+            parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) error("Fetch reliefs failed: ${response.bodyAsText()}")
         return response.body()
@@ -2011,12 +2049,13 @@ class SupabaseDbService(
     }
 
     /** Fetch all prodrome log entries. */
-    suspend fun getAllProdromeLog(accessToken: String): List<ProdromeLogRow> {
+    suspend fun getAllProdromeLog(accessToken: String, window: JournalWindow? = null): List<ProdromeLogRow> {
         val response = client.get("$supabaseUrl/rest/v1/prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("select", "id,type,start_at,notes,migraine_id")
             parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) return emptyList()
         return response.body()
@@ -2172,11 +2211,12 @@ class SupabaseDbService(
     }
 
     /** Fetch all location log entries. */
-    suspend fun getAllLocationLog(accessToken: String): List<LocationLogRow> {
+    suspend fun getAllLocationLog(accessToken: String, window: JournalWindow? = null): List<LocationLogRow> {
         val response = client.get("$supabaseUrl/rest/v1/locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) return emptyList()
         return response.body()
@@ -2435,13 +2475,14 @@ class SupabaseDbService(
     }
 
     /** Fetch all activity log entries. */
-    suspend fun getAllActivityLog(accessToken: String): List<ActivityLogRow> {
+    suspend fun getAllActivityLog(accessToken: String, window: JournalWindow? = null): List<ActivityLogRow> {
         val response = client.get("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("activity_type", "neq.daily_total")
             parameter("start_at", "not.is.null")
             parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) return emptyList()
         return response.body()
@@ -2598,11 +2639,12 @@ class SupabaseDbService(
     }
 
     /** Fetch all missed activity log entries. */
-    suspend fun getAllMissedActivityLog(accessToken: String): List<MissedActivityLogRow> {
+    suspend fun getAllMissedActivityLog(accessToken: String, window: JournalWindow? = null): List<MissedActivityLogRow> {
         val response = client.get("$supabaseUrl/rest/v1/missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("order", "start_at.desc")
+            journalWindow(window)
         }
         if (!response.status.isSuccess()) return emptyList()
         return response.body()

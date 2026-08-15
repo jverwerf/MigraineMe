@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -169,6 +170,72 @@ sealed class JournalEvent {
     data class MissedActivity(val row: SupabaseDbService.MissedActivityLogRow) : JournalEvent()
 }
 
+/** The row id behind a feed entry — how a deleted entry is found in the list. */
+fun journalEventId(ev: JournalEvent): String = when (ev) {
+    is JournalEvent.Migraine -> ev.row.id
+    is JournalEvent.Trigger -> ev.row.id
+    is JournalEvent.Medicine -> ev.row.id
+    is JournalEvent.Relief -> ev.row.id
+    is JournalEvent.Prodrome -> ev.row.id
+    is JournalEvent.Location -> ev.row.id
+    is JournalEvent.Activity -> ev.row.id
+    is JournalEvent.MissedActivity -> ev.row.id
+}
+
+/** The timestamp the feed is ordered and paged by. */
+fun journalEventStartAt(ev: JournalEvent): String? = when (ev) {
+    is JournalEvent.Migraine -> ev.row.startAt
+    is JournalEvent.Trigger -> ev.row.startAt
+    is JournalEvent.Medicine -> ev.row.startAt
+    is JournalEvent.Relief -> ev.row.startAt
+    is JournalEvent.Prodrome -> ev.row.startAt
+    is JournalEvent.Location -> ev.row.startAt
+    is JournalEvent.Activity -> ev.row.startAt
+    is JournalEvent.MissedActivity -> ev.row.startAt
+}
+
+/** Which table an entry came from — the type filter is really a table choice,
+ *  so it decides what a page even has to read. */
+enum class JournalTable { MIGRAINE, TRIGGER, MEDICINE, RELIEF, PRODROME, LOCATION, ACTIVITY, MISSED }
+
+/**
+ * The Journal's filter selection, as the feed loader needs it.
+ *
+ * The screen still owns the controls and still applies every filter to what it
+ * draws — this is the same selection expressed so the query can be narrowed
+ * before rows are fetched. Type picks the tables, the timeframe becomes the
+ * window bounds; source and "needs attention" are read off row fields and so
+ * are settled in memory.
+ */
+data class JournalFilter(
+    val type: String = "All",
+    val source: String = "All",
+    val sinceIso: String? = null,
+    val untilIso: String? = null
+) {
+    fun tables(): Set<JournalTable> = when (type) {
+        "Migraines" -> setOf(JournalTable.MIGRAINE)
+        "Triggers" -> setOf(JournalTable.TRIGGER)
+        "Prodromes" -> setOf(JournalTable.PRODROME)
+        "Medicines" -> setOf(JournalTable.MEDICINE)
+        "Reliefs" -> setOf(JournalTable.RELIEF)
+        "Activities" -> setOf(JournalTable.ACTIVITY)
+        "Locations" -> setOf(JournalTable.LOCATION)
+        "Missed Activities" -> setOf(JournalTable.MISSED)
+        else -> JournalTable.entries.toSet()
+    }
+
+    /** True when the screen would draw a card for this entry. */
+    fun accepts(ev: JournalEvent): Boolean {
+        if (type == "Needs attention" && !journalNeedsAttention(ev)) return false
+        return when (source) {
+            "Manual" -> journalEventSource(ev) == "manual"
+            "Auto" -> journalEventSource(ev) != "manual"
+            else -> true
+        }
+    }
+}
+
 class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = SupabaseDbService(
@@ -298,6 +365,20 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _journalLoading = MutableStateFlow(false)
     val journalLoading: StateFlow<Boolean> = _journalLoading
+
+    /** True while an older page is being appended — the first page is already on
+     *  screen, so this must never raise the full-screen spinner. */
+    private val _journalLoadingMore = MutableStateFlow(false)
+    val journalLoadingMore: StateFlow<Boolean> = _journalLoadingMore
+
+    /** False once a page comes back short, i.e. the history is fully loaded. */
+    private val _journalHasMore = MutableStateFlow(false)
+    val journalHasMore: StateFlow<Boolean> = _journalHasMore
+
+    /** Where the next page starts: the start_at of the oldest loaded entry. */
+    private var journalCursor: String? = null
+    private var journalFilter = JournalFilter()
+    private var journalPageJob: Job? = null
 
     private val _triggerLabelMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val triggerLabelMap: StateFlow<Map<String, String>> = _triggerLabelMap
@@ -1046,65 +1127,163 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ---- unified journal feed ----
-    fun loadJournal(accessToken: String) {
-        viewModelScope.launch {
-            _journalLoading.value = true
-            try {
-                // The seven whole-table reads don't depend on each other, and the
-                // per-migraine linked-item read is a fan-out over the attack list.
-                // Serially this was one round-trip per attack per child table —
-                // ~160 of them on a tour-seeded account, which is why the Journal
-                // sat blank behind the onboarding card for the best part of a
-                // minute. Batched, it is a handful of round-trips.
-                val migraineRows = db.getMigraines(accessToken)
-                val migraines = coroutineScope {
-                    migraineRows.chunked(5).flatMap { chunk ->
-                        chunk.map { row ->
-                            async {
-                                val linked = try { db.getLinkedItems(accessToken, row.id) } catch (_: Exception) { SupabaseDbService.MigraineLinkedItems() }
-                                JournalEvent.Migraine(row, linked)
-                            }
-                        }.awaitAll()
-                    }
-                }
-                val flat = coroutineScope {
-                    listOf(
-                        async { db.getAllTriggers(accessToken).map { JournalEvent.Trigger(it) } },
-                        async { db.getAllMedicines(accessToken).map { JournalEvent.Medicine(it) } },
-                        async { db.getAllReliefs(accessToken).map { JournalEvent.Relief(it) } },
-                        async { db.getAllProdromeLog(accessToken).map { JournalEvent.Prodrome(it) } },
-                        async { db.getAllLocationLog(accessToken).map { JournalEvent.Location(it) } },
-                        async { db.getAllActivityLog(accessToken).map { JournalEvent.Activity(it) } },
-                        async { db.getAllMissedActivityLog(accessToken).map { JournalEvent.MissedActivity(it) } },
-                    ).awaitAll().flatten()
-                }
+    //
+    // The feed is a merge of eight tables newest-first. It used to be read whole
+    // — every row of every table, plus one linked-items fan-out per attack —
+    // and then handed to the screen, which composed a Card for every entry. On
+    // an account with a thousand-odd entries that is two full copies of the
+    // history live at once whenever it reloads, and on a 192 MB heap deleting a
+    // single entry was enough to run out of memory. Now it is read a page at a
+    // time against a time cursor, and a delete edits the list in place.
 
-                // Load trigger definitions for label lookup
+    /** Entries per page — a couple of screens of cards, so the list arrives
+     *  already scrollable and the next page is fetched before the user reaches
+     *  the bottom. Sized against the feed's own shape: a busy month is roughly
+     *  this many entries, so the first page is usually the whole recent view. */
+    private val journalPageSize = 60
+
+    /**
+     * Applies a filter selection. A change resets paging and reloads from the
+     * newest entry, since the filters decide both which tables are worth
+     * reading and how far back the window goes.
+     */
+    fun applyJournalFilter(accessToken: String, filter: JournalFilter) {
+        if (filter == journalFilter && _journal.value.isNotEmpty()) return
+        journalFilter = filter
+        loadJournal(accessToken)
+    }
+
+    /** Reloads the feed from the newest entry under the current filter. */
+    fun loadJournal(accessToken: String) {
+        journalPageJob?.cancel()
+        journalPageJob = viewModelScope.launch {
+            _journalLoading.value = true
+            journalCursor = journalFilter.untilIso
+            try {
+                // Trigger labels are needed before the first card renders.
                 val context = getApplication<android.app.Application>().applicationContext
                 val defs = edge.getTriggerDefinitions(context)
                 _triggerLabelMap.value = defs.associate { it.triggerType to it.label }
 
-                val merged = (migraines + flat).sortedByDescending { ev ->
-                    when (ev) {
-                        is JournalEvent.Migraine -> ev.row.startAt
-                        is JournalEvent.Trigger -> ev.row.startAt
-                        is JournalEvent.Medicine -> ev.row.startAt
-                        is JournalEvent.Relief -> ev.row.startAt
-                        is JournalEvent.Prodrome -> ev.row.startAt
-                        is JournalEvent.Location -> ev.row.startAt
-                        is JournalEvent.Activity -> ev.row.startAt
-                        is JournalEvent.MissedActivity -> ev.row.startAt
-                    }
-                }
-                _journal.value = merged
-                println("DEBUG loadJournal: count=${merged.size}")
+                val page = fetchJournalPage(accessToken)
+                _journal.value = page
+                println("DEBUG loadJournal: first page=${page.size} hasMore=${_journalHasMore.value}")
             } catch (e: Exception) {
                 e.printStackTrace()
                 _journal.value = emptyList()
+                _journalHasMore.value = false
             } finally {
                 _journalLoading.value = false
             }
         }
+    }
+
+    /** Appends the next older page. No-op while one is already in flight or the
+     *  history is exhausted, so scroll events can fire it freely. */
+    fun loadMoreJournal(accessToken: String) {
+        if (!_journalHasMore.value) return
+        if (_journalLoading.value || _journalLoadingMore.value) return
+        journalPageJob = viewModelScope.launch {
+            _journalLoadingMore.value = true
+            try {
+                val page = fetchJournalPage(accessToken)
+                if (page.isNotEmpty()) _journal.value = _journal.value + page
+                println("DEBUG loadMoreJournal: +${page.size} total=${_journal.value.size}")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _journalLoadingMore.value = false
+            }
+        }
+    }
+
+    /**
+     * Reads one page of the merged feed, advancing [journalCursor].
+     *
+     * The filters that narrow the query — which tables, and how far back — are
+     * pushed down to PostgREST. The two that cannot be (source, and the
+     * "needs attention" test, both of which the screen evaluates from row
+     * fields) are applied here as well, and the walk keeps pulling windows
+     * until it has a full page of entries the screen will actually draw.
+     * Rows that fail are dropped rather than kept, so memory stays bounded by
+     * what is on screen instead of by how much history the account has.
+     */
+    private suspend fun fetchJournalPage(accessToken: String): List<JournalEvent> {
+        val kept = mutableListOf<JournalEvent>()
+        val tables = journalFilter.tables()
+
+        while (kept.size < journalPageSize) {
+            val window = SupabaseDbService.JournalWindow(
+                beforeIso = journalCursor,
+                sinceIso = journalFilter.sinceIso,
+                limit = journalPageSize
+            )
+
+            val flat = coroutineScope {
+                buildList {
+                    if (JournalTable.TRIGGER in tables) add(async { db.getAllTriggers(accessToken, window).map { JournalEvent.Trigger(it) } })
+                    if (JournalTable.MEDICINE in tables) add(async { db.getAllMedicines(accessToken, window).map { JournalEvent.Medicine(it) } })
+                    if (JournalTable.RELIEF in tables) add(async { db.getAllReliefs(accessToken, window).map { JournalEvent.Relief(it) } })
+                    if (JournalTable.PRODROME in tables) add(async { db.getAllProdromeLog(accessToken, window).map { JournalEvent.Prodrome(it) } })
+                    if (JournalTable.LOCATION in tables) add(async { db.getAllLocationLog(accessToken, window).map { JournalEvent.Location(it) } })
+                    if (JournalTable.ACTIVITY in tables) add(async { db.getAllActivityLog(accessToken, window).map { JournalEvent.Activity(it) } })
+                    if (JournalTable.MISSED in tables) add(async { db.getAllMissedActivityLog(accessToken, window).map { JournalEvent.MissedActivity(it) } })
+                }.awaitAll().flatten()
+            }
+            val migraineRows =
+                if (JournalTable.MIGRAINE in tables) db.getMigraines(accessToken, window) else emptyList()
+
+            val raw = (migraineRows.map { JournalEvent.Migraine(it, SupabaseDbService.MigraineLinkedItems()) } + flat)
+                .sortedByDescending { journalEventStartAt(it) ?: "" }
+
+            if (raw.isEmpty()) {
+                _journalHasMore.value = false
+                break
+            }
+
+            // Only the newest page-worth is complete: below that timestamp a
+            // table's own window may have cut rows off, so they are left for
+            // the next walk rather than shown out of order.
+            val complete = if (raw.size > journalPageSize) raw.take(journalPageSize) else raw
+            val nextCursor = journalEventStartAt(complete.last())
+            val exhausted = raw.size < journalPageSize || nextCursor == null || nextCursor == journalCursor
+            journalCursor = nextCursor
+            _journalHasMore.value = !exhausted
+
+            kept += complete.filter { journalFilter.accepts(it) }
+
+            if (exhausted) break
+        }
+
+        // The linked items are only needed for the attacks actually on screen —
+        // this was the fan-out that made a full reload so expensive.
+        val withLinked = coroutineScope {
+            kept.chunked(5).flatMap { chunk ->
+                chunk.map { ev ->
+                    async {
+                        if (ev is JournalEvent.Migraine) {
+                            val linked = try { db.getLinkedItems(accessToken, ev.row.id) } catch (_: Exception) { SupabaseDbService.MigraineLinkedItems() }
+                            JournalEvent.Migraine(ev.row, linked)
+                        } else ev
+                    }
+                }.awaitAll()
+            }
+        }
+        return withLinked
+    }
+
+    /**
+     * Drops entries from the loaded feed by row id.
+     *
+     * A delete used to call loadJournal, which re-read every table and every
+     * attack's linked items to render one fewer card — the second copy of the
+     * feed being built while the first was still held is what tipped a heavy
+     * account over its heap. The rows are already known here, so the list is
+     * edited in place and the server is not asked again.
+     */
+    private fun dropFromJournal(ids: Set<String>) {
+        if (ids.isEmpty()) return
+        _journal.value = _journal.value.filterNot { journalEventId(it) in ids }
     }
 
     // ---- removals ----
@@ -1128,7 +1307,18 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 linked.prodromes.filter { it.source != "system" }.forEach { runCatching { db.deleteProdromeLog(accessToken, it.id) } }
                 linked.activities.filter { it.source != "system" }.forEach { runCatching { db.deleteActivityLog(accessToken, it.id) } }
                 linked.locations.filter { it.source != "system" }.forEach { runCatching { db.deleteLocationLog(accessToken, it.id) } }
-                loadJournal(accessToken)
+                // The manual linked rows are feed entries in their own right and
+                // have just been deleted too, so they go with it.
+                val alsoDeleted = buildSet {
+                    add(id)
+                    linked.triggers.filter { it.source != "system" }.forEach { add(it.id) }
+                    linked.medicines.filter { it.source != "system" }.forEach { add(it.id) }
+                    linked.reliefs.filter { it.source != "system" }.forEach { add(it.id) }
+                    linked.prodromes.filter { it.source != "system" }.forEach { add(it.id) }
+                    linked.activities.filter { it.source != "system" }.forEach { add(it.id) }
+                    linked.locations.filter { it.source != "system" }.forEach { add(it.id) }
+                }
+                dropFromJournal(alsoDeleted)
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -1137,7 +1327,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteTrigger(accessToken, id)
-                loadJournal(accessToken)
+                dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -1146,7 +1336,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteMedicine(accessToken, id)
-                loadJournal(accessToken)
+                dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -1155,7 +1345,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteRelief(accessToken, id)
-                loadJournal(accessToken)
+                dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -1164,7 +1354,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteProdromeLog(accessToken, id)
-                loadJournal(accessToken)
+                dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -1173,7 +1363,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteLocationLog(accessToken, id)
-                loadJournal(accessToken)
+                dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -1182,7 +1372,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteActivityLog(accessToken, id)
-                loadJournal(accessToken)
+                dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -1191,7 +1381,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteMissedActivityLog(accessToken, id)
-                loadJournal(accessToken)
+                dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }
     }

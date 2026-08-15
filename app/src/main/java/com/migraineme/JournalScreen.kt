@@ -67,26 +67,9 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     val authState by authVm.state.collectAsState()
     val journal by vm.journal.collectAsState()
     val journalLoading by vm.journalLoading.collectAsState()
+    val journalLoadingMore by vm.journalLoadingMore.collectAsState()
+    val journalHasMore by vm.journalHasMore.collectAsState()
     val triggerLabelMap by vm.triggerLabelMap.collectAsState()
-
-    LaunchedEffect(authState.accessToken) {
-        val token = authState.accessToken
-        if (!token.isNullOrBlank()) vm.loadJournal(token)
-    }
-
-    if (journalLoading) {
-        // Top-aligned, not centred: the onboarding tour parks its card over the
-        // lower half of the screen, and a centred spinner sat exactly behind it,
-        // so a still-loading Journal read as a blank page during the tour step.
-        Box(Modifier.fillMaxSize().padding(top = 56.dp), contentAlignment = Alignment.TopCenter) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(color = AppTheme.AccentPurple)
-                Spacer(Modifier.height(8.dp))
-                Text(t("Loading journal…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-        return
-    }
 
     val premiumState by PremiumManager.state.collectAsState()
 
@@ -114,6 +97,37 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
         else -> now.plus(1, ChronoUnit.DAYS)
     }
 
+    // The same selection the filters below apply, handed to the loader so the
+    // query is narrowed before rows are fetched rather than after. The bounds
+    // are deliberately no tighter than the client-side test that follows, so
+    // whatever comes back is still filtered to exactly what it is today.
+    val loaderFilter = remember(selectedTypeFilter, selectedSourceFilter, effectiveTimeframe, customFromDate, customToDate) {
+        JournalFilter(
+            type = selectedTypeFilter,
+            source = selectedSourceFilter,
+            sinceIso = if (effectiveTimeframe == "All") null else timeframeCutoff.toString(),
+            untilIso = if (effectiveTimeframe == "Custom") timeframeCeiling.toString() else null
+        )
+    }
+    LaunchedEffect(authState.accessToken, loaderFilter) {
+        val token = authState.accessToken
+        if (!token.isNullOrBlank()) vm.applyJournalFilter(token, loaderFilter)
+    }
+
+    if (journalLoading) {
+        // Top-aligned, not centred: the onboarding tour parks its card over the
+        // lower half of the screen, and a centred spinner sat exactly behind it,
+        // so a still-loading Journal read as a blank page during the tour step.
+        Box(Modifier.fillMaxSize().padding(top = 56.dp), contentAlignment = Alignment.TopCenter) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = AppTheme.AccentPurple)
+                Spacer(Modifier.height(8.dp))
+                Text(t("Loading journal…"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        return
+    }
+
     val filtered = journal
         .let { list ->
             when (selectedTypeFilter) {
@@ -125,27 +139,38 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                 "Activities" -> list.filterIsInstance<JournalEvent.Activity>()
                 "Missed Activities" -> list.filterIsInstance<JournalEvent.MissedActivity>()
                 "Locations" -> list.filterIsInstance<JournalEvent.Location>()
-                "Needs attention" -> list.filter { needsAttention(it) }
+                "Needs attention" -> list.filter { journalNeedsAttention(it) }
                 else -> list
             }
         }
         .let { list ->
             when (selectedSourceFilter) {
-                "Manual" -> list.filter { eventSource(it) == "manual" }
-                "Auto" -> list.filter { eventSource(it) != "manual" }
+                "Manual" -> list.filter { journalEventSource(it) == "manual" }
+                "Auto" -> list.filter { journalEventSource(it) != "manual" }
                 else -> list
             }
         }
         .let { list ->
             if (effectiveTimeframe == "All") list
             else list.filter { ev ->
-                val startAt = eventStartAt(ev) ?: return@filter false
+                val startAt = journalEventStartAt(ev) ?: return@filter false
                 val t = Instant.parse(startAt)
                 t.isAfter(timeframeCutoff) && t.isBefore(timeframeCeiling)
             }
         }
 
     val scrollState = rememberScrollState()
+
+    // Older entries are fetched as the list is scrolled, a little before the
+    // bottom so the next page is usually already there when it is reached.
+    LaunchedEffect(scrollState.value, scrollState.maxValue, journalHasMore) {
+        val token = authState.accessToken
+        if (!token.isNullOrBlank() && journalHasMore && scrollState.maxValue > 0 &&
+            scrollState.value >= scrollState.maxValue - 1200
+        ) {
+            vm.loadMoreJournal(token)
+        }
+    }
 
     ScrollableScreenContent(scrollState = scrollState, logoRevealHeight = 0.dp) {
 
@@ -395,7 +420,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                 ) { Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     when (event) {
                         is JournalEvent.Migraine -> {
-                            JournalEntryHeader("Migraine", AppTheme.AccentPink, event.row.startAt, needsAttention(event))
+                            JournalEntryHeader("Migraine", AppTheme.AccentPink, event.row.startAt, journalNeedsAttention(event))
                             val missing = missingFields(event)
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
                             event.row.severity?.let { JournalDetail("Severity", "$it / 10") }
@@ -438,7 +463,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         }
                         is JournalEvent.Trigger -> {
                             val isMenstruation = event.row.type == "menstruation" && event.row.source == "system"
-                            JournalEntryHeader("Trigger", Color(0xFFFFB74D), event.row.startAt, needsAttention(event))
+                            JournalEntryHeader("Trigger", Color(0xFFFFB74D), event.row.startAt, journalNeedsAttention(event))
                             Spacer(Modifier.height(8.dp))
                             val missing = missingFields(event)
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
@@ -448,7 +473,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             if (!isMenstruation) JournalActions({ navController.navigate("${Routes.EDIT_TRIGGER}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Medicine -> {
-                            JournalEntryHeader("Medicine", Color(0xFF4FC3F7), event.row.startAt, needsAttention(event))
+                            JournalEntryHeader("Medicine", Color(0xFF4FC3F7), event.row.startAt, journalNeedsAttention(event))
                             Spacer(Modifier.height(8.dp))
                             val missing = missingFields(event)
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
@@ -458,7 +483,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             JournalActions({ navController.navigate("${Routes.EDIT_MEDICINE}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Relief -> {
-                            JournalEntryHeader("Relief", Color(0xFF81C784), event.row.startAt, needsAttention(event))
+                            JournalEntryHeader("Relief", Color(0xFF81C784), event.row.startAt, journalNeedsAttention(event))
                             Spacer(Modifier.height(8.dp))
                             val missing = missingFields(event)
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
@@ -467,7 +492,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             JournalActions({ navController.navigate("${Routes.EDIT_RELIEF}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Prodrome -> {
-                            JournalEntryHeader("Prodrome", AppTheme.AccentPurple, event.row.startAt, needsAttention(event))
+                            JournalEntryHeader("Prodrome", AppTheme.AccentPurple, event.row.startAt, journalNeedsAttention(event))
                             Spacer(Modifier.height(8.dp))
                             val missing = missingFields(event)
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
@@ -483,7 +508,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             JournalActions({ navController.navigate("${Routes.EDIT_LOCATION}/${event.row.id}") }) { confirmDelete = true }
                         }
                         is JournalEvent.Activity -> {
-                            JournalEntryHeader("Activity", Color(0xFFFF8A65), event.row.startAt, needsAttention(event))
+                            JournalEntryHeader("Activity", Color(0xFFFF8A65), event.row.startAt, journalNeedsAttention(event))
                             Spacer(Modifier.height(8.dp))
                             val missing = missingFields(event)
                             if (missing.isNotEmpty()) JournalDetail("⚠ Missing", missing.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } })
@@ -521,12 +546,21 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                     }
                 } }
             }
+
+            // Older pages arrive underneath the list; the cards above stay put.
+            if (journalLoadingMore) {
+                Box(Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = AppTheme.AccentPurple, modifier = Modifier.size(24.dp))
+                }
+            }
         }
 }
 
 // ── Helpers ──
 
-private fun eventSource(ev: JournalEvent): String? = when (ev) {
+// Shared with the feed loader, which has to answer the same two questions to
+// decide whether a fetched row is one the screen would actually draw.
+fun journalEventSource(ev: JournalEvent): String? = when (ev) {
     is JournalEvent.Migraine -> "manual"
     is JournalEvent.Trigger -> ev.row.source
     is JournalEvent.Medicine -> ev.row.source
@@ -537,18 +571,7 @@ private fun eventSource(ev: JournalEvent): String? = when (ev) {
     is JournalEvent.MissedActivity -> "manual"
 }
 
-private fun eventStartAt(ev: JournalEvent): String? = when (ev) {
-    is JournalEvent.Migraine -> ev.row.startAt
-    is JournalEvent.Trigger -> ev.row.startAt
-    is JournalEvent.Medicine -> ev.row.startAt
-    is JournalEvent.Relief -> ev.row.startAt
-    is JournalEvent.Prodrome -> ev.row.startAt
-    is JournalEvent.Location -> ev.row.startAt
-    is JournalEvent.Activity -> ev.row.startAt
-    is JournalEvent.MissedActivity -> ev.row.startAt
-}
-
-private fun needsAttention(event: JournalEvent): Boolean = missingFields(event).isNotEmpty()
+fun journalNeedsAttention(event: JournalEvent): Boolean = missingFields(event).isNotEmpty()
 
 private fun missingFields(event: JournalEvent): List<String> = when (event) {
     is JournalEvent.Migraine -> buildList {
