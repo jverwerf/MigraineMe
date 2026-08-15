@@ -173,13 +173,22 @@ serve(async (req) => {
         const predicted = predictedTriggers[0];
         const predictedDate = predicted.start_at.slice(0, 10);
 
-        // Check if predicted date is TODAY (in user's local timezone)
-        if (predictedDate !== localTime.localDate) {
-          console.log(`[convert-predicted-menstruations] User ${userId}: Predicted date ${predictedDate} != today ${localTime.localDate}`);
+        // Convert when the prediction is due today OR overdue. The old
+        // strict equality (predictedDate !== today) meant a single missed
+        // 9am run (e.g. the cron 401-ing) left the prediction stuck in the
+        // past forever — it could never equal "today" again. Overdue
+        // predictions convert at their PREDICTED date so history stays
+        // truthful, and the DB trigger rolls the prediction forward one
+        // cycle; a multi-cycle backlog self-heals one cycle per daily run.
+        if (predictedDate > localTime.localDate) {
+          console.log(`[convert-predicted-menstruations] User ${userId}: Predicted date ${predictedDate} is in the future (today ${localTime.localDate})`);
           continue;
         }
 
-        console.log(`[convert-predicted-menstruations] User ${userId}: Predicted trigger is DUE TODAY!`);
+        // The date the period actually gets logged at.
+        const periodDate = predictedDate;
+
+        console.log(`[convert-predicted-menstruations] User ${userId}: Predicted trigger is due (${predictedDate} <= ${localTime.localDate})`);
 
         // Check if already converted today (avoid duplicates if function runs multiple times in the 9:00-9:10 window)
         const { data: existingToday, error: checkError } = await supabase
@@ -188,8 +197,8 @@ serve(async (req) => {
           .eq("user_id", userId)
           .eq("type", "menstruation")
           .eq("source", "auto")
-          .gte("start_at", `${localTime.localDate}T00:00:00Z`)
-          .lte("start_at", `${localTime.localDate}T23:59:59Z`);
+          .gte("start_at", `${periodDate}T00:00:00Z`)
+          .lte("start_at", `${periodDate}T23:59:59Z`);
 
         if (checkError) {
           console.error(`[convert-predicted-menstruations] User ${userId}: Check error:`, checkError.message);
@@ -203,16 +212,19 @@ serve(async (req) => {
           continue;
         }
 
-        // Check if user manually logged period nearby (within 3 days)
-        const threeDaysAgo = addDaysIsoDate(localTime.localDate, -3);
-        const threeDaysLater = addDaysIsoDate(localTime.localDate, 3);
+        // Check if the user already has a real period logged nearby (within 3 days).
+        // "healthkit" covers iOS Apple Health imports (HealthKitService.syncMenstruation);
+        // without it the 9am cron would insert a duplicate source="auto" period next to a
+        // real imported one and skew cycle averages.
+        const threeDaysAgo = addDaysIsoDate(periodDate, -3);
+        const threeDaysLater = addDaysIsoDate(periodDate, 3);
 
         const { data: manualPeriods, error: manualError } = await supabase
           .from("triggers")
           .select("id")
           .eq("user_id", userId)
           .eq("type", "menstruation")
-          .in("source", ["manual", "health_connect"])
+          .in("source", ["manual", "health_connect", "healthkit"])
           .gte("start_at", `${threeDaysAgo}T00:00:00Z`)
           .lte("start_at", `${threeDaysLater}T23:59:59Z`);
 
@@ -234,7 +246,7 @@ serve(async (req) => {
           .insert({
             user_id: userId,
             type: "menstruation",
-            start_at: `${localTime.localDate}T09:00:00Z`,
+            start_at: `${periodDate}T09:00:00Z`,
             source: "auto",
             active: true,
             notes: "Auto-generated from predicted menstruation"
