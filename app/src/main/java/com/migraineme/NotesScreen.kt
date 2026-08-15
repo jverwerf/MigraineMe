@@ -14,7 +14,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -48,18 +51,49 @@ fun NotesScreen(
 ) {
     val draft by vm.draft.collectAsState()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
-    var notes by rememberSaveable { mutableStateOf("") }
+    var notes by rememberSaveable { mutableStateOf(draft.migraine?.note ?: "") }
 
-    // Sync from existing draft once
-    LaunchedEffect(draft.migraine) {
+    // Prefill from the draft — which is where "Paint the picture" leaves what
+    // the user already typed or spoke earlier in this wizard, so nobody says
+    // the same thing twice. Only fills an untouched field: once the user edits
+    // here, their version is the one that survives to save.
+    LaunchedEffect(draft.migraine?.note) {
         draft.migraine?.let { m ->
-            notes = m.note ?: ""
+            if (notes.isEmpty() && !m.note.isNullOrBlank()) {
+                notes = m.note ?: ""
+            }
         }
     }
 
     fun syncDraft() {
-        vm.setMigraineDraft(note = notes.ifBlank { null })
+        vm.setMigraineDraft(note = notes.ifBlank { null }, clearNote = notes.isBlank())
+    }
+
+    // Speech recogniser — same RecognizerIntent path as "Paint the picture".
+    val speechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                notes = if (notes.isBlank()) spoken else "$notes, $spoken"
+                syncDraft()
+            }
+        }
+    }
+
+    fun launchVoice() {
+        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Add any notes about this migraine…")
+        }
+        try { speechLauncher.launch(intent) } catch (_: Exception) {
+            android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
@@ -70,7 +104,7 @@ fun NotesScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { syncDraft(); navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(t("Reliefs"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    Text(t("Missed Activities"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) {
@@ -120,6 +154,21 @@ fun NotesScreen(
                     ),
                     minLines = 5
                 )
+                Spacer(Modifier.height(10.dp))
+
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { launchVoice() },
+                        modifier = Modifier.height(40.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple),
+                        border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f))
+                    ) {
+                        Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             }
 
             // Navigation

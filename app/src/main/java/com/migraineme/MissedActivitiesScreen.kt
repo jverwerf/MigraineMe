@@ -153,7 +153,7 @@ fun MissedActivitiesScreen(
                 }
             }
 
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.REVIEW) })
+            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.NOTES) })
 
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -195,7 +195,7 @@ fun MissedActivitiesScreen(
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
                 ) { Text(t("Back")) }
-                Button(onClick = { navController.navigate(Routes.REVIEW) },
+                Button(onClick = { navController.navigate(Routes.NOTES) },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
                 ) { Text(t("Next")) }
             }

@@ -246,6 +246,15 @@ fun PaintThePictureScreen(
         })
     }
 
+    // What the user typed or spoke here is the note for this attack. It used to
+    // be consumed by the parser and then thrown away, so anyone who described
+    // their migraine at this step had to write it out a second time on the
+    // Notes step. Keeping it on the draft means the Notes step opens pre-filled
+    // and the same single field is what save writes to migraines.notes.
+    fun syncNote() {
+        vm.setMigraineDraft(note = dayNote.ifBlank { null }, clearNote = dayNote.isBlank())
+    }
+
     // Speech recogniser
     val speechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
@@ -256,6 +265,7 @@ fun PaintThePictureScreen(
                 ?.firstOrNull()
             if (!spoken.isNullOrBlank()) {
                 dayNote = if (dayNote.isBlank()) spoken else "$dayNote, $spoken"
+                syncNote()
                 if (aiParsed) {
                     aiParsed = false; aiResult = null
                     editPainLocations.clear(); editSymptoms.clear(); editMatches.clear()
@@ -394,6 +404,7 @@ fun PaintThePictureScreen(
                     value = dayNote,
                     onValueChange = {
                         dayNote = it
+                        syncNote()
                         if (aiParsed) {
                             aiParsed = false; aiResult = null
                             editPainLocations.clear(); editSymptoms.clear(); editMatches.clear()
