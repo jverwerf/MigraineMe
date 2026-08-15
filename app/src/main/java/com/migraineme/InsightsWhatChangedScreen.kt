@@ -84,7 +84,7 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             if (attacks.isNotEmpty()) {
                 BaseCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        BrainyBlobIcon(R.drawable.brainy_migraines_small)
+                        BrainyBlobIcon(R.drawable.brainy_risk_small)
                         Spacer(Modifier.width(10.dp))
                         Column {
                             Text(t("Your migraines"), color = Color.White,
@@ -102,7 +102,7 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
                 Text(t("Occurrences on your attacks, last 30 days vs the 30 before."),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
-                BrainyWatermarkCard(resId = R.drawable.brainy_risk, flipWatermark = true) {
+                BaseCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall,
@@ -166,7 +166,7 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             // diverging bars as the items above. Renders nothing at all when
             // no metric has data in either window.
             if (habits.isNotEmpty()) {
-                BrainyWatermarkCard(resId = R.drawable.brainy_gardener) {
+                BrainyWatermarkCard(resId = R.drawable.brainy_risk, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         BrainyBlobIcon(R.drawable.brainy_gardener_small)
                         Spacer(Modifier.width(10.dp))
@@ -192,7 +192,10 @@ private fun AttackTrendRow(t: InsightsViewModel.AttackTrend) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 3.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(t(t.label), color = Color.White,
@@ -259,7 +262,10 @@ private fun DailyHabitRow(h: InsightsViewModel.HabitTrend) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 3.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         BrainyRowIcon(h.label, size = 18.dp)
@@ -353,7 +359,10 @@ private fun WhatChangedTrendRow(t: InsightsViewModel.ItemTrend, maxDelta: Int) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 3.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         BrainyRowIcon(t.name, size = 18.dp)
