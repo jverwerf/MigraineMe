@@ -426,42 +426,44 @@ fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys
             }
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
 
-        sections.forEachIndexed { i, section ->
-            if (i > 0) Spacer(Modifier.height(10.dp))
-            val preview = section.items.take(2)
-            val extra = (section.items.size - preview.size).coerceAtLeast(0)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(section.icon, contentDescription = null,
-                    tint = section.color, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(t(section.title), color = section.color,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.weight(1f))
-                if (extra > 0) {
-                    Text(t("+%s more", extra), color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall)
+        // Two most recent recommendations across all categories, each tagged
+        // with the category it came from; the rest collapse into "+N more".
+        val flat = sections.flatMap { s -> s.items.map { s to it } }
+        val previewRows = flat.take(2)
+        val extra = (flat.size - previewRows.size).coerceAtLeast(0)
+        previewRows.forEachIndexed { j, (section, row) ->
+            if (j > 0) Spacer(Modifier.height(6.dp))
+            Column(
+                Modifier.fillMaxWidth()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                    .background(Color.White.copy(alpha = 0.04f))
+                    .padding(10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyRowIcon(row.name, size = 18.dp)
+                    Text(prettyLabel(row.name), color = Color.White,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(8.dp))
+                    Icon(section.icon, contentDescription = null,
+                        tint = section.color, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(t(section.title), color = section.color,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
                 }
+                Spacer(Modifier.height(3.dp))
+                Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium,
+                    maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
-            Spacer(Modifier.height(6.dp))
-            preview.forEachIndexed { j, row ->
-                if (j > 0) Spacer(Modifier.height(6.dp))
-                Column(
-                    Modifier.fillMaxWidth()
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.04f))
-                        .padding(10.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        BrainyRowIcon(row.name, size = 18.dp)
-                        Text(prettyLabel(row.name), color = Color.White,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    }
-                    Spacer(Modifier.height(3.dp))
-                    Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
-                }
-            }
+        }
+        if (extra > 0) {
+            Spacer(Modifier.height(4.dp))
+            Text(t("+%s more", extra), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.align(Alignment.End))
         }
     }
 }

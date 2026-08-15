@@ -116,7 +116,7 @@ internal fun BrainyNavCard(
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
         }
         if (preview != null) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(6.dp))
             preview()
         }
     }
@@ -128,28 +128,24 @@ internal data class CardPreviewEntry(val label: String, val stat: String, val ca
 @Composable
 internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalCount: Int = entries.size) {
     val shown = entries.take(2)
-    shown.forEachIndexed { i, e ->
-        if (i > 0) Spacer(Modifier.height(6.dp))
+    shown.forEach { e ->
         Row(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color.White.copy(alpha = 0.04f))
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             BrainyRowIcon(e.label, category = e.category, size = 18.dp)
             Text(prettyLabel(e.label), color = Color.White,
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f))
             Spacer(Modifier.width(8.dp))
-            Text(e.stat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(e.stat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
         }
     }
     val extra = totalCount - shown.size
     if (extra > 0) {
-        Spacer(Modifier.height(4.dp))
         Text(t("+%s more", extra), color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.align(Alignment.End))
@@ -3547,7 +3543,7 @@ internal fun medicationRising(changed: List<InsightsViewModel.ItemTrend>): Boole
 @Composable
 internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick: () -> Unit) {
     val top = remember(changed) {
-        changed.sortedByDescending { kotlin.math.abs(it.delta) }.take(4)
+        changed.sortedByDescending { kotlin.math.abs(it.delta) }.take(2)
     }
     val medRising = remember(changed) { medicationRising(changed) }
     BrainyWatermarkCard(
@@ -3589,6 +3585,11 @@ internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick
                 Text(if (t.delta > 0) "↑" else "↓", color = color,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
             }
+        }
+        if (changed.size > top.size) {
+            Text(t("+%s more", changed.size - top.size), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.align(Alignment.End))
         }
         if (medRising) {
             Spacer(Modifier.height(2.dp))
