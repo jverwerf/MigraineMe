@@ -151,11 +151,14 @@ internal data class CardPreviewEntry(val label: String, val stat: String, val ca
 @Composable
 internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalCount: Int = entries.size) {
     val shown = entries.take(2)
-    shown.forEach { e ->
+    shown.forEachIndexed { i, e ->
+        if (i > 0) Spacer(Modifier.height(6.dp))
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(vertical = 3.dp),
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White.copy(alpha = 0.04f))
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             BrainyRowIcon(e.label, category = e.category, size = 18.dp)
@@ -3614,7 +3617,7 @@ internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.White.copy(alpha = 0.04f))
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BrainyRowIcon(tr.name, size = 18.dp)
