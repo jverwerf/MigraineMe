@@ -152,12 +152,7 @@ fun InsightsImpactScreen(
                                 Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Box(
-                                    Modifier.size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFE57373).copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
-                                )
-                                Spacer(Modifier.width(8.dp))
+                                BrainyRowIcon(label, iconKey = "migraine_starburst", size = 18.dp)
                                 Text(t(label), color = Color.White,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                                     modifier = Modifier.weight(1f),

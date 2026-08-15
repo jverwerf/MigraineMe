@@ -166,7 +166,7 @@ internal fun AccuracyStatTile(value: String, color: Color, label: String, modifi
 }
 
 /** One line of a nav-card preview: label + compact stat, same row style as RecommendationsCard. */
-internal data class CardPreviewEntry(val label: String, val stat: String, val category: String? = null)
+internal data class CardPreviewEntry(val label: String, val stat: String, val category: String? = null, val iconKey: String? = null)
 
 @Composable
 internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalCount: Int = entries.size) {
@@ -181,7 +181,7 @@ internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalC
                 .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BrainyRowIcon(e.label, category = e.category, size = 18.dp)
+            BrainyRowIcon(e.label, iconKey = e.iconKey, category = e.category, size = 18.dp)
             Text(prettyLabel(e.label), color = Color.White,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -608,7 +608,8 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     val impactEntries = buildList {
         painLocsHub.firstOrNull()?.let { (locId, count) ->
             if (totalMigsHub > 0) add(CardPreviewEntry(ALL_PAIN_POINTS_MAP[locId] ?: locId,
-                tSync("%1\$s× · %2\$s%%", count, count * 100 / totalMigsHub)))
+                tSync("%1\$s× · %2\$s%%", count, count * 100 / totalMigsHub),
+                iconKey = "migraine_starburst"))
         }
         if (auraAttacksHub > 0) add(CardPreviewEntry(tSync("Aura"), tSync("in %s attacks", auraAttacksHub)))
         impactPool.forEach {
