@@ -40,6 +40,7 @@ fun InsightsImpactScreen(
     val auraDurationBuckets by vm.auraDurationBuckets.collectAsState()
     val auraInsights by vm.auraInsights.collectAsState()
     val painMigration by vm.painMigration.collectAsState()
+    val severityPredictors by vm.severityPredictors.collectAsState()
     val overallAvgSeverity = remember(migraineSpans) {
         val severities = migraineSpans.mapNotNull { it.severity }
         if (severities.isEmpty()) 5f else severities.average().toFloat()
@@ -237,6 +238,11 @@ fun InsightsImpactScreen(
                         }
                     }
                 }
+            }
+
+            // ── Card 2c: Does aura / onset predict a worse attack? ──
+            if (severityPredictors.isNotEmpty()) {
+                SeverityPredictorCard(severityPredictors)
             }
 
             // ── Card 2a: How the pain moves — needs timelined attacks ──
@@ -583,4 +589,93 @@ private fun PainStageLegend(title: String, locations: List<String>, color: Color
     Spacer(Modifier.height(4.dp))
     Text(locations.joinToString(", ") { ALL_PAIN_POINTS_MAP[it] ?: it },
         color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+}
+
+
+// ── Severity predictor card (aura / onset location) ────────────
+/**
+ * Every row here already passed the engine's gate (>= 3 attacks a side,
+ * >= 1.5 point gap), so this view only formats — it never decides what is
+ * worth saying, and an empty list means the card is simply absent.
+ *
+ * Copy stays "in your logged attacks" — this is a correlation. It also never
+ * tells the user to do anything mid-attack; the value is recognising the
+ * pattern for themselves and mentioning it to a clinician.
+ *
+ * Static only — no animation anywhere in this app.
+ */
+@Composable
+fun SeverityPredictorCard(rows: List<EdgeFunctionsService.SeverityPredictorStat>) {
+    BaseCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BrainyBlobIcon(R.drawable.brainy_recover_small)
+            Spacer(Modifier.width(10.dp))
+            Column {
+                Text(t("What tends to run worse"), color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Worth mentioning to your doctor"),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        rows.forEach { row ->
+            val worse = row.withAvgSeverity > row.withoutAvgSeverity
+            val title = if (row.predictorType == "aura") t("Attacks with aura")
+            else t("Attacks starting at %s", t(ALL_PAIN_POINTS_MAP[row.predictorLabel] ?: row.predictorLabel))
+            val otherTitle = if (row.predictorType == "aura") t("Without aura") else t("Starting elsewhere")
+
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SeveritySideBox(title, row.withAvgSeverity, row.withCount, worse, Modifier.weight(1f))
+                SeveritySideBox(otherTitle, row.withoutAvgSeverity, row.withoutCount, !worse, Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(6.dp))
+            val gap = String.format("%.1f", Math.abs(row.withAvgSeverity - row.withoutAvgSeverity))
+            Text(
+                if (worse) t("In your logged attacks, these ran about %s points more severe.", gap)
+                else t("In your logged attacks, these ran about %s points less severe.", gap),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.height(4.dp))
+        }
+    }
+}
+
+/** One side of the comparison. The worse side carries the warning tint. */
+@Composable
+private fun SeveritySideBox(
+    title: String,
+    value: Float,
+    count: Int,
+    highlight: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val warn = Color(0xFFE57373)
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (highlight) warn.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.05f))
+            .padding(vertical = 10.dp, horizontal = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            title, color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            String.format("%.1f", value),
+            color = if (highlight) warn else Color.White.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+        )
+        Text(t("avg severity"), color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall)
+        Text(
+            (if (count == 1) t("1 attack") else t("%s attacks", count)),
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
 }

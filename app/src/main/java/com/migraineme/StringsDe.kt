@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3513 entries.
+ * 3522 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -463,6 +463,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Attack log" to "Attacken",
     "Attacks in range" to "Attacken im Zeitraum",
     "Attacks logged" to "Erfasste Attacken",
+    "Attacks starting at %s" to "Attacken ab %s",
+    "Attacks with aura" to "Attacken mit Aura",
     "Aura" to "Aura",
     "Aura Location" to "Aura-Ort",
     "Aura duration" to "Aura-Dauer",
@@ -1391,6 +1393,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "In an acute attack right now? Go straight to the app" to "Gerade eine Attacke? Geh direkt in die App",
     "In your logged attacks, taking %s sooner went with a lower peak." to "In deinen Attacken ging früheres Nehmen von %s mit einem niedrigeren Gipfel einher.",
     "In your logged attacks, the earlier doses went with a higher peak — often a sign the worst attacks get treated fastest." to "In deinen Attacken gingen frühere Dosen mit einem höheren Gipfel einher — oft ein Zeichen, dass die schlimmsten Attacken am schnellsten behandelt werden.",
+    "In your logged attacks, these ran about %s points less severe." to "In deinen Attacken waren diese rund %s Punkte schwächer.",
+    "In your logged attacks, these ran about %s points more severe." to "In deinen Attacken waren diese rund %s Punkte stärker.",
     "Increased appetite" to "Mehr Appetit",
     "Indomethacin" to "Indometacin",
     "Insights" to "Erkenntnisse",
@@ -2607,6 +2611,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Start: %s" to "Start: %s",
     "Started" to "Begonnen",
     "Started %s" to "Start %s",
+    "Starting elsewhere" to "Ab anderer Stelle",
     "Starts" to "Beginnt",
     "Statistically established patterns that did not appear in this report's time frame." to "Statistisch etablierte Muster, die im Zeitraum dieses Berichts nicht auftraten.",
     "Stay at home" to "Zu Hause",
@@ -2816,6 +2821,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Tight at the sides at first" to "Zuerst eng an den Seiten",
     "Time Range" to "Zeitraum",
     "Time asleep vs time in bed" to "Schlafzeit vs. Bettzeit",
+    "Time cannot be in the future" to "Zeit darf nicht in der Zukunft liegen",
     "Time: %s" to "Zeit: %s",
     "Timeframe" to "Zeitraum",
     "Timeline, breakdowns & detailed charts" to "Verlauf, Aufteilungen und Grafiken",
@@ -3178,6 +3184,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "What makes those habits happen" to "Was diese Gewohnheiten trägt",
     "What medicines do you take?" to "Welche Medikamente nimmst du?",
     "What symptoms do you experience?" to "Welche Symptome hast du?",
+    "What tends to run worse" to "Was meist schlimmer verläuft",
     "What the icons mean" to "Was die Symbole heißen",
     "What the patient reported when setting up, in their own words" to "Was die Patientin beim Einrichten berichtet hat, in eigenen Worten",
     "What these triggers do to you" to "Was diese Auslöser bei dir bewirken",
@@ -3260,6 +3267,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Within 2-3 days" to "In 2-3 Tagen",
     "Within hours" to "In Stunden",
     "Within {0}" to "Innerhalb von {0}",
+    "Without aura" to "Ohne Aura",
     "Woke Up" to "Aufgewacht",
     "Word-finding trouble" to "Wortfindungsstörung",
     "Work" to "Arbeit",
@@ -3279,6 +3287,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Worsening — up {0}%" to "Schlechter — plus {0}%",
     "Worst day" to "Schlimmster Tag",
     "Worst season" to "Schlimmste Jahreszeit",
+    "Worth mentioning to your doctor" to "Erwähnenswert bei deiner Praxis",
     "Wraparound neck massager with deep kneading, air pressure and heat, controlled from your phone." to "Nackenmassage zum Umlegen mit tiefem Kneten, Luftdruck und Wärme, per Handy gesteuert.",
     "Wrist skin temp deviation" to "Hauttemperatur am Handgelenk",
     "Wristband that stimulates the median nerve to settle nausea." to "Armband, das den Medianusnerv reizt, um Übelkeit zu beruhigen.",

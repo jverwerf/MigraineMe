@@ -232,11 +232,11 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:155",
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:156",
     "line": "                                Text(t(\"%1\\$s%% · %2\\$s attacks\", pct, s.totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:306",
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:312",
     "line": "                                t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), count),"
   },
   {

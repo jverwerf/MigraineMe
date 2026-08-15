@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3513 entries.
+ * 3522 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -463,6 +463,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Attack log" to "Aanvallen",
     "Attacks in range" to "Aanvallen in periode",
     "Attacks logged" to "Gelogde aanvallen",
+    "Attacks starting at %s" to "Aanvallen vanaf %s",
+    "Attacks with aura" to "Aanvallen met aura",
     "Aura" to "Aura",
     "Aura Location" to "Plek van aura",
     "Aura duration" to "Auraduur",
@@ -1391,6 +1393,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "In an acute attack right now? Go straight to the app" to "Nu een acute aanval? Ga direct naar de app",
     "In your logged attacks, taking %s sooner went with a lower peak." to "In je genoteerde aanvallen ging %s eerder nemen samen met een lagere piek.",
     "In your logged attacks, the earlier doses went with a higher peak — often a sign the worst attacks get treated fastest." to "In je genoteerde aanvallen gingen vroegere doses samen met een hogere piek — vaak een teken dat de zwaarste aanvallen het snelst behandeld worden.",
+    "In your logged attacks, these ran about %s points less severe." to "In je genoteerde aanvallen waren deze zo'n %s punten milder.",
+    "In your logged attacks, these ran about %s points more severe." to "In je genoteerde aanvallen waren deze zo'n %s punten heviger.",
     "Increased appetite" to "Meer eetlust",
     "Indomethacin" to "Indometacine",
     "Insights" to "Inzichten",
@@ -2607,6 +2611,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Start: %s" to "Start: %s",
     "Started" to "Begonnen",
     "Started %s" to "Sinds %s",
+    "Starting elsewhere" to "Vanaf elders",
     "Starts" to "Begint",
     "Statistically established patterns that did not appear in this report's time frame." to "Statistisch vastgestelde patronen die niet in het tijdsbestek van dit rapport voorkwamen.",
     "Stay at home" to "Thuis",
@@ -2816,6 +2821,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Tight at the sides at first" to "Eerst strak aan de zijkanten",
     "Time Range" to "Periode",
     "Time asleep vs time in bed" to "Slaaptijd versus tijd in bed",
+    "Time cannot be in the future" to "Tijd mag niet in de toekomst liggen",
     "Time: %s" to "Tijd: %s",
     "Timeframe" to "Periode",
     "Timeline, breakdowns & detailed charts" to "Tijdlijn, verdelingen en grafieken",
@@ -3178,6 +3184,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "What makes those habits happen" to "Wat die gewoonten mogelijk maakt",
     "What medicines do you take?" to "Welke medicijnen neem je?",
     "What symptoms do you experience?" to "Welke klachten heb je?",
+    "What tends to run worse" to "Wat meestal erger verloopt",
     "What the icons mean" to "Wat de iconen zeggen",
     "What the patient reported when setting up, in their own words" to "Wat de patiënt bij het instellen vertelde, in eigen woorden",
     "What these triggers do to you" to "Wat deze triggers met je doen",
@@ -3260,6 +3267,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Within 2-3 days" to "Binnen 2-3 dagen",
     "Within hours" to "Binnen uren",
     "Within {0}" to "Binnen {0}",
+    "Without aura" to "Zonder aura",
     "Woke Up" to "Wakker",
     "Word-finding trouble" to "Woordvindproblemen",
     "Work" to "Werk",
@@ -3279,6 +3287,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Worsening — up {0}%" to "Verslechtert — {0}% omhoog",
     "Worst day" to "Ergste dag",
     "Worst season" to "Ergste seizoen",
+    "Worth mentioning to your doctor" to "Het vermelden waard bij je arts",
     "Wraparound neck massager with deep kneading, air pressure and heat, controlled from your phone." to "Nekmassage die om je nek sluit, met diep kneden, luchtdruk en warmte, bediend via je telefoon.",
     "Wrist skin temp deviation" to "Afwijking huidtemp pols",
     "Wristband that stimulates the median nerve to settle nausea." to "Polsband die de middelste armzenuw prikkelt tegen misselijkheid.",

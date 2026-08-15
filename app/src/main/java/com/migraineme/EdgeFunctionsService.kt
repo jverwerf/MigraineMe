@@ -2392,6 +2392,43 @@ class EdgeFunctionsService {
         }
     }
 
+    /**
+     * Does aura — or where the pain starts — predict a worse attack?
+     * A row exists only when both sides had >= 3 attacks with a recorded
+     * severity and the averages differed by >= 1.5 points, so anything
+     * returned here is safe to render as-is.
+     */
+    @Serializable
+    data class SeverityPredictorStat(
+        @SerialName("predictor_type") val predictorType: String,   // "aura" | "onset_location"
+        @SerialName("predictor_label") val predictorLabel: String,
+        @SerialName("with_count") val withCount: Int,
+        @SerialName("with_avg_severity") val withAvgSeverity: Float,
+        @SerialName("without_count") val withoutCount: Int,
+        @SerialName("without_avg_severity") val withoutAvgSeverity: Float,
+    )
+
+    /** Severity predictors. Empty unless the engine's gate passed. RLS scopes to the user. */
+    suspend fun getSeverityPredictors(context: Context): List<SeverityPredictorStat> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/severity_predictor_stats" +
+                "?select=predictor_type,predictor_label,with_count,with_avg_severity,without_count,without_avg_severity"
+            val r = client.get(url) {
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            }
+            if (r.status.value in 200..299) r.body() else emptyList()
+        } catch (e: Exception) {
+            println("getSeverityPredictors failed: ${e.message}")
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
     suspend fun getTreatmentTiming(context: Context): List<TreatmentTimingStat> {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()

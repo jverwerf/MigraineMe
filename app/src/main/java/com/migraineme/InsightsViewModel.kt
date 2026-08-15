@@ -241,6 +241,10 @@ class InsightsViewModel : ViewModel() {
     private val _painMigration = MutableStateFlow<EdgeFunctionsService.PainMigrationStat?>(null)
     val painMigration: StateFlow<EdgeFunctionsService.PainMigrationStat?> = _painMigration
 
+    /** Aura / onset-location severity predictors; empty unless the engine's gate passed. */
+    private val _severityPredictors = MutableStateFlow<List<EdgeFunctionsService.SeverityPredictorStat>>(emptyList())
+    val severityPredictors: StateFlow<List<EdgeFunctionsService.SeverityPredictorStat>> = _severityPredictors
+
     private val _gaugeAccuracy = MutableStateFlow<EdgeFunctionsService.GaugeAccuracy?>(null)
     val gaugeAccuracy: StateFlow<EdgeFunctionsService.GaugeAccuracy?> = _gaugeAccuracy
 
@@ -2159,6 +2163,7 @@ class InsightsViewModel : ViewModel() {
                 _symptomSegments.value  = withContext(Dispatchers.IO) { edge.getSymptomSegments(context) }
                 _treatmentTiming.value  = withContext(Dispatchers.IO) { edge.getTreatmentTiming(context) }
                 _painMigration.value     = withContext(Dispatchers.IO) { edge.getPainMigration(context) }
+                _severityPredictors.value = withContext(Dispatchers.IO) { edge.getSeverityPredictors(context) }
                 _auraInsights.value     = withContext(Dispatchers.IO) { edge.getAuraInsights(context) }
             } catch (e: Exception) {
                 android.util.Log.w("InsightsVM", "loadCorrelationData failed: ${e.message}")
@@ -2170,6 +2175,7 @@ class InsightsViewModel : ViewModel() {
                 _symptomSegments.value = emptyList()
                 _treatmentTiming.value = emptyList()
                 _painMigration.value = null
+                _severityPredictors.value = emptyList()
                 _auraInsights.value = emptyList()
             } finally {
                 _correlationsLoading.value = false
