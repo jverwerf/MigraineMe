@@ -703,7 +703,10 @@ private fun MenstruationDatePicker(
                 initial.year,
                 initial.monthValue - 1,
                 initial.dayOfMonth
-            ).show()
+            ).apply {
+                // Period days are logged, never scheduled — no future dates
+                datePicker.maxDate = System.currentTimeMillis()
+            }.show()
         },
         enabled = enabled,
         modifier = modifier,

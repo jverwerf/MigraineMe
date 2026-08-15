@@ -541,7 +541,10 @@ private fun MStyledDatePicker(
         onClick = {
             DatePickerDialog(ctx, { _, y, m, d ->
                 onDateSelected("%04d-%02d-%02d".format(y, m + 1, d))
-            }, initial.year, initial.monthValue - 1, initial.dayOfMonth).show()
+            }, initial.year, initial.monthValue - 1, initial.dayOfMonth).apply {
+                // Period dates are logged, never scheduled — no future dates
+                datePicker.maxDate = System.currentTimeMillis()
+            }.show()
         },
         enabled = enabled, modifier = modifier, shape = RoundedCornerShape(12.dp)
     ) { Text(if (isoDate.isBlank()) t("Select date") else isoDate, color = Color.White) }

@@ -1521,6 +1521,14 @@ private fun TimeEditor(
 
     fun commit() {
         val zone = java.time.ZoneId.systemDefault()
+        // Logging never accepts a future moment — clamp date+time to now so the
+        // field shows the value that will actually be stored.
+        val now = java.time.LocalDateTime.now()
+        if (selectedDate.atTime(hour, minute).isAfter(now)) {
+            selectedDate = now.toLocalDate()
+            hour = now.hour
+            minute = now.minute
+        }
         val iso = selectedDate.atTime(hour, minute).atZone(zone).toOffsetDateTime()
             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         onTimeChanged(iso)
@@ -1540,7 +1548,8 @@ private fun TimeEditor(
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            initialSelectedDateMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            selectableDates = PastOnlyDates
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },

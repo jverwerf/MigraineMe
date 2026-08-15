@@ -66,7 +66,7 @@ fun appTimePickerColors(): TimePickerColors = TimePickerDefaults.colors(
  * tomorrow early for anyone east of Greenwich.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-private object PastOnlyDates : SelectableDates {
+internal object PastOnlyDates : SelectableDates {
     override fun isSelectableDate(utcTimeMillis: Long): Boolean =
         !Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneId.of("UTC")).toLocalDate()
             .isAfter(LocalDate.now())
@@ -78,17 +78,16 @@ private object PastOnlyDates : SelectableDates {
  * Themed DateTimePicker field — replaces the legacy Android DatePickerDialog.
  * Shows a Material3 DatePicker then TimePicker in our purple theme.
  *
- * [allowFuture] defaults to true because some call sites legitimately stamp a
- * future moment (a missed activity is often something still on the calendar).
- * Anything recording an event that has already happened passes false: the date
- * grid then stops at today, and a time later than now on today's date is
+ * [allowFuture] defaults to false: every call site records something that has
+ * already happened, so logging must never accept a future date or time. The
+ * date grid stops at today, and a time later than now on today's date is
  * refused inline rather than accepted silently.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateTimePickerField(
     label: String,
-    allowFuture: Boolean = true,
+    allowFuture: Boolean = false,
     onDateTimeSelected: (String) -> Unit
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -202,7 +201,7 @@ fun DateTimePickerField(
 @Composable
 fun AppDateTimePicker(
     label: String,
-    allowFuture: Boolean = true,
+    allowFuture: Boolean = false,
     onDateTimeSelected: (String) -> Unit
 ) {
     DateTimePickerField(label = label, allowFuture = allowFuture, onDateTimeSelected = onDateTimeSelected)

@@ -880,7 +880,14 @@ private fun TimingEditorPill(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
                         .clickable {
-                            val updated = parsed.withHour(hour).withMinute(minute)
+                            // Logging never accepts a future moment — clamp to now
+                            var updated = parsed.withHour(hour).withMinute(minute)
+                            val now = OffsetDateTime.now()
+                            if (updated.isAfter(now)) {
+                                updated = now
+                                hour = now.hour
+                                minute = now.minute
+                            }
                             onDateTimeSelected(updated.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                         }
                         .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -971,6 +978,14 @@ private fun ItemEditorPill(
 
     fun commitChanges() {
         val zone = java.time.ZoneId.systemDefault()
+        // Logging never accepts a future moment — clamp date+time to now so the
+        // field shows the value that will actually be stored.
+        val nowLdt = java.time.LocalDateTime.now()
+        if (selectedDate.atTime(hour, minute).isAfter(nowLdt)) {
+            selectedDate = nowLdt.toLocalDate()
+            hour = nowLdt.hour
+            minute = nowLdt.minute
+        }
         val timeIso = selectedDate.atTime(hour, minute).atZone(zone).toOffsetDateTime()
             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         // Legacy mirror string ("400mg" / "2"); the insert path re-derives
@@ -1056,7 +1071,8 @@ private fun ItemEditorPill(
             val datePickerState = rememberDatePickerState(
                 initialSelectedDateMillis = selectedDate
                     .atStartOfDay(java.time.ZoneId.systemDefault())
-                    .toInstant().toEpochMilli()
+                    .toInstant().toEpochMilli(),
+                selectableDates = PastOnlyDates
             )
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },

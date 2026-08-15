@@ -251,9 +251,10 @@ fun JournalEditScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    // Date picker button
+                    // Date picker button — log entries never sit in the future
                     val datePickerState = rememberDatePickerState(
-                        initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                        selectableDates = PastOnlyDates
                     )
                     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -274,6 +275,10 @@ fun JournalEditScreen(
                                 TextButton(onClick = {
                                     datePickerState.selectedDateMillis?.let {
                                         selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                                    }
+                                    // Moving onto today can strand the kept time ahead of now — clamp
+                                    if (selectedDate == LocalDate.now() && selectedTime.isAfter(LocalTime.now())) {
+                                        selectedTime = LocalTime.now()
                                     }
                                     showDatePicker = false
                                 }) { Text(t("OK")) }
@@ -308,7 +313,11 @@ fun JournalEditScreen(
                             onDismissRequest = { showTimePicker = false },
                             confirmButton = {
                                 TextButton(onClick = {
-                                    selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                                    val picked = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                                    // Today + a later clock time would be a future log — clamp to now
+                                    selectedTime = if (selectedDate == LocalDate.now() && picked.isAfter(LocalTime.now())) {
+                                        LocalTime.now()
+                                    } else picked
                                     showTimePicker = false
                                 }) { Text(t("OK")) }
                             },
@@ -341,7 +350,8 @@ fun JournalEditScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         val endDatePickerState = rememberDatePickerState(
-                            initialSelectedDateMillis = selectedEndDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            initialSelectedDateMillis = selectedEndDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                            selectableDates = PastOnlyDates
                         )
                         var showEndDatePicker by remember { mutableStateOf(false) }
 
@@ -362,6 +372,10 @@ fun JournalEditScreen(
                                     TextButton(onClick = {
                                         endDatePickerState.selectedDateMillis?.let {
                                             selectedEndDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                                        }
+                                        // Moving onto today can strand the kept time ahead of now — clamp
+                                        if (selectedEndDate == LocalDate.now() && selectedEndTime.isAfter(LocalTime.now())) {
+                                            selectedEndTime = LocalTime.now()
                                         }
                                         showEndDatePicker = false
                                     }) { Text(t("OK")) }
@@ -395,7 +409,11 @@ fun JournalEditScreen(
                                 onDismissRequest = { showEndTimePicker = false },
                                 confirmButton = {
                                     TextButton(onClick = {
-                                        selectedEndTime = LocalTime.of(endTimePickerState.hour, endTimePickerState.minute)
+                                        val picked = LocalTime.of(endTimePickerState.hour, endTimePickerState.minute)
+                                        // Today + a later clock time would be a future log — clamp to now
+                                        selectedEndTime = if (selectedEndDate == LocalDate.now() && picked.isAfter(LocalTime.now())) {
+                                            LocalTime.now()
+                                        } else picked
                                         showEndTimePicker = false
                                     }) { Text(t("OK")) }
                                 },

@@ -557,7 +557,10 @@ fun AiQuestionsPage6(
                         OutlinedButton(
                             onClick = {
                                 android.app.DatePickerDialog(ctx, { _, y, m, d -> onLastPeriodDate("%04d-%02d-%02d".format(y, m + 1, d)) },
-                                    initial.year, initial.monthValue - 1, initial.dayOfMonth).show()
+                                    initial.year, initial.monthValue - 1, initial.dayOfMonth).apply {
+                                    // "Last period" is by definition in the past
+                                    datePicker.maxDate = System.currentTimeMillis()
+                                }.show()
                             },
                             shape = RoundedCornerShape(12.dp)
                         ) { Text(if (lastPeriodDate.isNullOrBlank()) t("Select date") else lastPeriodDate, color = Color.White) }

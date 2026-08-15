@@ -173,7 +173,10 @@ fun MenstruationSetupDialog(
                                     cal.get(Calendar.YEAR),
                                     cal.get(Calendar.MONTH),
                                     cal.get(Calendar.DAY_OF_MONTH)
-                                ).show()
+                                ).apply {
+                                    // "Last period" is by definition in the past
+                                    datePicker.maxDate = System.currentTimeMillis()
+                                }.show()
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
