@@ -171,6 +171,19 @@ fun HomeScreenRoot(
         }
     }
 
+    // ── AI prose is being rewritten in the language just picked ──
+    // The switch can be made from the drawer with Home already composed, so the
+    // state that drives the card has to come from outside this screen. On the
+    // way out, re-read: the insight in memory is still the old language's, and
+    // silently, because the numbers on screen have not changed.
+    val aiRegenerating by AiContentRefresh.regenerating.collectAsState()
+    val aiCompletions by AiContentRefresh.completions.collectAsState()
+    LaunchedEffect(aiCompletions) {
+        if (aiCompletions > 0 && !auth.accessToken.isNullOrBlank()) {
+            vm.loadRisk(appCtx, showSpinner = false)
+        }
+    }
+
     if (state.loading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -204,7 +217,9 @@ fun HomeScreenRoot(
 
         // Last visible card carries the Brainy watermark, same rule as Insights detail screens.
         val contributorsVisible = displayTriggers.isNotEmpty()
-        val insightVisible = selectedDay == 0 && !state.dailyInsight.isNullOrBlank()
+        // Stays visible through a language rewrite: the card holds its place and
+        // says it is updating, rather than vanishing mid-switch and coming back.
+        val insightVisible = selectedDay == 0 && (!state.dailyInsight.isNullOrBlank() || aiRegenerating)
         val watermarkOn = when {
             contributorsVisible -> "contributors"
             insightVisible -> "insight"
@@ -364,8 +379,12 @@ fun HomeScreenRoot(
                 if (insightVisible) {
                     // ── Well done — the one card that is purely on the user's side.
                     // Deliberately NOT premium-gated: encouragement should not be paywalled.
-                    state.positives.firstOrNull()?.let { praise ->
-                        WellDoneCard(text = praise)
+                    // Hidden during a language rewrite: it is model-written too, so
+                    // it would be the one paragraph left in the old language.
+                    if (!aiRegenerating) {
+                        state.positives.firstOrNull()?.let { praise ->
+                            WellDoneCard(text = praise)
+                        }
                     }
 
                     PremiumGate(
@@ -374,8 +393,9 @@ fun HomeScreenRoot(
                         onUpgrade = onNavigateToPaywall
                     ) {
                         AiInsightCard(
-                            insight = state.dailyInsight!!,
-                            watermark = watermarkOn == "insight"
+                            insight = state.dailyInsight.orEmpty(),
+                            watermark = watermarkOn == "insight",
+                            updating = aiRegenerating
                         )
                     }
                 }
@@ -865,8 +885,14 @@ private fun WellDoneCard(text: String) {
     }
 }
 
+/**
+ * @param updating the insight is being rewritten in a newly-picked language.
+ * The card keeps its shape and shows a still label in place of the paragraph:
+ * the previous language's text would read as a bug next to a translated screen,
+ * and an animated placeholder is not an option here — motion is a trigger.
+ */
 @Composable
-private fun AiInsightCard(insight: String, watermark: Boolean = false) {
+private fun AiInsightCard(insight: String, watermark: Boolean = false, updating: Boolean = false) {
     Card(
         colors = CardDefaults.cardColors(containerColor = AppTheme.AccentPurple.copy(alpha = 0.1f)),
         shape = RoundedCornerShape(12.dp)
@@ -903,8 +929,8 @@ private fun AiInsightCard(insight: String, watermark: Boolean = false) {
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Text(
-                    insight,
-                    color = AppTheme.BodyTextColor,
+                    if (updating) t("Updating for your new language…") else insight,
+                    color = if (updating) AppTheme.SubtleTextColor else AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodySmall
                 )
             }

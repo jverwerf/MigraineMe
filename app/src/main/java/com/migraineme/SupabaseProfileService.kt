@@ -207,6 +207,49 @@ object SupabaseProfileService {
         }
     }
 
+    /**
+     * Rewrite this user's AI prose in the language they just picked, now.
+     *
+     * Everything the app draws itself is keyed English and re-renders the
+     * instant LangPrefs changes. The daily insight is not ours to translate —
+     * it is written by a model, so the only way to change its language is to
+     * write it again. The PATCH above fires a profiles.lang trigger that drops
+     * the current daily_insights row and re-queues the job, but the queue is
+     * drained by a cron tick up to five minutes away, oldest three first, so
+     * without this the user watches a blank card for minutes. Posting
+     * scope=self makes the worker process this user's own queued job inline
+     * and return once the new-language text has landed, typically in 15–30s.
+     *
+     * Suspends for the duration, so the caller can hold an "Updating…" state
+     * for exactly as long as the rewrite takes. Returns true if anything was
+     * regenerated; false is the ordinary case where there was no insight to
+     * rewrite (no job queued), not an error.
+     */
+    suspend fun regenerateAiContentForLang(context: android.content.Context): Boolean {
+        return try {
+            val appCtx = context.applicationContext
+            val token = SessionStore.getValidAccessToken(appCtx) ?: return false
+            val res: RegenerateResponse = client.post("$baseUrl/functions/v1/ai-daily-insight-worker") {
+                header("apikey", anonKey)
+                header("Authorization", "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody(RegenerateBody())
+            }.body()
+            (res.processed ?: 0) > 0
+        } catch (e: Exception) {
+            // Non-fatal: the cron worker still picks the job up, it just takes
+            // minutes instead of seconds.
+            android.util.Log.w("SupabaseProfileService", "AI content regeneration failed", e)
+            false
+        }
+    }
+
+    @Serializable
+    private data class RegenerateBody(val scope: String = "self")
+
+    @Serializable
+    private data class RegenerateResponse(val processed: Int? = null)
+
     @kotlinx.serialization.Serializable
     private data class AuthMetaBody(val data: AuthMetaLang)
 

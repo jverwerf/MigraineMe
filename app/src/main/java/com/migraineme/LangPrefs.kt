@@ -122,7 +122,10 @@ object LangPrefs {
     private fun pushToProfile() {
         val ctx = appContext ?: return
         CoroutineScope(Dispatchers.IO).launch {
-            SupabaseProfileService.syncLang(ctx)
+            val wrote = SupabaseProfileService.syncLang(ctx)
+            // Only when a profile row actually changed: signed out, or before a
+            // row exists, there is no AI prose of theirs to rewrite.
+            if (wrote) AiContentRefresh.regenerateNow(ctx)
         }
     }
 
@@ -137,5 +140,54 @@ object LangPrefs {
     suspend fun syncAfterSignIn(context: Context) {
         if (!hasExplicitChoice()) return
         SupabaseProfileService.syncLang(context)
+    }
+}
+
+/**
+ * Whether the server is currently rewriting this user's AI prose in the
+ * language they just picked.
+ *
+ * Strings the app owns are keyed English and swap the instant LangPrefs
+ * changes. Model-written prose — the daily insight, its recommendations and
+ * the well-done line — cannot swap, because there is no translation of it to
+ * swap to; it has to be written again. That takes a round trip, and until it
+ * lands the only honest thing to show is that it is being rewritten. The
+ * alternative, leaving the previous language's paragraph sitting there while
+ * the rest of the screen is in Spanish, reads as a bug.
+ *
+ * A StateFlow rather than per-screen state because the switch can happen from
+ * the drawer while Home is already composed, and Home has to react to a change
+ * made on another screen. Deliberately static on screen — no spinner, no
+ * shimmer: motion is itself a migraine trigger in this app.
+ */
+object AiContentRefresh {
+    private val _regenerating = MutableStateFlow(false)
+    val regenerating: StateFlow<Boolean> = _regenerating.asStateFlow()
+
+    /**
+     * Bumped every time a rewrite finishes, so a screen holding already-loaded
+     * prose knows to re-read it. A counter rather than a boolean because two
+     * switches in a row must both be observable.
+     */
+    private val _completions = MutableStateFlow(0)
+    val completions: StateFlow<Int> = _completions.asStateFlow()
+
+    /**
+     * Never let a hung request strand the card on "Updating…" — worse than
+     * stale text, because it never resolves. The worker returns in 15–30s; at
+     * the cap we give up and let the next load show whatever is there.
+     */
+    private const val TIMEOUT_MS = 60_000L
+
+    suspend fun regenerateNow(context: Context) {
+        _regenerating.value = true
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(TIMEOUT_MS) {
+                SupabaseProfileService.regenerateAiContentForLang(context)
+            }
+        } finally {
+            _regenerating.value = false
+            _completions.value = _completions.value + 1
+        }
     }
 }
