@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ActivityViewModel : ViewModel() {
+class ActivityViewModel : PoolViewModel() {
 
     private val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
 
@@ -84,7 +84,7 @@ class ActivityViewModel : ViewModel() {
     fun addNewToPool(accessToken: String, label: String, category: String? = null) {
         viewModelScope.launch {
             runCatching { db.upsertActivityToPool(accessToken, label, category); loadAll(accessToken) }
-                .onFailure { it.printStackTrace() }
+                .onFailure { reportError(it) }
         }
     }
 

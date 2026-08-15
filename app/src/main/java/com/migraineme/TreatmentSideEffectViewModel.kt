@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
  * TriggerViewModel / MissedActivityViewModel — exposes the pool + a list
  * of `frequent` prefs, plus add/remove/favourite helpers.
  */
-class TreatmentSideEffectViewModel : ViewModel() {
+class TreatmentSideEffectViewModel : PoolViewModel() {
     private val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
 
     private val _pool = MutableStateFlow<List<SupabaseDbService.UserTreatmentSideEffectRow>>(emptyList())
@@ -36,6 +36,7 @@ class TreatmentSideEffectViewModel : ViewModel() {
     fun addNewToPool(accessToken: String, label: String, iconKey: String? = null) {
         viewModelScope.launch {
             runCatching { db.insertTreatmentSideEffectToPool(accessToken, label, iconKey = iconKey) }
+                .onFailure { reportError(it) }
             loadAll(accessToken)
         }
     }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class MigraineViewModel : ViewModel() {
+class MigraineViewModel : PoolViewModel() {
 
     private val db = SupabaseDbService(
         BuildConfig.SUPABASE_URL,
@@ -48,7 +48,7 @@ class MigraineViewModel : ViewModel() {
                 db.upsertMigraineToPool(accessToken, label.trim())
                 loadAll(accessToken)
             } catch (e: Exception) {
-                e.printStackTrace()
+                reportError(e)
             }
         }
     }

@@ -210,7 +210,7 @@ private suspend fun upsertWeatherManualEntry(
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", BuildConfig.SUPABASE_ANON_KEY)
             header("Prefer", "resolution=merge-duplicates,return=minimal")
-            parameter("on_conflict", "user_id,source,date")
+            parameter("on_conflict", "user_id,date")
             contentType(ContentType.Application.Json)
             setBody(listOf(body))
         }

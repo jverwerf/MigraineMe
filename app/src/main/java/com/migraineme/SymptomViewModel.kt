@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class SymptomViewModel : ViewModel() {
+class SymptomViewModel : PoolViewModel() {
 
     private val db = SupabaseDbService(
         BuildConfig.SUPABASE_URL,
@@ -61,7 +61,7 @@ class SymptomViewModel : ViewModel() {
                 db.upsertSymptomToPool(accessToken, label.trim(), category, iconKey)
                 loadAll(accessToken)
             } catch (e: Exception) {
-                e.printStackTrace()
+                reportError(e)
             }
         }
     }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ReliefViewModel : ViewModel() {
+class ReliefViewModel : PoolViewModel() {
 
     private val db = SupabaseDbService(
         BuildConfig.SUPABASE_URL,
@@ -38,7 +38,7 @@ class ReliefViewModel : ViewModel() {
             runCatching {
                 db.upsertReliefToPool(accessToken, label, category)
                 loadAll(accessToken)
-            }.onFailure { it.printStackTrace() }
+            }.onFailure { reportError(it) }
         }
     }
 

@@ -1507,7 +1507,7 @@ class SupabaseDbService(
         val response = client.post("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
-            parameter("on_conflict", "label")
+            parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
             contentType(ContentType.Application.Json); setBody(UserMedicineInsert(label, category, doseUnit))
         }
@@ -1612,7 +1612,7 @@ class SupabaseDbService(
         val response = client.post("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
-            parameter("on_conflict", "label")
+            parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
             contentType(ContentType.Application.Json); setBody(UserReliefInsert(label, category))
         }
@@ -1715,7 +1715,7 @@ class SupabaseDbService(
         val response = client.post("$supabaseUrl/rest/v1/user_migraines_pool") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
-            parameter("on_conflict", "label")
+            parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
             contentType(ContentType.Application.Json); setBody(UserMigrainePoolInsert(label))
         }
@@ -2106,7 +2106,7 @@ class SupabaseDbService(
         val response = client.post("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
-            parameter("on_conflict", "label")
+            parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
             contentType(ContentType.Application.Json); setBody(UserLocationInsert(label, category))
         }
@@ -2267,7 +2267,7 @@ class SupabaseDbService(
         val response = client.post("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
-            parameter("on_conflict", "label")
+            parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
             contentType(ContentType.Application.Json); setBody(UserActivityInsert(label, category))
         }
@@ -2534,7 +2534,7 @@ class SupabaseDbService(
         val response = client.post("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
-            parameter("on_conflict", "label")
+            parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
             contentType(ContentType.Application.Json); setBody(UserMissedActivityInsert(label, category))
         }

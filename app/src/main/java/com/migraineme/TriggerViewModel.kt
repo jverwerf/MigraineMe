@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class TriggerViewModel : ViewModel() {
+class TriggerViewModel : PoolViewModel() {
 
     private val db = SupabaseDbService(
         BuildConfig.SUPABASE_URL,
@@ -102,7 +102,7 @@ class TriggerViewModel : ViewModel() {
                 db.upsertTriggerToPool(accessToken, label.trim(), category, predictionValue)
                 loadAll(accessToken)
             } catch (e: Exception) {
-                e.printStackTrace()
+                reportError(e)
             }
         }
     }

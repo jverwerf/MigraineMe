@@ -1792,6 +1792,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = triggerVm.errors,
                                 title = t("Triggers"),
                                 subtitle = t("Add, star, or remove triggers"),
                                 iconColor = Color(0xFFFFB74D),
@@ -1888,6 +1889,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = medicineVm.errors,
                                 title = t("Medicines"),
                                 subtitle = t("Add, star, or remove medicines"),
                                 iconColor = Color(0xFF4FC3F7),
@@ -1957,6 +1959,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = reliefVm.errors,
                                 title = t("Reliefs"),
                                 subtitle = t("Add, star, or remove reliefs"),
                                 iconColor = Color(0xFF81C784),
@@ -2046,6 +2049,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = prodromeVm.errors,
                                 title = t("Prodromes"),
                                 subtitle = t("Early warning signs before a migraine"),
                                 iconColor = Color(0xFFCE93D8),
@@ -2134,6 +2138,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = locationVm.errors,
                                 title = t("Locations"),
                                 subtitle = t("Where were you?"),
                                 iconColor = Color(0xFF64B5F6),
@@ -2181,6 +2186,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = activityVm.errors,
                                 title = t("Activities"),
                                 subtitle = t("What were you doing?"),
                                 iconColor = Color(0xFFFF8A65),
@@ -2229,6 +2235,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = missedVm.errors,
                                 title = t("Missed Activities"),
                                 subtitle = t("What did you miss?"),
                                 iconColor = Color(0xFFEF9A9A),
@@ -2277,6 +2284,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
+                                errors = tseVm.errors,
                                 title = t("Treatment side effects"),
                                 subtitle = t("Symptoms you flag as caused by your treatments"),
                                 iconColor = AppTheme.AccentPurple,

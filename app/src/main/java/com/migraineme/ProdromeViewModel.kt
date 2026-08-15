@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ProdromeViewModel : ViewModel() {
+class ProdromeViewModel : PoolViewModel() {
 
     private val db = SupabaseDbService(
         BuildConfig.SUPABASE_URL,
@@ -99,7 +99,7 @@ class ProdromeViewModel : ViewModel() {
                 db.upsertProdromeToPool(accessToken, label.trim(), category, predictionValue)
                 loadAll(accessToken)
             } catch (e: Exception) {
-                e.printStackTrace()
+                reportError(e)
             }
         }
     }

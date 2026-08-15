@@ -105,6 +105,12 @@ data class PoolConfig(
     val doseUnitChoices: List<Pair<String, String>> = emptyList(),
     val onAddWithUnit: ((label: String, category: String?, doseUnit: String) -> Unit)? = null,
     val onSetDoseUnit: (itemId: String, doseUnit: String) -> Unit = { _, _ -> },
+    /**
+     * User-facing failures from the backing view model (see [PoolViewModel.errors]).
+     * Pool edits run in `viewModelScope`, so the callbacks above cannot report
+     * their own failures — surfaced here as a snackbar instead.
+     */
+    val errors: kotlinx.coroutines.flow.Flow<String>? = null,
 )
 
 /* ────────────────────────────────────────────────
@@ -155,6 +161,15 @@ fun ManagePoolScreen(
         )
     }
 
+    // ── Surface pool-edit failures (e.g. a rejected custom item) ──
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(config.errors) {
+        config.errors?.collect { msg ->
+            snackbarHostState.showSnackbar(tSync("Failed to add: %1\$s", msg))
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
@@ -448,6 +463,8 @@ fun ManagePoolScreen(
 
             Spacer(Modifier.height(32.dp))
         }
+    }
+        SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     // ── Hero info dialog ──
