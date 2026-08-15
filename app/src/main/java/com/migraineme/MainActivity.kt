@@ -2663,8 +2663,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         .scale(pulseScale)
                                 )
 
+                                // statusText stays an English key (it is compared
+                                // against "All set!" above); translated at render.
                                 Text(
-                                    statusText,
+                                    t(statusText),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = AppTheme.TitleColor,
                                     textAlign = TextAlign.Center
@@ -2735,8 +2737,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable("paywall_trial_ended") {
                         PaywallScreen(
                             navController = nav,
-                            headerTitle = "Your free trial just ended",
-                            headerSubtitle = "Keep your risk forecast, insights and AI assistant. Pick a plan to continue where you left off."
+                            headerTitle = t("Your free trial just ended"),
+                            headerSubtitle = t("Keep your risk forecast, insights and AI assistant. Pick a plan to continue where you left off.")
                         )
                     }
 
@@ -2935,14 +2937,14 @@ private fun BottomBar(
                         }
                         if (showBadge) {
                             BadgedBox(badge = { Badge { Text(journalBadgeCount.toString()) } }) {
-                                Icon(item.icon, contentDescription = item.label)
+                                Icon(item.icon, contentDescription = t(item.label))
                             }
                         } else if (showInsightsDot) {
                             BadgedBox(badge = { Badge() }) {
-                                Icon(item.icon, contentDescription = item.label)
+                                Icon(item.icon, contentDescription = t(item.label))
                             }
                         } else {
-                            Icon(item.icon, contentDescription = item.label)
+                            Icon(item.icon, contentDescription = t(item.label))
                         }
                     }
                 },

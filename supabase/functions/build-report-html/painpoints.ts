@@ -58,9 +58,18 @@ const CELL_LABEL: Record<string, string> = {
   bottom_left: "bottom left", bottom_center: "bottom center", bottom_right: "bottom right",
 };
 
-export function AURA_ZONE_LABEL(id: string): string {
+/**
+ * Compose the printed label for an aura zone id. `tr` is the render-time
+ * translator (build-report-html's rt); it defaults to identity so callers that
+ * only need the English key keep working. The eye names and cell names are
+ * translated as separate keys because the "·" join is language-neutral.
+ */
+export function AURA_ZONE_LABEL(
+  id: string,
+  tr: (en: string) => string = (en) => en,
+): string {
   const [eye, ...rest] = id.split("_");
   const cell = rest.join("_");
-  const eyeLabel = eye === "left" ? "Left eye" : eye === "right" ? "Right eye" : eye;
-  return CELL_LABEL[cell] ? `${eyeLabel} · ${CELL_LABEL[cell]}` : id;
+  const eyeLabel = eye === "left" ? tr("Left eye") : eye === "right" ? tr("Right eye") : eye;
+  return CELL_LABEL[cell] ? `${eyeLabel} · ${tr(CELL_LABEL[cell])}` : id;
 }

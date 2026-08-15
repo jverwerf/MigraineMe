@@ -217,13 +217,26 @@ serve(async (req) => {
     user_id: regimen.user_id,
     stats_fingerprint: fp,
     narrative,
+    // Which language the prose is IN — not a translated value, a fact about
+    // the row. The doctor report filters on it so a stale-language paragraph
+    // can never print. (The fingerprint already regenerates on switch; the
+    // column exists for readers that cannot recompute the fingerprint.)
+    lang: narrativeLang,
     generated_at: new Date().toISOString(),
   };
   // If table has app_id (MeSeries variant), include it.
   if ("app_id" in (regimen as any)) {
     cachePayload.app_id = (regimen as any).app_id;
   }
-  await admin.from("treatment_narrative_cache").upsert(cachePayload, { onConflict: "regimen_id" });
+  const { error: cacheErr } = await admin
+    .from("treatment_narrative_cache").upsert(cachePayload, { onConflict: "regimen_id" });
+  if (cacheErr) {
+    // Deploy-order tolerance: until the lang column's migration has run, the
+    // write above fails on the unknown column. Cache without it rather than
+    // dropping the cache (and with it the 7-day regeneration damper).
+    const { lang: _lang, ...withoutLang } = cachePayload;
+    await admin.from("treatment_narrative_cache").upsert(withoutLang, { onConflict: "regimen_id" });
+  }
 
   return json({ narrative, cached: false, generated_at: cachePayload.generated_at });
 });

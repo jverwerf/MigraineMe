@@ -77,9 +77,7 @@ fun ManageCalendarSkipsScreen(navController: NavController) {
     var groups by remember { mutableStateOf<List<SkipGroup>>(emptyList()) }
     var showInfo by remember { mutableStateOf(false) }
 
-    val infoText = "Calendar events you've told MigraineMe to stop suggesting. Every time the Daily Check-In's \"From your calendar\" page surfaces an event and you tap dismiss instead of tagging it as a trigger, relief, or activity, the event title lands here.\n\n" +
-        "For each entry:\n• Tap the trash icon to remove it from the opt-out list. The next time an event with that title shows up in your calendar, the Daily Check-In will suggest it again.\n\n" +
-        "This is the inverse of the other Manage Items pools: instead of adding things you want to track, this is the list of things you've explicitly chosen NOT to track. Useful when you accidentally dismissed something important, or when a recurring meeting title becomes relevant (e.g. you used to dismiss \"Standup\" but now want to flag standup-stress as a trigger)."
+    val infoText = t("Calendar events you've told MigraineMe to stop suggesting. Every time the Daily Check-In's \"From your calendar\" page surfaces an event and you tap dismiss instead of tagging it as a trigger, relief, or activity, the event title lands here.\n\nFor each entry:\n• Tap the trash icon to remove it from the opt-out list. The next time an event with that title shows up in your calendar, the Daily Check-In will suggest it again.\n\nThis is the inverse of the other Manage Items pools: instead of adding things you want to track, this is the list of things you've explicitly chosen NOT to track. Useful when you accidentally dismissed something important, or when a recurring meeting title becomes relevant (e.g. you used to dismiss \"Standup\" but now want to flag standup-stress as a trigger).")
 
     suspend fun reload() {
         loading = true

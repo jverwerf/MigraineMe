@@ -193,7 +193,7 @@ fun LoginScreen(
         val expiresIn = frag["expires_in"]?.toLongOrNull()
         val errDesc = frag["error_description"] ?: frag["error"]
         if (!errDesc.isNullOrBlank()) { error = errDesc; return true }
-        if (accessToken.isNullOrBlank()) { error = "Facebook sign-in failed (missing access token)."; return true }
+        if (accessToken.isNullOrBlank()) { error = tSync("Facebook sign-in failed (missing access token)."); return true }
         handleSuccessfulSession(token = accessToken, refreshToken = refreshToken, expiresIn = expiresIn, providerHint = "facebook")
         return true
     }
@@ -218,23 +218,24 @@ fun LoginScreen(
                     credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
                 ) GoogleIdTokenCredential.createFrom(credential.data) else null
                 val idToken = googleCred?.idToken
-                if (idToken.isNullOrBlank()) { error = "Google sign-in failed: no ID token received."; return@launch }
+                if (idToken.isNullOrBlank()) { error = tSync("Google sign-in failed: no ID token received."); return@launch }
                 Log.d(LOG_TAG, "Got Google ID token, exchanging with Supabase...")
                 val ses = SupabaseAuthService.signInWithGoogleIdToken(idToken)
                 Log.d(LOG_TAG, "Supabase response: accessToken=${ses.accessToken?.take(10)}, error=${ses.accessToken == null}")
                 ses.accessToken?.let {
                     handleSuccessfulSession(token = it, refreshToken = ses.refreshToken, expiresIn = ses.expiresIn,
                         displayNameHint = googleCred?.displayName, avatarUrlHint = googleCred?.profilePictureUri?.toString(), providerHint = "google")
-                } ?: run { error = "Sign-in didn't complete. Please try again." }
+                } ?: run { error = tSync("Sign-in didn't complete. Please try again.") }
             } catch (e: GetCredentialException) {
                 Log.e(LOG_TAG, "GetCredentialException: ${e.type} - ${e.message}", e)
-                error = "Credential error: ${e.type} - ${e.message}"
+                // Translate the frame; the provider detail stays raw.
+                error = tSync("Credential error: %s", "${e.type} - ${e.message}")
             } catch (e: AuthServerException) {
                 Log.e(LOG_TAG, "Supabase auth error: ${e.message}", e)
                 error = e.message
             } catch (t: Throwable) {
                 Log.e(LOG_TAG, "Google sign-in error: ${t.javaClass.simpleName} - ${t.message}", t)
-                error = "Something went wrong. Please try again."
+                error = tSync("Something went wrong. Please try again.")
             } finally {
                 busy = false
             }
@@ -243,7 +244,7 @@ fun LoginScreen(
 
     fun signInWithFacebook() {
         error = null
-        val activity = ctx as? Activity ?: run { error = "Facebook sign-in unavailable."; return }
+        val activity = ctx as? Activity ?: run { error = tSync("Facebook sign-in unavailable."); return }
         FacebookAuthService().startAuth(activity)
     }
 
@@ -507,9 +508,9 @@ fun LoginScreen(
                                         ses.accessToken?.let {
                                             handleSuccessfulSession(token = it, refreshToken = ses.refreshToken,
                                                 expiresIn = ses.expiresIn, providerHint = "email")
-                                        } ?: run { error = "Invalid login response." }
+                                        } ?: run { error = tSync("Invalid login response.") }
                                     } catch (t: Throwable) {
-                                        error = t.message ?: "Login failed."
+                                        error = t.message ?: tSync("Login failed.")
                                     } finally {
                                         busy = false
                                     }

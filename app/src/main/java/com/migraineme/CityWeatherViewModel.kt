@@ -72,7 +72,7 @@ class CityWeatherViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
                 if (cities.isEmpty()) {
-                    _state.value = _state.value.copy(loading = false, error = "No cities available")
+                    _state.value = _state.value.copy(loading = false, error = tSync("No cities available"))
                     return@launch
                 }
 
@@ -125,7 +125,7 @@ class CityWeatherViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
                 if (cities.isEmpty()) {
-                    _state.value = _state.value.copy(loading = false, error = "No cities available")
+                    _state.value = _state.value.copy(loading = false, error = tSync("No cities available"))
                     return@launch
                 }
 

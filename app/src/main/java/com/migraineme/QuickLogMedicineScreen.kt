@@ -287,7 +287,7 @@ fun QuickLogMedicineScreen(
                             androidx.compose.material3.FilterChip(
                                 selected = sideEffectScale == key,
                                 onClick = { sideEffectScale = key },
-                                label = { Text(display, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(display), style = MaterialTheme.typography.labelSmall) },
                                 colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = seColor.copy(alpha = 0.3f),
                                     selectedLabelColor = Color.White,

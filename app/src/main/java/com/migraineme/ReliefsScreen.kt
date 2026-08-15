@@ -590,7 +590,7 @@ private fun ReliefMinutesField(value: String, onValueChange: (String) -> Unit) {
                 unfocusedTextColor = Color.White
             )
         )
-        Text("min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(t("min"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

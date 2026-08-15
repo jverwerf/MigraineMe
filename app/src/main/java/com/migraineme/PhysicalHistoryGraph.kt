@@ -342,7 +342,7 @@ fun PhysicalHistoryGraph(
                     modifier = Modifier.fillMaxWidth().padding(start = yAxisWidth),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    val fmt = DateTimeFormatter.ofPattern("MMM d")
+                    val fmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
                     if (historyData.isNotEmpty()) {
                         val firstLabel = try { LocalDate.parse(historyData.first().date).format(fmt) } catch (_: Exception) { historyData.first().date }
                         val lastLabel = try { LocalDate.parse(historyData.last().date).format(fmt) } catch (_: Exception) { historyData.last().date }

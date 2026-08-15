@@ -46,10 +46,10 @@ object TimeOfDay {
         return ldt.hour + ldt.minute / 60.0
     }
 
-    /** "h:mm a" formatted label (e.g. "10:30 PM") in the device timezone. */
+    /** Short time label (e.g. "10:30 PM", "22:30" for 24h locales) in the device timezone. */
     fun formatHmma(raw: String): String? {
         val instant = parseInstant(raw) ?: return null
         val time = LocalTime.from(instant.atZone(ZoneId.systemDefault()))
-        return time.format(DateTimeFormatter.ofPattern("h:mm a"))
+        return time.format(DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(appLocale()))
     }
 }

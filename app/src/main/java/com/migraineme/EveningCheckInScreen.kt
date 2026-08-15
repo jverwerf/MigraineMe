@@ -1285,7 +1285,7 @@ private fun ReviewPage(
     Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
         Text(t("Review"), color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
         Spacer(Modifier.height(4.dp))
-        Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM")), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+        Text(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM", appLocale())), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(20.dp))
 
         AnimatedVisibility(visible = saved) {
@@ -1521,7 +1521,7 @@ private fun TimeEditor(
     Spacer(Modifier.height(2.dp))
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            selectedDate.format(DateTimeFormatter.ofPattern("EEE d MMM")),
+            selectedDate.format(DateTimeFormatter.ofPattern("EEE d MMM", appLocale())),
             color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(AppTheme.AccentPurple.copy(alpha = 0.1f)).clickable { showDatePicker = true }.padding(horizontal = 8.dp, vertical = 4.dp)

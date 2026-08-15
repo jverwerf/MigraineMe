@@ -55,7 +55,10 @@
         </LinearLayout>
     </RelativeLayout>
 
+    <!-- English placeholder only; MigraineMeWidget.applyStaticLabels() sets the
+         translated text on every update. -->
     <TextView
+        android:id="@+id/widget_quicklog_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Quick log"
@@ -74,27 +77,27 @@
 
         <LinearLayout android:id="@+id/widget_btn_migraine" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="4dp">
             <ImageView android:id="@+id/widget_icon_migraine" android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_widget_migraine" android:background="@drawable/widget_btn_migraine_bg" android:padding="5dp" android:contentDescription="Log migraine" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Migraine" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
+            <TextView android:id="@+id/widget_label_migraine" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Migraine" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
         </LinearLayout>
 
         <LinearLayout android:id="@+id/widget_btn_trigger" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="4dp">
             <ImageView android:id="@+id/widget_icon_trigger" android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_widget_trigger" android:background="@drawable/widget_btn_trigger_bg" android:padding="5dp" android:contentDescription="Log trigger" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trigger" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
+            <TextView android:id="@+id/widget_label_trigger" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trigger" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
         </LinearLayout>
 
         <LinearLayout android:id="@+id/widget_btn_prodrome" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="4dp">
             <ImageView android:id="@+id/widget_icon_prodrome" android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_widget_prodrome" android:background="@drawable/widget_btn_prodrome_bg" android:padding="5dp" android:contentDescription="Log prodrome" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Prodrome" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
+            <TextView android:id="@+id/widget_label_prodrome" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Prodrome" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
         </LinearLayout>
 
         <LinearLayout android:id="@+id/widget_btn_medicine" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="4dp">
             <ImageView android:id="@+id/widget_icon_medicine" android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_widget_medicine" android:background="@drawable/widget_btn_medicine_bg" android:padding="5dp" android:contentDescription="Log medicine" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Medicine" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
+            <TextView android:id="@+id/widget_label_medicine" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Medicine" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
         </LinearLayout>
 
         <LinearLayout android:id="@+id/widget_btn_relief" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal" android:padding="4dp">
             <ImageView android:id="@+id/widget_icon_relief" android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_widget_relief" android:background="@drawable/widget_btn_relief_bg" android:padding="5dp" android:contentDescription="Log relief" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Relief" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
+            <TextView android:id="@+id/widget_label_relief" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Relief" android:textColor="#9EFFFFFF" android:textSize="8sp" android:layout_marginTop="2dp" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

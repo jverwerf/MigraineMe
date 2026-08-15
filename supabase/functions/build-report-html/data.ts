@@ -302,9 +302,22 @@ export async function loadReportData(
     for (const row of treatments) {
       const regimenId = String(row.regimen_id ?? "");
       if (!regimenId) continue;
-      const { data: nar } = await sb.from("treatment_narrative_cache")
-        .select("narrative").eq("regimen_id", regimenId).limit(1);
-      if (nar?.[0]?.narrative) narratives[regimenId] = String(nar[0].narrative);
+      // The cached narrative is model prose in whatever language the user had
+      // when it was generated (treatment_narrative_cache.lang). A paragraph in
+      // the wrong language is worse than no paragraph in a clinical document,
+      // so a row that does not match the report's language is omitted — the
+      // app's own Monitor screen regenerates it in the new language soon
+      // enough via the lang-aware fingerprint. Until the lang column's
+      // migration has run, the select falls back and behaves as before.
+      const { data: nar, error: narErr } = await sb.from("treatment_narrative_cache")
+        .select("narrative, lang").eq("regimen_id", regimenId).limit(1);
+      if (narErr) {
+        const { data: legacy } = await sb.from("treatment_narrative_cache")
+          .select("narrative").eq("regimen_id", regimenId).limit(1);
+        if (legacy?.[0]?.narrative) narratives[regimenId] = String(legacy[0].narrative);
+      } else if (nar?.[0]?.narrative && asLang(nar[0].lang) === lang) {
+        narratives[regimenId] = String(nar[0].narrative);
+      }
       // Side-effect logs inside the regimen's active window — the same read
       // generate-treatment-narrative does. Logs are date-keyed, not
       // regimen-keyed, so the window IS the association.

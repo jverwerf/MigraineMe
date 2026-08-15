@@ -70,7 +70,7 @@ fun MentalDataHistoryScreen(onBack: () -> Unit) {
     val mentalConfig = remember { MentalCardConfigStore.load(context) }
     var isLoading by remember { mutableStateOf(true) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
+    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale())
 
     fun loadEntries() {
         scope.launch {

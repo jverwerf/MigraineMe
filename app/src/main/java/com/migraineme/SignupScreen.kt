@@ -228,8 +228,8 @@ fun SignupScreen(
                     Button(
                         onClick = {
                             error = null
-                            if (!passwordStrong) { error = "Password must be at least 6 characters."; return@Button }
-                            if (password != confirm) { error = "Passwords do not match."; return@Button }
+                            if (!passwordStrong) { error = tSync("Password must be at least 6 characters."); return@Button }
+                            if (password != confirm) { error = tSync("Passwords do not match."); return@Button }
                             busy = true
                             scope.launch {
                                 try {

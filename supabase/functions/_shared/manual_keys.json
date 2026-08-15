@@ -238,6 +238,486 @@
     {
       "en": "Symptoms",
       "why": "report breakdown block titles: runtime values translated at display"
+    },
+    {
+      "en": "Sleep duration",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Sleep score",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Sleep efficiency",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Disturbances",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Deep sleep",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "REM sleep",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Light sleep",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Bedtime",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Wake time",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "HRV",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Resting HR",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "SpO2",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Respiratory rate",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Skin temperature",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Recovery",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Stress index",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Steps",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Strain",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "High HR zones",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Pressure",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Temperature",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Humidity",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Wind",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "UV index",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Thunderstorm",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Altitude",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Altitude change",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Screen time",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Late screen",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Noise",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Brightness",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Phone volume",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Phone unlocks",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Dark mode",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Hydration",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Mindfulness",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Calories",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Protein",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Carbs",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Fat",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Fiber",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Sugar",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Sodium",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Caffeine",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Cholesterol",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Saturated fat",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Unsaturated fat",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Trans fat",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Potassium",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Calcium",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Iron",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Magnesium",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Zinc",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Selenium",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Phosphorus",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Copper",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Manganese",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Vitamin A",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Vitamin C",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Vitamin D",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Vitamin E",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Vitamin K",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Vitamin B6",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Vitamin B12",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Thiamin",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Riboflavin",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Niacin",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Folate",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Biotin",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Pantothenic acid",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Tyramine",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Alcohol",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Gluten",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Histamine",
+      "why": "report metric registry label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Top of Head",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Forehead Center",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Forehead Left",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Forehead Right",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Left Brow",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Right Brow",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Left Temple",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Right Temple",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Left Eye",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Right Eye",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Left Ear",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Right Ear",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Nose Bridge",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Left Sinus",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Right Sinus",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Left Jaw / TMJ",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Right Jaw / TMJ",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Teeth Left",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Teeth Right",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Neck Left",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Neck Right",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Top of Back Head Left",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Top of Back Head Right",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Occipital Center",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Behind Left Ear",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Behind Right Ear",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Base of Skull Left",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Base of Skull Center",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Base of Skull Right",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Upper Back Left",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Upper Back Right",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Upper Back Center",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Left Shoulder",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Right Shoulder",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "Center / Lower Back",
+      "why": "report pain-location label: reaches rt() as a runtime value"
+    },
+    {
+      "en": "top left",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "top center",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "top right",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "center left",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "center",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "center right",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "bottom left",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "bottom center",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "bottom right",
+      "why": "report aura zone cell label: composed in AURA_ZONE_LABEL at runtime"
+    },
+    {
+      "en": "All",
+      "why": "report cover timeframeLabel: Android sends this runtime value"
+    },
+    {
+      "en": "Unknown",
+      "why": "report cover timeframeLabel: Android error fallback, runtime value"
     }
   ]
 }

@@ -596,7 +596,7 @@ private fun AttachedInsightsGraphCard(graphVm: CommunityGraphViewModel) {
     if (windowStart == null || windowEnd == null) return
 
     val zone = ZoneId.systemDefault()
-    val fmt = DateTimeFormatter.ofPattern("d MMM").withZone(zone)
+    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(zone)
     val rangeLabel = "${fmt.format(windowStart)} - ${fmt.format(windowEnd)}"
 
     Card(
@@ -664,7 +664,7 @@ private fun AttachedRiskGraphCard(graphVm: CommunityGraphViewModel) {
 
     if (riskDays.isEmpty()) return
 
-    val fmt = DateTimeFormatter.ofPattern("d MMM")
+    val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
     val from = LocalDate.parse(riskDays.first().date).format(fmt)
     val to = LocalDate.parse(riskDays.last().date).format(fmt)
 
@@ -727,7 +727,7 @@ private fun formatCommentDate(isoDate: String): String {
             hours < 24 -> "${hours}h"
             days < 7 -> "${days}d"
             else -> {
-                val fmt = DateTimeFormatter.ofPattern("d MMM").withZone(ZoneId.systemDefault())
+                val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(ZoneId.systemDefault())
                 fmt.format(instant)
             }
         }

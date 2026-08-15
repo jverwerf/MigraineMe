@@ -80,7 +80,7 @@ class RecalibrationViewModel : ViewModel() {
 
     private suspend fun fetchProposals(context: Context): RecalibrationState {
         val accessToken = SessionStore.getValidAccessToken(context.applicationContext)
-            ?: return RecalibrationState(loading = false, error = "Not authenticated")
+            ?: return RecalibrationState(loading = false, error = tSync("Not authenticated"))
 
         val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/recalibration_proposals" +
                 "?status=eq.pending&order=created_at.desc" +
@@ -93,7 +93,7 @@ class RecalibrationViewModel : ViewModel() {
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                return RecalibrationState(loading = false, error = "Failed to load proposals")
+                return RecalibrationState(loading = false, error = tSync("Failed to load proposals"))
             }
 
             val arr = JSONArray(response.body?.string() ?: "[]")

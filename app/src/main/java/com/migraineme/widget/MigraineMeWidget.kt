@@ -15,6 +15,7 @@ import com.migraineme.R
 import com.migraineme.MainActivity
 import com.migraineme.SessionStore
 import com.migraineme.SupabaseDbService
+import com.migraineme.tSync
 import kotlinx.coroutines.*
 import java.time.Instant
 import kotlin.math.cos
@@ -114,8 +115,30 @@ class MigraineMeWidget : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget_migraineme)
         views.setImageViewBitmap(R.id.widget_gauge_image, renderGauge(context, 0, 0.0, "NONE"))
         views.setTextViewText(R.id.widget_score_text, "...")
-        views.setTextViewText(R.id.widget_zone_text, "Loading")
+        views.setTextViewText(R.id.widget_zone_text, tSync("Loading"))
+        applyStaticLabels(views)
         mgr.updateAppWidget(id, views)
+    }
+
+    /**
+     * The layout XML carries English placeholders only; every user-visible
+     * label is (re)applied here through tSync() so the widget follows the
+     * in-app language. LangPrefs.init() runs in MigraineMeApp.onCreate, so
+     * tSync() is safe from an AppWidgetProvider.
+     */
+    private fun applyStaticLabels(views: RemoteViews) {
+        views.setTextViewText(R.id.widget_quicklog_title, tSync("Quick log"))
+        views.setTextViewText(R.id.widget_label_migraine, tSync("Migraine"))
+        views.setTextViewText(R.id.widget_label_trigger, tSync("Trigger"))
+        views.setTextViewText(R.id.widget_label_prodrome, tSync("Prodrome"))
+        views.setTextViewText(R.id.widget_label_medicine, tSync("Medicine"))
+        views.setTextViewText(R.id.widget_label_relief, tSync("Relief"))
+        views.setContentDescription(R.id.widget_gauge_image, tSync("Risk gauge"))
+        views.setContentDescription(R.id.widget_icon_migraine, tSync("Log migraine"))
+        views.setContentDescription(R.id.widget_icon_trigger, tSync("Log trigger"))
+        views.setContentDescription(R.id.widget_icon_prodrome, tSync("Log prodrome"))
+        views.setContentDescription(R.id.widget_icon_medicine, tSync("Log medicine"))
+        views.setContentDescription(R.id.widget_icon_relief, tSync("Log relief"))
     }
 
     private fun updateWidget(context: Context, mgr: AppWidgetManager, id: Int, data: WidgetData) {
@@ -128,11 +151,12 @@ class MigraineMeWidget : AppWidgetProvider() {
 
         if (!data.loggedIn) {
             views.setTextViewText(R.id.widget_score_text, "\u2013")
-            views.setTextViewText(R.id.widget_zone_text, "Sign in")
+            views.setTextViewText(R.id.widget_zone_text, tSync("Sign in"))
         } else {
             views.setTextViewText(R.id.widget_score_text, "%.1f".format(data.riskScore))
             views.setTextViewText(R.id.widget_zone_text, formatZone(data.riskZone))
         }
+        applyStaticLabels(views)
 
         val openApp = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -164,7 +188,7 @@ class MigraineMeWidget : AppWidgetProvider() {
     }
 
     private fun formatZone(zone: String): String = when (zone.uppercase()) {
-        "HIGH" -> "High risk"; "MILD" -> "Mild risk"; "LOW" -> "Low risk"; else -> "No data"
+        "HIGH" -> tSync("High risk"); "MILD" -> tSync("Mild risk"); "LOW" -> tSync("Low risk"); else -> tSync("No data")
     }
 
     // === Canvas gauge (matches in-app RiskGauge) ===

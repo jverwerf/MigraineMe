@@ -306,13 +306,13 @@ function attackCard(m: Migraine, d: ReportData): string {
     if (legacy.length) {
       rows.push({
         label: "Pain location", at: null, pain: true,
-        text: legacy.map((l) => PAIN_LABELS[l] ?? pretty(l)).join(", "),
+        text: legacy.map((l) => rt(PAIN_LABELS[l] ?? pretty(l))).join(", "),
       });
     }
   } else {
     for (const [at, group] of moments.slice(0, PAIN_ENTRIES_SHOWN)) {
       const sev = group.map((g) => g.severity).filter((s): s is number => s != null);
-      const locs = group.map((g) => PAIN_LABELS[g.location_id] ?? pretty(g.location_id)).join(", ");
+      const locs = group.map((g) => rt(PAIN_LABELS[g.location_id] ?? pretty(g.location_id))).join(", ");
       rows.push({
         label: "Pain", at: parseDate(at), pain: true,
         text: sev.length ? `${Math.max(...sev)}/10 — ${locs}` : locs,
@@ -320,7 +320,7 @@ function attackCard(m: Migraine, d: ReportData): string {
     }
   }
 
-  const auraZones = (m.aura_locations ?? []).map((z) => AURA_ZONE_LABEL(z));
+  const auraZones = (m.aura_locations ?? []).map((z) => AURA_ZONE_LABEL(z, rt));
   if (auraZones.length || m.aura_duration_minutes) {
     const dur = m.aura_duration_minutes ? ` · ${m.aura_duration_minutes}m` : "";
     rows.push({ label: "Aura", at: null, text: esc(auraZones.join(", ")) + dur });
@@ -496,14 +496,14 @@ function attackCard(m: Migraine, d: ReportData): string {
     moments.length
       ? `<b>${rt("Pain")}</b> ${moments.map(([at, group]) => {
           const sev = group.map((g) => g.severity).filter((v): v is number => v != null);
-          const locs = group.map((g) => PAIN_LABELS[g.location_id] ?? pretty(g.location_id)).join(", ");
+          const locs = group.map((g) => rt(PAIN_LABELS[g.location_id] ?? pretty(g.location_id))).join(", ");
           return `${sev.length ? `${Math.max(...sev)}/10 ` : ""}${esc(locs)}`;
         }).join(" &rarr; ")}`
       : (painIds.size
-        ? `<b>${rt("Pain")}</b> ${esc([...painIds].map((id) => PAIN_LABELS[id] ?? pretty(id)).join(", "))}`
+        ? `<b>${rt("Pain")}</b> ${esc([...painIds].map((id) => rt(PAIN_LABELS[id] ?? pretty(id))).join(", "))}`
         : ""),
     auraSet.size
-      ? `<b>${rt("Aura")}</b> ${esc([...auraSet].map((z) => AURA_ZONE_LABEL(z)).join(", "))}${
+      ? `<b>${rt("Aura")}</b> ${esc([...auraSet].map((z) => AURA_ZONE_LABEL(z, rt)).join(", "))}${
           m.aura_duration_minutes ? ` · ${m.aura_duration_minutes}m` : ""}`
       : "",
   ].filter(Boolean);
@@ -739,7 +739,7 @@ function attackChart(
         return yOf(near.v);
       },
       lastY: yOf(pts[pts.length - 1].v),
-      label: `${s.label}${s.unit ? ` (${s.unit})` : ""}`,
+      label: `${rt(s.label)}${s.unit ? ` (${s.unit})` : ""}`,
       range: `${fmt(min)}–${fmt(max)}`,
       color: colorFor(s),
     };
@@ -1018,14 +1018,14 @@ function frequency(d: ReportData, pageNo: number): string {
 
 // ── what happened ────────────────────────────────────────────────
 function contextLine(s: CorrelationStat): string {
-  const lag = (s.best_lag_days ?? 0) > 0 ? `${s.best_lag_days} days before` : "same day";
-  const pct = s.pct_migraine_windows != null ? `${Math.round(s.pct_migraine_windows)}% of migraines · ` : "";
+  const lag = (s.best_lag_days ?? 0) > 0 ? rt("{0} days before", s.best_lag_days) : rt("same day");
+  const pct = s.pct_migraine_windows != null ? `${rt("{0}% of migraines", Math.round(s.pct_migraine_windows))} · ` : "";
   return `${pct}${lag}`;
 }
 
 function statRow(s: CorrelationStat, color: string, name: string): string {
   const hits = s.sample_size && s.pct_migraine_windows != null
-    ? `${Math.round((s.pct_migraine_windows / 100) * s.sample_size)} of ${s.sample_size}`
+    ? rt("{0} of {1}", Math.round((s.pct_migraine_windows / 100) * s.sample_size), s.sample_size)
     : `${s.lift_ratio.toFixed(1)}×`;
   return `<div class="card row">
     <div class="grow">
@@ -1408,7 +1408,7 @@ function impact(d: ReportData, pageNo: number): string {
         </figure>
         <table class="log" style="align-self:center">
           ${locs.slice(0, 6).map(([id, n]) => `<tr>
-            <td class="k">${esc(PAIN_LABELS[id] ?? pretty(id))}</td>
+            <td class="k">${esc(rt(PAIN_LABELS[id] ?? pretty(id)))}</td>
             <td class="o">${n}</td>
             <td class="v">${bar(C.red, (n / total) * 100)}</td></tr>`).join("")}
         </table>
@@ -1445,9 +1445,9 @@ function impact(d: ReportData, pageNo: number): string {
           }).join("")}
           <table class="log" style="align-self:center">
             <tr><td class="k" style="color:${rgba(C.pink, .7)}">1 · ${rt("Starts")}</td><td class="v">
-              ${esc(pm.onset_locations.map((l) => PAIN_LABELS[l] ?? pretty(l)).join(", ") || "—")}</td></tr>
+              ${esc(pm.onset_locations.map((l) => rt(PAIN_LABELS[l] ?? pretty(l))).join(", ") || "—")}</td></tr>
             <tr><td class="k" style="color:${C.pink}">2 · ${rt("Spreads")}</td><td class="v">
-              ${esc(pm.spread_locations.map((l) => PAIN_LABELS[l] ?? pretty(l)).join(", ") || "—")}</td></tr>
+              ${esc(pm.spread_locations.map((l) => rt(PAIN_LABELS[l] ?? pretty(l))).join(", ") || "—")}</td></tr>
             ${peakText ? `<tr><td class="k">${rt("Peaks after")}</td><td class="v">${esc(rt("about {0}", peakText))}</td></tr>` : ""}
           </table>
         </div>
@@ -1651,7 +1651,7 @@ function lifestyleBlock(d: ReportData): string {
     }
     const w = steady || oneSided ? 0 : Math.max(4, (magnitude / 100) * 42);
     return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0">
-      <span style="width:118px;font-size:10px;color:#E4DAEF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(row.label)}</span>
+      <span style="width:118px;font-size:10px;color:#E4DAEF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(rt(row.label))}</span>
       <div style="flex:1;position:relative;height:9px">
         <div style="position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(255,255,255,0.18)"></div>
         ${w ? `<div style="position:absolute;top:0;height:9px;border-radius:4px;${up ? "left:50%" : "right:50%"};width:${w.toFixed(1)}%;background:${color}"></div>` : ""}

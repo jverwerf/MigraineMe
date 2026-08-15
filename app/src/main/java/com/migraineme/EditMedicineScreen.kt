@@ -88,25 +88,25 @@ fun EditMedicineScreen(
     var migraineMenuOpen by rememberSaveable { mutableStateOf(false) }
 
     fun labelForMigraine(startIso: String?): String {
-        if (startIso.isNullOrBlank()) return "Unknown"
+        if (startIso.isNullOrBlank()) return tSync("Unknown")
         return try {
             val odt = runCatching { OffsetDateTime.parse(startIso) }.getOrNull()
             val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(startIso)
-            ldt.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy • HH:mm"))
-        } catch (_: Exception) { "Unknown" }
+            ldt.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy • HH:mm", appLocale()))
+        } catch (_: Exception) { tSync("Unknown") }
     }
     val selectedMigraineLabel = migraines
         .firstOrNull { it.id == migraineId }
         ?.let { labelForMigraine(it.startAt) }
-        ?: "None"
+        ?: tSync("None")
 
     fun formatIsoDdMmHm(iso: String?): String {
-        if (iso.isNullOrBlank()) return "Not set"
+        if (iso.isNullOrBlank()) return tSync("Not set")
         return try {
             val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
             val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(iso)
             ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
-        } catch (_: Exception) { "Not set" }
+        } catch (_: Exception) { tSync("Not set") }
     }
 
     Column(

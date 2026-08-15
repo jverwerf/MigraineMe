@@ -508,7 +508,7 @@ fun InsightsReportScreen(
                             if (html == null) {
                                 isGeneratingPdf = false
                                 android.widget.Toast.makeText(
-                                    ctx, "Couldn't build the report — check your connection",
+                                    ctx, tSync("Couldn't build the report — check your connection"),
                                     android.widget.Toast.LENGTH_LONG,
                                 ).show()
                                 return@launch
@@ -517,13 +517,13 @@ fun InsightsReportScreen(
                             isGeneratingPdf = false
                             if (file != null) ReportHtmlPrinter.share(ctx, file)
                             else android.widget.Toast.makeText(
-                                ctx, "Failed to generate PDF", android.widget.Toast.LENGTH_SHORT,
+                                ctx, tSync("Failed to generate PDF"), android.widget.Toast.LENGTH_SHORT,
                             ).show()
                         } catch (e: Exception) {
                             isGeneratingPdf = false
                             android.util.Log.e("ReportPDF", "PDF error", e)
                             android.widget.Toast.makeText(
-                                ctx, "PDF error: ${e.message}", android.widget.Toast.LENGTH_LONG,
+                                ctx, tSync("PDF error: %s", e.message ?: ""), android.widget.Toast.LENGTH_LONG,
                             ).show()
                         }
                     }
@@ -571,7 +571,7 @@ fun InsightsReportScreen(
                     (1..7).map { day ->
                         val count = grouped[day]?.size ?: 0
                         InsightsViewModel.DayOfWeekStat(
-                            dayName = java.time.DayOfWeek.of(day).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()),
+                            dayName = java.time.DayOfWeek.of(day).getDisplayName(java.time.format.TextStyle.SHORT, appLocale()),
                             dayIndex = day,
                             count = count,
                             pct = count * 100f / total
@@ -677,7 +677,7 @@ fun InsightsReportScreen(
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                         Spacer(Modifier.height(8.dp))
                         val maxAvg = monthsWithDur.maxOf { it.second }.coerceAtLeast(1f)
-                        val durFmt = DateTimeFormatter.ofPattern("MMM")
+                        val durFmt = DateTimeFormatter.ofPattern("MMM", appLocale())
                         Row(
                             Modifier.fillMaxWidth().height(120.dp).horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -1098,7 +1098,7 @@ fun InsightsReportScreen(
                         val isAuto = series.key in allAutoSelectedKeys
                         BaseCard(modifier = Modifier.padding(vertical = 4.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("${series.label} (${series.unit})",
+                                Text("${t(series.label)} (${series.unit})",
                                     color = series.color,
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                                 if (isAuto) {
@@ -1195,7 +1195,7 @@ fun InsightsReportScreen(
                                     color = Color.White.copy(alpha = 0.4f).toArgb()
                                     textSize = 18f; isAntiAlias = true; textAlign = android.graphics.Paint.Align.CENTER
                                 }
-                                val xFmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM")
+                                val xFmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM", appLocale())
                                 val labelCount = 5.coerceAtMost(daySpan.toInt() + 1)
                                 for (i in 0 until labelCount) {
                                     val frac = if (labelCount <= 1) 0f else i.toFloat() / (labelCount - 1)
@@ -1313,7 +1313,7 @@ private fun FilterCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (timeFrame != InsightsViewModel.TimeFrame.ALL && timeFrame != InsightsViewModel.TimeFrame.NONE) {
                     val timeLabel = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null) {
-                        val df = java.time.format.DateTimeFormatter.ofPattern("MMM d")
+                        val df = java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())
                         "${df.format(customRange.from)} — ${df.format(customRange.to)}"
                     } else t(timeFrame.label)
                     Row(
@@ -1380,7 +1380,7 @@ private fun FilterCard(
 
                 // Custom date range row (shown when custom is active or being set)
                 AnimatedVisibility(visible = timeFrame == InsightsViewModel.TimeFrame.CUSTOM) {
-                    val df = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy")
+                    val df = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale())
                     Row(
                         Modifier.fillMaxWidth().padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1796,8 +1796,8 @@ private fun DetailMigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(z)
-    val tf = DateTimeFormatter.ofPattern("h:mm a").withZone(z)
+    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val tf = DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {
@@ -2038,7 +2038,7 @@ private fun RegimenRow(
         val s = java.time.LocalDate.parse(r.startDate)
         java.time.temporal.ChronoUnit.WEEKS.between(s, java.time.LocalDate.now()).coerceAtLeast(0L).toInt()
     }.getOrNull() ?: 0
-    val sub = listOfNotNull(r.kind, dose.ifBlank { null }, "$weeks wks").joinToString(" · ")
+    val sub = listOfNotNull(r.kind, dose.ifBlank { null }, t("%s wks", weeks)).joinToString(" · ")
 
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2067,7 +2067,7 @@ private fun RegimenRow(
             }
         }
         if (band != "not_enough_data") {
-            Text(bandLabel, color = bandColor, fontWeight = FontWeight.SemiBold,
+            Text(t(bandLabel), color = bandColor, fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.labelSmall)
         }
         if (!narrative.isNullOrBlank()) {
@@ -2203,7 +2203,8 @@ internal fun offsetFromStart(start: Instant, at: Instant?): String {
 @Composable
 private fun AttackLogCard(details: List<ReportAttackDetail>) {
     val zone = ZoneId.systemDefault()
-    val dateFmt = remember { DateTimeFormatter.ofPattern("d MMM yyyy").withZone(ZoneId.systemDefault()) }
+    val loc = rememberAppLocale()
+    val dateFmt = remember(loc) { DateTimeFormatter.ofPattern("d MMM yyyy", loc).withZone(ZoneId.systemDefault()) }
 
     BrainyWatermarkCard(resId = R.drawable.brainy_briefcase, flipWatermark = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -2354,7 +2355,8 @@ internal fun AttackCard(
     auraZones: List<SupabaseDbService.AuraZoneRow> = emptyList(),
 ) {
     val zone = ZoneId.systemDefault()
-    val dateFmt = remember { DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm").withZone(zone) }
+    val dtLoc = rememberAppLocale()
+    val dateFmt = remember(dtLoc) { DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm", dtLoc).withZone(zone) }
     val hrs = mg.end?.let { (it.toEpochMilli() - mg.start.toEpochMilli()) / 3_600_000.0 }
 
     BaseCard {
@@ -2657,7 +2659,8 @@ internal fun AttackChart(
     modifier: Modifier = Modifier,
 ) {
     val zone = ZoneId.systemDefault()
-    val dayFmt = remember { DateTimeFormatter.ofPattern("dd MMM").withZone(zone) }
+    val dayLoc = rememberAppLocale()
+    val dayFmt = remember(dayLoc) { DateTimeFormatter.ofPattern("dd MMM", dayLoc).withZone(zone) }
     val hasMetrics = metrics.any { it.points.size >= 2 }
     val density = LocalDensity.current
 

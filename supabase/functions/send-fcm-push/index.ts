@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import { asLang, translatorFor } from "../_shared/i18n.ts";
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FIREBASE_SERVICE_ACCOUNT = JSON.parse(
@@ -191,6 +193,15 @@ serve(async (req) => {
     let extraData: Record<string, string> = {};
     // Pre-rendered, already-translated notification text. See sendFcmMessage.
     let notification: { title: string; body: string } | undefined;
+    // Per-token copy, used when the caller asked for the push to be rendered
+    // in each recipient's own language (see `notification_key` below). Falls
+    // back to `notification` for any token not in the map.
+    const notificationByToken = new Map<string, { title: string; body: string }>();
+    // English key + args for per-recipient rendering; resolved against each
+    // target user's profiles.lang in the user_ids branch below.
+    let notificationKey:
+      | { title: string; body: string; title_args?: unknown[]; body_args?: unknown[] }
+      | null = null;
 
     if (req.method === "POST") {
       const body = await req.json();
@@ -224,6 +235,34 @@ serve(async (req) => {
         };
       }
 
+      // ── Recipient-language rendering ────────────────────────────────
+      //
+      // `notification` carries copy the caller already rendered, which is
+      // correct when the caller knows the recipient. It is WRONG for a
+      // fan-out to many users: one pre-rendered string puts the composer's
+      // language on every recipient's lock screen. So a caller can instead
+      // send `notification_key`: English strings, which ARE the translation
+      // keys, plus their arguments. We resolve each recipient's own
+      // profiles.lang below — the only place that knows which users these
+      // tokens belong to — and render per token.
+      if (
+        body.notification_key &&
+        typeof body.notification_key === "object" &&
+        typeof body.notification_key.title === "string" &&
+        typeof body.notification_key.body === "string"
+      ) {
+        notificationKey = {
+          title: body.notification_key.title,
+          body: body.notification_key.body,
+          title_args: Array.isArray(body.notification_key.title_args)
+            ? body.notification_key.title_args
+            : undefined,
+          body_args: Array.isArray(body.notification_key.body_args)
+            ? body.notification_key.body_args
+            : undefined,
+        };
+      }
+
       // FCM only accepts string values in the data map.
       if (body.data && typeof body.data === "object") {
         for (const [k, v] of Object.entries(body.data)) {
@@ -248,7 +287,7 @@ serve(async (req) => {
       // ── Direct user mode: resolve tokens for exactly these users ──
       const { data: targets, error: targetsError } = await supabase
         .from("profiles")
-        .select("user_id, fcm_token")
+        .select("user_id, fcm_token, lang")
         .in("user_id", directUserIds)
         .not("fcm_token", "is", null);
 
@@ -256,6 +295,20 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: targetsError.message }), { status: 500 });
       }
       tokensToSend = (targets || []).map((p: any) => p.fcm_token).filter(Boolean);
+
+      // Render notification_key copy once per recipient, in that recipient's
+      // own language. This branch is the only one that knows whose token is
+      // whose, so it is the only place per-recipient rendering can happen.
+      if (notificationKey) {
+        for (const p of (targets || []) as Array<{ fcm_token: string | null; lang?: unknown }>) {
+          if (!p.fcm_token) continue;
+          const t = translatorFor(asLang(p.lang));
+          notificationByToken.set(p.fcm_token, {
+            title: t(notificationKey.title, ...(notificationKey.title_args ?? [])),
+            body: t(notificationKey.body, ...(notificationKey.body_args ?? [])),
+          });
+        }
+      }
 
     } else if (messageType === "evening_checkin") {
       // ── Evening check-in: only users where it's 8pm local ──
@@ -372,8 +425,20 @@ serve(async (req) => {
     let sent = 0;
     let failed = 0;
 
+    // A caller that sent only notification_key (no pre-rendered notification)
+    // still gets a visible push for tokens outside the per-token map — the
+    // English key is real copy, so it degrades to English, never to silence.
+    if (!notification && notificationKey) {
+      const t = translatorFor("en");
+      notification = {
+        title: t(notificationKey.title, ...(notificationKey.title_args ?? [])),
+        body: t(notificationKey.body, ...(notificationKey.body_args ?? [])),
+      };
+    }
+
     for (const fcmToken of tokensToSend) {
-      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType, extraData, notification);
+      const copyForToken = notificationByToken.get(fcmToken) ?? notification;
+      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType, extraData, copyForToken);
       if (success) sent++;
       else failed++;
     }

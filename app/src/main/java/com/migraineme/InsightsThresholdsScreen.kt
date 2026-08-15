@@ -131,14 +131,14 @@ fun InsightsThresholdsScreen(
                             modifier = Modifier.weight(1f),
                             value = "${ga.truePositives}",
                             label = t("Caught"),
-                            sublabel = "Warned & it happened",
+                            sublabel = t("Warned & it happened"),
                             color = Color(0xFF81C784),
                         )
                         ConfusionCell(
                             modifier = Modifier.weight(1f),
                             value = "${ga.falsePositives}",
                             label = t("False alarm"),
-                            sublabel = "Warned, nothing came",
+                            sublabel = t("Warned, nothing came"),
                             color = Color(0xFFE57373),
                         )
                     }
@@ -150,14 +150,14 @@ fun InsightsThresholdsScreen(
                             modifier = Modifier.weight(1f),
                             value = "${ga.falseNegatives}",
                             label = t("Missed"),
-                            sublabel = "It happened unwarned",
+                            sublabel = t("It happened unwarned"),
                             color = Color(0xFFFFB74D),
                         )
                         ConfusionCell(
                             modifier = Modifier.weight(1f),
                             value = "${ga.trueNegatives}",
                             label = t("Quiet days"),
-                            sublabel = "No warning, no migraine",
+                            sublabel = t("No warning, no migraine"),
                             color = AppTheme.SubtleTextColor,
                         )
                     }

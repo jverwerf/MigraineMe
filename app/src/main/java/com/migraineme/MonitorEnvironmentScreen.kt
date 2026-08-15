@@ -223,7 +223,7 @@ fun MonitorEnvironmentScreen(
                         // Weather condition
                         val condition = weatherCodeToCondition(todayWeather!!.weatherCode)
                         Text(
-                            condition,
+                            t(condition),
                             color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
@@ -296,13 +296,13 @@ fun MonitorEnvironmentScreen(
                         )
                         Spacer(Modifier.height(8.dp))
 
-                        val dayFormatter = DateTimeFormatter.ofPattern("EEE")
-                        val dateFormatter = DateTimeFormatter.ofPattern("d MMM")
+                        val dayFormatter = DateTimeFormatter.ofPattern("EEE", rememberAppLocale())
+                        val dateFormatter = DateTimeFormatter.ofPattern("d MMM", rememberAppLocale())
                         val slotColors = listOf(Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFF81C784))
 
                         forecastDays.forEach { day ->
                             val date = LocalDate.parse(day.date)
-                            val dayLabel = if (date == LocalDate.now().plusDays(1)) "Tomorrow" else date.format(dayFormatter)
+                            val dayLabel = if (date == LocalDate.now().plusDays(1)) t("Tomorrow") else date.format(dayFormatter)
                             val condition = weatherCodeToCondition(day.weatherCode)
 
                             Row(
@@ -325,7 +325,7 @@ fun MonitorEnvironmentScreen(
                                     )
                                 }
                                 Text(
-                                    condition,
+                                    t(condition),
                                     color = AppTheme.BodyTextColor,
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.weight(1f)

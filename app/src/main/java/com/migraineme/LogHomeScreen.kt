@@ -587,6 +587,6 @@ private fun formatSymptomTime(iso: String?): String {
     return runCatching {
         java.time.OffsetDateTime.parse(iso)
             .atZoneSameInstant(java.time.ZoneId.systemDefault())
-            .format(java.time.format.DateTimeFormatter.ofPattern("d MMM, HH:mm"))
+            .format(java.time.format.DateTimeFormatter.ofPattern("d MMM, HH:mm", appLocale()))
     }.getOrElse { iso }
 }

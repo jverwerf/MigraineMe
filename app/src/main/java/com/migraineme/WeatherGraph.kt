@@ -364,7 +364,7 @@ fun WeatherHistoryGraph(
                     modifier = Modifier.fillMaxWidth().padding(start = yAxisWidth),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    val fmt = DateTimeFormatter.ofPattern("MMM d")
+                    val fmt = DateTimeFormatter.ofPattern("MMM d", appLocale())
                     Text(LocalDate.parse(historyData.first().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     Text(LocalDate.parse(historyData.last().date).format(fmt), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                 }

@@ -12,11 +12,32 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getLang, t, type Lang } from "../_shared/i18n.ts";
+import { getLang, languageDirective, t, type Lang } from "../_shared/i18n.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+
+/**
+ * Model-written prose has no translation table, so it must be generated in the
+ * user's display language in the first place. Structure must NOT move with the
+ * language: build-report-html and all clients parse clinical_assessment by its
+ * ENGLISH "=== Section ===" headers (parseNarrativeSections), and every
+ * label/enum in the JSON is matched against English rows downstream. So the
+ * directive pins those explicitly and frees only the prose.
+ */
+function modelLanguageDirective(lang: Lang): string {
+  const base = languageDirective(lang);
+  if (!base) return "";
+  return base
+    + ` The "=== Migraine Profile ===", "=== Trigger Profile ===", "=== Burden Profile ===",`
+    + ` "=== Coping Profile ===", "=== Lifestyle ===" and "=== Trend ===" section headers are`
+    + ` machine-parsed markers: reproduce them EXACTLY as written, in English, never translated.`
+    + ` Every "label", "from", "to", "item_type", "type", "metric" and "severity" value must also`
+    + ` stay exactly as provided in English, because it is matched against English records.`
+    + ` Only the free prose — section bodies, "summary", "reasoning", "message",`
+    + ` "calibration_notes" — is written in the user's language.`;
+}
 
 // Onboarding-tour seed rows are marked source='demo'. Written as an OR group so
 // rows with a NULL source (real data on the nullable tables) are kept.
@@ -38,10 +59,10 @@ serve(async (req: Request) => {
       userId = user.id;
     }
 
-    // Display language for the `message` fields below. Only those: the
-    // proposals this function writes stay English, because they are rows the
-    // app reads back and renders itself, and their labels are matched against
-    // English user_triggers / user_prodromes labels downstream.
+    // Display language: for the `message` fields below, and for the model
+    // calls' prose (clinical_assessment bodies, reasoning, summary) via
+    // modelLanguageDirective. Labels and the "=== Section ===" headers stay
+    // English — they are matched/parsed against English data downstream.
     const lang: Lang = await getLang(supabase, userId);
 
     // ── Premium check ──
@@ -772,7 +793,7 @@ serve(async (req: Request) => {
       symSeverityByLabel, auraSummary, corrLines, treatmentLines, bedtimeStats,
     );
 
-    const call1Result = await callOpenAI(CALL1_SYSTEM_PROMPT, call1UserMessage);
+    const call1Result = await callOpenAI(CALL1_SYSTEM_PROMPT + modelLanguageDirective(lang), call1UserMessage);
 
     // ══════════════════════════════════════════════════════════════
     // CALL 2 — The Statistician (skip for profile_only mode)
@@ -789,7 +810,7 @@ serve(async (req: Request) => {
         thresholdRows ?? [], decayRows ?? [],
       );
 
-      call2Result = await callOpenAI(CALL2_SYSTEM_PROMPT, call2UserMessage);
+      call2Result = await callOpenAI(CALL2_SYSTEM_PROMPT + modelLanguageDirective(lang), call2UserMessage);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -844,7 +865,7 @@ serve(async (req: Request) => {
           profile, mc, onCycleCount, offCycleCount,
           offsetHistogram, menstrualDecayRow, menstruationConfig,
         );
-        call3Result = await callOpenAI(CALL3_SYSTEM_PROMPT, call3UserMessage);
+        call3Result = await callOpenAI(CALL3_SYSTEM_PROMPT + modelLanguageDirective(lang), call3UserMessage);
       }
     }
 

@@ -596,11 +596,11 @@ fun MedicineDWMLegend() {
                 .background(Color.White.copy(alpha = 0.04f))
                 .padding(horizontal = 8.dp, vertical = 2.dp)
         ) {
-            Text("D", color = Color(0xFFFFB74D),
+            Text(t("D"), color = Color(0xFFFFB74D),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-            Text("W", color = Color(0xFF4FC3F7),
+            Text(t("W"), color = Color(0xFF4FC3F7),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-            Text("M", color = Color(0xFF81C784),
+            Text(t("M"), color = Color(0xFF81C784),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
         }
     }
@@ -828,15 +828,15 @@ private fun MedicineDwmGrid(
 fun MedicineDWMHeaderRow() {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Spacer(Modifier.weight(1f))
-        Text("D", color = Color(0xFFFFB74D),
+        Text(t("D"), color = Color(0xFFFFB74D),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             textAlign = TextAlign.End,
             modifier = Modifier.width(MEDICINE_VALUE_COL_WIDTH))
-        Text("W", color = Color(0xFF4FC3F7),
+        Text(t("W"), color = Color(0xFF4FC3F7),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             textAlign = TextAlign.End,
             modifier = Modifier.width(MEDICINE_VALUE_COL_WIDTH))
-        Text("M", color = Color(0xFF81C784),
+        Text(t("M"), color = Color(0xFF81C784),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             textAlign = TextAlign.End,
             modifier = Modifier.width(MEDICINE_VALUE_COL_WIDTH))
@@ -1173,7 +1173,7 @@ fun MedicineDataHistoryScreen(onBack: () -> Unit) {
                     IconButton(onClick = { selectedDate = selectedDate.minusDays(1) }) {
                         Icon(Icons.Outlined.ChevronLeft, t("Previous day"), tint = AppTheme.AccentPurple)
                     }
-                    Text(selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy")),
+                    Text(selectedDate.format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy", rememberAppLocale())),
                         color = AppTheme.TitleColor, modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleSmall)
                     IconButton(onClick = {

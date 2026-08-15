@@ -75,7 +75,7 @@ fun PhysicalDataHistoryScreen(
     var isLoading by remember { mutableStateOf(true) }
     var activityCount by remember { mutableStateOf(0) }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
+    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMM d", appLocale())
 
     fun loadEntries() {
         scope.launch {

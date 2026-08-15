@@ -260,7 +260,7 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2260",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2261",
     "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
   },
   {
@@ -280,19 +280,19 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1149",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1151",
     "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2628",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2630",
     "line": "                        Text(t(\"%1\\$s migraines (%2\\$s%%)\", item.count, item.pctOfMigraines.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2782",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2784",
     "line": "                    Text(t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), timed),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3387",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3389",
     "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 %3\\$s\\u00D7 the average day.\", w.dayName, String.format(\"%.0f\", w.pct), String.format(\"%.1f\", ratio)),"
   },
   {
@@ -512,11 +512,11 @@
     "line": "                        t(\"%s calories\", adjustedCalories) + (if (servingsMultiplier != 1.0) t(\" (was %s)\", it.toInt()) else \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:510",
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:506",
     "line": "                                    t(\"%1\\$s/%2\\$s — Tap to expand\", tourState.stepIndex + 1, steps.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:586",
+    "site": "app/src/main/java/com/migraineme/OnboardingCoach.kt:583",
     "line": "                                            Text(t(\"%1\\$s of %2\\$s\", tourState.stepIndex + 1, steps.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)"
   },
   {
@@ -581,7 +581,7 @@
   },
   {
     "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:263",
-    "line": "                            Text(t(\"%1\\$s (avg %2\\$s)\", chip.label, fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)"
+    "line": "                            Text(t(\"%1\\$s (avg %2\\$s)\", t(chip.label), fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)"
   },
   {
     "site": "app/src/main/java/com/migraineme/RiskHistoryGraph.kt:672",

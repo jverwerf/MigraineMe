@@ -303,7 +303,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         onClick = { selectedTimeframe = "Custom"; showFromPicker = true },
                         label = {
                             val lbl = if (custSel && customFromDate != null && customToDate != null) {
-                                val fmt = DateTimeFormatter.ofPattern("dd MMM")
+                                val fmt = DateTimeFormatter.ofPattern("dd MMM", appLocale())
                                 "${LocalDate.ofEpochDay(customFromDate!! / 86400000).format(fmt)} → ${LocalDate.ofEpochDay(customToDate!! / 86400000).format(fmt)}"
                             } else "Custom range…"
                             Text(lbl, style = MaterialTheme.typography.labelSmall)
@@ -578,7 +578,7 @@ private fun missingFields(event: JournalEvent): List<String> = when (event) {
 }
 
 private fun formatTimestamp(iso: String): String = try {
-    ZonedDateTime.parse(iso).format(DateTimeFormatter.ofPattern("d MMM, HH:mm"))
+    ZonedDateTime.parse(iso).format(DateTimeFormatter.ofPattern("d MMM, HH:mm", appLocale()))
 } catch (_: Exception) { iso.take(16).replace("T", " ") }
 
 // ── UI components ──

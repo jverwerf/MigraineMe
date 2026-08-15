@@ -422,5 +422,1048 @@
       "app/src/main/java/com/migraineme/OnboardingScreen.kt:511"
     ],
     "source": "audit-2026-08-13-wrap"
+  },
+  {
+    "en": "Analyzing your data...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Fetching your data...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Loading weather patterns...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Evaluating your triggers...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Calculating risk scores...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Almost there...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "All set!",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Taking longer than expected...",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Still setting up in the background",
+    "class": "soft",
+    "sites": [
+      "app/src/main/java/com/migraineme/MainActivity.kt:2670"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Working well",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2070"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Showing progress",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2070"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Some effect",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2070"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Not noticeable yet",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2070"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Not enough data",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2070"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "D",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:599"
+    ],
+    "source": "audit-2026-08-14-wrap",
+    "max_len": 2
+  },
+  {
+    "en": "W",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:599"
+    ],
+    "source": "audit-2026-08-14-wrap",
+    "max_len": 2
+  },
+  {
+    "en": "M",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:599"
+    ],
+    "source": "audit-2026-08-14-wrap",
+    "max_len": 2
+  },
+  {
+    "en": "Pressure",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Temp",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Humidity",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Wind",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "UV Index",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Thunderstorm",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Altitude",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Alt. Change",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Recovery",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "HRV",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Resting HR",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "SpO2",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Skin Temp",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Resp. Rate",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Stress",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Strain",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "High HR Zones",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Steps",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Weight",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Body Fat",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "BP Systolic",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Glucose",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Sleep",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Sleep Score",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Sleep Eff.",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Disturbances",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Deep Sleep",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "REM Sleep",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Light Sleep",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Bedtime",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Wake Time",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Screen Time",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Late Screen",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Noise",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Brightness",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Volume",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Unlocks",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Dark Mode",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Mindfulness",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Calories",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Protein",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Carbs",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Fat",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Fiber",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Sugar",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Sodium",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Caffeine",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Cholesterol",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Sat. Fat",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Unsat. Fat",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Trans Fat",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Hydration",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Potassium",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Calcium",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Iron",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Magnesium",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Zinc",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Selenium",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Phosphorus",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Copper",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Manganese",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Vitamin A",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Vitamin C",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Vitamin D",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Vitamin E",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Vitamin K",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Vitamin B6",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Vitamin B12",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Thiamin",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Riboflavin",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Niacin",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Folate",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Biotin",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Panto. Acid",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Tyramine",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Alcohol",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Gluten",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Histamine",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Risk Score",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Temperature",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Wind Speed",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Altitude Change",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1101"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Clear sky",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Mainly clear",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Partly cloudy",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Overcast",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Foggy",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Drizzle",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Freezing drizzle",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Rain",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Freezing rain",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Snow",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Snow grains",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Rain showers",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Snow showers",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Thunderstorm with hail",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Unknown",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/MonitorScreen.kt:551"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Migraines",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Prodromes",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Triggers",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Medicines",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Reliefs",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Activities",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Missed Activities",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Locations",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Symptoms",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsScreen.kt:1120"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Trigger",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsTimelineGraph.kt:192"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Prodrome",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsTimelineGraph.kt:192"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Medicine",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsTimelineGraph.kt:192"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Relief",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsTimelineGraph.kt:192"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Activity",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsTimelineGraph.kt:192"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Symptom",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsTimelineGraph.kt:192"
+    ],
+    "source": "audit-2026-08-14-wrap"
+  },
+  {
+    "en": "Location",
+    "class": "hard",
+    "sites": [
+      "app/src/main/java/com/migraineme/InsightsTimelineGraph.kt:192"
+    ],
+    "source": "audit-2026-08-14-wrap"
   }
 ]

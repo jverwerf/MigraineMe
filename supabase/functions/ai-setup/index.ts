@@ -6,7 +6,27 @@
 //
 // Deploy: supabase functions deploy ai-setup --no-verify-jwt
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getLang, translatorFor, type Lang } from "../_shared/i18n.ts";
+import { getLang, languageDirective, translatorFor, type Lang } from "../_shared/i18n.ts";
+
+// The context types whose model output contains user-facing prose
+// (clinical_assessment, adjustments[].reasoning, data_warnings[].message,
+// calibration_notes, summary). That prose has no translation table, so it must
+// be generated in the user's display language. Everything structural is pinned
+// English: JSON keys, enums, and every "label"/"metric" value — they are
+// matched verbatim against English pool rows downstream. onboarding_parser /
+// onboarding_suggester / calibration_call3 outputs are pure identifiers and
+// stay untouched.
+const PROSE_CONTEXTS = new Set(["ai_setup", "calibration_call1", "calibration_call2"]);
+
+function modelLanguageDirective(lang: Lang): string {
+  const base = languageDirective(lang);
+  if (!base) return "";
+  return base
+    + ` Every "label", "from", "to", "type", "metric" and "severity" value must stay EXACTLY`
+    + ` as provided in English, because it is matched against English records. Only the free`
+    + ` prose — "clinical_assessment", "reasoning", "message", "calibration_notes", "summary" —`
+    + ` is written in the user's language.`;
+}
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 // Default model. Per-context overrides below — onboarding_parser uses a smarter model
 // because it runs ONCE per user and needs richer inference (vague stories → pool labels).
@@ -556,7 +576,7 @@ RULES:
 Respond with ONLY a JSON array of slugs. Examples: ["luna", "kai"] or []`
 };
 // ── Fetch companion roster server-side (for calibration_call3) ───────────────
-async function fetchCompanionRoster(supabaseUrl, serviceKey) {
+async function fetchCompanionRoster(supabaseUrl: string, serviceKey: string) {
   try {
     const url = `${supabaseUrl}/rest/v1/ai_companions?is_active=eq.true&select=slug,name,triggers,interests&order=slug.asc`;
     const res = await fetch(url, {
@@ -568,7 +588,7 @@ async function fetchCompanionRoster(supabaseUrl, serviceKey) {
     if (!res.ok) return "";
     const arr = await res.json();
     if (!arr.length) return "";
-    return arr.map((c)=>`- "${c.slug}" (${c.name}) — Triggers: ${(c.triggers ?? []).join(", ")}. Interests: ${(c.interests ?? []).join(", ")}.`).join("\n");
+    return arr.map((c: { slug: string; name: string; triggers?: string[]; interests?: string[] })=>`- "${c.slug}" (${c.name}) — Triggers: ${(c.triggers ?? []).join(", ")}. Interests: ${(c.interests ?? []).join(", ")}.`).join("\n");
   } catch  {
     return "";
   }
@@ -865,6 +885,11 @@ Deno.serve(async (req)=>{
       }
     }
     // ── Call OpenAI ──
+    // Prose-bearing contexts get the language directive; see PROSE_CONTEXTS.
+    if (PROSE_CONTEXTS.has(context_type)) {
+      const lang = await getLang(supabaseAdmin, user.id);
+      system_prompt += modelLanguageDirective(lang);
+    }
     const model = MODEL_BY_CONTEXT[context_type] ?? DEFAULT_MODEL;
     console.log(`AI setup [${context_type}] for ${user.id} — model: ${model} — usr: ${user_message.length}c`);
     const openaiRes = await fetch(OPENAI_URL, {
@@ -1040,7 +1065,7 @@ Deno.serve(async (req)=>{
         }
       } catch (e) {
         // Stage 2 is an enhancement. If it fails the user still gets stage 1.
-        console.error(`Stage2 suggester error: ${e.message} — returning stage 1 only`);
+        console.error(`Stage2 suggester error: ${e instanceof Error ? e.message : String(e)} — returning stage 1 only`);
       }
     }
     // Record for rate limiting
@@ -1059,7 +1084,7 @@ Deno.serve(async (req)=>{
   } catch (err) {
     console.error("ai-setup error:", err);
     return new Response(JSON.stringify({
-      error: err.message ?? "Internal error"
+      error: err instanceof Error ? err.message : "Internal error"
     }), {
       status: 500,
       headers: {

@@ -295,7 +295,7 @@ private fun formatBlogDate(isoDate: String?): String? {
     if (isoDate.isNullOrBlank()) return null
     return try {
         val instant = java.time.Instant.parse(isoDate)
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy")
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", appLocale())
             .withZone(java.time.ZoneId.systemDefault())
         formatter.format(instant)
     } catch (e: Exception) {

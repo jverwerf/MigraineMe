@@ -65,13 +65,13 @@ fun ChangePasswordScreen(
     }
 
     fun validate(): String? {
-        if (currentPassword.value.isBlank()) return "Please enter your current password."
+        if (currentPassword.value.isBlank()) return tSync("Please enter your current password.")
         if (newPassword.value.isBlank() || confirmPassword.value.isBlank())
-            return "Please fill in all password fields."
+            return tSync("Please fill in all password fields.")
         if (newPassword.value != confirmPassword.value)
-            return "New passwords do not match."
+            return tSync("New passwords do not match.")
         if (newPassword.value.length < 8)
-            return "Password must be at least 8 characters."
+            return tSync("Password must be at least 8 characters.")
         return null
     }
 
@@ -80,12 +80,12 @@ fun ChangePasswordScreen(
         val userId = auth.userId
 
         if (token.isNullOrBlank() || userId.isNullOrBlank()) {
-            errorDialog.value = "Not signed in."
+            errorDialog.value = tSync("Not signed in.")
             return
         }
 
         if (!canUse.value) {
-            errorDialog.value = "Password changes are only available for email accounts."
+            errorDialog.value = tSync("Password changes are only available for email accounts.")
             return
         }
 
@@ -101,7 +101,7 @@ fun ChangePasswordScreen(
                 // 1) fetch email (authoritative)
                 val email = withContext(Dispatchers.IO) {
                     SupabaseAuthService.getUser(token).email
-                } ?: throw IllegalStateException("Could not determine email.")
+                } ?: throw IllegalStateException(tSync("Could not determine email."))
 
                 // 2) re-authenticate with current password
                 val session = withContext(Dispatchers.IO) {
@@ -109,7 +109,7 @@ fun ChangePasswordScreen(
                 }
 
                 val newAccessToken = session.accessToken
-                    ?: throw IllegalStateException("Re-authentication failed.")
+                    ?: throw IllegalStateException(tSync("Re-authentication failed."))
 
                 // 3) change password using fresh token
                 withContext(Dispatchers.IO) {
@@ -118,7 +118,7 @@ fun ChangePasswordScreen(
 
                 successDialog.value = true
             } catch (t: Throwable) {
-                errorDialog.value = t.message ?: "Failed to change password."
+                errorDialog.value = t.message ?: tSync("Failed to change password.")
             } finally {
                 loading.value = false
             }

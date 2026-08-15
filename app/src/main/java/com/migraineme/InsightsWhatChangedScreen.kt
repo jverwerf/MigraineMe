@@ -133,8 +133,8 @@ private fun AttackTrendRow(t: InsightsViewModel.AttackTrend) {
 private fun attackRowSpec(t: InsightsViewModel.AttackTrend): HabitRowSpec {
     fun v(x: Double) = when {
         t.isCount -> x.roundToInt().toString()
-        t.isHours -> String.format(Locale.US, "%.1fh", x)
-        else -> String.format(Locale.US, "%.1f", x)
+        t.isHours -> String.format(appLocale(), "%.1fh", x)
+        else -> String.format(appLocale(), "%.1f", x)
     }
     val base = if (abs(t.prior) > 1e-9) abs(t.prior) else null
     val pct = if (base == null) (if (abs(t.current) > 1e-9) 100.0 else 0.0)
@@ -144,8 +144,8 @@ private fun attackRowSpec(t: InsightsViewModel.AttackTrend): HabitRowSpec {
     val delta = abs(t.current - t.prior)
     val deltaTxt = when {
         t.isCount -> delta.roundToInt().toString()
-        t.isHours -> String.format(Locale.US, "%.1fh", delta)
-        else -> String.format(Locale.US, "%.1f", delta)
+        t.isHours -> String.format(appLocale(), "%.1fh", delta)
+        else -> String.format(appLocale(), "%.1f", delta)
     }
     return HabitRowSpec(
         fill = (abs(pct) / 100.0).toFloat().coerceIn(0.08f, 1f),
@@ -209,11 +209,11 @@ private fun habitValue(h: InsightsViewModel.HabitTrend, v: Double?): String {
         var hh = floor(hod).toInt()
         var mm = ((hod - hh) * 60.0).roundToInt()
         if (mm == 60) { hh = (hh + 1) % 24; mm = 0 }
-        return String.format(Locale.US, "%02d:%02d", hh, mm)
+        return String.format(appLocale(), "%02d:%02d", hh, mm)
     }
-    if (h.unit == "risk") return String.format(Locale.US, "%.1f", v)
-    val n = if (abs(v) >= 100) String.format(Locale.US, "%.0f", v)
-        else String.format(Locale.US, "%.1f", v)
+    if (h.unit == "risk") return String.format(appLocale(), "%.1f", v)
+    val n = if (abs(v) >= 100) String.format(appLocale(), "%.0f", v)
+        else String.format(appLocale(), "%.1f", v)
     return if (h.unit.isNotEmpty()) "$n ${h.unit}" else n
 }
 

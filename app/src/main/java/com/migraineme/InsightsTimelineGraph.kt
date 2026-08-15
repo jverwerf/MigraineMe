@@ -189,7 +189,7 @@ private fun CoreCanvas(
                 if (sev > 0) drawContext.canvas.nativeCanvas.drawText("$sev", (xs + xe) / 2f - 6f, barY + 4f, Paint().apply { color = Color.White.toArgb(); textSize = 20f; isAntiAlias = true; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD) }) }
 
             if (catCnt > 0) { val rowH = (evBot - evTop) / catCnt
-                eventCats.forEachIndexed { ci, catName -> val rcy = evTop + ci * rowH + rowH / 2f; drawContext.canvas.nativeCanvas.drawText(catName, x0 + 2f, rcy + 5f, catPaint); if (ci > 0) drawLine(GridColor, Offset(x0, evTop + ci * rowH), Offset(x1, evTop + ci * rowH), 0.5f) }
+                eventCats.forEachIndexed { ci, catName -> val rcy = evTop + ci * rowH + rowH / 2f; drawContext.canvas.nativeCanvas.drawText(tSync(catName), x0 + 2f, rcy + 5f, catPaint); if (ci > 0) drawLine(GridColor, Offset(x0, evTop + ci * rowH), Offset(x1, evTop + ci * rowH), 0.5f) }
 
                 // Pre-compute positions with overlap offset
                 data class DotPos(val idx: Int, val ev: EventMarker, val cx: Float, val cy: Float, val ox: Float, val oy: Float)
@@ -246,7 +246,7 @@ private fun CoreCanvas(
                         drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
                         sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
                     }
-                    val first = sorted.first(); drawContext.canvas.nativeCanvas.drawText("${series.label}: ${"%.1f".format(first.value)}${series.unit}", dateX(first.date) + 4f, valY(first.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true })
+                    val first = sorted.first(); drawContext.canvas.nativeCanvas.drawText("${tSync(series.label)}: ${"%.1f".format(first.value)}${series.unit}", dateX(first.date) + 4f, valY(first.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true })
                     if (sorted.size > 2) { val last = sorted.last(); drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(last.value)}", dateX(last.date) - 12f, valY(last.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true }) }
                 }
             }

@@ -1,280 +1,2201 @@
 {
-  "_why": "Strings rendered by the BACKEND, not by Compose. extract.py cannot find these — it scans app/src/main/java for Text()/label=/title= sites, and an edge function has none. So they are declared by hand here and MERGED into strings.json by extract.py, which keeps strings.json the single spec that check_lengths.py gates and generate.py compiles, and means re-running extraction never silently drops them. Add a string here the moment an edge function renders one.",
-  "_budgets": "max_len is set explicitly rather than derived, because the tolerance formula in extract.py measures a Compose row or button and these strings live somewhere else. Push titles and bodies are measured against the Android notification tray (one title line, ~2 body lines); the rest is dialog and snackbar copy and carries the soft budget the extractor would have given it.",
-  "_placeholders": "%1$s / %2$s, positional, matching the convention documented on Strings.kt: word order moves in translation and a translator must be free to reorder. supabase/functions/_shared/i18n.ts substitutes them the same way Kotlin's String.format does.",
-  "entries": [
-    {
-      "en": "%1$s commented",
-      "class": "hard",
-      "max_len": 42,
-      "sites": [
-        "supabase/functions/generate-bot-comments/index.ts (push title, one companion)"
-      ]
-    },
-    {
-      "en": "%1$s and %2$s commented",
-      "class": "hard",
-      "max_len": 42,
-      "sites": [
-        "supabase/functions/generate-bot-comments/index.ts (push title, two companions)"
-      ]
-    },
-    {
-      "en": "%1$s and %2$s others commented",
-      "class": "hard",
-      "max_len": 46,
-      "sites": [
-        "supabase/functions/generate-bot-comments/index.ts (push title, three or more companions)"
-      ]
-    },
-    {
-      "en": "%1$s new comments in your community feed",
-      "class": "hard",
-      "max_len": 64,
-      "sites": [
-        "supabase/functions/generate-bot-comments/index.ts (push body, batched)"
-      ]
-    },
-    {
-      "en": "Please enter a promo code.",
-      "class": "soft",
-      "max_len": 37,
-      "sites": [
-        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-      ]
-    },
-    {
-      "en": "This promo code doesn't exist.",
-      "class": "soft",
-      "max_len": 43,
-      "sites": [
-        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-      ]
-    },
-    {
-      "en": "This promo code is no longer active.",
-      "class": "soft",
-      "max_len": 52,
-      "sites": [
-        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-      ]
-    },
-    {
-      "en": "This promo code has expired.",
-      "class": "soft",
-      "max_len": 40,
-      "sites": [
-        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-      ]
-    },
-    {
-      "en": "This promo code has reached its usage limit.",
-      "class": "soft",
-      "max_len": 63,
-      "sites": [
-        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-      ]
-    },
-    {
-      "en": "You've already used this promo code.",
-      "class": "soft",
-      "max_len": 52,
-      "sites": [
-        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-      ]
-    },
-    {
-      "en": "Something went wrong. Please try again.",
-      "class": "soft",
-      "max_len": 56,
-      "sites": [
-        "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
-      ]
-    },
-    {
-      "en": "This feature requires a premium subscription.",
-      "class": "soft",
-      "max_len": 65,
-      "sites": [
-        "supabase/functions/recalibrate/index.ts (message)",
-        "supabase/functions/apply-recalibration/index.ts (message)"
-      ]
-    },
-    {
-      "en": "Next recalibration available after %1$s",
-      "class": "soft",
-      "max_len": 56,
-      "sites": [
-        "supabase/functions/recalibrate/index.ts (cooldown message)"
-      ]
-    },
-    {
-      "en": "Profile re-assessment is available once per day. Try again tomorrow.",
-      "class": "soft",
-      "max_len": 98,
-      "sites": [
-        "supabase/functions/recalibrate/index.ts (cooldown message)"
-      ]
-    },
-    {
-      "en": "No proposals specified",
-      "class": "soft",
-      "max_len": 32,
-      "sites": [
-        "supabase/functions/apply-recalibration/index.ts (message)"
-      ]
-    },
-    {
-      "en": "No matching pending proposals",
-      "class": "soft",
-      "max_len": 42,
-      "sites": [
-        "supabase/functions/apply-recalibration/index.ts (message)"
-      ]
-    },
-    {
-      "en": "A free month on us, and a quick question",
-      "class": "soft",
-      "max_len": 70,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Hi %1$s,",
-      "class": "soft",
-      "max_len": 17,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Hi there,",
-      "class": "soft",
-      "max_len": 16,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch.",
-      "class": "soft",
-      "max_len": 279,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "If you've got a second, I'd really like to know what made you stop.",
-      "class": "soft",
-      "max_len": 118,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Was it the price, something missing, or just not the right time?",
-      "class": "soft",
-      "max_len": 112,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Even a one-line reply genuinely helps shape what we build next.",
-      "class": "soft",
-      "max_len": 111,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "And if it was timing or cost, I'd love to give you",
-      "class": "soft",
-      "max_len": 88,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "another month, free, cancel anytime.",
-      "class": "soft",
-      "max_len": 63,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "MigraineMe's insights get better the more you log.",
-      "class": "soft",
-      "max_len": 88,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Triggers, patterns and risk forecasts need a real stretch of data before they show up, and one month often isn't long enough to see them. So here's another, to give your data a proper chance.",
-      "class": "soft",
-      "max_len": 335,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Everything's still there, right where you left it.",
-      "class": "soft",
-      "max_len": 88,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Claim your free month:",
-      "class": "soft",
-      "max_len": 39,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1$s.",
-      "class": "soft",
-      "max_len": 142,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "We're building MigraineMe into a place where",
-      "class": "soft",
-      "max_len": 77,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "data and evidence come first",
-      "class": "soft",
-      "max_len": 51,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "for people living with migraine. It's still early, and I'd love to have you along.",
-      "class": "soft",
-      "max_len": 144,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    },
-    {
-      "en": "Either way, thanks for giving MigraineMe a go.",
-      "class": "soft",
-      "max_len": 81,
-      "sites": [
-        "supabase/functions/winback-daily/index.ts (winback email)"
-      ]
-    }
-  ]
+ "_why": "Strings rendered by the BACKEND, not by Compose. extract.py cannot find these — it scans app/src/main/java for Text()/label=/title= sites, and an edge function has none. So they are declared by hand here and MERGED into strings.json by extract.py, which keeps strings.json the single spec that check_lengths.py gates and generate.py compiles, and means re-running extraction never silently drops them. Add a string here the moment an edge function renders one.",
+ "_budgets": "max_len is set explicitly rather than derived, because the tolerance formula in extract.py measures a Compose row or button and these strings live somewhere else. Push titles and bodies are measured against the Android notification tray (one title line, ~2 body lines); the rest is dialog and snackbar copy and carries the soft budget the extractor would have given it.",
+ "_placeholders": "%1$s / %2$s, positional, matching the convention documented on Strings.kt: word order moves in translation and a translator must be free to reorder. supabase/functions/_shared/i18n.ts substitutes them the same way Kotlin's String.format does.",
+ "entries": [
+  {
+   "en": "%1$s commented",
+   "class": "hard",
+   "max_len": 42,
+   "sites": [
+    "supabase/functions/generate-bot-comments/index.ts (push title, one companion)"
+   ]
+  },
+  {
+   "en": "%1$s and %2$s commented",
+   "class": "hard",
+   "max_len": 42,
+   "sites": [
+    "supabase/functions/generate-bot-comments/index.ts (push title, two companions)"
+   ]
+  },
+  {
+   "en": "%1$s and %2$s others commented",
+   "class": "hard",
+   "max_len": 46,
+   "sites": [
+    "supabase/functions/generate-bot-comments/index.ts (push title, three or more companions)"
+   ]
+  },
+  {
+   "en": "%1$s new comments in your community feed",
+   "class": "hard",
+   "max_len": 64,
+   "sites": [
+    "supabase/functions/generate-bot-comments/index.ts (push body, batched)"
+   ]
+  },
+  {
+   "en": "Please enter a promo code.",
+   "class": "soft",
+   "max_len": 37,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This promo code doesn't exist.",
+   "class": "soft",
+   "max_len": 43,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This promo code is no longer active.",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This promo code has expired.",
+   "class": "soft",
+   "max_len": 40,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This promo code has reached its usage limit.",
+   "class": "soft",
+   "max_len": 63,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "You've already used this promo code.",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "Something went wrong. Please try again.",
+   "class": "soft",
+   "max_len": 56,
+   "sites": [
+    "supabase/functions/redeem-promo/index.ts (message -> PaywallScreen)"
+   ]
+  },
+  {
+   "en": "This feature requires a premium subscription.",
+   "class": "soft",
+   "max_len": 65,
+   "sites": [
+    "supabase/functions/recalibrate/index.ts (message)",
+    "supabase/functions/apply-recalibration/index.ts (message)"
+   ]
+  },
+  {
+   "en": "Next recalibration available after %1$s",
+   "class": "soft",
+   "max_len": 56,
+   "sites": [
+    "supabase/functions/recalibrate/index.ts (cooldown message)"
+   ]
+  },
+  {
+   "en": "Profile re-assessment is available once per day. Try again tomorrow.",
+   "class": "soft",
+   "max_len": 98,
+   "sites": [
+    "supabase/functions/recalibrate/index.ts (cooldown message)"
+   ]
+  },
+  {
+   "en": "No proposals specified",
+   "class": "soft",
+   "max_len": 32,
+   "sites": [
+    "supabase/functions/apply-recalibration/index.ts (message)"
+   ]
+  },
+  {
+   "en": "No matching pending proposals",
+   "class": "soft",
+   "max_len": 42,
+   "sites": [
+    "supabase/functions/apply-recalibration/index.ts (message)"
+   ]
+  },
+  {
+   "en": "A free month on us, and a quick question",
+   "class": "soft",
+   "max_len": 70,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Hi %1$s,",
+   "class": "soft",
+   "max_len": 17,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Hi there,",
+   "class": "soft",
+   "max_len": 16,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "I noticed your MigraineMe trial wrapped up a little while back and you didn't carry on, which is totally fine. I just wanted to reach out before we lose touch.",
+   "class": "soft",
+   "max_len": 279,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "If you've got a second, I'd really like to know what made you stop.",
+   "class": "soft",
+   "max_len": 118,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Was it the price, something missing, or just not the right time?",
+   "class": "soft",
+   "max_len": 112,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Even a one-line reply genuinely helps shape what we build next.",
+   "class": "soft",
+   "max_len": 111,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "And if it was timing or cost, I'd love to give you",
+   "class": "soft",
+   "max_len": 88,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "another month, free, cancel anytime.",
+   "class": "soft",
+   "max_len": 63,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "MigraineMe's insights get better the more you log.",
+   "class": "soft",
+   "max_len": 88,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Triggers, patterns and risk forecasts need a real stretch of data before they show up, and one month often isn't long enough to see them. So here's another, to give your data a proper chance.",
+   "class": "soft",
+   "max_len": 335,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Everything's still there, right where you left it.",
+   "class": "soft",
+   "max_len": 88,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Claim your free month:",
+   "class": "soft",
+   "max_len": 39,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "On Android: open MigraineMe, head to the upgrade screen, and enter the code %1$s.",
+   "class": "soft",
+   "max_len": 142,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "We're building MigraineMe into a place where",
+   "class": "soft",
+   "max_len": 77,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "data and evidence come first",
+   "class": "soft",
+   "max_len": 51,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "for people living with migraine. It's still early, and I'd love to have you along.",
+   "class": "soft",
+   "max_len": 144,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "Either way, thanks for giving MigraineMe a go.",
+   "class": "soft",
+   "max_len": 81,
+   "sites": [
+    "supabase/functions/winback-daily/index.ts (winback email)"
+   ]
+  },
+  {
+   "en": "1 migraine ({0}%)",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Across {0} attacks with aura, from the patient's own point of view",
+   "class": "soft",
+   "max_len": 118,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Across {0} attacks with more than one timed pain entry, from your full logging history",
+   "class": "soft",
+   "max_len": 154,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Active during this period",
+   "class": "soft",
+   "max_len": 45,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Activities and locations during attacks",
+   "class": "soft",
+   "max_len": 70,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "After {0}",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Age range",
+   "class": "soft",
+   "max_len": 22,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "All Time",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "All logged data",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "All time",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Altitude change",
+   "class": "soft",
+   "max_len": 29,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Areas they suspect",
+   "class": "soft",
+   "max_len": 32,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Around your logged migraines",
+   "class": "soft",
+   "max_len": 50,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Attacks in range",
+   "class": "soft",
+   "max_len": 29,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Attacks logged",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Autumn",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Average duration per month",
+   "class": "soft",
+   "max_len": 46,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Average severity per month",
+   "class": "soft",
+   "max_len": 46,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Averages over the last 30 days compared with the 30 days before them.",
+   "class": "soft",
+   "max_len": 124,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Averages over this report's period compared with the equal period before it.",
+   "class": "soft",
+   "max_len": 136,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Avg duration",
+   "class": "soft",
+   "max_len": 22,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Avg severity",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Avg severity /10",
+   "class": "soft",
+   "max_len": 29,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "BY ITEM",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Base of Skull Center",
+   "class": "soft",
+   "max_len": 36,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Base of Skull Left",
+   "class": "soft",
+   "max_len": 32,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Base of Skull Right",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Based on the date range only; attack filters do not change these numbers.",
+   "class": "soft",
+   "max_len": 131,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Behind Left Ear",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Behind Right Ear",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Built from this patient's own patterns, reviewed monthly",
+   "class": "soft",
+   "max_len": 100,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Burden Profile",
+   "class": "soft",
+   "max_len": 26,
+   "sites": [
+    "_shared/manual_keys.json (report narrative section titles: rendered via rt(def.title) runtime value)"
+   ]
+  },
+  {
+   "en": "By day of week",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "By season",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "CONTENTS",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Center / Lower Back",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Clinical assessment",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Confidence",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Coping Profile",
+   "class": "soft",
+   "max_len": 31,
+   "sites": [
+    "_shared/manual_keys.json (report narrative section titles: rendered via rt(def.title) runtime value)"
+   ]
+  },
+  {
+   "en": "Correlations describe what co-occurred in this record; they are not a diagnosis and do not establish causation.",
+   "class": "soft",
+   "max_len": 199,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Dark mode",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Days / month",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Deep sleep",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Doing",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Doing what",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Effectiveness is measured over each treatment's full duration, not just this report's window.",
+   "class": "soft",
+   "max_len": 167,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Established patterns that also appeared in the attacks in this report.",
+   "class": "soft",
+   "max_len": 126,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Every attack in the period, in the order things happened",
+   "class": "soft",
+   "max_len": 100,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Everything recorded in this period, by type and category",
+   "class": "soft",
+   "max_len": 100,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Everything tracked around the attacks in this period",
+   "class": "soft",
+   "max_len": 93,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Forehead Center",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Forehead Left",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Forehead Right",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Frequency trends",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Fri",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "From your full history",
+   "class": "soft",
+   "max_len": 39,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Gender",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Generated by MigraineMe from the patient's own logged data.",
+   "class": "soft",
+   "max_len": 106,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Habits that show up on migraine-free days, and what drives them",
+   "class": "soft",
+   "max_len": 113,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Health metrics",
+   "class": "soft",
+   "max_len": 26,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "High HR zones",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "How it affected you",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "How often attacks come, and which way that is moving",
+   "class": "soft",
+   "max_len": 93,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "How the pain moves",
+   "class": "soft",
+   "max_len": 35,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Improving — down {0}%",
+   "class": "soft",
+   "max_len": 37,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Keep your risk forecast, insights and AI assistant. Pick a plan in {0} to keep full access.",
+   "class": "soft",
+   "max_len": 163,
+   "sites": [
+    "trial-ending-push/index.ts"
+   ]
+  },
+  {
+   "en": "Keep your risk gauge, insights and assistant. Pick a plan in {0} to keep full access.",
+   "class": "soft",
+   "max_len": 153,
+   "sites": [
+    "trial-ending-push/index.ts"
+   ]
+  },
+  {
+   "en": "Last 14 Days",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Last 3 Months",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Last 30 Days",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Last 6 Months",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Last 7 Days",
+   "class": "soft",
+   "max_len": 24,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Last Year",
+   "class": "soft",
+   "max_len": 22,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Last {0} weeks",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Lasted",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Late screen",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left Brow",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left Ear",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left Eye",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left Jaw / TMJ",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left Shoulder",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left Sinus",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left Temple",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Left eye",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Light sleep",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Migraine report",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "MigraineMe clinical summary",
+   "class": "soft",
+   "max_len": 48,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "MigraineMe is not a medical device.",
+   "class": "soft",
+   "max_len": 63,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Missed activities",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "_shared/manual_keys.json (report breakdown block titles: runtime values translated at display)"
+   ]
+  },
+  {
+   "en": "Mon",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Narrative",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Neck Left",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Neck Right",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Need at least 4 months for a trend",
+   "class": "soft",
+   "max_len": 61,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "No attacks in range",
+   "class": "soft",
+   "max_len": 35,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Nose Bridge",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Occipital Center",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Occurrences over the last 30 days vs the 30 days before them.",
+   "class": "soft",
+   "max_len": 109,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Occurrences per period, this report's range vs the equal period before it.",
+   "class": "soft",
+   "max_len": 133,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Only {0} weeks of data in this record",
+   "class": "soft",
+   "max_len": 66,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Pain locations",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Pantothenic acid",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Patient profile",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Patterns are established across your full logging history, where there is enough data for statistical confidence.",
+   "class": "soft",
+   "max_len": 203,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Peak",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Peak severity when treated earlier vs later, in this patient's own logged attacks. Correlation, not causation.",
+   "class": "soft",
+   "max_len": 198,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Peaks after",
+   "class": "soft",
+   "max_len": 22,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Per month",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Per-regimen efficacy, baseline vs the most recent 28 days",
+   "class": "soft",
+   "max_len": 102,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Phone unlocks",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Phone volume",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Pink lines mark migraine days · {0} days · range {1}",
+   "class": "soft",
+   "max_len": 93,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Population default decay curve.",
+   "class": "soft",
+   "max_len": 55,
+   "sites": [
+    "ai-setup/index.ts"
+   ]
+  },
+  {
+   "en": "Population default thresholds for {0} active triggers.",
+   "class": "soft",
+   "max_len": 97,
+   "sites": [
+    "ai-setup/index.ts"
+   ]
+  },
+  {
+   "en": "Population defaults. There were no answers to calibrate from, so your risk gauge and its decay curves are set for a regular person with regular migraines. They get tuned to you as you log.",
+   "class": "soft",
+   "max_len": 338,
+   "sites": [
+    "ai-setup/index.ts"
+   ]
+  },
+  {
+   "en": "Present on {0}% of migraine-free days",
+   "class": "soft",
+   "max_len": 66,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Profile",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report narrative section titles: rendered via rt(def.title) runtime value)"
+   ]
+  },
+  {
+   "en": "REM sleep",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Report period",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Respiratory rate",
+   "class": "soft",
+   "max_len": 31,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right Brow",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right Ear",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right Eye",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right Jaw / TMJ",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right Shoulder",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right Sinus",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right Temple",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Right eye",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Sat",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Saturated fat",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Seasonal pattern",
+   "class": "soft",
+   "max_len": 31,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Seasons with no bar were not covered by this record",
+   "class": "soft",
+   "max_len": 91,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Seen in this period",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Set up on population defaults for now. Log a few days, then re-assess your profile to have these tuned to you.",
+   "class": "soft",
+   "max_len": 198,
+   "sites": [
+    "ai-setup/index.ts"
+   ]
+  },
+  {
+   "en": "Severity {0}",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Severity —",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Severity, where the pain sat, and what it cost",
+   "class": "soft",
+   "max_len": 82,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Short periods are noisy; interpret with care.",
+   "class": "soft",
+   "max_len": 81,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Shorter = reduced duration · milder = reduced severity",
+   "class": "soft",
+   "max_len": 97,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Showing 8 of {0}",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Showing {0} of {1} pain entries",
+   "class": "soft",
+   "max_len": 55,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Skin temperature",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Sleep duration",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Sleep efficiency",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Sleep score",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "So that is what we have set you up for: a regular person with regular migraines. Your profile, your risk gauge and its thresholds all start on those typical settings, and they stay that way until your own tracking teaches the app otherwise. Log for a couple of weeks, tap 'Re-assess my profile', and this becomes about you.",
+   "class": "soft",
+   "max_len": 581,
+   "sites": [
+    "ai-setup/index.ts"
+   ]
+  },
+  {
+   "en": "Spreads",
+   "class": "soft",
+   "max_len": 24,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Spring",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Stable — consistent frequency",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Starts",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Statistically established patterns that did not appear in this report's time frame.",
+   "class": "soft",
+   "max_len": 149,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Stress index",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Summer",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Sun",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Symptoms per attack",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "THE ATTACK",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "TRACKED DATA · each line scaled to its own range",
+   "class": "soft",
+   "max_len": 86,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Teeth Left",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Teeth Right",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "The factors that showed up before attacks, ranked by strength",
+   "class": "soft",
+   "max_len": 109,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "The story of this record, in plain words",
+   "class": "soft",
+   "max_len": 72,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "This period against the equal one before it",
+   "class": "soft",
+   "max_len": 77,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Thu",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Top of Back Head Left",
+   "class": "soft",
+   "max_len": 37,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Top of Back Head Right",
+   "class": "soft",
+   "max_len": 39,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Top of Head",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Tracking since",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Trajectory",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Trans fat",
+   "class": "soft",
+   "max_len": 22,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Treatment timing",
+   "class": "soft",
+   "max_len": 32,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Trend",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report narrative section titles: rendered via rt(def.title) runtime value)",
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Trigger Profile",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "_shared/manual_keys.json (report narrative section titles: rendered via rt(def.title) runtime value)"
+   ]
+  },
+  {
+   "en": "Trigger areas",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "Tue",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Typical duration",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report cover and patient-profile card: runtime values)"
+   ]
+  },
+  {
+   "en": "UV index",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Unsaturated fat",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Upper Back Center",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Upper Back Left",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Upper Back Right",
+   "class": "soft",
+   "max_len": 28,
+   "sites": [
+    "_shared/manual_keys.json (report pain-location label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "Wake time",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report metric registry label: reaches rt() as a runtime value)"
+   ]
+  },
+  {
+   "en": "We don't know you yet, so there's nothing personal to read into here.",
+   "class": "soft",
+   "max_len": 124,
+   "sites": [
+    "ai-setup/index.ts"
+   ]
+  },
+  {
+   "en": "Wed",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "What drives it",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What happened",
+   "class": "soft",
+   "max_len": 26,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What the patient reported when setting up, in their own words",
+   "class": "soft",
+   "max_len": 109,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What these triggers do to you",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What we can tell you is what tends to set migraines off for most people: disrupted or short sleep, stress and the let-down after it, dehydration, skipped meals, hormonal shifts, bright light and long screen sessions, drops in air pressure, and changes in alcohol or caffeine. We suggest keeping an eye on those to begin with.",
+   "class": "soft",
+   "max_len": 585,
+   "sites": [
+    "ai-setup/index.ts"
+   ]
+  },
+  {
+   "en": "What worked",
+   "class": "soft",
+   "max_len": 26,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What you logged",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What you missed",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What you were doing",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "What's helping",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Where",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Winter",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report frequency page: day/season tick labels translated at display)"
+   ]
+  },
+  {
+   "en": "Within {0}",
+   "class": "soft",
+   "max_len": 25,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Works best when",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Worsening — up {0}%",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Worst day",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Worst season",
+   "class": "soft",
+   "max_len": 29,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Written at your recalibration on {0}, from your full logging history at the time; the report's filters do not change it.",
+   "class": "soft",
+   "max_len": 216,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "Years with migraine",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "_shared/manual_keys.json (report patient-profile row label: runtime value)"
+   ]
+  },
+  {
+   "en": "Your free trial ends tomorrow",
+   "class": "soft",
+   "max_len": 52,
+   "sites": [
+    "trial-ending-push/index.ts"
+   ]
+  },
+  {
+   "en": "about {0}",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "at onset",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "average (n = {0}) · shortest {1}m · longest {2}m",
+   "class": "soft",
+   "max_len": 86,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "bottom center",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "bottom left",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "bottom right",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "center",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "center left",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "center right",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "generated {0}",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "likely",
+   "class": "soft",
+   "max_len": 22,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "ongoing",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "possible",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "steady",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "steady {0}",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "strong",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "top center",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "top left",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "top right",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "_shared/manual_keys.json (report aura zone cell label: composed in AURA_ZONE_LABEL at runtime)"
+   ]
+  },
+  {
+   "en": "{0} days",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} days before",
+   "class": "soft",
+   "max_len": 27,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} detected",
+   "class": "soft",
+   "max_len": 24,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} hours",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} logged",
+   "class": "soft",
+   "max_len": 21,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} logged · 1 category",
+   "class": "soft",
+   "max_len": 41,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} logged · {1} categories",
+   "class": "soft",
+   "max_len": 48,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} migraines ({1}%)",
+   "class": "soft",
+   "max_len": 36,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} minutes",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} of {1}",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} points milder",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0} weaker links are not shown — they sit inside normal variation.",
+   "class": "soft",
+   "max_len": 118,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0}% of attacks with it vs {1}% without",
+   "class": "soft",
+   "max_len": 70,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0}% of migraines",
+   "class": "soft",
+   "max_len": 30,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0}% with it · {1}% without",
+   "class": "soft",
+   "max_len": 48,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0}/10 average peak",
+   "class": "soft",
+   "max_len": 34,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "{0}{1} avg",
+   "class": "soft",
+   "max_len": 20,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  },
+  {
+   "en": "· started {0}",
+   "class": "soft",
+   "max_len": 23,
+   "sites": [
+    "build-report-html/render.ts"
+   ]
+  }
+ ]
 }

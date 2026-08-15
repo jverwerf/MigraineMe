@@ -548,7 +548,7 @@ private fun EnvironmentCard(
                         color = Color.White,
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                     )
-                    Text(weather.condition, color = AppTheme.SubtleTextColor)
+                    Text(t(weather.condition), color = AppTheme.SubtleTextColor)
                 }
                 Column(
                     modifier = Modifier.width(172.dp).padding(end = 8.dp),
@@ -780,7 +780,7 @@ private fun MenstruationCard(
             val todayDate = LocalDate.now()
             val daysUntil = ChronoUnit.DAYS.between(todayDate, nextExpected)
             
-            val nextLabel = nextExpected.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))
+            val nextLabel = nextExpected.format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale()))
             val countdown = when {
                 daysUntil < 0 -> "${-daysUntil} days ago"
                 daysUntil == 0L -> "Today"
@@ -1402,7 +1402,7 @@ internal suspend fun loadSleepSummary(
                             fellAsleepDisplay = try {
                                 val zdt = java.time.ZonedDateTime.parse(valueAt)
                                 val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
-                                local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+                                local.format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(appLocale()))
                             } catch (_: Exception) { valueAt.take(5) }
                         }
                     }
@@ -1428,7 +1428,7 @@ internal suspend fun loadSleepSummary(
                             wokeUpDisplay = try {
                                 val zdt = java.time.ZonedDateTime.parse(valueAt)
                                 val local = zdt.withZoneSameInstant(java.time.ZoneId.systemDefault())
-                                local.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+                                local.format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(appLocale()))
                             } catch (_: Exception) { valueAt.take(5) }
                         }
                     }

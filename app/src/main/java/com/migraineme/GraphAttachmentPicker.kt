@@ -475,7 +475,7 @@ private fun RiskGraphTab(
 
         // ── Date range label ──
         if (displayDays.isNotEmpty()) {
-            val fmt = DateTimeFormatter.ofPattern("d MMM")
+            val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale())
             val from = LocalDate.parse(displayDays.first().date).format(fmt)
             val to = LocalDate.parse(displayDays.last().date).format(fmt)
             Text("$from \u2013 $to", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
@@ -785,8 +785,8 @@ private fun PickerMigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(z)
-    val tf = DateTimeFormatter.ofPattern("h:mm a").withZone(z)
+    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", appLocale()).withZone(z)
+    val tf = DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(appLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {

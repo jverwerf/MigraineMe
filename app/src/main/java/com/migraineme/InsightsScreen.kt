@@ -1036,8 +1036,8 @@ private fun MigraineSelector(
     onPrev: () -> Unit, onNext: () -> Unit
 ) {
     val z = ZoneId.systemDefault()
-    val df = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(z)
-    val tf = DateTimeFormatter.ofPattern("h:mm a").withZone(z)
+    val df = DateTimeFormatter.ofPattern("MMM d, yyyy", rememberAppLocale()).withZone(z)
+    val tf = DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(rememberAppLocale()).withZone(z)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = idx < sorted.size - 1) {
@@ -1115,7 +1115,9 @@ internal fun EmptyInsightCard(
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(logType, color = AppTheme.TitleColor,
+                // logType stays the English domain key (drives colors/icons);
+                // translated only at render.
+                Text(t(logType), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Text(emptyMessage, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
             }
@@ -1144,7 +1146,7 @@ internal fun SpiderInsightCard(data: SpiderData, onClick: () -> Unit, secondAxes
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(data.logType, color = AppTheme.TitleColor,
+                Text(t(data.logType), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
                 Text(t("%1\$s logged • %2\$s categories", data.totalLogged, data.breakdown.size),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
@@ -3081,7 +3083,7 @@ internal fun GaugeStat(value: String, label: String, sublabel: String, color: Co
         Text(value, color = color, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
         if (sublabel.isNotBlank()) {
-            Text(sublabel, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t(sublabel), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -3250,7 +3252,7 @@ private fun TreatmentEffectivenessContent(
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE57373)))
-            Text("Low/none", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+            Text(t("Low/none"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
         }
     }
 }

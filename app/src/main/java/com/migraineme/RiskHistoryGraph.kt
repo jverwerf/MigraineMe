@@ -257,10 +257,10 @@ fun RiskHistoryGraph(
                         Spacer(Modifier.width(4.dp))
                         if (isNormalized) {
                             val mn = allMin[key] ?: 0f; val mx = allMax[key] ?: 1f
-                            Text("${chip.label} [${fmtV(mn)}\u2013${fmtV(mx)}]", color = chip.color, style = MaterialTheme.typography.labelSmall)
+                            Text("${t(chip.label)} [${fmtV(mn)}\u2013${fmtV(mx)}]", color = chip.color, style = MaterialTheme.typography.labelSmall)
                         } else {
                             val avg = if (values.isNotEmpty()) values.average().toFloat() else 0f
-                            Text(t("%1\$s (avg %2\$s)", chip.label, fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)
+                            Text(t("%1\$s (avg %2\$s)", t(chip.label), fmtV(avg)), color = chip.color, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -615,7 +615,7 @@ fun RiskHistoryGraph(
                 // Tooltip overlay — show actual logged items
                 tappedIcon?.let { icon ->
                     val typeLabel = tSync(hubTypeLabels.getOrElse(icon.typeIdx) { "" })
-                    val dateLabel = try { LocalDate.parse(icon.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d")) } catch (_: Exception) { icon.date }
+                    val dateLabel = try { LocalDate.parse(icon.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())) } catch (_: Exception) { icon.date }
                     // Get actual item names from the maps
                     val itemNames: List<String> = when (icon.typeIdx) {
                         0 -> migraineDates[icon.date] ?: emptyList()
@@ -650,7 +650,7 @@ fun RiskHistoryGraph(
 
                 // Tooltip for tapped contributor bar segment
                 tappedBar?.let { bar ->
-                    val dateLabel = try { LocalDate.parse(bar.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d")) } catch (_: Exception) { bar.date }
+                    val dateLabel = try { LocalDate.parse(bar.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale())) } catch (_: Exception) { bar.date }
                     val sevColor = when (bar.trigger.severity.uppercase()) {
                         "HIGH" -> Color(0xFFEF5350)
                         "MILD" -> Color(0xFFFFB74D)

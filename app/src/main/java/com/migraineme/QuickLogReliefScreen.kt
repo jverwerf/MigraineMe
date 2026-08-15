@@ -239,7 +239,7 @@ fun QuickLogReliefScreen(
                                     )
                                 )
                                 Spacer(Modifier.size(8.dp))
-                                Text("min", color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+                                Text(t("min"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
 
@@ -313,7 +313,7 @@ fun QuickLogReliefScreen(
                             androidx.compose.material3.FilterChip(
                                 selected = sideEffectScale == key,
                                 onClick = { sideEffectScale = key },
-                                label = { Text(display, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(display), style = MaterialTheme.typography.labelSmall) },
                                 colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = seColor.copy(alpha = 0.3f),
                                     selectedLabelColor = Color.White,

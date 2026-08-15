@@ -76,7 +76,7 @@ fun EditReliefScreen(
         return try {
             val odt = runCatching { OffsetDateTime.parse(startIso) }.getOrNull()
             val ldt = odt?.toLocalDateTime() ?: LocalDateTime.parse(startIso)
-            ldt.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy • HH:mm"))
+            ldt.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy • HH:mm", appLocale()))
         } catch (_: Exception) { "Unknown" }
     }
     val selectedMigraineLabel = migraines

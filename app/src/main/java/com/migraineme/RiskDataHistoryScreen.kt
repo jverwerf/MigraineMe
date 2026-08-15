@@ -138,7 +138,7 @@ fun RiskDataHistoryScreen(onBack: () -> Unit) {
                             today -> t("Today")
                             today.minusDays(1) -> t("Yesterday")
                             today.plusDays(1) -> t("Tomorrow")
-                            else -> selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                            else -> selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, rememberAppLocale())
                         },
                         color = AppTheme.TitleColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)

@@ -264,7 +264,7 @@ fun JournalEditScreen(
                     ) {
                         Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(selectedDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")))
+                        Text(selectedDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", appLocale())))
                     }
 
                     if (showDatePicker) {
@@ -352,7 +352,7 @@ fun JournalEditScreen(
                         ) {
                             Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(selectedEndDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")))
+                            Text(selectedEndDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", appLocale())))
                         }
 
                         if (showEndDatePicker) {
@@ -469,7 +469,7 @@ fun JournalEditScreen(
                             FilterChip(
                                 selected = sideEffectScale == key,
                                 onClick = { sideEffectScale = key },
-                                label = { Text(display, style = MaterialTheme.typography.labelSmall) },
+                                label = { Text(t(display), style = MaterialTheme.typography.labelSmall) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = seColor.copy(alpha = 0.3f),
                                     selectedLabelColor = Color.White,

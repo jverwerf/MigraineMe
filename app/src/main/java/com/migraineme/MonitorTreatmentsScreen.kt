@@ -807,7 +807,7 @@ private fun treatmentFieldColors() = OutlinedTextFieldDefaults.colors(
 private fun StartDatePicker(date: LocalDate, onChange: (LocalDate) -> Unit) {
     val ctx = LocalContext.current
     val label = remember(date) {
-        date.format(DateTimeFormatter.ofPattern("d MMM yyyy"))
+        date.format(DateTimeFormatter.ofPattern("d MMM yyyy", appLocale()))
     }
     Surface(
         color = Color.White.copy(alpha = 0.10f),

@@ -389,13 +389,13 @@ private fun ActTimeDialog(title: String, initialIso: String? = null, initialEndI
 }
 
 private fun formatActTime(iso: String?): String {
-    if (iso.isNullOrBlank()) return "Not set"
+    if (iso.isNullOrBlank()) return tSync("Not set")
     return try {
         val odt = runCatching { OffsetDateTime.parse(iso) }.getOrNull()
         val ldt = odt?.toLocalDateTime() ?: runCatching { LocalDateTime.parse(iso) }.getOrNull()
-            ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return "Not set"
+            ?: runCatching { Instant.parse(iso).atZone(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull() ?: return tSync("Not set")
         ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
-    } catch (_: Exception) { "Not set" }
+    } catch (_: Exception) { tSync("Not set") }
 }
 
 private fun deriveDurationMinutes(startIso: String, endIso: String): Int? {
