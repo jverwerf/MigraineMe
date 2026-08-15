@@ -1287,6 +1287,43 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         _journal.value = _journal.value.filterNot { journalEventId(it) in ids }
     }
 
+    /**
+     * Public form of [dropFromJournal], for the delete that lives on the entry's
+     * own edit sheet rather than on the feed. It used to call loadJournal, which
+     * is the same whole-feed rebuild the row-menu delete was moved off: it throws
+     * away however many pages the user has scrolled through and re-reads every
+     * table, plus each attack's linked items, to render one fewer card.
+     */
+    fun removeFromJournal(id: String) = dropFromJournal(setOf(id))
+
+    /**
+     * Swaps one edited entry back into the loaded feed.
+     *
+     * Only that row is re-read. The entry keeps its place in the window, so a
+     * save from the edit sheet no longer resets the user's scroll position or
+     * costs a full reload. Entries that have since scrolled out of the loaded
+     * pages are left alone — they will be read fresh when their page loads.
+     */
+    fun refreshJournalEntry(accessToken: String, itemType: String, id: String) {
+        viewModelScope.launch {
+            try {
+                if (_journal.value.none { journalEventId(it) == id }) return@launch
+                val replacement: JournalEvent = when (itemType) {
+                    "trigger" -> JournalEvent.Trigger(db.getTriggerById(accessToken, id))
+                    "medicine" -> JournalEvent.Medicine(db.getMedicineById(accessToken, id))
+                    "relief" -> JournalEvent.Relief(db.getReliefById(accessToken, id))
+                    "prodrome" -> JournalEvent.Prodrome(db.getProdromeLogById(accessToken, id))
+                    "activity" -> JournalEvent.Activity(db.getActivityLogById(accessToken, id))
+                    "location" -> JournalEvent.Location(db.getLocationLogById(accessToken, id))
+                    else -> return@launch
+                }
+                _journal.value = _journal.value.map {
+                    if (journalEventId(it) == id) replacement else it
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
     // ---- removals ----
     fun removeMigraine(accessToken: String, id: String) {
         viewModelScope.launch {

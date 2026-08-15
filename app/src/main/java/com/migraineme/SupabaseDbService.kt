@@ -2126,6 +2126,18 @@ class SupabaseDbService(
         return response.body()
     }
 
+    /** One prodrome log by id — how an edited entry is refreshed in the journal
+     *  feed without re-reading the whole window. */
+    suspend fun getProdromeLogById(accessToken: String, id: String): ProdromeLogRow {
+        val response = client.get("$supabaseUrl/rest/v1/prodromes") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id"); parameter("select", "*")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+        }
+        if (!response.status.isSuccess()) error("Get prodrome log by id failed: ${response.bodyAsText()}")
+        return response.body()
+    }
+
     suspend fun deleteProdromeLog(accessToken: String, id: String) {
         client.delete("$supabaseUrl/rest/v1/prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
@@ -2284,6 +2296,17 @@ class SupabaseDbService(
             journalWindow(window)
         }
         if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    /** One location log by id — see [getProdromeLogById]. */
+    suspend fun getLocationLogById(accessToken: String, id: String): LocationLogRow {
+        val response = client.get("$supabaseUrl/rest/v1/locations") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id"); parameter("select", "*")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+        }
+        if (!response.status.isSuccess()) error("Get location log by id failed: ${response.bodyAsText()}")
         return response.body()
     }
 
@@ -2550,6 +2573,17 @@ class SupabaseDbService(
             journalWindow(window)
         }
         if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
+    /** One activity log by id — see [getProdromeLogById]. */
+    suspend fun getActivityLogById(accessToken: String, id: String): ActivityLogRow {
+        val response = client.get("$supabaseUrl/rest/v1/time_in_high_hr_zones_daily") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id"); parameter("select", "*")
+            header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
+        }
+        if (!response.status.isSuccess()) error("Get activity log by id failed: ${response.bodyAsText()}")
         return response.body()
     }
 

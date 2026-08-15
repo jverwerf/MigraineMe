@@ -577,7 +577,9 @@ fun JournalEditScreen(
                         }
                         saving = false
                         if (error == null) {
-                            auth.accessToken?.let { logVm?.loadJournal(it) }
+                            // Just this row, back into the window the feed already
+                            // holds — not a reload of the whole journal.
+                            auth.accessToken?.let { logVm?.refreshJournalEntry(it, itemType, itemId) }
                             onBack()
                         }
                     }
@@ -632,7 +634,9 @@ fun JournalEditScreen(
                                     } catch (_: Exception) {}
                                 }
                                 confirmDelete = false
-                                auth.accessToken?.let { logVm?.loadJournal(it) }
+                                // The row is gone on the server; drop it from the
+                                // loaded feed rather than rebuilding the feed.
+                                logVm?.removeFromJournal(itemId)
                                 onDeleted()
                             }
                         }) { Text(t("Delete"), color = Color(0xFFE57373)) }

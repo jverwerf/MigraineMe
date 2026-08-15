@@ -1717,27 +1717,27 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
                     composable("${Routes.EDIT_TRIGGER}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        JournalEditScreen(itemType = "trigger", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
+                        JournalEditScreen(itemType = "trigger", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_MEDICINE}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        JournalEditScreen(itemType = "medicine", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
+                        JournalEditScreen(itemType = "medicine", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_RELIEF}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        JournalEditScreen(itemType = "relief", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
+                        JournalEditScreen(itemType = "relief", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_PRODROME}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        JournalEditScreen(itemType = "prodrome", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
+                        JournalEditScreen(itemType = "prodrome", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_ACTIVITY}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        JournalEditScreen(itemType = "activity", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
+                        JournalEditScreen(itemType = "activity", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
                     }
                     composable("${Routes.EDIT_LOCATION}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
-                        JournalEditScreen(itemType = "location", itemId = id, authVm = authVm, onBack = { nav.popBackStack() })
+                        JournalEditScreen(itemType = "location", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
                     }
 
                     composable(Routes.ADJUST_MIGRAINES) {
