@@ -10,6 +10,9 @@ package com.migraineme
 // Static, no motion.
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,20 +32,50 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
+// Same chip palette as the Recommendations detail categories.
+private val KIND_CHIP_COLORS = mapOf(
+    "trigger" to Color(0xFFFFB74D),
+    "prodrome" to Color(0xFFCE93D8),
+    "medicine" to Color(0xFF4FC3F7),
+    "symptom" to Color(0xFFFF8A65),
+    "relief" to Color(0xFF81C784),
+)
+private val KIND_CHIP_LABELS = mapOf(
+    "trigger" to "Triggers",
+    "prodrome" to "Prodromes",
+    "medicine" to "Medicines",
+    "symptom" to "Symptoms",
+    "relief" to "Reliefs",
+)
+
 @Composable
 fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
     val trends by vm.itemTrends.collectAsState()
     val attacks by vm.attackTrends.collectAsState()
     val habits by vm.habitTrends.collectAsState()
     val changed = remember(trends) { trends.filter { it.current != it.prior } }
-    val unwanted = remember(changed) {
-        changed.filter { it.kind != "relief" }.sortedByDescending { abs(it.delta) }
+    // Same sort + filter system as the Recommendations detail.
+    var sortMode by remember { mutableStateOf("Biggest change") }
+    var activeKinds by remember { mutableStateOf(setOf<String>()) }
+    val filtered = remember(changed, activeKinds) {
+        changed.filter { activeKinds.isEmpty() || activeKinds.contains(it.kind) }
     }
-    val helpful = remember(changed) {
-        changed.filter { it.kind == "relief" }.sortedByDescending { abs(it.delta) }
+    val unwanted = remember(filtered) {
+        filtered.filter { it.kind != "relief" }.sortedByDescending { abs(it.delta) }
     }
-    val maxDelta = remember(changed) {
-        (changed.maxOfOrNull { abs(it.delta) } ?: 1).coerceAtLeast(1)
+    val helpful = remember(filtered) {
+        filtered.filter { it.kind == "relief" }.sortedByDescending { abs(it.delta) }
+    }
+    val flatSorted = remember(filtered, sortMode) {
+        when (sortMode) {
+            "Rising" -> filtered.sortedByDescending { it.delta }
+            "Falling" -> filtered.sortedBy { it.delta }
+            "A to Z" -> filtered.sortedBy { prettyLabel(it.name).lowercase() }
+            else -> emptyList()
+        }
+    }
+    val maxDelta = remember(filtered) {
+        (filtered.maxOfOrNull { abs(it.delta) } ?: 1).coerceAtLeast(1)
     }
     val medRising = remember(changed) { medicationRising(changed) }
 
@@ -68,20 +101,58 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
                 BrainyWatermarkCard(resId = R.drawable.brainy_risk, flipWatermark = true) {
-                    if (unwanted.isNotEmpty()) {
-                        Text(t("Triggers, prodromes, medicines & symptoms"), color = TrendAmber,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                        unwanted.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.weight(1f))
+                        SortChipMenu(sortMode, listOf("Biggest change", "Rising", "Falling", "A to Z")) { sortMode = it }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        changed.map { it.kind }.distinct().forEach { kind ->
+                            val active = activeKinds.isEmpty() || activeKinds.contains(kind)
+                            val color = KIND_CHIP_COLORS[kind] ?: AppTheme.AccentPurple
+                            Text(
+                                t(KIND_CHIP_LABELS[kind] ?: kind),
+                                color = if (active) color else AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .border(1.dp, if (active) color else AppTheme.SubtleTextColor.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+                                    .clickable {
+                                        activeKinds = if (activeKinds.contains(kind)) activeKinds - kind
+                                        else activeKinds + kind
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    if (sortMode == "Biggest change") {
+                        if (unwanted.isNotEmpty()) {
+                            Text(t("Triggers, prodromes, medicines & symptoms"), color = TrendAmber,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            unwanted.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
+                            if (medRising) {
+                                Text(t("Acute medication use rising — worth an overuse check."),
+                                    color = TrendAmber, style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        if (helpful.isNotEmpty()) {
+                            if (unwanted.isNotEmpty()) Spacer(Modifier.height(6.dp))
+                            Text(t("Reliefs"), color = TrendGreen,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            helpful.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
+                        }
+                    } else {
+                        flatSorted.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
                         if (medRising) {
                             Text(t("Acute medication use rising — worth an overuse check."),
                                 color = TrendAmber, style = MaterialTheme.typography.labelSmall)
                         }
-                    }
-                    if (helpful.isNotEmpty()) {
-                        if (unwanted.isNotEmpty()) Spacer(Modifier.height(6.dp))
-                        Text(t("Reliefs"), color = TrendGreen,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                        helpful.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
                     }
                 }
             }
