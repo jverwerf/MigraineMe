@@ -1,12 +1,17 @@
 package com.migraineme
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -46,7 +51,24 @@ fun BrainyRowIcon(
     gap: Dp = 6.dp,
 ) {
     val res = brainyForLogKey(iconKey, label, category) ?: return
-    Image(painterResource(res), contentDescription = null, modifier = Modifier.size(size))
+    // Same soft organic blob as BrainyBlobIcon, scaled down to row size
+    // (58x54 box around a 44 image → 1.32x/1.23x of the art).
+    Box(
+        modifier = Modifier
+            .size(width = size * 58f / 44f, height = size * 54f / 44f)
+            .background(
+                brush = Brush.linearGradient(
+                    listOf(Color(0x57CE93D8), Color(0x24B388FF))
+                ),
+                shape = RoundedCornerShape(
+                    topStartPercent = 46, topEndPercent = 54,
+                    bottomEndPercent = 42, bottomStartPercent = 58
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(painterResource(res), contentDescription = null, modifier = Modifier.size(size))
+    }
     Spacer(Modifier.width(gap))
 }
 

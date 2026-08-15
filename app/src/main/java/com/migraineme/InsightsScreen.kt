@@ -94,6 +94,7 @@ internal fun BrainyNavCard(
     onClick: () -> Unit,
     flipBlob: Boolean = false,
     flipWatermark: Boolean = false,
+    preview: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     BrainyWatermarkCard(
         modifier = Modifier
@@ -114,6 +115,44 @@ internal fun BrainyNavCard(
             Spacer(Modifier.width(8.dp))
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
         }
+        if (preview != null) {
+            Spacer(Modifier.height(10.dp))
+            preview()
+        }
+    }
+}
+
+/** One line of a nav-card preview: label + compact stat, same row style as RecommendationsCard. */
+internal data class CardPreviewEntry(val label: String, val stat: String, val category: String? = null)
+
+@Composable
+internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalCount: Int = entries.size) {
+    val shown = entries.take(2)
+    shown.forEachIndexed { i, e ->
+        if (i > 0) Spacer(Modifier.height(6.dp))
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White.copy(alpha = 0.04f))
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BrainyRowIcon(e.label, category = e.category, size = 18.dp)
+            Text(prettyLabel(e.label), color = Color.White,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f))
+            Spacer(Modifier.width(8.dp))
+            Text(e.stat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+        }
+    }
+    val extra = totalCount - shown.size
+    if (extra > 0) {
+        Spacer(Modifier.height(4.dp))
+        Text(t("+%s more", extra), color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.align(Alignment.End))
     }
 }
 
@@ -446,6 +485,81 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
         }.sortedByDescending { it.liftRatio }
     }
 
+    // ── Nav-card previews: each card surfaces its top two entries inline ──
+    val accuracyPreview: (@Composable ColumnScope.() -> Unit)? =
+        gaugeAccuracy?.takeIf { it.totalDays > 0 }?.let { ga ->
+            {
+                CardPreviewRows(listOf(
+                    CardPreviewEntry(tSync("Attacks caught"), "${ga.sensitivityPct}%"),
+                    CardPreviewEntry(tSync("False alarms"), "${ga.falseAlarmRatePct}%"),
+                ))
+            }
+        }
+    val patternPool = triggerCorrelations + metricCorrelations
+    val whatHappenedPreview: (@Composable ColumnScope.() -> Unit)? =
+        patternPool.takeIf { it.isNotEmpty() }?.let { pool ->
+            {
+                CardPreviewRows(
+                    pool.take(2).map {
+                        CardPreviewEntry(it.factorName, tSync("×%1\$s · %2\$s%% of attacks",
+                            "%.1f".format(it.liftRatio), it.pctMigraineWindows.toInt()))
+                    },
+                    totalCount = pool.size + interactionCorrelations.size
+                )
+            }
+        }
+    val treatmentPool = (medicineItems.map { it to "medicine" } + reliefItems.map { it to "relief" })
+        .sortedByDescending { it.first.avgRelief }
+    val whatWorkedPreview: (@Composable ColumnScope.() -> Unit)? =
+        treatmentPool.takeIf { it.isNotEmpty() }?.let { pool ->
+            {
+                CardPreviewRows(
+                    pool.take(2).map { (item, cat) ->
+                        CardPreviewEntry(item.name, tSync("relief %1\$s · %2\$s×",
+                            "%.1f".format(item.avgRelief), item.count), cat)
+                    },
+                    totalCount = pool.size
+                )
+            }
+        }
+    val helpingPool = correlations.filter { it.factorType == "well_done" }.sortedByDescending { it.liftRatio }
+    val whatsHelpingPreview: (@Composable ColumnScope.() -> Unit)? =
+        helpingPool.takeIf { it.isNotEmpty() }?.let { pool ->
+            {
+                CardPreviewRows(
+                    pool.take(2).map {
+                        CardPreviewEntry(it.factorName, tSync("×%1\$s on attack-free days",
+                            "%.1f".format(it.liftRatio)))
+                    },
+                    totalCount = pool.size
+                )
+            }
+        }
+    val contextPool = contextItems.sortedByDescending { it.count }
+    val contextPreview: (@Composable ColumnScope.() -> Unit)? =
+        contextPool.takeIf { it.isNotEmpty() }?.let { pool ->
+            {
+                CardPreviewRows(
+                    pool.take(2).map {
+                        CardPreviewEntry(it.name, tSync("%1\$s attacks · %2\$s%%", it.count, it.pctOfMigraines.toInt()))
+                    },
+                    totalCount = pool.size
+                )
+            }
+        }
+    val impactPool = impactItems.sortedByDescending { it.totalMissed }
+    val impactPreview: (@Composable ColumnScope.() -> Unit)? =
+        impactPool.takeIf { it.isNotEmpty() }?.let { pool ->
+            {
+                CardPreviewRows(
+                    pool.take(2).map {
+                        CardPreviewEntry(it.name, tSync("missed %1\$s× · %2\$s%%", it.totalMissed, it.pctOfMigraines.toInt()))
+                    },
+                    totalCount = pool.size
+                )
+            }
+        }
+
     // ── Full-screen loading state (like Journal) ──
     if (spiderLoading || correlationsLoading) {
         Box(
@@ -623,6 +737,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             resId = R.drawable.brainy_archer,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_THRESHOLDS) },
+                            preview = accuracyPreview,
                         )
                         IconButton(
                             onClick = { showAccuracyInfo = true },
@@ -674,6 +789,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             resId = R.drawable.brainy_detective,
                             flipBlob = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_PATTERNS) },
+                            preview = whatHappenedPreview,
                         )
                         IconButton(
                             onClick = { showWhatHappenedInfo = true },
@@ -725,6 +841,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             resId = R.drawable.brainy_shield,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_TREATMENTS) },
+                            preview = whatWorkedPreview,
                         )
                         IconButton(
                             onClick = { showWhatWorkedInfo = true },
@@ -778,6 +895,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             resId = R.drawable.brainy_gardener,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_WHATS_HELPING) },
+                            preview = whatsHelpingPreview,
                         )
                         IconButton(
                             onClick = { showWhatsHelpingInfo = true },
@@ -884,6 +1002,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             resId = R.drawable.brainy_runner,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_CONTEXT) },
+                            preview = contextPreview,
                         )
                         IconButton(
                             onClick = { showContextInfo = true },
@@ -943,6 +1062,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             resId = R.drawable.brainy_recover,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_IMPACT) },
+                            preview = impactPreview,
                         )
                         IconButton(
                             onClick = { showImpactInfo = true },
