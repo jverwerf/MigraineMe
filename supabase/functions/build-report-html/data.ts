@@ -132,6 +132,14 @@ export type ReportData = {
     attacks_analysed: number; onset_locations: string[];
     spread_locations: string[]; median_minutes_to_peak: number | null;
   } | null;
+  /** Pain-response engine output (intraday_response_stats). Every row already
+   *  passed the engine's honesty gates, so the report renders what it gets and
+   *  renders nothing when the table is empty. */
+  intradayResponse: {
+    event_kind: "aggravator" | "easer"; label: string;
+    median_effect: number; horizon_minutes: number;
+    n: number; consistency: number; caution: boolean; p_value: number;
+  }[];
   treatments: Record<string, unknown>[];
   narratives: Record<string, string>;
   sideEffects: Record<string, Record<string, unknown>[]>;
@@ -278,12 +286,13 @@ export async function loadReportData(
   }
 
   const [
-    { data: corr }, { data: timing }, { data: migration },
+    { data: corr }, { data: timing }, { data: migration }, { data: intraday },
     { data: pool }, { data: prof }, { data: insights },
   ] = await Promise.all([
     sb.from("correlation_stats").select("*"),
     sb.from("treatment_timing_stats").select("*"),
     sb.from("pain_migration_stats").select("*").limit(1),
+    sb.from("intraday_response_stats").select("*"),
     sb.from("user_symptoms").select("label,category"),
     sb.from("ai_setup_profiles").select("*").limit(1),
     sb.from("daily_insights").select("ai_recommendations")
@@ -691,6 +700,7 @@ export async function loadReportData(
     correlations: (corr ?? []) as CorrelationStat[],
     treatmentTiming: (timing ?? []) as ReportData["treatmentTiming"],
     painMigration: (migration?.[0] ?? null) as ReportData["painMigration"],
+    intradayResponse: (intraday ?? []) as ReportData["intradayResponse"],
     treatments, narratives, sideEffects,
     recommendations,
     labelToMetricKeys,

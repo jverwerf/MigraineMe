@@ -69,7 +69,7 @@ fun InsightsTreatmentsScreen(
                     watermarkOnLast = symptomSegments.isEmpty())
             }
 
-            // Same-day response: how pain moved in the hours after these
+            // Pain response: how pain moved after these
             // treatments. Cautions (pain consistently ROSE) render in amber.
             // Hidden entirely when the engine wrote no easer rows.
             if (intradayEasers.isNotEmpty()) {

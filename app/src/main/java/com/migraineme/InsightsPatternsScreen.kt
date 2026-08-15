@@ -72,7 +72,7 @@ fun InsightsPatternsScreen(
                     watermarkOnLast = symptomOutcomes.isEmpty())
             }
 
-            // Same-day response: how pain moved in the hours after these events.
+            // Pain response: how pain moved after these events.
             // Hidden entirely when the engine wrote no aggravator rows.
             if (intradayAggravators.isNotEmpty()) {
                 IntradayResponseCard(intradayAggravators, easers = false)

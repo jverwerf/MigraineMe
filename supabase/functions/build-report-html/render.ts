@@ -1258,6 +1258,46 @@ function whatWorked(d: ReportData, pageNo: number): string {
   `, pageNo);
 }
 
+// ── pain response ────────────────────────────────────────────────
+// Rows come straight from intraday_response_stats — every one already passed
+// the engine's honesty gates (>= 5 occurrences with a pain reading on both
+// sides, |median effect| >= 1.0 pain points, >= 60% sign consistency), so
+// this section never decides what is worth saying. Aggravators only ever
+// describe rises; an easer whose pain consistently ROSE arrives flagged
+// caution = true and is marked in amber, never hidden. No rows, no section —
+// the report does not fabricate.
+function painResponse(d: ReportData, pageNo: number): string {
+  const horizon = (m: number) => (m % 60 === 0 ? `~${m / 60}h` : `~${m}m`);
+  const byStrength = (rows: ReportData["intradayResponse"]) =>
+    [...rows].sort((a, b) => Math.abs(b.median_effect) - Math.abs(a.median_effect));
+  const agg = byStrength(d.intradayResponse.filter((r) => r.event_kind === "aggravator"));
+  const eas = byStrength(d.intradayResponse.filter((r) => r.event_kind === "easer"));
+  if (!agg.length && !eas.length) return "";
+
+  const row = (r: ReportData["intradayResponse"][number], color: string) => {
+    const effect = (r.median_effect > 0 ? "+" : "−") + Math.abs(r.median_effect).toFixed(1);
+    const meta = rt("n = {0} · {1}% moved the same way", r.n, Math.round(r.consistency * 100));
+    return `<div class="card row">
+      <div class="grow">
+        <div class="name">${esc(pretty(r.label))}</div>
+        <div class="meta">${esc(meta)}${r.caution
+          ? ` · <b style="color:${C.orange}">${esc(rt("pain rose after this"))}</b>` : ""}</div>
+      </div>
+      ${dots(color, r.p_value)}
+      ${badge(color, rt("{0} within {1}", effect, horizon(r.horizon_minutes)))}
+    </div>`;
+  };
+
+  return page(C.purple, `
+    ${header(C.purple, ICON.pulse, rt("Pain response"),
+      rt("Median change in pain after each logged item, against the 3 hours before it"), true)}
+    ${agg.length ? sub(C.red, rt("Pain response — what pushed it up")) : ""}
+    ${agg.map((r) => row(r, C.red)).join("")}
+    ${eas.length ? sub(C.green, rt("Pain response — what brought it down")) : ""}
+    ${eas.map((r) => row(r, r.caution ? C.orange : C.green)).join("")}
+  `, pageNo);
+}
+
 // ── what's helping ───────────────────────────────────────────────
 function whatsHelping(d: ReportData, pageNo: number): string {
   const direct = d.correlations.filter((s) => s.factor_type === "well_done")
@@ -2118,6 +2158,7 @@ export function renderReport(d: ReportData): string {
 
   add(rt("What happened"), whatHappened);
   add(rt("What worked"), whatWorked);
+  add(rt("Pain response"), painResponse);
   add(rt("What's helping"), whatsHelping);
   add(rt("What you were doing"), contextPage);
   add(rt("How it affected you"), impact);

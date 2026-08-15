@@ -1627,7 +1627,7 @@ internal fun CorrelationRow(stat: EdgeFunctionsService.CorrelationStat) {
     }
 }
 
-// ── Same-day response card (intraday engine) ──────────────────
+// ── Pain response card (intraday engine) ──────────────────────
 /**
  * Every row shown has already passed the engine's gate (>= 5 occurrences with
  * a pain reading on both sides, |median effect| >= 1.0 pain points, >= 60%
@@ -1652,11 +1652,11 @@ internal fun IntradayResponseCard(
     val sorted = remember(rows) { rows.sortedByDescending { kotlin.math.abs(it.medianEffect) } }
     val top = sorted.take(4)
     BaseCard {
-        Text(t("Same-day response"), color = AppTheme.TitleColor,
+        Text(t("Pain response"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
         Text(
-            if (easers) t("How your pain moved in the hours after these treatments")
-            else t("How your pain moved in the hours after these were logged"),
+            if (easers) t("How your pain moved after these treatments")
+            else t("How your pain moved after these were logged"),
             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(6.dp))
         top.forEach { row ->
