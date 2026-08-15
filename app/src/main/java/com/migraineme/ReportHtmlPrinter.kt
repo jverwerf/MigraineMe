@@ -94,12 +94,26 @@ object ReportHtmlPrinter {
         if (ok && out.length() > 0) out else null
     }
 
+    /**
+     * Hands the finished PDF to the system share sheet.
+     *
+     * ACTION_SEND, not ACTION_VIEW: the point of the report is to reach a
+     * clinician, and a viewer intent only opens it locally — the same capability
+     * iOS (UIActivityViewController) and the Expo apps (expo-sharing) have always
+     * offered. The chooser still lists PDF viewers alongside mail and Drive, so
+     * "just look at it" survives.
+     */
     fun share(context: Context, file: File) {
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_TITLE, file.name)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
         context.startActivity(
-            Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "application/pdf")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent.createChooser(send, null).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
             },
         )
     }

@@ -263,6 +263,33 @@ function cover(d: ReportData, contents: { title: string; page: number }[]): stri
     </div>`, 1);
 }
 
+/** How a medicine's dose should print.
+ *
+ *  dose_value + dose_unit are the truth (dose contract 2026-08-13); `amount` is
+ *  a formatted mirror the clients still write, and the ONLY thing rows logged
+ *  before that contract have. So: real columns when present, legacy string
+ *  otherwise, nothing when neither. A clinician reading "took 2" wants to know
+ *  two of what, and the mirror is the one that goes stale.
+ */
+function doseText(r: ChildRow): string | null {
+  const v = r.dose_value;
+  const u = (r.dose_unit ?? "").trim();
+  if (v != null && Number.isFinite(v)) {
+    // Trailing zeros read as false precision on a dose.
+    const n = String(Number(v.toFixed(3)));
+    switch (u) {
+      case "mg":      return `${n}mg`;
+      case "mcg":     return `${n}mcg`;
+      case "units":   return `${n} ${rt("units")}`;
+      case "minutes": return `${n} ${rt("min")}`;
+      case "amount":  return n;
+      default:        return u ? `${n} ${rt(u)}` : n;
+    }
+  }
+  const legacy = (r.amount ?? "").trim();
+  return legacy.length > 0 ? legacy : null;
+}
+
 // ── attack log ───────────────────────────────────────────────────
 const PAIN_ENTRIES_SHOWN = 10;
 
@@ -330,7 +357,8 @@ function attackCard(m: Migraine, d: ReportData): string {
     for (const r of list.filter((x) => x.migraine_id === m.id)) {
       const name = r.name ?? r.type;
       if (!name) continue;
-      const amt = r.amount && r.amount.trim() ? ` (${esc(r.amount)})` : "";
+      const dose = doseText(r);
+      const amt = dose ? ` (${esc(dose)})` : "";
       rows.push({ label, at: parseDate(r.start_at), text: pretty(name) + amt });
     }
   };
@@ -1016,6 +1044,38 @@ function frequency(d: ReportData, pageNo: number): string {
   `, pageNo);
 }
 
+// ── severity spread ──────────────────────────────────────────────
+/** The 1–10 histogram from the old report (and Android's ReportPdfGenerator):
+ *  the average alone hides whether attacks are steady fives or a mix of twos
+ *  and nines, and that spread is what a clinician actually asks about. */
+function severitySpread(d: ReportData, pageNo: number): string {
+  const sevs = d.migraines.map((m) => m.severity)
+    .filter((v): v is number => typeof v === "number" && v >= 1 && v <= 10);
+  if (!sevs.length) return "";
+  const counts = Array.from({ length: 10 }, (_, i) =>
+    sevs.filter((v) => Math.round(v) === i + 1).length);
+  const max = Math.max(...counts, 1);
+  const avg = sevs.reduce((a, b) => a + b, 0) / sevs.length;
+
+  return page(C.red, `
+    ${header(C.red, ICON.chart, rt("Severity spread"),
+      rt("How hard attacks hit, across the 1–10 scale"))}
+    <div class="stats" style="margin-bottom:12px">
+      <div class="stat"><b>${avg.toFixed(1)}</b><span>${rt("Average /10")}</span></div>
+      <div class="stat"><b>${Math.min(...sevs)}</b><span>${rt("Mildest")}</span></div>
+      <div class="stat"><b>${Math.max(...sevs)}</b><span>${rt("Worst")}</span></div>
+      <div class="stat"><b>${sevs.length}</b><span>${rt("Attacks rated")}</span></div>
+    </div>
+    <div class="card"><div class="cols">
+      ${counts.map((n, i) => `<div>
+        <span>${n || ""}</span>
+        <i style="height:${Math.max(3, Math.round((n / max) * 62))}px;
+          background:${sevColor(i + 1)}"></i>
+        <span>${i + 1}</span></div>`).join("")}
+    </div></div>
+  `, pageNo);
+}
+
 // ── what happened ────────────────────────────────────────────────
 function contextLine(s: CorrelationStat): string {
   const lag = (s.best_lag_days ?? 0) > 0 ? rt("{0} days before", s.best_lag_days) : rt("same day");
@@ -1172,7 +1232,7 @@ function whatHappened(d: ReportData, pageNo: number): string {
   }
 
   return page(C.accent, `
-    ${header(C.accent, ICON.search, rt("What happened"),
+    ${header(C.accent, ICON.search, rt("What Happened"),
       rt("The factors that showed up before attacks, ranked by strength"), !scoped)}
     ${scoped ? historyNote(STATS_NOTE()) : ""}
     <div class="card row" style="padding:7px 12px">
@@ -1251,10 +1311,56 @@ function whatWorked(d: ReportData, pageNo: number): string {
   }
 
   return page(C.green, `
-    ${header(C.green, ICON.check, rt("What worked"),
+    ${header(C.green, ICON.check, rt("What Worked"),
       rt("Shorter = reduced duration · milder = reduced severity"), !scoped)}
     ${scoped ? historyNote(STATS_NOTE()) : ""}
     ${body}
+  `, pageNo);
+}
+
+// ── usage vs effectiveness ───────────────────────────────────────
+/** Per relief category, how often it was reached for against how much it
+ *  actually helped — the old report's port of Android's dual spider, as two
+ *  bars per row because a two-series radar reads worse in print. */
+function usageVsEffectiveness(d: ReportData, pageNo: number): string {
+  if (!d.reliefs.length) return "";
+  // NONE/LOW/MILD/HIGH is the reliefs.relief_scale set the apps write.
+  const SCORE: Record<string, number> = { NONE: 0, LOW: 1, MILD: 2, HIGH: 3 };
+  const cats = d.poolCategories["relief"] ?? {};
+  const byCat = new Map<string, { count: number; scored: number[] }>();
+  for (const r of d.reliefs) {
+    const name = r.type ?? r.name;
+    if (!name) continue;
+    const cat = pretty(cats[name.toLowerCase()] ?? "Other");
+    const entry = byCat.get(cat) ?? { count: 0, scored: [] };
+    entry.count += 1;
+    const sc = typeof r.relief_scale === "string" ? SCORE[r.relief_scale] : undefined;
+    if (sc != null) entry.scored.push(sc);
+    byCat.set(cat, entry);
+  }
+  const rows = [...byCat.entries()].map(([cat, v]) => ({
+    cat, count: v.count,
+    avg: v.scored.length ? v.scored.reduce((a, b) => a + b, 0) / v.scored.length : null,
+  })).sort((a, b) => b.count - a.count);
+  if (!rows.length) return "";
+  const maxCount = Math.max(...rows.map((r) => r.count), 1);
+
+  return page(C.green, `
+    ${header(C.green, ICON.chart, rt("Usage vs effectiveness"),
+      rt("How often each kind of relief was used, against how much it actually helped"))}
+    ${rows.map((r) => `<div class="card row">
+      <div class="grow">
+        <div class="name">${esc(rt(r.cat))}</div>
+        <div class="meta">${esc(rt("Used {0}×", r.count))} ·
+          ${esc(r.avg == null ? rt("no relief ratings") : rt("avg relief {0} / 3", r.avg.toFixed(1)))}</div>
+      </div>
+      <div style="width:110px">${bar(C.green, (r.count / maxCount) * 100)}</div>
+      <div style="width:110px">${bar(C.blue, r.avg == null ? 0 : (r.avg / 3) * 100)}</div>
+    </div>`).join("")}
+    <div class="card row" style="padding:7px 12px">
+      <span class="meta" style="margin:0">${badge(C.green, rt("times used"))}
+        ${badge(C.blue, rt("average relief, 0–3"))}</span>
+    </div>
   `, pageNo);
 }
 
@@ -1342,7 +1448,7 @@ function whatsHelping(d: ReportData, pageNo: number): string {
   }
 
   return page(C.green, `
-    ${header(C.green, ICON.leaf, rt("What's helping"),
+    ${header(C.green, ICON.leaf, rt("What's Helping"),
       rt("Habits that show up on migraine-free days, and what drives them"), !scoped)}
     ${scoped ? historyNote(STATS_NOTE()) : ""}
     ${body}
@@ -1381,7 +1487,7 @@ function contextPage(d: ReportData, pageNo: number): string {
     </div>`).join("");
 
   return page(C.orange, `
-    ${header(C.orange, ICON.run, rt("What you were doing"),
+    ${header(C.orange, ICON.run, rt("What Were You Doing"),
       rt("Activities and locations during attacks"))}
     ${locs.length ? sub(C.orange, rt("Where")) : ""}${rows(locs, C.orange)}
     ${acts.length ? sub(C.orange, rt("Doing what")) : ""}${rows(acts, C.orange)}
@@ -1430,7 +1536,7 @@ function impact(d: ReportData, pageNo: number): string {
     : peak < 90 ? rt("{0} minutes", peak) : rt("{0} hours", (peak / 60).toFixed(1).replace(/\.0$/, ""));
 
   return page(C.purple, `
-    ${header(C.purple, ICON.pin, rt("How it affected you"),
+    ${header(C.purple, ICON.pin, rt("How Did It Impact You"),
       rt("Severity, where the pain sat, and what it cost"))}
 
     ${sub(C.purple, rt("Pain locations"))}
@@ -2152,16 +2258,18 @@ export function renderReport(d: ReportData): string {
   add(rt("Narrative"), narrative);
   add(rt("Frequency trends"), frequency);
   add(rt("What changed"), trendsPage);
+  add(rt("Severity spread"), severitySpread);
 
   // Breakdowns can span several pages, so it counts its own.
   add(rt("What you logged"), breakdowns);
 
-  add(rt("What happened"), whatHappened);
-  add(rt("What worked"), whatWorked);
+  add(rt("What Happened"), whatHappened);
+  add(rt("What Worked"), whatWorked);
   add(rt("Pain response"), painResponse);
-  add(rt("What's helping"), whatsHelping);
-  add(rt("What you were doing"), contextPage);
-  add(rt("How it affected you"), impact);
+  add(rt("Usage vs effectiveness"), usageVsEffectiveness);
+  add(rt("What's Helping"), whatsHelping);
+  add(rt("What Were You Doing"), contextPage);
+  add(rt("How Did It Impact You"), impact);
   add(rt("Recommendations"), recommendations);
   add(rt("Treatments"), treatments);
   add(rt("Health metrics"), metrics);

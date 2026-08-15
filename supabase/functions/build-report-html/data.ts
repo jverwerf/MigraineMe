@@ -62,6 +62,12 @@ export type ChildRow = {
   type?: string | null;
   name?: string | null;
   amount?: string | null;
+  /** Dose contract 2026-08-13: the real columns. `amount` is a formatted
+   *  mirror the clients still write, and the only thing older rows have. */
+  dose_value?: number | null;
+  dose_unit?: string | null;
+  /** NONE/LOW/MILD/HIGH — how much this relief or medicine actually helped. */
+  relief_scale?: string | null;
   start_at: string;
   source?: string | null;
 };
@@ -254,8 +260,8 @@ export async function loadReportData(
   ] = await Promise.all([
     childrenFor(sb, "triggers", ids, "id,migraine_id,type,start_at,source"),
     childrenFor(sb, "prodromes", ids, "id,migraine_id,type,start_at,source"),
-    childrenFor(sb, "medicines", ids, "id,migraine_id,name,amount,start_at,source"),
-    childrenFor(sb, "reliefs", ids, "id,migraine_id,type,start_at,source"),
+    childrenFor(sb, "medicines", ids, "id,migraine_id,name,amount,dose_value,dose_unit,start_at,source"),
+    childrenFor(sb, "reliefs", ids, "id,migraine_id,type,relief_scale,start_at,source"),
     childrenFor(sb, "activities", ids, "id,migraine_id,type,start_at,source"),
     childrenFor(sb, "locations", ids, "id,migraine_id,type,start_at,source"),
     childrenFor(sb, "missed_activities", ids, "id,migraine_id,type,start_at,source"),
