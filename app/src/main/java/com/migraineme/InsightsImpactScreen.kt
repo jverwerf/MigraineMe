@@ -56,8 +56,6 @@ fun InsightsImpactScreen(
 
     val lastCard = when {
         impactItems.isNotEmpty() -> "missed"
-        hasAuraCard -> "aura"
-        painLocationCounts.isNotEmpty() && totalMigraineCount > 0 -> "pain"
         symptomStats.isNotEmpty() -> "symptoms"
         else -> "severity"
     }
@@ -106,6 +104,199 @@ fun InsightsImpactScreen(
                             modifier = Modifier.weight(1f),
                             barHeight = 60.dp,
                         )
+                    }
+
+                    if (painLocationCounts.isNotEmpty() && totalMigraineCount > 0) {
+                        Spacer(Modifier.height(16.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column {
+                                Text(t("Pain Locations"), color = AppTheme.TitleColor,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text(t("Where your migraines hurt most"),
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Front + Back side by side
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PainHeatMap(
+                                painLocationCounts = painLocationCounts,
+                                totalMigraines = totalMigraineCount,
+                                points = FRONT_PAIN_POINTS,
+                                imageRes = R.drawable.painpoints,
+                                modifier = Modifier.weight(1f).aspectRatio(0.75f),
+                            )
+                            PainHeatMap(
+                                painLocationCounts = painLocationCounts,
+                                totalMigraines = totalMigraineCount,
+                                points = BACK_PAIN_POINTS,
+                                imageRes = R.drawable.painpointsback,
+                                modifier = Modifier.weight(1f).aspectRatio(0.75f),
+                            )
+                        }
+
+                        // Location list with percentages
+                        Spacer(Modifier.height(12.dp))
+                        painLocationCounts.forEach { (locId, count) ->
+                            val label = ALL_PAIN_POINTS_MAP[locId] ?: locId
+                            val pct = (count.toFloat() / totalMigraineCount * 100).toInt()
+                            val pctColor = when {
+                                pct >= 60 -> Color(0xFFE57373)
+                                pct >= 30 -> Color(0xFFFFB74D)
+                                else -> AppTheme.SubtleTextColor
+                            }
+
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    Modifier.size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFE57373).copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(t(label), color = Color.White,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("$pct%", color = pctColor,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            }
+                        }
+                    }
+                    if (hasAuraCard) {
+                        Spacer(Modifier.height(16.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column {
+                                Text(if (hasAuraZones) t("Aura Location") else t("Your Aura"),
+                                    color = AppTheme.TitleColor,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text(
+                                    if (hasAuraZones)
+                                        t("Where in your vision it shows up, as seen through your own eyes")
+                                    else t("What your aura has been doing across your attacks"),
+                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+
+                        if (hasAuraZones) {
+                            Spacer(Modifier.height(12.dp))
+
+                            AuraHeatMap(
+                                auraZoneCounts = auraZoneCounts,
+                                totalAuraAttacks = auraAttackCount,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+
+                            Spacer(Modifier.height(12.dp))
+                            auraZoneCounts.forEach { (zoneId, count) ->
+                                val pct = (count.toFloat() / auraAttackCount * 100).toInt()
+                                val pctColor = when {
+                                    pct >= 60 -> Color(0xFFE57373)
+                                    pct >= 30 -> Color(0xFFFFB74D)
+                                    else -> AppTheme.SubtleTextColor
+                                }
+                                Row(
+                                    Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Box(
+                                        Modifier.size(10.dp)
+                                            .clip(CircleShape)
+                                            .background(AppTheme.AccentPurple.copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(AuraZones.label(zoneId), color = Color.White,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text("$pct%", color = pctColor,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                }
+                            }
+                        }
+
+                        auraDurationStats?.let { (avgMin, count) ->
+                            Spacer(Modifier.height(8.dp))
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(t("Average aura duration"), color = AppTheme.SubtleTextColor,
+                                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                                Text(
+                                    t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), count),
+                                    color = AppTheme.AccentPurple,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                        }
+
+                        // Server-computed findings — the patterns, not just the counts.
+                        if (auraInsights.isNotEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            Text(t("What we've spotted"), color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                            Spacer(Modifier.height(6.dp))
+                            val insightTileShape = RoundedCornerShape(18.dp)
+                            auraInsights.forEach { ins ->
+                                Column(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clip(insightTileShape)
+                                        .background(Color.White.copy(alpha = 0.035f))
+                                        .border(1.dp, Color.White.copy(alpha = 0.05f), insightTileShape)
+                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                ) {
+                                    Text(ins.headline, color = Color(0xFFF3EAFB),
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+                                    ins.detail?.let {
+                                        Spacer(Modifier.height(3.dp))
+                                        Text(it, color = Color(0xFF9C8BB0),
+                                            style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                                Spacer(Modifier.height(6.dp))
+                            }
+                        }
+
+                        // The spread, because an average hides the outlier that
+                        // actually matters clinically (a single 90-minute aura).
+                        if (auraDurationBuckets.isNotEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            Text(t("How long they last"), color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                            Spacer(Modifier.height(6.dp))
+                            val maxBucket = auraDurationBuckets.maxOf { it.second }
+                            auraDurationBuckets.forEach { (label, count) ->
+                                Row(
+                                    Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(t(label), color = AppTheme.BodyTextColor,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.width(64.dp))
+                                    Box(
+                                        Modifier
+                                            .weight(1f)
+                                            .height(10.dp)
+                                            .clip(RoundedCornerShape(5.dp))
+                                            .background(Color.White.copy(alpha = 0.06f))
+                                    ) {
+                                        Box(
+                                            Modifier
+                                                .fillMaxWidth(count.toFloat() / maxBucket.coerceAtLeast(1))
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .background(AppTheme.AccentPurple.copy(alpha = 0.65f))
+                                        )
+                                    }
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("$count", color = AppTheme.SubtleTextColor,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -177,68 +368,6 @@ fun InsightsImpactScreen(
             }
 
             // ── Card 2: Pain Locations ──
-            if (painLocationCounts.isNotEmpty() && totalMigraineCount > 0) {
-                MaybeWatermarkCard(watermark = lastCard == "pain", resId = R.drawable.brainy_recover, flipWatermark = true) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column {
-                            Text(t("Pain Locations"), color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(t("Where your migraines hurt most"),
-                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // Front + Back side by side
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PainHeatMap(
-                            painLocationCounts = painLocationCounts,
-                            totalMigraines = totalMigraineCount,
-                            points = FRONT_PAIN_POINTS,
-                            imageRes = R.drawable.painpoints,
-                            modifier = Modifier.weight(1f).aspectRatio(0.75f),
-                        )
-                        PainHeatMap(
-                            painLocationCounts = painLocationCounts,
-                            totalMigraines = totalMigraineCount,
-                            points = BACK_PAIN_POINTS,
-                            imageRes = R.drawable.painpointsback,
-                            modifier = Modifier.weight(1f).aspectRatio(0.75f),
-                        )
-                    }
-
-                    // Location list with percentages
-                    Spacer(Modifier.height(12.dp))
-                    painLocationCounts.forEach { (locId, count) ->
-                        val label = ALL_PAIN_POINTS_MAP[locId] ?: locId
-                        val pct = (count.toFloat() / totalMigraineCount * 100).toInt()
-                        val pctColor = when {
-                            pct >= 60 -> Color(0xFFE57373)
-                            pct >= 30 -> Color(0xFFFFB74D)
-                            else -> AppTheme.SubtleTextColor
-                        }
-
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                Modifier.size(10.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFE57373).copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(t(label), color = Color.White,
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("$pct%", color = pctColor,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                        }
-                    }
-                }
-            }
 
             // ── Card 2c: Does aura / onset predict a worse attack? ──
             if (severityPredictors.isNotEmpty()) {
@@ -249,140 +378,6 @@ fun InsightsImpactScreen(
             painMigration?.let { pm -> PainMigrationCard(pm) }
 
             // ── Card 2b: Aura ──
-            if (hasAuraCard) {
-                // watermark lives on the page's last card; that's this one when
-                // there are no missed activities below
-                MaybeWatermarkCard(watermark = lastCard == "aura", resId = R.drawable.brainy_recover, flipWatermark = true) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column {
-                            Text(if (hasAuraZones) t("Aura Location") else t("Your Aura"),
-                                color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(
-                                if (hasAuraZones)
-                                    t("Where in your vision it shows up, as seen through your own eyes")
-                                else t("What your aura has been doing across your attacks"),
-                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-
-                    if (hasAuraZones) {
-                        Spacer(Modifier.height(12.dp))
-
-                        AuraHeatMap(
-                            auraZoneCounts = auraZoneCounts,
-                            totalAuraAttacks = auraAttackCount,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-
-                        Spacer(Modifier.height(12.dp))
-                        auraZoneCounts.forEach { (zoneId, count) ->
-                            val pct = (count.toFloat() / auraAttackCount * 100).toInt()
-                            val pctColor = when {
-                                pct >= 60 -> Color(0xFFE57373)
-                                pct >= 30 -> Color(0xFFFFB74D)
-                                else -> AppTheme.SubtleTextColor
-                            }
-                            Row(
-                                Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Box(
-                                    Modifier.size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(AppTheme.AccentPurple.copy(alpha = (pct / 100f).coerceIn(0.2f, 0.9f)))
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text(AuraZones.label(zoneId), color = Color.White,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                    modifier = Modifier.weight(1f),
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("$pct%", color = pctColor,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                            }
-                        }
-                    }
-
-                    auraDurationStats?.let { (avgMin, count) ->
-                        Spacer(Modifier.height(8.dp))
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(t("Average aura duration"), color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                            Text(
-                                t("%1\$s · %2\$s timed", formatAuraDuration(avgMin), count),
-                                color = AppTheme.AccentPurple,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    }
-
-                    // Server-computed findings — the patterns, not just the counts.
-                    if (auraInsights.isNotEmpty()) {
-                        Spacer(Modifier.height(10.dp))
-                        Text(t("What we've spotted"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                        Spacer(Modifier.height(6.dp))
-                        val insightTileShape = RoundedCornerShape(18.dp)
-                        auraInsights.forEach { ins ->
-                            Column(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clip(insightTileShape)
-                                    .background(Color.White.copy(alpha = 0.035f))
-                                    .border(1.dp, Color.White.copy(alpha = 0.05f), insightTileShape)
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                            ) {
-                                Text(ins.headline, color = Color(0xFFF3EAFB),
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
-                                ins.detail?.let {
-                                    Spacer(Modifier.height(3.dp))
-                                    Text(it, color = Color(0xFF9C8BB0),
-                                        style = MaterialTheme.typography.labelSmall)
-                                }
-                            }
-                            Spacer(Modifier.height(6.dp))
-                        }
-                    }
-
-                    // The spread, because an average hides the outlier that
-                    // actually matters clinically (a single 90-minute aura).
-                    if (auraDurationBuckets.isNotEmpty()) {
-                        Spacer(Modifier.height(10.dp))
-                        Text(t("How long they last"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-                        Spacer(Modifier.height(6.dp))
-                        val maxBucket = auraDurationBuckets.maxOf { it.second }
-                        auraDurationBuckets.forEach { (label, count) ->
-                            Row(
-                                Modifier.fillMaxWidth().padding(vertical = 3.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(t(label), color = AppTheme.BodyTextColor,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.width(64.dp))
-                                Box(
-                                    Modifier
-                                        .weight(1f)
-                                        .height(10.dp)
-                                        .clip(RoundedCornerShape(5.dp))
-                                        .background(Color.White.copy(alpha = 0.06f))
-                                ) {
-                                    Box(
-                                        Modifier
-                                            .fillMaxWidth(count.toFloat() / maxBucket.coerceAtLeast(1))
-                                            .fillMaxHeight()
-                                            .clip(RoundedCornerShape(5.dp))
-                                            .background(AppTheme.AccentPurple.copy(alpha = 0.65f))
-                                    )
-                                }
-                                Spacer(Modifier.width(8.dp))
-                                Text("$count", color = AppTheme.SubtleTextColor,
-                                    style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                    }
-                }
-            }
 
             // ── Card 3: Missed Activities ──
             if (impactItems.isNotEmpty()) {

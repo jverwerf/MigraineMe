@@ -601,14 +601,26 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             }
         }
     val impactPool = impactItems.sortedByDescending { it.totalMissed }
+    val painLocsHub by vm.painLocationCounts.collectAsState()
+    val totalMigsHub by vm.totalMigraineCount.collectAsState()
+    val auraAttacksHub by vm.auraAttackCount.collectAsState()
+    // Expose pain + aura first, then missed activities fill the remainder.
+    val impactEntries = buildList {
+        painLocsHub.firstOrNull()?.let { (locId, count) ->
+            if (totalMigsHub > 0) add(CardPreviewEntry(ALL_PAIN_POINTS_MAP[locId] ?: locId,
+                tSync("%1\$s× · %2\$s%%", count, count * 100 / totalMigsHub)))
+        }
+        if (auraAttacksHub > 0) add(CardPreviewEntry(tSync("Aura"), tSync("in %s attacks", auraAttacksHub)))
+        impactPool.forEach {
+            add(CardPreviewEntry(it.name, tSync("missed %1\$s× · %2\$s%%", it.totalMissed, it.pctOfMigraines.toInt())))
+        }
+    }
     val impactPreview: (@Composable ColumnScope.() -> Unit)? =
-        impactPool.takeIf { it.isNotEmpty() }?.let { pool ->
+        impactEntries.takeIf { it.isNotEmpty() }?.let { pool ->
             {
                 CardPreviewRows(
-                    pool.take(2).map {
-                        CardPreviewEntry(it.name, tSync("missed %1\$s× · %2\$s%%", it.totalMissed, it.pctOfMigraines.toInt()))
-                    },
-                    totalCount = pool.size
+                    pool.take(2),
+                    totalCount = painLocsHub.size + (if (auraAttacksHub > 0) 1 else 0) + impactPool.size
                 )
             }
         }
