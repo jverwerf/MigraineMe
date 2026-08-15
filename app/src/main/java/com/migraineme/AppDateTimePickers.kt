@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -60,20 +61,43 @@ fun appTimePickerColors(): TimePickerColors = TimePickerDefaults.colors(
 )
 
 /**
+ * Days from today onwards are unselectable. Timestamps in this app are wall
+ * clock, so "today" is the local day — a UTC-based comparison would open
+ * tomorrow early for anyone east of Greenwich.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+private object PastOnlyDates : SelectableDates {
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+        !Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneId.of("UTC")).toLocalDate()
+            .isAfter(LocalDate.now())
+
+    override fun isSelectableYear(year: Int): Boolean = year <= LocalDate.now().year
+}
+
+/**
  * Themed DateTimePicker field — replaces the legacy Android DatePickerDialog.
  * Shows a Material3 DatePicker then TimePicker in our purple theme.
+ *
+ * [allowFuture] defaults to true because some call sites legitimately stamp a
+ * future moment (a missed activity is often something still on the calendar).
+ * Anything recording an event that has already happened passes false: the date
+ * grid then stops at today, and a time later than now on today's date is
+ * refused inline rather than accepted silently.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateTimePickerField(
     label: String,
+    allowFuture: Boolean = true,
     onDateTimeSelected: (String) -> Unit
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var pickedDate by remember { mutableStateOf<LocalDate?>(null) }
 
-    val datePickerState = rememberDatePickerState()
+    val datePickerState = rememberDatePickerState(
+        selectableDates = if (allowFuture) DatePickerDefaults.AllDates else PastOnlyDates
+    )
     val timePickerState = rememberTimePickerState(
         initialHour = LocalTime.now().hour,
         initialMinute = LocalTime.now().minute,
@@ -125,6 +149,11 @@ fun DateTimePickerField(
 
     // Time picker dialog
     if (showTimePicker && pickedDate != null) {
+        // The date grid can only stop at whole days, so today plus a later
+        // clock time is the one way a past-only field can still land ahead of
+        // now. Caught here rather than on save.
+        val isFutureTime = !allowFuture && pickedDate!!.atTime(timePickerState.hour, timePickerState.minute)
+            .isAfter(LocalDateTime.now())
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
             containerColor = Color(0xFF1E0A2E),
@@ -139,8 +168,9 @@ fun DateTimePickerField(
                         )
                         onDateTimeSelected(iso)
                         showTimePicker = false
-                    }
-                ) { Text(t("Done"), color = AppTheme.AccentPurple) }
+                    },
+                    enabled = !isFutureTime
+                ) { Text(t("Done"), color = if (isFutureTime) AppTheme.SubtleTextColor else AppTheme.AccentPurple) }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
@@ -149,11 +179,17 @@ fun DateTimePickerField(
             },
             title = { Text(t("Select time")) },
             text = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                ) {
                     TimePicker(
                         state = timePickerState,
                         colors = appTimePickerColors()
                     )
+                    if (isFutureTime) {
+                        Text(t("Time cannot be in the future"), color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
         )
@@ -166,9 +202,10 @@ fun DateTimePickerField(
 @Composable
 fun AppDateTimePicker(
     label: String,
+    allowFuture: Boolean = true,
     onDateTimeSelected: (String) -> Unit
 ) {
-    DateTimePickerField(label = label, onDateTimeSelected = onDateTimeSelected)
+    DateTimePickerField(label = label, allowFuture = allowFuture, onDateTimeSelected = onDateTimeSelected)
 }
 
 /**

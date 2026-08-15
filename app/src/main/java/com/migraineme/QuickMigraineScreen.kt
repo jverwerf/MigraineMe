@@ -239,6 +239,7 @@ fun QuickMigraineScreen(
                     Spacer(Modifier.height(4.dp))
                     AppDateTimePicker(
                         label = formatQuickTime(beganAtIso) ?: t("Now"),
+                        allowFuture = false,
                         onDateTimeSelected = { beganAtIso = it }
                     )
                 }

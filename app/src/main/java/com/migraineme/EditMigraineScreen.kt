@@ -555,9 +555,9 @@ private fun CorePage(
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                AppDateTimePicker(label = t("Start time")) { iso -> setBeganAt(iso) }
+                AppDateTimePicker(label = t("Start time"), allowFuture = false) { iso -> setBeganAt(iso) }
                 Text(t("Current: %s", formatIsoDdMmYyHm(beganAt)))
-                AppDateTimePicker(label = t("End time")) { iso -> setEndedAt(iso) }
+                AppDateTimePicker(label = t("End time"), allowFuture = false) { iso -> setEndedAt(iso) }
                 Text(t("Current: %s", formatIsoDdMmYyHm(endedAt)))
                 if (endBeforeStart) {
                     Text(t("End time cannot be before start time"), color = MaterialTheme.colorScheme.error)
