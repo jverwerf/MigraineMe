@@ -111,6 +111,18 @@ data class PoolConfig(
      * their own failures — surfaced here as a snackbar instead.
      */
     val errors: kotlinx.coroutines.flow.Flow<String>? = null,
+    /**
+     * Rows of the app's global template library that are not in [items] yet.
+     *
+     * The seeder stocks a new account from the template tables once and never
+     * again, so anything added to a template table after a user signed up — the
+     * Device reliefs, for one — was unreachable: the add dialog only takes a
+     * typed name. These are those rows, offered for a one-tap add so the pool
+     * can catch up with the library. Empty for pools with no library surface.
+     */
+    val libraryItems: List<PoolItem> = emptyList(),
+    /** Adds one [libraryItems] row to the pool, template metadata intact. */
+    val onAddFromLibrary: ((PoolItem) -> Unit)? = null,
 )
 
 /* ────────────────────────────────────────────────
@@ -402,6 +414,83 @@ fun ManagePoolScreen(
                         } // end Column
                     } // end AnimatedVisibility
                     } // end categories forEach
+                }
+            }
+
+            // ── Library card ──
+            // Everything the template library has that this pool does not.
+            // Hidden entirely when the pool is already complete, so a user who
+            // signed up after the last template was added never sees it.
+            val onAddFromLibrary = effectiveConfig.onAddFromLibrary
+            if (onAddFromLibrary != null && effectiveConfig.libraryItems.isNotEmpty()) {
+                BaseCard {
+                    Text(
+                        t("From library"),
+                        color = AppTheme.TitleColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                    )
+
+                    val isSearching = searchQuery.isNotBlank()
+                    val visibleLibrary = if (!isSearching) effectiveConfig.libraryItems
+                        else effectiveConfig.libraryItems.filter { it.label.contains(searchQuery.trim(), ignoreCase = true) }
+
+                    if (visibleLibrary.isEmpty()) {
+                        Text(
+                            t("No matches for \"%s\"", searchQuery.trim()),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    } else {
+                        val grouped = visibleLibrary.groupBy { it.category ?: "Other" }
+                        val sortedCategories = grouped.keys.sortedWith(compareBy { if (it == "Other") "zzz" else it })
+                        var expandedLibraryCategories by remember { mutableStateOf(setOf<String>()) }
+
+                        sortedCategories.forEach { category ->
+                            val isExpanded = isSearching || category in expandedLibraryCategories
+                            val categoryItems = grouped[category] ?: emptyList()
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        expandedLibraryCategories =
+                                            if (isExpanded) expandedLibraryCategories - category
+                                            else expandedLibraryCategories + category
+                                    }
+                                    .padding(top = 12.dp, bottom = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "${category.replaceFirstChar { c -> c.uppercase() }} (${categoryItems.size})",
+                                    color = effectiveConfig.iconColor.copy(alpha = 0.8f),
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                                Icon(
+                                    if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                                    contentDescription = if (isExpanded) t("Collapse") else t("Expand"),
+                                    tint = effectiveConfig.iconColor.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            HorizontalDivider(color = effectiveConfig.iconColor.copy(alpha = 0.15f), thickness = 0.5.dp, modifier = Modifier.padding(bottom = 4.dp))
+
+                            AnimatedVisibility(visible = isExpanded) {
+                                Column {
+                                    categoryItems.forEach { item ->
+                                        LibraryItemRow(
+                                            item = item,
+                                            config = effectiveConfig,
+                                            onAdd = { onAddFromLibrary(item) }
+                                        )
+                                        if (item != categoryItems.last()) {
+                                            HorizontalDivider(color = Color.White.copy(alpha = 0.06f), thickness = 0.5.dp, modifier = Modifier.padding(vertical = 2.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -712,6 +801,57 @@ private fun PredictionChip(
             .padding(horizontal = 12.dp, vertical = 5.dp)
     ) {
         Text(t(value.display), color = textColor, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+    }
+}
+
+/* ────────────────────────────────────────────────
+ *  Library item row
+ * ──────────────────────────────────────────────── */
+
+/**
+ * A template that is not in the pool yet: the pool row's icon circle and label,
+ * with the screen's add affordance in place of the star / trash it has not
+ * earned. Tapping anywhere on the row adds it, the same as tapping the +.
+ */
+@Composable
+private fun LibraryItemRow(
+    item: PoolItem,
+    config: PoolConfig,
+    onAdd: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onAdd)
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        val icon = config.iconResolver?.invoke(item.iconKey, item.label)
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.07f))
+                .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            val brainyId = brainyForLogVector(icon) ?: brainyForLogKey(item.iconKey, item.label)
+            if (brainyId != null || icon != null) {
+                LogIconImage(drawableId = brainyId, fallback = icon, size = if (brainyId != null) 26.dp else 18.dp, tint = config.iconColor.copy(alpha = 0.8f))
+            } else {
+                Text(item.label.take(2).uppercase(), color = config.iconColor.copy(alpha = 0.8f),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+            }
+        }
+
+        Text(t(item.label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium)
+
+        Spacer(Modifier.weight(1f))
+
+        IconButton(onClick = onAdd, modifier = Modifier.size(28.dp)) {
+            Icon(Icons.Outlined.Add, t("Add"), tint = config.iconColor, modifier = Modifier.size(18.dp))
+        }
     }
 }
 

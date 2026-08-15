@@ -1598,7 +1598,43 @@ class SupabaseDbService(
         val status: String,
         @SerialName("user_reliefs") val relief: UserReliefRow? = null
     )
-    @Serializable private data class UserReliefInsert(val label: String, val category: String? = null)
+    @Serializable private data class UserReliefInsert(
+        val label: String,
+        val category: String? = null,
+        @SerialName("icon_key") val iconKey: String? = null,
+        @SerialName("is_automatable") val isAutomatable: Boolean? = null,
+        @SerialName("is_automated") val isAutomated: Boolean? = null
+    )
+
+    /**
+     * One row of the global relief library.
+     *
+     * Same shape the new-user seeder reads: seed_pools_for_new_user() copies
+     * label, category, icon_key, is_automatable, is_automated out of
+     * relief_templates into user_reliefs. Reusing that column set is what makes
+     * a library add indistinguishable from a seeded row — in particular the
+     * Device rows keep category = 'Device', which is what
+     * DeviceCatalog.isDeviceRelief matches on to arm the 2h follow-up.
+     */
+    @Serializable data class ReliefTemplateRow(
+        val label: String,
+        val category: String? = null,
+        @SerialName("icon_key") val iconKey: String? = null,
+        @SerialName("is_automatable") val isAutomatable: Boolean = false,
+        @SerialName("is_automated") val isAutomated: Boolean = false
+    )
+
+    /** The whole relief library, template order. Filtering against the user's
+     *  own pool happens client-side so a search can span both lists. */
+    suspend fun getReliefTemplates(accessToken: String): List<ReliefTemplateRow> {
+        val response = client.get("$supabaseUrl/rest/v1/relief_templates") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "label,category,icon_key,is_automatable,is_automated")
+            parameter("order", "label.asc")
+        }
+        if (!response.status.isSuccess()) error("Fetch relief_templates failed: ${response.bodyAsText()}")
+        return response.body()
+    }
 
     suspend fun getAllReliefPool(accessToken: String): List<UserReliefRow> {
         val response = client.get("$supabaseUrl/rest/v1/user_reliefs") {
@@ -1608,13 +1644,27 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Fetch user_reliefs failed: ${response.bodyAsText()}")
         return response.body()
     }
-    suspend fun upsertReliefToPool(accessToken: String, label: String, category: String? = null): UserReliefRow {
+    /**
+     * Adds one relief to the user's pool. [iconKey] / [isAutomatable] /
+     * [isAutomated] are carried by library adds, which pass the template row's
+     * own metadata straight through; a custom add leaves them null so the
+     * column defaults apply.
+     */
+    suspend fun upsertReliefToPool(
+        accessToken: String,
+        label: String,
+        category: String? = null,
+        iconKey: String? = null,
+        isAutomatable: Boolean? = null,
+        isAutomated: Boolean? = null
+    ): UserReliefRow {
         val response = client.post("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             header("Prefer", "return=representation,resolution=merge-duplicates")
             parameter("on_conflict", "user_id,label")
             header(HttpHeaders.Accept, "application/vnd.pgrst.object+json")
-            contentType(ContentType.Application.Json); setBody(UserReliefInsert(label, category))
+            contentType(ContentType.Application.Json)
+            setBody(UserReliefInsert(label, category, iconKey, isAutomatable, isAutomated))
         }
         if (!response.status.isSuccess()) error("Upsert user_reliefs failed: ${response.bodyAsText()}")
         return response.body()

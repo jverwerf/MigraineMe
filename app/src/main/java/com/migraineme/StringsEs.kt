@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3522 entries.
+ * 3523 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -1183,6 +1183,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "From AI setup questionnaire" to "Del cuestionario con IA",
     "From calendar" to "Del calendario",
     "From date" to "Desde",
+    "From library" to "Biblioteca",
     "From what you told us" to "De lo que nos dijiste",
     "From your calendar" to "De tu calendario",
     "From your full history" to "De todo tu historial",

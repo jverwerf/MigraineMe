@@ -1956,6 +1956,28 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             }
                         }
 
+                        // Library = the template rows this pool is missing. The
+                        // seeder stocks a new account from relief_templates once
+                        // at signup, so a template added later (the Device rows:
+                        // CEFALY, Nerivio, Apollo Neuro, …) never reaches an
+                        // existing user. Matched on label, case-insensitively,
+                        // the same way the template inserts guard themselves.
+                        val library by reliefVm.library.collectAsState()
+                        val libraryItems = remember(library, pool) {
+                            val owned = pool.map { it.label.lowercase() }.toSet()
+                            library.filter { it.label.lowercase() !in owned }
+                                .map { tpl ->
+                                    PoolItem(
+                                        id = "template:${tpl.label}",
+                                        label = tpl.label,
+                                        iconKey = tpl.iconKey,
+                                        category = tpl.category,
+                                        isAutomatable = tpl.isAutomatable,
+                                        isAutomated = tpl.isAutomated
+                                    )
+                                }
+                        }
+
                         ManagePoolScreen(
                             navController = nav,
                             config = PoolConfig(
@@ -1974,6 +1996,12 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                 pickerIcons = ReliefIcons.ALL_ICONS.map { PickerIconEntry(it.key, it.label, it.icon) },
                                 onAdd = { label, category, _ ->
                                     authState.accessToken?.let { reliefVm.addNewToPool(it, label, category) }
+                                },
+                                libraryItems = libraryItems,
+                                onAddFromLibrary = { item ->
+                                    val token = authState.accessToken ?: return@PoolConfig
+                                    val tpl = library.find { it.label == item.label } ?: return@PoolConfig
+                                    reliefVm.addFromLibrary(token, tpl)
                                 },
                                 onDelete = { id -> authState.accessToken?.let { reliefVm.removeFromPool(it, id) } },
                                 onToggleFavorite = { id, starred ->

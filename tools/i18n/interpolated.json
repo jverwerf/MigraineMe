@@ -324,6 +324,10 @@
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
+    "site": "app/src/main/java/com/migraineme/ManagePoolScreen.kt:180",
+    "line": "            snackbarHostState.showSnackbar(tSync(\"Failed to add: %1\\$s\", msg))"
+  },
+  {
     "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:215",
     "line": "                        t(\"Your predicted period date gets a single trigger. The risk curve controls \") +"
   },
