@@ -122,6 +122,29 @@ internal fun BrainyNavCard(
     }
 }
 
+/** Stat tile matching the Accuracy detail's first card, reused in its nav-card preview. */
+@Composable
+internal fun AccuracyStatTile(value: String, color: Color, label: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.04f)),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(value, color = color,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(2.dp))
+            Text(label, color = AppTheme.SubtleTextColor,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium))
+        }
+    }
+}
+
 /** One line of a nav-card preview: label + compact stat, same row style as RecommendationsCard. */
 internal data class CardPreviewEntry(val label: String, val stat: String, val category: String? = null)
 
@@ -485,10 +508,21 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     val accuracyPreview: (@Composable ColumnScope.() -> Unit)? =
         gaugeAccuracy?.takeIf { it.totalDays > 0 }?.let { ga ->
             {
-                CardPreviewRows(listOf(
-                    CardPreviewEntry(tSync("Attacks caught"), "${ga.sensitivityPct}%"),
-                    CardPreviewEntry(tSync("False alarms"), "${ga.falseAlarmRatePct}%"),
-                ))
+                // Same two stat tiles as the Accuracy detail's first card.
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AccuracyStatTile(
+                        value = "${ga.sensitivityPct}%",
+                        color = Color(0xFF81C784),
+                        label = t("Caught — migraines that followed a warning"),
+                        modifier = Modifier.weight(1f),
+                    )
+                    AccuracyStatTile(
+                        value = "${ga.falseAlarmRatePct}%",
+                        color = if (ga.falseAlarmRatePct > 30) Color(0xFFE57373) else Color(0xFFFFB74D),
+                        label = t("False alarms — warnings with no migraine"),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     val patternPool = triggerCorrelations + metricCorrelations
