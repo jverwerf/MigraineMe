@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -126,7 +127,14 @@ private fun ConfidenceDotsGreen(pValue: Float) {
 
 @Composable
 internal fun WellDoneDirectRow(stat: EdgeFunctionsService.CorrelationStat) {
-    Column(Modifier.padding(vertical = 4.dp)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             BrainyRowIcon(stat.factorName)
             Text(prettyLabel(stat.factorName), color = Color.White,
@@ -141,7 +149,14 @@ internal fun WellDoneDirectRow(stat: EdgeFunctionsService.CorrelationStat) {
 
 @Composable
 internal fun WellDoneChainRow(stat: EdgeFunctionsService.CorrelationStat) {
-    Column(Modifier.padding(vertical = 4.dp)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
         // A chain is two things, so it carries two icons: the habit that
         // drives it, then the metric it keeps steady.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
