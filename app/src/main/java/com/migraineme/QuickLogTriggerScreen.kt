@@ -63,8 +63,12 @@ fun QuickLogTriggerScreen(
     val rawPool by triggerVm.pool.collectAsState()
     val frequent by triggerVm.frequent.collectAsState()
 
-    // Hide triggers with prediction = NONE
-    val pool = remember(rawPool) { rawPool.filter { it.predictionValue?.uppercase() != "NONE" } }
+    // Hide triggers with prediction = NONE, and the system-owned
+    // menstruation_predicted row (logging it creates a phantom prediction).
+    val pool = remember(rawPool) {
+        rawPool.filter { it.predictionValue?.uppercase() != "NONE" }
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+    }
     
     // Load trigger options
     LaunchedEffect(authState.accessToken) {

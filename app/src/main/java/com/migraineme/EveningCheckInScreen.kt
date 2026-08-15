@@ -125,7 +125,11 @@ fun EveningCheckInScreen(
 
     val triggerFavIds = remember(triggerFreq) { triggerFreq.map { it.triggerId }.toSet() }
     val triggerItems = remember(triggerPool, triggerFavIds) {
-        triggerPool.map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
+        triggerPool
+            // System pool row backing the prediction curve — tapping it would
+            // log a phantom prediction, never a period. Not user-loggable.
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+            .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
     }
     val prodromeFavIds = remember(prodromeFreq) { prodromeFreq.map { it.prodromeId }.toSet() }
     val prodromeItems = remember(prodromePool, prodromeFavIds) {
@@ -530,6 +534,9 @@ fun EveningCheckInScreen(
                         }
                     }
                 }
+                // Every sibling write path recalcs the gauge after logging;
+                // the check-in was the one surface that didn't.
+                runCatching { EdgeFunctionsService().triggerRecalcRiskScores(activityCtx.applicationContext) }
                 saved = true
                 kotlinx.coroutines.delay(1200)
                 navController.popBackStack()
@@ -1929,7 +1936,8 @@ private val SYNONYMS: Map<String, List<String>> = mapOf(
     "sound sensitivity" to listOf("sensitive to sound", "phonophobia"),
     "aura" to listOf("visual aura", "zigzag", "flashing"),
     "caffeine" to listOf("coffee", "espresso", "energy drink"),
-    "menstruation" to listOf("period", "menstrual", "cycle"),
+    // No bare "cycle": substring-matches "cycled to work" / "sleep cycle".
+    "menstruation" to listOf("period", "menstrual", "menstrual cycle"),
     "dizziness" to listOf("dizzy", "vertigo", "lightheaded"),
     "ibuprofen" to listOf("advil", "motrin", "nurofen"),
     "paracetamol" to listOf("acetaminophen", "tylenol", "panadol"),

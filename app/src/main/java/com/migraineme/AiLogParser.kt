@@ -439,7 +439,9 @@ private val EXPANDED_SYNONYMS: Map<String, List<String>> = mapOf(
     "thunderstorm" to listOf("thunder", "lightning", "thunderstorm", "thunderstorms", "electrical storm", "storm"),
     "neck stiffness" to listOf("stiff neck", "neck pain", "tight neck", "neck tension"),
     "caffeine" to listOf("coffee", "espresso", "energy drink", "tea", "too much coffee", "latte", "cappuccino"),
-    "menstruation" to listOf("period", "menstrual", "cycle", "time of the month", "pms"),
+    // No bare "cycle": it substring-matches "cycled to work" / "sleep cycle"
+    // and silently logs a period.
+    "menstruation" to listOf("period", "menstrual", "menstrual cycle", "time of the month", "pms"),
     "processed food" to listOf("junk food", "fast food", "takeaway", "takeout", "pizza", "burger", "fried food"),
     "cheese" to listOf("cheese", "aged cheese", "cheddar", "brie", "camembert"),
     "chocolate" to listOf("chocolate", "cocoa"),

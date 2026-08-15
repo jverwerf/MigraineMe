@@ -2,6 +2,8 @@ package com.migraineme
 
 import android.content.Context
 import android.util.Log
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.time.LocalDate
 
 /**
@@ -42,25 +44,38 @@ object PredictedMenstruationHelper {
                 LocalDate.now().plusDays(settings.avgCycleLength.toLong())
             }
 
-            // Split existing predicted rows into "already on target date" vs "wrong date".
-            // The DB trigger `trigger_update_menstruation_prediction` may have already
-            // created a predicted row with a non-system source — filtering by source
-            // misses it and the subsequent insert collides on (user_id, start_at, type).
+            // Mirror the DB trigger's canonical-row logic: one predicted row,
+            // source='system', on the target date; every other predicted row is
+            // retired with active=false (DELETE is blocked server-side by
+            // prevent_predicted_trigger_deletion).
             val targetDayPrefix = predictedDate.toString()
             val allPredicted = allTriggers.filter { it.type == "menstruation_predicted" }
-            val onTarget = allPredicted.any { it.startAt.startsWith(targetDayPrefix) }
-            val wrongDate = allPredicted.filter { !it.startAt.startsWith(targetDayPrefix) }
+            val onTarget = allPredicted.firstOrNull { it.startAt.startsWith(targetDayPrefix) }
+            val wrongDate = allPredicted.filter { !it.startAt.startsWith(targetDayPrefix) && it.active }
 
             for (old in wrongDate) {
                 try {
-                    db.deleteTrigger(accessToken, old.id)
+                    db.patchTrigger(accessToken, old.id, buildJsonObject { put("active", false) })
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed to delete stale predicted trigger ${old.id}: ${e.message}")
+                    Log.w(TAG, "Failed to retire stale predicted trigger ${old.id}: ${e.message}")
                 }
             }
 
-            if (onTarget) {
-                Log.d(TAG, "Predicted trigger already present for $predictedDate, skipping insert")
+            if (onTarget != null) {
+                // Promote whatever sits on the target date to the canonical
+                // system row (it may be a legacy 'manual' or retired one).
+                if (onTarget.source != "system" || !onTarget.active) {
+                    try {
+                        db.patchTrigger(accessToken, onTarget.id, buildJsonObject {
+                            put("source", "system")
+                            put("active", true)
+                            put("notes", "Predicted menstruation")
+                        })
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to promote predicted trigger ${onTarget.id}: ${e.message}")
+                    }
+                }
+                Log.d(TAG, "Predicted trigger already present for $predictedDate")
             } else {
                 try {
                     db.insertTrigger(
@@ -68,7 +83,8 @@ object PredictedMenstruationHelper {
                         migraineId = null,
                         type = "menstruation_predicted",
                         startAt = "${predictedDate}T09:00:00Z",
-                        notes = "Predicted menstruation"
+                        notes = "Predicted menstruation",
+                        source = "system"
                     )
                     Log.d(TAG, "Created predicted trigger for $predictedDate")
                 } catch (e: Exception) {
@@ -91,16 +107,18 @@ object PredictedMenstruationHelper {
 
             val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
             val allTriggers = db.getAllTriggers(accessToken)
+            // Any source: legacy rows may carry 'manual'. DELETE is blocked by
+            // the server guard, so retire with active=false instead.
             val predicted = allTriggers.filter { trigger ->
-                trigger.type == "menstruation_predicted" && trigger.source == "system"
+                trigger.type == "menstruation_predicted" && trigger.active
             }
 
             for (trigger in predicted) {
-                try { db.deleteTrigger(accessToken, trigger.id) }
-                catch (e: Exception) { Log.w(TAG, "Failed to delete predicted trigger ${trigger.id}: ${e.message}") }
+                try { db.patchTrigger(accessToken, trigger.id, buildJsonObject { put("active", false) }) }
+                catch (e: Exception) { Log.w(TAG, "Failed to retire predicted trigger ${trigger.id}: ${e.message}") }
             }
 
-            Log.d(TAG, "Deleted ${predicted.size} predicted trigger(s)")
+            Log.d(TAG, "Retired ${predicted.size} predicted trigger(s)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete predicted triggers", e)
         }

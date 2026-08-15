@@ -102,7 +102,7 @@ fun QuickLogStrip(
             triggerPool.find { it.id == pref.triggerId }?.let {
                 QuickLogFavorite(it.label, it.iconKey, QuickLogCategory.TRIGGER)
             }
-        }
+        }.filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
     }
     val medicineFavs = remember(medicineFreq, medicinePool) {
         medicineFreq.mapNotNull { pref ->

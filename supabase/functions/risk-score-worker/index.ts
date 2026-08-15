@@ -369,6 +369,7 @@ async function calculateRiskForUser(
     .from("triggers")
     .select("type, start_at")
     .eq("user_id", userId)
+    .eq("active", true) // retired menstruation_predicted rows must not score
     .gte("start_at", cutoffStart)
     .lte("start_at", cutoffEnd)
     .order("start_at", { ascending: false });

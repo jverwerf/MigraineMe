@@ -53,7 +53,10 @@ fun TriggersScreen(
     // so system-detected anomalies are surfaced. Collapse display_group items
     // into a single entry so user sees "Poor sleep" instead of 8 individual sleep metrics
     val pool = remember(rawPool) {
-        val visible = rawPool
+        // menstruation_predicted is the system row backing the prediction
+        // curve, not a loggable trigger; attributing a migraine to it would
+        // insert a phantom prediction. The actual "Menstruation" pill stays.
+        val visible = rawPool.filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
         val standalone = visible.filter { it.displayGroup == null }
         val grouped = visible.filter { it.displayGroup != null }
             .groupBy { it.displayGroup!! }

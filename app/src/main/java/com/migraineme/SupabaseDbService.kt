@@ -507,10 +507,11 @@ class SupabaseDbService(
         migraineId: String?,
         type: String?,
         startAt: String?,
-        notes: String?
+        notes: String?,
+        source: String? = "manual"
     ): TriggerRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
-        val payload = TriggerInsert(type, safeStart, notes, migraineId)
+        val payload = TriggerInsert(type, safeStart, notes, migraineId, source)
         // Try normal insert first
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -625,6 +626,20 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Update trigger failed: ${response.bodyAsText()}")
         return response.body()
     }
+    /**
+     * PATCH a trigger row. menstruation_predicted rows cannot be DELETEd
+     * (server-side guard prevent_predicted_trigger_deletion), so retirement
+     * is active=false — the same convention the backend uses.
+     */
+    suspend fun patchTrigger(accessToken: String, id: String, fields: kotlinx.serialization.json.JsonObject) {
+        val response = client.patch("$supabaseUrl/rest/v1/triggers") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("id", "eq.$id")
+            contentType(ContentType.Application.Json); setBody(fields)
+        }
+        if (!response.status.isSuccess()) error("Patch trigger failed: ${response.bodyAsText()}")
+    }
+
     suspend fun deleteTrigger(accessToken: String, id: String) {
         val response = client.delete("$supabaseUrl/rest/v1/triggers") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
