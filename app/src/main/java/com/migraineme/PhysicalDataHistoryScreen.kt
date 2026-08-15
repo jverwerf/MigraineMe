@@ -283,7 +283,11 @@ private suspend fun fetchPhysicalEntriesForDate(
         TableDef("spo2_daily", "SpO2", "date,source,value_pct"),
         TableDef("skin_temp_daily", "Skin Temp", "date,source,value_celsius"),
         TableDef("respiratory_rate_daily", "Resp. Rate", "date,source,value_bpm"),
-        TableDef("stress_index_daily", "Stress", "date,source,value"),
+        // stress_index_daily is derived server-side from HRV/RHR baselines and has
+        // no `source` column — selecting one 400s the whole request and the Stress
+        // row silently disappears. Matches MentalDataHistoryScreen and the iOS
+        // `noSourceTables` set in MonitorDataHistory.swift.
+        TableDef("stress_index_daily", "Stress", "date,value"),
         TableDef("time_in_high_hr_zones_daily", "High HR Zones", "date,source,value_minutes"),
         TableDef("steps_daily", "Steps", "date,source,value_count")
     )
