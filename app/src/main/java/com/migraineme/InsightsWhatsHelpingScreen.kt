@@ -78,15 +78,11 @@ fun InsightsWhatsHelpingScreen(
 
             if (chains.isNotEmpty()) {
                 BrainyWatermarkCard(resId = R.drawable.brainy_gardener, flipWatermark = true) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        BrainyBlobIcon(R.drawable.brainy_runner_small)
-                        Spacer(Modifier.width(10.dp))
-                        Column {
-                            Text(t("What Drives It"), color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(t("What makes those habits happen"),
-                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                        }
+                    Column {
+                        Text(t("What Drives It"), color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("What makes those habits happen"),
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
                     Spacer(Modifier.height(8.dp))
                     chains.take(10).forEach { stat -> WellDoneChainRow(stat) }
