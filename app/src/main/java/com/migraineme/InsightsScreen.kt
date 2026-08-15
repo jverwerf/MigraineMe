@@ -1627,6 +1627,87 @@ internal fun CorrelationRow(stat: EdgeFunctionsService.CorrelationStat) {
     }
 }
 
+// ── Same-day response card (intraday engine) ──────────────────
+/**
+ * Every row shown has already passed the engine's gate (>= 5 occurrences with
+ * a pain reading on both sides, |median effect| >= 1.0 pain points, >= 60%
+ * sign consistency), so this view never decides what is worth saying.
+ * Aggravator rows show how pain ROSE in the hours after the event; easer rows
+ * how it FELL. An easer whose pain consistently rose arrives flagged
+ * caution = true and renders in amber — flagged, never hidden.
+ */
+@Composable
+internal fun IntradayResponseCard(
+    rows: List<EdgeFunctionsService.IntradayResponseStat>,
+    easers: Boolean,
+) {
+    if (rows.isEmpty()) return
+    fun horizonText(minutes: Int): String = when {
+        minutes % 60 == 0 -> "~${minutes / 60}h"
+        else -> "~${minutes}m"
+    }
+    val amber = Color(0xFFFFB74D)
+    val red = Color(0xFFE57373)
+    val green = Color(0xFF81C784)
+    val sorted = remember(rows) { rows.sortedByDescending { kotlin.math.abs(it.medianEffect) } }
+    val top = sorted.take(4)
+    BaseCard {
+        Text(t("Same-day response"), color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+        Text(
+            if (easers) t("How your pain moved in the hours after these treatments")
+            else t("How your pain moved in the hours after these were logged"),
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(6.dp))
+        top.forEach { row ->
+            val rising = row.medianEffect > 0f
+            val color = when {
+                row.caution -> amber
+                rising -> red
+                else -> green
+            }
+            val effectText = (if (rising) "+" else "−") +
+                String.format("%.1f", kotlin.math.abs(row.medianEffect))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White.copy(alpha = 0.04f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BrainyRowIcon(row.label, size = 18.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(prettyLabel(row.label), color = Color.White,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (row.caution) {
+                        Text(t("pain rose after this"), color = amber,
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                Spacer(Modifier.width(8.dp))
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(t("%1\$s within %2\$s", effectText, horizonText(row.horizonMinutes)),
+                        color = color,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    Spacer(Modifier.height(2.dp))
+                    ConfidenceDots(row.pValue, color)
+                }
+            }
+        }
+        if (sorted.size > top.size) {
+            Text(t("+%s more", sorted.size - top.size), color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(t("Compared with your pain entries in the 3 hours before each log."),
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.labelSmall)
+    }
+}
+
 /** Compact correlation row — name + lag + lift only, no insight text */
 @Composable
 private fun CorrelationRowCompact(stat: EdgeFunctionsService.CorrelationStat) {

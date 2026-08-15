@@ -2449,6 +2449,45 @@ class EdgeFunctionsService {
         }
     }
 
+    /**
+     * Intraday response: how pain moved in the hours after an event was logged.
+     * A row only exists when the engine's gate passed (>= 5 occurrences with a
+     * pain reading on both sides, |median| >= 1.0, >= 60% sign consistency),
+     * so anything returned here is safe to render as-is. Easers that
+     * consistently RAISED pain arrive flagged caution = true, never hidden.
+     */
+    @Serializable
+    data class IntradayResponseStat(
+        @SerialName("event_kind") val eventKind: String,   // "aggravator" | "easer"
+        val label: String,
+        @SerialName("median_effect") val medianEffect: Float,
+        @SerialName("horizon_minutes") val horizonMinutes: Int,
+        val n: Int,
+        val consistency: Float,
+        val caution: Boolean = false,
+        @SerialName("p_value") val pValue: Float,
+    )
+
+    suspend fun getIntradayResponse(context: Context): List<IntradayResponseStat> {
+        val appCtx = context.applicationContext
+        val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
+        val client = buildClient()
+        return try {
+            val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/intraday_response_stats" +
+                "?select=event_kind,label,median_effect,horizon_minutes,n,consistency,caution,p_value"
+            val r = client.get(url) {
+                header(HttpHeaders.Authorization, "Bearer $supaAccessToken")
+                header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+            }
+            if (r.status.value in 200..299) r.body() else emptyList()
+        } catch (e: Exception) {
+            println("getIntradayResponse failed: ${e.message}")
+            emptyList()
+        } finally {
+            client.close()
+        }
+    }
+
     suspend fun getSymptomSegments(context: Context, limit: Int = 200): List<CorrelationStat> {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()

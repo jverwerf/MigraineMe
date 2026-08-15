@@ -237,6 +237,10 @@ class InsightsViewModel : ViewModel() {
     private val _treatmentTiming = MutableStateFlow<List<EdgeFunctionsService.TreatmentTimingStat>>(emptyList())
     val treatmentTiming: StateFlow<List<EdgeFunctionsService.TreatmentTimingStat>> = _treatmentTiming
 
+    /** Same-day pain response after logged events; empty unless the engine's gate passed. */
+    private val _intradayResponse = MutableStateFlow<List<EdgeFunctionsService.IntradayResponseStat>>(emptyList())
+    val intradayResponse: StateFlow<List<EdgeFunctionsService.IntradayResponseStat>> = _intradayResponse
+
     /** Where the pain starts / spreads. Null until enough timelined attacks. */
     private val _painMigration = MutableStateFlow<EdgeFunctionsService.PainMigrationStat?>(null)
     val painMigration: StateFlow<EdgeFunctionsService.PainMigrationStat?> = _painMigration
@@ -2162,6 +2166,7 @@ class InsightsViewModel : ViewModel() {
                 _symptomOutcomes.value  = withContext(Dispatchers.IO) { edge.getSymptomOutcomes(context) }
                 _symptomSegments.value  = withContext(Dispatchers.IO) { edge.getSymptomSegments(context) }
                 _treatmentTiming.value  = withContext(Dispatchers.IO) { edge.getTreatmentTiming(context) }
+                _intradayResponse.value = withContext(Dispatchers.IO) { edge.getIntradayResponse(context) }
                 _painMigration.value     = withContext(Dispatchers.IO) { edge.getPainMigration(context) }
                 _severityPredictors.value = withContext(Dispatchers.IO) { edge.getSeverityPredictors(context) }
                 _auraInsights.value     = withContext(Dispatchers.IO) { edge.getAuraInsights(context) }
@@ -2174,6 +2179,7 @@ class InsightsViewModel : ViewModel() {
                 _symptomOutcomes.value = emptyList()
                 _symptomSegments.value = emptyList()
                 _treatmentTiming.value = emptyList()
+                _intradayResponse.value = emptyList()
                 _painMigration.value = null
                 _severityPredictors.value = emptyList()
                 _auraInsights.value = emptyList()

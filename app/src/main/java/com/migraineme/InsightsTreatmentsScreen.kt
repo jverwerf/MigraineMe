@@ -32,6 +32,10 @@ fun InsightsTreatmentsScreen(
     val correlationsLoading by vm.correlationsLoading.collectAsState()
     val symptomSegments by vm.symptomSegments.collectAsState()
     val treatmentTiming by vm.treatmentTiming.collectAsState()
+    val intradayResponse by vm.intradayResponse.collectAsState()
+    val intradayEasers = remember(intradayResponse) {
+        intradayResponse.filter { it.eventKind == "easer" }
+    }
 
     // Treatments use self-reported relief — relax p-value filter, only require lift > 1.2
     val treatmentCorrelations = remember(correlationStats) {
@@ -63,6 +67,13 @@ fun InsightsTreatmentsScreen(
                 TreatmentEffectivenessCard(treatmentCorrelations, treatmentInteractionCorrelations,
                     medicineCategories = medicineCategories, reliefIconKeys = reliefIconKeys,
                     watermarkOnLast = symptomSegments.isEmpty())
+            }
+
+            // Same-day response: how pain moved in the hours after these
+            // treatments. Cautions (pain consistently ROSE) render in amber.
+            // Hidden entirely when the engine wrote no easer rows.
+            if (intradayEasers.isNotEmpty()) {
+                IntradayResponseCard(intradayEasers, easers = true)
             }
 
             // Per-treatment symptom segment comparison (Phase 2c)

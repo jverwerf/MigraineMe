@@ -30,6 +30,10 @@ fun InsightsPatternsScreen(
     val triggerIconKeys by vm.triggerIconKeys.collectAsState()
     val correlationsLoading by vm.correlationsLoading.collectAsState()
     val symptomOutcomes by vm.symptomOutcomes.collectAsState()
+    val intradayResponse by vm.intradayResponse.collectAsState()
+    val intradayAggravators = remember(intradayResponse) {
+        intradayResponse.filter { it.eventKind == "aggravator" }
+    }
 
     val significantCorrelations = remember(correlationStats) {
         correlationStats.filter { it.isSignificant() }
@@ -66,6 +70,12 @@ fun InsightsPatternsScreen(
             if (allPatterns.isNotEmpty() || interactionCorrelations.isNotEmpty()) {
                 TopPatternsCard(triggerCorrelations, metricCorrelations, interactionCorrelations, triggerIconKeys,
                     watermarkOnLast = symptomOutcomes.isEmpty())
+            }
+
+            // Same-day response: how pain moved in the hours after these events.
+            // Hidden entirely when the engine wrote no aggravator rows.
+            if (intradayAggravators.isNotEmpty()) {
+                IntradayResponseCard(intradayAggravators, easers = false)
             }
 
             // Per-trigger symptom profile (Phase 2b)
