@@ -190,7 +190,9 @@ fun EveningCheckInScreen(
             val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
             val rows = withContext(Dispatchers.IO) { db.getTreatmentRegimens(token) }
             activeRegimens.clear()
-            activeRegimens.addAll(rows.filter { it.stopDate == null })
+            // Devices don't get a side-effects page (user call, 15 Aug) —
+            // side-effect check-ins are for drugs/supplements/lifestyle only.
+            activeRegimens.addAll(rows.filter { it.stopDate == null && it.kind != "device" })
             openMigraine = withContext(Dispatchers.IO) { db.getOpenMigraine(token) }
             var tsePool = withContext(Dispatchers.IO) {
                 runCatching { db.getUserTreatmentSideEffects(token) }.getOrDefault(emptyList())
