@@ -33,6 +33,7 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 
 // Same chip palette as the Recommendations detail categories.
+private val KIND_ORDER = listOf("trigger", "prodrome", "medicine", "symptom", "relief")
 private val KIND_CHIP_COLORS = mapOf(
     "trigger" to Color(0xFFFFB74D),
     "prodrome" to Color(0xFFCE93D8),
@@ -60,12 +61,6 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
     val filtered = remember(changed, activeKinds) {
         changed.filter { activeKinds.isEmpty() || activeKinds.contains(it.kind) }
     }
-    val unwanted = remember(filtered) {
-        filtered.filter { it.kind != "relief" }.sortedByDescending { abs(it.delta) }
-    }
-    val helpful = remember(filtered) {
-        filtered.filter { it.kind == "relief" }.sortedByDescending { abs(it.delta) }
-    }
     val flatSorted = remember(filtered, sortMode) {
         when (sortMode) {
             "Rising" -> filtered.sortedByDescending { it.delta }
@@ -87,11 +82,18 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             // Your migraines: attack-level shifts over the same windows.
             // Missing sides count as zero; both-zero rows never arrive here.
             if (attacks.isNotEmpty()) {
-                BrainyWatermarkCard(resId = R.drawable.brainy_migraines) {
-                    Text(t("Your migraines"), color = Color.White,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall)
+                BaseCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BrainyBlobIcon(R.drawable.brainy_migraines_small)
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(t("Your migraines"), color = Color.White,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
                     attacks.forEach { t -> AttackTrendRow(t) }
                 }
             }
@@ -132,20 +134,23 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
                     }
                     Spacer(Modifier.height(8.dp))
                     if (sortMode == "Biggest change") {
-                        if (unwanted.isNotEmpty()) {
-                            Text(t("Triggers, prodromes, medicines & symptoms"), color = TrendAmber,
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                            unwanted.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
-                            if (medRising) {
-                                Text(t("Acute medication use rising — worth an overuse check."),
-                                    color = TrendAmber, style = MaterialTheme.typography.labelSmall)
+                        // One section per kind, like the Recommendations detail.
+                        var first = true
+                        KIND_ORDER.forEach { kind ->
+                            val rows = filtered.filter { it.kind == kind }
+                                .sortedByDescending { abs(it.delta) }
+                            if (rows.isNotEmpty()) {
+                                if (!first) Spacer(Modifier.height(6.dp))
+                                first = false
+                                Text(t(KIND_CHIP_LABELS[kind] ?: kind),
+                                    color = KIND_CHIP_COLORS[kind] ?: AppTheme.AccentPurple,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                                rows.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
+                                if (kind == "medicine" && medRising) {
+                                    Text(t("Acute medication use rising — worth an overuse check."),
+                                        color = TrendAmber, style = MaterialTheme.typography.labelSmall)
+                                }
                             }
-                        }
-                        if (helpful.isNotEmpty()) {
-                            if (unwanted.isNotEmpty()) Spacer(Modifier.height(6.dp))
-                            Text(t("Reliefs"), color = TrendGreen,
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                            helpful.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
                         }
                     } else {
                         flatSorted.forEach { t -> WhatChangedTrendRow(t, maxDelta) }
