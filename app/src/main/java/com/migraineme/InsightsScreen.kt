@@ -678,7 +678,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         onUpgrade = { navController.navigate(Routes.PAYWALL) }
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            RecommendationsCard(aiRecs, dismissedRecKeys) {
+                            val recsContext = LocalContext.current
+                            RecommendationsCard(
+                                aiRecs, dismissedRecKeys,
+                                onDismiss = { category, name, evidence ->
+                                    vm.dismissRecommendation(recsContext, category, name, evidence)
+                                }
+                            ) {
                                 navController.navigate(Routes.INSIGHTS_RECOMMENDATIONS)
                             }
                             IconButton(

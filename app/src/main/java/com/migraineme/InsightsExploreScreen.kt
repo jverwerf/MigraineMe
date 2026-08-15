@@ -407,7 +407,12 @@ fun buildRecommendationSections(recs: InsightsViewModel.AiRecommendations, dismi
 }
 
 @Composable
-fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys: Set<String>, onClick: () -> Unit = {}) {
+fun RecommendationsCard(
+    recs: InsightsViewModel.AiRecommendations,
+    dismissedKeys: Set<String>,
+    onDismiss: ((category: String, name: String, evidence: String) -> Unit)? = null,
+    onClick: () -> Unit = {},
+) {
     val sections = buildRecommendationSections(recs, dismissedKeys)
 
     BrainyWatermarkCard(
@@ -435,28 +440,45 @@ fun RecommendationsCard(recs: InsightsViewModel.AiRecommendations, dismissedKeys
         val extra = (flat.size - previewRows.size).coerceAtLeast(0)
         previewRows.forEachIndexed { j, (section, row) ->
             if (j > 0) Spacer(Modifier.height(6.dp))
-            Column(
+            Row(
                 Modifier.fillMaxWidth()
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
                     .background(Color.White.copy(alpha = 0.04f))
-                    .padding(10.dp)
+                    .padding(10.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    BrainyRowIcon(row.name, size = 18.dp)
-                    Text(prettyLabel(row.name), color = Color.White,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f))
-                    Spacer(Modifier.width(8.dp))
-                    Icon(section.icon, contentDescription = null,
-                        tint = section.color, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(t(section.title), color = section.color,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BrainyRowIcon(row.name, size = 18.dp)
+                        Text(prettyLabel(row.name), color = Color.White,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f))
+                        Spacer(Modifier.width(8.dp))
+                        Icon(section.icon, contentDescription = null,
+                            tint = section.color, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(t(section.title), color = section.color,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                    }
+                    Spacer(Modifier.height(3.dp))
+                    Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium,
+                        maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
-                Spacer(Modifier.height(3.dp))
-                Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium,
-                    maxLines = 3, overflow = TextOverflow.Ellipsis)
+                if (onDismiss != null) {
+                    Spacer(Modifier.width(6.dp))
+                    IconButton(
+                        onClick = { onDismiss(row.category, row.name, row.evidence) },
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Close,
+                            contentDescription = t("Dismiss recommendation"),
+                            tint = AppTheme.SubtleTextColor,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
             }
         }
         if (extra > 0) {
