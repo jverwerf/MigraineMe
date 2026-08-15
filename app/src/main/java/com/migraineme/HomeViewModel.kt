@@ -82,9 +82,16 @@ class HomeViewModel : ViewModel() {
      * Read pre-computed score from risk_score_live.
      * If missing or stale >2h, trigger edge function then re-read.
      */
-    fun loadRisk(context: Context) {
+    /**
+     * @param showSpinner false for a background refresh that must not blank the
+     * screen. Home renders a full-screen spinner while [HomeUiState.loading] is
+     * set, which tears the whole tree down — including QuickLogStrip and the
+     * "Logged: …" confirmation it had just raised. A quick log therefore looked
+     * like it had done nothing at all, and testers logged the same thing again.
+     */
+    fun loadRisk(context: Context, showSpinner: Boolean = true) {
         viewModelScope.launch {
-            _state.value = HomeUiState(loading = true)
+            if (showSpinner) _state.value = HomeUiState(loading = true)
 
             try {
                 val result = withContext(Dispatchers.IO) { loadFromLiveScore(context) }

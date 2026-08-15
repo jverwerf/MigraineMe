@@ -229,7 +229,7 @@ fun HomeScreenRoot(
                     reliefVm = reliefVm,
                     prodromeVm = prodromeVm,
                     symptomVm = symptomVm,
-                    onLogComplete = { vm.loadRisk(appCtx) }
+                    onLogComplete = { vm.loadRisk(appCtx, showSpinner = false) }
                 )
 
                 Box(Modifier.onGloballyPositioned { riskCardY = it.positionInParent().y.toInt() }) {

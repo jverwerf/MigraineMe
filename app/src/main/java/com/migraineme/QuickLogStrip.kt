@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
@@ -280,6 +281,12 @@ fun QuickLogStrip(
                     QuickLogCategory.entries.forEach { cat ->
                         QuickLogButton(
                             category = cat,
+                            // A tile with no starred favourites writes the row
+                            // straight from the tap, with no sheet in between to
+                            // absorb a second tap. Locked for the round trip so
+                            // an impatient double-tap can't log twice — the
+                            // favourites sheet already guards itself this way.
+                            enabled = !saving,
                             onClick = {
                                 val favs = favsFor(cat)
                                 if (favs.isEmpty()) {
@@ -389,13 +396,16 @@ fun QuickLogStrip(
 @Composable
 private fun QuickLogButton(
     category: QuickLogCategory,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .width(58.dp)
+            .alpha(if (enabled) 1f else 0.4f)
             .clickable(
+                enabled = enabled,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
