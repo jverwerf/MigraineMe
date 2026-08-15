@@ -136,7 +136,10 @@ class SupabaseMenstruationService(private val context: Context) {
     suspend fun getMenstruationHistory(accessToken: String, limitDays: Int = 365): List<MenstruationPeriod> {
         val userId = JwtUtils.extractUserIdFromAccessToken(accessToken) ?: return emptyList()
         val cutoffIso = "${LocalDate.now().minusDays(limitDays.toLong())}T00:00:00Z"
-        val url = "$SUPABASE_URL/rest/v1/triggers?user_id=eq.$userId&type=eq.menstruation&source=in.(manual,health_connect)&start_at=gte.$cutoffIso&order=start_at.asc&select=start_at,notes,source"
+        // Both spellings are real period logs: lowercase "menstruation" from the
+        // tracker/health sync, capital-M "Menstruation" logged from the user's
+        // own trigger pool (wizard inserts the pool label verbatim).
+        val url = "$SUPABASE_URL/rest/v1/triggers?user_id=eq.$userId&type=in.(menstruation,Menstruation)&source=in.(manual,health_connect)&start_at=gte.$cutoffIso&order=start_at.asc&select=start_at,notes,source"
         val req = Request.Builder().url(url).get()
             .header("apikey", SUPABASE_ANON_KEY).header("Authorization", "Bearer $accessToken").build()
 

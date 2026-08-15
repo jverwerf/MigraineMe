@@ -163,8 +163,10 @@ object MenstruationTrackingHelper {
 
         val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         val day = lastDate.toString()
+        // Case-insensitive: a pool-logged period arrives as capital-M
+        // "Menstruation" and counts as a period log too.
         val alreadyLogged = db.getAllTriggers(accessToken).any { t ->
-            t.type == "menstruation" &&
+            t.type.equals("menstruation", ignoreCase = true) &&
                     (t.source ?: "manual") == "manual" &&
                     t.startAt.startsWith(day)
         }

@@ -27,8 +27,10 @@ object PredictedMenstruationHelper {
             val settings = menstruationService.getSettings(accessToken)
                 ?: MenstruationSettings(null, 28, true)
 
+            // Case-insensitive: a pool-logged period arrives as capital-M
+            // "Menstruation" and counts as a period log too.
             val lastPeriod = allTriggers
-                .filter { it.type == "menstruation" && it.source != "system" }
+                .filter { it.type.equals("menstruation", ignoreCase = true) && it.source != "system" }
                 .maxByOrNull { it.startAt }
 
             val predictedDate: LocalDate = if (lastPeriod != null) {

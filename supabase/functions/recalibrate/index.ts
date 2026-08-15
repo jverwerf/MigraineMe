@@ -435,7 +435,10 @@ serve(async (req: Request) => {
       .from("triggers")
       .select("start_at, migraine_id, source, notes")
       .eq("user_id", userId)
-      .eq("type", "menstruation")
+      // ilike with no wildcard = case-insensitive equality: periods exist as
+      // lowercase "menstruation" (tracker/health sync/auto-convert) AND
+      // capital-M "Menstruation" (logged from the user's own trigger pool).
+      .ilike("type", "menstruation")
       .eq("active", true);
     const menstrualEvents = notDemo(menstrualEventRows);
 

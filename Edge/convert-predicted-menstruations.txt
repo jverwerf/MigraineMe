@@ -80,6 +80,24 @@ async function resolveUserTimezone(
   return null;
 }
 
+// Deactivate a non-system prediction row this cron has finished with.
+// The DB trigger only rolls the source='system' row forward, so a manual-
+// source prediction would otherwise stay active and due forever. DELETE is
+// blocked by prevent_predicted_trigger_deletion, so deactivate instead.
+async function retireNonSystemPrediction(
+  supabase: ReturnType<typeof createClient>,
+  predicted: { id: string; source: string | null }
+): Promise<void> {
+  if (predicted.source === "system") return;
+  const { error } = await supabase
+    .from("triggers")
+    .update({ active: false })
+    .eq("id", predicted.id);
+  if (error) {
+    console.error(`[convert-predicted-menstruations] Failed to retire prediction ${predicted.id}:`, error.message);
+  }
+}
+
 serve(async (req) => {
   try {
     console.log("[convert-predicted-menstruations] start", {
@@ -150,14 +168,24 @@ serve(async (req) => {
 
         console.log(`[convert-predicted-menstruations] User ${userId}: It's 9:0${localTime.mm} AM! (${timezone})`);
 
-        // Find predicted trigger
+        // Find predicted trigger rows. App-generated predictions always carry
+        // the exact notes "Predicted menstruation", whether the DB trigger
+        // wrote them (source='system') or an app client wrote them (Android's
+        // PredictedMenstruationHelper inserts without a source, so the column
+        // default 'manual' applied — those predictions were invisible to the
+        // old .eq("source","system") filter and sat stale forever). Filtering
+        // by notes instead of source recognises both, while user-tapped pool
+        // logs of "menstruation_predicted" (e.g. notes "evening check-in")
+        // stay untouched — those are deliberate user entries, not predictions
+        // this cron owns.
         const { data: predictedTriggers, error: queryError } = await supabase
           .from("triggers")
-          .select("id, user_id, type, start_at, source, active")
+          .select("id, user_id, type, start_at, source, active, notes")
           .eq("user_id", userId)
           .eq("type", "menstruation_predicted")
-          .eq("source", "system")
-          .eq("active", true);
+          .eq("notes", "Predicted menstruation")
+          .eq("active", true)
+          .order("start_at", { ascending: true });
 
         if (queryError) {
           console.error(`[convert-predicted-menstruations] User ${userId}: Query error:`, queryError.message);
@@ -170,7 +198,30 @@ serve(async (req) => {
           continue;
         }
 
-        const predicted = predictedTriggers[0];
+        // Pick the earliest eligible prediction. Non-system predictions more
+        // than STALE_BACKLOG_DAYS overdue are a pre-fix backlog (they were
+        // invisible to this cron for months) — converting them now would
+        // rewrite period history, so they are reported, not converted,
+        // pending a one-off backfill decision. System predictions keep the
+        // existing unbounded one-cycle-per-day self-heal.
+        const STALE_BACKLOG_DAYS = 14;
+        const staleCutoff = addDaysIsoDate(localTime.localDate, -STALE_BACKLOG_DAYS);
+        let predicted = null;
+        for (const p of predictedTriggers) {
+          const d = p.start_at.slice(0, 10);
+          if (p.source !== "system" && d < staleCutoff) {
+            console.log(`[convert-predicted-menstruations] User ${userId}: Stale pre-fix manual prediction ${d}, leaving for backfill decision`);
+            results.push({ userId, status: "stale_backlog", predictedDate: d });
+            continue;
+          }
+          predicted = p;
+          break;
+        }
+
+        if (!predicted) {
+          continue;
+        }
+
         const predictedDate = predicted.start_at.slice(0, 10);
 
         // Convert when the prediction is due today OR overdue. The old
@@ -208,6 +259,9 @@ serve(async (req) => {
 
         if (existingToday && existingToday.length > 0) {
           console.log(`[convert-predicted-menstruations] User ${userId}: Already converted today, skipping`);
+          // A non-system prediction isn't rolled forward by the DB trigger,
+          // so a fulfilled one would stay due forever — retire it here.
+          await retireNonSystemPrediction(supabase, predicted);
           results.push({ userId, status: "skipped", reason: "Already converted today" });
           continue;
         }
@@ -219,11 +273,17 @@ serve(async (req) => {
         const threeDaysAgo = addDaysIsoDate(periodDate, -3);
         const threeDaysLater = addDaysIsoDate(periodDate, 3);
 
+        // ilike with no wildcard = case-insensitive equality: it matches both
+        // the period tracker's lowercase "menstruation" AND the capital-M
+        // "Menstruation" a user logs from their own trigger pool (wizard /
+        // evening check-in insert type = pool label). Both are real period
+        // logs — without this, pool loggers got a duplicate auto period
+        // inserted on top of the one they logged.
         const { data: manualPeriods, error: manualError } = await supabase
           .from("triggers")
           .select("id")
           .eq("user_id", userId)
-          .eq("type", "menstruation")
+          .ilike("type", "menstruation")
           .in("source", ["manual", "health_connect", "healthkit"])
           .gte("start_at", `${threeDaysAgo}T00:00:00Z`)
           .lte("start_at", `${threeDaysLater}T23:59:59Z`);
@@ -236,6 +296,10 @@ serve(async (req) => {
 
         if (manualPeriods && manualPeriods.length > 0) {
           console.log(`[convert-predicted-menstruations] User ${userId}: User logged period manually nearby, skipping auto-conversion`);
+          // The user's own log fulfilled this prediction; retire a non-system
+          // row so it can't sit due forever (the DB trigger only rolls the
+          // system row forward).
+          await retireNonSystemPrediction(supabase, predicted);
           results.push({ userId, status: "skipped", reason: "Manual period logged nearby" });
           continue;
         }
@@ -259,7 +323,14 @@ serve(async (req) => {
         }
 
         console.log(`[convert-predicted-menstruations] ✓ User ${userId}: Converted predicted to real!`);
-        results.push({ 
+
+        // The insert above fired the DB trigger, which creates/rolls the
+        // source='system' prediction. A converted non-system prediction row
+        // is unmanaged — retire it so it can't double-count in the risk
+        // gauge or convert again.
+        await retireNonSystemPrediction(supabase, predicted);
+
+        results.push({
           userId, 
           status: "converted", 
           timezone, 
@@ -282,6 +353,7 @@ serve(async (req) => {
       totalUsers: userRows.length,
       converted: results.filter(r => r.status === "converted").length,
       skipped: results.filter(r => r.status === "skipped").length,
+      staleBacklog: results.filter(r => r.status === "stale_backlog").length,
       errors: results.filter(r => r.status === "error").length,
       results: results
     };
