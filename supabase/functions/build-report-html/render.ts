@@ -1972,7 +1972,7 @@ function metrics(d: ReportData, pageNo: number): string {
       const avg = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
       return `<div class="card">
         <div class="log-head">
-          <span class="date">${esc(s.label)}</span>
+          <span class="date">${esc(rt(s.label))}</span>
           ${badge(C.green, rt("{0}{1} avg", avg.toFixed(1), s.unit))}
         </div>
         ${spark(s.points, s.color ?? C.green, s.unit)}
@@ -2173,11 +2173,17 @@ function breakdowns(d: ReportData, pageNo: number): string {
     const byItem = new Map<string, number>();
     const byCat = new Map<string, number>();
     for (const r of rows) {
+      const raw = String(r.name ?? r.type ?? "").trim().replace(/_/g, " ").replace(/\s+/g, " ");
       const name = pretty(r.name ?? r.type ?? "");
       if (!name) continue;
       byItem.set(name, (byItem.get(name) ?? 0) + 1);
-      const key = name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-      const cat = pretty(cats[key] ?? cats[name.toLowerCase()] ?? "Other");
+      // Look the category up by the ENGLISH name. `cats` is keyed on the
+      // seeded English pool labels, while pretty() has already translated
+      // `name` — keying on that made every translated item miss and fall back
+      // to "Other", which silently moved counts between categories and
+      // reordered the chart in every language but English.
+      const key = raw.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const cat = pretty(cats[key] ?? cats[raw.toLowerCase()] ?? "Other");
       byCat.set(cat, (byCat.get(cat) ?? 0) + 1);
     }
     const items = [...byItem.entries()].sort((a, b) => b[1] - a[1]);
