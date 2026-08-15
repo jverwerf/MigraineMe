@@ -3606,23 +3606,26 @@ internal fun WhatChangedCard(changed: List<InsightsViewModel.ItemTrend>, onClick
             Text("→", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
         }
         Spacer(Modifier.height(4.dp))
-        top.forEach { t ->
-            val color = trendColor(t.kind, t.delta)
+        top.forEachIndexed { i, tr ->
+            val color = trendColor(tr.kind, tr.delta)
+            if (i > 0) Spacer(Modifier.height(6.dp))
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 3.dp),
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White.copy(alpha = 0.04f))
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BrainyRowIcon(t.name, size = 18.dp)
-                Text(prettyLabel(t.name), color = Color.White,
+                BrainyRowIcon(tr.name, size = 18.dp)
+                Text(prettyLabel(tr.name), color = Color.White,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(8.dp))
-                Text("${t.prior}→${t.current}", color = AppTheme.SubtleTextColor,
+                Text("${tr.prior}→${tr.current}", color = AppTheme.SubtleTextColor,
                     style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.width(6.dp))
-                Text(if (t.delta > 0) "↑" else "↓", color = color,
+                Text(if (tr.delta > 0) "↑" else "↓", color = color,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
             }
         }
