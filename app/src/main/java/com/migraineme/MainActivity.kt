@@ -457,6 +457,17 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)) {
+    // Keep the stored access token fresh: several legacy call sites read the
+    // raw token synchronously (SessionStore.readAccessToken) and hang on
+    // PGRST303 once it expires. Refreshing here on a timer means they always
+    // pick up a live one.
+    val tokenRefreshCtx = LocalContext.current.applicationContext
+    LaunchedEffect(Unit) {
+        while (true) {
+            try { SessionStore.getValidAccessToken(tokenRefreshCtx) } catch (_: Throwable) {}
+            kotlinx.coroutines.delay(10 * 60 * 1000L)
+        }
+    }
     val nav = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()

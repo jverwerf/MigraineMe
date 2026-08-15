@@ -615,6 +615,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             add(CardPreviewEntry(it.name, tSync("missed %1\$s× · %2\$s%%", it.totalMissed, it.pctOfMigraines.toInt())))
         }
     }
+    val auraZonesHub by vm.auraZoneCounts.collectAsState()
     val impactPreview: (@Composable ColumnScope.() -> Unit)? =
         impactEntries.takeIf { it.isNotEmpty() }?.let { pool ->
             {
@@ -622,6 +623,32 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     pool.take(2),
                     totalCount = painLocsHub.size + (if (auraAttacksHub > 0) 1 else 0) + impactPool.size
                 )
+                // The man and the eyes: mini pain heat map + aura zones inline.
+                if ((painLocsHub.isNotEmpty() && totalMigsHub > 0) || (auraZonesHub.isNotEmpty() && auraAttacksHub > 0)) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (painLocsHub.isNotEmpty() && totalMigsHub > 0) {
+                            PainHeatMap(
+                                painLocationCounts = painLocsHub,
+                                totalMigraines = totalMigsHub,
+                                points = FRONT_PAIN_POINTS,
+                                imageRes = R.drawable.painpoints,
+                                modifier = Modifier.weight(1f).aspectRatio(0.75f),
+                            )
+                        }
+                        if (auraZonesHub.isNotEmpty() && auraAttacksHub > 0) {
+                            AuraHeatMap(
+                                auraZoneCounts = auraZonesHub,
+                                totalAuraAttacks = auraAttacksHub,
+                                modifier = Modifier.weight(1.4f),
+                            )
+                        }
+                    }
+                }
             }
         }
 
