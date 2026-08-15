@@ -167,10 +167,17 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             // no metric has data in either window.
             if (habits.isNotEmpty()) {
                 BrainyWatermarkCard(resId = R.drawable.brainy_gardener) {
-                    Text(t("Daily habits"), color = Color.White,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BrainyBlobIcon(R.drawable.brainy_gardener_small)
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(t("Daily habits"), color = Color.White,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
                     habits.forEach { h -> DailyHabitRow(h) }
                 }
             }
@@ -255,10 +262,11 @@ private fun DailyHabitRow(h: InsightsViewModel.HabitTrend) {
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        BrainyRowIcon(h.label, size = 18.dp)
         Text(t(h.label), color = Color.White,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.width(122.dp))
+            modifier = Modifier.width(104.dp))
         Spacer(Modifier.width(8.dp))
         DivergingTrendBar(fill = spec.fill, positive = spec.positive, color = spec.color,
             modifier = Modifier.weight(1f))
