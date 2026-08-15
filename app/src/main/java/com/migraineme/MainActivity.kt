@@ -462,12 +462,6 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     // PGRST303 once it expires. Refreshing here on a timer means they always
     // pick up a live one.
     val tokenRefreshCtx = LocalContext.current.applicationContext
-    LaunchedEffect(Unit) {
-        while (true) {
-            try { SessionStore.getValidAccessToken(tokenRefreshCtx) } catch (_: Throwable) {}
-            kotlinx.coroutines.delay(10 * 60 * 1000L)
-        }
-    }
     val nav = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -490,6 +484,15 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
     val insightsVm: InsightsViewModel = viewModel()
 
     val authState by authVm.state.collectAsState()
+    // Keep BOTH the stored token and the in-memory auth state fresh: legacy
+    // callers read SessionStore synchronously, screens read authState — an
+    // expired token in either place hangs fetches on PGRST303.
+    LaunchedEffect(Unit) {
+        while (true) {
+            try { authVm.getValidAccessToken(tokenRefreshCtx) } catch (_: Throwable) {}
+            kotlinx.coroutines.delay(10 * 60 * 1000L)
+        }
+    }
     val token = authState.accessToken
 
     val communityState by communityVm.state.collectAsState()
