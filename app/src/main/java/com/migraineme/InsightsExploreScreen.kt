@@ -3,6 +3,8 @@ package com.migraineme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -392,7 +394,7 @@ private fun sha256Hex(input: String): String {
 
 fun buildRecommendationSections(recs: InsightsViewModel.AiRecommendations, dismissedKeys: Set<String>): List<RecommendationsSection> {
     fun toRows(category: String, m: Map<String, InsightsViewModel.AiRecommendationItem>): List<RecommendationRow> =
-        m.toSortedMap().mapNotNull { (name, item) ->
+        m.mapNotNull { (name, item) ->
             val key = "$category|$name|${sha256Hex(item.evidence)}"
             if (dismissedKeys.contains(key)) null
             else RecommendationRow(category, name, item.text, item.evidence)
@@ -497,28 +499,80 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
     val sections = buildRecommendationSections(recs, dismissedKeys)
     val scrollState = rememberScrollState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    var sortMode by remember { mutableStateOf("Category") }
+    var activeCats by remember { mutableStateOf(setOf<String>()) }
+    val visibleSections = sections.filter { activeCats.isEmpty() || activeCats.contains(it.category) }
+    // "Newest" is the generation order the AI emitted (insertion order of the
+    // recommendations JSON); "Oldest" is that reversed.
+    val flatRows = when (sortMode) {
+        "A to Z" -> visibleSections.flatMap { sec -> sec.items.map { sec to it } }
+            .sortedBy { it.second.name.lowercase() }
+        "Newest" -> visibleSections.flatMap { sec -> sec.items.map { sec to it } }
+        "Oldest" -> visibleSections.flatMap { sec -> sec.items.map { sec to it } }.reversed()
+        else -> emptyList()
+    }
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
-            sections.forEachIndexed { i, section ->
-                MaybeWatermarkCard(
-                    watermark = i == sections.lastIndex,
-                    resId = R.drawable.brainy_recs,
-                    flipWatermark = true
+            MaybeWatermarkCard(
+                watermark = visibleSections.isEmpty() || sortMode != "Category",
+                resId = R.drawable.brainy_recs,
+                flipWatermark = true
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyBlobIcon(R.drawable.brainy_recs_small)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(t("Recommendations"), color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Built from your Insights patterns, with a next step for each"),
+                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                    }
+                    SortChipMenu(sortMode, listOf("Category", "A to Z", "Newest", "Oldest")) { sortMode = it }
+                }
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    if (i == 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            BrainyBlobIcon(R.drawable.brainy_recs_small)
-                            Spacer(Modifier.width(10.dp))
-                            Column {
-                                Text(t("Recommendations"), color = AppTheme.TitleColor,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Text(t("Built from your Insights patterns, with a next step for each"),
-                                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                            }
+                    sections.forEach { sec ->
+                        val active = activeCats.isEmpty() || activeCats.contains(sec.category)
+                        Row(
+                            Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .border(1.dp, if (active) sec.color else AppTheme.SubtleTextColor.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+                                .clickable {
+                                    activeCats = if (activeCats.contains(sec.category)) activeCats - sec.category
+                                    else activeCats + sec.category
+                                }
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(sec.icon, contentDescription = null,
+                                tint = if (active) sec.color else AppTheme.SubtleTextColor, modifier = Modifier.size(12.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(t(sec.title), color = if (active) sec.color else AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                        }
+                    }
+                }
+                if (sortMode != "Category") {
+                    Spacer(Modifier.height(8.dp))
+                    flatRows.forEach { (sec, row) ->
+                        RecommendationDetailRow(sec, row, showTag = true) {
+                            vm.dismissRecommendation(context, row.category, row.name, row.evidence)
                         }
                         Spacer(Modifier.height(8.dp))
                     }
+                }
+            }
+            if (sortMode == "Category") {
+            visibleSections.forEachIndexed { i, section ->
+                MaybeWatermarkCard(
+                    watermark = i == visibleSections.lastIndex,
+                    resId = R.drawable.brainy_recs,
+                    flipWatermark = true
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(section.icon, contentDescription = null,
                             tint = section.color, modifier = Modifier.size(18.dp))
@@ -563,6 +617,53 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
                     }
                 }
             }
+            }
+        }
+    }
+}
+
+/** One dismissible recommendation row; optional trailing category tag for flat sort views. */
+@Composable
+private fun RecommendationDetailRow(
+    section: RecommendationsSection,
+    row: RecommendationRow,
+    showTag: Boolean,
+    onDismiss: () -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .padding(12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BrainyRowIcon(row.name, size = 18.dp)
+                Text(prettyLabel(row.name), color = Color.White,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f))
+                if (showTag) {
+                    Spacer(Modifier.width(8.dp))
+                    Icon(section.icon, contentDescription = null,
+                        tint = section.color, modifier = Modifier.size(12.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(t(section.title), color = section.color,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold))
+                }
+            }
+            Spacer(Modifier.height(3.dp))
+            Text(row.text, color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelMedium)
+        }
+        Spacer(Modifier.width(8.dp))
+        IconButton(onClick = onDismiss, modifier = Modifier.size(34.dp)) {
+            Icon(
+                androidx.compose.material.icons.Icons.Outlined.Close,
+                contentDescription = t("Dismiss recommendation"),
+                tint = AppTheme.SubtleTextColor,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }

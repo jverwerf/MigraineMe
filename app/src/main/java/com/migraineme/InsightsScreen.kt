@@ -122,6 +122,26 @@ internal fun BrainyNavCard(
     }
 }
 
+/** Inline-text row icon on the same soft blob as BrainyRowIcon, sized for 18sp art. */
+@Composable
+internal fun InlineBlobIcon(res: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.linearGradient(listOf(Color(0x57CE93D8), Color(0x24B388FF))),
+                shape = RoundedCornerShape(
+                    topStartPercent = 46, topEndPercent = 54,
+                    bottomEndPercent = 42, bottomStartPercent = 58
+                )
+            )
+            .padding(2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize())
+    }
+}
+
 /** Stat tile matching the Accuracy detail's first card, reused in its nav-card preview. */
 @Composable
 internal fun AccuracyStatTile(value: String, color: Color, label: String, modifier: Modifier = Modifier) {
@@ -1834,15 +1854,15 @@ private fun PatternTile(
             val inlineIcons = buildMap {
                 icon?.let { res ->
                     put("iconA", androidx.compose.foundation.text.InlineTextContent(
-                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
                             androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
-                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                    ) { InlineBlobIcon(res) })
                 }
                 iconB?.let { res ->
                     put("iconB", androidx.compose.foundation.text.InlineTextContent(
-                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
                             androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
-                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                    ) { InlineBlobIcon(res) })
                 }
             }
             Text(
@@ -2528,15 +2548,15 @@ private fun TreatmentTile(
             val inlineIcons = buildMap {
                 icon?.let { res ->
                     put("iconA", androidx.compose.foundation.text.InlineTextContent(
-                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
                             androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
-                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                    ) { InlineBlobIcon(res) })
                 }
                 iconB?.let { res ->
                     put("iconB", androidx.compose.foundation.text.InlineTextContent(
-                        androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
                             androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
-                    ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                    ) { InlineBlobIcon(res) })
                 }
             }
             Text(
@@ -2771,9 +2791,9 @@ internal fun ContextCard(
                         val inlineIcons = buildMap {
                             iconFor(item.name)?.let { res ->
                                 put("icon", androidx.compose.foundation.text.InlineTextContent(
-                                    androidx.compose.ui.text.Placeholder(18.sp, 18.sp,
+                                    androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
                                         androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
-                                ) { androidx.compose.foundation.Image(painterResource(res), contentDescription = null, modifier = Modifier.fillMaxSize()) })
+                                ) { InlineBlobIcon(res) })
                             }
                         }
                         Text(
