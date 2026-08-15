@@ -11,6 +11,7 @@ package com.migraineme
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -157,17 +159,36 @@ internal fun WellDoneChainRow(stat: EdgeFunctionsService.CorrelationStat) {
             .background(Color.White.copy(alpha = 0.04f))
             .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
-        // A chain is two things, so it carries two icons: the habit that
-        // drives it, then the metric it keeps steady.
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            BrainyRowIcon(stat.factorName)
-            Text("${prettyLabel(stat.factorName)} → ", color = Color.White,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
-            BrainyRowIcon(stat.factorB)
-            Text(t("steady %s", prettyLabel(stat.factorB ?: "").lowercase()),
-                color = Color.White,
+        // A chain is two things with two icons. Built as one wrapping inline
+        // string so long labels flow onto a second line instead of truncating.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            val resA = brainyForLogKey(null, stat.factorName)
+            val resB = stat.factorB?.let { brainyForLogKey(null, it) }
+            val title = androidx.compose.ui.text.buildAnnotatedString {
+                if (resA != null) { appendInlineContent("a", "\u2b1c"); append(" ") }
+                append(prettyLabel(stat.factorName))
+                append("  \u2192  ")
+                if (resB != null) { appendInlineContent("b", "\u2b1c"); append(" ") }
+                append(tSync("steady %s", prettyLabel(stat.factorB ?: "").lowercase()))
+            }
+            val inline = buildMap {
+                resA?.let { res ->
+                    put("a", androidx.compose.foundation.text.InlineTextContent(
+                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
+                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
+                    ) { InlineBlobIcon(res) })
+                }
+                resB?.let { res ->
+                    put("b", androidx.compose.foundation.text.InlineTextContent(
+                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
+                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
+                    ) { InlineBlobIcon(res) })
+                }
+            }
+            Text(title, inlineContent = inline, color = Color.White,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                modifier = Modifier.weight(1f))
+            Spacer(Modifier.width(6.dp))
             ConfidenceDotsGreen(stat.pValue)
         }
         Text(t("Steady %1\$s%% of the time with it, %2\$s%% without.", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),
