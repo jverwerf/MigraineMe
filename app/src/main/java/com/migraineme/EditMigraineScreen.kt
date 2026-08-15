@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -82,6 +83,7 @@ fun EditMigraineScreen(
     // Supabase access unchanged
     val db = remember { SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) }
     val scope = rememberCoroutineScope()
+    val appCtx = LocalContext.current.applicationContext
 
     // Stepper (same order as draft flow)
     var step by remember { mutableStateOf(Step.CORE) }
@@ -259,7 +261,10 @@ fun EditMigraineScreen(
                                         // Deletes
                                         deleteTriggerIds.forEach { runCatching { db.deleteTrigger(token, it) } }
                                         deleteMedicineIds.forEach { runCatching { db.deleteMedicine(token, it) } }
-                                        deleteReliefIds.forEach { runCatching { db.deleteRelief(token, it) } }
+                                        deleteReliefIds.forEach {
+                                            runCatching { db.deleteRelief(token, it) }
+                                            DeviceReliefOutcomeWorker.cancel(appCtx, it)
+                                        }
                                         // Adds
                                         addTriggers.forEach { t ->
                                             runCatching {

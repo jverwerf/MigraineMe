@@ -831,6 +831,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 val keepRelIds = rels.mapNotNull { it.existingId }.toSet()
                 oldLinked.reliefs.filter { it.source != "system" && it.id !in keepRelIds }.forEach {
                     runCatching { db.deleteRelief(accessToken, it.id) }
+                    DeviceReliefOutcomeWorker.cancel(getApplication<Application>().applicationContext, it.id)
                 }
                 for (r in rels.filter { it.type.isNotBlank() }) {
                     val rStart = r.startAtIso ?: migraineStart
@@ -1303,7 +1304,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 // Then delete manual linked items (system items survive via RLS + app filter)
                 linked.triggers.filter { it.source != "system" }.forEach { runCatching { db.deleteTrigger(accessToken, it.id) } }
                 linked.medicines.filter { it.source != "system" }.forEach { runCatching { db.deleteMedicine(accessToken, it.id) } }
-                linked.reliefs.filter { it.source != "system" }.forEach { runCatching { db.deleteRelief(accessToken, it.id) } }
+                linked.reliefs.filter { it.source != "system" }.forEach {
+                    runCatching { db.deleteRelief(accessToken, it.id) }
+                    DeviceReliefOutcomeWorker.cancel(getApplication<Application>().applicationContext, it.id)
+                }
                 linked.prodromes.filter { it.source != "system" }.forEach { runCatching { db.deleteProdromeLog(accessToken, it.id) } }
                 linked.activities.filter { it.source != "system" }.forEach { runCatching { db.deleteActivityLog(accessToken, it.id) } }
                 linked.locations.filter { it.source != "system" }.forEach { runCatching { db.deleteLocationLog(accessToken, it.id) } }
@@ -1345,6 +1349,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 db.deleteRelief(accessToken, id)
+                DeviceReliefOutcomeWorker.cancel(getApplication<Application>().applicationContext, id)
                 dropFromJournal(setOf(id))
             } catch (e: Exception) { e.printStackTrace() }
         }

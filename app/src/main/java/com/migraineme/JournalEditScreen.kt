@@ -602,7 +602,10 @@ fun JournalEditScreen(
                                         when (itemType) {
                                             "trigger" -> db.deleteTrigger(token, itemId)
                                             "medicine" -> db.deleteMedicine(token, itemId)
-                                            "relief" -> db.deleteRelief(token, itemId)
+                                            "relief" -> {
+                                                db.deleteRelief(token, itemId)
+                                                DeviceReliefOutcomeWorker.cancel(ctx, itemId)
+                                            }
                                             "prodrome" -> db.deleteProdromeLog(token, itemId)
                                             "activity" -> db.deleteActivityLog(token, itemId)
                                             "location" -> db.deleteLocationLog(token, itemId)

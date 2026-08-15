@@ -134,6 +134,9 @@ class DeviceReliefOutcomeWorker(
 
         private fun notifIdFor(reliefId: String): Int = 92000 + (reliefId.hashCode() and 0x3FF)
 
+        /** Unique work name for one relief's follow-up. */
+        private fun workNameFor(reliefId: String) = "device_relief_outcome_$reliefId"
+
         /**
          * Call after inserting a relief log. No-op unless the relief is a known
          * neuromodulation device.
@@ -145,10 +148,25 @@ class DeviceReliefOutcomeWorker(
                 .setInputData(workDataOf(KEY_RELIEF_ID to reliefId, KEY_LABEL to (label ?: "your device")))
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(
-                "device_relief_outcome_$reliefId",
+                workNameFor(reliefId),
                 ExistingWorkPolicy.REPLACE,
                 req
             )
+        }
+
+        /**
+         * Call when a relief log is deleted. Drops the pending follow-up and
+         * clears the notification if it has already been posted, so a relief
+         * that no longer exists can never ask the user how it went.
+         *
+         * Safe to call for any relief: the work name is derived from the id, so
+         * cancelling one that was never scheduled is a no-op. Call sites do not
+         * have to re-check DeviceCatalog — and must not, since a relief deleted
+         * after its label was edited would otherwise keep its follow-up.
+         */
+        fun cancel(context: Context, reliefId: String) {
+            WorkManager.getInstance(context).cancelUniqueWork(workNameFor(reliefId))
+            NotificationManagerCompat.from(context).cancel(notifIdFor(reliefId))
         }
     }
 }
