@@ -25,9 +25,12 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        // Default = original package. Build with -PnewPackage for the Play relaunch
-        // package (app.migraineme) after the com.migraineme suspension.
-        applicationId = if (project.hasProperty("newPackage")) "app.migraineme" else "com.migraineme"
+        // app.migraineme is the live Play package. com.migraineme is suspended and
+        // anything built against it is unpublishable, so it is only reachable with
+        // an explicit -PlegacyPackage. -PnewPackage is still accepted and does
+        // nothing, so the commands and scripts that pass it keep working.
+        val legacyPackage = project.hasProperty("legacyPackage")
+        applicationId = if (legacyPackage) "com.migraineme" else "app.migraineme"
         minSdk = 26
         targetSdk = 36
         versionCode = 59
@@ -42,9 +45,10 @@ android {
             "\"${localProp("GOOGLE_WEB_CLIENT_ID")}\"")
         buildConfigField("String", "USDA_API_KEY",
             "\"${localProp("USDA_API_KEY")}\"")
-        // New-package builds use the relaunch RevenueCat app's key.
+        // The key follows the package: the relaunch RevenueCat app for the live
+        // package, the original one only for a legacy build.
         buildConfigField("String", "REVENUECAT_API_KEY",
-            "\"${localProp(if (project.hasProperty("newPackage")) "REVENUECAT_API_KEY_NEW" else "REVENUECAT_API_KEY")}\"")
+            "\"${localProp(if (legacyPackage) "REVENUECAT_API_KEY" else "REVENUECAT_API_KEY_NEW")}\"")
         buildConfigField("String", "WHOOP_CLIENT_ID",
             "\"${localProp("WHOOP_CLIENT_ID")}\"")
         buildConfigField("String", "OURA_CLIENT_ID",
