@@ -556,7 +556,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 // effect re-fires on every token refresh — without the tour check
                 // a refresh purges the demo data out from under the running tour.
                 try {
-                    if (!TourManager.isActive() && OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
+                    // `== true` deliberately: this purge DELETES rows, so an
+                    // unknown answer (null) must skip it rather than guess.
+                    if (!TourManager.isActive() && OnboardingPrefs.isCompletedFromSupabase(appCtx) == true) {
                         DemoDataSeeder.purgeOrphanDemoRows(appCtx)
                     }
                 } catch (e: Exception) {
@@ -651,7 +653,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 // otherwise purge the demo data out from under it.
                 scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     try {
-                        if (!TourManager.isActive() && OnboardingPrefs.isCompletedFromSupabase(appCtx)) {
+                        // `== true` deliberately: this purge DELETES rows, so an
+                    // unknown answer (null) must skip it rather than guess.
+                    if (!TourManager.isActive() && OnboardingPrefs.isCompletedFromSupabase(appCtx) == true) {
                             DemoDataSeeder.purgeOrphanDemoRows(appCtx)
                         }
                     } catch (e: Exception) {
@@ -2296,10 +2300,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                         launchSingleTop = true
                                     }
                                 } else {
+                                    // null = the check itself failed (offline, or a
+                                    // non-2xx) and this device has never been told
+                                    // the answer. Never route to onboarding on a
+                                    // non-answer: this is a signed-in user, ONBOARDING
+                                    // pops the back stack inclusive so there is no way
+                                    // out, and the flow seeds demo data and re-grants
+                                    // the trial over their real account. Unknown ->
+                                    // HOME; the next successful check corrects it.
                                     val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
                                         OnboardingPrefs.isCompletedFromSupabase(loginCtx)
                                     }
-                                    val dest = if (completed) Routes.HOME else Routes.ONBOARDING
+                                    val dest = if (completed != false) Routes.HOME else Routes.ONBOARDING
                                     nav.navigate(dest) {
                                         popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                         launchSingleTop = true
@@ -2311,10 +2323,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             authVm = authVm,
                             onLoggedIn = {
                                 scope.launch {
+                                    // null = the check itself failed (offline, or a
+                                    // non-2xx) and this device has never been told
+                                    // the answer. Never route to onboarding on a
+                                    // non-answer: this is a signed-in user, ONBOARDING
+                                    // pops the back stack inclusive so there is no way
+                                    // out, and the flow seeds demo data and re-grants
+                                    // the trial over their real account. Unknown ->
+                                    // HOME; the next successful check corrects it.
                                     val completed = kotlinx.coroutines.withContext(Dispatchers.IO) {
                                         OnboardingPrefs.isCompletedFromSupabase(loginCtx)
                                     }
-                                    val dest = if (completed) Routes.HOME else Routes.ONBOARDING
+                                    val dest = if (completed != false) Routes.HOME else Routes.ONBOARDING
                                     nav.navigate(dest) {
                                         popUpTo(nav.graph.findStartDestination().id) { inclusive = true }
                                         launchSingleTop = true

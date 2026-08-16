@@ -3,8 +3,24 @@ package com.migraineme
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import java.io.IOException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+
+/**
+ * Outcome of asking for a usable access token.
+ *
+ * The distinction is the point: a refresh we could not DELIVER is not the same
+ * as a refresh the server REJECTED, and collapsing both to `null` is what let
+ * one offline moment read as "signed out". Only [SignedOut] means the user has
+ * no session; [Unreachable] means we could not ask, and their stored session is
+ * still perfectly good.
+ */
+sealed class TokenResult {
+    data class Valid(val accessToken: String) : TokenResult()
+    object Unreachable : TokenResult()
+    object SignedOut : TokenResult()
+}
 
 object SessionStore {
     private const val PREFS = "session_prefs"
@@ -183,10 +199,17 @@ object SessionStore {
      * IMPORTANT: Ensure KEY_USER_ID is always present when an access token is present.
      * WHOOP token ownership checks depend on a stable Supabase user_id in SessionStore.
      */
-    suspend fun getValidAccessToken(context: Context): String? {
+    /**
+     * A usable access token, or why there isn't one.
+     *
+     * Callers that only need the token can keep using [getValidAccessToken];
+     * callers that decide whether the user is still SIGNED IN must use this,
+     * so an unreachable server does not read as a sign-out.
+     */
+    suspend fun getAccessToken(context: Context): TokenResult {
         return refreshMutex.withLock {
             val access = readAccessToken(context)
-            if (access.isNullOrBlank()) return@withLock null
+            if (access.isNullOrBlank()) return@withLock TokenResult.SignedOut
 
             // CHANGE #1:
             // If user_id is missing, derive it from the access token JWT and persist it.
@@ -203,7 +226,7 @@ object SessionStore {
 
             // If we don't have expiry metadata, assume it's still usable (backward compatibility).
             if (expiresIn == null || obtainedAt == null) {
-                return@withLock access
+                return@withLock TokenResult.Valid(access)
             }
 
             val expiresAt = obtainedAt + (expiresIn * 1000L)
@@ -211,13 +234,13 @@ object SessionStore {
 
             // Still valid (with skew) -> return.
             if (now + EXPIRY_SKEW_MS < expiresAt) {
-                return@withLock access
+                return@withLock TokenResult.Valid(access)
             }
 
             // Expired -> refresh.
             val refresh = readRefreshToken(context)
             if (refresh.isNullOrBlank()) {
-                return@withLock null
+                return@withLock TokenResult.SignedOut
             }
 
             return@withLock try {
@@ -225,7 +248,11 @@ object SessionStore {
 
                 val newAccess = ses.accessToken
                 if (newAccess.isNullOrBlank()) {
-                    null
+                    // The call came back, and it came back without a token —
+                    // refreshSession does not validate status, so a rejected
+                    // refresh deserialises to null fields. That is a genuine
+                    // sign-out.
+                    TokenResult.SignedOut
                 } else {
                     // CHANGE #2:
                     // Always derive userId from the refreshed access token (do not depend on existing prefs).
@@ -243,11 +270,27 @@ object SessionStore {
                         expiresIn = ses.expiresIn,
                         obtainedAtMs = System.currentTimeMillis()
                     )
-                    newAccess
+                    TokenResult.Valid(newAccess)
                 }
+            } catch (_: IOException) {
+                // Never delivered: offline, DNS, timeout, connection reset. The
+                // refresh token on this device is untouched and still valid, so
+                // the user is NOT signed out — we simply cannot mint a fresh
+                // access token until the network is back.
+                TokenResult.Unreachable
             } catch (_: Throwable) {
-                null
+                // Anything else (malformed body, serialisation) — treat as a
+                // real failure rather than silently keeping the user in.
+                TokenResult.SignedOut
             }
         }
     }
+
+    /**
+     * A usable access token, or null. Unchanged contract for the many callers
+     * that just need a bearer token; use [getAccessToken] when the ANSWER
+     * matters (i.e. when deciding whether the user is signed in).
+     */
+    suspend fun getValidAccessToken(context: Context): String? =
+        (getAccessToken(context) as? TokenResult.Valid)?.accessToken
 }

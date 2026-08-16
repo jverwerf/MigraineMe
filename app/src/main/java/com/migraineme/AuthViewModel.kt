@@ -45,12 +45,20 @@ class AuthViewModel : ViewModel() {
     suspend fun getValidAccessToken(context: Context): String? {
         val appCtx = context.applicationContext
 
-        val valid = SessionStore.getValidAccessToken(appCtx)
-        if (valid.isNullOrBlank()) {
-            // If we cannot refresh, reflect that to UI by clearing session.
-            // (LogoutScreen already clears SessionStore; this mirrors that state.)
-            _state.update { it.copy(accessToken = null, userId = null) }
-            return null
+        val valid = when (val result = SessionStore.getAccessToken(appCtx)) {
+            is TokenResult.Valid -> result.accessToken
+            // The refresh never reached the server — offline, DNS, timeout. The
+            // stored session is untouched and still good, so leave the UI signed
+            // in and degraded rather than clearing it. This runs on a 10-minute
+            // loop from AppRoot, so one flight-mode tick used to blank
+            // accessToken/userId app-wide and, with the onboarding read failing
+            // the same way, land the user back in onboarding.
+            TokenResult.Unreachable -> return null
+            // The server answered and refused: this really is a sign-out.
+            TokenResult.SignedOut -> {
+                _state.update { it.copy(accessToken = null, userId = null) }
+                return null
+            }
         }
 
         // Ensure user id is present and stable.

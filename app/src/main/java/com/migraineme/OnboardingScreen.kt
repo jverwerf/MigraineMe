@@ -46,14 +46,46 @@ object OnboardingMode {
 
 object OnboardingPrefs {
 
+    private const val PREFS = "onboarding_prefs"
+    private fun cacheKey(userId: String) = "onboarding_completed_$userId"
+
+    private fun readCached(context: Context, userId: String): Boolean? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (!prefs.contains(cacheKey(userId))) return null
+        return prefs.getBoolean(cacheKey(userId), false)
+    }
+
+    private fun writeCached(context: Context, userId: String, completed: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(cacheKey(userId), completed)
+            .apply()
+    }
+
     /**
-     * Check Supabase directly — no local cache.
+     * Has this user finished onboarding? `null` means WE DO NOT KNOW — the read
+     * failed and this device has never been told the answer.
+     *
+     * This used to return a plain Boolean and answer `false` on every failure
+     * path: no token, no user id, empty body, any exception. Offline that made
+     * a long-since onboarded user look brand new, and MainActivity routed them
+     * to Routes.ONBOARDING with popUpTo(inclusive) — no way back, and the flow
+     * seeds demo data and re-grants the trial over a real account.
+     *
+     * Now: a successful read is cached locally, a failed read falls back to that
+     * cache, and only a genuine "never seen this user" returns null.
+     *
      * Must be called from IO dispatcher.
      */
-    suspend fun isCompletedFromSupabase(context: Context): Boolean {
+    suspend fun isCompletedFromSupabase(context: Context): Boolean? {
+        val tokenResult = SessionStore.getAccessToken(context)
+        val userId = SessionStore.readUserId(context)
+            ?: (tokenResult as? TokenResult.Valid)
+                ?.let { JwtUtils.extractUserIdFromAccessToken(it.accessToken) }
+            ?: return null
+        val token = (tokenResult as? TokenResult.Valid)?.accessToken
+            ?: return readCached(context, userId)
         return try {
-            val token = SessionStore.getValidAccessToken(context) ?: return false
-            val userId = SessionStore.readUserId(context) ?: JwtUtils.extractUserIdFromAccessToken(token) ?: return false
             val url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/profiles?user_id=eq.$userId&select=onboarding_completed"
             val request = okhttp3.Request.Builder()
                 .url(url)
@@ -62,11 +94,24 @@ object OnboardingPrefs {
                 .addHeader("Authorization", "Bearer $token")
                 .build()
             val response = okhttp3.OkHttpClient().newCall(request).execute()
-            val body = response.body?.string() ?: return false
+            // A 401/500 body does not contain the flag either, and reading that
+            // as "not onboarded" is the same bug in a different coat.
+            if (!response.isSuccessful) {
+                response.close()
+                return readCached(context, userId)
+            }
+            val body = response.body?.string()
             response.close()
-            body.contains("\"onboarding_completed\":true") || body.contains("\"onboarding_completed\": true")
-        } catch (_: Exception) { false }
+            if (body == null) return readCached(context, userId)
+            val completed = body.contains("\"onboarding_completed\":true") ||
+                body.contains("\"onboarding_completed\": true")
+            writeCached(context, userId, completed)
+            completed
+        } catch (_: Exception) {
+            readCached(context, userId)
+        }
     }
+
 
     /**
      * Mark onboarding complete in Supabase.
@@ -87,7 +132,12 @@ object OnboardingPrefs {
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Prefer", "return=minimal")
                 .build()
-            okhttp3.OkHttpClient().newCall(request).execute().close()
+            val response = okhttp3.OkHttpClient().newCall(request).execute()
+            val ok = response.isSuccessful
+            response.close()
+            // Only mirror a write the server ACCEPTED — caching an optimistic
+            // "completed" would hide a dropped write behind a local true.
+            if (ok) writeCached(context, userId, true)
         } catch (_: Exception) {}
     }
 
@@ -107,7 +157,10 @@ object OnboardingPrefs {
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Prefer", "return=minimal")
                 .build()
-            okhttp3.OkHttpClient().newCall(request).execute().close()
+            val response = okhttp3.OkHttpClient().newCall(request).execute()
+            val ok = response.isSuccessful
+            response.close()
+            if (ok) writeCached(context, userId, false)
         } catch (_: Exception) {}
     }
 }
