@@ -86,10 +86,48 @@ async function sendFcmMessage(
   fcmToken: string,
   messageType: string,
   extraData: Record<string, string> = {},
-  notification?: { title: string; body: string }
+  notification?: { title: string; body: string },
+  // Put the copy in the APNs alert but NOT in the top-level `notification`.
+  // See the block below for why the two are not the same thing.
+  iosAlertOnly = false
 ): Promise<boolean> {
   const projectId = FIREBASE_SERVICE_ACCOUNT.project_id;
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+  // iOS needs an explicit APNs block; Android needs it left alone.
+  //
+  // Without one, a data-only message carries nothing APNs will deliver for: it
+  // is discarded unless the app is already in the foreground, so on-device
+  // rendering never ran and NOTHING appeared in the shade — trigger bells,
+  // daily_gauge, ongoing_migraine, new_insight, recalibration_ready, all of it.
+  // `content-available: 1` (plus the `remote-notification` background mode in
+  // Info.plist) is what wakes the app so it can render its own copy.
+  //
+  // Deliberately iOS-only. Putting a top-level `notification` on the message
+  // instead would make Android's system tray render it and SUPPRESS
+  // onMessageReceived while backgrounded, which is where the Android app sets
+  // its has_new_insight / has_proposals flags and builds the bell copy. The
+  // `apns` key is ignored by Android, so this fixes iOS without touching it.
+  const apns = notification
+    ? {
+        // Visible push: state the alert rather than leaving FCM to synthesise
+        // it, and ask for a sound — FCM never adds one.
+        headers: { "apns-push-type": "alert", "apns-priority": "10" },
+        payload: {
+          aps: {
+            alert: { title: notification.title, body: notification.body },
+            sound: "default",
+          },
+        },
+      }
+    : {
+        // No copy to show: a silent wake-up so the app can render its own.
+        // Weak on iOS (throttled, and never delivered to a force-quit app), so
+        // anything the user is meant to SEE sends copy and takes the branch
+        // above. This one is for the sync workers.
+        headers: { "apns-push-type": "background", "apns-priority": "5" },
+        payload: { aps: { "content-available": 1 } },
+      };
 
   const message: Record<string, unknown> = {
     message: {
@@ -99,10 +137,18 @@ async function sendFcmMessage(
         ...extraData,
         type: messageType,
       },
-      ...(notification ? { notification } : {}),
+      // `iosAlertOnly` keeps the copy out of the top-level notification, which
+      // is an ANDROID concern: a message carrying one is rendered by Android's
+      // system tray and onMessageReceived is then SKIPPED while the app is
+      // backgrounded — and that callback is where the Android app sets its
+      // has_new_insight / has_proposals flags and builds the bell copy. The
+      // `apns` key is ignored by Android, so iOS gets a real alert (which is
+      // the only thing it delivers reliably) with Android's behaviour intact.
+      ...(notification && !iosAlertOnly ? { notification } : {}),
       android: {
         priority: "high",
       },
+      apns,
     },
   };
 
@@ -193,6 +239,9 @@ serve(async (req) => {
     let extraData: Record<string, string> = {};
     // Pre-rendered, already-translated notification text. See sendFcmMessage.
     let notification: { title: string; body: string } | undefined;
+    // Set by callers whose push must render on iOS but must stay data-only on
+    // Android, i.e. every type the Android app renders itself.
+    let iosAlertOnly = false;
     // Per-token copy, used when the caller asked for the push to be rendered
     // in each recipient's own language (see `notification_key` below). Falls
     // back to `notification` for any token not in the map.
@@ -262,6 +311,8 @@ serve(async (req) => {
             : undefined,
         };
       }
+
+      if (body.ios_alert === true) iosAlertOnly = true;
 
       // FCM only accepts string values in the data map.
       if (body.data && typeof body.data === "object") {
@@ -438,7 +489,7 @@ serve(async (req) => {
 
     for (const fcmToken of tokensToSend) {
       const copyForToken = notificationByToken.get(fcmToken) ?? notification;
-      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType, extraData, copyForToken);
+      const success = await sendFcmMessage(firebaseToken, fcmToken, messageType, extraData, copyForToken, iosAlertOnly);
       if (success) sent++;
       else failed++;
     }
