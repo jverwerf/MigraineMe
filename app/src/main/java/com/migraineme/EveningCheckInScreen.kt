@@ -1548,7 +1548,7 @@ private fun TimeEditor(
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            initialSelectedDateMillis = localDateToDatePickerMillis(selectedDate),
             selectableDates = PastOnlyDates
         )
         DatePickerDialog(
@@ -1556,7 +1556,7 @@ private fun TimeEditor(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        selectedDate = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                        selectedDate = datePickerMillisToLocalDate(millis)
                     }
                     showDatePicker = false; commit()
                 }, enabled = datePickerState.selectedDateMillis != null) { Text(t("OK"), color = if (datePickerState.selectedDateMillis != null) AppTheme.AccentPurple else AppTheme.SubtleTextColor) }

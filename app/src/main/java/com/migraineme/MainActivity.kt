@@ -1201,107 +1201,65 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         MonitorTreatmentsScreen(navController = nav)
                     }
                     composable("monitor_treatments_config") {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { MonitorTreatmentsConfigScreen(navController = nav) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { MonitorTreatmentsConfigScreen(navController = nav) }
                     }
                     composable(
                         Routes.MONITOR_TREATMENT_DETAIL,
                         arguments = listOf(androidx.navigation.navArgument("regimenId") { type = androidx.navigation.NavType.StringType })
                     ) { backStack ->
                         val regimenId = backStack.arguments?.getString("regimenId") ?: ""
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) {
                             MonitorTreatmentDetailScreen(navController = nav, regimenId = regimenId)
                         }
                     }
                     composable(Routes.MEDICINE_CONFIG) { MonitorMedicineConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.MEDICINE_DATA_HISTORY) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { MedicineDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { MedicineDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.NUTRITION_CONFIG) { NutritionConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.NUTRITION_HISTORY) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { NutritionHistoryScreen(onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { NutritionHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.WEATHER_CONFIG) { WeatherConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.SLEEP_DATA_HISTORY) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { SleepDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { SleepDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.ENV_DATA_HISTORY) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { EnvironmentDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { EnvironmentDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.MONITOR_PHYSICAL) { MonitorPhysicalScreen(navController = nav, authVm = authVm) }
                     composable(Routes.PHYSICAL_CONFIG) { PhysicalConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.PHYSICAL_DATA_HISTORY) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { PhysicalDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { PhysicalDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.FULL_GRAPH_PHYSICAL) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { FullScreenGraphScreen(graphType = "physical", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "physical", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.MONITOR_SLEEP) { MonitorSleepScreen(navController = nav, authVm = authVm) }
                     composable(Routes.SLEEP_CONFIG) { SleepConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.FULL_GRAPH_SLEEP) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "sleep", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.FULL_GRAPH_WEATHER) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "weather", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.FULL_GRAPH_NUTRITION) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "nutrition", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.FULL_GRAPH_MEDICINES) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { FullScreenGraphScreen(graphType = "medicines", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "medicines", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.MONITOR_MENTAL) { MonitorMentalScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_RISK) { MonitorRiskScreen(navController = nav, authVm = authVm) }
                     composable(Routes.RISK_CONFIG) { RiskConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.RISK_DATA_HISTORY) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { RiskDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { RiskDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(
                         Routes.FULL_GRAPH_RISK + "?contributors={contributors}",
                         arguments = listOf(navArgument("contributors") { type = NavType.StringType; defaultValue = "" })
                     ) { backStackEntry ->
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) {
                             val contribArg = java.net.URLDecoder.decode(
                                 backStackEntry.arguments?.getString("contributors") ?: "", "UTF-8"
                             )
@@ -1311,16 +1269,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
                     composable(Routes.MENTAL_CONFIG) { MentalConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.MENTAL_DATA_HISTORY) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { MentalDataHistoryScreen(onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { MentalDataHistoryScreen(onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.FULL_GRAPH_MENTAL) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }
-                        } else { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }) }
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.MONITOR) } }) { FullScreenGraphScreen(graphType = "mental", onBack = { nav.popBackStack() }) }
                     }
                     composable(Routes.MONITOR_ENVIRONMENT) { MonitorEnvironmentScreen(navController = nav, authVm = authVm) }
                     
@@ -1345,10 +1297,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         InsightsDetailScreen(navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_REPORT) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsReportScreen(navController = nav, vm = insightsVm)
@@ -1361,70 +1310,49 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         InsightsBreakdownScreen(logType = logType, navController = nav, vm = insightsVm)
                     }
                     composable(Routes.INSIGHTS_PATTERNS) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsPatternsScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_THRESHOLDS) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsThresholdsScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_TREATMENTS) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsTreatmentsScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_WHATS_HELPING) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsWhatsHelpingScreen(vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_WHAT_CHANGED) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsWhatChangedScreen(vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_CONTEXT) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsContextScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_IMPACT) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
                             InsightsImpactScreen(navController = nav, vm = insightsVm)
@@ -2486,18 +2414,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.RISK_WEIGHTS) {
-                        val pState by PremiumManager.state.collectAsState()
-                        val tourActive = TourManager.isActive()
-                        if (!tourActive && !pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }
-                        } else { RiskWeightsScreen(onBack = { nav.popBackStack() }) }
+                        // The guided tour walks through this screen regardless of tier.
+                        if (TourManager.isActive()) {
+                            RiskWeightsScreen(onBack = { nav.popBackStack() })
+                        } else {
+                            PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
+                                RiskWeightsScreen(onBack = { nav.popBackStack() })
+                            }
+                        }
                     }
 
                     composable(Routes.RISK_DETAIL) {
-                        val pState by PremiumManager.state.collectAsState()
-                        if (!pState.isLoading && !pState.isPremium) {
-                            LaunchedEffect(Unit) { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }
-                        } else {
+                        PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.HOME) } }) {
                             val homeState by homeVm.state.collectAsState()
                             RiskDetailScreen(
                                 navController = nav,

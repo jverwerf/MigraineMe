@@ -248,29 +248,30 @@ fun HomeScreenRoot(
                 )
 
                 Box(Modifier.onGloballyPositioned { riskCardY = it.positionInParent().y.toInt() }) {
+                // Three states, not two. Today's risk is free either way, so
+                // while entitlement is resolving the gauge shows exactly that —
+                // today only, no forecast — and its taps do nothing. Sending an
+                // unresolved tap to the paywall was pitching a subscription to
+                // people who had already bought one.
+                val riskEntitled = premiumState.access == PremiumAccess.ENTITLED
+                val riskResolved = premiumState.access != PremiumAccess.LOADING
                 RiskHeroCard(
                     riskPercent = displayPercent,
                     riskScore = displayScore,
                     riskZone = displayZone,
                     // Gate: only show full 7-day forecast for premium users
-                    forecast = if (premiumState.isPremium) state.forecast
+                    forecast = if (riskEntitled) state.forecast
                                else listOf(state.forecast.firstOrNull() ?: 0),
-                    selectedDay = if (premiumState.isPremium) selectedDay else 0,
-                    dayRisks = if (premiumState.isPremium) state.dayRisks
+                    selectedDay = if (riskEntitled) selectedDay else 0,
+                    dayRisks = if (riskEntitled) state.dayRisks
                                else state.dayRisks.take(1),
                     onDaySelected = {
-                        if (premiumState.isPremium) {
-                            selectedDay = it
-                        } else {
-                            onNavigateToPaywall()
-                        }
+                        if (riskEntitled) selectedDay = it
+                        else if (riskResolved) onNavigateToPaywall()
                     },
                     onTap = {
-                        if (premiumState.isPremium) {
-                            onNavigateToRiskDetail()
-                        } else {
-                            onNavigateToPaywall()
-                        }
+                        if (riskEntitled) onNavigateToRiskDetail()
+                        else if (riskResolved) onNavigateToPaywall()
                     },
                     infoText = RiskInfoCopy.text
                 )

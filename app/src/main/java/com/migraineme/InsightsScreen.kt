@@ -687,10 +687,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 Box(modifier = Modifier.fillMaxWidth()) {
                     BrainyWatermarkCard(modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            if (premiumStateTop.isPremium) navController.navigate(Routes.INSIGHTS_REPORT)
-                            else navController.navigate(Routes.PAYWALL)
-                        },
+                        .then(
+                            premiumGatedClickable(
+                                access = premiumStateTop.access,
+                                onOpen = { navController.navigate(Routes.INSIGHTS_REPORT) },
+                                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                            )
+                        ),
                         resId = R.drawable.brainy_briefcase, flipWatermark = true
                     ) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -703,7 +706,10 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                                     color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.bodySmall)
                             }
-                            if (!premiumStateTop.isPremium) {
+                            // Only once we know they are on the free tier — a
+                            // padlock drawn while entitlement is still resolving
+                            // is shown to subscribers too.
+                            if (premiumStateTop.access == PremiumAccess.NOT_ENTITLED) {
                                 Icon(Icons.Outlined.Lock, contentDescription = t("Premium"),
                                     tint = AppTheme.AccentPurple, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(6.dp))

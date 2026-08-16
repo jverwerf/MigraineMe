@@ -564,13 +564,20 @@ fun MonitorNutritionScreen(
             // Today's Log
             // diet art faces left already, so the watermark stays unflipped
             BrainyWatermarkCard(resId = R.drawable.brainy_diet, flipWatermark = false) {
+                val premiumAccess = PremiumManager.state.collectAsState().value.access
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable { if (PremiumManager.isPremium) navController.navigate(Routes.NUTRITION_HISTORY) else navController.navigate(Routes.PAYWALL) },
+                    modifier = Modifier.fillMaxWidth().then(
+                        premiumGatedClickable(
+                            access = premiumAccess,
+                            onOpen = { navController.navigate(Routes.NUTRITION_HISTORY) },
+                            onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                        )
+                    ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(t("Today's Log"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    if (PremiumManager.isPremium) { Text(t("History →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } else { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Icon(Icons.Outlined.Lock, contentDescription = t("Premium"), tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp)); Text(t("History"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall) } }
+                    PremiumHistoryLabel(premiumAccess)
                 }
                 Spacer(Modifier.height(8.dp))
                 

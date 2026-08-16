@@ -485,14 +485,19 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                         }
                         Text(t("%s entries", visible.size), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                     }
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.PAYWALL) },
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Outlined.FilterList, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(t("Upgrade to filter & search your full history"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                    // The 7-day window above is just a fact about what is shown.
+                    // This line is a sales pitch, so it waits until we know the
+                    // user is actually on the free tier.
+                    if (premiumState.access == PremiumAccess.NOT_ENTITLED) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable { navController.navigate(Routes.PAYWALL) },
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Outlined.FilterList, contentDescription = null, tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(t("Upgrade to filter & search your full history"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }

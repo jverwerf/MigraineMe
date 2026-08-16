@@ -19,6 +19,31 @@ enum class PremiumTier {
     FREE
 }
 
+/**
+ * What a gated surface is allowed to draw right now.
+ *
+ * Three states, deliberately — "entitled" and "not entitled" are not the whole
+ * story, and collapsing [LOADING] into either of them is a bug in one of two
+ * directions:
+ *
+ *  - folded into [ENTITLED], the gate fails OPEN and free users get every
+ *    premium surface unblurred for as long as entitlement takes to resolve;
+ *  - folded into [NOT_ENTITLED], the gate fails CLOSED and paying users are
+ *    shown padlocks and upsells for something they already bought.
+ *
+ * [LOADING] must therefore render neither: no premium content, and no lock,
+ * blur, price or "Upgrade" call to action. A quiet placeholder that holds the
+ * layout's shape, and inert controls, until the real answer lands.
+ */
+enum class PremiumAccess {
+    /** Entitlement has not resolved yet. Show a neutral placeholder. */
+    LOADING,
+    /** Trial or paid subscription — render the real thing. */
+    ENTITLED,
+    /** Resolved as free tier — blur, lock and upsell are correct here. */
+    NOT_ENTITLED
+}
+
 data class PremiumState(
     val tier: PremiumTier = PremiumTier.FREE,
 
@@ -37,9 +62,27 @@ data class PremiumState(
     /** Which plan the user is on: "monthly", "annual", or null */
     val planType: String? = null
 ) {
-    /** True if user has access to premium features (trial OR paid) */
+    /**
+     * The one place the three-state answer is derived. Every gated surface
+     * should branch on this rather than on a pair of booleans, so that the
+     * loading case cannot be forgotten at a call site.
+     */
+    val access: PremiumAccess
+        get() = when {
+            !isLoaded -> PremiumAccess.LOADING
+            tier == PremiumTier.TRIAL || tier == PremiumTier.PREMIUM -> PremiumAccess.ENTITLED
+            else -> PremiumAccess.NOT_ENTITLED
+        }
+
+    /**
+     * True only once entitlement has resolved AND grants access (trial OR paid).
+     *
+     * Note what this is not: `!isPremium` does not mean "free tier", it means
+     * "not known to be premium", which is also true while loading. Anything
+     * that shows a lock or an upsell must test [access] instead.
+     */
     val isPremium: Boolean
-        get() = tier == PremiumTier.TRIAL || tier == PremiumTier.PREMIUM
+        get() = access == PremiumAccess.ENTITLED
 
     /** True if user is in trial and should see trial banner */
     val showTrialBanner: Boolean
@@ -51,5 +94,5 @@ data class PremiumState(
 
     /** True if state hasn't loaded yet — show loading/skeleton, not paywall */
     val isLoading: Boolean
-        get() = !isLoaded
+        get() = access == PremiumAccess.LOADING
 }

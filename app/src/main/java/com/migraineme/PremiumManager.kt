@@ -89,9 +89,43 @@ object PremiumManager {
     // State Loading
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Resolves entitlement, on-device sources first.
+     *
+     * Order matters, and it is the opposite of what it used to be. RevenueCat
+     * answers out of its own disk cache and returns in milliseconds whether or
+     * not there is a network — so asking it first means a paying user's state
+     * is settled almost immediately, including on a cold launch in aeroplane
+     * mode. Only when RevenueCat says "no active subscription" do we need the
+     * Supabase round trip that decides trial vs free, and only that case can
+     * be slow. Previously the (blocking, up to 10s) Supabase read ran first and
+     * held every gated surface in limbo behind it.
+     *
+     * This never blocks on the network to grant access the user already has:
+     * a failed trial read falls back to the last trial_end this device saw,
+     * honoured only until it expires.
+     */
     suspend fun loadState(context: Context) {
         withContext(Dispatchers.IO) {
             val appCtx = context.applicationContext
+
+            val rcState = loadFromRevenueCat()
+            if (rcState.isSubscribed) {
+                // Paid access is the strongest answer there is and needs nothing
+                // from the server. Publish it and stop — no user who is paying
+                // should wait on Supabase to find out they are premium.
+                _state.update {
+                    PremiumState(
+                        tier = PremiumTier.PREMIUM,
+                        isLoaded = true,
+                        subscriptionExpiryDate = rcState.expiryDate,
+                        planType = rcState.planType
+                    )
+                }
+                Log.d(TAG, "Premium state loaded from RevenueCat: PREMIUM (plan=${rcState.planType})")
+                return@withContext
+            }
+
             val accessToken = SessionStore.getValidAccessToken(appCtx)
             if (accessToken.isNullOrBlank()) {
                 _state.update { PremiumState(isLoaded = true) }
@@ -102,7 +136,12 @@ object PremiumManager {
                 ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
                 ?: run { _state.update { PremiumState(isLoaded = true) }; return@withContext }
             val trialState = loadTrialFromSupabase(accessToken, userId)
-            val rcState = loadFromRevenueCat()
+
+            // Only a request that actually came back is allowed to change what
+            // this device believes about the trial. A read that failed (offline,
+            // 5xx) must not be mistaken for "this user has no trial" — that is
+            // how a mid-trial user gets locked out on a train.
+            if (trialState.reachedServer) saveCachedTrialEnd(appCtx, userId, trialState.trialEnd)
 
             val current = _state.value
             val localTrialActive = current.tier == PremiumTier.TRIAL &&
@@ -110,29 +149,98 @@ object PremiumManager {
                     runCatching { Instant.parse(it).isAfter(Instant.now()) }.getOrDefault(false)
                 } == true
 
+            // Last trial_end this device was told about, used only when the
+            // server could not be reached, and only while it is still in future.
+            val cachedTrialEnd = if (trialState.reachedServer) null else readCachedTrialEnd(appCtx, userId)
+            val cachedTrialActive = cachedTrialEnd?.let {
+                runCatching { Instant.parse(it).isAfter(Instant.now()) }.getOrDefault(false)
+            } == true
+
             val tier = when {
-                rcState.isSubscribed -> PremiumTier.PREMIUM
                 trialState.isDbSubscribed -> PremiumTier.PREMIUM
                 trialState.isTrialActive -> PremiumTier.TRIAL
                 // Preserve a freshly-started local trial when the Supabase row
                 // hasn't propagated yet (race after onboarding skip).
                 localTrialActive -> PremiumTier.TRIAL
+                cachedTrialActive -> PremiumTier.TRIAL
                 else -> PremiumTier.FREE
             }
+
+            // Neither source could actually be asked and there is no live
+            // cached trial to fall back on, so nothing is known. Publishing
+            // FREE here would be a guess, and a guess that puts padlocks in
+            // front of subscribers. Stay unresolved instead — every gated
+            // surface shows its neutral placeholder — and let the next
+            // loadState (app resume, or RevenueCat finishing configuration)
+            // settle it.
+            if (!rcState.consulted && !trialState.reachedServer &&
+                !localTrialActive && !cachedTrialActive
+            ) {
+                Log.w(TAG, "Entitlement unresolved: RevenueCat and Supabase both unavailable")
+                return@withContext
+            }
+
+            val resolvedTrialEnd = trialState.trialEnd
+                ?: cachedTrialEnd
+                ?: if (tier == PremiumTier.TRIAL) current.trialEndDate else null
 
             _state.update {
                 PremiumState(
                     tier = tier,
-                    trialDaysRemaining = if (trialState.isTrialActive) trialState.daysRemaining else if (tier == PremiumTier.TRIAL) current.trialDaysRemaining else 0,
-                    trialEndDate = trialState.trialEnd ?: if (tier == PremiumTier.TRIAL) current.trialEndDate else null,
+                    trialDaysRemaining = when {
+                        trialState.isTrialActive -> trialState.daysRemaining
+                        tier == PremiumTier.TRIAL -> daysRemainingUntil(resolvedTrialEnd) ?: current.trialDaysRemaining
+                        else -> 0
+                    },
+                    trialEndDate = resolvedTrialEnd,
                     isLoaded = true,
                     subscriptionExpiryDate = rcState.expiryDate,
                     planType = rcState.planType
                 )
             }
 
-            Log.d(TAG, "Premium state loaded: tier=$tier, trialDays=${trialState.daysRemaining}, subscribed=${rcState.isSubscribed}")
+            Log.d(TAG, "Premium state loaded: tier=$tier, trialDays=${_state.value.trialDaysRemaining}, reachedServer=${trialState.reachedServer}, rcConsulted=${rcState.consulted}")
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Last-known trial end (offline fallback)
+    // ═══════════════════════════════════════════════════════════
+
+    private const val PREMIUM_PREFS = "premium_prefs"
+
+    /**
+     * Keyed by user, deliberately. Signing out is not the only thing that
+     * reaches for a reset — MainActivity resets whenever it has no token in
+     * hand, which includes the moment before the stored session has been read
+     * on every cold launch. A single global key was therefore wiped on the way
+     * into the app, exactly when it was about to be needed. Per-user keys also
+     * mean one account's trial can never be read against another's.
+     */
+    private fun trialEndKey(userId: String) = "cached_trial_end_$userId"
+
+    private fun saveCachedTrialEnd(context: Context, userId: String, trialEnd: String?) {
+        val editor = context.getSharedPreferences(PREMIUM_PREFS, Context.MODE_PRIVATE).edit()
+        if (trialEnd.isNullOrBlank()) editor.remove(trialEndKey(userId))
+        else editor.putString(trialEndKey(userId), trialEnd)
+        editor.apply()
+    }
+
+    private fun readCachedTrialEnd(context: Context, userId: String): String? =
+        context.getSharedPreferences(PREMIUM_PREFS, Context.MODE_PRIVATE)
+            .getString(trialEndKey(userId), null)
+            ?.takeIf { it.isNotBlank() }
+
+    private fun clearCachedTrialEnd(context: Context, userId: String) {
+        context.getSharedPreferences(PREMIUM_PREFS, Context.MODE_PRIVATE)
+            .edit().remove(trialEndKey(userId)).apply()
+    }
+
+    /** Ceil partial days, same rule the server read uses. */
+    private fun daysRemainingUntil(trialEnd: String?): Int? {
+        val end = trialEnd?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
+        val secondsLeft = ChronoUnit.SECONDS.between(Instant.now(), end).coerceAtLeast(0)
+        return ((secondsLeft + 86399) / 86400).toInt()
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -143,7 +251,13 @@ object PremiumManager {
         val isTrialActive: Boolean = false,
         val daysRemaining: Int = 0,
         val trialEnd: String? = null,
-        val isDbSubscribed: Boolean = false
+        val isDbSubscribed: Boolean = false,
+        /**
+         * Whether the row was actually read. A default [TrialInfo] means two
+         * very different things — "this user has no trial" and "we could not
+         * ask" — and only the first may be allowed to revoke access.
+         */
+        val reachedServer: Boolean = false
     )
 
     private fun loadTrialFromSupabase(accessToken: String, userId: String): TrialInfo {
@@ -165,12 +279,16 @@ object PremiumManager {
 
                 val body = response.body?.string() ?: return TrialInfo()
                 val arr = org.json.JSONArray(body)
-                if (arr.length() == 0) return TrialInfo()
+                // Read succeeded from here on: an empty array really is
+                // "no trial row for this user".
+                if (arr.length() == 0) return TrialInfo(reachedServer = true)
 
                 val row = arr.getJSONObject(0)
                 val trialEndStr = row.optString("trial_end", "")
                 val rcStatus = row.optString("rc_subscription_status", "")
-                if (trialEndStr.isBlank()) return TrialInfo()
+                if (trialEndStr.isBlank()) {
+                    return TrialInfo(isDbSubscribed = rcStatus == "active", reachedServer = true)
+                }
 
                 val trialEnd = Instant.parse(trialEndStr)
                 val now = Instant.now()
@@ -182,7 +300,8 @@ object PremiumManager {
                     isTrialActive = now.isBefore(trialEnd),
                     daysRemaining = daysRemaining.coerceAtLeast(0),
                     trialEnd = trialEndStr,
-                    isDbSubscribed = rcStatus == "active"
+                    isDbSubscribed = rcStatus == "active",
+                    reachedServer = true
                 )
             }
         } catch (e: Exception) {
@@ -198,11 +317,20 @@ object PremiumManager {
     private data class SubscriptionInfo(
         val isSubscribed: Boolean = false,
         val expiryDate: String? = null,
-        val planType: String? = null
+        val planType: String? = null,
+        /**
+         * Whether RevenueCat actually answered. False means it was not yet
+         * configured, errored, or timed out — none of which are the same as
+         * "this user has no subscription", and none of which may be used to
+         * take premium away from someone.
+         */
+        val consulted: Boolean = false
     )
 
     private fun loadFromRevenueCat(): SubscriptionInfo {
         return try {
+            // configure() happens in initialize(), which a concurrent loadState
+            // (app resume racing first launch) can beat. Not an answer.
             if (!Purchases.isConfigured) return SubscriptionInfo()
 
             var result = SubscriptionInfo()
@@ -210,7 +338,7 @@ object PremiumManager {
 
             Purchases.sharedInstance.getCustomerInfo(object : ReceiveCustomerInfoCallback {
                 override fun onReceived(customerInfo: CustomerInfo) {
-                    result = parseCustomerInfo(customerInfo)
+                    result = parseCustomerInfo(customerInfo).copy(consulted = true)
                     latch.countDown()
                 }
                 override fun onError(error: PurchasesError) {
@@ -404,6 +532,7 @@ object PremiumManager {
             // onboarding can't extend or re-grant the 14 days.
             val existing = loadTrialFromSupabase(accessToken, userId)
             if (!existing.trialEnd.isNullOrBlank()) {
+                saveCachedTrialEnd(appCtx, userId, existing.trialEnd)
                 _state.update {
                     it.copy(
                         tier = if (existing.isTrialActive) PremiumTier.TRIAL else PremiumTier.FREE,
@@ -442,6 +571,10 @@ object PremiumManager {
                     .header("Content-Type", "application/json")
                     .build()
                 httpClient.newCall(request).execute().use { response ->
+                    // Only a trial the server accepted is allowed into the
+                    // offline cache. Caching the optimistic one would let a
+                    // trial that was never granted survive across launches.
+                    if (response.isSuccessful) saveCachedTrialEnd(appCtx, userId, trialEndStr)
                     Log.d(TAG, "startOnboardingTrial: ${response.code}, trialEnd=$trialEndStr")
                 }
             } catch (e: Exception) {
@@ -465,6 +598,7 @@ object PremiumManager {
             val userId = SessionStore.readUserId(appCtx)
                 ?: JwtUtils.extractUserIdFromAccessToken(accessToken)
                 ?: return@withContext
+            clearCachedTrialEnd(appCtx, userId)
             try {
                 val url = "${BuildConfig.SUPABASE_URL}/rest/v1/premium_status?user_id=eq.$userId"
                 val request = Request.Builder()
@@ -485,6 +619,15 @@ object PremiumManager {
     val isPremium: Boolean
         get() = _state.value.isPremium
 
+    /**
+     * No session in hand. Drops back to LOADING rather than FREE, because
+     * nothing is known about whoever signs in next — and this also runs on the
+     * way into a cold launch, before the stored session has been read.
+     *
+     * Leaves the cached trial_end alone: it is keyed by user, so it cannot be
+     * read against the wrong account, and wiping it here would destroy the
+     * offline fallback on every single launch.
+     */
     fun reset() {
         _state.update { PremiumState() }
         if (Purchases.isConfigured) {

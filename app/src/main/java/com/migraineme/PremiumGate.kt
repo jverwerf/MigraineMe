@@ -15,10 +15,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -26,10 +31,68 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
+ * Swallows every gesture before the children below can see it, without
+ * changing the layout. Used to make a placeholder's underlying content inert
+ * while entitlement is still resolving — the content is there only to hold the
+ * card's size, and must not be tappable through the placeholder.
+ */
+private fun Modifier.consumeAllPointerInput(): Modifier = this.pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+        }
+    }
+}
+
+/**
+ * The neutral middle state: neither the premium content nor a lock.
+ *
+ * [content] is kept in the layout at zero opacity so the card holds its real
+ * size and nothing jumps when entitlement lands, and is covered by a quiet
+ * placeholder. Deliberately carries no lock, price or "Upgrade" — the user may
+ * well be a subscriber and we do not yet know.
+ */
+@Composable
+private fun PremiumLoadingPlaceholder(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .alpha(0f)
+                .consumeAllPointerInput()
+                .clearAndSetSemantics { }
+        ) {
+            content()
+        }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .padding(1.dp)
+                .clip(RoundedCornerShape(17.dp))
+                .background(AppTheme.BaseCardContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = AppTheme.AccentPurple,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+/**
  * Wraps premium content with a blur overlay + CTA when the user is on the free tier.
  *
- * During trial or with an active subscription, content renders normally.
- * After trial expiry (FREE tier), content is blurred with an upgrade prompt.
+ * Three states, never two — see [PremiumAccess]:
+ *  - ENTITLED (trial or paid): content renders normally.
+ *  - NOT_ENTITLED (free tier): content is blurred under an upgrade prompt.
+ *  - LOADING: neither. Entitlement is still resolving, so showing content would
+ *    hand every gated surface to free users for the length of the window, and
+ *    showing the lock would wall off people who are paying. A quiet placeholder
+ *    holds the card's shape until the answer arrives.
  *
  * Usage:
  *   PremiumGate(
@@ -51,10 +114,16 @@ fun PremiumGate(
 ) {
     val premiumState by PremiumManager.state.collectAsState()
 
-    // While loading, show content (don't flash paywall on app start)
-    if (premiumState.isLoading || premiumState.isPremium) {
-        content()
-        return
+    when (premiumState.access) {
+        PremiumAccess.ENTITLED -> {
+            content()
+            return
+        }
+        PremiumAccess.LOADING -> {
+            PremiumLoadingPlaceholder(modifier = modifier, content = content)
+            return
+        }
+        PremiumAccess.NOT_ENTITLED -> Unit // falls through to the blurred upsell
     }
 
     // FREE tier: render content blurred, overlay inside card bounds
@@ -145,7 +214,25 @@ fun PremiumFeatureButton(
 ) {
     val premiumState by PremiumManager.state.collectAsState()
 
-    if (!isPremiumAction || premiumState.isPremium) {
+    if (isPremiumAction && premiumState.access == PremiumAccess.LOADING) {
+        // Entitlement unresolved: the button keeps its place and its label but
+        // does nothing. No "(Premium)" suffix and no lock — that is a claim
+        // about the user we are not yet entitled to make.
+        Button(
+            onClick = {},
+            enabled = false,
+            modifier = modifier,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AppTheme.AccentPurple,
+                contentColor = Color.White,
+                disabledContainerColor = AppTheme.AccentPurple.copy(alpha = 0.35f),
+                disabledContentColor = Color.White.copy(alpha = 0.6f)
+            ),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Text(t(label), fontWeight = FontWeight.SemiBold)
+        }
+    } else if (!isPremiumAction || premiumState.isPremium) {
         // Normal button
         Button(
             onClick = onAction,
@@ -184,6 +271,96 @@ fun PremiumFeatureButton(
             )
         }
     }
+}
+
+/**
+ * Whole-screen premium gate for a nav destination.
+ *
+ * Same three states as [PremiumGate], expressed for a route:
+ *  - ENTITLED: the screen.
+ *  - NOT_ENTITLED: bounce to the paywall via [onDenied].
+ *  - LOADING: a spinner. Not the screen — that is the free ride the inline gate
+ *    used to give away — and not the bounce, which would throw a paying user
+ *    out of a screen they just opened and land them on a price list.
+ *
+ * The route stays mounted while loading, so when entitlement resolves the user
+ * is already where they asked to be.
+ */
+@Composable
+fun PremiumRoute(
+    onDenied: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    val premiumState by PremiumManager.state.collectAsState()
+
+    when (premiumState.access) {
+        PremiumAccess.ENTITLED -> content()
+        PremiumAccess.NOT_ENTITLED -> LaunchedEffect(Unit) { onDenied() }
+        PremiumAccess.LOADING -> Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = AppTheme.AccentPurple,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+/**
+ * The "History →" affordance that sits in the header of every Monitor card.
+ *
+ * Was copy-pasted across seven screens, each reading the non-observable
+ * `PremiumManager.isPremium` snapshot — so the padlock latched at first
+ * composition, when nothing had loaded yet, and never went away for a
+ * subscriber until the screen was rebuilt. One observable copy, three states.
+ */
+@Composable
+fun PremiumHistoryLabel(
+    access: PremiumAccess,
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    iconSize: Dp = 14.dp
+) {
+    when (access) {
+        PremiumAccess.ENTITLED ->
+            Text(t("History →"), color = AppTheme.AccentPurple, style = textStyle)
+
+        // Same word, no lock and no arrow: it says nothing about whether this
+        // user may have it, because we do not know yet.
+        PremiumAccess.LOADING ->
+            Text(t("History"), color = AppTheme.SubtleTextColor, style = textStyle)
+
+        PremiumAccess.NOT_ENTITLED -> Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                Icons.Outlined.Lock,
+                contentDescription = t("Premium"),
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(iconSize)
+            )
+            Text(t("History"), color = AppTheme.AccentPurple, style = textStyle)
+        }
+    }
+}
+
+/**
+ * Click behaviour for a gated row: open it, sell it, or — while entitlement is
+ * unresolved — do nothing at all. A tap that lands on the paywall because the
+ * answer had not arrived yet is the fail-closed half of the same bug.
+ */
+@Composable
+fun premiumGatedClickable(
+    access: PremiumAccess,
+    onOpen: () -> Unit,
+    onUpgrade: () -> Unit
+): Modifier = when (access) {
+    PremiumAccess.ENTITLED -> Modifier.clickable(onClick = onOpen)
+    PremiumAccess.NOT_ENTITLED -> Modifier.clickable(onClick = onUpgrade)
+    PremiumAccess.LOADING -> Modifier
 }
 
 /**

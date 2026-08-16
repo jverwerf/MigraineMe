@@ -159,23 +159,20 @@ fun MonitorSleepScreen(
             } else {
                 // Last Night's Sleep
                 BrainyWatermarkCard(resId = R.drawable.brainy_sleep, flipWatermark = true) {
+                    val premiumAccess = PremiumManager.state.collectAsState().value.access
                     Row(
-                        modifier = Modifier.fillMaxWidth().clickable {
-                            if (PremiumManager.isPremium) navController.navigate(Routes.SLEEP_DATA_HISTORY)
-                            else navController.navigate(Routes.PAYWALL)
-                        },
+                        modifier = Modifier.fillMaxWidth().then(
+                            premiumGatedClickable(
+                                access = premiumAccess,
+                                onOpen = { navController.navigate(Routes.SLEEP_DATA_HISTORY) },
+                                onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                            )
+                        ),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(t("Last Night's Sleep"), color = AppTheme.TitleColor, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                        if (PremiumManager.isPremium) {
-                            Text(t("History →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
-                        } else {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Icon(Icons.Outlined.Lock, contentDescription = t("Premium"), tint = AppTheme.AccentPurple, modifier = Modifier.size(14.dp))
-                                Text(t("History"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
+                        PremiumHistoryLabel(premiumAccess)
                     }
                     Spacer(Modifier.height(8.dp))
 

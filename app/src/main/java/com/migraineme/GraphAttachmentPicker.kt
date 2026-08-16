@@ -77,7 +77,21 @@ fun GraphAttachmentPicker(
 
             Spacer(Modifier.height(8.dp))
 
-            if (!premiumState.isPremium) {
+            if (premiumState.access == PremiumAccess.LOADING) {
+                // PremiumGate's placeholder sizes itself from its content, and
+                // this gate's content is empty — so it has to be spelled out
+                // here rather than collapsing to a zero-height blank.
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(96.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = AppTheme.AccentPurple,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            } else if (!premiumState.isPremium) {
                 PremiumGate(
                     message = t("Share your migraine graphs"),
                     subtitle = t("Attach detailed graphs to community posts"),

@@ -518,19 +518,21 @@ fun MonitorMedicineScreen(navController: NavController, authVm: AuthViewModel = 
                             Text(t("Breakdown"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                                 modifier = Modifier.weight(1f))
-                            val pState by PremiumManager.state.collectAsState()
-                            if (pState.isPremium) {
-                                Text(t("History →"), color = AppTheme.AccentPurple,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.clickable { navController.navigate(Routes.MEDICINE_DATA_HISTORY) })
-                            } else {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Outlined.Lock, contentDescription = null,
-                                        tint = AppTheme.AccentPurple, modifier = Modifier.size(12.dp))
-                                    Spacer(Modifier.width(2.dp))
-                                    Text(t("History"), color = AppTheme.AccentPurple,
-                                        style = MaterialTheme.typography.labelSmall)
-                                }
+                            val premiumAccess = PremiumManager.state.collectAsState().value.access
+                            Box(
+                                modifier = Modifier.then(
+                                    premiumGatedClickable(
+                                        access = premiumAccess,
+                                        onOpen = { navController.navigate(Routes.MEDICINE_DATA_HISTORY) },
+                                        onUpgrade = { navController.navigate(Routes.PAYWALL) }
+                                    )
+                                )
+                            ) {
+                                PremiumHistoryLabel(
+                                    access = premiumAccess,
+                                    textStyle = MaterialTheme.typography.labelSmall,
+                                    iconSize = 12.dp
+                                )
                             }
                         }
                         Spacer(Modifier.height(8.dp))

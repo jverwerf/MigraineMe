@@ -518,14 +518,19 @@ fun TreatmentsMonitorCard(onClick: () -> Unit) {
                 Spacer(Modifier.width(10.dp))
                 Text(t("Treatments"), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.weight(1f))
-                if (isPremium) {
+                // The "Premium ·" tag and the upgrade pitch below are claims
+                // about this user's tier, so neither may be drawn until the
+                // tier is actually known.
+                if (isPremium || pState.access == PremiumAccess.LOADING) {
                     Text("→", color = Color(0xFFB388FF), style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text(t("Premium · →"), color = Color(0xFFB97BFF), style = MaterialTheme.typography.labelSmall)
                 }
             }
             Spacer(Modifier.height(6.dp))
-            if (!isPremium) {
+            if (pState.access == PremiumAccess.LOADING) {
+                CircularProgressIndicator(color = Color(0xFFB97BFF), modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+            } else if (!isPremium) {
                 Text(t("Track how well each drug, device, or lifestyle change reduces your migraine days. Upgrade to unlock."),
                     color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.bodySmall)
             } else if (loading) {

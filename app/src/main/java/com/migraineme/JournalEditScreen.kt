@@ -253,7 +253,7 @@ fun JournalEditScreen(
                 ) {
                     // Date picker button — log entries never sit in the future
                     val datePickerState = rememberDatePickerState(
-                        initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                        initialSelectedDateMillis = localDateToDatePickerMillis(selectedDate),
                         selectableDates = PastOnlyDates
                     )
                     var showDatePicker by remember { mutableStateOf(false) }
@@ -274,7 +274,7 @@ fun JournalEditScreen(
                             confirmButton = {
                                 TextButton(onClick = {
                                     datePickerState.selectedDateMillis?.let {
-                                        selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                                        selectedDate = datePickerMillisToLocalDate(it)
                                     }
                                     // Moving onto today can strand the kept time ahead of now — clamp
                                     if (selectedDate == LocalDate.now() && selectedTime.isAfter(LocalTime.now())) {
@@ -350,7 +350,7 @@ fun JournalEditScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         val endDatePickerState = rememberDatePickerState(
-                            initialSelectedDateMillis = selectedEndDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                            initialSelectedDateMillis = localDateToDatePickerMillis(selectedEndDate),
                             selectableDates = PastOnlyDates
                         )
                         var showEndDatePicker by remember { mutableStateOf(false) }
@@ -371,7 +371,7 @@ fun JournalEditScreen(
                                 confirmButton = {
                                     TextButton(onClick = {
                                         endDatePickerState.selectedDateMillis?.let {
-                                            selectedEndDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                                            selectedEndDate = datePickerMillisToLocalDate(it)
                                         }
                                         // Moving onto today can strand the kept time ahead of now — clamp
                                         if (selectedEndDate == LocalDate.now() && selectedEndTime.isAfter(LocalTime.now())) {

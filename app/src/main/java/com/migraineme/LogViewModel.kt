@@ -1317,9 +1317,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     "location" -> JournalEvent.Location(db.getLocationLogById(accessToken, id))
                     else -> return@launch
                 }
-                _journal.value = _journal.value.map {
-                    if (journalEventId(it) == id) replacement else it
-                }
+                // Re-sorted, not just swapped: the commonest reason to edit an
+                // entry is to correct its time, and dropping the new row into
+                // the old row's slot left it sitting between the wrong
+                // neighbours until something forced a full reload. Same
+                // comparator the feed is built with, so an edit that did not
+                // move the timestamp changes nothing.
+                _journal.value = _journal.value
+                    .map { if (journalEventId(it) == id) replacement else it }
+                    .sortedByDescending { journalEventStartAt(it) ?: "" }
             } catch (e: Exception) { e.printStackTrace() }
         }
     }

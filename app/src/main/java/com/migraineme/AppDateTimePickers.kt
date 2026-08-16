@@ -61,6 +61,28 @@ fun appTimePickerColors(): TimePickerColors = TimePickerDefaults.colors(
 )
 
 /**
+ * Material3's DatePicker speaks exclusively in UTC: `selectedDateMillis` is
+ * midnight UTC of the day the user tapped, and `initialSelectedDateMillis` is
+ * read back the same way. Converting either with [ZoneId.systemDefault] shifts
+ * the answer by a day for anyone west of Greenwich — pick 15 August in New
+ * York and 2026-08-15T00:00Z reads back as the 14th — which is how a US user's
+ * logs quietly landed on the previous day.
+ *
+ * These two are the only sanctioned way to cross that boundary. The picked
+ * value is a calendar date the user pointed at, not an instant, so it is
+ * carried as a [LocalDate] and combined with the picked wall-clock time by the
+ * caller. That matches [PastOnlyDates] and the ISO writer below, which already
+ * treat these timestamps as wall clock.
+ */
+private val DATE_PICKER_ZONE: ZoneId = ZoneId.of("UTC")
+
+fun datePickerMillisToLocalDate(utcMillis: Long): LocalDate =
+    Instant.ofEpochMilli(utcMillis).atZone(DATE_PICKER_ZONE).toLocalDate()
+
+fun localDateToDatePickerMillis(date: LocalDate): Long =
+    date.atStartOfDay(DATE_PICKER_ZONE).toInstant().toEpochMilli()
+
+/**
  * Days from today onwards are unselectable. Timestamps in this app are wall
  * clock, so "today" is the local day — a UTC-based comparison would open
  * tomorrow early for anyone east of Greenwich.
@@ -68,8 +90,7 @@ fun appTimePickerColors(): TimePickerColors = TimePickerDefaults.colors(
 @OptIn(ExperimentalMaterial3Api::class)
 internal object PastOnlyDates : SelectableDates {
     override fun isSelectableDate(utcTimeMillis: Long): Boolean =
-        !Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneId.of("UTC")).toLocalDate()
-            .isAfter(LocalDate.now())
+        !datePickerMillisToLocalDate(utcTimeMillis).isAfter(LocalDate.now())
 
     override fun isSelectableYear(year: Int): Boolean = year <= LocalDate.now().year
 }
@@ -121,7 +142,7 @@ fun DateTimePickerField(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            pickedDate = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                            pickedDate = datePickerMillisToLocalDate(millis)
                             showDatePicker = false
                             showTimePicker = true
                         }
@@ -228,7 +249,7 @@ fun ThemedDatePicker(
     val displayText = if (isoDate.isBlank()) "Select date" else isoDate
 
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initial.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        initialSelectedDateMillis = localDateToDatePickerMillis(initial)
     )
 
     OutlinedButton(
@@ -249,7 +270,7 @@ fun ThemedDatePicker(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            val picked = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                            val picked = datePickerMillisToLocalDate(millis)
                             onDateSelected(picked.format(DateTimeFormatter.ISO_LOCAL_DATE))
                             showPicker = false
                         }
