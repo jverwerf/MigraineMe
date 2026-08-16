@@ -718,6 +718,74 @@
     {
       "en": "Unknown",
       "why": "report cover timeframeLabel: Android error fallback, runtime value"
+    },
+    {
+      "en": "Trigger detected",
+      "why": "per-item trigger bell push title: hourly-trigger-dispatcher sends it as notification_key, not a t() literal"
+    },
+    {
+      "en": "Early warning detected",
+      "why": "per-item prodrome bell push title: hourly-prodrome-dispatcher sends it as notification_key"
+    },
+    {
+      "en": "Today's risk: {0}",
+      "why": "daily_gauge push title: risk-score-worker sends it as notification_key"
+    },
+    {
+      "en": "Risk just went up: {0}",
+      "why": "daily_gauge push title when the zone escalated"
+    },
+    {
+      "en": "High",
+      "why": "daily_gauge push title argument: zone label looked up by enum"
+    },
+    {
+      "en": "Mild",
+      "why": "daily_gauge push title argument: zone label looked up by enum"
+    },
+    {
+      "en": "Low",
+      "why": "daily_gauge push title argument: zone label looked up by enum"
+    },
+    {
+      "en": "Your gauge is at {0}.",
+      "why": "daily_gauge push body sentence"
+    },
+    {
+      "en": "Biggest factor: {0}.",
+      "why": "daily_gauge push body sentence, present only when a top trigger exists"
+    },
+    {
+      "en": "Tap to see what's driving it.",
+      "why": "daily_gauge push body sentence"
+    },
+    {
+      "en": "Is your migraine over?",
+      "why": "ongoing_migraine push title: ongoing-migraine-reminder sends it as notification_key"
+    },
+    {
+      "en": "You logged a migraine 1 day ago and it's still open.",
+      "why": "ongoing_migraine push body opening sentence"
+    },
+    {
+      "en": "You logged a migraine {0} days ago and it's still open.",
+      "why": "ongoing_migraine push body opening sentence"
+    },
+    {
+      "en": "Tap to add how it ended.",
+      "why": "ongoing_migraine push body closing sentence"
+    },
+    {
+      "en": "Tap to add how it ended. We won't ask about this one again.",
+      "why": "ongoing_migraine push body closing sentence on the last reminder"
+    },
+    {
+      "en": "New recommendations ready",
+      "why": "new_insight push title: ai-daily-insight-worker sends it as notification_key"
+    },
+    {
+      "en": "Your recommendations for today are ready. Tap to see them.",
+      "why": "new_insight push body"
     }
   ]
 }

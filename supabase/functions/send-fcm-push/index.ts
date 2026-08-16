@@ -226,6 +226,29 @@ async function getEveningCheckinTokens(
   return tokens;
 }
 
+// A body sent as sentence parts is translated part by part and joined; a
+// body sent whole is translated as one key. Same output either way, so
+// callers pick whichever matches how their copy is actually written.
+type NotificationKey = {
+  title: string;
+  body: string;
+  title_args?: unknown[];
+  body_args?: unknown[];
+  body_parts?: Array<{ key: string; args?: unknown[] }>;
+};
+
+function renderBody(
+  t: (en: string, ...args: unknown[]) => string,
+  key: NotificationKey,
+): string {
+  if (key.body_parts && key.body_parts.length > 0) {
+    return key.body_parts
+      .map((p) => t(p.key, ...(p.args ?? [])))
+      .join(" ");
+  }
+  return t(key.body, ...(key.body_args ?? []));
+}
+
 // ─── Main handler ───────────────────────────────────────────────────
 
 serve(async (req) => {
@@ -248,9 +271,7 @@ serve(async (req) => {
     const notificationByToken = new Map<string, { title: string; body: string }>();
     // English key + args for per-recipient rendering; resolved against each
     // target user's profiles.lang in the user_ids branch below.
-    let notificationKey:
-      | { title: string; body: string; title_args?: unknown[]; body_args?: unknown[] }
-      | null = null;
+    let notificationKey: NotificationKey | null = null;
 
     if (req.method === "POST") {
       const body = await req.json();
@@ -298,11 +319,25 @@ serve(async (req) => {
         body.notification_key &&
         typeof body.notification_key === "object" &&
         typeof body.notification_key.title === "string" &&
-        typeof body.notification_key.body === "string"
+        (typeof body.notification_key.body === "string" ||
+          Array.isArray(body.notification_key.body_parts))
       ) {
         notificationKey = {
           title: body.notification_key.title,
-          body: body.notification_key.body,
+          body: typeof body.notification_key.body === "string" ? body.notification_key.body : "",
+          // Whole sentences, each its own key, joined after translation —
+          // the same rule the devices use, and the reason a language is free
+          // to reorder the words inside a sentence without the caller caring.
+          // It also means a push reuses the sentence keys the app already has
+          // translated instead of minting a combined string nobody has seen.
+          body_parts: Array.isArray(body.notification_key.body_parts)
+            ? (body.notification_key.body_parts as Array<Record<string, unknown>>)
+              .filter((p) => p && typeof p.key === "string")
+              .map((p) => ({
+                key: p.key as string,
+                args: Array.isArray(p.args) ? p.args : undefined,
+              }))
+            : undefined,
           title_args: Array.isArray(body.notification_key.title_args)
             ? body.notification_key.title_args
             : undefined,
@@ -356,7 +391,7 @@ serve(async (req) => {
           const t = translatorFor(asLang(p.lang));
           notificationByToken.set(p.fcm_token, {
             title: t(notificationKey.title, ...(notificationKey.title_args ?? [])),
-            body: t(notificationKey.body, ...(notificationKey.body_args ?? [])),
+            body: renderBody(t, notificationKey),
           });
         }
       }
@@ -483,7 +518,7 @@ serve(async (req) => {
       const t = translatorFor("en");
       notification = {
         title: t(notificationKey.title, ...(notificationKey.title_args ?? [])),
-        body: t(notificationKey.body, ...(notificationKey.body_args ?? [])),
+        body: renderBody(t, notificationKey),
       };
     }
 
