@@ -1157,6 +1157,7 @@ function group(color: string, title: string, note: string, body: string, count: 
 const SEEN_NOTE = () => rt("Established patterns that also appeared in the attacks in this report.");
 const HISTORY_ONLY_NOTE = () => rt("Statistically established patterns that did not appear in this report's time frame.");
 const STATS_NOTE = () => rt("Patterns are established across your full logging history, where there is enough data for statistical confidence.");
+const REGENERATING_NOTE = () => rt("These are being rewritten in your language and were not ready when this report was made. Generate the report again in a few minutes to include them.");
 
 // A combination row is only meaningful when it names two DIFFERENT things. The
 // engine no longer emits self-pairs, but rows written before that fix are still
@@ -1615,7 +1616,20 @@ function impact(d: ReportData, pageNo: number): string {
 
 // ── recommendations ──────────────────────────────────────────────
 function recommendations(d: ReportData, pageNo: number): string {
-  if (!d.recommendations.length) return "";
+  if (!d.recommendations.length) {
+    // Empty because a regeneration is in flight is not the same as empty
+    // because there is nothing to say. Returning "" drops the page AND its
+    // contents entry, so the reader cannot tell the section was ever meant to
+    // exist — which, in a document a clinician reads as a complete record, is
+    // the difference between "this patient has no recommendations" and "ask
+    // for this report again in a few minutes".
+    if (!d.recommendationsPending) return "";
+    return page(C.purple, `
+      ${header(C.purple, ICON.bulb, rt("Recommendations"),
+      rt("Built from this patient's own patterns, reviewed monthly"))}
+      ${historyNote(REGENERATING_NOTE())}
+    `, pageNo);
+  }
   const card = (r: { title: string; body: string }) => `<div class="card">
       <div class="name">${esc(r.title)}</div>
       <div class="meta" style="line-height:1.5">${esc(r.body)}</div>

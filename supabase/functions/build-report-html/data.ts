@@ -150,6 +150,15 @@ export type ReportData = {
   narratives: Record<string, string>;
   sideEffects: Record<string, Record<string, unknown>[]>;
   recommendations: { title: string; body: string }[];
+  /** A regeneration of the insight row is queued or running.
+   *
+   *  Changing the display language deletes the newest daily_insights row and
+   *  re-queues its job (trg_requeue_daily_insight_on_lang_change), because the
+   *  model prose cannot be re-translated at the render boundary the way t()
+   *  strings are. For the minutes that takes, `recommendations` is empty for a
+   *  reason that has nothing to do with the patient — and a clinical document
+   *  must not present a transient gap as "no recommendations". */
+  recommendationsPending: boolean;
   /** Normalised trigger/prodrome label -> the metric keys it stands for.
    *  Grouped labels such as "Poor sleep" cover several metrics, which is why
    *  this is a set per label and not a single key. */
@@ -293,7 +302,7 @@ export async function loadReportData(
 
   const [
     { data: corr }, { data: timing }, { data: migration }, { data: intraday },
-    { data: pool }, { data: prof }, { data: insights },
+    { data: pool }, { data: prof }, { data: insights }, { data: insightJobs },
   ] = await Promise.all([
     sb.from("correlation_stats").select("*"),
     sb.from("treatment_timing_stats").select("*"),
@@ -304,6 +313,12 @@ export async function loadReportData(
     sb.from("daily_insights").select("ai_recommendations")
       .not("ai_recommendations", "is", null)
       .order("date", { ascending: false }).limit(1),
+    // Distinguishes "regenerating" from "never had any". daily_insights is not
+    // language-stamped, so the row is deleted and rebuilt rather than filtered
+    // — which means its absence alone cannot tell the two cases apart, and the
+    // job queue is the only place that can.
+    sb.from("daily_insight_jobs").select("status")
+      .in("status", ["queued", "processing"]).limit(1),
   ]);
 
   // Treatments: the leaderboard is an RPC, its narratives and side effects are
@@ -709,6 +724,7 @@ export async function loadReportData(
     intradayResponse: (intraday ?? []) as ReportData["intradayResponse"],
     treatments, narratives, sideEffects,
     recommendations,
+    recommendationsPending: (insightJobs?.length ?? 0) > 0,
     labelToMetricKeys,
     metricGroups,
     poolCategories,

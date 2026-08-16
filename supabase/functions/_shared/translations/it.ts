@@ -269,6 +269,7 @@ const TABLE: Record<string, string> = {
   "Temperature": "Temperatura",
   "The factors that showed up before attacks, ranked by strength": "I fattori comparsi prima degli attacchi, ordinati per forza",
   "The story of this record, in plain words": "La storia di questo registro, in parole semplici",
+  "These are being rewritten in your language and were not ready when this report was made. Generate the report again in a few minutes to include them.": "Sono in fase di riscrittura nella tua lingua e non erano pronte quando è stato creato questo referto. Genera di nuovo il referto tra qualche minuto per includerle.",
   "Thiamin": "Tiamina",
   "This period against the equal one before it": "Questo periodo rispetto a quello uguale precedente",
   "Thu": "gio",
