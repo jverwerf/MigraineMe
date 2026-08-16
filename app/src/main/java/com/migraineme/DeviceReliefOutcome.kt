@@ -38,8 +38,19 @@ object DeviceCatalog {
         "avulux", "theraspecs", "allay", "thermazone", "apollo"
     )
 
+    /**
+     * [category] is the authoritative answer and is checked first: it is the
+     * pool item's own user_reliefs.category, which is "Device" for every device
+     * in the library and for anything the user filed as one, whatever they
+     * named it.
+     *
+     * [label] matching stays as the FALLBACK, and has to. Reliefs logged before
+     * the app started stamping category have it NULL, and a few paths write a
+     * generic label that belongs to no pool item at all. For those the name is
+     * the only signal there is.
+     */
     fun isDeviceRelief(label: String?, category: String? = null): Boolean {
-        if (category?.equals("Device", ignoreCase = true) == true) return true
+        if (category?.trim()?.equals("Device", ignoreCase = true) == true) return true
         val l = label?.lowercase() ?: return false
         return MATCHERS.any { l.contains(it) }
     }
@@ -138,8 +149,14 @@ class DeviceReliefOutcomeWorker(
         private fun workNameFor(reliefId: String) = "device_relief_outcome_$reliefId"
 
         /**
-         * Call after inserting a relief log. No-op unless the relief is a known
-         * neuromodulation device.
+         * Call after inserting a relief log. No-op unless the relief is a
+         * device.
+         *
+         * Pass the inserted row's own [category] (ReliefRow.category), not a
+         * guess: that is the pool item's category as it was actually stored, so
+         * a device the user renamed or one that is not in DeviceCatalog still
+         * gets its follow-up. Only leave it null where there genuinely is no
+         * category, and accept name matching there.
          */
         fun scheduleIfDevice(context: Context, reliefId: String, label: String?, category: String? = null) {
             if (!DeviceCatalog.isDeviceRelief(label, category)) return

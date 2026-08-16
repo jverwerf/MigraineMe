@@ -10,6 +10,8 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -1290,6 +1292,25 @@ class SupabaseDbService(
         @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
         @SerialName("side_effect_notes") val sideEffectNotes: String? = null
     )
+    /**
+     * Writes one relief log.
+     *
+     * [category] is the POOL ITEM's own category (user_reliefs.category), not a
+     * per-log field the user picks. It is the authoritative answer to "is this
+     * a device?" for every later reader — the 2h outcome follow-up, device
+     * stats in Insights, the journal edit sheet. ReliefInsert has always
+     * declared the column, but nothing ever filled it, so every relief row this
+     * app wrote had category NULL and the follow-up could only guess from the
+     * item's NAME against a fixed device list. A device the user renamed, or
+     * one not on that list, never got its "did it help?" prompt.
+     *
+     * Callers holding the pool row pass it straight through. Callers that only
+     * ever have a label (drafts rebuilt from an AI parse, the evening
+     * check-in, calendar auto-inserts) leave it null and it is resolved from
+     * the user's own pool by label. Resolution is best effort: it never fails
+     * the insert, and a label that belongs to no pool item simply stays NULL,
+     * which leaves name matching as the fallback exactly as before.
+     */
     suspend fun insertRelief(
         accessToken: String,
         migraineId: String?,
@@ -1299,13 +1320,16 @@ class SupabaseDbService(
         endAt: String? = null,
         reliefScale: String? = "NONE",
         sideEffectScale: String? = "NONE",
-        sideEffectNotes: String? = null
+        sideEffectNotes: String? = null,
+        category: String? = null
     ): ReliefRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
         // end_at is the single source of truth for duration; a relief with no
         // end simply has end_at NULL (never defaulted to start_at).
         val safeEnd = endAt?.takeIf { it.isNotBlank() }
-        val payload = ReliefInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId, endAt = safeEnd, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
+        val safeCategory = category?.takeIf { it.isNotBlank() }
+            ?: ReliefPoolCategories.categoryFor(this, accessToken, type)
+        val payload = ReliefInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId, category = safeCategory, endAt = safeEnd, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes)
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -1350,8 +1374,17 @@ class SupabaseDbService(
         sideEffectScale: String? = null,
         sideEffectNotes: String? = null
     ): ReliefRow {
+        // Changing the type changes which pool item the row is, so its category
+        // has to move with it — including down to NULL when the new label is in
+        // no pool. Leaving the old one behind would keep calling a relief a
+        // device after the user changed it to something else.
+        val retypedCategory = type?.let { ReliefPoolCategories.categoryFor(this, accessToken, it) }
         val payload = buildJsonObject {
-            type?.let { put("type", it) }
+            type?.let {
+                put("type", it)
+                if (retypedCategory != null) put("category", retypedCategory)
+                else put("category", kotlinx.serialization.json.JsonNull)
+            }
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
             if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
@@ -1571,7 +1604,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete user_medicines failed: ${response.bodyAsText()}")
     }
     suspend fun setMedicineCategory(accessToken: String, medicineId: String, category: String?) {
-        val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
+        val payload = categoryPatch(category)
         val response = client.patch("$supabaseUrl/rest/v1/user_medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$medicineId")
@@ -1715,7 +1748,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete user_reliefs failed: ${response.bodyAsText()}")
     }
     suspend fun setReliefCategory(accessToken: String, reliefId: String, category: String?) {
-        val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
+        val payload = categoryPatch(category)
         val response = client.patch("$supabaseUrl/rest/v1/user_reliefs") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$reliefId")
@@ -2221,7 +2254,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete user_locations failed: ${response.bodyAsText()}")
     }
     suspend fun setLocationCategory(accessToken: String, locationId: String, category: String?) {
-        val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
+        val payload = categoryPatch(category)
         val response = client.patch("$supabaseUrl/rest/v1/user_locations") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$locationId")
@@ -2393,7 +2426,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete user_activities failed: ${response.bodyAsText()}")
     }
     suspend fun setActivityCategory(accessToken: String, activityId: String, category: String?) {
-        val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
+        val payload = categoryPatch(category)
         val response = client.patch("$supabaseUrl/rest/v1/user_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$activityId")
@@ -2676,7 +2709,7 @@ class SupabaseDbService(
         if (!response.status.isSuccess()) error("Delete user_missed_activities failed: ${response.bodyAsText()}")
     }
     suspend fun setMissedActivityCategory(accessToken: String, id: String, category: String?) {
-        val payload = buildJsonObject { category?.let { put("category", it) } ?: put("category", kotlinx.serialization.json.JsonNull) }
+        val payload = categoryPatch(category)
         val response = client.patch("$supabaseUrl/rest/v1/user_missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("id", "eq.$id")
@@ -3058,6 +3091,75 @@ class SupabaseDbService(
             parameter("side_effect_id", "eq.$sideEffectId")
         }
         if (!response.status.isSuccess()) error("Delete treatment_side_effect_preferences failed: ${response.bodyAsText()}")
+    }
+}
+
+/**
+ * PATCH body for a pool item's category: set it, or clear it when null.
+ *
+ * This used to be written inline as
+ * `category?.let { put("category", it) } ?: put("category", JsonNull)`.
+ * JsonObjectBuilder.put returns the PREVIOUS value for the key, which is null
+ * on a first write, so the let branch evaluated to null and the elvis fallback
+ * ran every time — the body sent was always `{"category": null}`. Marking a
+ * pool item as a Device, or filing one under any category at all, silently
+ * cleared it instead. That is the same column device detection now reads.
+ */
+private fun categoryPatch(category: String?) = buildJsonObject {
+    if (category != null) put("category", category)
+    else put("category", kotlinx.serialization.json.JsonNull)
+}
+
+/**
+ * user_reliefs.category keyed by label, so a relief insert that only ever has
+ * a label can still stamp the pool item's own category on the row.
+ *
+ * (user_id, label) is unique in user_reliefs — upsertReliefToPool relies on
+ * exactly that constraint — so a label identifies one pool item and nothing
+ * else. Cached per access token: a token belongs to one user, so a sign-out
+ * and sign-in as somebody else can never read the previous user's pool.
+ *
+ * A label that is in the pool but has no category, and a label that is in no
+ * pool at all (the generic "Relief" the skip button writes, the widget's
+ * "Unknown"), both resolve to null. That is the correct answer, not a failure:
+ * the row keeps category NULL and device detection falls back to name matching
+ * exactly as it did before.
+ */
+private object ReliefPoolCategories {
+    private val mutex = Mutex()
+    private var forToken: String? = null
+    private var byLabel: Map<String, String> = emptyMap()
+    private var lastMissReloadMs = 0L
+
+    /** A miss can mean "added to the pool since we loaded", so re-read — but
+     *  not on every generic label, or the widget would refetch the pool per tap. */
+    private const val MISS_RELOAD_INTERVAL_MS = 60_000L
+
+    suspend fun categoryFor(db: SupabaseDbService, accessToken: String, label: String?): String? {
+        val key = label?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return null
+        return mutex.withLock {
+            if (forToken != accessToken) reload(db, accessToken)
+            byLabel[key] ?: run {
+                val now = System.currentTimeMillis()
+                if (now - lastMissReloadMs >= MISS_RELOAD_INTERVAL_MS) {
+                    lastMissReloadMs = now
+                    reload(db, accessToken)
+                }
+                byLabel[key]
+            }
+        }
+    }
+
+    /** Clears first so a failed read can never serve another user's pool, and
+     *  leaves forToken null on failure so the next insert retries. */
+    private suspend fun reload(db: SupabaseDbService, accessToken: String) {
+        forToken = null
+        byLabel = emptyMap()
+        val rows = runCatching { db.getAllReliefPool(accessToken) }.getOrNull() ?: return
+        byLabel = rows.mapNotNull { row ->
+            row.category?.takeIf { it.isNotBlank() }?.let { row.label.trim().lowercase() to it }
+        }.toMap()
+        forToken = accessToken
     }
 }
 

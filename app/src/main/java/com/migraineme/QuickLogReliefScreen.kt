@@ -395,7 +395,7 @@ fun QuickLogReliefScreen(
                                                 sideEffectNotes = sideEffectNotes.ifBlank { null }
                                             )
                                             if (reliefScale == null || reliefScale == "NONE") {
-                                                DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, relief)
+                                                DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, relief, row.category)
                                             }
                                         }
                                         snackbarHostState.showSnackbar(tSync("Relief logged!"))

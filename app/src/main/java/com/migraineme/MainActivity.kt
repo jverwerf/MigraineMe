@@ -1519,7 +1519,18 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     val token = authVm.state.value.accessToken ?: return@launch
                                     val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
                                     quickLogVm.draft.value.rels.forEach { r ->
-                                        runCatching { db.insertRelief(token, linkedMigraineId, r.type, r.startAtIso ?: java.time.Instant.now().toString(), r.endAtIso, r.notes, r.reliefScale) }
+                                        runCatching {
+                                            val row = db.insertRelief(token, linkedMigraineId, r.type, r.startAtIso ?: java.time.Instant.now().toString(), r.endAtIso, r.notes, r.reliefScale)
+                                            // This is the live quick-log relief
+                                            // route, and it was the only relief
+                                            // path that never armed the 2h
+                                            // follow-up. Same guard as the
+                                            // wizard: an outcome already given
+                                            // means there is nothing to ask.
+                                            if (r.reliefScale == null || r.reliefScale == "NONE") {
+                                                DeviceReliefOutcomeWorker.scheduleIfDevice(appCtx, row.id, r.type, row.category)
+                                            }
+                                        }
                                     }
                                     quickLogVm.clearDraft()
                                     nav.popBackStack()

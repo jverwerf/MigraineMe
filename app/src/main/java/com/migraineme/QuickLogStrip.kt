@@ -56,6 +56,13 @@ data class QuickLogFavorite(
     val label: String,
     val iconKey: String? = null,
     val category: QuickLogCategory? = null,
+    /**
+     * The POOL ITEM's own category (e.g. user_reliefs.category == "Device"),
+     * not the strip bucket in [category]. It is what marks a user-added relief
+     * as a device, and dropping it here left the 2h follow-up guessing from the
+     * item's name — so a device the user renamed never got its prompt.
+     */
+    val poolCategory: String? = null,
 )
 
 // ─── Main Strip Composable ──────────────────────────────────────────
@@ -115,7 +122,7 @@ fun QuickLogStrip(
     val reliefFavs = remember(reliefFreq, reliefPool) {
         reliefFreq.mapNotNull { pref ->
             reliefPool.find { it.id == pref.reliefId }?.let {
-                QuickLogFavorite(it.label, it.iconKey, QuickLogCategory.RELIEF)
+                QuickLogFavorite(it.label, it.iconKey, QuickLogCategory.RELIEF, poolCategory = it.category)
             }
         }
     }
@@ -165,7 +172,10 @@ fun QuickLogStrip(
         QuickLogCategory.RELIEF -> reliefFavs
     }
 
-    fun doSave(cat: QuickLogCategory, label: String?, auraLocations: List<String>? = null, auraDurationMinutes: Int? = null, doseValue: Double? = null, doseUnit: String? = null) {
+    // [poolCategory] is the tapped pool item's own category, carried through so
+    // the relief row is stamped with it instead of being left NULL. Null on the
+    // skip path, which writes a generic label belonging to no pool item.
+    fun doSave(cat: QuickLogCategory, label: String?, auraLocations: List<String>? = null, auraDurationMinutes: Int? = null, doseValue: Double? = null, doseUnit: String? = null, poolCategory: String? = null) {
         val token = authState.accessToken ?: return
         saving = true
         scope.launch {
@@ -214,9 +224,13 @@ fun QuickLogStrip(
                                 migraineId = null,
                                 type = label ?: "Unknown",
                                 startAt = now,
-                                notes = null
+                                notes = null,
+                                category = poolCategory
                             )
-                            DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, label)
+                            // row.category is what actually landed on the row,
+                            // so the follow-up decides on the stored value
+                            // rather than a second guess at the name.
+                            DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, label, row.category)
                         }
                     }
                     // Trigger correlation recompute for migraines
@@ -325,17 +339,19 @@ fun QuickLogStrip(
             category = cat,
             favorites = favs,
             saving = saving,
-            onSelect = { label ->
-                if (cat == QuickLogCategory.MIGRAINE && isAuraSymptomLabel(label)) {
+            // The whole favourite, not just its label: the item's own category
+            // is what marks a relief as a device, and it has to survive the tap.
+            onSelect = { fav ->
+                if (cat == QuickLogCategory.MIGRAINE && isAuraSymptomLabel(fav.label)) {
                     // Aura gets its detail sheet before saving
                     activeCategory = null
-                    pendingAuraLabel = label
+                    pendingAuraLabel = fav.label
                 } else if (cat == QuickLogCategory.MEDICINE) {
                     // Medicines collect a dose number first (skippable)
                     activeCategory = null
-                    pendingMedicineLabel = label
+                    pendingMedicineLabel = fav.label
                 } else {
-                    doSave(cat, label)
+                    doSave(cat, fav.label, poolCategory = fav.poolCategory)
                 }
             },
             onSkip = { doSave(cat, cat.label) },
@@ -454,7 +470,7 @@ private fun QuickLogFavoritesSheet(
     category: QuickLogCategory,
     favorites: List<QuickLogFavorite>,
     saving: Boolean,
-    onSelect: (String) -> Unit,
+    onSelect: (QuickLogFavorite) -> Unit,
     onSkip: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -512,7 +528,7 @@ private fun QuickLogFavoritesSheet(
                         iconKey = fav.iconKey,
                         category = category,
                         enabled = !saving,
-                        onClick = { onSelect(fav.label) }
+                        onClick = { onSelect(fav) }
                     )
                 }
             }

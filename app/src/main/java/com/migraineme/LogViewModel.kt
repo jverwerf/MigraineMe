@@ -714,7 +714,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val nowIso = Instant.now().toString()
                 val row = db.insertRelief(accessToken, migraineId = null, type = type, startAt = nowIso, notes = notes)
-                DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, type)
+                // row.category is the pool item's own category as it landed on
+                // the row, so the follow-up keys off that and only falls back
+                // to name matching when the label belongs to no pool item.
+                DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, type, row.category)
                 loadJournal(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -855,7 +858,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                         runCatching {
                             val row = db.insertRelief(accessToken, migraineId, r.type, rStart, r.notes, rEnd, r.reliefScale, sideEffectScale = r.sideEffectScale, sideEffectNotes = r.sideEffectNotes)
                             if (r.reliefScale == null || r.reliefScale == "NONE") {
-                                DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, r.type)
+                                DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, r.type, row.category)
                             }
                         }
                     }
@@ -1059,7 +1062,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             sideEffectNotes = r.sideEffectNotes
                         )
                         if (r.reliefScale == null || r.reliefScale == "NONE") {
-                            DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, r.type)
+                            DeviceReliefOutcomeWorker.scheduleIfDevice(getApplication<Application>().applicationContext, row.id, r.type, row.category)
                         }
                     } catch (e: Exception) { e.printStackTrace() }
                 }
