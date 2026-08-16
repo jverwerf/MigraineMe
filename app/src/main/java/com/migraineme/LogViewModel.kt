@@ -377,6 +377,17 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Where the next page starts: the start_at of the oldest loaded entry. */
     private var journalCursor: String? = null
+    /**
+     * Whether [journalCursor] is re-read inclusively. A page boundary is read
+     * back including its own timestamp so rows tied with the oldest loaded
+     * entry are not skipped; the filter ceiling that opens a walk is strict.
+     */
+    private var journalCursorInclusive = false
+    /**
+     * Ids already on screen. The inclusive boundary re-delivers the rows tied
+     * with the previous cursor, and this is what stops them appearing twice.
+     */
+    private val journalSeenIds = mutableSetOf<String>()
     private var journalFilter = JournalFilter()
     private var journalPageJob: Job? = null
 
@@ -883,7 +894,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 for (act in activitiesSnapshot.filter { it.type.isNotBlank() }) {
                     val aStart = act.startAtIso ?: migraineStart
-                    val aEnd = act.endAtIso ?: aStart
+                    // No end time on the draft = end_at NULL (unknown
+                    // duration), never end = start — that recorded every
+                    // activity the user did not give an end for as zero minutes.
+                    val aEnd = act.endAtIso
                     if (act.existingId != null) {
                         runCatching { db.updateActivityLog(accessToken, act.existingId, act.type, aStart, aEnd, act.note) }
                     } else {
@@ -1082,7 +1096,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                             migraineId = migraine.id,
                             type = act.type,
                             startAt = aStart,
-                            endAt = act.endAtIso ?: aStart,
+                            // Unknown end stays NULL, never faked as the start.
+                            endAt = act.endAtIso,
                             notes = act.note
                         )
                     } catch (e: Exception) { e.printStackTrace() }
@@ -1160,6 +1175,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         journalPageJob = viewModelScope.launch {
             _journalLoading.value = true
             journalCursor = journalFilter.untilIso
+            journalCursorInclusive = false
+            journalSeenIds.clear()
             try {
                 // Trigger labels are needed before the first card renders.
                 val context = getApplication<android.app.Application>().applicationContext
@@ -1217,7 +1234,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             val window = SupabaseDbService.JournalWindow(
                 beforeIso = journalCursor,
                 sinceIso = journalFilter.sinceIso,
-                limit = journalPageSize
+                limit = journalPageSize,
+                // Only a real page boundary is re-read inclusively; opening a
+                // walk at the filter's own ceiling keeps that bound strict.
+                beforeInclusive = journalCursor != null && journalCursorInclusive
             )
 
             val flat = coroutineScope {
@@ -1242,15 +1262,38 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                 break
             }
 
+            // The boundary is re-read inclusively, so every page after the
+            // first re-delivers the rows tied with the previous cursor. They
+            // are already on screen — drop them before the page is measured, or
+            // a page would be spent on rows the list already has.
+            val fresh = raw.filterNot { journalSeenIds.contains(journalEventId(it)) }
+
+            if (fresh.isEmpty()) {
+                // The whole read was rows we already have. Either the history
+                // ran out, or one timestamp carries more rows in a single table
+                // than a window can hold and the inclusive re-read can never
+                // get past it. Stepping the boundary strictly past that
+                // timestamp is the only way forward, and it can only skip rows
+                // the per-table limit was already refusing to return.
+                if (raw.size >= journalPageSize && journalCursor != null && journalCursorInclusive) {
+                    journalCursorInclusive = false
+                    continue
+                }
+                _journalHasMore.value = false
+                break
+            }
+
             // Only the newest page-worth is complete: below that timestamp a
             // table's own window may have cut rows off, so they are left for
             // the next walk rather than shown out of order.
-            val complete = if (raw.size > journalPageSize) raw.take(journalPageSize) else raw
+            val complete = if (fresh.size > journalPageSize) fresh.take(journalPageSize) else fresh
             val nextCursor = journalEventStartAt(complete.last())
-            val exhausted = raw.size < journalPageSize || nextCursor == null || nextCursor == journalCursor
-            journalCursor = nextCursor
+            val exhausted = fresh.size < journalPageSize || nextCursor == null
+            journalCursor = nextCursor ?: journalCursor
+            journalCursorInclusive = nextCursor != null
             _journalHasMore.value = !exhausted
 
+            complete.forEach { journalSeenIds.add(journalEventId(it)) }
             kept += complete.filter { journalFilter.accepts(it) }
 
             if (exhausted) break
@@ -1285,6 +1328,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private fun dropFromJournal(ids: Set<String>) {
         if (ids.isEmpty()) return
         _journal.value = _journal.value.filterNot { journalEventId(it) in ids }
+        // No longer on screen, so no longer a tie to suppress at a boundary.
+        journalSeenIds.removeAll(ids)
     }
 
     /**

@@ -43,11 +43,16 @@ class SupabaseDbService(
      *
      * The feed is a merge of eight tables ordered by start_at descending, so a
      * page is expressed as a time cursor rather than an offset: everything
-     * strictly older than [beforeIso] (null = start at the newest entry), no
-     * older than [sinceIso], capped at [limit] rows per table. Taking the
-     * newest [limit] of the merged result and using its last timestamp as the
-     * next cursor is complete — at most [limit] - 1 merged rows sit above that
-     * cursor, so no single table can have hidden one inside its own window.
+     * older than [beforeIso] (null = start at the newest entry), no older than
+     * [sinceIso], capped at [limit] rows per table.
+     *
+     * [beforeInclusive] decides whether the bound keeps rows sharing the
+     * cursor's own timestamp. It must be true for a page boundary: several rows
+     * can share one start_at, a strict bound drops the ones that fell past the
+     * previous page, and no later page ever asks for that timestamp again — so
+     * they vanish from the feed for good. The caller re-reads the boundary and
+     * drops the ids it has already shown. A plain filter ceiling stays strict,
+     * since it is a timeframe bound rather than a page boundary.
      *
      * Without this a thousand-entry account read every row of every table, plus
      * one linked-items fan-out per attack, just to draw the first screenful.
@@ -55,14 +60,15 @@ class SupabaseDbService(
     data class JournalWindow(
         val beforeIso: String? = null,
         val sinceIso: String? = null,
-        val limit: Int = 60
+        val limit: Int = 60,
+        val beforeInclusive: Boolean = false
     )
 
     private fun HttpRequestBuilder.journalWindow(w: JournalWindow?) {
         if (w == null) return
         // Repeated filters on one column are ANDed by PostgREST, so the two
-        // bounds compose into the half-open window the cursor walk needs.
-        w.beforeIso?.let { parameter("start_at", "lt.$it") }
+        // bounds compose into the window the cursor walk needs.
+        w.beforeIso?.let { parameter("start_at", if (w.beforeInclusive) "lte.$it" else "lt.$it") }
         w.sinceIso?.let { parameter("start_at", "gte.$it") }
         header("Range-Unit", "items")
         header("Range", "0-${(w.limit - 1).coerceAtLeast(0)}")
@@ -677,6 +683,10 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
         @SerialName("migraine_id") val migraineId: String? = null,
+        // Stamped like every other hand-logged row. The Journal's Manual/Auto
+        // filter is `source == "manual"`, so a NULL here files a row the user
+        // typed under "Auto".
+        val source: String = "manual",
         @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
         @SerialName("side_effect_notes") val sideEffectNotes: String? = null
     )
@@ -707,7 +717,12 @@ class SupabaseDbService(
         } else if (!amt.isNullOrBlank()) {
             DoseUnits.parseLegacy(amt)?.let { (v, u) -> dv = v; du = u }
         }
-        val payload = MedicineInsert(name, amt, dv, du, safeStart, notes, category, reliefScale, migraineId, sideEffectScale, sideEffectNotes)
+        val payload = MedicineInsert(
+            name = name, amount = amt, doseValue = dv, doseUnit = du,
+            startAt = safeStart, notes = notes, category = category,
+            reliefScale = reliefScale, migraineId = migraineId,
+            sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes
+        )
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/medicines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
@@ -1268,6 +1283,10 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("end_at") val endAt: String? = null,
         @SerialName("relief_scale") val reliefScale: String? = "NONE",
+        // Stamped like every other hand-logged row. The Journal's Manual/Auto
+        // filter is `source == "manual"`, so a NULL here files a row the user
+        // typed under "Auto".
+        val source: String = "manual",
         @SerialName("side_effect_scale") val sideEffectScale: String? = "NONE",
         @SerialName("side_effect_notes") val sideEffectNotes: String? = null
     )
@@ -2496,6 +2515,11 @@ class SupabaseDbService(
             durationMinutes?.let { put("duration_minutes", it) }
             notes?.let { put("notes", it) }
             migraineId?.let { put("migraine_id", it) }
+            // activities is the one log table WITHOUT a `source` default, so an
+            // omitted key lands NULL rather than 'manual' — and the Journal's
+            // Manual/Auto filter is `source == "manual"`, which filed every
+            // check-in activity under "Auto".
+            put("source", "manual")
         }
         val res = client.post("$supabaseUrl/rest/v1/activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
