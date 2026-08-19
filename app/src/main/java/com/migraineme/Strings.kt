@@ -61,6 +61,52 @@ object Strings {
         return englishOf(en)
     }
 
+    /**
+     * The reverse of [resolve], scoped to a known option list: given a string
+     * that may have come back translated, return the English option it is a
+     * translation of, or null if it is not one of them.
+     *
+     * This exists because the ai-setup parser is handed the user's story in
+     * their own language and sometimes answers in it, returning "Nee" or
+     * "Nein" where the schema says "Yes"/"No". Every consumer of those answers
+     * compares against the English verbatim, so a translated value is not
+     * wrong-but-usable, it is silently dropped: a Dutch user answering "Nee"
+     * to tracks_cycle lost the whole menstruation subsystem and never saw the
+     * follow-up questions. The prompt now tells the parser to answer in
+     * English; this is the safety net for when it does not.
+     *
+     * SCOPED, not global. A table-wide reverse map has real collisions —
+     * German "Mittel" is both "Drug" and "Moderate", Spanish "Ninguno" is both
+     * "None" and "None of these". Restricted to the option list of the field
+     * being parsed, those collisions cannot arise, because no single option
+     * list contains two options that translate alike.
+     *
+     * Derived from the tables rather than a hand-written word list, so it
+     * cannot drift out of step with them. Reads TABLES directly rather than
+     * going through resolve(), so a lookup never pollutes the missing-key set.
+     *
+     * English is tried first: an option that is already correct must never be
+     * re-interpreted as some other language's translation of a different one.
+     *
+     * Note the direction. This turns translated text back INTO the English the
+     * rest of the app stores and matches on — it is the one place that is
+     * allowed to consume translated text, and it exists precisely so that
+     * translated text does not reach Supabase or DeterministicMapper. It does
+     * not weaken the contract on LangPrefs; it enforces it.
+     */
+    fun canonicalEnglish(raw: String?, candidates: Collection<String>): String? {
+        val needle = raw?.trim().orEmpty()
+        if (needle.isEmpty()) return null
+        for (c in candidates) if (englishOf(c).equals(needle, ignoreCase = true)) return c
+        for (lang in Lang.entries) {
+            val table = TABLES[lang] ?: continue
+            for (c in candidates) {
+                if (table[c]?.equals(needle, ignoreCase = true) == true) return c
+            }
+        }
+        return null
+    }
+
     /** Display translation, live across language changes. */
     @Composable
     fun t(en: String): String {

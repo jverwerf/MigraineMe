@@ -121,11 +121,23 @@ object AiOnboardingParser {
     private val CYCLE_LENGTH_VALUES = setOf("< 25 days", "25-28 days", "28-32 days", "32-35 days", "> 35 days", "Irregular")
     private val CYCLE_TIMING_VALUES = setOf("1-2 days before", "3-5 days before", "During my period", "1-2 days after")
     private val USES_CONTRACEPTION_VALUES = setOf("Yes", "No")
+    private val TRACKS_CYCLE_VALUES = AiSetupOptions.TRACKS_CYCLE.toSet()
+    // The wizard's four certainty chips, as English keys the six language tables
+    // carry. Used only to canonicalise a certainty that came back translated.
+    private val CERTAINTY_CHIP_LABELS = setOf("None", "Low", "Mild", "High")
     // Note: em-dash (—), not hyphen — must match AiSetupQuestions.kt:479 exactly.
     private val CONTRACEPTION_EFFECT_VALUES = AiSetupOptions.CONTRACEPTION_EFFECT.toSet()
     private val PHYSICAL_PRODROMES_KEYS = setOf("Neck stiffness", "Yawning", "Urination", "Stuffy nose", "Watery eyes", "Muscle tension")
     private val MOOD_PRODROMES_KEYS = setOf("Concentrating", "Words", "Irritability", "Mood swings", "Feeling low", "Unusually happy", "Food cravings", "Loss of appetite")
     private val SENSORY_PRODROMES_KEYS = setOf("Light", "Sound", "Smell", "Tingling", "Numbness")
+
+    private fun certaintyForChipLabel(label: String): DeterministicMapper.Certainty? = when (label) {
+        "High" -> DeterministicMapper.Certainty.EVERY_TIME
+        "Mild" -> DeterministicMapper.Certainty.OFTEN
+        "Low"  -> DeterministicMapper.Certainty.SOMETIMES
+        "None" -> DeterministicMapper.Certainty.NO
+        else   -> null
+    }
 
     /**
      * Deterministic pre-parse: match pool labels against the story text.
@@ -361,7 +373,18 @@ object AiOnboardingParser {
         val obj = JSONObject(json)
 
         fun optStr(key: String): String? = obj.optString(key, "").let { if (it == "null" || it.isBlank()) null else it }
-        fun optStrIn(key: String, allowed: Set<String>): String? = optStr(key)?.takeIf { it in allowed }
+        // The parser is handed the user's story in their own language and
+        // sometimes answers in it — "Nee" for tracks_cycle, "Nein" for
+        // uses_contraception, both seen in ai_setup_profiles.answers. Everything
+        // downstream compares these against the English verbatim, so a
+        // translated value is not merely odd, it is dropped: a Dutch user
+        // answering "Nee" lost the whole menstruation subsystem. Strings
+        // .canonicalEnglish maps it back using the same tables that produced it,
+        // scoped to this field's own option list so the table-wide collisions
+        // (German "Mittel" = Drug and Moderate) cannot bite.
+        fun canon(raw: String?, allowed: Set<String>): String? =
+            raw?.let { if (it in allowed) it else Strings.canonicalEnglish(it, allowed) }
+        fun optStrIn(key: String, allowed: Set<String>): String? = canon(optStr(key), allowed)
         // valueOf is exact and case-sensitive, so normalise casing and whitespace
         // first: a model that answers "Rarely" or " rarely " instead of "RARELY"
         // would otherwise throw, get swallowed by getOrNull, and drop the
@@ -374,9 +397,19 @@ object AiOnboardingParser {
         // saved on Next — a sleep trigger the user never chose. Both fold to the
         // same stored severity ("LOW") via certaintyToSeverity, so the chip
         // shown and the trigger written agree.
+        //
+        // If it is not a wire value at all, it may be a translated chip label —
+        // the parser sometimes answers in the user's language. The chip
+        // vocabulary (None/Low/Mild/High) is in the six tables, so it can be
+        // canonicalised the same way every other option list is. The wire words
+        // themselves (OFTEN, RARELY...) are identifiers and are NOT in the
+        // tables, so a model that localises those specifically still falls
+        // through to null — see the report accompanying this change.
         fun parseCert(raw: String?): DeterministicMapper.Certainty? {
-            val s = raw?.trim()?.uppercase()?.takeIf { it.isNotEmpty() } ?: return null
-            val c = runCatching { DeterministicMapper.Certainty.valueOf(s) }.getOrNull() ?: return null
+            val trimmed = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+            val c = runCatching { DeterministicMapper.Certainty.valueOf(trimmed.uppercase()) }.getOrNull()
+                ?: Strings.canonicalEnglish(trimmed, CERTAINTY_CHIP_LABELS)?.let(::certaintyForChipLabel)
+                ?: return null
             return if (c == DeterministicMapper.Certainty.RARELY) DeterministicMapper.Certainty.SOMETIMES else c
         }
         fun optCert(key: String): DeterministicMapper.Certainty? = parseCert(optStr(key))
@@ -384,8 +417,8 @@ object AiOnboardingParser {
             val arr = obj.optJSONArray(key) ?: return emptySet()
             val out = mutableSetOf<String>()
             for (i in 0 until arr.length()) {
-                val s = arr.optString(i, "").trim()
-                if (s in allowed) out.add(s)
+                val s = canon(arr.optString(i, "").trim(), allowed)
+                if (s != null) out.add(s)
             }
             return out
         }
@@ -469,7 +502,7 @@ object AiOnboardingParser {
             exerciseFrequency = optStr("exercise_frequency"),
             exerciseTriggers = optCert("exercise_triggers"),
             exercisePattern = optStrSet("exercise_pattern", EXERCISE_PATTERN_VALUES),
-            tracksCycle = optStr("tracks_cycle"),
+            tracksCycle = optStrIn("tracks_cycle", TRACKS_CYCLE_VALUES),
             cyclePatterns = optCertMap("cycle_patterns", CYCLE_PATTERNS_KEYS),
             cycleLength = optStrIn("cycle_length", CYCLE_LENGTH_VALUES),
             cycleMigraineTiming = optStrSet("cycle_migraine_timing", CYCLE_TIMING_VALUES),

@@ -358,6 +358,12 @@ A deterministic parser has already found some items (listed in user_message unde
 
 === ANSWER RULES ===
 - Use ONLY values from the EXACT option lists below. Never invent strings, never approximate.
+- The story may be in ANY language. Every value you return must be the EXACT English
+  string from the option lists below — "Yes", never "Ja"/"Nee"/"Oui"; "OFTEN", never
+  "Oft"/"Souvent". These values are matched verbatim against English records, so a
+  translated one is silently discarded and the patient loses the answer. This context
+  returns option values and identifiers only — no prose — so nothing in your response is
+  written in the patient's language.
 - If the story gives no signal for a field, OMIT the key (or set to null). Do not guess.
 - Some fields are SETTLED by the story without being stated outright. If the patient
   describes something only one sex experiences — periods, menstrual cycle, pregnancy,

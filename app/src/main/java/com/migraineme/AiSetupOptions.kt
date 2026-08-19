@@ -30,6 +30,17 @@ object AiSetupOptions {
     const val EXERCISE_INACTIVE = "When I haven't exercised"
     val EXERCISE_PATTERN = listOf(EXERCISE_INTENSE, EXERCISE_INACTIVE)
 
+    // tracks_cycle
+    // Whitelisted because "Yes" here is exact-compared in eight places
+    // (DeterministicMapper, AiSetupQuestions, AiSetupScreen, AiSetupApplier,
+    // AiSetupProfileStore) and gates the entire menstruation subsystem. A
+    // parser that answered "Nee" or "Nein" — which has happened in production —
+    // failed every one of those comparisons silently.
+    const val TRACKS_CYCLE_YES = "Yes"
+    const val TRACKS_CYCLE_NO = "No"
+    const val TRACKS_CYCLE_NA = "Not applicable"
+    val TRACKS_CYCLE = listOf(TRACKS_CYCLE_YES, TRACKS_CYCLE_NO, TRACKS_CYCLE_NA)
+
     // contraception_effect
     const val CONTRACEPTION_WORSE_EVERY_TIME = "Worse — every time"
     const val CONTRACEPTION_WORSE_SOMETIMES = "Worse — sometimes"
