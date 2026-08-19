@@ -1542,6 +1542,78 @@ const isMeasured = (r: TreatRow): boolean => {
   return tier != null && tier !== "rating";
 };
 
+/** Medicines are dosed, reliefs are used, and anything else is simply logged.
+ *  The pain-response table carries only a label, so the noun comes from the
+ *  same logs the treatment rows are built out of. */
+function treatmentKindOf(d: ReportData): (label: string) => "medicine" | "relief" | null {
+  const kinds = new Map<string, "medicine" | "relief">();
+  for (const r of d.reliefs) {
+    const l = (r.name ?? r.type ?? "").trim().toLowerCase();
+    if (l) kinds.set(l, "relief");
+  }
+  for (const r of d.medicines) {
+    const l = (r.name ?? r.type ?? "").trim().toLowerCase();
+    if (l) kinds.set(l, "medicine");
+  }
+  return (label) => kinds.get(label.trim().toLowerCase()) ?? null;
+}
+
+/** "in 8 of 11 doses" — how many of the logged occasions moved the way the
+ *  median did. The counts stay on the page: this is the clinician's copy and a
+ *  finding without its denominator cannot be weighed. */
+const occasions = (hits: number, n: number, kind: "medicine" | "relief" | null): string =>
+  kind === "medicine"
+    ? rt("in {0} of {1} doses", hits, n)
+    : kind === "relief"
+    ? rt("in {0} of {1} uses", hits, n)
+    : rt("in {0} of {1} logs", hits, n);
+
+/** "by 2 hours" — the horizon a pain change was measured over. */
+const byHorizon = (minutes: number): string =>
+  minutes > 0 && minutes % 60 === 0
+    ? (minutes === 60 ? rt("by 1 hour") : rt("by {0} hours", minutes / 60))
+    : rt("by {0} minutes", Math.round(minutes));
+
+/** How differently this treatment was rated when the symptom was present, on
+ *  the 0-3 relief scale. Read straight off the two averages — `lift_ratio` is
+ *  pinned to 1 on these rows now, so anything thresholding on it sees a
+ *  constant and shows nothing. */
+const segDelta = (s: CorrelationStat): number | null => {
+  const l = s.lag_details ?? {};
+  const w = asNum(l["avg_relief_with"]), wo = asNum(l["avg_relief_without"]);
+  return w == null || wo == null ? null : w - wo;
+};
+
+/** A quarter of one step on the 0-3 scale. Below that it is the same word. */
+const SEG_FLOOR = 0.25;
+
+/** One treatment's strongest symptom segment. These rows compare two rating
+ *  averages and no test runs on them (contract §6), so they carry no p-value
+ *  — and still draw the one-dot floor rather than nothing. The 0-3 code never
+ *  prints; the words the patient logged on do. */
+function segmentRow(s: CorrelationStat): string {
+  const l = s.lag_details ?? {};
+  const delta = segDelta(s) ?? 0;
+  const symptom = pretty(s.symptom_segment ?? "");
+  const w = asNum(l["avg_relief_with"]), wo = asNum(l["avg_relief_without"]);
+  const nW = asNum(l["n_with"]), nWo = asNum(l["n_without"]);
+  const better = delta > 0;
+  const color = better ? C.green : C.orange;
+  const label = better ? rt("Better with {0}", symptom) : rt("Less help with {0}", symptom);
+  const line = w != null && wo != null && nW != null && nWo != null
+    ? rt("{0} across {1} attacks with {2}, against {3} across {4} without",
+      reliefWord(w), nW, symptom, reliefWord(wo), nWo)
+    : rt("No meaningful difference across this patient's symptoms.");
+  return `<div class="card row">
+    <div class="grow">
+      <div class="name">${esc(pretty(s.factor_name))}</div>
+      <div class="meta">${esc(line)}</div>
+    </div>
+    ${dots(color, null, 1)}
+    ${badge(color, label)}
+  </div>`;
+}
+
 function whatWorked(d: ReportData, pageNo: number): string {
   // Best evidence first: measured rows before rated ones, then by p, then by
   // how much the treatment was actually used. lift_ratio is pinned to 1 on
@@ -1560,7 +1632,24 @@ function whatWorked(d: ReportData, pageNo: number): string {
   const combos = d.correlations
     .filter((s) => s.factor_type === "treatment_interaction" && realCombo(s))
     .sort((a, b) => (b.sample_size ?? 0) - (a.sample_size ?? 0)).slice(0, 5);
-  if (!treatments.length && !combos.length && !d.treatmentTiming.length) return "";
+  // "Works best when": one row per treatment, its strongest symptom segment.
+  // Listing every symptom under every treatment buried the one comparison the
+  // section exists to make.
+  const segments = (() => {
+    const best = new Map<string, CorrelationStat>();
+    for (const s of d.correlations) {
+      if (s.factor_type !== "treatment" || !s.symptom_segment) continue;
+      const delta = segDelta(s);
+      if (delta == null || Math.abs(delta) < SEG_FLOOR) continue;
+      const k = s.factor_name.trim().toLowerCase();
+      const cur = best.get(k);
+      if (!cur || Math.abs(segDelta(cur) ?? 0) < Math.abs(delta)) best.set(k, s);
+    }
+    return [...best.values()]
+      .sort((a, b) => Math.abs(segDelta(b) ?? 0) - Math.abs(segDelta(a) ?? 0)).slice(0, 4);
+  })();
+  if (!treatments.length && !combos.length && !segments.length
+    && !d.treatmentTiming.length) return "";
 
   const delay = (mins: number) => {
     if (mins < 90) return rt("{0} minutes", mins);
@@ -1595,16 +1684,45 @@ function whatWorked(d: ReportData, pageNo: number): string {
     </div>`;
   };
 
-  const lists = (tr: TreatRow[], co: CorrelationStat[], ti: ReportData["treatmentTiming"]) => `
+  // treatment_interaction rows never went through the v2 rewrite (contract
+  // §7). They still carry the old `lift_ratio` and a v1 `duration_lift` /
+  // `severity_lift` pair, which on live accounts is the patient's own relief
+  // slider rescaled by a constant. None of the three is printable, so none is
+  // printed: the row states how often the pair was logged together, which is
+  // real, and claims nothing further.
+  const comboRow = (s: CorrelationStat): string => {
+    const n = Math.max(0, Math.round(s.sample_size ?? 0));
+    const pct = s.pct_migraine_windows ?? 0;
+    const together = Math.min(n, Math.max(0, Math.round((pct / 100) * n)));
+    return `<div class="card row">
+      <div class="grow">
+        <div class="name">${esc(pretty(s.factor_name))}
+          <span style="color:${C.green};font-weight:700">+</span> ${esc(pretty(s.factor_b))}</div>
+        <div class="meta">${esc(rt("Logged together in about {0} of {1} attacks", together, n))}</div>
+      </div>
+      ${dots(VERDICT_COLOR.thin, null, 1)}
+      ${badge(VERDICT_COLOR.thin, VERDICT_LABEL.thin())}
+    </div>`;
+  };
+
+  const lists = (tr: TreatRow[], co: CorrelationStat[], sg: CorrelationStat[],
+    ti: ReportData["treatmentTiming"]) => `
     ${tr.map(treatmentRow).join("")}
     ${tr.some((r) => treatmentEvidence(r).usesBetween)
       ? `<p class="meta">${rt("Comparisons with untreated attacks are a floor, not a ceiling: treatments are reached for on the worse attacks, which understates the benefit.")}</p>`
       : ""}
 
-    ${co.length ? sub(C.green, rt("Logged together")) : ""}
-    ${co.map((s) => statRow(s, C.green,
-      `${esc(pretty(s.factor_name))} <span style="color:${C.green};font-weight:700">+</span> ${esc(pretty(s.factor_b))}`
-    )).join("")}
+    ${co.length ? sub(C.green, rt("Used together")) : ""}
+    ${co.length
+      ? `<p class="meta" style="margin:-4px 0 8px">${rt("Pairs reached for in the same attack. The engine tests each treatment separately, so a pair is counted here, never measured on its own — no effect size is claimed for the combination.")}</p>`
+      : ""}
+    ${co.map(comboRow).join("")}
+
+    ${sg.length ? sub(C.green, rt("Works best when")) : ""}
+    ${sg.length
+      ? `<p class="meta" style="margin:-4px 0 8px">${rt("Whether a treatment landed differently depending on the symptoms that came with the attack. Ratings compared, not measured — no statistical test runs on these.")}</p>`
+      : ""}
+    ${sg.map(segmentRow).join("")}
 
     ${ti.length ? sub(C.blue, rt("Treatment timing")) : ""}
     ${ti.length
@@ -1635,13 +1753,14 @@ function whatWorked(d: ReportData, pageNo: number): string {
     const has = namesInPeriod(d);
     const [tNow, tHist] = split(treatments, (r) => has(r.name));
     const [cNow, cHist] = split(combos, (s) => has(s.factor_name) && (!s.factor_b || has(s.factor_b)));
+    const [sNow, sHist] = split(segments, (s) => has(s.factor_name));
     const [iNow, iHist] = split(d.treatmentTiming, (t) => has(t.treatment_name));
     body = group(C.green, rt("Seen in this period"), SEEN_NOTE(),
-        lists(tNow, cNow, iNow), tNow.length + cNow.length + iNow.length)
+        lists(tNow, cNow, sNow, iNow), tNow.length + cNow.length + sNow.length + iNow.length)
       + group(C.muted, rt("From your full history"), HISTORY_ONLY_NOTE(),
-        lists(tHist, cHist, iHist), tHist.length + cHist.length + iHist.length);
+        lists(tHist, cHist, sHist, iHist), tHist.length + cHist.length + sHist.length + iHist.length);
   } else {
-    body = lists(treatments, combos, d.treatmentTiming);
+    body = lists(treatments, combos, segments, d.treatmentTiming);
   }
 
   return page(C.green, `
@@ -1716,30 +1835,39 @@ function usageVsEffectiveness(d: ReportData, pageNo: number): string {
 // caution = true and is marked in amber, never hidden. No rows, no section —
 // the report does not fabricate.
 function painResponse(d: ReportData, pageNo: number): string {
-  const horizon = (m: number) => (m % 60 === 0 ? `~${m / 60}h` : `~${m}m`);
   const byStrength = (rows: ReportData["intradayResponse"]) =>
     [...rows].sort((a, b) => Math.abs(b.median_effect) - Math.abs(a.median_effect));
   const agg = byStrength(d.intradayResponse.filter((r) => r.event_kind === "aggravator"));
   const eas = byStrength(d.intradayResponse.filter((r) => r.event_kind === "easer"));
   if (!agg.length && !eas.length) return "";
 
+  const kindOf = treatmentKindOf(d);
   const row = (r: ReportData["intradayResponse"][number], color: string) => {
-    const effect = (r.median_effect > 0 ? "+" : "−") + num(Math.abs(r.median_effect));
-    const meta = rt("n = {0} · {1}% moved the same way", r.n, Math.round(r.consistency * 100));
+    // The headline is the movement itself, in pain points. A rise keeps its
+    // sign and its row: suppressing it, or flipping it, would be the old
+    // multiplier's dishonesty with the direction of the error reversed.
+    const effect = rt("{0} pts",
+      (r.median_effect > 0 ? "+" : "−") + num(Math.abs(r.median_effect)));
+    const hits = Math.min(r.n, Math.max(0, Math.round(r.consistency * r.n)));
+    const counts = occasions(hits, r.n, kindOf(r.label));
+    const meta = r.median_effect > 0
+      ? `${rt("pain rose after these")}, ${counts}`
+      : `${byHorizon(r.horizon_minutes)}, ${counts}`;
     return `<div class="card row">
       <div class="grow">
         <div class="name">${esc(pretty(r.label))}</div>
-        <div class="meta">${esc(meta)}${r.caution
-          ? ` · <b style="color:${C.orange}">${esc(rt("pain rose after this"))}</b>` : ""}</div>
+        <div class="meta">${esc(meta)}${r.caution && r.median_effect <= 0
+          ? ` · <b style="color:${C.orange}">${esc(rt("pain rose after some of these"))}</b>` : ""}</div>
+        ${bar(color, r.n > 0 ? (hits / r.n) * 100 : 0)}
       </div>
       ${dots(color, r.p_value)}
-      ${badge(color, rt("{0} within {1}", effect, horizon(r.horizon_minutes)))}
+      ${badge(color, effect)}
     </div>`;
   };
 
   return page(C.purple, `
     ${header(C.purple, ICON.pulse, rt("Pain response"),
-      rt("Median change in pain after each logged item, against the 3 hours before it"), true)}
+      rt("What the pain did in the hours after a dose, inside the same attack, against the 3 hours before it. Needs pain logged over time."), true)}
     ${agg.length ? sub(C.red, rt("Pain response — what pushed it up")) : ""}
     ${agg.map((r) => row(r, C.red)).join("")}
     ${eas.length ? sub(C.green, rt("Pain response — what brought it down")) : ""}

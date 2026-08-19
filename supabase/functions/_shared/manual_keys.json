@@ -3041,6 +3041,222 @@
         "it": "Sono stati registrati altri {0} trattamenti, elencati nel diario degli attacchi.",
         "pt": "Foram registados mais {0} tratamentos, listados no registo de crises."
       }
+    },
+    {
+      "en": "Better with {0}",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Besser bei {0}",
+        "es": "Mejor con {0}",
+        "nl": "Beter bij {0}",
+        "fr": "Meilleur avec {0}",
+        "it": "Meglio con {0}",
+        "pt": "Melhor com {0}"
+      }
+    },
+    {
+      "en": "Less help with {0}",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Hilft weniger bei {0}",
+        "es": "Ayuda menos con {0}",
+        "nl": "Helpt minder bij {0}",
+        "fr": "Aide moins avec {0}",
+        "it": "Aiuta meno con {0}",
+        "pt": "Ajuda menos com {0}"
+      }
+    },
+    {
+      "en": "Logged together in about {0} of {1} attacks",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "In etwa {0} von {1} Attacken zusammen erfasst",
+        "es": "Registrados juntos en unos {0} de {1} ataques",
+        "nl": "Samen genoteerd bij ongeveer {0} van {1} aanvallen",
+        "fr": "Notés ensemble dans environ {0} crises sur {1}",
+        "it": "Registrati insieme in circa {0} attacchi su {1}",
+        "pt": "Registados juntos em cerca de {0} de {1} crises"
+      }
+    },
+    {
+      "en": "No meaningful difference across this patient's symptoms.",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Kein nennenswerter Unterschied über die Symptome dieser Person hinweg.",
+        "es": "Sin diferencia relevante entre los síntomas de este paciente.",
+        "nl": "Geen noemenswaardig verschil tussen de symptomen van deze patiënt.",
+        "fr": "Pas de différence notable selon les symptômes de ce patient.",
+        "it": "Nessuna differenza rilevante tra i sintomi di questo paziente.",
+        "pt": "Sem diferença relevante entre os sintomas deste paciente."
+      }
+    },
+    {
+      "en": "Pairs reached for in the same attack. The engine tests each treatment separately, so a pair is counted here, never measured on its own — no effect size is claimed for the combination.",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Paare, die in derselben Attacke eingesetzt wurden. Die Auswertung testet jede Behandlung einzeln, ein Paar wird hier also nur gezählt und nie für sich gemessen — für die Kombination wird keine Effektstärke behauptet.",
+        "es": "Pares usados en el mismo ataque. El motor analiza cada tratamiento por separado, así que aquí un par solo se cuenta, nunca se mide por sí mismo: no se afirma ningún tamaño de efecto para la combinación.",
+        "nl": "Paren die in dezelfde aanval zijn gebruikt. De analyse toetst elke behandeling apart, dus een paar wordt hier alleen geteld en nooit op zichzelf gemeten — er wordt geen effectgrootte voor de combinatie geclaimd.",
+        "fr": "Paires utilisées pendant la même crise. Le moteur teste chaque traitement séparément : une paire est donc seulement comptée ici, jamais mesurée en tant que telle — aucune taille d'effet n'est avancée pour la combinaison.",
+        "it": "Coppie usate nello stesso attacco. Il motore analizza ogni trattamento separatamente, quindi una coppia qui viene solo contata, mai misurata di per sé — per la combinazione non si afferma alcuna dimensione dell'effetto.",
+        "pt": "Pares usados na mesma crise. O motor testa cada tratamento em separado, por isso um par é aqui apenas contado, nunca medido por si só — não se afirma qualquer tamanho de efeito para a combinação."
+      }
+    },
+    {
+      "en": "Used together",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Zusammen eingesetzt",
+        "es": "Usados juntos",
+        "nl": "Samen gebruikt",
+        "fr": "Utilisés ensemble",
+        "it": "Usati insieme",
+        "pt": "Usados juntos"
+      }
+    },
+    {
+      "en": "What the pain did in the hours after a dose, inside the same attack, against the 3 hours before it. Needs pain logged over time.",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Was der Schmerz in den Stunden nach einer Dosis tat, innerhalb derselben Attacke, verglichen mit den 3 Stunden davor. Setzt über die Zeit erfasste Schmerzwerte voraus.",
+        "es": "Qué hizo el dolor en las horas posteriores a una dosis, dentro del mismo ataque, frente a las 3 horas previas. Requiere dolor registrado a lo largo del tiempo.",
+        "nl": "Wat de pijn deed in de uren na een dosis, binnen dezelfde aanval, vergeleken met de 3 uur ervoor. Vereist pijn die over de tijd is genoteerd.",
+        "fr": "Ce que la douleur a fait dans les heures suivant une prise, au sein de la même crise, par rapport aux 3 heures précédentes. Nécessite une douleur notée dans le temps.",
+        "it": "Che cosa ha fatto il dolore nelle ore dopo una dose, all'interno dello stesso attacco, rispetto alle 3 ore precedenti. Richiede il dolore registrato nel tempo.",
+        "pt": "O que a dor fez nas horas após uma dose, dentro da mesma crise, face às 3 horas anteriores. Exige dor registada ao longo do tempo."
+      }
+    },
+    {
+      "en": "Whether a treatment landed differently depending on the symptoms that came with the attack. Ratings compared, not measured — no statistical test runs on these.",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Ob eine Behandlung je nach den Symptomen der Attacke anders wirkte. Bewertungen verglichen, nicht gemessen — hierauf läuft kein statistischer Test.",
+        "es": "Si un tratamiento funcionó distinto según los síntomas que acompañaron al ataque. Valoraciones comparadas, no medidas: aquí no se aplica ninguna prueba estadística.",
+        "nl": "Of een behandeling anders uitpakte afhankelijk van de symptomen bij de aanval. Beoordelingen vergeleken, niet gemeten — hierop draait geen statistische toets.",
+        "fr": "Si un traitement a agi différemment selon les symptômes présents pendant la crise. Évaluations comparées, non mesurées — aucun test statistique n'est appliqué ici.",
+        "it": "Se un trattamento ha agito diversamente a seconda dei sintomi presenti nell'attacco. Valutazioni confrontate, non misurate — su queste non gira alcun test statistico.",
+        "pt": "Se um tratamento resultou de forma diferente consoante os sintomas da crise. Avaliações comparadas, não medidas — aqui não corre qualquer teste estatístico."
+      }
+    },
+    {
+      "en": "by 1 hour",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "nach 1 Stunde",
+        "es": "tras 1 hora",
+        "nl": "na 1 uur",
+        "fr": "après 1 heure",
+        "it": "dopo 1 ora",
+        "pt": "após 1 hora"
+      }
+    },
+    {
+      "en": "by {0} hours",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "nach {0} Stunden",
+        "es": "tras {0} horas",
+        "nl": "na {0} uur",
+        "fr": "après {0} heures",
+        "it": "dopo {0} ore",
+        "pt": "após {0} horas"
+      }
+    },
+    {
+      "en": "by {0} minutes",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "nach {0} Minuten",
+        "es": "tras {0} minutos",
+        "nl": "na {0} minuten",
+        "fr": "après {0} minutes",
+        "it": "dopo {0} minuti",
+        "pt": "após {0} minutos"
+      }
+    },
+    {
+      "en": "in {0} of {1} doses",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "in {0} von {1} Dosen",
+        "es": "en {0} de {1} dosis",
+        "nl": "bij {0} van {1} doses",
+        "fr": "dans {0} prises sur {1}",
+        "it": "in {0} dosi su {1}",
+        "pt": "em {0} de {1} doses"
+      }
+    },
+    {
+      "en": "in {0} of {1} logs",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "in {0} von {1} Einträgen",
+        "es": "en {0} de {1} registros",
+        "nl": "bij {0} van {1} notities",
+        "fr": "dans {0} entrées sur {1}",
+        "it": "in {0} registrazioni su {1}",
+        "pt": "em {0} de {1} registos"
+      }
+    },
+    {
+      "en": "in {0} of {1} uses",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "in {0} von {1} Anwendungen",
+        "es": "en {0} de {1} usos",
+        "nl": "bij {0} van {1} toepassingen",
+        "fr": "dans {0} utilisations sur {1}",
+        "it": "in {0} utilizzi su {1}",
+        "pt": "em {0} de {1} utilizações"
+      }
+    },
+    {
+      "en": "pain rose after some of these",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "nach einigen davon stieg der Schmerz",
+        "es": "el dolor subió tras algunos de estos",
+        "nl": "bij sommige hiervan steeg de pijn",
+        "fr": "la douleur a monté après certains",
+        "it": "dopo alcuni il dolore è salito",
+        "pt": "a dor subiu após alguns destes"
+      }
+    },
+    {
+      "en": "pain rose after these",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "nach diesen stieg der Schmerz",
+        "es": "el dolor subió tras estos",
+        "nl": "hierna steeg de pijn",
+        "fr": "la douleur a monté après",
+        "it": "dopo questi il dolore è salito",
+        "pt": "a dor subiu após estes"
+      }
+    },
+    {
+      "en": "{0} across {1} attacks with {2}, against {3} across {4} without",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} über {1} Attacken mit {2}, gegenüber {3} über {4} ohne",
+        "es": "{0} en {1} ataques con {2}, frente a {3} en {4} sin",
+        "nl": "{0} over {1} aanvallen met {2}, tegenover {3} over {4} zonder",
+        "fr": "{0} sur {1} crises avec {2}, contre {3} sur {4} sans",
+        "it": "{0} su {1} attacchi con {2}, contro {3} su {4} senza",
+        "pt": "{0} em {1} crises com {2}, face a {3} em {4} sem"
+      }
+    },
+    {
+      "en": "{0} pts",
+      "why": "report What Worked rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} Pkt.",
+        "es": "{0} pts",
+        "nl": "{0} ptn",
+        "fr": "{0} pts",
+        "it": "{0} pt",
+        "pt": "{0} pts"
+      }
     }
   ]
 }
