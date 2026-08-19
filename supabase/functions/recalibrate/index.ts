@@ -18,6 +18,15 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
 
+// The closed sets a proposal is allowed to carry out of the model. Both are
+// enforced again in apply-recalibration, which is the last gate before the
+// database; checking here as well keeps a proposal that could never be applied
+// from ever being shown to the user.
+const PREDICTION_VALUES = new Set(["NONE", "LOW", "MILD", "HIGH"]);
+const FAVORITE_ITEM_TYPES = new Set([
+  "medicine", "relief", "symptom", "activity", "missed_activity",
+]);
+
 /**
  * Model-written prose has no translation table, so it must be generated in the
  * user's display language in the first place. Structure must NOT move with the
@@ -886,10 +895,19 @@ serve(async (req: Request) => {
     const proposals: any[] = [];
 
     // Trigger adjustments
+    //
+    // `to` becomes user_triggers.prediction_value verbatim. The ladder is
+    // closed — the risk engine ignores anything else — so a proposal off the
+    // ladder can never be applied and is dropped here rather than offered to
+    // the user and refused later.
     for (const adj of call1Result.trigger_adjustments ?? []) {
+      if (!PREDICTION_VALUES.has(String(adj.to ?? "").trim().toUpperCase())) {
+        console.warn(`recalibrate: dropping trigger_adjustment with to=${JSON.stringify(adj.to)}`);
+        continue;
+      }
       proposals.push({
         user_id: userId, type: "trigger", label: adj.label,
-        from_value: adj.from, to_value: adj.to,
+        from_value: adj.from, to_value: String(adj.to).trim().toUpperCase(),
         should_favorite: adj.should_favorite ?? false,
         reasoning: adj.reasoning, status: "pending",
       });
@@ -897,16 +915,31 @@ serve(async (req: Request) => {
 
     // Prodrome adjustments
     for (const adj of call1Result.prodrome_adjustments ?? []) {
+      if (!PREDICTION_VALUES.has(String(adj.to ?? "").trim().toUpperCase())) {
+        console.warn(`recalibrate: dropping prodrome_adjustment with to=${JSON.stringify(adj.to)}`);
+        continue;
+      }
       proposals.push({
         user_id: userId, type: "prodrome", label: adj.label,
-        from_value: adj.from, to_value: adj.to,
+        from_value: adj.from, to_value: String(adj.to).trim().toUpperCase(),
         should_favorite: adj.should_favorite ?? false,
         reasoning: adj.reasoning, status: "pending",
       });
     }
 
     // Favorite adjustments
+    //
+    // item_type becomes the proposal TYPE, which is what apply-recalibration
+    // branches on, so a value outside this list steers the proposal into some
+    // other branch entirely. A favorite the model typed as a "prodrome" landed
+    // in the prodrome branch and wrote to_value ("favorite") straight into
+    // user_prodromes.prediction_value — a value the risk engine ignores. There
+    // is one such row in production. Drop anything unrecognised.
     for (const fav of call1Result.favorite_adjustments ?? []) {
+      if (!FAVORITE_ITEM_TYPES.has(fav.item_type)) {
+        console.warn(`recalibrate: dropping favorite_adjustment with item_type ${JSON.stringify(fav.item_type)}`);
+        continue;
+      }
       proposals.push({
         user_id: userId, type: fav.item_type, label: fav.label,
         from_value: fav.currently_favorite ? "favorite" : "not_favorite",
@@ -1104,10 +1137,10 @@ Respond with ONLY valid JSON (no markdown fences):
   "clinical_assessment": "Six-section narrative using the exact === Section === headers from STEP 1, in order, separated by blank lines.",
   "summary": "2-3 sentence summary of key findings",
   "trigger_adjustments": [
-    {"label": "exact label", "from": "CURRENT", "to": "NEW (one notch)", "should_favorite": true/false, "reasoning": "gentle explanation referencing data"}
+    {"label": "exact label", "from": "CURRENT", "to": "NONE|LOW|MILD|HIGH (one notch from CURRENT)", "should_favorite": true/false, "reasoning": "gentle explanation referencing data"}
   ],
   "prodrome_adjustments": [
-    {"label": "exact label", "from": "CURRENT", "to": "NEW (one notch)", "should_favorite": true/false, "reasoning": "gentle explanation"}
+    {"label": "exact label", "from": "CURRENT", "to": "NONE|LOW|MILD|HIGH (one notch from CURRENT)", "should_favorite": true/false, "reasoning": "gentle explanation"}
   ],
   "favorite_adjustments": [
     {"item_type": "medicine|relief|symptom|activity|missed_activity", "label": "exact label", "currently_favorite": true/false, "should_favorite": true/false, "reasoning": "..."}
