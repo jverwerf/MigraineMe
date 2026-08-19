@@ -100,6 +100,9 @@ internal fun trimNum(v: Float): String {
     return if (s.endsWith(".0")) s.dropLast(2) else s
 }
 
+/** "2.9" / "3". A lift printed whole, never truncated to an int. */
+internal fun trimLift(lift: Float): String = trimNum(lift)
+
 /** "4h" / "1.5h". Hours only — duration is never a ratio. */
 internal fun hoursText(hours: Float): String = "${trimNum(hours)}h"
 

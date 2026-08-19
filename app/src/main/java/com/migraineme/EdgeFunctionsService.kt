@@ -2008,7 +2008,7 @@ class EdgeFunctionsService {
         }
 
         /** Which number to show, set by the engine's 3-step gate.
-         *  "comparison" -> real normal-day comparison -> show "N% more likely".
+         *  "comparison" -> real normal-day comparison -> show "about N times as likely".
          *  "prevalence" -> no fair comparison -> show "in X of attacks", no multiplier.
          *  Defaults to "comparison" for rows written before mode tagging. */
         val mode: String get() {
@@ -2037,7 +2037,7 @@ class EdgeFunctionsService {
                 val lagText = if (bestLagDays == 0) "on the same day"
                     else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
                 val base = "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your migraines ($lagText). " +
-                    "That's ${Math.round((liftRatio - 1f) * 100f)}% more likely than on your normal days."
+                    "That's about ${trimLift(liftRatio)} times as likely as on your normal days."
                 val parts = mutableListOf(base)
                 val durStr = avgDurationHrs?.let { "avg ${String.format("%.0f", it)}hrs" }
                 val sevStr = avgSeverity?.let { "severity ${String.format("%.0f", it)}/10" }
@@ -2065,9 +2065,9 @@ class EdgeFunctionsService {
                     }
                     "Your migraines cluster when ${factorName.lowercase()} is $dirText " +
                         "${fmtThreshold(suggestedThreshold, factorName)} " +
-                        "(${Math.round((liftRatio - 1f) * 100f)}% more likely)."
+                        "(about ${trimLift(liftRatio)} times as likely)."
                 } else {
-                    "${factorName} turns up ${Math.round(kotlin.math.abs(liftRatio - 1f) * 100f)}% more often on pre-migraine days than on normal days."
+                    "${factorName} turns up about ${trimLift(liftRatio)} times as often on pre-migraine days as on normal days."
                 }
             }
             "interaction" -> {
@@ -2077,7 +2077,7 @@ class EdgeFunctionsService {
                 } else {
                     "${factorName} + ${factorB ?: "?"} together preceded " +
                         "${pctMigraineWindows.toInt()}% of your migraines — " +
-                        "${Math.round((liftRatio - 1f) * 100f)}% more likely than either alone."
+                        "about ${trimLift(liftRatio)} times as likely as either alone."
                 }
             }
             // Combination rows are not multipliers any more. lift_ratio on them is
@@ -2091,7 +2091,7 @@ class EdgeFunctionsService {
             // fallback for anywhere still calling the generic sentence builder.
             "treatment" ->
                 "${factorName} was logged in $sampleSize of your attacks."
-            else -> "${factorName}: ${Math.round((liftRatio - 1f) * 100f)}% more likely"
+            else -> "${factorName} turns up about ${trimLift(liftRatio)} times as often around your attacks."
         }
 
         fun isSignificant(): Boolean = when (factorType) {
@@ -2178,7 +2178,11 @@ class EdgeFunctionsService {
      * Read top significant correlations from PostgREST.
      * Filters out symptom-aware rows so they don't crowd out the existing top-50 by lift.
      */
-    suspend fun getTopCorrelations(context: Context, limit: Int = 80): List<CorrelationStat> {
+    // lift_ratio is pinned to 1 on every treatment row now, so ordering by it
+    // desc parks the whole What Worked pool at the tail. At 80 a user with a lot
+    // of triggers lost their treatments entirely. 200 covers the row count the
+    // engine can write per user.
+    suspend fun getTopCorrelations(context: Context, limit: Int = 200): List<CorrelationStat> {
         val appCtx = context.applicationContext
         val supaAccessToken = SessionStore.getValidAccessToken(appCtx) ?: return emptyList()
 

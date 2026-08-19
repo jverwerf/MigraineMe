@@ -563,10 +563,10 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         // around an attack than on a normal day. Prevalence-mode
                         // rows have no fair comparison, so they only say how often.
                         val stat = if (it.mode == "prevalence")
-                            tSync("in %1\$s of %2\$s attacks", it.attackHits, it.sampleSize)
+                            tSync("in %s%% of attacks", it.pctMigraineWindows.toInt())
                         else
-                            tSync("%1\$s · in %2\$s of %3\$s attacks",
-                                liftPercentPhrase(it.liftRatio), it.attackHits, it.sampleSize)
+                            tSync("%1\$s · %2\$s%% of attacks",
+                                liftTimesText(it.liftRatio), it.pctMigraineWindows.toInt())
                         CardPreviewEntry(it.factorName, stat)
                     },
                     totalCount = pool.size + interactionCorrelations.size
@@ -602,8 +602,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         // Attack-free days, a third question again: how much more
                         // often you did this on the days no attack came.
                         CardPreviewEntry(it.factorName,
-                            tSync("%s%% more often on your attack-free days",
-                                Math.round(kotlin.math.abs(it.liftRatio - 1f) * 100f)))
+                            tSync("on %s%% of migraine-free days", it.pctControlWindows.toInt()))
                     },
                     totalCount = pool.size
                 )
@@ -629,12 +628,12 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     val impactEntries = buildList {
         painLocsHub.firstOrNull()?.let { (locId, count) ->
             if (totalMigsHub > 0) add(CardPreviewEntry(ALL_PAIN_POINTS_MAP[locId] ?: locId,
-                tSync("%1\$s× · %2\$s%%", count, count * 100 / totalMigsHub),
+                tSync("in %1\$s attacks · %2\$s%%", count, count * 100 / totalMigsHub),
                 iconKey = "migraine_starburst"))
         }
         if (auraAttacksHub > 0) add(CardPreviewEntry(tSync("Aura"), tSync("in %s attacks", auraAttacksHub)))
         impactPool.forEach {
-            add(CardPreviewEntry(it.name, tSync("missed %1\$s× · %2\$s%%", it.totalMissed, it.pctOfMigraines.toInt())))
+            add(CardPreviewEntry(it.name, tSync("missed %1\$s times · %2\$s%%", it.totalMissed, it.pctOfMigraines.toInt())))
         }
     }
     val auraZonesHub by vm.auraZoneCounts.collectAsState()
@@ -963,7 +962,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
                             title = t("What Worked"),
-                            description = t("Which medicines & reliefs shorten your attacks"),
+                            description = t("How your attacks went when you used each medicine and relief"),
                             resId = R.drawable.brainy_shield,
                             flipWatermark = true,
                             onClick = { navController.navigate(Routes.INSIGHTS_TREATMENTS) },
@@ -1496,31 +1495,21 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
 // ══════════════════════════════════════════════════════════════════
 
 /**
- * A risk lift in plain English. The old copy printed a bare "\u00D71.7" and, above
- * 2, truncated it with .toInt(), so a 2.9\u00D7 read "2\u00D7 more likely" \u2014 the wrong
- * number and a glyph nobody reads the same way twice. Percent more or less
- * often says the same thing, at any size, with no rounding lie.
+ * A risk lift in plain English. The old copy printed a bare "×1.7" and, above
+ * 2, truncated it with .toInt(), so a 2.9× read "2× more likely" — the wrong
+ * number and a glyph nobody reads the same way twice. Spelled out, at any size,
+ * with no rounding lie. Same wording as iOS.
  *
  * This is deliberately NOT the What Worked vocabulary: this card answers "how
  * much does this raise the chance of an attack starting", which is a different
  * question from "did this treatment help once one had".
  */
-internal fun liftPercentText(lift: Float): String {
-    val pct = Math.round(kotlin.math.abs(lift - 1f) * 100f)
-    return if (lift >= 1f) tSync("%s%% more likely", pct) else tSync("%s%% less likely", pct)
-}
-
-/** Longer form, for previews and sentences where the comparison needs naming. */
-internal fun liftPercentPhrase(lift: Float): String {
-    val pct = Math.round(kotlin.math.abs(lift - 1f) * 100f)
-    return if (lift >= 1f) tSync("%s%% more likely than your normal days", pct)
-    else tSync("%s%% less likely than your normal days", pct)
-}
+internal fun liftTimesText(lift: Float): String = tSync("about %s times as likely", trimLift(lift))
 
 /** Lift ratio as a colored bar + plain-language text */
 @Composable
 internal fun LiftBadge(lift: Float) {
-    val label = liftPercentText(lift)
+    val label = liftTimesText(lift)
     val fraction = (lift / 5f).coerceIn(0f, 1f)
     Column(horizontalAlignment = Alignment.End) {
         Text(label, color = AppTheme.AccentPurple,
@@ -2054,9 +2043,9 @@ private fun PatternTile(
             )
             Spacer(Modifier.width(10.dp))
             val headlineStat = if (stat.mode != "prevalence") {
-                liftPercentText(stat.liftRatio)
+                liftTimesText(stat.liftRatio)
             } else {
-                tSync("in %1\$s of %2\$s attacks", stat.attackHits, stat.sampleSize)
+                tSync("in %s%% of attacks", stat.pctMigraineWindows.toInt())
             }
             Text(
                 headlineStat,
@@ -2142,8 +2131,10 @@ internal fun PatternsPreviewCard(
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${prettyLabel(stat.factorName)} \u2192 ${prettyLabel(stat.symptomOutcome)}", color = Color.White,
                         style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.weight(1f))
-                    Text(liftPercentText(stat.liftRatio),
-                        color = if (stat.liftRatio >= 2f) Color(0xFFE57373) else if (stat.liftRatio >= 1.5f) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
+                    // The two rates, undivided — same as the Patterns detail card.
+                    Text(t("%1\$s%% of days vs %2\$s%% usually",
+                        stat.pctMigraineWindows.toInt(), stat.pctControlWindows.toInt()),
+                        color = if (stat.pctMigraineWindows >= stat.pctControlWindows * 2f) Color(0xFFE57373) else AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
             }
@@ -2758,7 +2749,7 @@ internal fun ImpactCard(
                         Text(t("missed during %s%% of migraines", item.pctOfMigraines.toInt()),
                             color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
-                    Text("${item.totalMissed}\u00D7", color = Color(0xFFE57373),
+                    Text(t("%s times", item.totalMissed), color = Color(0xFFE57373),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
             }
@@ -3242,7 +3233,7 @@ private fun DayOfWeekCard(pattern: List<InsightsViewModel.DayOfWeekStat>) {
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
-                        t("%1\$ss account for %2\$s%% of your migraines \u2014 %3\$s%% more than an average day.", w.dayName, String.format("%.0f", w.pct), Math.round((ratio - 1f) * 100f)),
+                        t("%1\$ss account for %2\$s%% of your migraines \u2014 about %3\$s times an average day.", w.dayName, String.format("%.0f", w.pct), trimLift(ratio)),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(10.dp),
@@ -3357,7 +3348,7 @@ object AccuracyInfoCopy {
 }
 
 object WhatHappenedInfoCopy {
-    val text: String get() = tSync("The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"70% more likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list.") + MEDICAL_NOTE
+    val text: String get() = tSync("The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"about 2 times as likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list.") + MEDICAL_NOTE
 }
 
 object WhatWorkedInfoCopy {

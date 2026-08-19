@@ -153,15 +153,12 @@ private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.Correlatio
                         Text(prettyLabel(stat.symptomOutcome), color = Color(0xFFDDD2EA),
                             style = MaterialTheme.typography.bodySmall, maxLines = 1,
                             modifier = Modifier.weight(1f))
-                        // Percent more often, not a bare "×1.7": this row is about
-                        // which symptom follows a trigger, and the multiplier read
-                        // as an amount rather than a comparison.
-                        Text(liftPercentText(stat.liftRatio),
-                            color = if (stat.liftRatio >= 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
+                        // The two rates, undivided. Dividing them gave a bare
+                        // "2.4×" that read as an amount rather than a comparison,
+                        // and the rates say the same thing without the arithmetic.
+                        Text(t("%1\$s%% of days vs %2\$s%% usually", condPct.toInt(), baselinePct.toInt()),
+                            color = if (condPct >= baselinePct * 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                        Spacer(Modifier.width(8.dp))
-                        Text(t("%1\$s%% vs %2\$s%% of days", condPct.toInt(), baselinePct.toInt()),
-                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
