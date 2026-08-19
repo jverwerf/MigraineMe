@@ -2171,7 +2171,7 @@ class InsightsViewModel : ViewModel() {
             try {
                 val edge = EdgeFunctionsService()
                 // 80 (was 50): room for Well Done layer rows without crowding treatments
-                val stats = withContext(Dispatchers.IO) { edge.getTopCorrelations(context, 80) }
+                val stats = withContext(Dispatchers.IO) { edge.getTopCorrelations(context) }
                 _correlationStats.value = stats
 
                 val accuracy = withContext(Dispatchers.IO) { edge.getGaugeAccuracy(context) }
