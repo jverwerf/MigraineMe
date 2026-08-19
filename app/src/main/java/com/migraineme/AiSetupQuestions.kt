@@ -346,7 +346,7 @@ fun AiQuestionsPage1(
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         QPageHeader(Icons.Outlined.Psychology, t("About You & Your Migraines"), t("Help us personalise your experience"), 1, 17, brainy = R.drawable.brainy_migraines)
         QCard(t("What is your gender?"), Icons.Outlined.Person, t("Used to personalise thresholds (e.g. nutrition, body composition)")) { QSingleChips(listOf("Female", "Male", "Prefer not to say"), gender, onGender) }
-        QCard(t("What is your age range?"), Icons.Outlined.Cake) { QSingleChips(listOf("18-25", t("26-35"), "36-45", "46-55", "56+"), ageRange, onAgeRange) }
+        QCard(t("What is your age range?"), Icons.Outlined.Cake) { QSingleChips(listOf("18-25", "26-35", "36-45", "46-55", "56+"), ageRange, onAgeRange) }
         QCard(t("How often do you get migraines?"), Icons.Outlined.CalendarMonth, fieldKey = "frequency") {
             QSingleChips(listOf("A few per year", "Every 1-2 months", "1-3 per month", "Weekly", "Chronic"), frequency, onFrequency)
         }
@@ -457,8 +457,8 @@ fun AiQuestionsPage4(
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         QPageHeader(Icons.Outlined.Restaurant, t("Diet & Substances"), t("Food, drink, and nutrition triggers"), 4, 17, brainy = R.drawable.brainy_diet)
         QCard(t("How much caffeine do you have daily?"), Icons.Outlined.LocalCafe, fieldKey = "caffeine_intake") { QSingleChips(listOf("None", "1-2 cups", "3-4 cups", "5+ cups"), caffeineIntake, onCaffeineIntake) }
-        QCard(t("Does caffeine affect your migraines?"), Icons.Outlined.Bolt, fieldKey = "caffeine_direction") { QSingleChips(listOf("Too much triggers it", "Missing caffeine triggers it", "Both ways", "Not sure", "No"), caffeineDirection, onCaffeineDirection) }
-        AnimatedVisibility(visible = caffeineDirection != null && caffeineDirection != "No", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+        QCard(t("Does caffeine affect your migraines?"), Icons.Outlined.Bolt, fieldKey = "caffeine_direction") { QSingleChips(AiSetupOptions.CAFFEINE_DIRECTION, caffeineDirection, onCaffeineDirection) }
+        AnimatedVisibility(visible = caffeineDirection != null && caffeineDirection != AiSetupOptions.CAFFEINE_NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             QCard(t("How certain about the caffeine link?"), Icons.Outlined.TrendingUp, fieldKey = "caffeine_certainty") { SingleCertaintySelect(caffeineCertainty, onCaffeineCertainty) }
         }
         QCard(t("How often do you drink alcohol?"), Icons.Outlined.LocalBar, fieldKey = "alcohol_frequency") { QSingleChips(listOf("Never", "Occasionally", "Weekly", "Daily"), alcoholFrequency, onAlcoholFrequency) }
@@ -540,15 +540,15 @@ fun AiQuestionsPage6(
         QCard(t("How often do you exercise?"), Icons.Outlined.DirectionsRun, fieldKey = "exercise_frequency") { QSingleChips(listOf("Daily", "Few times/week", "Weekly", "Rarely", "Never"), exerciseFrequency, onExerciseFrequency) }
         QCard(t("Does exercise trigger migraines?"), Icons.Outlined.Bolt, fieldKey = "exercise_triggers") { SingleCertaintySelect(exerciseTriggers, onExerciseTriggers) }
         AnimatedVisibility(visible = exerciseTriggers != null && exerciseTriggers != DeterministicMapper.Certainty.NO, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-            QCard(t("Which pattern?"), Icons.Outlined.Loop, t("Select all that apply"), fieldKey = "exercise_pattern") { QMultiChips(listOf("During or after intense exercise", "When I haven't exercised"), exercisePattern, onToggleExercisePattern) }
+            QCard(t("Which pattern?"), Icons.Outlined.Loop, t("Select all that apply"), fieldKey = "exercise_pattern") { QMultiChips(AiSetupOptions.EXERCISE_PATTERN, exercisePattern, onToggleExercisePattern) }
         }
-        QCard(t("Do you track your menstrual cycle?"), Icons.Outlined.Female) { QSingleChips(listOf("Yes", t("No"), "Not applicable"), tracksCycle, onTracksCycle) }
+        QCard(t("Do you track your menstrual cycle?"), Icons.Outlined.Female) { QSingleChips(listOf("Yes", "No", "Not applicable"), tracksCycle, onTracksCycle) }
         AnimatedVisibility(visible = tracksCycle == "Yes", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 QCard(t("Do migraines relate to your cycle?"), Icons.Outlined.Loop, t("Select all, set certainty"), fieldKey = "cycle_patterns") {
                     CertaintyMultiSelect(items = listOf(CertaintyItem("Around my period", "Around my period"), CertaintyItem("Around ovulation", "Around ovulation (mid-cycle)")), selections = cyclePatterns, onSelectionChanged = onCyclePatterns, showNoneOption = true)
                 }
-                QCard(t("How long is your average cycle?"), Icons.Outlined.CalendarMonth) { QSingleChips(listOf("< 25 days", t("25-28 days"), "28-32 days", "32-35 days", "> 35 days", "Irregular"), cycleLength, onCycleLength) }
+                QCard(t("How long is your average cycle?"), Icons.Outlined.CalendarMonth) { QSingleChips(listOf("< 25 days", "25-28 days", "28-32 days", "32-35 days", "> 35 days", "Irregular"), cycleLength, onCycleLength) }
                 QCard(t("When did your last period start?"), Icons.Outlined.DateRange, t("Helps us predict your next one")) {
                     val ctx = LocalContext.current
                     val parsed = lastPeriodDate?.takeIf { it.isNotBlank() }?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
@@ -579,9 +579,9 @@ fun AiQuestionsPage6(
         }
         AnimatedVisibility(visible = tracksCycle != "Not applicable" && tracksCycle != null, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                QCard(t("Do you use hormonal contraception?"), Icons.Outlined.Medication) { QSingleChips(listOf("Yes", t("No")), usesContraception, onUsesContraception) }
+                QCard(t("Do you use hormonal contraception?"), Icons.Outlined.Medication) { QSingleChips(listOf("Yes", "No"), usesContraception, onUsesContraception) }
                 AnimatedVisibility(visible = usesContraception == "Yes", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                    QCard(t("Has contraception affected your migraines?"), Icons.Outlined.Bolt) { QSingleChips(listOf("Worse — every time", t("Worse — sometimes"), "No change", "Actually helps"), contraceptionEffect, onContraceptionEffect) }
+                    QCard(t("Has contraception affected your migraines?"), Icons.Outlined.Bolt) { QSingleChips(AiSetupOptions.CONTRACEPTION_EFFECT, contraceptionEffect, onContraceptionEffect) }
                 }
             }
         }

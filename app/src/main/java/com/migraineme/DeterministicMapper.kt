@@ -745,17 +745,17 @@ object DeterministicMapper {
     // ═════════════════════════════════════════════════════════════════════
 
     private fun mapDiet(a: QuestionnaireAnswers, d: Map<String, Double>, out: MutableMap<String, TriggerSetting>) {
-        if (a.caffeineCertainty != Certainty.NO && a.caffeineDirection != "No") {
+        if (a.caffeineCertainty != Certainty.NO && a.caffeineDirection != AiSetupOptions.CAFFEINE_NO) {
             val sev = certaintyToSeverity(a.caffeineCertainty)
             val cc = a.caffeineCertainty
             when (a.caffeineDirection) {
-                "Too much" -> out["Caffeine high"] = trigHigh("Caffeine high", sev, d, cc, fav = true)
-                "Missing"  -> out["Caffeine low"] = trigLow("Caffeine low", sev, d, cc, fav = true)
-                "Both" -> {
+                AiSetupOptions.CAFFEINE_TOO_MUCH -> out["Caffeine high"] = trigHigh("Caffeine high", sev, d, cc, fav = true)
+                AiSetupOptions.CAFFEINE_MISSING  -> out["Caffeine low"] = trigLow("Caffeine low", sev, d, cc, fav = true)
+                AiSetupOptions.CAFFEINE_BOTH -> {
                     out["Caffeine high"] = trigHigh("Caffeine high", sev, d, cc, fav = true)
                     out["Caffeine low"] = trigLow("Caffeine low", sev, d, cc, fav = true)
                 }
-                "Not sure" -> {
+                AiSetupOptions.CAFFEINE_NOT_SURE -> {
                     out["Caffeine high"] = TriggerSetting("Caffeine high", "LOW", d["Caffeine high"])
                     out["Caffeine low"] = TriggerSetting("Caffeine low", "LOW", d["Caffeine low"])
                 }
@@ -907,11 +907,11 @@ object DeterministicMapper {
     private fun mapExercise(a: QuestionnaireAnswers, d: Map<String, Double>, out: MutableMap<String, TriggerSetting>) {
         if (a.exerciseTriggers == Certainty.NO) return
         val sev = certaintyToSeverity(a.exerciseTriggers)
-        if ("Intense exercise" in a.exercisePattern) {
+        if (AiSetupOptions.EXERCISE_INTENSE in a.exercisePattern) {
             out["High HR zones high"] = trigHigh("High HR zones high", sev, d, a.exerciseTriggers, fav = true)
             out["Steps high"] = trigHigh("Steps high", sev, d, a.exerciseTriggers)
         }
-        if ("When inactive" in a.exercisePattern) {
+        if (AiSetupOptions.EXERCISE_INACTIVE in a.exercisePattern) {
             out["Steps low"] = trigLow("Steps low", sev, d, a.exerciseTriggers)
         }
     }
@@ -938,8 +938,8 @@ object DeterministicMapper {
             out["menstruation_predicted"] = TriggerSetting("menstruation_predicted", "LOW")
         }
         when (a.contraceptionEffect) {
-            "Made them worse — every time" -> out["Contraceptive"] = trigManual("Contraceptive", "HIGH")
-            "Made them worse — sometimes"  -> out["Contraceptive"] = trigManual("Contraceptive", "MILD")
+            AiSetupOptions.CONTRACEPTION_WORSE_EVERY_TIME -> out["Contraceptive"] = trigManual("Contraceptive", "HIGH")
+            AiSetupOptions.CONTRACEPTION_WORSE_SOMETIMES  -> out["Contraceptive"] = trigManual("Contraceptive", "MILD")
         }
     }
 
