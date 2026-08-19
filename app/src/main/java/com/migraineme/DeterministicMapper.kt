@@ -22,6 +22,21 @@ object DeterministicMapper {
 
     enum class Certainty { EVERY_TIME, OFTEN, SOMETIMES, RARELY, NO }
 
+    /**
+     * Every certainty level, weakest first — the order the chips are drawn in:
+     * Never / Rarely / Sometimes / Often / Every time.
+     *
+     * This is a FREQUENCY scale, and the chips must label it as one. Severity
+     * words (None/Low/Mild/High) used to be pinned on it, which both misnamed
+     * the question and left RARELY with no chip at all, so a seeded RARELY
+     * showed as nothing selected.
+     *
+     * Derived from the enum rather than hand-written so it stays exhaustive:
+     * add a level and it gets a chip. Certainty is declared strongest-first,
+     * hence the reverse.
+     */
+    val CERTAINTY_SCALE: List<Certainty> = Certainty.entries.reversed()
+
     fun certaintyToSeverity(c: Certainty): String = when (c) {
         Certainty.EVERY_TIME -> "HIGH"
         Certainty.OFTEN      -> "MILD"

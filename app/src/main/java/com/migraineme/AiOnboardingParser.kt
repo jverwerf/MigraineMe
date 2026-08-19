@@ -362,10 +362,16 @@ object AiOnboardingParser {
 
         fun optStr(key: String): String? = obj.optString(key, "").let { if (it == "null" || it.isBlank()) null else it }
         fun optStrIn(key: String, allowed: Set<String>): String? = optStr(key)?.takeIf { it in allowed }
-        fun optCert(key: String): DeterministicMapper.Certainty? {
-            val s = optStr(key) ?: return null
+        // valueOf is exact and case-sensitive, so normalise casing and whitespace
+        // first: a model that answers "Rarely" or " rarely " instead of "RARELY"
+        // would otherwise throw, get swallowed by getOrNull, and drop the
+        // suggestion with no trace. Every level the model can name has a chip,
+        // so no value needs remapping — only parsing reliably.
+        fun parseCert(raw: String?): DeterministicMapper.Certainty? {
+            val s = raw?.trim()?.uppercase()?.takeIf { it.isNotEmpty() } ?: return null
             return runCatching { DeterministicMapper.Certainty.valueOf(s) }.getOrNull()
         }
+        fun optCert(key: String): DeterministicMapper.Certainty? = parseCert(optStr(key))
         fun optStrSet(key: String, allowed: Set<String>): Set<String> {
             val arr = obj.optJSONArray(key) ?: return emptySet()
             val out = mutableSetOf<String>()
@@ -382,9 +388,12 @@ object AiOnboardingParser {
             while (it.hasNext()) {
                 val k = it.next()
                 if (k !in allowedKeys) continue
-                val cert = runCatching {
-                    DeterministicMapper.Certainty.valueOf(inner.optString(k, "").trim())
-                }.getOrNull() ?: continue
+                val cert = parseCert(inner.optString(k, "")) ?: continue
+                // A key in the map means "this one is on your list", and the row
+                // it draws has no chip for NO. Keeping a NO entry would tick the
+                // row with no level under it — the same half-selected state a
+                // RARELY value used to leave. Absence already means no.
+                if (cert == DeterministicMapper.Certainty.NO) continue
                 out[k] = cert
             }
             return out

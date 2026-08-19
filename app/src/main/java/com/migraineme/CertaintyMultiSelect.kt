@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +41,52 @@ data class CertaintyItem(
     val label: String,
     val description: String? = null,
 )
+
+/**
+ * Chip label for each certainty level. The questions ask how OFTEN something
+ * brings a migraine on, and Certainty is a frequency enum, so the chips read as
+ * frequency: Never / Rarely / Sometimes / Often / Every time. They used to read
+ * None / Low / Mild / High — severity words over a frequency scale, and one word
+ * short, which left RARELY with no chip to render.
+ *
+ * Kept in step with VertigoMe / MeSeries, which use the same five labels.
+ */
+private val CERTAINTY_CHIP_LABELS: Map<DeterministicMapper.Certainty, String> = mapOf(
+    DeterministicMapper.Certainty.NO to "Never",
+    DeterministicMapper.Certainty.RARELY to "Rarely",
+    DeterministicMapper.Certainty.SOMETIMES to "Sometimes",
+    DeterministicMapper.Certainty.OFTEN to "Often",
+    DeterministicMapper.Certainty.EVERY_TIME to "Every time",
+)
+
+/**
+ * Every level, weakest first. Derived from DeterministicMapper.CERTAINTY_SCALE
+ * rather than hand-written, so a level cannot exist in the enum with no chip to
+ * show it as selected.
+ */
+private val SINGLE_CERTAINTY_OPTIONS: List<Pair<DeterministicMapper.Certainty, String>> =
+    DeterministicMapper.CERTAINTY_SCALE.map { it to (CERTAINTY_CHIP_LABELS[it] ?: it.name) }
+
+/**
+ * Same, minus "Never". In a multi-select the tick box is the never: a row is on
+ * the list or it is not, and the chips under it only say how often. A ticked row
+ * reading "Never" would contradict itself.
+ */
+private val MULTI_CERTAINTY_OPTIONS: List<Pair<DeterministicMapper.Certainty, String>> =
+    SINGLE_CERTAINTY_OPTIONS.filterNot { it.first == DeterministicMapper.Certainty.NO }
+
+/** Selected-chip fill. Every level needs one, or a selected chip reads as unselected. */
+private fun certaintyChipColor(c: DeterministicMapper.Certainty): Color = when (c) {
+    DeterministicMapper.Certainty.EVERY_TIME -> Color(0xFFE53935)
+    DeterministicMapper.Certainty.OFTEN      -> Color(0xFFFFA726)
+    DeterministicMapper.Certainty.SOMETIMES  -> Color(0xFFFFEE58)
+    DeterministicMapper.Certainty.RARELY     -> Color(0xFF78909C)
+    DeterministicMapper.Certainty.NO         -> Color(0xFF455A64)
+}
+
+/** Yellow needs dark text; the rest are dark enough for white. */
+private fun certaintyChipTextColor(c: DeterministicMapper.Certainty): Color =
+    if (c == DeterministicMapper.Certainty.SOMETIMES) Color.Black else Color.White
 
 @Composable
 fun CertaintyMultiSelect(
@@ -147,6 +195,7 @@ fun CertaintyMultiSelect(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CertaintySelector(
     selected: DeterministicMapper.Certainty,
@@ -154,26 +203,22 @@ private fun CertaintySelector(
     accentColor: Color = AppTheme.AccentPink,
     modifier: Modifier = Modifier,
 ) {
-    val options = listOf(
-        DeterministicMapper.Certainty.SOMETIMES to "Low",
-        DeterministicMapper.Certainty.OFTEN to "Mild",
-        DeterministicMapper.Certainty.EVERY_TIME to "High",
-    )
+    val options = MULTI_CERTAINTY_OPTIONS
 
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    // FlowRow, not Row: the scale gained a chip and the labels are words rather
+    // than the old three-letter severities, so on a narrow screen (or in German)
+    // the last one wraps instead of being clipped off the edge.
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
         for ((certainty, label) in options) {
             val isSelected = selected == certainty
-            val chipColor = when {
-                isSelected && certainty == DeterministicMapper.Certainty.EVERY_TIME -> Color(0xFFE53935)
-                isSelected && certainty == DeterministicMapper.Certainty.OFTEN -> Color(0xFFFFA726)
-                isSelected && certainty == DeterministicMapper.Certainty.SOMETIMES -> Color(0xFFFFEE58)
-                else -> Color.White.copy(alpha = 0.08f)
-            }
-            val textColor = when {
-                isSelected && certainty == DeterministicMapper.Certainty.SOMETIMES -> Color.Black
-                isSelected -> Color.White
-                else -> AppTheme.SubtleTextColor
-            }
+            val chipColor =
+                if (isSelected) certaintyChipColor(certainty) else Color.White.copy(alpha = 0.08f)
+            val textColor =
+                if (isSelected) certaintyChipTextColor(certainty) else AppTheme.SubtleTextColor
 
             Box(
                 Modifier
@@ -198,12 +243,7 @@ fun SingleCertaintySelect(
     onSelected: (DeterministicMapper.Certainty) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val options = listOf(
-        DeterministicMapper.Certainty.NO to "None",
-        DeterministicMapper.Certainty.SOMETIMES to "Low",
-        DeterministicMapper.Certainty.OFTEN to "Mild",
-        DeterministicMapper.Certainty.EVERY_TIME to "High",
-    )
+    val options = SINGLE_CERTAINTY_OPTIONS
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -211,19 +251,10 @@ fun SingleCertaintySelect(
     ) {
         for ((certainty, label) in options) {
             val isSelected = selected == certainty
-            val chipColor = when {
-                !isSelected -> Color.White.copy(alpha = 0.08f)
-                certainty == DeterministicMapper.Certainty.EVERY_TIME -> Color(0xFFE53935)
-                certainty == DeterministicMapper.Certainty.OFTEN -> Color(0xFFFFA726)
-                certainty == DeterministicMapper.Certainty.SOMETIMES -> Color(0xFFFFEE58)
-                certainty == DeterministicMapper.Certainty.RARELY -> Color(0xFF78909C)
-                else -> Color(0xFF455A64)
-            }
-            val textColor = when {
-                !isSelected -> AppTheme.SubtleTextColor
-                certainty == DeterministicMapper.Certainty.SOMETIMES -> Color.Black
-                else -> Color.White
-            }
+            val chipColor =
+                if (isSelected) certaintyChipColor(certainty) else Color.White.copy(alpha = 0.08f)
+            val textColor =
+                if (isSelected) certaintyChipTextColor(certainty) else AppTheme.SubtleTextColor
 
             Box(
                 Modifier
@@ -239,7 +270,9 @@ fun SingleCertaintySelect(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     textAlign = TextAlign.Center,
-                    maxLines = 1,
+                    // Five equal-width chips now, and "Every time" (or "Jedes Mal")
+                    // does not fit one line at a fifth of the row. Wrap, don't clip.
+                    maxLines = 2,
                 )
             }
         }
