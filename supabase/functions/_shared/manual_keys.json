@@ -1,6 +1,12 @@
 {
   "_readme": [
-    "Strings the scanner cannot see because they reach t()/rt() as runtime values."
+    "Strings the scanner cannot see because they reach t()/rt() as runtime values.",
+    "",
+    "Optional per-key fields:",
+    "  prefer  name of the app repo whose table must win for this key, when the",
+    "          two repos translate the same English word in different SENSES.",
+    "  value   explicit wording per language, for keys no app table can supply.",
+    "          Partial maps are fine; languages left out fall back to the tables."
   ],
   "keys": [
     {
@@ -786,6 +792,1763 @@
     {
       "en": "Your recommendations for today are ready. Tap to see them.",
       "why": "new_insight push body"
+    },
+    {
+      "en": "Acupressure",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Acupuncture",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Alcohol exposure high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Alcohol exposure low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Allay Lamp",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Allergies",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Almotriptan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Altitude change high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Altitude change low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Altitude high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Altitude low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Amitriptyline",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Anger",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Anxiety",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Apollo Neuro",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Aspirin",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Atogepant (Qulipta)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Avulux glasses",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Bar / pub",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Bath",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Beach",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Bedroom",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Bedtime early",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Bedtime late",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Biotin high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Biotin low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Blood glucose high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Blood glucose low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Blood pressure high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Blood pressure low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Blurred vision",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Body aches lingering",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Body fat high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Body fat low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Botox",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Box breathing",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Brain fog",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Brain fog (after)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Brightness high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Brightness low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Bus",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Butterbur",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Caffeine high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Caffeine low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Café",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Calcium high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Calcium low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "CalmiGo",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Calories high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Calories low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Candesartan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Car",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Carbs high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Carbs low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cefaly",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Celecoxib",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Childcare",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cholesterol high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cholesterol low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Chores",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Church",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cinema",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cleaning",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cluster headache",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "CoQ10",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Codeine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cold pack",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cold sensation",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Commuting",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Computer / screen",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Concert / event",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Contraceptive",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cooking",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Copper high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Copper low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Cycling",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Dark mode high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Dark mode low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Dark room",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Date",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Deep breathing",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Deep sleep high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Deep sleep low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Dehydration",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Depression",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Diclofenac",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Difficulty concentrating",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Difficulty focusing",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Difficulty speaking",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Dihydroergotamine (DHE)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Dizziness",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Dizziness (after)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Doctor",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Domperidone",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Driving",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Eating out",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Electrolytes",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Eletriptan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Eptinezumab (Vyepti)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Erenumab (Aimovig)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ergotamine (Cafergot)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Euphoria",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Excedrin",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Exercise",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Exercising",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Eye mask",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Family event",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fat high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fat low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fatigue",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Feverfew",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fibre high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fibre low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fluid retention",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Flunarizine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fluorescent light",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Flying",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Folate high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Folate low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Food cravings",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Forest",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fremanezumab (Ajovy)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Frequent urination",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Fresh air",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Friend's house",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Frovatriptan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Galcanezumab (Emgality)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Gaming",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Garden",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Gentle walk",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ginger tea",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Gluten exposure high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Gluten exposure low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Gym",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "HRV high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "HRV low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Hangover feeling",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "HeartMath",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Heat pack",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Hemiplegic migraine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "High HR zones high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "High HR zones low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Hiking",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Histamine exposure high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Histamine exposure low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Hobbies",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Home",
+      "why": "seeded pool label: report renders it through pretty(); location pool item (the place). migraineme-ios translates the same word as the Home nav tab — 'Accueil'/'Start' — which would print the patient's location as the app's home screen.",
+      "prefer": "MigraineMe"
+    },
+    {
+      "en": "Hospital",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Humidity high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Humidity low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ibuprofen",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ice on neck",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Illness",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Indomethacin",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Iron high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Iron low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Irritability",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Jet lag",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Lasmiditan (Reyvow)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Late screen time high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Late screen time low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Let-down",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Lie down",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Light sensitivity lingering",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Light sleep high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Light sleep low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Lingering fatigue",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Loss of appetite",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Low blood sugar",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Magnesium high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Magnesium low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Manganese high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Manganese low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Medication change",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Meditation",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Meeting",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Melatonin",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Menstruation",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Metoclopramide",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Migraleve",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Mood change",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Mood crash",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Mood lift",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Motion sickness",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Mountains",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Muscle tension",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Nap",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Napping",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Naproxen",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Naratriptan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Nasal congestion",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Nausea",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Neck massage",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Neck stiffness",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Neck stiffness (after)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Neck stretch",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Nerivio",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Niacin high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Niacin low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Night out",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Noise cancelling headphones",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Noise high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Noise low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Nortriptyline",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Numbness",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ocular migraine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Office",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ondansetron",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Outdoors",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ovulation",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Oxygen therapy",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Pantothenic acid high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Pantothenic acid low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Paracetamol",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Park",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Partying",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Peppermint oil",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Pet care",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Phone",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Phone unlocks high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Phone unlocks low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Phosphorus high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Phosphorus low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Pizotifen",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Plane",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Potassium high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Potassium low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Prednisone",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Presenting",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Pressure high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Pressure low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Prochlorperazine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Progressive relaxation",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Propranolol",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Protein high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Protein low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Quell",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Quiet environment",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "REM sleep high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "REM sleep low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Reading",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Recovery high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Recovery low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Regular Migraine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Reliefband",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Relivion",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Resp rate high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Resp rate low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Restaurant",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Resting HR high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Resting HR low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Riboflavin (B2)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Riboflavin high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Riboflavin low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Rimegepant (Nurtec)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Rizatriptan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Running",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Saturated fat high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Saturated fat low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Scalp massage",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "School",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Screen break",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Screen time high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Screen time low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Seeing spots",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Selenium high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Selenium low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Self-care",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sensitivity to light",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sensitivity to smell",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sensitivity to sound",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sexual activity",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Shop",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Shopping",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Shower",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sinus headache",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Skin temp high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Skin temp low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Skipped meals",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep apnea",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep disturbances high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep disturbances low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep duration high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep duration low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep efficiency high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep efficiency low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep score high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleep score low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sleeping",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Slowed thinking",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Smoke",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Social plans",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Socialising",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sodium high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sodium low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sound sensitivity lingering",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "SpO2 high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "SpO2 low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sport",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Steps high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Steps low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Stress",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Stress high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Stress low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Strong smell",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Study",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Studying",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sugar high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sugar low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sumatriptan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Sunglasses",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Supermarket",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Swimming",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Symbravo",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "TV / film",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Tearing",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Temperature high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Temperature low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Temple massage",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Tension headache",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "TheraSpecs",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "ThermaZone",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Thiamin high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Thiamin low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Thirst",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Tingling",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Tobacco",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Topiramate",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Train",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Tramadol",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Trans fat high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Trans fat low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Travel",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Treximet",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Tyramine exposure high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Tyramine exposure low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "UV index high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "UV index low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Ubrogepant (Ubrelvy)",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Unsaturated fat high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Unsaturated fat low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Valproate",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Venlafaxine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Verapamil",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vestibular migraine",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin A high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin A low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin B12 high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin B12 low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin B6 high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin B6 low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin C high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin C low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin D high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin D low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin E high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin E low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin K high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vitamin K low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Volume high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Volume low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Vomiting",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Wake time early",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Wake time late",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Walk",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Walking",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Warm compress",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Water",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Weakness",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Weight high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Weight low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Wind speed high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Wind speed low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Word-finding trouble",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Work",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Working",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Working from home",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Yawning",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Yoga",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Zavzpret",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Zinc high",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Zinc low",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Zolmitriptan",
+      "why": "seeded pool label: report renders it through pretty()"
+    },
+    {
+      "en": "Accompanying",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Analgesic",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Anti-Nausea",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Autonomic",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Body",
+      "why": "pool category: report renders it through pretty(); trigger/prodrome pool category, the anatomy sense; the app table's nl/it wording is the message-body sense",
+      "value": {
+        "nl": "Lichaam",
+        "it": "Corpo"
+      }
+    },
+    {
+      "en": "Breathing",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "CGRP",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Care",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Cognitive",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Cold/Heat",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Combination",
+      "why": "pool category: report renders it through pretty(); medicine pool category: combination analgesics",
+      "value": {
+        "de": "Kombination",
+        "es": "Combinación",
+        "nl": "Combinatie",
+        "fr": "Combinaison",
+        "it": "Combinazione",
+        "pt": "Combinação"
+      }
+    },
+    {
+      "en": "Darkness",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Device",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Diet",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Digestive",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Ditan",
+      "why": "pool category: report renders it through pretty(); medicine pool category: the ditan class, worded like Triptan",
+      "value": {
+        "de": "Ditan",
+        "es": "Ditán",
+        "nl": "Ditaan",
+        "fr": "Ditan",
+        "it": "Ditano",
+        "pt": "Ditano"
+      }
+    },
+    {
+      "en": "Environment",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Ergotamine",
+      "why": "pool category: report renders it through pretty(); medicine pool category: the ergot class",
+      "value": {
+        "de": "Ergotamin",
+        "es": "Ergotamina",
+        "nl": "Ergotamine",
+        "fr": "Ergotamine",
+        "it": "Ergotamina",
+        "pt": "Ergotamina"
+      }
+    },
+    {
+      "en": "Leisure",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Massage",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Medical",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Menstrual Cycle",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Mental",
+      "why": "pool category: report renders it through pretty(); trigger pool category; near-duplicate of Cognitive in the data (3 rows vs 5635) and renders identically to it in es/fr/it/pt",
+      "value": {
+        "de": "Psychisch",
+        "es": "Mental",
+        "nl": "Mentaal",
+        "fr": "Mental",
+        "it": "Mentale",
+        "pt": "Mental"
+      }
+    },
+    {
+      "en": "Mood",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Motor",
+      "why": "pool category: report renders it through pretty(); symptom pool category: motor function, worded like Sensory",
+      "value": {
+        "de": "Motorik",
+        "es": "Motricidad",
+        "nl": "Motoriek",
+        "fr": "Motricité",
+        "it": "Motricità",
+        "pt": "Motricidade"
+      }
+    },
+    {
+      "en": "Movement",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Other",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Pain character",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Physical",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Preventive",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Rest",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Screen",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Senses",
+      "why": "pool category: report renders it through pretty(); symptom pool category: the senses",
+      "value": {
+        "de": "Sinne",
+        "es": "Sentidos",
+        "nl": "Zintuigen",
+        "fr": "Sens",
+        "it": "Sensi",
+        "pt": "Sentidos"
+      }
+    },
+    {
+      "en": "Sensitivity",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Sensory",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Social",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Supplement",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Transport",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Triptan",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Visual",
+      "why": "pool category: report renders it through pretty()"
+    },
+    {
+      "en": "Moderate",
+      "why": "symptom severity enum: rendered by severityLabel() in render.ts"
+    },
+    {
+      "en": "Severe",
+      "why": "symptom severity enum: rendered by severityLabel() in render.ts"
     }
   ]
 }

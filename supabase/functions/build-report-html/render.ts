@@ -66,6 +66,32 @@ const parseDate = (iso: string | null | undefined): Date | null => {
   return isNaN(d.getTime()) ? null : d;
 };
 
+/**
+ * A number as the reader's locale writes it: 6.4 in English, 6,4 in German.
+ *
+ * DISPLAY ONLY. Never use this inside SVG geometry — path data, viewBox,
+ * x/y/width attributes — where the grammar requires a dot and a locale comma
+ * silently breaks the chart. Those sites keep toFixed() on purpose.
+ */
+const num = (v: number, digits = 1): string =>
+  v.toLocaleString(rtLocale, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+
+/**
+ * Symptom severity is stored as a bare enum (MILD / MODERATE / SEVERE), so it
+ * has to be translated through the capitalised key the tables use rather than
+ * printed raw. It reads as a subdued lowercase note next to the symptom name,
+ * so the translated word is lowercased in the reader's locale — not with the
+ * host's default casing rules.
+ */
+const severityLabel = (raw: unknown): string => {
+  const s = String(raw ?? "").trim();
+  if (!s) return "";
+  return rt(s[0].toUpperCase() + s.slice(1).toLowerCase()).toLocaleLowerCase(rtLocale);
+};
+
 const fmtDate = (d: Date): string =>
   d.toLocaleDateString(rtLocale, { day: "2-digit", month: "short", year: "numeric" });
 
@@ -191,9 +217,9 @@ function auraEye(
 function cover(d: ReportData, contents: { title: string; page: number }[]): string {
   const migs = d.migraines;
   const sevs = migs.map((m) => m.severity).filter((s): s is number => s != null);
-  const avgSev = sevs.length ? (sevs.reduce((a, b) => a + b, 0) / sevs.length).toFixed(1) : "—";
+  const avgSev = sevs.length ? num(sevs.reduce((a, b) => a + b, 0) / sevs.length) : "—";
   const durs = migs.map(durationHours).filter((h): h is number => h != null);
-  const avgDur = durs.length ? `${(durs.reduce((a, b) => a + b, 0) / durs.length).toFixed(1)}h` : "—";
+  const avgDur = durs.length ? `${num(durs.reduce((a, b) => a + b, 0) / durs.length)}h` : "—";
 
   const dates = migs.map((m) => parseDate(m.start_at)).filter((x): x is Date => !!x);
   const first = dates.length ? dates[dates.length - 1] : null;
@@ -218,7 +244,7 @@ function cover(d: ReportData, contents: { title: string; page: number }[]): stri
   const days = winStart && winEndExcl
     ? Math.max(1, Math.round((winEndExcl.getTime() - winStart.getTime()) / DAY))
     : 0;
-  const perMonth = days > 0 ? (migs.length / (days / 30)).toFixed(1) : "—";
+  const perMonth = days > 0 ? num(migs.length / (days / 30)) : "—";
 
   const range = winStart && winEndShown
     ? `${fmtDate(winStart)} — ${fmtDate(winEndShown)}`
@@ -311,12 +337,12 @@ function attackCard(m: Migraine, d: ReportData): string {
   for (const label of typeSyms) {
     if (catOf(label) === "postdrome") continue;
     const src = rowFor.get(label.toLowerCase());
-    const note = src?.severity ? ` <span style="color:${C.muted}">· ${esc(src.severity.toLowerCase())}</span>` : "";
+    const note = src?.severity ? ` <span style="color:${C.muted}">· ${esc(severityLabel(src.severity))}</span>` : "";
     rows.push({ label: "Symptom", at: parseDate(src?.start_at ?? null), text: pretty(label) + note });
   }
   for (const s of symRows) {
     if (!s.type || catOf(s.type) !== "postdrome") continue;
-    const note = s.severity ? ` <span style="color:${C.muted}">· ${esc(s.severity.toLowerCase())}</span>` : "";
+    const note = s.severity ? ` <span style="color:${C.muted}">· ${esc(severityLabel(s.severity))}</span>` : "";
     rows.push({ label: "Postdrome", at: parseDate(s.start_at), text: pretty(s.type) + note });
   }
 
@@ -429,7 +455,7 @@ function attackCard(m: Migraine, d: ReportData): string {
     const isPost = catOf(sy.type) === "postdrome";
     chartEvents.push({
       at,
-      label: sy.severity ? `${pretty(sy.type)} (${sy.severity.toLowerCase()})` : pretty(sy.type),
+      label: sy.severity ? `${pretty(sy.type)} (${severityLabel(sy.severity)})` : pretty(sy.type),
       category: isPost ? "Postdrome" : "Symptom",
       color: isPost ? C.purple : C.red,
     });
@@ -745,7 +771,7 @@ function attackChart(
     // Each line is min-max scaled to its own range so metrics in different
     // units share one panel. That is only honest if the range is printed, so
     // the reader can decode the shape back into real numbers.
-    const fmt = (v: number) => (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1));
+    const fmt = (v: number) => (Math.abs(v) >= 100 ? num(v, 0) : num(v));
     return {
       key: s.key,
       firstX: x(pts[0].t),
@@ -1003,7 +1029,7 @@ function frequency(d: ReportData, pageNo: number): string {
     const max = Math.max(1, ...entries.map(([, v]) => v));
     return `<div class="card"><div class="cols">
       ${entries.map(([k, v]) => `<div>
-        <span>${v.toFixed(1)}${esc(unit)}</span>
+        <span>${num(v)}${esc(unit)}</span>
         <i style="height:${Math.max(3, Math.round((v / max) * 62))}px;border-radius:3px 3px 0 0;
           background:${shadeFor(v, max)}"></i>
         <span>${esc(monthLabel(k))}</span></div>`).join("")}
@@ -1061,7 +1087,7 @@ function severitySpread(d: ReportData, pageNo: number): string {
     ${header(C.red, ICON.chart, rt("Severity spread"),
       rt("How hard attacks hit, across the 1–10 scale"))}
     <div class="stats" style="margin-bottom:12px">
-      <div class="stat"><b>${avg.toFixed(1)}</b><span>${rt("Average /10")}</span></div>
+      <div class="stat"><b>${num(avg)}</b><span>${rt("Average /10")}</span></div>
       <div class="stat"><b>${Math.min(...sevs)}</b><span>${rt("Mildest")}</span></div>
       <div class="stat"><b>${Math.max(...sevs)}</b><span>${rt("Worst")}</span></div>
       <div class="stat"><b>${sevs.length}</b><span>${rt("Attacks rated")}</span></div>
@@ -1086,7 +1112,7 @@ function contextLine(s: CorrelationStat): string {
 function statRow(s: CorrelationStat, color: string, name: string): string {
   const hits = s.sample_size && s.pct_migraine_windows != null
     ? rt("{0} of {1}", Math.round((s.pct_migraine_windows / 100) * s.sample_size), s.sample_size)
-    : `${s.lift_ratio.toFixed(1)}×`;
+    : `${num(s.lift_ratio)}×`;
   return `<div class="card row">
     <div class="grow">
       <div class="name">${name}</div>
@@ -1211,7 +1237,7 @@ function whatHappened(d: ReportData, pageNo: number): string {
             <span style="color:${C.orange};font-weight:700">→</span> ${esc(pretty(s.symptom_outcome))}</div>
           <div class="meta">${rt("{0}% of attacks with it vs {1}% without", cond, base)}</div>
         </div>
-        ${badge(C.orange, `${s.lift_ratio.toFixed(1)}×`)}
+        ${badge(C.orange, `${num(s.lift_ratio)}×`)}
       </div>`;
     }).join("")}
   `;
@@ -1280,17 +1306,17 @@ function whatWorked(d: ReportData, pageNo: number): string {
     ${ti.map((t) => `<div class="card">
       <div class="log-head">
         <span class="date">${esc(pretty(t.treatment_name))}</span>
-        ${badge(C.blue, rt("{0} points milder", (t.late_avg_peak - t.early_avg_peak).toFixed(1)))}
+        ${badge(C.blue, rt("{0} points milder", num(t.late_avg_peak - t.early_avg_peak)))}
       </div>
       <table class="log">
         <tr><td class="k" style="color:${C.green}">${esc(rt("Within {0}", delay(t.cutoff_minutes)))}</td>
             <td class="o">n = ${t.early_count}</td>
             <td class="v">${bar(C.green, t.early_avg_peak * 10)}
-              <div class="meta">${rt("{0}/10 average peak", t.early_avg_peak.toFixed(1))}</div></td></tr>
+              <div class="meta">${rt("{0}/10 average peak", num(t.early_avg_peak))}</div></td></tr>
         <tr><td class="k" style="color:${C.red}">${esc(rt("After {0}", delay(t.cutoff_minutes)))}</td>
             <td class="o">n = ${t.late_count}</td>
             <td class="v">${bar(C.red, t.late_avg_peak * 10)}
-              <div class="meta">${rt("{0}/10 average peak", t.late_avg_peak.toFixed(1))}</div></td></tr>
+              <div class="meta">${rt("{0}/10 average peak", num(t.late_avg_peak))}</div></td></tr>
       </table>
     </div>`).join("")}
   `;
@@ -1353,7 +1379,7 @@ function usageVsEffectiveness(d: ReportData, pageNo: number): string {
       <div class="grow">
         <div class="name">${esc(rt(r.cat))}</div>
         <div class="meta">${esc(rt("Used {0}×", r.count))} ·
-          ${esc(r.avg == null ? rt("no relief ratings") : rt("avg relief {0} / 3", r.avg.toFixed(1)))}</div>
+          ${esc(r.avg == null ? rt("no relief ratings") : rt("avg relief {0} / 3", num(r.avg)))}</div>
       </div>
       <div style="width:110px">${bar(C.green, (r.count / maxCount) * 100)}</div>
       <div style="width:110px">${bar(C.blue, r.avg == null ? 0 : (r.avg / 3) * 100)}</div>
@@ -1382,7 +1408,7 @@ function painResponse(d: ReportData, pageNo: number): string {
   if (!agg.length && !eas.length) return "";
 
   const row = (r: ReportData["intradayResponse"][number], color: string) => {
-    const effect = (r.median_effect > 0 ? "+" : "−") + Math.abs(r.median_effect).toFixed(1);
+    const effect = (r.median_effect > 0 ? "+" : "−") + num(Math.abs(r.median_effect));
     const meta = rt("n = {0} · {1}% moved the same way", r.n, Math.round(r.consistency * 100));
     return `<div class="card row">
       <div class="grow">
@@ -1691,7 +1717,7 @@ function treatments(d: ReportData, pageNo: number): string {
           <span class="date">${esc(pretty(t.name ?? t.treatment_name))}</span>
           ${badge(pct != null && pct < 0 ? C.green : C.muted,
             bandLabel[band] ? rt(bandLabel[band])
-              : (pct != null ? `${pct > 0 ? "+" : ""}${pct.toFixed(0)}%` : rt("Not enough data")))}
+              : (pct != null ? `${pct > 0 ? "+" : ""}${num(pct, 0)}%` : rt("Not enough data")))}
         </div>
         <div class="meta">${esc([t.kind ?? t.category, t.amount ?? t.dose, t.frequency].filter(Boolean).join(" · "))}
           ${t.start_date ? esc(rt("· started {0}", String(t.start_date))) : ""}</div>
@@ -1757,8 +1783,8 @@ function lifestyleBlock(d: ReportData): string {
   const fmtVal = (row: ReportData["lifestyle"][number], v: number | null): string => {
     if (v == null) return "—";
     if (defOf.get(row.key)?.kind === "time") return clock(v);
-    if (row.unit === "risk") return v.toFixed(1);
-    const n = Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1);
+    if (row.unit === "risk") return num(v);
+    const n = Math.abs(v) >= 100 ? num(v, 0) : num(v);
     return row.unit ? `${n} ${row.unit}` : n;
   };
 
@@ -1987,11 +2013,11 @@ function metrics(d: ReportData, pageNo: number): string {
       return `<div class="card">
         <div class="log-head">
           <span class="date">${esc(rt(s.label))}</span>
-          ${badge(C.green, rt("{0}{1} avg", avg.toFixed(1), s.unit))}
+          ${badge(C.green, rt("{0}{1} avg", num(avg), s.unit))}
         </div>
         ${spark(s.points, s.color ?? C.green, s.unit)}
         <div class="meta">${esc(rt("Pink lines mark migraine days · {0} days · range {1}", s.points.length,
-          `${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}${s.unit}`))}</div>
+          `${num(Math.min(...vals))} – ${num(Math.max(...vals))}${s.unit}`))}</div>
       </div>`;
     }).join("")}
   `, pageNo);
