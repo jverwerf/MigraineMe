@@ -365,11 +365,19 @@ object AiOnboardingParser {
         // valueOf is exact and case-sensitive, so normalise casing and whitespace
         // first: a model that answers "Rarely" or " rarely " instead of "RARELY"
         // would otherwise throw, get swallowed by getOrNull, and drop the
-        // suggestion with no trace. Every level the model can name has a chip,
-        // so no value needs remapping — only parsing reliably.
+        // suggestion with no trace.
+        //
+        // RARELY is then folded to SOMETIMES, because this is the boundary where
+        // the ai-setup response becomes wizard state and the chip row has four
+        // levels (None/Low/Mild/High), not five. Left as RARELY it matched no
+        // chip, so the question rendered as untouched while the value was still
+        // saved on Next — a sleep trigger the user never chose. Both fold to the
+        // same stored severity ("LOW") via certaintyToSeverity, so the chip
+        // shown and the trigger written agree.
         fun parseCert(raw: String?): DeterministicMapper.Certainty? {
             val s = raw?.trim()?.uppercase()?.takeIf { it.isNotEmpty() } ?: return null
-            return runCatching { DeterministicMapper.Certainty.valueOf(s) }.getOrNull()
+            val c = runCatching { DeterministicMapper.Certainty.valueOf(s) }.getOrNull() ?: return null
+            return if (c == DeterministicMapper.Certainty.RARELY) DeterministicMapper.Certainty.SOMETIMES else c
         }
         fun optCert(key: String): DeterministicMapper.Certainty? = parseCert(optStr(key))
         fun optStrSet(key: String, allowed: Set<String>): Set<String> {
@@ -390,9 +398,10 @@ object AiOnboardingParser {
                 if (k !in allowedKeys) continue
                 val cert = parseCert(inner.optString(k, "")) ?: continue
                 // A key in the map means "this one is on your list", and the row
-                // it draws has no chip for NO. Keeping a NO entry would tick the
-                // row with no level under it — the same half-selected state a
-                // RARELY value used to leave. Absence already means no.
+                // it draws has no chip for NO — the tick box is the none. Keeping
+                // a NO entry would tick the row with no level under it, the same
+                // half-selected state a RARELY value used to leave. Absence
+                // already means no.
                 if (cert == DeterministicMapper.Certainty.NO) continue
                 out[k] = cert
             }
