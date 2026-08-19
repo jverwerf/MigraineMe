@@ -17,13 +17,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material3.Surface
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,7 +59,7 @@ import androidx.compose.foundation.Image
  * t() reads LangPrefs as state. There is no restart and no activity recreate.
  */
 @Composable
-fun LanguageScreen(onBack: () -> Unit) {
+fun LanguageScreen() {
     val current by LangPrefs.lang.collectAsState()
 
     Column(
@@ -72,27 +70,11 @@ fun LanguageScreen(onBack: () -> Unit) {
             .padding(horizontal = 16.dp)
     ) {
         Spacer(Modifier.height(12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = t("Back"),
-                    tint = AppTheme.TitleColor
-                )
-            }
-            Text(
-                t("Language"),
-                color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
-        }
-
-        Spacer(Modifier.height(4.dp))
         Text(
             t("Your migraine data is not affected by this."),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 12.dp)
+            modifier = Modifier.padding(horizontal = 4.dp)
         )
         Spacer(Modifier.height(16.dp))
 

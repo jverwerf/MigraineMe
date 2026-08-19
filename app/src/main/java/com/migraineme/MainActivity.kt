@@ -1049,6 +1049,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.PROFILE -> "Profile"
                                     Routes.HELP -> "Help"
                                     Routes.DATA -> "Data"
+                                    Routes.LANGUAGE -> "Language"
                                     Routes.MENSTRUATION_SETTINGS -> "Menstruation Settings"
                                     Routes.LOGOUT -> "Logout"
                                     Routes.MEDICINES -> "Medicines"
@@ -2428,7 +2429,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     composable(Routes.LANGUAGE) {
-                        LanguageScreen(onBack = { nav.popBackStack() })
+                        LanguageScreen()
                     }
                     composable(Routes.HELP) {
                         HelpScreen(
