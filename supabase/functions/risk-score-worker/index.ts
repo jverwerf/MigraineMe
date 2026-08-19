@@ -2,6 +2,17 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
+import {
+  buildRiskMaps,
+  categoryFor,
+  collapseRiskContributions,
+  countDaysActive,
+  severityFor,
+  sumRiskScores,
+  type RiskPoolRow,
+  type RiskTriggerScore,
+} from "../_shared/riskAggregation.ts";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type RiskScoreJobRow = {
@@ -51,12 +62,7 @@ interface ScoredEvent {
   category: string | null;
 }
 
-interface TriggerScore {
-  name: string;
-  score: number;
-  severity: string;
-  days_active: number;
-}
+type TriggerScore = RiskTriggerScore;
 
 interface DayRisk {
   date: string;
@@ -325,30 +331,11 @@ async function calculateRiskForUser(
     .select("label, prediction_value, category, display_group")
     .eq("user_id", userId);
 
-  const triggerSeverityMap: Record<string, string> = {};
-  const triggerCategoryMap: Record<string, string | null> = {};
-  // label → display_group. Consolidated metrics (the seven sleep signals all
-  // carry "Poor sleep") describe ONE night, so they must contribute to the
-  // score once, not seven times. Grouping happens here at scoring time, never
-  // when the trigger is logged — the individual trigger stays in the user's
-  // history because "REM sleep low" is more use to them than "Poor sleep".
-  const triggerGroupMap: Record<string, string> = {};
-
-  for (const t of (triggerPool || []) as PoolItem[]) {
-    const sev = (t.prediction_value || "NONE").toUpperCase();
-    triggerSeverityMap[t.label.toLowerCase()] = sev;
-    triggerCategoryMap[t.label.toLowerCase()] = t.category;
-    if (t.display_group) {
-      triggerGroupMap[t.label.toLowerCase()] = t.display_group;
-      const gk = t.display_group.toLowerCase();
-      const existing = triggerSeverityMap[gk];
-      const sevOrder = ["HIGH", "MILD", "LOW", "NONE"];
-      if (!existing || sevOrder.indexOf(sev) < sevOrder.indexOf(existing)) {
-        triggerSeverityMap[gk] = sev;
-      }
-      triggerCategoryMap[gk] = t.category;
-    }
-  }
+  // Severity / category / display_group lookups, plus the grouping rule that
+  // keeps the seven sleep signals from scoring as seven separate risks.
+  // Shared with backfill-all, recalc-risk-scores and recalc-user-triggers so
+  // the gauge means the same thing whoever wrote the row.
+  const triggerMaps = buildRiskMaps((triggerPool || []) as RiskPoolRow[]);
 
   // 4. Prodrome pool
   const { data: prodromePool } = await supabase
@@ -392,7 +379,7 @@ async function calculateRiskForUser(
 
     // Handle menstruation_predicted separately for centered decay
     if (t.type === "menstruation_predicted") {
-      const severity = triggerSeverityMap[t.type.toLowerCase()] || "NONE";
+      const severity = severityFor(t.type, triggerMaps);
       if (severity === "NONE") continue;
       const eventDate = toLocalDate(t.start_at);
       if (!eventDate) continue;
@@ -400,11 +387,11 @@ async function calculateRiskForUser(
       continue;
     }
 
-    const severity = triggerSeverityMap[t.type.toLowerCase()] || "NONE";
+    const severity = severityFor(t.type, triggerMaps);
     if (severity === "NONE") continue;
     const eventDate = toLocalDate(t.start_at);
     if (!eventDate) continue;
-    events.push({ name: t.type, severity, eventDate, category: triggerCategoryMap[t.type.toLowerCase()] || null });
+    events.push({ name: t.type, severity, eventDate, category: categoryFor(t.type, triggerMaps) });
   }
 
   for (const p of (prodromeEvents || []) as EventRow[]) {
@@ -450,42 +437,21 @@ async function calculateRiskForUser(
       }
     }
 
-    // Collapse contributions onto their display_group, keeping the strongest
-    // member rather than adding them up — several breached sleep metrics are
-    // one bad night, not several separate risks. Severity resolution matches
-    // the documented pool collapse: highest of HIGH > MILD > LOW > NONE.
-    const sevOrder = ["HIGH", "MILD", "LOW", "NONE"];
-    const grouped: Record<string, { total: number; severity: string }> = {};
-    for (const c of contributions) {
-      const key = triggerGroupMap[c.name.toLowerCase()] ?? c.name;
-      if (!grouped[key]) grouped[key] = { total: 0, severity: c.severity };
-      // Same group, same day: keep the biggest single contribution.
-      grouped[key].total = Math.max(grouped[key].total, c.contribution);
-      if (sevOrder.indexOf(c.severity) < sevOrder.indexOf(grouped[key].severity)) {
-        grouped[key].severity = c.severity;
-      }
-    }
+    // Count distinct dates each trigger appeared on in the 7-day lookback
+    // window, counted per GROUP so three sleep metrics breaching on the same
+    // night read as one active day, not three.
+    const triggerDatesMap = countDaysActive(
+      events.filter((event) => {
+        const daysFromToday = daysBetween(event.eventDate, perspectiveDate);
+        return daysFromToday >= 0 && daysFromToday <= 6;
+      }),
+      triggerMaps,
+    );
 
-    // Count distinct dates each trigger appeared on in the 7-day lookback window
-    const triggerDatesMap: Record<string, Set<string>> = {};
-    for (const event of events) {
-      const daysFromToday = daysBetween(event.eventDate, perspectiveDate);
-      if (daysFromToday < 0 || daysFromToday > 6) continue;
-      const dateKey = triggerGroupMap[event.name.toLowerCase()] ?? event.name;
-      if (!triggerDatesMap[dateKey]) triggerDatesMap[dateKey] = new Set();
-      triggerDatesMap[dateKey].add(event.eventDate);
-    }
+    // Collapse onto display_group, strongest member wins (see _shared/riskAggregation.ts).
+    const topTriggers = collapseRiskContributions(contributions, triggerMaps, triggerDatesMap);
 
-    const topTriggers = Object.entries(grouped)
-      .map(([name, { total, severity }]) => ({
-        name,
-        score: Math.round(total),
-        severity,
-        days_active: triggerDatesMap[name]?.size ?? 1,
-      }))
-      .sort((a, b) => b.score - a.score);
-
-    const roundedScore = topTriggers.reduce((sum, t) => sum + t.score, 0);
+    const roundedScore = sumRiskScores(topTriggers);
     const dayPercent = Math.min(100, Math.max(0, Math.round((roundedScore / gaugeMax) * 100)));
     const dayZone = zoneForScore(roundedScore, thresholdHigh, thresholdMild, thresholdLow);
 
