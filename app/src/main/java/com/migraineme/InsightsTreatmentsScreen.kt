@@ -33,8 +33,18 @@ fun InsightsTreatmentsScreen(
     val symptomSegments by vm.symptomSegments.collectAsState()
     val treatmentTiming by vm.treatmentTiming.collectAsState()
     val intradayResponse by vm.intradayResponse.collectAsState()
+    val medicineItems by vm.medicineItems.collectAsState()
+    val reliefItems by vm.reliefItems.collectAsState()
     val intradayEasers = remember(intradayResponse) {
         intradayResponse.filter { it.eventKind == "easer" }
+    }
+
+    // Everything the user actually logged, ungated. The hub card previews this
+    // exact pool (InsightsScreen.kt whatWorkedPreview), so the page has to show
+    // it or the card promises rows the page then denies. Same build, same sort.
+    val treatmentPool = remember(medicineItems, reliefItems) {
+        (medicineItems.map { it to "medicine" } + reliefItems.map { it to "relief" })
+            .sortedByDescending { it.first.avgRelief }
     }
 
     // Treatments use self-reported relief — relax p-value filter, only require lift > 1.2
@@ -63,10 +73,18 @@ fun InsightsTreatmentsScreen(
                 }
             }
 
-            if (treatmentCorrelations.isNotEmpty() || treatmentInteractionCorrelations.isNotEmpty()) {
+            // The logged-pool card always renders last when it has anything, so
+            // it owns the watermark and every card above it gives it up. The
+            // blob stays on whichever card is first.
+            val statsCardShown = treatmentCorrelations.isNotEmpty() || treatmentInteractionCorrelations.isNotEmpty()
+            val poolCardShown = treatmentPool.isNotEmpty()
+            val anyStatsCardShown = statsCardShown || intradayEasers.isNotEmpty() ||
+                treatmentTiming.isNotEmpty() || symptomSegments.isNotEmpty()
+
+            if (statsCardShown) {
                 TreatmentEffectivenessCard(treatmentCorrelations, treatmentInteractionCorrelations,
                     medicineCategories = medicineCategories, reliefIconKeys = reliefIconKeys,
-                    watermarkOnLast = symptomSegments.isEmpty())
+                    watermarkOnLast = symptomSegments.isEmpty() && !poolCardShown)
             }
 
             // Pain response: how pain moved after these
@@ -83,10 +101,20 @@ fun InsightsTreatmentsScreen(
             }
 
             if (symptomSegments.isNotEmpty()) {
-                TreatmentSymptomSegmentCard(symptomSegments)
+                TreatmentSymptomSegmentCard(symptomSegments, watermark = !poolCardShown)
             }
 
-            if (!correlationsLoading && treatmentCorrelations.isEmpty() && treatmentInteractionCorrelations.isEmpty()) {
+            // No statistical gate: if it was logged, it is on the page.
+            if (poolCardShown) {
+                LoggedTreatmentsCard(
+                    pool = treatmentPool,
+                    medicineCategories = medicineCategories,
+                    reliefIconKeys = reliefIconKeys,
+                    showBlob = !anyStatsCardShown,
+                )
+            }
+
+            if (!correlationsLoading && !anyStatsCardShown && !poolCardShown) {
                 BaseCard {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Canvas(Modifier.size(36.dp)) { HubIcons.run { drawShieldCheck(Color(0xFF81C784)) } }
@@ -105,7 +133,10 @@ fun InsightsTreatmentsScreen(
 }
 
 @Composable
-private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.CorrelationStat>) {
+private fun TreatmentSymptomSegmentCard(
+    rows: List<EdgeFunctionsService.CorrelationStat>,
+    watermark: Boolean = true,
+) {
     val grouped = remember(rows) {
         rows.groupBy { it.factorName }
             .map { (name, list) -> name to list.sortedByDescending { kotlin.math.abs(it.liftRatio - 1f) } }
@@ -127,7 +158,7 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
             else -> grouped
         }
     }
-    BrainyWatermarkCard(resId = R.drawable.brainy_shield, flipWatermark = true) {
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(t("Works Best When…"), color = AppTheme.TitleColor,
@@ -180,6 +211,127 @@ private fun TreatmentSymptomSegmentCard(rows: List<EdgeFunctionsService.Correlat
     }
 }
 
+
+// ── Logged treatments card (ungated) ───────────────────────────
+/**
+ * Every medicine and relief the user has linked to an attack, with the average
+ * relief they reported and how often they used it. No statistical gate: the
+ * engine's correlation cards stack above this one, so statistics are an extra
+ * layer rather than the entry fee for seeing your own log back.
+ *
+ * The rows and the legend moved here from InsightsScreen.kt, where
+ * TreatmentEffectivenessContent had been written for exactly this and then
+ * never called from anywhere.
+ */
+@Composable
+private fun LoggedTreatmentsCard(
+    pool: List<Pair<InsightsViewModel.TreatmentItem, String>>,
+    medicineCategories: Map<String, String>,
+    reliefIconKeys: Map<String, String>,
+    showBlob: Boolean,
+) {
+    BrainyWatermarkCard(resId = R.drawable.brainy_shield, flipWatermark = true) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBlob) {
+                BrainyBlobIcon(R.drawable.brainy_shield_small)
+                Spacer(Modifier.width(10.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(t("Effectiveness Ranking"), color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Every medicine and relief you logged, ranked by the relief you reported"),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+
+        pool.forEach { (item, category) ->
+            val key = item.name.lowercase()
+            LoggedTreatmentRow(
+                item = item,
+                category = category,
+                iconKey = reliefIconKeys[key],
+                iconCategory = medicineCategories[key],
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            ReliefLegendSwatch(Color(0xFF81C784), t("High relief"))
+            ReliefLegendSwatch(Color(0xFFFFB74D), t("Some relief"))
+            ReliefLegendSwatch(Color(0xFFE57373), t("Low/none"))
+        }
+    }
+}
+
+@Composable
+private fun ReliefLegendSwatch(color: Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Box(Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(color))
+        Text(label, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable
+private fun LoggedTreatmentRow(
+    item: InsightsViewModel.TreatmentItem,
+    category: String,
+    iconKey: String?,
+    iconCategory: String?,
+) {
+    val barColor = when {
+        item.avgRelief >= 2.2f -> Color(0xFF81C784)
+        item.avgRelief >= 1.2f -> Color(0xFFFFB74D)
+        else -> Color(0xFFE57373)
+    }
+    val pct = (item.avgRelief / 3f).coerceIn(0f, 1f)
+    val label = when {
+        item.avgRelief >= 2.5f -> t("High")
+        item.avgRelief >= 1.5f -> t("Mild")
+        item.avgRelief >= 0.5f -> t("Low")
+        else -> t("None")
+    }
+    // Kind stays on the row in words: the Brainy art distinguishes most rows,
+    // but a name with no art resolves to no icon at all, and then a medicine
+    // and a relief would read identically.
+    val kindLabel = if (category == "medicine") t("Medicine") else t("Relief")
+
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BrainyRowIcon(item.name, iconKey = iconKey, category = iconCategory, size = 18.dp)
+
+        Column(Modifier.weight(1f)) {
+            Text(prettyLabel(item.name), color = Color.White,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("$kindLabel · ${t("%s× used", item.count)}", color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.labelSmall)
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Box(
+            Modifier.width(80.dp).height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(AppTheme.SubtleTextColor.copy(alpha = 0.15f))
+        ) {
+            Box(
+                Modifier.fillMaxHeight()
+                    .fillMaxWidth(pct)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(barColor)
+            )
+        }
+
+        Spacer(Modifier.width(8.dp))
+
+        Text(label, color = barColor,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.width(36.dp))
+    }
+}
 
 // ── Treatment timing card (early vs late) ──────────────────────
 /**
