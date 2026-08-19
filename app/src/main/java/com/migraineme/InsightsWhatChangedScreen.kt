@@ -167,15 +167,14 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             // no metric has data in either window.
             if (habits.isNotEmpty()) {
                 BrainyWatermarkCard(resId = R.drawable.brainy_risk, flipWatermark = true) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        BrainyBlobIcon(R.drawable.brainy_gardener_small)
-                        Spacer(Modifier.width(10.dp))
-                        Column {
-                            Text(t("Daily habits"), color = Color.White,
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
-                                style = MaterialTheme.typography.labelSmall)
-                        }
+                    // No header blob: the page carries one brainy identity (the
+                    // risk pose on the first card + this card's watermark), the
+                    // same as every other Insights detail page.
+                    Column {
+                        Text(t("Daily habits"), color = Color.White,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall)
                     }
                     Spacer(Modifier.height(4.dp))
                     habits.forEach { h -> DailyHabitRow(h) }
