@@ -831,6 +831,10 @@ fun InsightsReportScreen(
                         rows = reportWhatWorked,
                         medicineCategories = medicineCategories,
                         reliefIconKeys = reliefIconKeys,
+                        // The report is the clinician-facing export: it carries
+                        // every logged treatment, hidden or not, and offers no
+                        // hide control of its own.
+                        canHide = false,
                     )
                     Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,

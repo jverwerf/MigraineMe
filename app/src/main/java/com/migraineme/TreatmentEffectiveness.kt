@@ -1,17 +1,24 @@
 package com.migraineme
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -303,6 +310,10 @@ fun timingText(t: TreatmentTiming): String =
 /**
  * One row per medicine and relief: verdict, the line it came from, the timing
  * line where timing exists, and dots. No multipliers, no raw 0-3 numbers.
+ *
+ * [canHide] turns on the per-row hide control and the hidden filter. The page
+ * passes true; the Full Report passes false, because an export a clinician
+ * reads should carry everything that was logged.
  */
 @Composable
 fun WhatWorkedCard(
@@ -311,12 +322,31 @@ fun WhatWorkedCard(
     reliefIconKeys: Map<String, String> = emptyMap(),
     watermark: Boolean = true,
     showBlob: Boolean = true,
+    canHide: Boolean = true,
 ) {
     // tSync() reads the language once, so hold a live subscription here to keep
     // the card honest across a language change without threading t() through
     // every formatter.
     val lang by LangPrefs.lang.collectAsState()
     var sortMode by remember { mutableStateOf("Best evidence") }
+
+    // Same store the pre-verdict Treatments card wrote: file "insights_treatments",
+    // key "hidden". Per-device by design, never synced. Rows used to be keyed
+    // "$factorName|$factorB", so a single treatment was saved as "Aspirin|" —
+    // both spellings are honoured on read so anything hidden before the redesign
+    // is still hidden.
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("insights_treatments", Context.MODE_PRIVATE) }
+    var hiddenKeys by remember { mutableStateOf(prefs.getStringSet("hidden", emptySet())!!.toSet()) }
+    var showHidden by remember { mutableStateOf(false) }
+
+    fun isHidden(row: WhatWorkedRow) = row.name in hiddenKeys || "${row.name}|" in hiddenKeys
+    fun toggleHidden(row: WhatWorkedRow) {
+        hiddenKeys = if (isHidden(row)) hiddenKeys - row.name - "${row.name}|"
+                     else hiddenKeys + row.name
+        prefs.edit().putStringSet("hidden", hiddenKeys).apply()
+    }
+
     val sorted = remember(rows, sortMode, lang) {
         when (sortMode) {
             "Most used" -> rows.sortedByDescending { it.uses }
@@ -326,6 +356,8 @@ fun WhatWorkedCard(
             else -> rows.sortedWith(whatWorkedComparator)
         }
     }
+    val visible = if (canHide) sorted.filter { showHidden || !isHidden(it) } else sorted
+    val hiddenCount = if (canHide) rows.count { isHidden(it) } else 0
 
     MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -343,13 +375,28 @@ fun WhatWorkedCard(
                 listOf("Best evidence", "Most used", "A to Z", "Newest", "Oldest")) { sortMode = it }
         }
         Spacer(Modifier.height(8.dp))
-        sorted.forEach { row ->
+        visible.forEach { row ->
             WhatWorkedTile(
                 row = row,
                 iconKey = reliefIconKeys[row.name.lowercase()],
                 iconCategory = medicineCategories[row.name.lowercase()],
+                dimmed = canHide && isHidden(row),
+                onToggleHide = if (canHide) ({ toggleHidden(row) }) else null,
             )
             Spacer(Modifier.height(6.dp))
+        }
+        // The only route back to a hidden treatment, same wording and place as
+        // the Activities & Locations card.
+        if (hiddenCount > 0) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Spacer(Modifier.weight(1f))
+                Text(
+                    if (showHidden) t("hide %s again", hiddenCount) else t("%s hidden · show", hiddenCount),
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
+                )
+            }
         }
     }
 }
@@ -359,6 +406,8 @@ private fun WhatWorkedTile(
     row: WhatWorkedRow,
     iconKey: String?,
     iconCategory: String?,
+    dimmed: Boolean = false,
+    onToggleHide: (() -> Unit)? = null,
 ) {
     val metaColor = Color(0xFF9C8BB0)
     val tileShape = RoundedCornerShape(18.dp)
@@ -366,6 +415,7 @@ private fun WhatWorkedTile(
     Column(
         Modifier
             .fillMaxWidth()
+            .alpha(if (dimmed) 0.55f else 1f)
             .clip(tileShape)
             .background(Color.White.copy(alpha = 0.035f))
             .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
@@ -382,13 +432,23 @@ private fun WhatWorkedTile(
                 modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.width(10.dp))
-            // The verdict is the only thing in this column, on every row.
+            // The verdict leads this column on every row. The hide control sits
+            // after it, small and quiet, exactly as on Activities & Locations.
             Text(
                 verdictText(row.verdict),
                 color = verdictColor(row.verdict),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 textAlign = TextAlign.End,
             )
+            onToggleHide?.let { toggle ->
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    if (dimmed) Icons.Outlined.Check else Icons.Outlined.Close,
+                    contentDescription = if (dimmed) t("Unhide") else t("Hide"),
+                    tint = AppTheme.SubtleTextColor.copy(alpha = if (dimmed) 0.9f else 0.45f),
+                    modifier = Modifier.size(15.dp).clickable { toggle() }
+                )
+            }
         }
         Spacer(Modifier.height(6.dp))
         Text(evidenceText(row.evidence), color = AppTheme.BodyTextColor,
