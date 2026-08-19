@@ -166,7 +166,14 @@ internal fun AccuracyStatTile(value: String, color: Color, label: String, modifi
 }
 
 /** One line of a nav-card preview: label + compact stat, same row style as RecommendationsCard. */
-internal data class CardPreviewEntry(val label: String, val stat: String, val category: String? = null, val iconKey: String? = null)
+/**
+ * [sub] is a second line under the label, for cards whose row needs a plain
+ * sentence as well as a short right-hand verdict. What Worked uses it so the hub
+ * preview says exactly what the page says, rather than a number the page no
+ * longer shows.
+ */
+internal data class CardPreviewEntry(val label: String, val stat: String, val category: String? = null,
+                                     val iconKey: String? = null, val sub: String? = null)
 
 @Composable
 internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalCount: Int = entries.size) {
@@ -182,12 +189,18 @@ internal fun ColumnScope.CardPreviewRows(entries: List<CardPreviewEntry>, totalC
             verticalAlignment = Alignment.CenterVertically
         ) {
             BrainyRowIcon(e.label, iconKey = e.iconKey, category = e.category, size = 18.dp)
-            Text(prettyLabel(e.label), color = Color.White,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f))
+            Column(Modifier.weight(1f)) {
+                Text(prettyLabel(e.label), color = Color.White,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                e.sub?.let {
+                    Text(it, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+            }
             Spacer(Modifier.width(8.dp))
-            Text(e.stat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+            Text(e.stat, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.End)
         }
     }
     val extra = totalCount - shown.size
@@ -484,6 +497,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     val insightHistory by vm.insightHistory.collectAsState()
     val medicineItems by vm.medicineItems.collectAsState()
     val reliefItems by vm.reliefItems.collectAsState()
+    val hubTreatmentTiming by vm.treatmentTiming.collectAsState()
     val dayOfWeekPattern by vm.dayOfWeekPattern.collectAsState()
     val contextItems by vm.contextItems.collectAsState()
     val impactItems by vm.impactItems.collectAsState()
@@ -509,15 +523,6 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
     }
     val interactionCorrelations = remember(significantCorrelations) {
         significantCorrelations.filter { it.factorType == "interaction" && it.isRealCombo }
-            .sortedByDescending { it.liftRatio }
-    }
-    // Treatments use self-reported relief — relax p-value filter, only require lift > 1.2
-    val treatmentCorrelations = remember(correlations) {
-        correlations.filter { it.factorType == "treatment" && it.liftRatio > 1.2f }
-            .sortedByDescending { it.liftRatio }
-    }
-    val treatmentInteractionCorrelations = remember(correlations) {
-        correlations.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f && it.isRealCombo }
             .sortedByDescending { it.liftRatio }
     }
     val thresholdNudges = remember(significantCorrelations) {
@@ -554,22 +559,35 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             {
                 CardPreviewRows(
                     pool.take(2).map {
-                        CardPreviewEntry(it.factorName, tSync("×%1\$s · %2\$s%% of attacks",
-                            "%.1f".format(it.liftRatio), it.pctMigraineWindows.toInt()))
+                        // Risk, not treatment: how much more often this turns up
+                        // around an attack than on a normal day. Prevalence-mode
+                        // rows have no fair comparison, so they only say how often.
+                        val stat = if (it.mode == "prevalence")
+                            tSync("in %1\$s of %2\$s attacks", it.attackHits, it.sampleSize)
+                        else
+                            tSync("%1\$s · in %2\$s of %3\$s attacks",
+                                liftPercentPhrase(it.liftRatio), it.attackHits, it.sampleSize)
+                        CardPreviewEntry(it.factorName, stat)
                     },
                     totalCount = pool.size + interactionCorrelations.size
                 )
             }
         }
-    val treatmentPool = (medicineItems.map { it to "medicine" } + reliefItems.map { it to "relief" })
-        .sortedByDescending { it.first.avgRelief }
+    // The preview is built by the same builder as the What Worked page and shows
+    // the same verdict and the same line. A preview that promises a row the page
+    // then denies was the original bug on this card.
+    val whatWorkedRowsHub = buildWhatWorkedRows(
+        pool = medicineItems.map { it to "medicine" } + reliefItems.map { it to "relief" },
+        stats = correlations,
+        timing = hubTreatmentTiming,
+    )
     val whatWorkedPreview: (@Composable ColumnScope.() -> Unit)? =
-        treatmentPool.takeIf { it.isNotEmpty() }?.let { pool ->
+        whatWorkedRowsHub.takeIf { it.isNotEmpty() }?.let { pool ->
             {
                 CardPreviewRows(
-                    pool.take(2).map { (item, cat) ->
-                        CardPreviewEntry(item.name, tSync("relief %1\$s · %2\$s×",
-                            "%.1f".format(item.avgRelief), item.count), cat)
+                    pool.take(2).map { row ->
+                        CardPreviewEntry(row.name, verdictText(row.verdict), row.category,
+                            sub = evidenceText(row.evidence))
                     },
                     totalCount = pool.size
                 )
@@ -581,8 +599,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
             {
                 CardPreviewRows(
                     pool.take(2).map {
-                        CardPreviewEntry(it.factorName, tSync("×%1\$s on attack-free days",
-                            "%.1f".format(it.liftRatio)))
+                        // Attack-free days, a third question again: how much more
+                        // often you did this on the days no attack came.
+                        CardPreviewEntry(it.factorName,
+                            tSync("%s%% more often on your attack-free days",
+                                Math.round(kotlin.math.abs(it.liftRatio - 1f) * 100f)))
                     },
                     totalCount = pool.size
                 )
@@ -1474,16 +1495,35 @@ internal fun SymptomsInsightCard(ms: List<MigraineSpan>, onClick: () -> Unit) {
 // INSIGHT CARDS — All data-driven, no hardcoded labels
 // ══════════════════════════════════════════════════════════════════
 
+/**
+ * A risk lift in plain English. The old copy printed a bare "\u00D71.7" and, above
+ * 2, truncated it with .toInt(), so a 2.9\u00D7 read "2\u00D7 more likely" \u2014 the wrong
+ * number and a glyph nobody reads the same way twice. Percent more or less
+ * often says the same thing, at any size, with no rounding lie.
+ *
+ * This is deliberately NOT the What Worked vocabulary: this card answers "how
+ * much does this raise the chance of an attack starting", which is a different
+ * question from "did this treatment help once one had".
+ */
+internal fun liftPercentText(lift: Float): String {
+    val pct = Math.round(kotlin.math.abs(lift - 1f) * 100f)
+    return if (lift >= 1f) tSync("%s%% more likely", pct) else tSync("%s%% less likely", pct)
+}
+
+/** Longer form, for previews and sentences where the comparison needs naming. */
+internal fun liftPercentPhrase(lift: Float): String {
+    val pct = Math.round(kotlin.math.abs(lift - 1f) * 100f)
+    return if (lift >= 1f) tSync("%s%% more likely than your normal days", pct)
+    else tSync("%s%% less likely than your normal days", pct)
+}
+
 /** Lift ratio as a colored bar + plain-language text */
 @Composable
 internal fun LiftBadge(lift: Float) {
-    val label = when {
-        lift >= 2f -> t("%s\u00D7 more likely", lift.toInt())
-        else -> t("%s\u00D7 more likely", String.format("%.1f", lift))
-    }
+    val label = liftPercentText(lift)
     val fraction = (lift / 5f).coerceIn(0f, 1f)
     Column(horizontalAlignment = Alignment.End) {
-        Text(t(label), color = AppTheme.AccentPurple,
+        Text(label, color = AppTheme.AccentPurple,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
         Spacer(Modifier.height(3.dp))
         Box(
@@ -1539,14 +1579,25 @@ internal fun LagChip(lagDays: Int) {
     )
 }
 
-/** Confidence dot based on p-value */
+/**
+ * Confidence dot based on p-value. p is nullable since the v2 treatment schema:
+ * a rating-only row ran no test. It still gets one lit dot — a weak result shown
+ * weakly is honest, an empty dots row reads as broken.
+ */
 @Composable
-internal fun ConfidenceDots(pValue: Float, color: Color = AppTheme.AccentPurple) {
+internal fun ConfidenceDots(pValue: Float?, color: Color = AppTheme.AccentPurple) {
+    val p = pValue ?: 1f
     val dots = when {
-        pValue < 0.01f -> 3
-        pValue < 0.05f -> 2
+        p < 0.01f -> 3
+        p < 0.05f -> 2
         else -> 1
     }
+    ConfidenceDotsCount(dots, color)
+}
+
+/** Same dots, drawn from a count the engine already decided. Never zero. */
+@Composable
+internal fun ConfidenceDotsCount(dots: Int, color: Color = AppTheme.AccentPurple) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         repeat(3) { i ->
             Box(
@@ -2003,10 +2054,9 @@ private fun PatternTile(
             )
             Spacer(Modifier.width(10.dp))
             val headlineStat = if (stat.mode != "prevalence") {
-                if (stat.liftRatio >= 2f) "${stat.liftRatio.toInt()}\u00d7 more likely"
-                else "${String.format("%.1f", stat.liftRatio)}\u00d7 more likely"
+                liftPercentText(stat.liftRatio)
             } else {
-                "in ${stat.pctMigraineWindows.toInt()}% of attacks"
+                tSync("in %1\$s of %2\$s attacks", stat.attackHits, stat.sampleSize)
             }
             Text(
                 headlineStat,
@@ -2092,119 +2142,10 @@ internal fun PatternsPreviewCard(
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${prettyLabel(stat.factorName)} \u2192 ${prettyLabel(stat.symptomOutcome)}", color = Color.White,
                         style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.weight(1f))
-                    Text(String.format("%.1f\u00d7", stat.liftRatio),
+                    Text(liftPercentText(stat.liftRatio),
                         color = if (stat.liftRatio >= 2f) Color(0xFFE57373) else if (stat.liftRatio >= 1.5f) Color(0xFFFFB74D) else AppTheme.SubtleTextColor,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
-            }
-        }
-    }
-}
-
-// ── Treatment Preview Card (main screen — max 2 + max 2 combos, tap to show all) ──
-
-@Composable
-internal fun TreatmentPreviewCard(
-    treatments: List<EdgeFunctionsService.CorrelationStat>,
-    treatmentInteractions: List<EdgeFunctionsService.CorrelationStat>,
-    symptomSegments: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
-    onShowAll: () -> Unit
-) {
-    BrainyWatermarkCard(modifier = Modifier.clickable { onShowAll() }, resId = R.drawable.brainy_shield, flipWatermark = true) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            BrainyBlobIcon(R.drawable.brainy_shield_small)
-            Spacer(Modifier.width(8.dp))
-            Text(t("What Worked"), color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.weight(1f))
-            Text("\u2192", color = AppTheme.AccentPurple, style = MaterialTheme.typography.titleMedium)
-        }
-
-        if (treatments.isEmpty() && treatmentInteractions.isEmpty() && symptomSegments.isEmpty()) {
-            Spacer(Modifier.height(4.dp))
-            Text(t("Log medicines and reliefs with your migraines to see what works best."),
-                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-        }
-
-        if (treatments.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text(t("Top Treatments"), color = Color(0xFF81C784),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-            treatments.forEach { stat ->
-                TreatmentRowCompact(stat)
-            }
-        }
-
-        if (treatmentInteractions.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text(t("Effective Combinations"), color = Color(0xFF81C784),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-            treatmentInteractions.forEach { stat ->
-                TreatmentRowCompact(stat)
-            }
-        }
-
-        if (symptomSegments.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text(t("Works Best When"), color = Color(0xFF4FC3F7),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-            symptomSegments.take(2).forEach { stat ->
-                val direction = if (stat.liftRatio > 1.1f) "better" else if (stat.liftRatio < 0.9f) "worse" else "similar"
-                val color = if (stat.liftRatio > 1.1f) Color(0xFF81C784) else if (stat.liftRatio < 0.9f) Color(0xFFE57373) else Color(0xFFCFCFCF)
-                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("${prettyLabel(stat.factorName)} + ${prettyLabel(stat.symptomSegment)}",
-                        color = Color.White, style = MaterialTheme.typography.bodySmall, maxLines = 1,
-                        modifier = Modifier.weight(1f))
-                    Text(direction, color = color,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                }
-            }
-        }
-    }
-}
-
-/** Compact treatment row for main screen — green bars, shorter/milder split */
-@Composable
-private fun TreatmentRowCompact(stat: EdgeFunctionsService.CorrelationStat) {
-    val green = Color(0xFF81C784)
-    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        BrainyRowIcon(stat.factorName, size = 18.dp)
-        Column(Modifier.weight(1f)) {
-            Text(
-                stat.factorName,
-                color = Color.White,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
-            if (stat.factorB != null) {
-                Text(
-                    stat.factorB,
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Spacer(Modifier.height(2.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    t("used in %s%% of migraines", stat.pctMigraineWindows.toInt()),
-                    color = AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-                ConfidenceDots(stat.pValue, green)
-            }
-        }
-        // Two separate bars: shorter + milder
-        Column(horizontalAlignment = Alignment.End) {
-            if (stat.durationLift > 1f) {
-                EffectivenessBadge(stat.durationLift, "shorter")
-            }
-            if (stat.severityLift > 1f) {
-                if (stat.durationLift > 1f) Spacer(Modifier.height(4.dp))
-                EffectivenessBadge(stat.severityLift, "milder")
-            }
-            if (stat.durationLift <= 1f && stat.severityLift <= 1f) {
-                EffectivenessBadge(stat.liftRatio, "effective")
             }
         }
     }
@@ -2520,320 +2461,13 @@ internal fun InteractionInsightsCard(interactions: List<EdgeFunctionsService.Cor
     }
 }
 
-// ── Treatment Effectiveness Card ──
-
-@Composable
-internal fun TreatmentEffectivenessCard(
-    treatments: List<EdgeFunctionsService.CorrelationStat>,
-    treatmentInteractions: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
-    showLegend: Boolean = false,
-    medicineCategories: Map<String, String> = emptyMap(),
-    reliefIconKeys: Map<String, String> = emptyMap(),
-    watermarkOnLast: Boolean = false,
-) {
-    val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("insights_treatments", Context.MODE_PRIVATE) }
-    var hiddenKeys by remember { mutableStateOf(prefs.getStringSet("hidden", emptySet())!!.toSet()) }
-    var showHidden by remember { mutableStateOf(false) }
-    var sortMode by remember { mutableStateOf("Most effective") }
-    var comboSortMode by remember { mutableStateOf("Most effective") }
-
-    fun keyOf(stat: EdgeFunctionsService.CorrelationStat) = "${stat.factorName}|${stat.factorB ?: ""}"
-    fun toggleHidden(stat: EdgeFunctionsService.CorrelationStat) {
-        val k = keyOf(stat)
-        hiddenKeys = if (k in hiddenKeys) hiddenKeys - k else hiddenKeys + k
-        prefs.edit().putStringSet("hidden", hiddenKeys).apply()
-    }
-    fun sorted(list: List<EdgeFunctionsService.CorrelationStat>, mode: String) = when (mode) {
-        "Most used" -> list.sortedByDescending { it.pctMigraineWindows }
-        "A to Z" -> list.sortedBy { it.factorName.lowercase() }
-        "Newest" -> list.sortedByDescending { it.updatedAt }
-        "Oldest" -> list.sortedBy { it.updatedAt }
-        else -> list.sortedByDescending { maxOf(it.durationLift, it.severityLift, it.liftRatio) }
-    }
-    // Category first: MigraineMe draws medicines per drug class on purpose, so
-    // every triptan shares one icon rather than 55 drugs each getting their own.
-    // The old fallbacks passed a raw drug name into forKey(), which is keyed by
-    // category and case-sensitive — "Sumatriptan" could never match. The manifest
-    // handles the rest, including reliefs and the brand names.
-    fun iconFor(name: String?): Int? = name?.let { n ->
-        val cat = medicineCategories[n.lowercase()]
-        brainyForLogKey(reliefIconKeys[n.lowercase()], n, cat)
-    }
-
-    val top = remember(treatments) { treatments }
-    val topInteractions = remember(treatmentInteractions) { treatmentInteractions }
-    val visibleTreatments = sorted(top, sortMode).filter { showHidden || keyOf(it) !in hiddenKeys }
-    val visibleCombos = sorted(topInteractions, comboSortMode).filter { showHidden || keyOf(it) !in hiddenKeys }
-    val hiddenCount = (top + topInteractions).count { keyOf(it) in hiddenKeys }
-
-    val combosCardShown = visibleCombos.isNotEmpty()
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        MaybeWatermarkCard(watermark = watermarkOnLast && !combosCardShown, resId = R.drawable.brainy_shield, flipWatermark = true) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                BrainyBlobIcon(R.drawable.brainy_shield_small)
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(t("Treatments"), color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Text(t("How much easier each one made your migraines"),
-                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                }
-                SortChipMenu(sortMode,
-                    listOf("Most effective", "Most used", "A to Z", "Newest", "Oldest")) { sortMode = it }
-            }
-            Spacer(Modifier.height(6.dp))
-            if (top.isEmpty()) {
-                Text(t("Log medicines and reliefs with your migraines to see what works best."),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
-            visibleTreatments.forEach { stat ->
-                TreatmentTile(stat, icon = iconFor(stat.factorName), iconB = iconFor(stat.factorB),
-                    dimmed = keyOf(stat) in hiddenKeys) { toggleHidden(stat) }
-                Spacer(Modifier.height(6.dp))
-            }
-            Spacer(Modifier.height(2.dp))
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(t("\u00d7 shorter \u2014 migraines ended that much faster \u00b7 \u00d7 milder \u2014 pain stayed that much lower"),
-                    color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.weight(1f))
-                if (hiddenCount > 0) {
-                    Text(
-                        if (showHidden) t("hide %s again", hiddenCount) else t("%s hidden \u00b7 show", hiddenCount),
-                        color = AppTheme.AccentPurple,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.clickable { showHidden = !showHidden }.padding(4.dp)
-                    )
-                }
-            }
-        }
-
-        if (combosCardShown) {
-            MaybeWatermarkCard(watermark = watermarkOnLast, resId = R.drawable.brainy_shield, flipWatermark = true) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(t("Effective Combinations"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text(t("Pairs that worked better together"),
-                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    }
-                    SortChipMenu(comboSortMode,
-                        listOf("Most effective", "Most used", "A to Z", "Newest", "Oldest")) { comboSortMode = it }
-                }
-                Spacer(Modifier.height(6.dp))
-                visibleCombos.forEach { stat ->
-                    TreatmentTile(stat, icon = iconFor(stat.factorName), iconB = iconFor(stat.factorB),
-                        dimmed = keyOf(stat) in hiddenKeys) { toggleHidden(stat) }
-                    Spacer(Modifier.height(6.dp))
-                }
-            }
-        }
-    }
-}
-
-/** Quiet rounded tile for one treatment/combination, green accents. */
-@Composable
-private fun TreatmentTile(
-    stat: EdgeFunctionsService.CorrelationStat,
-    icon: Int? = null,
-    iconB: Int? = null,
-    dimmed: Boolean = false,
-    onToggleHide: (() -> Unit)? = null,
-) {
-    val green = Color(0xFF9CCB9E)
-    val metaColor = Color(0xFF9C8BB0)
-    val tileShape = RoundedCornerShape(18.dp)
-    fun fmt(lift: Float, type: String) =
-        if (lift >= 2f) "${lift.toInt()}\u00d7 $type" else "${String.format("%.1f", lift)}\u00d7 $type"
-    val headline = when {
-        stat.durationLift > 1f -> fmt(stat.durationLift, "shorter")
-        stat.severityLift > 1f -> fmt(stat.severityLift, "milder")
-        else -> fmt(stat.liftRatio, "effective")
-    }
-    val secondary = if (stat.durationLift > 1f && stat.severityLift > 1f) "also ${fmt(stat.severityLift, "milder")}" else null
-
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .alpha(if (dimmed) 0.55f else 1f)
-            .clip(tileShape)
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
-            .padding(horizontal = 16.dp, vertical = 13.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            val title = androidx.compose.ui.text.buildAnnotatedString {
-                if (icon != null) { appendInlineContent("iconA", "\u2b1c"); append(" ") }
-                append(stat.factorName)
-                if (stat.factorB != null) {
-                    append("  +  ")
-                    if (iconB != null) { appendInlineContent("iconB", "\u2b1c"); append(" ") }
-                    append(stat.factorB)
-                }
-            }
-            val inlineIcons = buildMap {
-                icon?.let { res ->
-                    put("iconA", androidx.compose.foundation.text.InlineTextContent(
-                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
-                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
-                    ) { InlineBlobIcon(res) })
-                }
-                iconB?.let { res ->
-                    put("iconB", androidx.compose.foundation.text.InlineTextContent(
-                        androidx.compose.ui.text.Placeholder(24.sp, 22.sp,
-                            androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter)
-                    ) { InlineBlobIcon(res) })
-                }
-            }
-            Text(
-                title,
-                inlineContent = inlineIcons,
-                color = Color(0xFFF3EAFB),
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(headline, color = green,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                textAlign = TextAlign.End)
-            onToggleHide?.let { toggle ->
-                Spacer(Modifier.width(8.dp))
-                Icon(
-                    if (dimmed) Icons.Outlined.Check else Icons.Outlined.Close,
-                    contentDescription = if (dimmed) t("Unhide") else t("Hide"),
-                    tint = AppTheme.SubtleTextColor.copy(alpha = if (dimmed) 0.9f else 0.45f),
-                    modifier = Modifier.size(15.dp).clickable { toggle() }
-                )
-            }
-        }
-        Spacer(Modifier.height(6.dp))
-        Text(t("used in %s%% of migraines", stat.pctMigraineWindows.toInt()), color = metaColor,
-            style = MaterialTheme.typography.labelSmall)
-        Spacer(Modifier.height(4.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(t("confidence"), color = metaColor, style = MaterialTheme.typography.labelSmall)
-            ConfidenceDots(stat.pValue, Color(0xFF81C784))
-            secondary?.let {
-                Text("\u00b7", color = metaColor, style = MaterialTheme.typography.labelSmall)
-                Text(it, color = metaColor, style = MaterialTheme.typography.labelSmall)
-            }
-        }
-    }
-}
-
-/** Single treatment row — medicine or relief with effectiveness badge */
-@Composable
-internal fun TreatmentRow(stat: EdgeFunctionsService.CorrelationStat) {
-    val green = Color(0xFF81C784)
-    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        stat.factorName,
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (stat.factorB != null) {
-                    Text(
-                        stat.factorB,
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Spacer(Modifier.height(2.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        t("used in %s%% of migraines", stat.pctMigraineWindows.toInt()),
-                        color = AppTheme.SubtleTextColor,
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                    ConfidenceDots(stat.pValue, green)
-                }
-            }
-            // Two separate bars: shorter + milder
-            Column(horizontalAlignment = Alignment.End) {
-                if (stat.durationLift > 1f) {
-                    EffectivenessBadge(stat.durationLift, "shorter")
-                }
-                if (stat.severityLift > 1f) {
-                    if (stat.durationLift > 1f) Spacer(Modifier.height(4.dp))
-                    EffectivenessBadge(stat.severityLift, "milder")
-                }
-                // Fallback if neither has data yet (uses overall lift)
-                if (stat.durationLift <= 1f && stat.severityLift <= 1f) {
-                    EffectivenessBadge(stat.liftRatio, "effective")
-                }
-            }
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            stat.toInsightText(),
-            color = AppTheme.BodyTextColor,
-            style = MaterialTheme.typography.bodySmall,
-        )
-    }
-}
-
-/** Effectiveness badge — green tones (opposite of LiftBadge red tones) */
-@Composable
-private fun EffectivenessBadge(lift: Float, type: String = "effective") {
-    val green = Color(0xFF81C784)
-    val label = when {
-        lift >= 2f -> "${lift.toInt()}\u00D7 $type"
-        else -> "${String.format("%.1f", lift)}\u00D7 $type"
-    }
-    val fraction = (lift / 5f).coerceIn(0f, 1f)
-    Column(horizontalAlignment = Alignment.End) {
-        Text(t(label), color = green,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
-        Spacer(Modifier.height(3.dp))
-        Box(
-            Modifier
-                .width(80.dp)
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(Color.White.copy(alpha = 0.08f))
-        ) {
-            Box(
-                Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(fraction)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(green)
-            )
-        }
-    }
-}
-
-// ── Treatment Interaction Card ──
-
-@Composable
-internal fun TreatmentInteractionCard(interactions: List<EdgeFunctionsService.CorrelationStat>) {
-    BaseCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column {
-                Text(t("Effective Combinations"), color = Color(0xFF81C784),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        // Detail card — show every effective combination (was capped at 5).
-        interactions.forEach { stat ->
-            TreatmentRow(stat)
-        }
-    }
-}
+// The treatment multiplier cards lived here: TreatmentPreviewCard,
+// TreatmentRowCompact, TreatmentEffectivenessCard, TreatmentTile,
+// TreatmentRow, EffectivenessBadge and TreatmentInteractionCard. They
+// rendered "N× shorter / milder / effective" off lag_details keys the v2
+// engine no longer writes. What Worked is now built by
+// TreatmentEffectiveness.kt and shared by the hub, the page and the
+// Full Report, so there is one vocabulary and one set of rows.
 
 // ── Gauge Performance Card ──
 
@@ -3608,7 +3242,7 @@ private fun DayOfWeekCard(pattern: List<InsightsViewModel.DayOfWeekStat>) {
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
-                        t("%1\$ss account for %2\$s%% of your migraines \u2014 %3\$s\u00D7 the average day.", w.dayName, String.format("%.0f", w.pct), String.format("%.1f", ratio)),
+                        t("%1\$ss account for %2\$s%% of your migraines \u2014 %3\$s%% more than an average day.", w.dayName, String.format("%.0f", w.pct), Math.round((ratio - 1f) * 100f)),
                         color = AppTheme.BodyTextColor,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(10.dp),
@@ -3723,11 +3357,11 @@ object AccuracyInfoCopy {
 }
 
 object WhatHappenedInfoCopy {
-    val text: String get() = tSync("The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"X× more likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list.") + MEDICAL_NOTE
+    val text: String get() = tSync("The patterns we've found in your data, stacked in three layers:\n• Single factors: the triggers, prodromes, and daily metrics (sleep, weather, HRV, etc.) that show up most around your attacks.\n• Combinations: pairs of factors that look risky together even if each one isn't a big deal alone. The classic example is under-6h sleep on its own being fine, but under-6h sleep paired with a stressful day stacking into a high-risk window.\n• Symptom outcomes: given the trigger you just hit, which symptoms tend to show up.\n\nYou'll see one of two numbers on each finding:\n• \"70% more likely\" — how much more often it happens on the days around your attacks compared with your normal days. We can only show this for things we can fairly compare day to day: signals tracked constantly (sleep, weather, HRV) and manual triggers you log very consistently. This is the stronger read — it means the factor genuinely makes an attack more likely.\n• \"% of your attacks\" — for things you only flag manually and not regularly, where there's no fair day-to-day comparison. It simply shows how often the factor turned up in your attacks. It tells you what your attacks have in common, not that the factor raises your risk.\n\nThe dots show how sure we are: more data behind a finding, more dots. Findings sharpen as you log more — sparse logging means weaker findings, consistent logging means cleaner patterns.\n\nThe preview here shows the top 2 from each layer. Tap in for the full ranked list.") + MEDICAL_NOTE
 }
 
 object WhatWorkedInfoCopy {
-    val text: String get() = tSync("Your treatment and relief track record, judged against what your data actually shows.\n• Individual treatments: which medicines and reliefs are reliably pulling their weight. Two main signals:\n  - Severity reduction: how much milder your migraines run when on this treatment, compared to your untreated baseline severity.\n  - Duration reduction: how much shorter they run compared to a typical attack at the same severity for you.\n  - Your self-reported relief score (the slider when logging) feeds in too, especially when you don't yet have enough untreated attacks to compare against.\n• Combinations: which treatments tend to work well paired. Sometimes two that are weak alone become strong together; sometimes pairing adds nothing.\n• Symptom-specific: which treatments help which symptoms most. Useful when an attack has a dominant symptom: a triptan may work better when nausea is present, an NSAID may suit pain-dominant attacks.\n\nThe preview shows the top 2 from each layer. Tap in for the full ranked list.\n\nFindings sharpen up with more logging, especially consistent relief ratings, dose notes, and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this.") + MEDICAL_NOTE
+    val text: String get() = tSync("How your attacks went when you used each medicine and relief. This is your own log read back to you, not a measure of the drug.\n\nEvery treatment you logged gets a row, and every row gets one of the same four verdicts, so you can compare them at a glance:\n• Works well — measured improvement, or you rated it high relief.\n• Some help — a smaller effect, or a mild rating.\n• No clear effect — measured and found nothing, or you rated it low or none.\n• Not enough yet — logged, but nothing to judge on.\n\nUnderneath, one line says where the verdict came from, in the unit it was measured in:\n• Pain points, when you log pain during an attack. We compare the three hours before a dose with the reading around two hours after, inside the same attack.\n• Pain points against your untreated attacks, when you don't. This one is deliberately cautious: you reach for treatment on your worse attacks, so it understates the benefit. That's why it reads \"at least\".\n• Hours, when we have enough ended-at times to compare an attack's length against your untreated attacks of the same severity.\n• Your own relief rating, in the words you picked, when there isn't enough to measure.\n\nWhere we have dose times, a second line splits your uses at your own median delay for that treatment and shows the peak pain either side. It is your habit, not a clinical window.\n\nThe dots show how much is behind the finding. One dot is a weak result honestly shown, not an error.\n\nFindings sharpen with more logging, especially relief ratings, dose times and ended-at times on each attack. \"Took something but didn't note what\" can't feed into this.") + MEDICAL_NOTE
 }
 
 object WhatsHelpingInfoCopy {

@@ -831,20 +831,68 @@ object DemoDataSeeder {
                     put("pct_migraine_windows", 38.0); put("pct_control_windows", 9.0)
                     put("sample_size", 14)
                 },
-                // Treatment effectiveness
+                // Treatment effectiveness, treatment_effectiveness/v2. lift_ratio is
+                // pinned to 1 on treatment rows and carries no meaning; the evidence
+                // lives in lag_details, one block per measured outcome in its own
+                // unit. A row without the schema tag would render rating-only, so
+                // the demo account has to write the real shape or it demos the bug.
                 buildJsonObject {
                     put("user_id", userId); put("factor_name", "Botox")
-                    put("factor_type", "treatment"); put("lift_ratio", 2.8)
+                    put("factor_type", "treatment"); put("lift_ratio", 1)
                     put("p_value", 0.009); put("best_lag_days", 0)
-                    put("pct_migraine_windows", 80.0); put("pct_control_windows", 0.0)
+                    put("pct_migraine_windows", 80.0); put("pct_control_windows", 2.4)
                     put("sample_size", 14)
+                    put("lag_details", buildJsonObject {
+                        put("schema", "treatment_effectiveness/v2")
+                        put("headline", buildJsonObject {
+                            put("tier", "severity_between")
+                            put("severity_source", "severity_between")
+                            put("p_value_raw", 0.0072)
+                        })
+                        put("confidence", buildJsonObject {
+                            put("dots", 3); put("basis", "p_value"); put("p_value", 0.009)
+                        })
+                        put("severity_between", buildJsonObject {
+                            put("mean_change_points", -2.1)
+                            put("direction", "milder")
+                            put("mean_treated_points", 5.4)
+                            put("mean_untreated_points", 7.5)
+                            put("n_treated", 14); put("n_untreated", 21)
+                            put("p_value", 0.0072)
+                            put("estimate_is", "lower_bound")
+                            put("bias", "against_treatment")
+                            put("confounded_by_indication", true)
+                        })
+                        put("rating", buildJsonObject {
+                            put("avg_relief_0_3", 2.4)
+                            putJsonArray("scale") { add("none"); add("low"); add("mild"); add("high") }
+                            put("n_rated", 12); put("n_uses", 14)
+                        })
+                    })
                 },
                 buildJsonObject {
                     put("user_id", userId); put("factor_name", "Daily meditation")
-                    put("factor_type", "treatment"); put("lift_ratio", 2.2)
-                    put("p_value", 0.035); put("best_lag_days", 0)
-                    put("pct_migraine_windows", 60.0); put("pct_control_windows", 0.0)
+                    put("factor_type", "treatment"); put("lift_ratio", 1)
+                    put("p_value", JsonNull); put("best_lag_days", 0)
+                    put("pct_migraine_windows", 60.0); put("pct_control_windows", 1.8)
                     put("sample_size", 14)
+                    put("lag_details", buildJsonObject {
+                        put("schema", "treatment_effectiveness/v2")
+                        put("headline", buildJsonObject {
+                            put("tier", "rating")
+                            put("severity_source", JsonNull)
+                            put("p_value_raw", JsonNull)
+                        })
+                        // No test ran, so no p — and still one lit dot, never none.
+                        put("confidence", buildJsonObject {
+                            put("dots", 1); put("basis", "rating_only"); put("p_value", JsonNull)
+                        })
+                        put("rating", buildJsonObject {
+                            put("avg_relief_0_3", 1.8)
+                            putJsonArray("scale") { add("none"); add("low"); add("mild"); add("high") }
+                            put("n_rated", 9); put("n_uses", 14)
+                        })
+                    })
                 }
             )
             for (stat in correlations) {

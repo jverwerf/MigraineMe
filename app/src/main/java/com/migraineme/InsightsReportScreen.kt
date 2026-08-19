@@ -189,6 +189,10 @@ fun InsightsReportScreen(
     val auraZonesByMigraine by vm.auraZonesByMigraine.collectAsState()
     val painMigration by vm.painMigration.collectAsState()
     val treatmentTiming by vm.treatmentTiming.collectAsState()
+    val medicineItems by vm.medicineItems.collectAsState()
+    val reliefItems by vm.reliefItems.collectAsState()
+    val medicineCategories by vm.medicineCategories.collectAsState()
+    val reliefIconKeys by vm.reliefIconKeys.collectAsState()
     val symptomStats by vm.symptomStats.collectAsState()
     val auraInsights by vm.auraInsights.collectAsState()
     val contextIconKeys by vm.contextIconKeys.collectAsState()
@@ -805,35 +809,28 @@ fun InsightsReportScreen(
                 )
             }
 
-            // ========== 3a-ii. TREATMENT TIMING (early vs late, all-time) ==========
-            // The engine only writes a row once both buckets clear >= 3 attacks
-            // and the gap is >= 1.5 points, so anything here is safe to print
-            // as-is. Deliberately all-time and not filtered: the split is the
-            // user's own median delay across their whole history.
-            if (treatmentTiming.isNotEmpty()) {
-                Column {
-                    TreatmentTimingCard(treatmentTiming)
-                    Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
-                }
-            }
-
             // ========== 3. WHAT WORKED (all time) ==========
-            val previewTreatments = remember(correlationStats) {
-                correlationStats.filter { it.factorType == "treatment" && it.liftRatio > 1.2f }
-                    .sortedByDescending { it.liftRatio }.take(3)
+            // Same builder, same vocabulary and same rows as the Insights hub
+            // preview and the What Worked page: one row per medicine and relief
+            // the user logged, its verdict, the line the verdict came from, its
+            // early-vs-late timing line, and its dots. The old section here
+            // carried the multipliers and the lift_ratio > 1.2 gate long after
+            // the page stopped, so the report and the app disagreed.
+            // Deliberately all-time and not filtered: the timing split is the
+            // user's own median delay across their whole history.
+            val reportWhatWorked = remember(medicineItems, reliefItems, correlationStats, treatmentTiming) {
+                buildWhatWorkedRows(
+                    pool = medicineItems.map { it to "medicine" } + reliefItems.map { it to "relief" },
+                    stats = correlationStats,
+                    timing = treatmentTiming,
+                )
             }
-            val previewTreatmentInteractions = remember(correlationStats) {
-                correlationStats.filter { it.factorType == "treatment_interaction" && it.liftRatio > 1.2f && it.isRealCombo }
-                    .sortedByDescending { it.liftRatio }.take(3)
-            }
-            if (previewTreatments.isNotEmpty() || previewTreatmentInteractions.isNotEmpty()) {
+            if (reportWhatWorked.isNotEmpty()) {
                 Column {
-                    TreatmentPreviewCard(
-                        treatments = previewTreatments,
-                        treatmentInteractions = previewTreatmentInteractions,
-                        onShowAll = { navController.navigate(Routes.INSIGHTS_TREATMENTS) }
+                    WhatWorkedCard(
+                        rows = reportWhatWorked,
+                        medicineCategories = medicineCategories,
+                        reliefIconKeys = reliefIconKeys,
                     )
                     Text(t("  Based on all time data"), color = AppTheme.SubtleTextColor.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.labelSmall,

@@ -111,10 +111,13 @@ fun InsightsWhatsHelpingScreen(
 }
 
 @Composable
-private fun ConfidenceDotsGreen(pValue: Float) {
+private fun ConfidenceDotsGreen(pValue: Float?) {
+    // p is nullable since the v2 treatment schema. Every row still shows dots:
+    // one lit dot is the honest floor, an empty row reads as broken.
+    val p = pValue ?: 1f
     val filled = when {
-        pValue < 0.01f -> 3
-        pValue < 0.05f -> 2
+        p < 0.01f -> 3
+        p < 0.05f -> 2
         else -> 1
     }
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {

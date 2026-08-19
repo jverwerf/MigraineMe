@@ -1924,7 +1924,10 @@ class EdgeFunctionsService {
         @SerialName("pct_migraine_windows") val pctMigraineWindows: Float = 0f,
         @SerialName("pct_control_windows") val pctControlWindows: Float = 0f,
         @SerialName("sample_size") val sampleSize: Int = 0,
-        @SerialName("p_value") val pValue: Float = 1f,
+        // Nullable since treatment_effectiveness/v2: a rating-only treatment row
+        // ran no statistical test, so it carries no p at all. A non-optional
+        // Float here dropped or crashed on every such row.
+        @SerialName("p_value") val pValue: Float? = null,
         @SerialName("suggested_threshold") val suggestedThreshold: Float? = null,
         @SerialName("current_threshold") val currentThreshold: Float? = null,
         @SerialName("threshold_direction") val thresholdDirection: String? = null,
@@ -1948,22 +1951,42 @@ class EdgeFunctionsService {
             return norm(b) != norm(factorName)
         }
 
-        /** Duration lift from lag_details (treatment/treatment_interaction only) */
-        val durationLift: Float get() {
-            val v = lagDetails?.get("duration_lift")
-            return when (v) {
-                is kotlinx.serialization.json.JsonPrimitive -> v.content.toFloatOrNull() ?: 0f
-                else -> 0f
-            }
-        }
+        // ── treatment_effectiveness/v2 ──────────────────────────────────────
+        // duration_lift and severity_lift are gone from lag_details. A treatment
+        // no longer has "an effectiveness": it has separately measured outcomes,
+        // each in its own unit, and the user's own rating. Nothing here is ever
+        // combined into a multiplier. See scratchpad/effectiveness-contract.md.
 
-        /** Severity lift from lag_details (treatment/treatment_interaction only) */
-        val severityLift: Float get() {
-            val v = lagDetails?.get("severity_lift")
-            return when (v) {
-                is kotlinx.serialization.json.JsonPrimitive -> v.content.toFloatOrNull() ?: 0f
-                else -> 0f
-            }
+        private fun obj(key: String): kotlinx.serialization.json.JsonObject? =
+            lagDetails?.get(key) as? kotlinx.serialization.json.JsonObject
+
+        /** Schema tag. Absent means the row is v1 and must render in rating form only. */
+        val lagSchema: String? get() =
+            (lagDetails?.get("schema") as? kotlinx.serialization.json.JsonPrimitive)?.content
+
+        val isTreatmentV2: Boolean get() = lagSchema == "treatment_effectiveness/v2"
+
+        /** "pain_response" | "severity_between" | "duration" | "rating", v2 rows only. */
+        val headlineTier: String? get() =
+            (obj("headline")?.get("tier") as? kotlinx.serialization.json.JsonPrimitive)?.content
+
+        val painResponse: kotlinx.serialization.json.JsonObject? get() = obj("pain_response")
+        val severityBetween: kotlinx.serialization.json.JsonObject? get() = obj("severity_between")
+        val durationBlock: kotlinx.serialization.json.JsonObject? get() = obj("duration")
+        val ratingBlock: kotlinx.serialization.json.JsonObject? get() = obj("rating")
+
+        /**
+         * Lit confidence dots. Every row shows dots — one lit dot for a weak
+         * result is the honest answer, no dots at all is not. The engine pins
+         * the floor at 1 in lag_details.confidence.dots; older rows fall back to
+         * the same p thresholds the rest of the app uses, and then to 1.
+         */
+        val confidenceDots: Int get() {
+            val d = (obj("confidence")?.get("dots") as? kotlinx.serialization.json.JsonPrimitive)
+                ?.content?.toIntOrNull()
+            if (d != null) return d.coerceIn(1, 3)
+            val p = pValue ?: return 1
+            return if (p < 0.01f) 3 else if (p < 0.05f) 2 else 1
         }
 
         /** Avg severity of migraines preceded by this trigger */
@@ -1985,7 +2008,7 @@ class EdgeFunctionsService {
         }
 
         /** Which number to show, set by the engine's 3-step gate.
-         *  "comparison" -> real normal-day comparison -> show "X× more likely".
+         *  "comparison" -> real normal-day comparison -> show "N% more likely".
          *  "prevalence" -> no fair comparison -> show "in X of attacks", no multiplier.
          *  Defaults to "comparison" for rows written before mode tagging. */
         val mode: String get() {
@@ -2014,7 +2037,7 @@ class EdgeFunctionsService {
                 val lagText = if (bestLagDays == 0) "on the same day"
                     else "$bestLagDays day${if (bestLagDays > 1) "s" else ""} before onset"
                 val base = "${factorName} appeared before ${pctMigraineWindows.toInt()}% of your migraines ($lagText). " +
-                    "That's ${String.format("%.1f", liftRatio)}x more likely than on your normal days."
+                    "That's ${Math.round((liftRatio - 1f) * 100f)}% more likely than on your normal days."
                 val parts = mutableListOf(base)
                 val durStr = avgDurationHrs?.let { "avg ${String.format("%.0f", it)}hrs" }
                 val sevStr = avgSeverity?.let { "severity ${String.format("%.0f", it)}/10" }
@@ -2042,9 +2065,9 @@ class EdgeFunctionsService {
                     }
                     "Your migraines cluster when ${factorName.lowercase()} is $dirText " +
                         "${fmtThreshold(suggestedThreshold, factorName)} " +
-                        "(${String.format("%.1f", liftRatio)}x lift)."
+                        "(${Math.round((liftRatio - 1f) * 100f)}% more likely)."
                 } else {
-                    "${factorName} shows a ${String.format("%.1f", liftRatio)}x difference on pre-migraine days vs normal days."
+                    "${factorName} turns up ${Math.round(kotlin.math.abs(liftRatio - 1f) * 100f)}% more often on pre-migraine days than on normal days."
                 }
             }
             "interaction" -> {
@@ -2054,41 +2077,31 @@ class EdgeFunctionsService {
                 } else {
                     "${factorName} + ${factorB ?: "?"} together preceded " +
                         "${pctMigraineWindows.toInt()}% of your migraines — " +
-                        "${String.format("%.1f", liftRatio)}x more likely than either alone."
+                        "${Math.round((liftRatio - 1f) * 100f)}% more likely than either alone."
                 }
             }
-            "treatment_interaction" -> {
-                val parts = mutableListOf("${factorName} + ${factorB ?: "?"} used together:")
-                if (durationLift > 1f) parts.add("${String.format("%.1f", durationLift)}\u00D7 shorter")
-                if (severityLift > 1f) parts.add("${String.format("%.1f", severityLift)}\u00D7 milder")
-                if (durationLift <= 1f && severityLift <= 1f) parts.add("${String.format("%.1f", liftRatio)}\u00D7 more effective")
-                parts.joinToString(" ")
-            }
-            "treatment" -> {
-                val usagePct = pctMigraineWindows.toInt()
-                val avgRelief = pctControlWindows // reused field: avg relief score 0-3
-                val reliefLabel = when {
-                    avgRelief >= 2.5f -> "strong"
-                    avgRelief >= 1.5f -> "moderate"
-                    avgRelief >= 0.5f -> "mild"
-                    else -> "minimal"
-                }
-                val parts = mutableListOf<String>()
-                parts.add("Used in $usagePct% of your migraines with $reliefLabel reported relief.")
-                if (durationLift > 1f) parts.add("${String.format("%.1f", durationLift)}\u00D7 shorter migraines.")
-                if (severityLift > 1f) parts.add("${String.format("%.1f", severityLift)}\u00D7 milder migraines.")
-                if (durationLift <= 1f && severityLift <= 1f) parts.add("No significant duration or severity improvement detected yet.")
-                parts.joinToString(" ")
-            }
-            else -> "${factorName}: ${String.format("%.1f", liftRatio)}x lift"
+            // Combination rows are not multipliers any more. lift_ratio on them is
+            // computed the old way and says nothing a reader can act on, so the
+            // sentence reports how often the pair was actually used and stops.
+            "treatment_interaction" ->
+                "${factorName} + ${factorB ?: "?"} used together in $sampleSize of your attacks."
+            // The treatment sentence is built by TreatmentEffectiveness.kt, which
+            // owns the whole vocabulary (verdict word, evidence line, timing line)
+            // so the hub, the page and the report cannot drift apart. This is the
+            // fallback for anywhere still calling the generic sentence builder.
+            "treatment" ->
+                "${factorName} was logged in $sampleSize of your attacks."
+            else -> "${factorName}: ${Math.round((liftRatio - 1f) * 100f)}% more likely"
         }
 
         fun isSignificant(): Boolean = when (factorType) {
-            "treatment", "treatment_interaction" -> {
-                // Show if either duration or severity is meaningful, or overall lift is significant
-                pValue < 0.1f && (durationLift > 1.1f || severityLift > 1.1f || liftRatio > 1.3f)
-            }
-            else -> pValue < 0.1f && liftRatio > 1.3f
+            // "Does this treatment have real evidence?" is a schema question now,
+            // not a lift threshold: lift_ratio is pinned to 1 on every treatment
+            // row, so the old `lift > 1.2` gate matched nothing and treatments
+            // silently vanished from every surface that used it.
+            "treatment", "treatment_interaction" ->
+                isTreatmentV2 && headlineTier != null && headlineTier != "rating" && pValue != null
+            else -> (pValue ?: 1f) < 0.1f && liftRatio > 1.3f
         }
 
         companion object {

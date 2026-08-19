@@ -153,7 +153,10 @@ private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.Correlatio
                         Text(prettyLabel(stat.symptomOutcome), color = Color(0xFFDDD2EA),
                             style = MaterialTheme.typography.bodySmall, maxLines = 1,
                             modifier = Modifier.weight(1f))
-                        Text(String.format("%.1f×", stat.liftRatio),
+                        // Percent more often, not a bare "×1.7": this row is about
+                        // which symptom follows a trigger, and the multiplier read
+                        // as an amount rather than a comparison.
+                        Text(liftPercentText(stat.liftRatio),
                             color = if (stat.liftRatio >= 2f) Color(0xFFE8A0A0) else Color(0xFFC9A9E8),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         Spacer(Modifier.width(8.dp))
