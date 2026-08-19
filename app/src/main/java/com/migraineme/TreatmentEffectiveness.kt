@@ -149,12 +149,12 @@ fun buildWhatWorkedRows(
         // no correlation row at all. The local log is authoritative for these.
         val ratingBlock = v2?.ratingBlock
         val avgRelief = ratingBlock?.num("avg_relief_0_3") ?: item.avgRelief
-        val nRated = ratingBlock?.int("n_rated") ?: item.count
+        val nRated = ratingBlock?.int("n_rated") ?: item.ratedCount
         val uses = ratingBlock?.int("n_uses") ?: stat?.sampleSize ?: item.count
         val scale = RELIEF_SCALE
 
         fun ratedRow(): Pair<TreatmentVerdict, TreatmentEvidence> =
-            if (nRated <= 0 || item.count <= 0) {
+            if (nRated <= 0) {
                 TreatmentVerdict.NOT_ENOUGH_YET to TreatmentEvidence.NotRated(uses)
             } else {
                 val verdict = when {

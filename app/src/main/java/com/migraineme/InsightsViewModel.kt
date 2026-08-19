@@ -178,7 +178,15 @@ class InsightsViewModel : ViewModel() {
     fun setReportBreakdownFilter(filter: FilteredSpiders?) { _reportBreakdownFilter.value = filter }
 
     // Item-level effectiveness with counts for Treatment Ranking card
-    data class TreatmentItem(val name: String, val count: Int, val avgRelief: Float)
+    /**
+     * One logged medicine or relief. [ratedCount] counts the doses that actually
+     * carry a relief answer: "used four times and never rated it" and "used four
+     * times and rated it none" are different facts, and the old shape could not
+     * tell them apart because an unrated dose scored 0 and dragged the average
+     * down with it. [avgRelief] therefore averages the RATED doses only, and is
+     * 0 when there are none.
+     */
+    data class TreatmentItem(val name: String, val count: Int, val avgRelief: Float, val ratedCount: Int = 0)
 
     /** Descriptive stats for an activity/location logged with migraines */
     data class ContextItem(
@@ -1872,7 +1880,13 @@ class InsightsViewModel : ViewModel() {
             _medicineItems.value = linkedM
                 .groupBy { it.name ?: "Unknown" }
                 .map { (name, items) ->
-                    TreatmentItem(name, items.size, items.map { reliefToNum(it.reliefScale) }.average().toFloat())
+                    val rated = items.filter { !it.reliefScale.isNullOrBlank() }
+                    TreatmentItem(
+                        name, items.size,
+                        if (rated.isEmpty()) 0f
+                        else rated.map { reliefToNum(it.reliefScale) }.average().toFloat(),
+                        rated.size,
+                    )
                 }
                 .sortedByDescending { it.avgRelief }
 
@@ -1893,7 +1907,13 @@ class InsightsViewModel : ViewModel() {
             _reliefItems.value = linkedR
                 .groupBy { it.type ?: "Unknown" }
                 .map { (name, items) ->
-                    TreatmentItem(name, items.size, items.map { reliefToNum(it.reliefScale) }.average().toFloat())
+                    val rated = items.filter { !it.reliefScale.isNullOrBlank() }
+                    TreatmentItem(
+                        name, items.size,
+                        if (rated.isEmpty()) 0f
+                        else rated.map { reliefToNum(it.reliefScale) }.average().toFloat(),
+                        rated.size,
+                    )
                 }
                 .sortedByDescending { it.avgRelief }
 
