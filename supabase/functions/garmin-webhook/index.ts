@@ -217,6 +217,22 @@ serve(async (req)=>{
     return true;
   }
   // ════════════════════════════════════════════════════════════════════
+  // Helper: cumulative daily totals — record the run but NEVER gate on it
+  //
+  // Garmin re-pushes `dailies` many times a day; every push carries the
+  // running total SO FAR (steps, activeKilocalories, vigorous-intensity
+  // seconds). The first push of a day lands minutes after local midnight,
+  // so gating on tryMarkMetricRan froze each day at a near-zero value.
+  // The daily tables are keyed per (user_id, date, source), so a later
+  // push simply overwrites the same row with the newer, higher total —
+  // no duplicate rows. Only metrics that are genuinely written once per
+  // day (resting HR, sleep, HRV, SpO2, …) keep the tryMarkMetricRan gate.
+  // ════════════════════════════════════════════════════════════════════
+  async function markCumulativeRan(userId: string, metric: string, localDate: string, source = "garmin") {
+    await tryMarkMetricRan(userId, metric, localDate, source); // audit trail only
+    return true;
+  }
+  // ════════════════════════════════════════════════════════════════════
   // Process: DAILIES
   // ════════════════════════════════════════════════════════════════════
   if (body.dailies && Array.isArray(body.dailies)) {
@@ -242,7 +258,7 @@ serve(async (req)=>{
         // steps_daily
         if (await isGarminEnabled(userId, "steps_daily")) {
           const val = intOrNull(d.steps);
-          if (val != null && await tryMarkMetricRan(userId, "steps_daily", localDate)) {
+          if (val != null && await markCumulativeRan(userId, "steps_daily", localDate)) {
             await upsertDailyRow("steps_daily", {
               user_id: userId,
               date: localDate,
@@ -280,7 +296,7 @@ serve(async (req)=>{
           const kcal = numOrNull(d.activeKilocalories);
           if (kcal != null) {
             const kj = Math.round(kcal * 4.184);
-            if (await tryMarkMetricRan(userId, "strain_daily", localDate)) {
+            if (await markCumulativeRan(userId, "strain_daily", localDate)) {
               await upsertDailyRow("strain_daily", {
                 user_id: userId,
                 date: localDate,
@@ -296,7 +312,7 @@ serve(async (req)=>{
           const vigSec = numOrNull(d.vigorousIntensityDurationInSeconds);
           if (vigSec != null && vigSec > 0) {
             const minutes = Math.round(vigSec / 60 * 10) / 10;
-            if (await tryMarkMetricRan(userId, "time_in_high_hr_zones_daily", localDate)) {
+            if (await markCumulativeRan(userId, "time_in_high_hr_zones_daily", localDate)) {
               await supabase.from("time_in_high_hr_zones_daily").upsert({
                 user_id: userId,
                 date: localDate,

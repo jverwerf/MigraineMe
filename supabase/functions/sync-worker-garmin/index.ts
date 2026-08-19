@@ -222,6 +222,16 @@ serve(async (req)=>{
         }
         return true;
       }
+      // Cumulative daily totals — record the run but NEVER gate on it.
+      // Garmin's `dailies` carries the running total so far (steps,
+      // activeKilocalories, vigorous-intensity seconds); a later fetch must
+      // be allowed to overwrite the earlier, lower value. The daily tables
+      // are keyed per (user_id, date, source) so this updates, never
+      // duplicates. Once-per-day metrics keep the tryMarkMetricRan gate.
+      async function markCumulativeRan(metric: string, localDate: string) {
+        await tryMarkMetricRan(metric, localDate); // audit trail only
+        return true;
+      }
       async function upsertDailyRow(table, row, conflict = "user_id,date,source") {
         const { error } = await supabase.from(table).upsert(row, {
           onConflict: conflict
@@ -247,7 +257,7 @@ serve(async (req)=>{
             if (calDate !== jobLocalDate) continue;
             if (garminEnabled("steps_daily")) {
               const val = intOrNull(d.steps);
-              if (val != null && await tryMarkMetricRan("steps_daily", calDate)) {
+              if (val != null && await markCumulativeRan("steps_daily", calDate)) {
                 await upsertDailyRow("steps_daily", {
                   user_id: userId,
                   date: calDate,
@@ -282,7 +292,7 @@ serve(async (req)=>{
             }
             if (garminEnabled("strain_daily")) {
               const kcal = numOrNull(d.activeKilocalories);
-              if (kcal != null && await tryMarkMetricRan("strain_daily", calDate)) {
+              if (kcal != null && await markCumulativeRan("strain_daily", calDate)) {
                 await upsertDailyRow("strain_daily", {
                   user_id: userId,
                   date: calDate,
@@ -296,7 +306,7 @@ serve(async (req)=>{
               const vigSec = numOrNull(d.vigorousIntensityDurationInSeconds);
               if (vigSec != null && vigSec > 0) {
                 const minutes = Math.round(vigSec / 60 * 10) / 10;
-                if (await tryMarkMetricRan("time_in_high_hr_zones_daily", calDate)) {
+                if (await markCumulativeRan("time_in_high_hr_zones_daily", calDate)) {
                   await supabase.from("time_in_high_hr_zones_daily").upsert({
                     user_id: userId,
                     date: calDate,
