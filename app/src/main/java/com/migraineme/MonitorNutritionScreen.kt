@@ -597,10 +597,13 @@ fun MonitorNutritionScreen(
                         ) {
                             selectedMetrics.forEachIndexed { index, registryKey ->
                                 val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
-                                val total = todayItems.sumOf { it.metricValue(legacyKey) ?: 0.0 }
+                                // Exposures max, nutrients sum — see metricTotal.
+                                val total = todayItems.metricTotal(legacyKey)
                                 val label = MetricRegistry.label(registryKey)
                                 val unit = MetricRegistry.unit(registryKey)
-                                val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
+                                val formatted = if (ExposureScale.isExposureMetric(legacyKey)) {
+                                    RiskColors.formatRiskLevel(legacyKey, total.toInt()).first
+                                } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
                                 NutritionSummaryValue(formatted, label, slotColors.getOrElse(index) { slotColors.last() })
                             }
                         }
@@ -628,12 +631,8 @@ fun MonitorNutritionScreen(
                         val allNutritionKeys = MetricRegistry.byGroup("nutrition").map { it.key }
                         allNutritionKeys.forEach { registryKey ->
                             val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
-                            val isRisk = legacyKey in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure", "histamine_exposure")
-                            val total = if (isRisk) {
-                                todayItems.maxOfOrNull { it.metricValue(legacyKey) ?: 0.0 } ?: 0.0
-                            } else {
-                                todayItems.sumOf { it.metricValue(legacyKey) ?: 0.0 }
-                            }
+                            val isRisk = ExposureScale.isExposureMetric(legacyKey)
+                            val total = todayItems.metricTotal(legacyKey)
                             val label = MetricRegistry.label(registryKey)
                             val unit = MetricRegistry.unit(registryKey)
                             if (isRisk) {

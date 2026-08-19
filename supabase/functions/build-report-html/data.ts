@@ -8,6 +8,7 @@
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { METRICS, type MetricDef } from "./metrics.ts";
 import { asLang, type Lang } from "../_shared/i18n.ts";
+import { exposureRank } from "../_shared/exposureScale.ts";
 
 /** Days of context drawn either side of an attack — the old Migraine Timeline
  *  section's window, now part of every attack card. */
@@ -202,9 +203,14 @@ export type ReportData = {
 
 /** "none"/"low"/"medium"/"high" -> 0..3, the scale the apps chart food-risk
  *  exposure on. */
+/** The report's own null semantics on top of the shared scale: an ABSENT cell
+ *  is "no data point" (null) rather than 0, so a day with no food logged does
+ *  not plot as a zero. Recognised words go through exposureRank, which folds
+ *  case and treats "moderate" as "medium" — the hand-written map this replaced
+ *  did neither, so nutrition_records' "HIGH"/"MODERATE" spellings scored null
+ *  and dropped out of the chart entirely. */
 const riskNum = (raw: unknown): number | null =>
-  ({ high: 3, medium: 2, low: 1, none: 0 } as Record<string, number>)[
-    String(raw ?? "").toLowerCase()] ?? null;
+  raw == null || String(raw).trim() === "" ? null : exposureRank(raw);
 
 /** Rows linked to one of the filtered attacks. PostgREST caps `in.()` lists,
  *  so ids are chunked rather than sent as one enormous filter. */

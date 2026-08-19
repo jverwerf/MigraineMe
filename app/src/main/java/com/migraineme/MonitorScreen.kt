@@ -191,11 +191,12 @@ fun MonitorScreen(
             "mental" -> mentalSummary?.displayValue(metric) ?: "-"
             "nutrition" -> {
                 if (nutritionItems.isEmpty()) return "-"
-                val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
+                // Exposures max, nutrients sum — see metricTotal.
+                val total = nutritionItems.metricTotal(metric)
                 if (total <= 0) return "-"
                 val registryKey = MetricRegistry.nutritionRegistryKey(metric)
                 val unit = MetricRegistry.unit(registryKey)
-                val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure", "histamine_exposure")
+                val isRisk = ExposureScale.isExposureMetric(metric)
                 if (isRisk) {
                     tSync(when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" })
                 } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
@@ -491,11 +492,16 @@ private fun NutritionCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 displayMetrics.forEachIndexed { index, metric ->
-                    val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
+                    // Exposures max, nutrients sum — see metricTotal. A pinned
+                    // exposure tile shows its severity word, not an ordinal
+                    // rank printed with a nutrient unit.
+                    val total = nutritionItems.metricTotal(metric)
                     val registryKey = MetricRegistry.nutritionRegistryKey(metric)
                     val label = MetricRegistry.label(registryKey)
                     val unit = MetricRegistry.unit(registryKey)
-                    val formatted = if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
+                    val formatted = if (ExposureScale.isExposureMetric(metric)) {
+                        RiskColors.formatRiskLevel(metric, total.toInt()).first
+                    } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)
                     val color = slotColors.getOrElse(index) { slotColors.last() }
 
                     MetricTile(formatted, label, color, Modifier.weight(1f))

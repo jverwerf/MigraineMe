@@ -1684,9 +1684,10 @@ class InsightsViewModel : ViewModel() {
                 "gluten" to "gluten_exposure",
                 "histamine" to "histamine_exposure"
             )
-            fun riskToNum(s: String?): Double? = when (s?.lowercase()) {
-                "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; "none" -> 0.0; else -> null
-            }
+            // ExposureScale also folds "MODERATE", which this when() dropped to
+            // null — silently discarding the row from the correlation instead of
+            // scoring it as the medium it is.
+            fun riskToNum(s: String?): Double? = ExposureScale.rankOrNull(s)
             val riskDaySums = mutableMapOf<String, MutableMap<String, Double>>()
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)

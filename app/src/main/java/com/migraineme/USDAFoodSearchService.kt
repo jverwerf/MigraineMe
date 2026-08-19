@@ -1203,19 +1203,36 @@ fun NutritionLogItem.metricValue(metric: String): Double? = when (metric) {
     MonitorCardConfig.METRIC_FOLATE -> folate
     MonitorCardConfig.METRIC_BIOTIN -> biotin
     MonitorCardConfig.METRIC_PANTOTHENIC_ACID -> pantothenicAcid
-    MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> when (tyramineExposure) {
-        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
-    }
-    MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> when (alcoholExposure) {
-        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
-    }
-    MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> when (glutenExposure) {
-        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
-    }
-    MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE -> when (histamineExposure) {
-        "high" -> 3.0; "medium" -> 2.0; "low" -> 1.0; else -> 0.0
-    }
+    // These four come straight from nutrition_records, which holds the
+    // classifier's own spellings — "HIGH", "NONE", "MODERATE" — not the
+    // lowercase words nutrition_daily is normalised to. Matching them
+    // literally scored every uppercase row 0.0, so a genuinely high-tyramine
+    // food displayed as "None". ExposureScale mirrors the shared edge module.
+    MonitorCardConfig.METRIC_TYRAMINE_EXPOSURE -> ExposureScale.rank(tyramineExposure)
+    MonitorCardConfig.METRIC_ALCOHOL_EXPOSURE -> ExposureScale.rank(alcoholExposure)
+    MonitorCardConfig.METRIC_GLUTEN_EXPOSURE -> ExposureScale.rank(glutenExposure)
+    MonitorCardConfig.METRIC_HISTAMINE_EXPOSURE -> ExposureScale.rank(histamineExposure)
     else -> null
 }
+
+/**
+ * The day's value for one metric across a list of food items.
+ *
+ * Nutrients add up: eat three things with 20mg of caffeine and you have had
+ * 60mg. Exposures do NOT — they are an ordinal 0..3 severity, so the day's
+ * value is the WORST single food, not the sum. Summing them made three
+ * separate low-tyramine foods (1+1+1 = 3) read as "High" when the user never
+ * ate anything above Low. Callers used to open-code this and several got the
+ * exposure half wrong, so both halves live here now.
+ *
+ * Matches nutrition-daily-worker, which stores MAX severity per day, and the
+ * PDF report's aggregation in build-report-html/data.ts.
+ */
+fun List<NutritionLogItem>.metricTotal(metric: String): Double =
+    if (ExposureScale.isExposureMetric(metric)) {
+        maxOfOrNull { it.metricValue(metric) ?: 0.0 } ?: 0.0
+    } else {
+        sumOf { it.metricValue(metric) ?: 0.0 }
+    }
 
 

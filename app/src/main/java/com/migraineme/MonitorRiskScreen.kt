@@ -121,11 +121,14 @@ fun MonitorRiskScreen(
             "mental" -> mentalSummary?.displayValue(metric) ?: "-"
             "nutrition" -> {
                 if (nutritionItems.isEmpty()) return "-"
-                val total = nutritionItems.sumOf { it.metricValue(metric) ?: 0.0 }
+                // Exposures max, nutrients sum — see metricTotal. The old
+                // hardcoded risk set here omitted histamine, so histamine
+                // rendered as a raw summed ordinal with a nutrient unit.
+                val total = nutritionItems.metricTotal(metric)
                 if (total <= 0) return "-"
                 val registryKey = MetricRegistry.nutritionRegistryKey(metric)
                 val unit = MetricRegistry.unit(registryKey)
-                val isRisk = metric in setOf("tyramine_exposure", "alcohol_exposure", "gluten_exposure")
+                val isRisk = ExposureScale.isExposureMetric(metric)
                 if (isRisk) {
                     when { total >= 3 -> "High"; total >= 2 -> "Med"; total >= 1 -> "Low"; else -> "None" }
                 } else if (total >= 10) "${total.toInt()}$unit" else String.format("%.1f$unit", total)

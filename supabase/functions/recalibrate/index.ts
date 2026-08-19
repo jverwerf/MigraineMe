@@ -13,6 +13,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getLang, languageDirective, t, type Lang } from "../_shared/i18n.ts";
+import { exposureRank } from "../_shared/exposureScale.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -502,9 +503,12 @@ serve(async (req: Request) => {
     }
     // Food-risk exposure columns are text ("none"/"low"/"medium"/"high") —
     // mapped onto the 0..3 scale the apps chart so avgBy can window them.
+    // exposureRank additionally folds "MODERATE", which the hand-written map
+    // this replaced scored as null, dropping the day from the average.
+    // An absent cell stays null here rather than 0, so a day with no food
+    // logged is "no data" and not a real "none" pulling the mean down.
     const riskNum = (raw: unknown): number | null =>
-      ({ high: 3, medium: 2, low: 1, none: 0 } as Record<string, number>)[
-        String(raw ?? "").toLowerCase()] ?? null;
+      raw == null || String(raw).trim() === "" ? null : exposureRank(raw);
     const nutritionRows = (nutrition.data ?? []).map((r: any) => ({
       ...r,
       tyramine_n: riskNum(r.max_tyramine_exposure),
