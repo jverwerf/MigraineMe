@@ -82,6 +82,10 @@ private val metricColors = mapOf(
 
 // Get metric value from day data
 private fun getDayValue(day: NutritionDayData, metric: String): Float {
+    // The day carries every nutrition metric now. The named fields below stay
+    // as the fallback for the eight this screen was originally built around, so
+    // a row that predates the generic read still plots.
+    day.values[metric]?.let { return it }
     return when (metric) {
         MonitorCardConfig.METRIC_CALORIES -> day.calories.toFloat()
         MonitorCardConfig.METRIC_PROTEIN -> day.protein.toFloat()

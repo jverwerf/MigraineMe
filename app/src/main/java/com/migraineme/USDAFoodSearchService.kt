@@ -922,6 +922,7 @@ class USDAFoodSearchService(private val context: Context) {
                     for (i in 0 until arr.length()) {
                         val obj = arr.getJSONObject(i)
                         allDays.add(NutritionDayData(
+                            values = nutritionValuesFrom(obj, rollup = true),
                             date = obj.getString("date"),
                             calories = obj.optDouble("total_calories", 0.0).toInt(),
                             protein = obj.optDouble("total_protein_g", 0.0).toInt(),
@@ -942,7 +943,7 @@ class USDAFoodSearchService(private val context: Context) {
 
             if (!hasToday) {
                 val todayUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/nutrition_records?" +
-                    "user_id=eq.$userId&date=eq.$today&select=calories,protein,total_carbohydrate,total_fat,dietary_fiber,sugar,sodium,caffeine"
+                    "user_id=eq.$userId&date=eq.$today"
 
                 val todayRequest = Request.Builder()
                     .url(todayUrl)
@@ -972,8 +973,23 @@ class USDAFoodSearchService(private val context: Context) {
                                 caffeine += obj.optDouble("caffeine", 0.0).toInt()
                             }
 
+                            // Today is built from raw records, one row per food, so
+                            // the day's value has to be aggregated here the way
+                            // nutrition-daily-worker would: nutrients add up over
+                            // the day, an exposure takes the worst single food.
+                            val dayValues = mutableMapOf<String, Float>()
+                            for (i in 0 until arr.length()) {
+                                for ((k, v) in nutritionValuesFrom(arr.getJSONObject(i), rollup = false)) {
+                                    dayValues[k] = if (ExposureScale.isExposureMetric(k)) {
+                                        maxOf(dayValues[k] ?: 0f, v)
+                                    } else {
+                                        (dayValues[k] ?: 0f) + v
+                                    }
+                                }
+                            }
                             allDays.add(NutritionDayData(
                                 date = today,
+                                values = dayValues,
                                 calories = calories, protein = protein, carbs = carbs, fat = fat,
                                 fiber = fiber, sugar = sugar, sodium = sodium, caffeine = caffeine
                             ))
@@ -1052,6 +1068,36 @@ data class NutritionHistoryResult(
 )
 
 // Daily nutrition data for graph
+/**
+ * Read every nutrition metric off one row, keyed by its legacy metric key.
+ *
+ * `rollup = true` reads a nutrition_daily row (columns like total_calories,
+ * max_tyramine_exposure); false reads a nutrition_records row, whose columns
+ * are named differently and hold one food rather than a day.
+ *
+ * Exposure columns hold a word, not a number. They go through ExposureScale so
+ * "high" becomes 3 on the same 0..3 rank the cards and the risk engine use —
+ * the graph must not invent a second scale.
+ */
+private fun nutritionValuesFrom(obj: org.json.JSONObject, rollup: Boolean): Map<String, Float> {
+    val out = mutableMapOf<String, Float>()
+    for (metric in MetricRegistry.byGroup("nutrition")) {
+        val legacyKey = MetricRegistry.nutritionLegacyKey(metric.key)
+        // nutrition_daily prefixes its columns (total_/max_); nutrition_records
+        // uses the bare name, which is what the legacy key already is.
+        val column = if (rollup) metric.column else legacyKey
+        if (obj.isNull(column)) continue
+        val raw = obj.opt(column)
+        val value = when {
+            raw is Number -> raw.toFloat()
+            raw is String -> ExposureScale.rank(raw).toFloat()
+            else -> continue
+        }
+        out[legacyKey] = value
+    }
+    return out
+}
+
 data class NutritionDayData(
     val date: String = "",
     val calories: Int = 0,
@@ -1061,7 +1107,18 @@ data class NutritionDayData(
     val fiber: Int = 0,
     val sugar: Int = 0,
     val sodium: Int = 0,
-    val caffeine: Int = 0
+    val caffeine: Int = 0,
+    /**
+     * Every nutrition metric for the day, keyed by its legacy metric key.
+     *
+     * The eight fields above are the ones this screen was built around, but the
+     * picker offers every metric in the nutrition group — around forty. Anything
+     * outside those eight used to fall through to a hard-coded zero, so the four
+     * food-risk exposures and thirty-odd vitamins and minerals drew a flat line
+     * at zero no matter what the user had logged. Reading the row generically
+     * fixes all of them at once.
+     */
+    val values: Map<String, Float> = emptyMap()
 )
 
 // Search result for display

@@ -326,8 +326,16 @@ object MetricRegistry {
         "user_weather_daily::is_thunderstorm_day" to 6,
         "user_location_daily::altitude_max_m" to 7,
         "user_location_daily::altitude_change_m" to 8,
-        // Nutrition — defaults: Tyramine Exposure, Magnesium, Caffeine
-        "nutrition_daily::max_tyramine_exposure" to 1,
+        // Nutrition. The four food-risk exposures lead the group: they are the
+        // reason this screen exists for a migraine patient, they share one
+        // legend, and they are read as a set. Tyramine was already first while
+        // alcohol, gluten and histamine sat at 36-38, stranding three quarters
+        // of the set below the vitamins. Negative keys keep them together at the
+        // top without renumbering the thirty-odd nutrients below.
+        "nutrition_daily::max_tyramine_exposure" to -4,
+        "nutrition_daily::max_alcohol_exposure" to -3,
+        "nutrition_daily::max_gluten_exposure" to -2,
+        "nutrition_daily::max_histamine_exposure" to -1,
         "nutrition_daily::total_magnesium_mg" to 2,
         "nutrition_daily::total_caffeine_mg" to 3,
         "nutrition_daily::total_calories" to 4,
@@ -362,9 +370,6 @@ object MetricRegistry {
         "nutrition_daily::total_folate_mcg" to 33,
         "nutrition_daily::total_biotin_mcg" to 34,
         "nutrition_daily::total_pantothenic_acid_mg" to 35,
-        "nutrition_daily::max_alcohol_exposure" to 36,
-        "nutrition_daily::max_gluten_exposure" to 37,
-        "nutrition_daily::max_histamine_exposure" to 38,
     )
 
     // ── Label overrides ──────────────────────────────────────────────────────
