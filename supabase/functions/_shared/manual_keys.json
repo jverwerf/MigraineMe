@@ -2549,6 +2549,498 @@
     {
       "en": "Severe",
       "why": "symptom severity enum: rendered by severityLabel() in render.ts"
+    },
+    {
+      "en": "Works well",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Wirkt gut",
+        "es": "Funciona bien",
+        "nl": "Werkt goed",
+        "fr": "Efficace",
+        "it": "Funziona bene",
+        "pt": "Funciona bem"
+      }
+    },
+    {
+      "en": "Some help",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Hilft etwas",
+        "es": "Algo de ayuda",
+        "nl": "Helpt iets",
+        "fr": "Aide un peu",
+        "it": "Aiuta un po'",
+        "pt": "Ajuda um pouco"
+      }
+    },
+    {
+      "en": "No clear effect",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Kein klarer Effekt",
+        "es": "Sin efecto claro",
+        "nl": "Geen duidelijk effect",
+        "fr": "Pas d'effet net",
+        "it": "Nessun effetto chiaro",
+        "pt": "Sem efeito claro"
+      }
+    },
+    {
+      "en": "Not enough yet",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Zu wenig Daten",
+        "es": "Datos insuficientes",
+        "nl": "Te weinig data",
+        "fr": "Données insuffisantes",
+        "it": "Dati insufficienti",
+        "pt": "Dados insuficientes"
+      }
+    },
+    {
+      "en": "no relief",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "keine Linderung",
+        "es": "sin alivio",
+        "nl": "geen verlichting",
+        "fr": "aucun soulagement",
+        "it": "nessun sollievo",
+        "pt": "sem alívio"
+      }
+    },
+    {
+      "en": "low relief",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "geringe Linderung",
+        "es": "alivio bajo",
+        "nl": "weinig verlichting",
+        "fr": "faible soulagement",
+        "it": "sollievo lieve",
+        "pt": "alívio baixo"
+      }
+    },
+    {
+      "en": "mild relief",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "mäßige Linderung",
+        "es": "alivio moderado",
+        "nl": "matige verlichting",
+        "fr": "soulagement modéré",
+        "it": "sollievo moderato",
+        "pt": "alívio moderado"
+      }
+    },
+    {
+      "en": "high relief",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "starke Linderung",
+        "es": "alivio alto",
+        "nl": "sterke verlichting",
+        "fr": "fort soulagement",
+        "it": "sollievo elevato",
+        "pt": "alívio elevado"
+      }
+    },
+    {
+      "en": "Pain fell about {0} points within {1} of a dose.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Der Schmerz sank innerhalb von {1} nach einer Dosis um etwa {0} Punkte.",
+        "es": "El dolor bajó unos {0} puntos en {1} tras una dosis.",
+        "nl": "De pijn daalde ongeveer {0} punten binnen {1} na een dosis.",
+        "fr": "La douleur a baissé d'environ {0} points dans les {1} suivant une prise.",
+        "it": "Il dolore è sceso di circa {0} punti entro {1} da una dose.",
+        "pt": "A dor desceu cerca de {0} pontos em {1} após uma dose."
+      }
+    },
+    {
+      "en": "Pain rose about {0} points within {1} of a dose.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Der Schmerz stieg innerhalb von {1} nach einer Dosis um etwa {0} Punkte.",
+        "es": "El dolor subió unos {0} puntos en {1} tras una dosis.",
+        "nl": "De pijn steeg ongeveer {0} punten binnen {1} na een dosis.",
+        "fr": "La douleur a augmenté d'environ {0} points dans les {1} suivant une prise.",
+        "it": "Il dolore è salito di circa {0} punti entro {1} da una dose.",
+        "pt": "A dor subiu cerca de {0} pontos em {1} após uma dose."
+      }
+    },
+    {
+      "en": "Pain did not measurably change within {0} of a dose.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Der Schmerz änderte sich innerhalb von {0} nach einer Dosis nicht messbar.",
+        "es": "El dolor no cambió de forma medible en {0} tras una dosis.",
+        "nl": "De pijn veranderde binnen {0} na een dosis niet meetbaar.",
+        "fr": "La douleur n'a pas changé de façon mesurable dans les {0} suivant une prise.",
+        "it": "Il dolore non è cambiato in modo misurabile entro {0} da una dose.",
+        "pt": "A dor não mudou de forma mensurável em {0} após uma dose."
+      }
+    },
+    {
+      "en": "{0} doses with a pain reading before and after",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} Dosen mit Schmerzwert davor und danach",
+        "es": "{0} dosis con registro de dolor antes y después",
+        "nl": "{0} doses met een pijnmeting ervoor en erna",
+        "fr": "{0} prises avec une mesure de douleur avant et après",
+        "it": "{0} dosi con una rilevazione del dolore prima e dopo",
+        "pt": "{0} doses com registo de dor antes e depois"
+      }
+    },
+    {
+      "en": "Attacks were at least {0} pain points milder than untreated attacks.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Attacken waren mindestens {0} Schmerzpunkte milder als unbehandelte Attacken.",
+        "es": "Los ataques fueron al menos {0} puntos de dolor más leves que los ataques sin tratar.",
+        "nl": "Aanvallen waren minstens {0} pijnpunten milder dan onbehandelde aanvallen.",
+        "fr": "Les crises étaient au moins {0} points de douleur moins fortes que les crises non traitées.",
+        "it": "Gli attacchi sono stati almeno {0} punti di dolore più lievi rispetto a quelli non trattati.",
+        "pt": "As crises foram pelo menos {0} pontos de dor mais leves do que as crises não tratadas."
+      }
+    },
+    {
+      "en": "No measurable benefit here — this was reached for on the worse attacks.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Kein messbarer Nutzen — dies wurde bei den schlimmeren Attacken eingesetzt.",
+        "es": "Sin beneficio medible: se recurrió a esto en los ataques peores.",
+        "nl": "Geen meetbaar voordeel — dit werd bij de zwaardere aanvallen gebruikt.",
+        "fr": "Aucun bénéfice mesurable — cela a été pris lors des crises les plus fortes.",
+        "it": "Nessun beneficio misurabile — è stato usato negli attacchi peggiori.",
+        "pt": "Sem benefício mensurável — foi usado nas crises piores."
+      }
+    },
+    {
+      "en": "Treated and untreated attacks were about equally severe.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Behandelte und unbehandelte Attacken waren etwa gleich schwer.",
+        "es": "Los ataques tratados y sin tratar fueron de gravedad similar.",
+        "nl": "Behandelde en onbehandelde aanvallen waren ongeveer even zwaar.",
+        "fr": "Les crises traitées et non traitées étaient de sévérité comparable.",
+        "it": "Gli attacchi trattati e non trattati sono stati di gravità simile.",
+        "pt": "As crises tratadas e não tratadas tiveram gravidade semelhante."
+      }
+    },
+    {
+      "en": "{0} treated attacks vs {1} untreated",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} behandelte Attacken vs. {1} unbehandelte",
+        "es": "{0} ataques tratados vs {1} sin tratar",
+        "nl": "{0} behandelde aanvallen vs {1} onbehandelde",
+        "fr": "{0} crises traitées vs {1} non traitées",
+        "it": "{0} attacchi trattati vs {1} non trattati",
+        "pt": "{0} crises tratadas vs {1} não tratadas"
+      }
+    },
+    {
+      "en": "Comparisons with untreated attacks are a floor, not a ceiling: treatments are reached for on the worse attacks, which understates the benefit.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Vergleiche mit unbehandelten Attacken sind eine Untergrenze, keine Obergrenze: Behandelt wird bei den schlimmeren Attacken, was den Nutzen untertreibt.",
+        "es": "Las comparaciones con ataques sin tratar son un mínimo, no un máximo: se recurre al tratamiento en los ataques peores, lo que subestima el beneficio.",
+        "nl": "Vergelijkingen met onbehandelde aanvallen zijn een ondergrens, geen bovengrens: er wordt behandeld bij de zwaardere aanvallen, wat het voordeel onderschat.",
+        "fr": "Les comparaisons avec les crises non traitées sont un minimum, pas un maximum : on traite les crises les plus fortes, ce qui sous-estime le bénéfice.",
+        "it": "I confronti con gli attacchi non trattati sono un limite minimo, non massimo: si ricorre al trattamento negli attacchi peggiori, il che sottostima il beneficio.",
+        "pt": "As comparações com crises não tratadas são um mínimo, não um máximo: trata-se nas crises piores, o que subestima o benefício."
+      }
+    },
+    {
+      "en": "Attacks ran about {0} hours shorter than untreated attacks of the same severity.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Attacken dauerten etwa {0} Stunden kürzer als unbehandelte Attacken derselben Schwere.",
+        "es": "Los ataques duraron unas {0} horas menos que los ataques sin tratar de la misma gravedad.",
+        "nl": "Aanvallen duurden ongeveer {0} uur korter dan onbehandelde aanvallen van dezelfde ernst.",
+        "fr": "Les crises ont duré environ {0} heures de moins que les crises non traitées de même sévérité.",
+        "it": "Gli attacchi sono durati circa {0} ore in meno rispetto a quelli non trattati di pari gravità.",
+        "pt": "As crises duraram cerca de {0} horas a menos do que as crises não tratadas da mesma gravidade."
+      }
+    },
+    {
+      "en": "Attacks ran about {0} hours longer than untreated attacks of the same severity.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Attacken dauerten etwa {0} Stunden länger als unbehandelte Attacken derselben Schwere.",
+        "es": "Los ataques duraron unas {0} horas más que los ataques sin tratar de la misma gravedad.",
+        "nl": "Aanvallen duurden ongeveer {0} uur langer dan onbehandelde aanvallen van dezelfde ernst.",
+        "fr": "Les crises ont duré environ {0} heures de plus que les crises non traitées de même sévérité.",
+        "it": "Gli attacchi sono durati circa {0} ore in più rispetto a quelli non trattati di pari gravità.",
+        "pt": "As crises duraram cerca de {0} horas a mais do que as crises não tratadas da mesma gravidade."
+      }
+    },
+    {
+      "en": "Attack length was about the same as untreated attacks of the same severity.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Die Attackendauer war etwa gleich wie bei unbehandelten Attacken derselben Schwere.",
+        "es": "La duración fue similar a la de los ataques sin tratar de la misma gravedad.",
+        "nl": "De aanvalsduur was ongeveer gelijk aan onbehandelde aanvallen van dezelfde ernst.",
+        "fr": "La durée était comparable à celle des crises non traitées de même sévérité.",
+        "it": "La durata è stata simile a quella degli attacchi non trattati di pari gravità.",
+        "pt": "A duração foi semelhante à das crises não tratadas da mesma gravidade."
+      }
+    },
+    {
+      "en": "Patient's own rating: {0}.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Eigene Bewertung des Patienten: {0}.",
+        "es": "Valoración del propio paciente: {0}.",
+        "nl": "Eigen beoordeling van de patiënt: {0}.",
+        "fr": "Évaluation du patient lui-même : {0}.",
+        "it": "Valutazione del paziente stesso: {0}.",
+        "pt": "Avaliação do próprio paciente: {0}."
+      }
+    },
+    {
+      "en": "{0} doses rated, used in {1} attacks",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} Dosen bewertet, in {1} Attacken eingesetzt",
+        "es": "{0} dosis valoradas, usado en {1} ataques",
+        "nl": "{0} doses beoordeeld, gebruikt bij {1} aanvallen",
+        "fr": "{0} prises évaluées, utilisé dans {1} crises",
+        "it": "{0} dosi valutate, usato in {1} attacchi",
+        "pt": "{0} doses avaliadas, usado em {1} crises"
+      }
+    },
+    {
+      "en": "Used in {0} attacks",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "In {0} Attacken eingesetzt",
+        "es": "Usado en {0} ataques",
+        "nl": "Gebruikt bij {0} aanvallen",
+        "fr": "Utilisé dans {0} crises",
+        "it": "Usato in {0} attacchi",
+        "pt": "Usado em {0} crises"
+      }
+    },
+    {
+      "en": "Treating within {0} went with a peak {1} points lower.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Behandeln innerhalb von {0} ging mit einer um {1} Punkte niedrigeren Spitze einher.",
+        "es": "Tratar en {0} se asoció con un pico {1} puntos más bajo.",
+        "nl": "Behandelen binnen {0} ging samen met een {1} punten lagere piek.",
+        "fr": "Traiter sous {0} allait de pair avec un pic inférieur de {1} points.",
+        "it": "Trattare entro {0} si è accompagnato a un picco più basso di {1} punti.",
+        "pt": "Tratar em {0} acompanhou um pico {1} pontos mais baixo."
+      }
+    },
+    {
+      "en": "Treating within {0} went with a peak {1} points higher.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Behandeln innerhalb von {0} ging mit einer um {1} Punkte höheren Spitze einher.",
+        "es": "Tratar en {0} se asoció con un pico {1} puntos más alto.",
+        "nl": "Behandelen binnen {0} ging samen met een {1} punten hogere piek.",
+        "fr": "Traiter sous {0} allait de pair avec un pic supérieur de {1} points.",
+        "it": "Trattare entro {0} si è accompagnato a un picco più alto di {1} punti.",
+        "pt": "Tratar em {0} acompanhou um pico {1} pontos mais alto."
+      }
+    },
+    {
+      "en": "Treating sooner went with the same peak severity.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Früher behandeln ging mit derselben Spitzenschwere einher.",
+        "es": "Tratar antes se asoció con el mismo pico de gravedad.",
+        "nl": "Eerder behandelen ging samen met dezelfde piekernst.",
+        "fr": "Traiter plus tôt allait de pair avec le même pic de sévérité.",
+        "it": "Trattare prima si è accompagnato allo stesso picco di gravità.",
+        "pt": "Tratar mais cedo acompanhou o mesmo pico de gravidade."
+      }
+    },
+    {
+      "en": "The cutoff is this patient's own median delay to treating, not a clinical threshold.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Die Grenze ist die eigene mediane Behandlungsverzögerung dieses Patienten, kein klinischer Schwellenwert.",
+        "es": "El corte es el retraso mediano propio de este paciente hasta tratar, no un umbral clínico.",
+        "nl": "De grens is de eigen mediane behandelvertraging van deze patiënt, geen klinische drempel.",
+        "fr": "Le seuil correspond au délai médian propre à ce patient avant de traiter, pas à un seuil clinique.",
+        "it": "La soglia è il ritardo mediano di questo paziente nel trattare, non una soglia clinica.",
+        "pt": "O corte é o atraso mediano do próprio paciente até tratar, não um limiar clínico."
+      }
+    },
+    {
+      "en": "Logged together",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Zusammen erfasst",
+        "es": "Registrados juntos",
+        "nl": "Samen genoteerd",
+        "fr": "Notés ensemble",
+        "it": "Registrati insieme",
+        "pt": "Registados juntos"
+      }
+    },
+    {
+      "en": "What each treatment went with in this patient's own attacks — correlation, not causation",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Womit jede Behandlung in den eigenen Attacken dieses Patienten einherging — Korrelation, keine Kausalität",
+        "es": "Con qué se asoció cada tratamiento en los propios ataques de este paciente: correlación, no causalidad",
+        "nl": "Waarmee elke behandeling samenging in de eigen aanvallen van deze patiënt — correlatie, geen oorzaak",
+        "fr": "Ce qui accompagnait chaque traitement dans les crises propres à ce patient — corrélation, pas causalité",
+        "it": "Con cosa si è accompagnato ogni trattamento negli attacchi di questo paziente — correlazione, non causalità",
+        "pt": "Com o que cada tratamento andou associado nas crises deste paciente — correlação, não causalidade"
+      }
+    },
+    {
+      "en": "n = {0}",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "n = {0}",
+        "es": "n = {0}",
+        "nl": "n = {0}",
+        "fr": "n = {0}",
+        "it": "n = {0}",
+        "pt": "n = {0}"
+      }
+    },
+    {
+      "en": "average {0} before attacks vs {1} otherwise",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Durchschnitt {0} vor Attacken vs. {1} sonst",
+        "es": "media {0} antes de los ataques vs {1} el resto",
+        "nl": "gemiddeld {0} vóór aanvallen vs {1} anders",
+        "fr": "moyenne {0} avant les crises vs {1} sinon",
+        "it": "media {0} prima degli attacchi vs {1} altrimenti",
+        "pt": "média {0} antes das crises vs {1} nos restantes"
+      }
+    },
+    {
+      "en": "How often each kind of relief was used, and the relief the patient reported",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Wie oft jede Art von Linderung genutzt wurde und welche Linderung der Patient angab",
+        "es": "Con qué frecuencia se usó cada tipo de alivio y el alivio que refirió el paciente",
+        "nl": "Hoe vaak elke soort verlichting is gebruikt en welke verlichting de patiënt meldde",
+        "fr": "À quelle fréquence chaque type de soulagement a été utilisé, et le soulagement rapporté par le patient",
+        "it": "Quanto spesso è stato usato ogni tipo di sollievo e il sollievo riferito dal paziente",
+        "pt": "Com que frequência cada tipo de alívio foi usado e o alívio relatado pelo paciente"
+      }
+    },
+    {
+      "en": "Used {0} times",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0}-mal genutzt",
+        "es": "Usado {0} veces",
+        "nl": "{0} keer gebruikt",
+        "fr": "Utilisé {0} fois",
+        "it": "Usato {0} volte",
+        "pt": "Usado {0} vezes"
+      }
+    },
+    {
+      "en": "typically {0}",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "meist {0}",
+        "es": "normalmente {0}",
+        "nl": "meestal {0}",
+        "fr": "généralement {0}",
+        "it": "di solito {0}",
+        "pt": "normalmente {0}"
+      }
+    },
+    {
+      "en": "typical relief reported",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "angegebene Linderung",
+        "es": "alivio referido",
+        "nl": "gemelde verlichting",
+        "fr": "soulagement rapporté",
+        "it": "sollievo riferito",
+        "pt": "alívio relatado"
+      }
+    },
+    {
+      "en": "Present on {0}% of migraine-free days vs {1}% of attack days",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "An {0}% der migränefreien Tage vorhanden vs. {1}% der Attackentage",
+        "es": "Presente en el {0}% de los días sin migraña vs {1}% de los días con ataque",
+        "nl": "Aanwezig op {0}% van de migrainevrije dagen vs {1}% van de aanvalsdagen",
+        "fr": "Présent sur {0}% des jours sans migraine vs {1}% des jours de crise",
+        "it": "Presente nel {0}% dei giorni senza emicrania vs {1}% dei giorni con attacco",
+        "pt": "Presente em {0}% dos dias sem crise vs {1}% dos dias com crise"
+      }
+    },
+    {
+      "en": "{0} migraine-free days · {1} attack days",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} migränefreie Tage · {1} Attackentage",
+        "es": "{0} días sin migraña · {1} días con ataque",
+        "nl": "{0} migrainevrije dagen · {1} aanvalsdagen",
+        "fr": "{0} jours sans migraine · {1} jours de crise",
+        "it": "{0} giorni senza emicrania · {1} giorni con attacco",
+        "pt": "{0} dias sem crise · {1} dias com crise"
+      }
+    },
+    {
+      "en": "{0} days with it · {1} days without",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} Tage damit · {1} Tage ohne",
+        "es": "{0} días con ello · {1} días sin",
+        "nl": "{0} dagen ermee · {1} dagen zonder",
+        "fr": "{0} jours avec · {1} jours sans",
+        "it": "{0} giorni con · {1} giorni senza",
+        "pt": "{0} dias com · {1} dias sem"
+      }
+    },
+    {
+      "en": "No relief rated for this.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Dafür wurde keine Linderung bewertet.",
+        "es": "No se valoró ningún alivio para esto.",
+        "nl": "Hiervoor is geen verlichting beoordeeld.",
+        "fr": "Aucun soulagement n'a été évalué pour cela.",
+        "it": "Nessun sollievo valutato per questo.",
+        "pt": "Não foi avaliado nenhum alívio para isto."
+      }
+    },
+    {
+      "en": "Works well = a measured benefit, or relief the patient rated high. Some help = a weaker measured benefit, or a mild rating. No clear effect = measured and nothing found, or rated low or none. Not enough yet = logged, with nothing to judge on.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "Wirkt gut = ein gemessener Nutzen oder eine vom Patienten als stark bewertete Linderung. Hilft etwas = ein schwächerer gemessener Nutzen oder eine mäßige Bewertung. Kein klarer Effekt = gemessen und nichts gefunden oder als gering bzw. keine bewertet. Zu wenig Daten = erfasst, aber nichts zu beurteilen.",
+        "es": "Funciona bien = un beneficio medido, o un alivio que el paciente valoró como alto. Algo de ayuda = un beneficio medido más débil, o una valoración moderada. Sin efecto claro = medido y sin hallazgos, o valorado como bajo o nulo. Datos insuficientes = registrado, pero sin nada que juzgar.",
+        "nl": "Werkt goed = een gemeten voordeel, of verlichting die de patiënt als sterk beoordeelde. Helpt iets = een zwakker gemeten voordeel, of een matige beoordeling. Geen duidelijk effect = gemeten en niets gevonden, of als weinig of geen beoordeeld. Te weinig data = genoteerd, maar niets om te beoordelen.",
+        "fr": "Efficace = un bénéfice mesuré, ou un soulagement que le patient a jugé fort. Aide un peu = un bénéfice mesuré plus faible, ou une évaluation modérée. Pas d'effet net = mesuré et rien trouvé, ou jugé faible ou nul. Données insuffisantes = noté, mais rien à juger.",
+        "it": "Funziona bene = un beneficio misurato, o un sollievo che il paziente ha valutato elevato. Aiuta un po' = un beneficio misurato più debole, o una valutazione moderata. Nessun effetto chiaro = misurato e nulla trovato, o valutato basso o nullo. Dati insufficienti = registrato, ma nulla da giudicare.",
+        "pt": "Funciona bem = um benefício medido, ou alívio que o paciente classificou como elevado. Ajuda um pouco = um benefício medido mais fraco, ou uma classificação moderada. Sem efeito claro = medido e nada encontrado, ou classificado como baixo ou nulo. Dados insuficientes = registado, mas sem nada para avaliar."
+      }
+    },
+    {
+      "en": "{0} further treatments were logged and are listed in the attack log.",
+      "why": "report What Worked / Insights rebuild: server-only copy, no app table has it",
+      "value": {
+        "de": "{0} weitere Behandlungen wurden erfasst und stehen im Attackenprotokoll.",
+        "es": "Se registraron {0} tratamientos más, que figuran en el registro de ataques.",
+        "nl": "Er zijn nog {0} behandelingen genoteerd; die staan in het aanvalslogboek.",
+        "fr": "{0} autres traitements ont été notés et figurent dans le journal des crises.",
+        "it": "Sono stati registrati altri {0} trattamenti, elencati nel diario degli attacchi.",
+        "pt": "Foram registados mais {0} tratamentos, listados no registo de crises."
+      }
     }
   ]
 }

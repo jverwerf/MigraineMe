@@ -104,7 +104,11 @@ export type CorrelationStat = {
   pct_migraine_windows: number | null;
   pct_control_windows: number | null;
   sample_size: number | null;
-  p_value: number;
+  /** NULL on rows where no statistical test ran — treatment rows whose only
+   *  evidence is the patient's own relief rating, and symptom-segment rows.
+   *  A rating is never converted into a p-value, so the column is nullable
+   *  and every reader has to say what it draws when there is no test. */
+  p_value: number | null;
   lag_details: Record<string, unknown> | null;
   symptom_outcome: string | null;
   symptom_segment: string | null;
