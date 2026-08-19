@@ -145,7 +145,7 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     val premiumState by PremiumManager.state.collectAsState()
 
     // ── Shared filter/search state (drives all three views) ──
-    var viewMode by rememberSaveable { mutableStateOf("Stream") }
+    var viewMode by rememberSaveable { mutableStateOf("Days") }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     // Multi-toggle category chips; empty = all categories active.
     var selectedCategoriesCsv by rememberSaveable { mutableStateOf("") }
@@ -929,10 +929,14 @@ private fun entryRowInfo(ev: JournalEvent, labels: Map<String, String>): EntryRo
 /** 3-segment Stream / Days / Calendar switch. */
 @Composable
 private fun JournalViewSwitch(mode: String, onMode: (String) -> Unit) {
+    // Days leads: the question a patient opens the Journal with is "what
+    // happened on a given day", not "show me everything in one river". Calendar
+    // is the month-level view of the same thing, so it sits beside it. Stream is
+    // the firehose and goes last — it used to be first and be the landing view.
     val segments = listOf(
-        Triple("Stream", Icons.Outlined.ViewAgenda, t("Stream")),
         Triple("Days", Icons.Outlined.GridView, t("Days")),
         Triple("Calendar", Icons.Outlined.CalendarMonth, t("Calendar")),
+        Triple("Stream", Icons.Outlined.ViewAgenda, t("Stream")),
     )
     Row(
         Modifier

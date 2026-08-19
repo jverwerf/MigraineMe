@@ -224,7 +224,7 @@ private fun CoreCanvas(
             }
 
             if (metricSeries.isNotEmpty() && metTop < metBot) { val chartH = metBot - metTop
-                metricSeries.forEach { series -> if (series.points.size < 2) return@forEach; val sorted = series.points.sortedBy { it.date }; val minV = sorted.minOf { it.value }; val maxV = sorted.maxOf { it.value }; val range = (maxV - minV).coerceAtLeast(0.01)
+                metricSeries.forEachIndexed { seriesIndex, series -> if (series.points.size < 2) return@forEachIndexed; val sorted = series.points.sortedBy { it.date }; val minV = sorted.minOf { it.value }; val maxV = sorted.maxOf { it.value }; val range = (maxV - minV).coerceAtLeast(0.01)
                     fun dateX(ds: String): Float { val ld = java.time.LocalDate.parse(ds); return xOf(ld.atStartOfDay(zone).toInstant().plusSeconds(43200)) }
                     fun valY(v: Double): Float { return metBot - ((v - minV) / range).toFloat().coerceIn(0f, 1f) * chartH * 0.85f }
                     val isNoise = isNoiseMetricKey(series.key)
@@ -246,8 +246,24 @@ private fun CoreCanvas(
                         drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
                         sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
                     }
-                    val first = sorted.first(); drawContext.canvas.nativeCanvas.drawText("${tSync(series.label)}: ${"%.1f".format(first.value)}${series.unit}", dateX(first.date) + 4f, valY(first.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true })
-                    if (sorted.size > 2) { val last = sorted.last(); drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(last.value)}", dateX(last.date) - 12f, valY(last.value) - 6f, Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true }) }
+                    // Every line used to be named at its left end, so with more
+                    // than two or three metrics the names piled up in the same
+                    // corner and the graph became unreadable — which defeats
+                    // naming them at all. Odd series carry their name on the
+                    // right instead, and the bare value goes to the opposite
+                    // end. Halves the crowding for free.
+                    val labelPaint = Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true }
+                    val first = sorted.first(); val last = sorted.last()
+                    val nameText = "${tSync(series.label)}: "
+                    if (seriesIndex % 2 == 0) {
+                        drawContext.canvas.nativeCanvas.drawText(nameText + "${"%.1f".format(first.value)}${series.unit}", dateX(first.date) + 4f, valY(first.value) - 6f, labelPaint)
+                        if (sorted.size > 2) drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(last.value)}", dateX(last.date) - 12f, valY(last.value) - 6f, labelPaint)
+                    } else {
+                        val nameOnRight = nameText + "${"%.1f".format(last.value)}${series.unit}"
+                        val tw = labelPaint.measureText(nameOnRight)
+                        drawContext.canvas.nativeCanvas.drawText(nameOnRight, dateX(last.date) - 4f - tw, valY(last.value) - 6f, labelPaint)
+                        if (sorted.size > 2) drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(first.value)}", dateX(first.date) + 12f, valY(first.value) - 6f, labelPaint)
+                    }
                 }
             }
         }
