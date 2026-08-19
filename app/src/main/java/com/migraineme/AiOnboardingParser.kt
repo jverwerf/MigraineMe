@@ -122,22 +122,11 @@ object AiOnboardingParser {
     private val CYCLE_TIMING_VALUES = setOf("1-2 days before", "3-5 days before", "During my period", "1-2 days after")
     private val USES_CONTRACEPTION_VALUES = setOf("Yes", "No")
     private val TRACKS_CYCLE_VALUES = AiSetupOptions.TRACKS_CYCLE.toSet()
-    // The wizard's four certainty chips, as English keys the six language tables
-    // carry. Used only to canonicalise a certainty that came back translated.
-    private val CERTAINTY_CHIP_LABELS = setOf("None", "Low", "Mild", "High")
     // Note: em-dash (—), not hyphen — must match AiSetupQuestions.kt:479 exactly.
     private val CONTRACEPTION_EFFECT_VALUES = AiSetupOptions.CONTRACEPTION_EFFECT.toSet()
     private val PHYSICAL_PRODROMES_KEYS = setOf("Neck stiffness", "Yawning", "Urination", "Stuffy nose", "Watery eyes", "Muscle tension")
     private val MOOD_PRODROMES_KEYS = setOf("Concentrating", "Words", "Irritability", "Mood swings", "Feeling low", "Unusually happy", "Food cravings", "Loss of appetite")
     private val SENSORY_PRODROMES_KEYS = setOf("Light", "Sound", "Smell", "Tingling", "Numbness")
-
-    private fun certaintyForChipLabel(label: String): DeterministicMapper.Certainty? = when (label) {
-        "High" -> DeterministicMapper.Certainty.EVERY_TIME
-        "Mild" -> DeterministicMapper.Certainty.OFTEN
-        "Low"  -> DeterministicMapper.Certainty.SOMETIMES
-        "None" -> DeterministicMapper.Certainty.NO
-        else   -> null
-    }
 
     /**
      * Deterministic pre-parse: match pool labels against the story text.
@@ -398,17 +387,21 @@ object AiOnboardingParser {
         // same stored severity ("LOW") via certaintyToSeverity, so the chip
         // shown and the trigger written agree.
         //
-        // If it is not a wire value at all, it may be a translated chip label —
-        // the parser sometimes answers in the user's language. The chip
-        // vocabulary (None/Low/Mild/High) is in the six tables, so it can be
-        // canonicalised the same way every other option list is. The wire words
-        // themselves (OFTEN, RARELY...) are identifiers and are NOT in the
-        // tables, so a model that localises those specifically still falls
-        // through to null — see the report accompanying this change.
+        // If it is not a wire value at all, it may be the answer in the user's
+        // own language — the parser is handed the story in that language and
+        // sometimes replies in it, which is how "Nee" got into tracks_cycle in
+        // production. [CertaintyWords] is the one place that knows the
+        // certainty vocabulary in the six shipped languages: chip labels
+        // resolved through the translation tables, plus the frequency words
+        // ("Oft", "Selten") the tables do not carry. It is scoped to certainty
+        // and consulted only after the exact wire value failed, so it can
+        // rescue a dropped answer but never rewrite a correct one, and it
+        // returns null for anything it does not recognise so a hallucinated
+        // value is still discarded rather than guessed at.
         fun parseCert(raw: String?): DeterministicMapper.Certainty? {
             val trimmed = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
             val c = runCatching { DeterministicMapper.Certainty.valueOf(trimmed.uppercase()) }.getOrNull()
-                ?: Strings.canonicalEnglish(trimmed, CERTAINTY_CHIP_LABELS)?.let(::certaintyForChipLabel)
+                ?: CertaintyWords.fromLocalisedWord(trimmed)
                 ?: return null
             return if (c == DeterministicMapper.Certainty.RARELY) DeterministicMapper.Certainty.SOMETIMES else c
         }
