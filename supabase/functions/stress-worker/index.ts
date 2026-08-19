@@ -175,12 +175,13 @@ async function computeOne(
   if (msErr) throw new Error(`metric_settings read failed: ${msErr.message}`);
   if (!stressSetting?.enabled) return { status: "skipped", reason: "stress_index_disabled" };
 
-  // Garmin writes a native device stress value directly (garmin-webhook /
-  // sync-worker-garmin), so don't overwrite it. All other sources (incl. WHOOP,
-  // Oura, Health Connect) have no native stress — compute it from HRV + RHR.
+  // Garmin and Oura write native device stress values directly (garmin-webhook /
+  // sync-worker-garmin / sync-worker-oura), so don't overwrite them. Other
+  // sources (WHOOP, Polar, Health Connect) have no native stress — compute it
+  // from HRV + RHR.
   const prefSource = (stressSetting.preferred_source ?? "").toLowerCase();
-  if (prefSource === "garmin") {
-    return { status: "skipped", reason: "stress_provided_by_garmin" };
+  if (prefSource === "garmin" || prefSource === "oura") {
+    return { status: "skipped", reason: `stress_provided_by_${prefSource}` };
   }
 
   const [{ data: hrvRow, error: hrvErr }, { data: rhrRow, error: rhrErr }] = await Promise.all([
