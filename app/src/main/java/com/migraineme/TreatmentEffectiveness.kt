@@ -117,6 +117,24 @@ internal fun hoursText(hours: Float): String = "${trimNum(hours)}h"
 internal fun cutoffText(minutes: Int): String =
     if (minutes < 90) tSync("%s min", minutes) else "${trimNum(minutes / 60f)}h"
 
+/** "2 hours" / "1 hour" / "30 min". Plain English, for the pain-response line. */
+internal fun horizonPhrase(minutes: Int): String = when {
+    minutes % 60 != 0 -> tSync("%s min", minutes)
+    minutes == 60 -> tSync("1 hour")
+    else -> tSync("%s hours", minutes / 60)
+}
+
+/**
+ * "−2.0 pts" / "+0.6 pts". Pain points with their sign kept: a rise is a real
+ * finding and is never flipped or hidden. One decimal, because this is the
+ * measured within-attack change and rounding it to a whole point would overstate
+ * the precision the other way.
+ */
+internal fun painPointsText(points: Float): String {
+    val sign = if (points > 0f) "+" else "−"
+    return tSync("%s pts", sign + String.format("%.1f", kotlin.math.abs(points)))
+}
+
 /** The user's own relief scale. Index i is the label for score i. */
 private val RELIEF_SCALE = listOf("none", "low", "mild", "high")
 
@@ -289,7 +307,7 @@ fun evidenceText(e: TreatmentEvidence): String = when (e) {
 }
 
 /** Same four words the user picked when logging, translated. */
-private fun reliefWordText(word: String): String = when (word) {
+internal fun reliefWordText(word: String): String = when (word) {
     "high" -> tSync("high")
     "mild" -> tSync("mild")
     "low" -> tSync("low")
@@ -453,9 +471,22 @@ private fun WhatWorkedTile(
         Spacer(Modifier.height(6.dp))
         Text(evidenceText(row.evidence), color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.labelSmall)
+        // Timing is a sub-finding of the row above it, not a second finding, so
+        // it is indented behind a rule and keyed TIMING rather than sitting flush
+        // with the evidence line and reading as an equal claim.
         row.timing?.let {
-            Spacer(Modifier.height(3.dp))
-            Text(timingText(it), color = metaColor, style = MaterialTheme.typography.labelSmall)
+            Spacer(Modifier.height(5.dp))
+            Row(Modifier.height(IntrinsicSize.Min)) {
+                Box(Modifier.width(2.dp).fillMaxHeight()
+                    .background(AppTheme.AccentPurple.copy(alpha = 0.35f)))
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Text(t("Timing").uppercase(), color = Color(0xFFC9BCDA),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                    Text(timingText(it), color = metaColor,
+                        style = MaterialTheme.typography.labelSmall)
+                }
+            }
         }
         Spacer(Modifier.height(5.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -463,5 +494,286 @@ private fun WhatWorkedTile(
             // Always drawn. One lit dot for a weak result is correct.
             ConfidenceDotsCount(row.dots, Color(0xFF81C784))
         }
+    }
+}
+
+// ── Shared row furniture for cards 2, 3 and 4 ───────────────────────────────
+
+internal val TreatmentTileShape = RoundedCornerShape(18.dp)
+internal val TreatmentMetaColor = Color(0xFF9C8BB0)
+internal val TreatmentGood = Color(0xFF81C784)
+internal val TreatmentWarn = Color(0xFFFFB74D)
+
+/** Same tile the What Worked rows sit in, so the four cards read as one page. */
+@Composable
+internal fun TreatmentTile(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(TreatmentTileShape)
+            .background(Color.White.copy(alpha = 0.035f))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), TreatmentTileShape)
+            .padding(horizontal = 16.dp, vertical = 13.dp),
+        content = content,
+    )
+}
+
+/** "confidence ●●○" — the same footer on every row that carries a finding. */
+@Composable
+internal fun TreatmentConfidenceRow(dots: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(t("confidence"), color = TreatmentMetaColor, style = MaterialTheme.typography.labelSmall)
+        ConfidenceDotsCount(dots, TreatmentGood)
+    }
+}
+
+/** The trailing column: the verdict, or on card 2 the measured change. */
+@Composable
+internal fun TreatmentTrailingText(text: String, color: Color) {
+    Text(
+        text,
+        color = color,
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+        textAlign = TextAlign.End,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+// ── Card 2: within the attack ───────────────────────────────────────────────
+
+/**
+ * Pain response. What the pain did in the hours after a dose, measured inside
+ * the same attack — the app's native equivalent of the clinical 2-hour endpoint.
+ *
+ * The change is the headline, in pain points with its sign kept. A treatment
+ * after which pain consistently ROSE is shown as such, in the warning colour,
+ * never hidden and never sign-flipped. The bar underneath is the proportion of
+ * doses that moved the way the median did, so a big change measured on a split
+ * decision does not read as a settled one.
+ */
+@Composable
+fun PainResponseCard(
+    rows: List<EdgeFunctionsService.IntradayResponseStat>,
+    watermark: Boolean = false,
+) {
+    if (rows.isEmpty()) return
+    val sorted = remember(rows) { rows.sortedByDescending { kotlin.math.abs(it.medianEffect) } }
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
+        Column(Modifier.fillMaxWidth()) {
+            Text(t("Pain response"), color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time."),
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        }
+        Spacer(Modifier.height(8.dp))
+        sorted.forEach { row ->
+            val rising = row.medianEffect > 0f
+            val color = if (rising) TreatmentWarn else TreatmentGood
+            // consistency is the fraction of doses that moved the median's way,
+            // so it converts back to the count the user can check against.
+            val hits = Math.round(row.consistency * row.n).coerceIn(0, row.n)
+            TreatmentTile {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyRowIcon(row.label, size = 20.dp)
+                    Text(prettyLabel(row.label), color = Color(0xFFF3EAFB),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(10.dp))
+                    TreatmentTrailingText(painPointsText(row.medianEffect), color)
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (rising) t("pain rose after these doses, in %1\$s of %2\$s", hits, row.n)
+                    else t("by %1\$s, in %2\$s of %3\$s doses", horizonPhrase(row.horizonMinutes), hits, row.n),
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.height(5.dp))
+                TreatmentConfidenceRow(dotsForP(row.pValue))
+                Spacer(Modifier.height(7.dp))
+                ProportionBar(row.consistency, color)
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        Text(t("Compared with your pain entries in the 3 hours before each log."),
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+/** How much of the evidence pulled the same way. Static — no animation, ever. */
+@Composable
+private fun ProportionBar(fraction: Float, color: Color) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(RoundedCornerShape(3.dp))
+            .background(Color.White.copy(alpha = 0.07f))
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(3.dp))
+                .background(color)
+        )
+    }
+}
+
+/** The dot thresholds the whole app uses. Floors at one, never zero. */
+internal fun dotsForP(p: Float?): Int {
+    val v = p ?: return 1
+    return if (v < 0.01f) 3 else if (v < 0.05f) 2 else 1
+}
+
+// ── Card 3: pairs ───────────────────────────────────────────────────────────
+
+/**
+ * Pairs the user reaches for in the same attack.
+ *
+ * These rows are still the pre-v2 combination analysis (contract §7): their
+ * lift_ratio and lag_details.duration_lift / severity_lift give every treatment
+ * in an attack full credit for that attack's outcome, so none of them is
+ * rendered — a verdict off that number would be the borrowed-credit multiplier
+ * with a word in front of it. What is true here is how often the pair was
+ * actually used together, and the dots carry the rest.
+ *
+ * `sample_size` on an interaction row is the user's TOTAL attack count, not the
+ * pair's; the pair count is pct_migraine_windows of it. The old copy printed
+ * sample_size as "used together in N of your attacks", which was the whole
+ * history every time.
+ */
+@Composable
+fun UsedTogetherCard(
+    rows: List<EdgeFunctionsService.CorrelationStat>,
+    watermark: Boolean = false,
+) {
+    if (rows.isEmpty()) return
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
+        Column(Modifier.fillMaxWidth()) {
+            Text(t("Used Together"), color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(t("Pairs you reach for in the same attack, and how those attacks went."),
+                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        }
+        Spacer(Modifier.height(8.dp))
+        rows.take(6).forEach { stat ->
+            val together = Math.round(stat.pctMigraineWindows / 100f * stat.sampleSize)
+                .coerceIn(0, stat.sampleSize)
+            TreatmentTile {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyRowIcon(stat.factorName, size = 20.dp)
+                    Text("${prettyLabel(stat.factorName)}  +  ${prettyLabel(stat.factorB)}",
+                        color = Color(0xFFF3EAFB),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(t("Used together in %1\$s of your %2\$s attacks", together, stat.sampleSize),
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.height(5.dp))
+                TreatmentConfidenceRow(stat.confidenceDots)
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        Text(t("How the pair itself changed an attack is not measured yet — this is how often you reached for both."),
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+// ── Card 4: symptom segments ────────────────────────────────────────────────
+
+/** avg_relief_with / avg_relief_without, with the legacy column as the fallback. */
+internal fun EdgeFunctionsService.CorrelationStat.segmentReliefWith(): Float =
+    (lagDetails?.get("avg_relief_with") as? JsonPrimitive)?.content?.toFloatOrNull() ?: pctMigraineWindows
+internal fun EdgeFunctionsService.CorrelationStat.segmentReliefWithout(): Float =
+    (lagDetails?.get("avg_relief_without") as? JsonPrimitive)?.content?.toFloatOrNull() ?: pctControlWindows
+internal fun EdgeFunctionsService.CorrelationStat.segmentNWith(): Int =
+    (lagDetails?.get("n_with") as? JsonPrimitive)?.content?.toFloatOrNull()?.toInt() ?: 0
+internal fun EdgeFunctionsService.CorrelationStat.segmentNWithout(): Int =
+    (lagDetails?.get("n_without") as? JsonPrimitive)?.content?.toFloatOrNull()?.toInt() ?: 0
+
+/** The user's own relief scale, as a word. Never the raw 0-3 number. */
+private fun segmentReliefWord(v: Float): String =
+    reliefWordText(RELIEF_SCALE.getOrElse(Math.round(v).coerceIn(0, 3)) { "none" })
+
+/**
+ * Whether a treatment lands differently depending on the symptoms present.
+ *
+ * One row per treatment — its strongest segment — rather than a treatment
+ * heading with every segment stacked under it, so the card scans as a list of
+ * findings like the other three. These rows compare two RATING averages and no
+ * statistical test runs on them (contract §6), so lift_ratio is a constant here
+ * and direction has to come from the two averages themselves.
+ */
+@Composable
+fun WorksBestWhenCard(
+    rows: List<EdgeFunctionsService.CorrelationStat>,
+    watermark: Boolean = true,
+) {
+    if (rows.isEmpty()) return
+    // Half a point apart on the 0-3 relief scale is the smallest gap worth
+    // calling a difference.
+    fun gap(s: EdgeFunctionsService.CorrelationStat) = s.segmentReliefWith() - s.segmentReliefWithout()
+    val best = remember(rows) {
+        rows.groupBy { it.factorName }
+            .mapNotNull { (_, list) -> list.maxByOrNull { kotlin.math.abs(gap(it)) } }
+            .sortedByDescending { kotlin.math.abs(gap(it)) }
+    }
+    var sortMode by remember { mutableStateOf("Strongest effect") }
+    val sorted = remember(best, sortMode) {
+        when (sortMode) {
+            "A to Z" -> best.sortedBy { it.factorName.lowercase() }
+            "Newest" -> best.sortedByDescending { it.updatedAt }
+            "Oldest" -> best.sortedBy { it.updatedAt }
+            else -> best
+        }
+    }
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(t("Works Best When…"), color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Whether a treatment lands differently depending on the symptoms you had."),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+            SortChipMenu(sortMode, listOf("Strongest effect", "A to Z", "Newest", "Oldest")) { sortMode = it }
+        }
+        Spacer(Modifier.height(8.dp))
+        sorted.take(6).forEach { stat ->
+            val symptom = prettyLabel(stat.symptomSegment)
+            val d = gap(stat)
+            val verdict = when {
+                d > 0.5f -> t("Better with %s", symptom)
+                d < -0.5f -> t("Better without %s", symptom)
+                else -> t("Much the same")
+            }
+            val color = if (kotlin.math.abs(d) > 0.5f) TreatmentGood else AppTheme.SubtleTextColor
+            TreatmentTile {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BrainyRowIcon(stat.factorName, size = 20.dp)
+                    Text(prettyLabel(stat.factorName), color = Color(0xFFF3EAFB),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(10.dp))
+                    TreatmentTrailingText(verdict, color)
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (kotlin.math.abs(d) > 0.5f)
+                        t("%1\$s relief on %2\$s attacks with %3\$s, against %4\$s on %5\$s without",
+                            segmentReliefWord(stat.segmentReliefWith()), stat.segmentNWith(), symptom,
+                            segmentReliefWord(stat.segmentReliefWithout()), stat.segmentNWithout())
+                    else t("no meaningful difference across your symptoms"),
+                    color = AppTheme.BodyTextColor, style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.height(5.dp))
+                TreatmentConfidenceRow(stat.confidenceDots)
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        Text(t("Relief levels come from what you logged after using the treatment."),
+            color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.labelSmall)
     }
 }

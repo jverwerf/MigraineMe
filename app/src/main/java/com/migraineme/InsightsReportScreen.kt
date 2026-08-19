@@ -189,6 +189,8 @@ fun InsightsReportScreen(
     val auraZonesByMigraine by vm.auraZonesByMigraine.collectAsState()
     val painMigration by vm.painMigration.collectAsState()
     val treatmentTiming by vm.treatmentTiming.collectAsState()
+    val intradayResponse by vm.intradayResponse.collectAsState()
+    val symptomSegments by vm.symptomSegments.collectAsState()
     val medicineItems by vm.medicineItems.collectAsState()
     val reliefItems by vm.reliefItems.collectAsState()
     val medicineCategories by vm.medicineCategories.collectAsState()
@@ -825,6 +827,17 @@ fun InsightsReportScreen(
                     timing = treatmentTiming,
                 )
             }
+            // Cards 2, 3 and 4 of the What Worked page, carried into the report
+            // verbatim. A clinician reading the export sees the same four cards,
+            // in the same order, saying the same things as the screen the
+            // patient is looking at.
+            val reportEasers = remember(intradayResponse) {
+                intradayResponse.filter { it.eventKind == "easer" }
+            }
+            val reportCombos = remember(correlationStats) {
+                correlationStats.filter { it.factorType == "treatment_interaction" && it.isRealCombo }
+                    .sortedByDescending { it.sampleSize }
+            }
             if (reportWhatWorked.isNotEmpty()) {
                 Column {
                     WhatWorkedCard(
@@ -840,6 +853,15 @@ fun InsightsReportScreen(
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                 }
+            }
+            if (reportEasers.isNotEmpty()) {
+                PainResponseCard(reportEasers, watermark = false)
+            }
+            if (reportCombos.isNotEmpty()) {
+                UsedTogetherCard(reportCombos, watermark = false)
+            }
+            if (symptomSegments.isNotEmpty()) {
+                WorksBestWhenCard(symptomSegments, watermark = false)
             }
 
             // ========== 3b. WHAT'S HELPING (Well Done layer, all-time) ==========
