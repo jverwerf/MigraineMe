@@ -752,13 +752,13 @@ private fun SetupLandingPage() {
         Text(t("We'll connect your wearables, choose health metrics to track, then AI will personalise your entire app. Takes a few minutes."),
             color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp))
         Spacer(Modifier.height(28.dp))
-        SetupStepPreview(Icons.Outlined.Lock, "1. Permissions", "Location, notifications, microphone, calendar")
+        SetupStepPreview(Icons.Outlined.Lock, t("1. Permissions"), t("Location, notifications, microphone, calendar"))
         Spacer(Modifier.height(8.dp))
-        SetupStepPreview(Icons.Outlined.Link, "2. Connect", "Health Connect, Oura, Polar, Garmin")
+        SetupStepPreview(Icons.Outlined.Link, t("2. Connect"), t("Health Connect, Oura, Polar, Garmin"))
         Spacer(Modifier.height(8.dp))
-        SetupStepPreview(Icons.Outlined.Storage, "3. Configure", "Choose which data to collect")
+        SetupStepPreview(Icons.Outlined.Storage, t("3. Configure"), t("Choose which data to collect"))
         Spacer(Modifier.height(8.dp))
-        SetupStepPreview(Icons.Outlined.AutoAwesome, "4. AI Personalisation", "Answer questions about your migraines, AI configures everything")
+        SetupStepPreview(Icons.Outlined.AutoAwesome, t("4. AI Personalisation"), t("Answer questions about your migraines, AI configures everything"))
         Spacer(Modifier.height(14.dp))
         // Pointer to the policy; iOS and the RN apps carry the same line.
         Text(

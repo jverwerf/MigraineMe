@@ -278,11 +278,11 @@ private fun CompanionCard(
             val displayName = companion.name.replace(" The AI", "").replace(" the AI", "")
             val description = buildString {
                 if (companion.triggers.isNotEmpty()) {
-                    append("$displayName covers ${companion.triggers.joinToString(", ")}.")
+                    append(tSync("%1\$s covers %2\$s.", displayName, companion.triggers.joinToString(", ") { tSync(it) }))
                 }
                 if (companion.interests.isNotEmpty()) {
                     if (isNotEmpty()) append(" ")
-                    append("Interested in ${companion.interests.joinToString(", ")}.")
+                    append(tSync("Interested in %1\$s.", companion.interests.joinToString(", ") { tSync(it) }))
                 }
             }
             if (description.isNotBlank()) {
@@ -360,7 +360,7 @@ private fun CompanionSelectCard(
                     }
                     if (companion.triggers.isNotEmpty()) {
                         Text(
-                            companion.triggers.joinToString(", "),
+                            companion.triggers.joinToString(", ") { tSync(it) },
                             color = AppTheme.AccentPurple,
                             style = MaterialTheme.typography.labelSmall,
                             maxLines = 1,
@@ -385,11 +385,11 @@ private fun CompanionSelectCard(
             val displayName = companion.name.replace(" The AI", "").replace(" the AI", "")
             val description = buildString {
                 if (companion.triggers.isNotEmpty()) {
-                    append("$displayName covers ${companion.triggers.joinToString(", ")}.")
+                    append(tSync("%1\$s covers %2\$s.", displayName, companion.triggers.joinToString(", ") { tSync(it) }))
                 }
                 if (companion.interests.isNotEmpty()) {
                     if (isNotEmpty()) append(" ")
-                    append("Interested in ${companion.interests.joinToString(", ")}.")
+                    append(tSync("Interested in %1\$s.", companion.interests.joinToString(", ") { tSync(it) }))
                 }
             }
             if (description.isNotBlank()) {

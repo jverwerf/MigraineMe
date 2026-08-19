@@ -60,6 +60,22 @@
     "line": "                if (isUndone) t(\"Removed\") else t(\"Saved as %1\\$s: %2\\$s\", type, label),"
   },
   {
+    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:281",
+    "line": "                    append(tSync(\"%1\\$s covers %2\\$s.\", displayName, companion.triggers.joinToString(\", \") { tSync(it) }))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:285",
+    "line": "                    append(tSync(\"Interested in %1\\$s.\", companion.interests.joinToString(\", \") { tSync(it) }))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:388",
+    "line": "                    append(tSync(\"%1\\$s covers %2\\$s.\", displayName, companion.triggers.joinToString(\", \") { tSync(it) }))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/CompanionsScreen.kt:392",
+    "line": "                    append(tSync(\"Interested in %1\\$s.\", companion.interests.joinToString(\", \") { tSync(it) }))"
+  },
+  {
     "site": "app/src/main/java/com/migraineme/CustomizeTriggersScreen.kt:104",
     "line": "                    t(\"Configure which health patterns should automatically create triggers. \") +"
   },
@@ -188,11 +204,11 @@
     "line": "                    text = if (isCustomRange) t(\"Custom: %1\\$s – %2\\$s\", startDate.format(dateFormat), endDate.format(dateFormat)) else t(\"Custom range…\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:809",
+    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:823",
     "line": "                    Text(t(\"%1\\$s%2\\$sm \\u2022 Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"\\u2014\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:816",
+    "site": "app/src/main/java/com/migraineme/GraphAttachmentPicker.kt:830",
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
@@ -240,95 +256,91 @@
     "line": "                                Text(t(\"%1\\$s%% · %2\\$s attacks\", pct, s.totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:160",
-    "line": "                        Text(t(\"%1\\$s%% vs %2\\$s%% of days\", condPct.toInt(), baselinePct.toInt()),"
+    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:159",
+    "line": "                        Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\", condPct.toInt(), baselinePct.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1286",
-    "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1718",
-    "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1820",
-    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1827",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2261",
-    "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:749",
-    "line": "                            Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], seasonalCounts[worstIdx], String.format(\"%.0f\", pct)),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:987",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1010",
     "line": "                        t(\"Showing %1\\$s of %2\\$s attacks · the PDF includes all %3\\$s\", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1279",
-    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1309",
+    "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1286",
-    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1370",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1741",
     "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1692",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1843",
+    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1850",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2284",
+    "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:755",
+    "line": "                            Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], seasonalCounts[worstIdx], String.format(\"%.0f\", pct)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1305",
+    "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1312",
+    "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1396",
+    "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1738",
     "line": "                    Text(t(\"%1\\$s within %2\\$s\", effectText, horizonText(row.horizonMinutes)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2930",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2135",
+    "line": "                    Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2561",
     "line": "                        Text(t(\"%1\\$s migraines (%2\\$s%%)\", item.count, item.pctOfMigraines.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3084",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2715",
     "line": "                    Text(t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), timed),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3689",
-    "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 %3\\$s\\u00D7 the average day.\", w.dayName, String.format(\"%.0f\", w.pct), String.format(\"%.1f\", ratio)),"
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3236",
+    "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 about %3\\$s times an average day.\", w.dayName, String.format(\"%.0f\", w.pct), trimLift(ratio)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:557",
-    "line": "                        CardPreviewEntry(it.factorName, tSync(\"×%1\\$s · %2\\$s%% of attacks\","
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:568",
+    "line": "                            tSync(\"%1\\$s · %2\\$s%% of attacks\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:571",
-    "line": "                        CardPreviewEntry(item.name, tSync(\"relief %1\\$s · %2\\$s×\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:584",
-    "line": "                        CardPreviewEntry(it.factorName, tSync(\"×%1\\$s on attack-free days\","
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:597",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:617",
     "line": "                        CardPreviewEntry(it.name, tSync(\"%1\\$s attacks · %2\\$s%%\", it.count, it.pctOfMigraines.toInt()))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:616",
-    "line": "            add(CardPreviewEntry(it.name, tSync(\"missed %1\\$s× · %2\\$s%%\", it.totalMissed, it.pctOfMigraines.toInt())))"
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:631",
+    "line": "                tSync(\"in %1\\$s attacks · %2\\$s%%\", count, count * 100 / totalMigsHub),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsTreatmentsScreen.kt:169",
-    "line": "                        Text(t(\"With %1\\$s: %2\\$s · Without: %3\\$s\", prettyLabel(stat.symptomSegment), reliefLabel(withRelief), reliefLabel(withoutRelief)),"
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:636",
+    "line": "            add(CardPreviewEntry(it.name, tSync(\"missed %1\\$s times · %2\\$s%%\", it.totalMissed, it.pctOfMigraines.toInt())))"
   },
   {
     "site": "app/src/main/java/com/migraineme/InsightsWeatherPanel.kt:81",
     "line": "                        t(\"Nearest: %s\", city.label) + (city.timezone?.let { \"  •  $it\" } ?: \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsWhatsHelpingScreen.kt:194",
+    "site": "app/src/main/java/com/migraineme/InsightsWhatsHelpingScreen.kt:197",
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
@@ -468,7 +480,7 @@
     "line": "                    t(\"and a 14-day stacked-bar history chart you can filter by medicine or category.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:507",
+    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:513",
     "line": "                t(\"%1\\$s meals • %2\\$s items today\", mealTypes.size, nutritionItems.size),"
   },
   {
@@ -480,43 +492,43 @@
     "line": "        Text(t(\"%1\\$s weeks in · %2\\$s attacks tracked%3\\$s\", e.weeksActive, e.nAttacksRolling, trustNote),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:562",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:567",
     "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:563",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:568",
     "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:564",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:569",
     "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:565",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
     "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:566",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:571",
     "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:567",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:572",
     "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:568",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:573",
     "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:569",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:574",
     "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:575",
     "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:571",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:576",
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {
@@ -560,7 +572,7 @@
     "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/PremiumGate.kt:302",
+    "site": "app/src/main/java/com/migraineme/PremiumGate.kt:479",
     "line": "            t(\"You have %1\\$s migraines, %2\\$s triggers, and %3\\$s treatments logged.\", migraineCount, triggerCount, treatmentCount),"
   },
   {
@@ -650,6 +662,50 @@
   {
     "site": "app/src/main/java/com/migraineme/StoreUnavailableNotice.kt:51",
     "line": "                t(\"yet. You haven't been charged. This is usually temporary.\"),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:283",
+    "line": "        tSync(\"Pain dropped about %1\\$s points within 2 hours, over %2\\$s uses\", trimNum(e.points), e.uses)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:285",
+    "line": "        tSync(\"Pain rose about %1\\$s points within 2 hours, over %2\\$s uses\", trimNum(e.points), e.uses)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:291",
+    "line": "        tSync(\"At least about %1\\$s points less pain than attacks you treated with nothing, over %2\\$s uses\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:298",
+    "line": "        tSync(\"Attacks ended about %1\\$s sooner, over %2\\$s uses\", hoursText(e.hours), e.uses)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:300",
+    "line": "        tSync(\"Attacks ran about %1\\$s longer, over %2\\$s uses\", hoursText(e.hours), e.uses)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:304",
+    "line": "        tSync(\"You rated it %1\\$s relief, over %2\\$s uses\", reliefWordText(e.word), e.uses)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:323",
+    "line": "    tSync(\"Taken within %1\\$s (your median delay): peak %2\\$s · later: peak %3\\$s\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:587",
+    "line": "                    if (rising) t(\"pain rose after these doses, in %1\\$s of %2\\$s\", hits, row.n)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:588",
+    "line": "                    else t(\"by %1\\$s, in %2\\$s of %3\\$s doses\", horizonPhrase(row.horizonMinutes), hits, row.n),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:672",
+    "line": "                Text(t(\"Used together in %1\\$s of your %2\\$s attacks\", together, stat.sampleSize),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:765",
+    "line": "                        t(\"%1\\$s relief on %2\\$s attacks with %3\\$s, against %4\\$s on %5\\$s without\","
   },
   {
     "site": "app/src/main/java/com/migraineme/TriggersSettingsScreen.kt:107",
