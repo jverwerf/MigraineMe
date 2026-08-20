@@ -29,7 +29,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -616,7 +620,7 @@ private fun ChatBubble(message: ChatMessage, onReport: (() -> Unit)? = null) {
             modifier = Modifier.widthIn(max = 300.dp)
         ) {
             Text(
-                text = message.content,
+                text = renderChatMarkdown(message.content),
                 color = Color.White.copy(
                     alpha = if (isUser) 0.95f else 0.85f
                 ),
@@ -765,6 +769,35 @@ private fun PremiumRequiredCard(onUpgrade: () -> Unit) {
             ) {
                 Text(t("Upgrade"), color = Color.White)
             }
+        }
+    }
+}
+
+/**
+ * The assistant answers in light markdown — **bold** run-ins and "- " bullets.
+ * Rendered as a plain string those markers showed up literally in the bubble
+ * ("**Sleep**: ..."), which reads like a bug to the user and got baked into
+ * store screenshots. Parse the two forms we actually receive; anything else
+ * passes through untouched.
+ */
+private fun renderChatMarkdown(raw: String): AnnotatedString = buildAnnotatedString {
+    raw.lines().forEachIndexed { lineIndex, line ->
+        if (lineIndex > 0) append("\n")
+        val body = if (line.startsWith("- ") || line.startsWith("* ")) {
+            append("•  ")
+            line.substring(2)
+        } else line
+        var i = 0
+        while (i < body.length) {
+            val open = body.indexOf("**", i)
+            if (open < 0) { append(body.substring(i)); break }
+            val close = body.indexOf("**", open + 2)
+            if (close < 0) { append(body.substring(i)); break }
+            append(body.substring(i, open))
+            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                append(body.substring(open + 2, close))
+            }
+            i = close + 2
         }
     }
 }
