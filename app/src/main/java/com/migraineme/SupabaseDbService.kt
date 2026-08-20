@@ -277,7 +277,8 @@ class SupabaseDbService(
         val postdromes: List<SymptomLogRow> = emptyList(),
         val activities: List<ActivityLogRow> = emptyList(),
         val locations: List<LocationLogRow> = emptyList(),
-        val painPoints: List<PainPointRow> = emptyList()
+        val painPoints: List<PainPointRow> = emptyList(),
+        val missedActivities: List<MissedActivityLogRow> = emptyList()
     )
 
     suspend fun getLinkedItems(accessToken: String, migraineId: String): MigraineLinkedItems {
@@ -335,6 +336,15 @@ class SupabaseDbService(
             }
             return if (r.status.isSuccess()) r.body() else emptyList()
         }
+        suspend fun fetchMissedActivities(): List<MissedActivityLogRow> {
+            val r = client.get("$supabaseUrl/rest/v1/missed_activities") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("apikey", supabaseKey)
+                parameter("migraine_id", "eq.$migraineId")
+                parameter("order", "start_at.asc")
+            }
+            return if (r.status.isSuccess()) r.body() else emptyList()
+        }
         suspend fun fetchPostdromes(): List<SymptomLogRow> {
             val r = client.get("$supabaseUrl/rest/v1/symptoms") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -357,6 +367,7 @@ class SupabaseDbService(
             val activities = async { fetchActivities("time_in_high_hr_zones_daily") }
             val locations = async { fetchLocations("locations") }
             val painPoints = async { getPainPoints(accessToken, migraineId) }
+            val missedActivities = async { fetchMissedActivities() }
             MigraineLinkedItems(
                 triggers = triggers.await(),
                 medicines = medicines.await(),
@@ -365,7 +376,8 @@ class SupabaseDbService(
                 postdromes = postdromes.await(),
                 activities = activities.await(),
                 locations = locations.await(),
-                painPoints = painPoints.await()
+                painPoints = painPoints.await(),
+                missedActivities = missedActivities.await()
             )
         }
     }
@@ -1370,6 +1382,7 @@ class SupabaseDbService(
         migraineId: String? = null,
         endAt: String? = null,
         clearMigraineId: Boolean = false,
+        clearEndAt: Boolean = false,
         reliefScale: String? = null,
         sideEffectScale: String? = null,
         sideEffectNotes: String? = null
@@ -1389,7 +1402,10 @@ class SupabaseDbService(
             notes?.let { put("notes", it) }
             if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
             else migraineId?.let { put("migraine_id", it) }
-            endAt?.let { put("end_at", it) }
+            // A null endAt is an absent key (column untouched), so wiping an
+            // end time back to "no known duration" is asked for explicitly.
+            if (clearEndAt) put("end_at", kotlinx.serialization.json.JsonNull)
+            else endAt?.let { put("end_at", it) }
             reliefScale?.let { put("relief_scale", it) }
             sideEffectScale?.let { put("side_effect_scale", it) }
             sideEffectNotes?.let { put("side_effect_notes", it) }

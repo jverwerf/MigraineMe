@@ -350,7 +350,8 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     },
                     prodromes = linked.prodromes.map { ProdromeDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
                     locations = linked.locations.map { LocationDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) },
-                    activities = linked.activities.map { ActivityDraft(it.type ?: "", it.startAt, it.endAt, it.notes, existingId = it.id) }
+                    activities = linked.activities.map { ActivityDraft(it.type ?: "", it.startAt, it.endAt, it.notes, existingId = it.id) },
+                    missedActivities = linked.missedActivities.map { MissedActivityDraft(it.type ?: "", it.startAt, it.notes, existingId = it.id) }
                 )
                 onReady()
             } catch (e: Exception) { e.printStackTrace() }
@@ -908,7 +909,14 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
 
-                // --- Missed Activities ---
+                // --- Missed Activities: delete removed, update existing, insert new ---
+                // Without the reconcile this section re-inserted every draft row on
+                // each edit-save (the wizard's calendar auto-suggest carries no
+                // existingId), duplicating missed activities once per edit.
+                val keepMissedIds = missedActivitiesSnapshot.mapNotNull { it.existingId }.toSet()
+                oldLinked.missedActivities.filter { it.source != "system" && it.id !in keepMissedIds }.forEach {
+                    runCatching { db.deleteMissedActivityLog(accessToken, it.id) }
+                }
                 for (ma in missedActivitiesSnapshot.filter { it.type.isNotBlank() }) {
                     if (ma.existingId != null) {
                         runCatching { db.updateMissedActivityLog(accessToken, ma.existingId, ma.type, ma.startAtIso ?: migraineStart, ma.note) }
