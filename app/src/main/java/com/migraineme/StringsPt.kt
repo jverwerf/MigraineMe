@@ -3634,4 +3634,5 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Microfone",
     "📍 Location" to "📍 Localização",
     "📱 Usage Access" to "📱 Acesso ao uso",
+    "You rated it %1\$s relief, over %2\$s uses" to "Alívio avaliado como %1\$s, em %2\$s utilizações",
 )

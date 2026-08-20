@@ -3634,4 +3634,5 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Micrófono",
     "📍 Location" to "📍 Ubicación",
     "📱 Usage Access" to "📱 Acceso de uso",
+    "You rated it %1\$s relief, over %2\$s uses" to "Valoraste el alivio como %1\$s, en %2\$s usos",
 )
