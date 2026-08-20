@@ -1679,6 +1679,22 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, doseUnit
     var sideEffectScale by remember(item.label) { mutableStateOf(item.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(item.label) { mutableStateOf(item.sideEffectNotes ?: "") }
 
+    // Voice input for the side-effect details field, same contract as
+    // JournalEditScreen: appends the spoken text to what is already there.
+    val seCtx = androidx.compose.ui.platform.LocalContext.current
+    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
+            }
+        }
+    }
+
     fun commit() {
         // Legacy mirror string ("400mg" / "2"); the insert path re-derives
         // dose_value/dose_unit from it (dual-write).
@@ -1722,6 +1738,19 @@ private fun MedicineEditorPill(item: CheckInMedicineItem, color: Color, doseUnit
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                 colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
+                        }
+                        try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
+                            android.widget.Toast.makeText(seCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = color, modifier = Modifier.size(18.dp))
+                    }
+                },
                 singleLine = true
             )
         }
@@ -1738,6 +1767,22 @@ private fun ReliefEditorPill(item: CheckInReliefItem, color: Color, onUpdate: (C
     var reliefScale by remember(item.label) { mutableStateOf(item.reliefScale ?: "NONE") }
     var sideEffectScale by remember(item.label) { mutableStateOf(item.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(item.label) { mutableStateOf(item.sideEffectNotes ?: "") }
+
+    // Voice input for the side-effect details field, same contract as
+    // JournalEditScreen: appends the spoken text to what is already there.
+    val seCtx = androidx.compose.ui.platform.LocalContext.current
+    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
+            }
+        }
+    }
 
     fun commit() {
         onUpdate(item.copy(startAtIso = timeIso, reliefScale = reliefScale, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }))
@@ -1764,6 +1809,19 @@ private fun ReliefEditorPill(item: CheckInReliefItem, color: Color, onUpdate: (C
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                 colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = AppTheme.BodyTextColor, cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f), unfocusedBorderColor = Color.White.copy(alpha = 0.1f)),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
+                        }
+                        try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
+                            android.widget.Toast.makeText(seCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = color, modifier = Modifier.size(18.dp))
+                    }
+                },
                 singleLine = true
             )
         }
@@ -2415,7 +2473,7 @@ private fun SideEffectsPageV2(
                 val matches = res.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
                 val spoken = matches?.firstOrNull().orEmpty()
                 if (spoken.isNotBlank()) {
-                    val joined = if (freeText.isBlank()) spoken else "$freeText $spoken"
+                    val joined = if (freeText.isBlank()) spoken else "$freeText, $spoken"
                     onFreeTextChange(joined)
                 }
             }
@@ -2430,17 +2488,31 @@ private fun SideEffectsPageV2(
             }
         }
         Spacer(Modifier.height(8.dp))
-        OutlinedButton(
-            onClick = { launchVoice() },
-            modifier = Modifier.height(40.dp),
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = accentColor),
-            border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.5f)),
-        ) {
-            Icon(Icons.Outlined.Mic, null, Modifier.size(18.dp))
-            Spacer(Modifier.width(4.dp))
-            Text(t("Voice"), style = MaterialTheme.typography.bodySmall)
-        }
+        // The dictated text was previously invisible: launchVoice() appended
+        // into freeText but no field rendered it. This field shows and edits
+        // it, with the mic as the trailing icon (house pattern).
+        OutlinedTextField(
+            value = freeText,
+            onValueChange = onFreeTextChange,
+            label = { Text(t("Extra notes (optional)"), color = AppTheme.SubtleTextColor) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = accentColor,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                cursorColor = accentColor,
+                focusedLabelColor = accentColor,
+                unfocusedLabelColor = AppTheme.SubtleTextColor,
+            ),
+            trailingIcon = {
+                IconButton(onClick = { launchVoice() }) {
+                    Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = accentColor, modifier = Modifier.size(20.dp))
+                }
+            },
+            minLines = 2,
+            maxLines = 4,
+        )
 
         Spacer(Modifier.height(80.dp))
     }

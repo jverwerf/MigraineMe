@@ -976,6 +976,22 @@ private fun ItemEditorPill(
     var sideEffectScale by remember(match.label) { mutableStateOf(match.sideEffectScale ?: "NONE") }
     var sideEffectNotes by remember(match.label) { mutableStateOf(match.sideEffectNotes ?: "") }
 
+    // Voice input for the side-effect details field, same contract as
+    // JournalEditScreen: appends the spoken text to what is already there.
+    val seCtx = LocalContext.current
+    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
+            }
+        }
+    }
+
     fun commitChanges() {
         val zone = java.time.ZoneId.systemDefault()
         // Logging never accepts a future moment — clamp date+time to now so the
@@ -1243,6 +1259,19 @@ private fun ItemEditorPill(
                     cursorColor = color, focusedBorderColor = color.copy(alpha = 0.5f),
                     unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
                 ),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
+                        }
+                        try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
+                            android.widget.Toast.makeText(seCtx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = color, modifier = Modifier.size(18.dp))
+                    }
+                },
                 singleLine = true
             )
         }
