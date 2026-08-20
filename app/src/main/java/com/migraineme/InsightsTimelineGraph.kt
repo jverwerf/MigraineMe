@@ -21,7 +21,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -224,6 +226,11 @@ private fun CoreCanvas(
             }
 
             if (metricSeries.isNotEmpty() && metTop < metBot) { val chartH = metBot - metTop
+                // Screen-space plan for the label pass below. The y values come
+                // straight from valY, so every label inherits the same per-series
+                // [0,1] min-max normalisation as the line it sits on.
+                data class SeriesPlan(val name: String, val unit: String, val color: Color, val pts: List<Offset>, val firstV: Double, val lastV: Double)
+                val plans = mutableListOf<SeriesPlan>()
                 metricSeries.forEachIndexed { seriesIndex, series -> if (series.points.size < 2) return@forEachIndexed; val sorted = series.points.sortedBy { it.date }; val minV = sorted.minOf { it.value }; val maxV = sorted.maxOf { it.value }; val range = (maxV - minV).coerceAtLeast(0.01)
                     fun dateX(ds: String): Float { val ld = java.time.LocalDate.parse(ds); return xOf(ld.atStartOfDay(zone).toInstant().plusSeconds(43200)) }
                     fun valY(v: Double): Float { return metBot - ((v - minV) / range).toFloat().coerceIn(0f, 1f) * chartH * 0.85f }
@@ -246,24 +253,54 @@ private fun CoreCanvas(
                         drawPath(path, series.color.copy(alpha = 0.1f), style = Stroke(width = 6f, cap = StrokeCap.Round)); drawPath(path, series.color.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
                         sorted.forEach { pt -> drawCircle(series.color.copy(alpha = 0.3f), 5f, Offset(dateX(pt.date), valY(pt.value))); drawCircle(series.color, 2.5f, Offset(dateX(pt.date), valY(pt.value))) }
                     }
-                    // Every line used to be named at its left end, so with more
-                    // than two or three metrics the names piled up in the same
-                    // corner and the graph became unreadable — which defeats
-                    // naming them at all. Odd series carry their name on the
-                    // right instead, and the bare value goes to the opposite
-                    // end. Halves the crowding for free.
-                    val labelPaint = Paint().apply { color = series.color.copy(alpha = 0.5f).toArgb(); textSize = 17f; isAntiAlias = true }
-                    val first = sorted.first(); val last = sorted.last()
-                    val nameText = "${tSync(series.label)}: "
-                    if (seriesIndex % 2 == 0) {
-                        drawContext.canvas.nativeCanvas.drawText(nameText + "${"%.1f".format(first.value)}${series.unit}", dateX(first.date) + 4f, valY(first.value) - 6f, labelPaint)
-                        if (sorted.size > 2) drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(last.value)}", dateX(last.date) - 12f, valY(last.value) - 6f, labelPaint)
-                    } else {
-                        val nameOnRight = nameText + "${"%.1f".format(last.value)}${series.unit}"
-                        val tw = labelPaint.measureText(nameOnRight)
-                        drawContext.canvas.nativeCanvas.drawText(nameOnRight, dateX(last.date) - 4f - tw, valY(last.value) - 6f, labelPaint)
-                        if (sorted.size > 2) drawContext.canvas.nativeCanvas.drawText("${"%.1f".format(first.value)}", dateX(first.date) + 12f, valY(first.value) - 6f, labelPaint)
+                    plans += SeriesPlan(tSync(series.label), series.unit, series.color,
+                        sorted.map { Offset(dateX(it.date), valY(it.value)) }, sorted.first().value, sorted.last().value)
+                }
+
+                // Corner labels forced the reader to match colours across the
+                // graph. Instead each name rides on its own line like a road
+                // label: series i anchors at its own horizontal slot, the pill
+                // sits on the curve there, and a colliding pill slides
+                // vertically with a tick tethering it back to its line.
+                fun yOnLine(pts: List<Offset>, x: Float): Float {
+                    if (x <= pts.first().x) return pts.first().y
+                    if (x >= pts.last().x) return pts.last().y
+                    for (j in 0 until pts.size - 1) { val a = pts[j]; val b = pts[j + 1]
+                        if (x >= a.x && x <= b.x) { val f = if (b.x > a.x) (x - a.x) / (b.x - a.x) else 0f; return a.y + f * (b.y - a.y) } }
+                    return pts.last().y
+                }
+                val placed = mutableListOf<Rect>()
+                val pillH = 26f; val padX = 8f
+                plans.forEachIndexed { i, p ->
+                    val namePaint = Paint().apply { color = p.color.toArgb(); textSize = 17f; isAntiAlias = true; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD) }
+                    val slotX = x0 + (i + 0.5f) / plans.size * (x1 - x0)
+                    val lineY = yOnLine(p.pts, slotX)
+                    val tw = namePaint.measureText(p.name)
+                    val left = (slotX - tw / 2f - padX).coerceIn(x0, (x1 - tw - 2 * padX).coerceAtLeast(x0))
+                    val candidates = mutableListOf(lineY - 8f - pillH, lineY + 8f)
+                    for (s in 1..6) { candidates += lineY - 8f - pillH - s * (pillH + 4f); candidates += lineY + 8f + s * (pillH + 4f) }
+                    val top = candidates.firstOrNull { t ->
+                        t >= metTop && t + pillH <= metBot && placed.none { it.overlaps(Rect(left, t, left + tw + 2 * padX, t + pillH)) }
+                    } ?: candidates.first().coerceIn(metTop, metBot - pillH)
+                    val rect = Rect(left, top, left + tw + 2 * padX, top + pillH)
+                    placed += rect
+                    if (rect.bottom < lineY - 14f) drawLine(p.color.copy(alpha = 0.8f), Offset(slotX, rect.bottom), Offset(slotX, lineY), 2f)
+                    else if (rect.top > lineY + 14f) drawLine(p.color.copy(alpha = 0.8f), Offset(slotX, lineY), Offset(slotX, rect.top), 2f)
+                    drawRoundRect(PopupBg.copy(alpha = 0.88f), Offset(rect.left, rect.top), Size(rect.width, rect.height), CornerRadius(8f, 8f))
+                    drawContext.canvas.nativeCanvas.drawText(p.name, rect.left + padX, rect.top + 19f, namePaint)
+
+                    // Endpoint values keep their spots but dodge anything placed
+                    val vPaint = Paint().apply { color = p.color.copy(alpha = 0.7f).toArgb(); textSize = 15f; isAntiAlias = true }
+                    fun placeValue(text: String, x: Float, y: Float, alignRight: Boolean) {
+                        val w2 = vPaint.measureText(text); val lx = if (alignRight) x - 6f - w2 else x + 6f
+                        var ty = y - 8f; var tries = 0
+                        while (tries < 8 && (ty - 15f < metTop || placed.any { it.overlaps(Rect(lx, ty - 15f, lx + w2, ty + 3f)) })) { ty += 18f; tries++ }
+                        ty = ty.coerceIn(metTop + 15f, metBot - 2f)
+                        placed += Rect(lx, ty - 15f, lx + w2, ty + 3f)
+                        drawContext.canvas.nativeCanvas.drawText(text, lx, ty, vPaint)
                     }
+                    placeValue("%.1f".format(p.firstV) + p.unit, p.pts.first().x, p.pts.first().y, alignRight = false)
+                    placeValue("%.1f".format(p.lastV) + p.unit, p.pts.last().x, p.pts.last().y, alignRight = true)
                 }
             }
         }

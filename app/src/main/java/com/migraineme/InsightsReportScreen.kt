@@ -2643,6 +2643,51 @@ internal fun AttackPainMap(
 /** Catmull-Rom through the points as cubic beziers — a data line that curves
  *  rather than kinks reads as a trend instead of a zigzag. Same curve the
  *  printed report draws. */
+/**
+ * Height of the SMOOTHED curve at x — the curve that is actually drawn, not the
+ * straight line between readings.
+ *
+ * smoothPath lays a cubic through each pair of points, so between two readings
+ * the drawn line bulges away from their straight interpolation. A marker placed
+ * with straight-line maths therefore sits beside the curve rather than on it,
+ * which is exactly what made the label markers look like they pointed at
+ * nothing. This walks the same cubic and solves it for x, so the marker lands on
+ * the line the user can see.
+ */
+private fun curveYAt(points: List<Offset>, targetX: Float): Float {
+    if (points.isEmpty()) return 0f
+    if (points.size == 1 || targetX <= points.first().x) return points.first().y
+    if (targetX >= points.last().x) return points.last().y
+    for (i in 0 until points.size - 1) {
+        val p1 = points[i]
+        val p2 = points[i + 1]
+        if (targetX < p1.x || targetX > p2.x) continue
+        if (points.size == 2) {
+            val t = if (p2.x == p1.x) 0f else (targetX - p1.x) / (p2.x - p1.x)
+            return p1.y + (p2.y - p1.y) * t
+        }
+        val p0 = points.getOrElse(i - 1) { p1 }
+        val p3 = points.getOrElse(i + 2) { p2 }
+        val c1x = p1.x + (p2.x - p0.x) / 6f
+        val c1y = p1.y + (p2.y - p0.y) / 6f
+        val c2x = p2.x - (p3.x - p1.x) / 6f
+        val c2y = p2.y - (p3.y - p1.y) / 6f
+        fun at(t: Float, a: Float, b: Float, c: Float, d: Float): Float {
+            val u = 1f - t
+            return u * u * u * a + 3f * u * u * t * b + 3f * u * t * t * c + t * t * t * d
+        }
+        // x is monotonic across the segment, so a bisection converges.
+        var lo = 0f
+        var hi = 1f
+        repeat(24) {
+            val mid = (lo + hi) / 2f
+            if (at(mid, p1.x, c1x, c2x, p2.x) < targetX) lo = mid else hi = mid
+        }
+        return at((lo + hi) / 2f, p1.y, c1y, c2y, p2.y)
+    }
+    return points.last().y
+}
+
 private fun smoothPath(points: List<Offset>): Path {
     val path = Path()
     if (points.isEmpty()) return path
@@ -2703,7 +2748,13 @@ internal fun AttackChart(
         val p1Bottom = painTop + painH + 40.dp.toPx()   // room for the 45° labels
         val p2Top = p1Bottom + 8.dp.toPx()
         val metricTop = p2Top + 10.dp.toPx()
-        val metricH = if (hasMetrics) 62.dp.toPx() else 0f
+        // Tall enough for one label row per metric: a dozen metrics needs a
+        // dozen rows, and a fixed 62dp band forced the placement to either
+        // overlap them or push some off the bottom.
+        val metricRows = metrics.count { it.points.size >= 2 }
+        val metricH = if (hasMetrics)
+            maxOf(62.dp.toPx(), (((metricRows + 1) / 2) * 10 + 14).dp.toPx())
+        else 0f
         val p2Bottom = if (hasMetrics) metricTop + metricH + 4.dp.toPx() else p1Bottom
 
         fun yPain(sev: Float) = painTop + (1f - sev / 10f) * painH
@@ -2810,31 +2861,169 @@ internal fun AttackChart(
             Offset(xOf(mg.start), p2Bottom), strokeWidth = 1.dp.toPx(),
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
 
-        // Tracked data: each line scaled to its own range, named on the line
+        // Tracked data: each line scaled to its own range, labelled along its own
+        // line at a position no other label can claim.
+        //
+        // Placement is decided, not searched. Every earlier attempt hunted for a
+        // free spot and had to do something arbitrary when it failed — stack two
+        // labels, or drop one. Both happened.
+        //
+        // Instead:
+        //   1. Each line proposes the x where it has the most clear space around
+        //      it, so labels gravitate to where their line is readable rather
+        //      than to the edges, where every line is bunched together.
+        //   2. Labels are sorted by that x and given one exclusive slot each,
+        //      left to right. Two labels can never share horizontal space.
+        //   3. Neighbouring slots alternate above and below their line, so the
+        //      room available to any one label is two slots wide, not one.
+        //   4. Each label sits on its own line at its slot, with a short dotted
+        //      leader touching it.
+        // Nothing can overlap and nothing can be dropped, whatever the data does.
         if (hasMetrics) {
-            metrics.filter { it.points.size >= 2 }.forEachIndexed { i, series ->
+            val labelPaint = android.graphics.Paint().apply {
+                textSize = with(density) { 7.sp.toPx() }
+                isAntiAlias = true
+            }
+            val labelH = 9.dp.toPx()
+            val lines = mutableListOf<Pair<MetricSeries, List<Offset>>>()
+
+            metrics.filter { it.points.size >= 2 }.forEach { series ->
                 val pts = series.points.mapNotNull { pt ->
                     runCatching { LocalDate.parse(pt.date).atStartOfDay(zone).toInstant() }
                         .getOrNull()?.let { it to pt.value.toFloat() }
                 }.filter { it.first >= windowStart && it.first <= windowEnd }
-                if (pts.size < 2) return@forEachIndexed
+                    // The API returns date.desc; curveYAt/yAt walk segments
+                    // assuming ascending x, so an unsorted list pins every
+                    // label dot at the line's right-endpoint height.
+                    .sortedBy { it.first }
+                if (pts.size < 2) return@forEach
                 val min = pts.minOf { it.second }
                 val max = pts.maxOf { it.second }
                 val range = (max - min).takeIf { it != 0f } ?: 1f
-                fun yOf(v: Float) = metricTop + (1f - (v - min) / range) * metricH
-                val path = smoothPath(pts.map { (t, v) -> Offset(xOf(t), yOf(v)) })
+                val screen = pts.map { (t, v) ->
+                    Offset(xOf(t), metricTop + (1f - (v - min) / range) * metricH)
+                }
+                val path = smoothPath(screen)
                 drawPath(path, series.color.copy(alpha = 0.18f), style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round))
                 drawPath(path, series.color, style = Stroke(width = 1.4.dp.toPx(), cap = StrokeCap.Round))
+                lines += series to screen
+            }
 
-                val lx = padL + plotW * (0.06f + (i % 4) * 0.22f)
-                val near = pts.minByOrNull { kotlin.math.abs(xOf(it.first) - lx) } ?: pts.first()
-                val ly = (yOf(near.second) - 5.dp.toPx()).coerceAtLeast(metricTop + 7.dp.toPx())
-                val namePaint = android.graphics.Paint().apply {
-                    color = series.color.toArgb()
-                    textSize = with(density) { 7.sp.toPx() }
-                    isAntiAlias = true
+            /** Height of a line at x, clamped to its own extent. */
+            fun yAt(line: List<Offset>, x: Float): Float {
+                if (line.isEmpty()) return metricTop + metricH / 2f
+                if (x <= line.first().x) return line.first().y
+                if (x >= line.last().x) return line.last().y
+                for (k in 0 until line.size - 1) {
+                    val a = line[k]; val b = line[k + 1]
+                    if (x in a.x..b.x) {
+                        val t = if (b.x == a.x) 0f else (x - a.x) / (b.x - a.x)
+                        return a.y + (b.y - a.y) * t
+                    }
                 }
-                nativeCanvas.drawText(tSync(series.label), lx, ly, namePaint)
+                return line.last().y
+            }
+
+            // 1. Preferred x per line: where its nearest neighbour is furthest away.
+            val preferred = lines.map { (series, line) ->
+                var bestX = padL + plotW / 2f
+                var bestClear = -1f
+                for (si in 0..24) {
+                    val x = padL + plotW * (0.08f + 0.84f * si / 24f)
+                    val y = yAt(line, x)
+                    var clear = metricH
+                    lines.forEach { (other, otherLine) ->
+                        if (other !== series) {
+                            val d = kotlin.math.abs(yAt(otherLine, x) - y)
+                            if (d < clear) clear = d
+                        }
+                    }
+                    if (clear > bestClear) { bestClear = clear; bestX = x }
+                }
+                Triple(series, line, bestX)
+            }.sortedBy { it.third }
+
+            // Fixed grid, so overlap is impossible by construction.
+            //
+            // "Above or below its own line" was not enough: those offsets are
+            // relative to each line, so two labels in neighbouring slots could
+            // still land at the same height and collide. Rows at FIXED heights
+            // remove that: a label can only ever share a row with labels a full
+            // column away, and a column is wider than the longest name.
+            //
+            // Drawn in three passes, and the order is the whole point. Doing it
+            // per-label meant each label painted its highlight and then its own
+            // opaque pill — so the next label's pill erased the previous one's
+            // highlight, and the link between a name and its line disappeared.
+            //   1. every highlighted stretch of line
+            //   2. every pill and name
+            //   3. every connector and end dot, on top, so nothing can cover the
+            //      one thing that answers "which line is mine".
+            val labelCount = preferred.size
+            val rows = if (labelCount <= 4) 1 else if (labelCount <= 8) 2 else 3
+            val cols = (labelCount + rows - 1) / rows
+            val rowGap = metricH / (rows + 1)
+
+            data class Placed(
+                val text: String, val color: Color, val x: Float, val ly: Float,
+                val lineY: Float, val tw: Float,
+            )
+            val placed = preferred.mapIndexed { idx, (series, line, _) ->
+                val text = tSync(series.label)
+                labelPaint.color = series.color.toArgb()
+                val tw = labelPaint.measureText(text)
+                val row = idx % rows
+                val col = idx / rows
+                // Nudge each row sideways within its column so the connectors in
+                // one column do not lie on top of each other.
+                val rowNudge = (row - (rows - 1) / 2f) * 9.dp.toPx()
+                val x = (padL + plotW * (col + 0.5f) / cols + rowNudge)
+                    .coerceIn(padL + tw / 2f + 2.dp.toPx(), padL + plotW - tw / 2f - 2.dp.toPx())
+                Placed(text, series.color, x, metricTop + rowGap * (row + 1f), curveYAt(line, x), tw)
+            }
+
+            // Pass 1 — the line itself, brightened either side of each label.
+            preferred.forEachIndexed { idx, (series, line, _) ->
+                val x = placed[idx].x
+                val emphasis = Path()
+                var started = false
+                var sx = x - 20.dp.toPx()
+                while (sx <= x + 20.dp.toPx()) {
+                    if (sx >= line.first().x && sx <= line.last().x) {
+                        val sy = curveYAt(line, sx)
+                        if (!started) { emphasis.moveTo(sx, sy); started = true } else emphasis.lineTo(sx, sy)
+                    }
+                    sx += 2.dp.toPx()
+                }
+                if (started) {
+                    drawPath(emphasis, Color.White.copy(alpha = 0.35f), style = Stroke(width = 6.dp.toPx(), cap = StrokeCap.Round))
+                    drawPath(emphasis, series.color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+                }
+            }
+
+            // Pass 2 — pills and names.
+            placed.forEach { lab ->
+                labelPaint.color = lab.color.toArgb()
+                val lx = lab.x - lab.tw / 2f
+                drawRoundRect(
+                    color = Color(0xFF1A0B2E).copy(alpha = 0.9f),
+                    topLeft = Offset(lx - 2.dp.toPx(), lab.ly - labelH),
+                    size = androidx.compose.ui.geometry.Size(lab.tw + 4.dp.toPx(), labelH + 1.dp.toPx()),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()),
+                )
+                nativeCanvas.drawText(lab.text, lx, lab.ly, android.graphics.Paint(labelPaint))
+            }
+
+            // Pass 3 — connectors and end dots, above everything.
+            placed.forEach { lab ->
+                drawLine(
+                    color = lab.color,
+                    start = Offset(lab.x, if (lab.ly < lab.lineY) lab.ly + 1.dp.toPx() else lab.ly - labelH - 1.dp.toPx()),
+                    end = Offset(lab.x, lab.lineY),
+                    strokeWidth = 1.2.dp.toPx(),
+                )
+                drawCircle(color = Color(0xFF1A0B2E), radius = 3.dp.toPx(), center = Offset(lab.x, lab.lineY))
+                drawCircle(color = lab.color, radius = 2.dp.toPx(), center = Offset(lab.x, lab.lineY))
             }
         }
     }
