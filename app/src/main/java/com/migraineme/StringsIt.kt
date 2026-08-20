@@ -3647,4 +3647,5 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "In %1\$s days" to "Tra %1\$s giorni",
     "%1\$s days ago" to "%1\$s giorni fa",
     "%1\$s days" to "%1\$s giorni",
+    "You rated it %1\$s relief, over %2\$s uses" to "Sollievo valutato %1\$s, su %2\$s utilizzi",
 )

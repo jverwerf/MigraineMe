@@ -3647,4 +3647,5 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "In %1\$s days" to "Over %1\$s dagen",
     "%1\$s days ago" to "%1\$s dagen geleden",
     "%1\$s days" to "%1\$s dagen",
+    "You rated it %1\$s relief, over %2\$s uses" to "Verlichting beoordeeld als %1\$s, over %2\$s keer",
 )

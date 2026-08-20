@@ -3647,4 +3647,5 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "In %1\$s days" to "In %1\$s Tagen",
     "%1\$s days ago" to "vor %1\$s Tagen",
     "%1\$s days" to "%1\$s Tage",
+    "You rated it %1\$s relief, over %2\$s uses" to "Linderung von dir als %1\$s bewertet, über %2\$s Anwendungen",
 )
