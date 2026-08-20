@@ -202,7 +202,7 @@ fun AuraDetailSheet(
                         )
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            eyeLabel,
+                            t(eyeLabel),
                             color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall
                         )
