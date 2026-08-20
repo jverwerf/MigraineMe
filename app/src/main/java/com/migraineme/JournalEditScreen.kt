@@ -426,8 +426,11 @@ fun JournalEditScreen(
             // fabricated end_at = start_at on reliefs that had no end. ──
             if (itemType == "relief" && !DoseUnits.isTakenOnlyRelief(reliefType)) {
                 val endZoned = endAt?.atZone(ZoneId.systemDefault())
-                var selectedEndDate by remember(loaded) { mutableStateOf(endZoned?.toLocalDate() ?: selectedDate) }
-                var selectedEndTime by remember(loaded) { mutableStateOf(endZoned?.toLocalTime() ?: selectedTime) }
+                // No stored end → pickers default to NOW, not the start time
+                // (iOS parity): toggling "Set end time" on and saving untouched
+                // must not fabricate a zero-minute end_at = start_at.
+                var selectedEndDate by remember(loaded) { mutableStateOf(endZoned?.toLocalDate() ?: LocalDate.now()) }
+                var selectedEndTime by remember(loaded) { mutableStateOf(endZoned?.toLocalTime() ?: LocalTime.now()) }
 
                 // Sync endAt from the pickers only while an end is wanted
                 LaunchedEffect(selectedEndDate, selectedEndTime, hasEnd) {
