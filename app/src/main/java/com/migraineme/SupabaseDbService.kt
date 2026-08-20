@@ -627,10 +627,22 @@ class SupabaseDbService(
         startAt: String? = null,
         notes: String? = null,
         migraineId: String? = null,
-        clearMigraineId: Boolean = false
+        clearMigraineId: Boolean = false,
+        category: String? = null,
+        moveCategory: Boolean = false
     ): TriggerRow {
         val payload = buildJsonObject {
-            type?.let { put("type", it) }
+            type?.let {
+                put("type", it)
+                // Same contract as updateRelief: a retype moves the row's
+                // category to the new pool item's, NULL included when the new
+                // label is in no pool. Callers not renaming from the pool
+                // leave moveCategory false and the column stays untouched.
+                if (moveCategory) {
+                    if (category != null) put("category", category)
+                    else put("category", kotlinx.serialization.json.JsonNull)
+                }
+            }
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
             if (clearMigraineId) put("migraine_id", kotlinx.serialization.json.JsonNull)
@@ -781,7 +793,9 @@ class SupabaseDbService(
         sideEffectScale: String? = null,
         sideEffectNotes: String? = null,
         doseValue: Double? = null,
-        doseUnit: String? = null
+        doseUnit: String? = null,
+        category: String? = null,
+        moveCategory: Boolean = false
     ): MedicineRow {
         // Dual-write (one-unit contract) — see insertMedicine.
         var dv = doseValue
@@ -794,7 +808,16 @@ class SupabaseDbService(
             DoseUnits.parseLegacy(amt)?.let { (v, u) -> dv = v; du = u }
         }
         val payload = buildJsonObject {
-            name?.let { put("name", it) }
+            name?.let {
+                put("name", it)
+                // A rename moves the row's category to the new pool item's,
+                // NULL included when the new name is in no pool. Callers not
+                // renaming from the pool leave moveCategory false.
+                if (moveCategory) {
+                    if (category != null) put("category", category)
+                    else put("category", kotlinx.serialization.json.JsonNull)
+                }
+            }
             if (amt != null) put("amount", amt)
             dv?.let { put("dose_value", it) }
             du?.let { put("dose_unit", it) }
@@ -2186,7 +2209,7 @@ class SupabaseDbService(
         val response = client.get("$supabaseUrl/rest/v1/prodromes") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
-            parameter("select", "id,type,start_at,notes,migraine_id")
+            parameter("select", "id,type,start_at,notes,migraine_id,source")
             parameter("order", "start_at.desc")
             journalWindow(window)
         }
@@ -2213,9 +2236,18 @@ class SupabaseDbService(
         }
     }
 
-    suspend fun updateProdromeLog(accessToken: String, id: String, type: String?, startAt: String?, notes: String?) {
+    suspend fun updateProdromeLog(accessToken: String, id: String, type: String?, startAt: String?, notes: String?, category: String? = null, moveCategory: Boolean = false) {
         val payload = buildJsonObject {
-            type?.let { put("type", it) }
+            type?.let {
+                put("type", it)
+                // Same contract as updateRelief: a retype moves the row's
+                // category with it, NULL included when the new label is in
+                // no pool; moveCategory false leaves the column untouched.
+                if (moveCategory) {
+                    if (category != null) put("category", category)
+                    else put("category", kotlinx.serialization.json.JsonNull)
+                }
+            }
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
         }
@@ -2385,9 +2417,18 @@ class SupabaseDbService(
         }
     }
 
-    suspend fun updateLocationLog(accessToken: String, id: String, type: String?, startAt: String?, notes: String?) {
+    suspend fun updateLocationLog(accessToken: String, id: String, type: String?, startAt: String?, notes: String?, category: String? = null, moveCategory: Boolean = false) {
         val payload = buildJsonObject {
-            type?.let { put("type", it) }
+            type?.let {
+                put("type", it)
+                // Same contract as updateRelief: a retype moves the row's
+                // category with it, NULL included when the new label is in
+                // no pool; moveCategory false leaves the column untouched.
+                if (moveCategory) {
+                    if (category != null) put("category", category)
+                    else put("category", kotlinx.serialization.json.JsonNull)
+                }
+            }
             startAt?.let { put("start_at", it) }
             notes?.let { put("notes", it) }
         }
@@ -2667,9 +2708,18 @@ class SupabaseDbService(
         }
     }
 
-    suspend fun updateActivityLog(accessToken: String, id: String, type: String?, startAt: String?, endAt: String? = null, notes: String?) {
+    suspend fun updateActivityLog(accessToken: String, id: String, type: String?, startAt: String?, endAt: String? = null, notes: String?, category: String? = null, moveCategory: Boolean = false) {
         val payload = buildJsonObject {
-            type?.let { put("activity_type", it) }
+            type?.let {
+                put("activity_type", it)
+                // Same contract as updateRelief: a retype moves the row's
+                // category with it, NULL included when the new label is in
+                // no pool; moveCategory false leaves the column untouched.
+                if (moveCategory) {
+                    if (category != null) put("category", category)
+                    else put("category", kotlinx.serialization.json.JsonNull)
+                }
+            }
             startAt?.let { put("start_at", it) }
             endAt?.let { put("end_at", it) }
             notes?.let { put("notes", it) }

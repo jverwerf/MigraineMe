@@ -67,6 +67,21 @@ fun JournalEditScreen(
     // Label -> pool icon_key, so the picker can show each relief's Brainy art.
     var reliefIconKeys by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var reliefTypeMenuOpen by remember { mutableStateOf(false) }
+    // Other pool-backed types (trigger, medicine, prodrome, activity,
+    // location): the same picker as reliefs. pickType is the raw pool label
+    // the row is; rows the app logged for the user (source != "manual",
+    // weather triggers and the like) keep the read-only name card.
+    var pickType by remember { mutableStateOf("") }
+    var pickEditable by remember { mutableStateOf(true) }
+    var pickFrequent by remember { mutableStateOf<List<String>>(emptyList()) }
+    var pickAll by remember { mutableStateOf<List<String>>(emptyList()) }
+    // Label -> pool icon_key and pool category: the first shows each option's
+    // Brainy art, the second lets a retype move the row's category with it.
+    var pickIconKeys by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    var pickCategories by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    // Medicine only: label -> the pool item's one dose unit.
+    var pickDoseUnits by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    var pickMenuOpen by remember { mutableStateOf(false) }
     var hasEnd by remember { mutableStateOf(false) }
     var notes by remember { mutableStateOf("") }
     var loaded by remember { mutableStateOf(false) }
@@ -119,23 +134,63 @@ fun JournalEditScreen(
                 val defs = edge.getTriggerDefinitions(ctx)
                 triggerLabelMap = defs.associate { it.triggerType to it.label }
 
+                // Fills the shared picker state from one type's pool: frequent
+                // prefs in position order first, the rest alphabetised, same
+                // as the relief picker. options carries (label, icon_key,
+                // category) per pool item. Best effort: an empty pool leaves
+                // the name read-only.
+                fun setPickOptions(freqLabels: List<String>, options: List<Triple<String, String?, String?>>) {
+                    val opts = options.filter { it.first.isNotEmpty() }
+                    val optionLabels = opts.map { it.first }
+                    val freq = freqLabels.filter { it in optionLabels }
+                    pickFrequent = freq
+                    pickAll = optionLabels.filter { it !in freq }.sorted()
+                    pickIconKeys = opts.associate { it.first to it.second }
+                    pickCategories = opts.associate { it.first to it.third }
+                }
+
                 when (itemType) {
                     "trigger" -> {
                         val rows = db.getAllTriggers(token)
                         val row = rows.find { it.id == itemId }
                         if (row != null) {
                             label = row.type?.let { t -> triggerLabelMap[t] ?: t.replace("_", " ").replaceFirstChar { c -> c.uppercase() } } ?: ""
+                            pickType = row.type ?: ""
+                            pickEditable = (row.source ?: "manual") == "manual"
                             startAt = Instant.parse(row.startAt)
                             notes = row.notes ?: ""
+                        }
+                        if (pickEditable) {
+                            // Same visibility rules as the wizard's trigger
+                            // page: menstruation_predicted is the system row
+                            // backing the prediction curve, not a loggable
+                            // trigger, and display_group members collapse to
+                            // one entry stored under the group name.
+                            val prefs = runCatching { db.getTriggerPrefs(token) }.getOrNull().orEmpty()
+                            val pool = runCatching { db.getAllTriggerPool(token) }.getOrNull().orEmpty()
+                            val visible = pool.filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+                            val options = visible.filter { it.displayGroup == null }
+                                .map { Triple(it.label.trim(), it.iconKey, it.category) } +
+                                visible.mapNotNull { it.displayGroup }.distinct().map { g ->
+                                    val first = visible.first { it.displayGroup == g }
+                                    Triple(g, first.iconKey, first.category)
+                                }
+                            val freq = prefs.filter { it.status == "frequent" }
+                                .sortedBy { it.position }
+                                .mapNotNull { it.trigger?.label?.trim() }
+                                .filter { it.isNotEmpty() }
+                            setPickOptions(freq, options)
                         }
                     }
                     "medicine" -> {
                         val rows = db.getAllMedicines(token)
                         val row = rows.find { it.id == itemId }
+                        val pool = runCatching { db.getAllMedicinePool(token) }.getOrNull().orEmpty()
                         if (row != null) {
                             label = row.name ?: ""
-                            val poolUnit = runCatching { db.getAllMedicinePool(token) }.getOrNull()
-                                ?.find { it.label == row.name }?.doseUnit
+                            pickType = row.name ?: ""
+                            pickEditable = (row.source ?: "manual") == "manual"
+                            val poolUnit = pool.find { it.label == row.name }?.doseUnit
                             doseUnit = DoseUnits.unitForEdit(row.doseUnit, row.amount, poolUnit)
                             inputUnit = DoseUnits.inputOptions(doseUnit).first()
                             doseText = row.doseValue?.let { DoseUnits.formatValue(it) }
@@ -146,6 +201,18 @@ fun JournalEditScreen(
                             reliefScale = ReliefScale.fromString(row.reliefScale)
                             sideEffectScale = row.sideEffectScale ?: "NONE"
                             sideEffectNotes = row.sideEffectNotes ?: ""
+                        }
+                        if (pickEditable) {
+                            val prefs = runCatching { db.getMedicinePrefs(token) }.getOrNull().orEmpty()
+                            // The medicine pool carries no icon_key; the
+                            // manifest resolves medicine art per label.
+                            val options = pool.map { Triple(it.label.trim(), null as String?, it.category) }
+                            val freq = prefs.filter { it.status == "frequent" }
+                                .sortedBy { it.position }
+                                .mapNotNull { it.medicine?.label?.trim() }
+                                .filter { it.isNotEmpty() }
+                            setPickOptions(freq, options)
+                            pickDoseUnits = pool.associate { it.label.trim() to it.doseUnit }
                         }
                     }
                     "relief" -> {
@@ -186,17 +253,53 @@ fun JournalEditScreen(
                         val row = rows.find { it.id == itemId }
                         if (row != null) {
                             label = row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: ""
+                            pickType = row.type ?: ""
+                            pickEditable = (row.source ?: "manual") == "manual"
                             startAt = row.startAt?.let { Instant.parse(it) } ?: Instant.now()
                             notes = row.notes ?: ""
+                        }
+                        if (pickEditable) {
+                            // Same visibility rules as the wizard's prodrome
+                            // page: display_group members collapse to one
+                            // entry stored under the group name.
+                            val prefs = runCatching { db.getProdromePrefs(token) }.getOrNull().orEmpty()
+                            val pool = runCatching { db.getAllProdromePool(token) }.getOrNull().orEmpty()
+                            val options = pool.filter { it.displayGroup == null }
+                                .map { Triple(it.label.trim(), it.iconKey, it.category) } +
+                                pool.mapNotNull { it.displayGroup }.distinct().map { g ->
+                                    val first = pool.first { it.displayGroup == g }
+                                    Triple(g, first.iconKey, first.category)
+                                }
+                            val freq = prefs.filter { it.status == "frequent" }
+                                .sortedBy { it.position }
+                                .mapNotNull { it.prodrome?.label?.trim() }
+                                .filter { it.isNotEmpty() }
+                            setPickOptions(freq, options)
                         }
                     }
                     "activity" -> {
                         val rows = db.getAllActivityLog(token)
                         val row = rows.find { it.id == itemId }
+                        val pool = runCatching { db.getAllActivityPool(token) }.getOrNull().orEmpty()
                         if (row != null) {
                             label = row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: ""
+                            // Stored activity_type is the pool label
+                            // lowercased (see insertActivity), so the picker
+                            // carries the matching pool label when one exists.
+                            val stored = row.type ?: ""
+                            pickType = pool.find { it.label.equals(stored, ignoreCase = true) }?.label ?: stored
+                            pickEditable = (row.source ?: "manual") == "manual"
                             startAt = row.startAt?.let { Instant.parse(it) } ?: Instant.now()
                             notes = row.notes ?: ""
+                        }
+                        if (pickEditable) {
+                            val prefs = runCatching { db.getActivityPrefs(token) }.getOrNull().orEmpty()
+                            val options = pool.map { Triple(it.label.trim(), it.iconKey, it.category) }
+                            val freq = prefs.filter { it.status == "frequent" }
+                                .sortedBy { it.position }
+                                .mapNotNull { it.activity?.label?.trim() }
+                                .filter { it.isNotEmpty() }
+                            setPickOptions(freq, options)
                         }
                     }
                     "location" -> {
@@ -204,8 +307,20 @@ fun JournalEditScreen(
                         val row = rows.find { it.id == itemId }
                         if (row != null) {
                             label = row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: ""
+                            pickType = row.type ?: ""
+                            pickEditable = (row.source ?: "manual") == "manual"
                             startAt = Instant.parse(row.startAt)
                             notes = row.notes ?: ""
+                        }
+                        if (pickEditable) {
+                            val prefs = runCatching { db.getLocationPrefs(token) }.getOrNull().orEmpty()
+                            val pool = runCatching { db.getAllLocationPool(token) }.getOrNull().orEmpty()
+                            val options = pool.map { Triple(it.label.trim(), it.iconKey, it.category) }
+                            val freq = prefs.filter { it.status == "frequent" }
+                                .sortedBy { it.position }
+                                .mapNotNull { it.location?.label?.trim() }
+                                .filter { it.isNotEmpty() }
+                            setPickOptions(freq, options)
                         }
                     }
                 }
@@ -250,9 +365,23 @@ fun JournalEditScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // The other pool-backed types re-pick through the shared state:
+            // only rows the user logged themselves, and only when the pool
+            // gave the picker something to offer.
+            val canPick = itemType != "relief" && pickEditable && (pickFrequent.isNotEmpty() || pickAll.isNotEmpty())
+            // Display name for the picked value: triggers may store a system
+            // key the definitions map to a label; the rest store the label
+            // itself (activities lowercased, hence the recase).
+            val pickDisplay = when (itemType) {
+                "trigger" -> triggerLabelMap[pickType] ?: pickType.replace("_", " ").replaceFirstChar { c -> c.uppercase() }
+                "medicine" -> pickType
+                else -> pickType.replace("_", " ").replaceFirstChar { c -> c.uppercase() }
+            }
+
             // ── Item name. Reliefs are re-pickable from the user's own pool
             // (Frequent, then All) — same dropdown as EditReliefScreen;
-            // everything else stays read-only. ──
+            // the other types re-pick from their own pools the same way;
+            // auto/system rows stay read-only. ──
             if (itemType == "relief" && (reliefFrequent.isNotEmpty() || reliefAll.isNotEmpty())) {
                 BaseCard {
                     Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
@@ -276,16 +405,19 @@ fun JournalEditScreen(
                         DropdownMenu(
                             expanded = reliefTypeMenuOpen,
                             onDismissRequest = { reliefTypeMenuOpen = false },
+                            // App-dark menu surface, same as JournalScreen's
+                            // filter menus — never the Material default white.
+                            modifier = Modifier.background(Color(0xFF1E0A2E)),
                         ) {
                             if (reliefFrequent.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text(t("Frequent"), fontWeight = FontWeight.Bold) },
+                                    text = { Text(t("Frequent"), fontWeight = FontWeight.Bold, color = AppTheme.SubtleTextColor) },
                                     onClick = {},
                                     enabled = false,
                                 )
                                 reliefFrequent.forEach { opt ->
                                     DropdownMenuItem(
-                                        text = { Text(opt) },
+                                        text = { Text(opt, color = Color.White) },
                                         leadingIcon = { BrainyRowIcon(opt, iconKey = reliefIconKeys[opt], category = "relief", size = 24.dp, gap = 0.dp) },
                                         onClick = {
                                             reliefType = opt
@@ -297,18 +429,88 @@ fun JournalEditScreen(
                             }
                             if (reliefAll.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text(t("All"), fontWeight = FontWeight.Bold) },
+                                    text = { Text(t("All"), fontWeight = FontWeight.Bold, color = AppTheme.SubtleTextColor) },
                                     onClick = {},
                                     enabled = false,
                                 )
                                 reliefAll.forEach { opt ->
                                     DropdownMenuItem(
-                                        text = { Text(opt) },
+                                        text = { Text(opt, color = Color.White) },
                                         leadingIcon = { BrainyRowIcon(opt, iconKey = reliefIconKeys[opt], category = "relief", size = 24.dp, gap = 0.dp) },
                                         onClick = {
                                             reliefType = opt
                                             reliefTypeMenuOpen = false
                                         },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (canPick) {
+                BaseCard {
+                    Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(4.dp))
+                    Box(Modifier.fillMaxWidth()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            BrainyRowIcon(pickType, iconKey = pickIconKeys[pickType], category = itemType, size = 24.dp)
+                            Text(
+                                pickDisplay.ifBlank { "Unknown" },
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.weight(1f),
+                            )
+                            IconButton(onClick = { pickMenuOpen = true }) {
+                                Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose type"), tint = AppTheme.SubtleTextColor)
+                            }
+                        }
+                        DropdownMenu(
+                            expanded = pickMenuOpen,
+                            onDismissRequest = { pickMenuOpen = false },
+                            // App-dark menu surface, same as JournalScreen's
+                            // filter menus — never the Material default white.
+                            modifier = Modifier.background(Color(0xFF1E0A2E)),
+                        ) {
+                            // Picking a different medicine switches the fixed
+                            // dose unit to the new pool item's; the typed
+                            // amount stays as it is.
+                            fun pick(opt: String) {
+                                if (itemType == "medicine" && opt != pickType) {
+                                    doseUnit = DoseUnits.unitForEdit(null, null, pickDoseUnits[opt])
+                                    inputUnit = DoseUnits.inputOptions(doseUnit).first()
+                                }
+                                pickType = opt
+                                pickMenuOpen = false
+                            }
+                            if (pickFrequent.isNotEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text(t("Frequent"), fontWeight = FontWeight.Bold, color = AppTheme.SubtleTextColor) },
+                                    onClick = {},
+                                    enabled = false,
+                                )
+                                pickFrequent.forEach { opt ->
+                                    DropdownMenuItem(
+                                        text = { Text(opt, color = Color.White) },
+                                        leadingIcon = { BrainyRowIcon(opt, iconKey = pickIconKeys[opt], category = itemType, size = 24.dp, gap = 0.dp) },
+                                        onClick = { pick(opt) },
+                                    )
+                                }
+                                if (pickAll.isNotEmpty()) Divider()
+                            }
+                            if (pickAll.isNotEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text(t("All"), fontWeight = FontWeight.Bold, color = AppTheme.SubtleTextColor) },
+                                    onClick = {},
+                                    enabled = false,
+                                )
+                                pickAll.forEach { opt ->
+                                    DropdownMenuItem(
+                                        text = { Text(opt, color = Color.White) },
+                                        leadingIcon = { BrainyRowIcon(opt, iconKey = pickIconKeys[opt], category = itemType, size = 24.dp, gap = 0.dp) },
+                                        onClick = { pick(opt) },
                                     )
                                 }
                             }
@@ -740,12 +942,17 @@ fun JournalEditScreen(
                             try {
                                 val newStartAt = ZonedDateTime.of(selectedDate, selectedTime, ZoneId.systemDefault())
                                     .toInstant().toString()
+                                // Retype only through the pool picker: rows it
+                                // never offered (auto/system rows, an empty
+                                // pool) send no type and keep their category.
+                                val newType = if (canPick) pickType.trim().ifBlank { null } else null
+                                val newCategory = newType?.let { pickCategories[it] }
                                 when (itemType) {
-                                    "trigger" -> db.updateTrigger(token, itemId, startAt = newStartAt, notes = notes)
+                                    "trigger" -> db.updateTrigger(token, itemId, type = newType, startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
                                     "medicine" -> {
                                         val doseValue = DoseUnits.parseNumber(doseText)
                                             ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
-                                        db.updateMedicine(token, itemId, startAt = newStartAt, amount = null, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, doseValue = doseValue, doseUnit = if (doseValue != null) doseUnit else null)
+                                        db.updateMedicine(token, itemId, name = newType, startAt = newStartAt, amount = null, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, doseValue = doseValue, doseUnit = if (doseValue != null) doseUnit else null, category = newCategory, moveCategory = newType != null)
                                     }
                                     "relief" -> {
                                         // End card set → end_at, cleared → the stored end
@@ -764,9 +971,11 @@ fun JournalEditScreen(
                                             sideEffectNotes = sideEffectNotes.ifBlank { null }
                                         )
                                     }
-                                    "prodrome" -> db.updateProdromeLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
-                                    "activity" -> db.updateActivityLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
-                                    "location" -> db.updateLocationLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
+                                    "prodrome" -> db.updateProdromeLog(token, itemId, type = newType, startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
+                                    // activity_type is stored lowercased, the
+                                    // same as the app's own insert path.
+                                    "activity" -> db.updateActivityLog(token, itemId, type = newType?.lowercase(), startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
+                                    "location" -> db.updateLocationLog(token, itemId, type = newType, startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
                                     else -> {}
                                 }
                             } catch (e: Exception) {
