@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -81,7 +82,22 @@ fun QuickLogTriggerScreen(
     var startAtIso by rememberSaveable { mutableStateOf<String?>(null) }
     var notes by rememberSaveable { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
-    
+
+    // Voice input for the Notes field, same contract as JournalEditScreen:
+    // appends the spoken text to what is already there.
+    val notesSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                notes = if (notes.isBlank()) spoken else "$notes, $spoken"
+            }
+        }
+    }
+
     val scrollState = rememberScrollState()
     
     // Get labels for display
@@ -223,6 +239,18 @@ fun QuickLogTriggerScreen(
                             focusedBorderColor = AppTheme.AccentPurple,
                             unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
                         ),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                }
+                                try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                    android.widget.Toast.makeText(ctx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }) {
+                                Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                            }
+                        },
                         minLines = 2
                     )
                 }

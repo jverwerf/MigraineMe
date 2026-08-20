@@ -216,6 +216,13 @@ object Routes {
     const val EDIT_ACTIVITY = "edit_activity"
     const val EDIT_LOCATION = "edit_location"
 
+    // Journal quick-add: standalone add flows pre-linked to one migraine.
+    // {start} carries the attack start (URL-encoded ISO) as the default time.
+    const val JOURNAL_ADD = "journal_add"           // + /{itemType}/{migraineId}/{start}
+    const val JOURNAL_ADD_PAIN = "journal_add_pain" // + /{migraineId}/{start}
+    const val JOURNAL_ADD_SYMPTOM = "journal_add_symptom"     // + /{migraineId}
+    const val JOURNAL_ADD_POSTDROME = "journal_add_postdrome" // + /{migraineId}
+
     const val ADJUST_MIGRAINES = "adjust_migraines"
     const val MANAGE_SYMPTOMS = "manage_symptoms"
     const val MANAGE_ITEMS = "manage_items"
@@ -1682,6 +1689,33 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable("${Routes.EDIT_LOCATION}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
                         JournalEditScreen(itemType = "location", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
+                    }
+
+                    // ── Journal quick-add: add a child row to an existing migraine ──
+                    composable("${Routes.JOURNAL_ADD}/{itemType}/{migraineId}/{start}") {
+                        val itemType = it.arguments?.getString("itemType") ?: return@composable
+                        val migraineId = it.arguments?.getString("migraineId") ?: return@composable
+                        // Navigation already URL-decodes route arguments — decoding
+                        // again turns the offset's '+' into a space and breaks parsing.
+                        val start = it.arguments?.getString("start")
+                        JournalEditScreen(
+                            itemType = itemType, itemId = "", authVm = authVm, logVm = logVm,
+                            addForMigraineId = migraineId, addStartAtIso = start,
+                            onBack = { nav.popBackStack() }
+                        )
+                    }
+                    composable("${Routes.JOURNAL_ADD_PAIN}/{migraineId}/{start}") {
+                        val migraineId = it.arguments?.getString("migraineId") ?: return@composable
+                        val start = it.arguments?.getString("start")
+                        QuickAddPainScreen(navController = nav, authVm = authVm, logVm = logVm, migraineId = migraineId, migraineStartAtIso = start)
+                    }
+                    composable("${Routes.JOURNAL_ADD_SYMPTOM}/{migraineId}") {
+                        val migraineId = it.arguments?.getString("migraineId") ?: return@composable
+                        QuickAddSymptomScreen(navController = nav, authVm = authVm, logVm = logVm, symptomVm = symptomVm, migraineId = migraineId, postdrome = false)
+                    }
+                    composable("${Routes.JOURNAL_ADD_POSTDROME}/{migraineId}") {
+                        val migraineId = it.arguments?.getString("migraineId") ?: return@composable
+                        QuickAddSymptomScreen(navController = nav, authVm = authVm, logVm = logVm, symptomVm = symptomVm, migraineId = migraineId, postdrome = true)
                     }
 
                     composable(Routes.ADJUST_MIGRAINES) {

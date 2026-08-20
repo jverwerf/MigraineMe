@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3620 entries.
+ * 3630 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -139,7 +139,9 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "(no title)" to "(senza titolo)",
     "(unknown)" to "(non noto)",
     "+ %s more" to "+ %s altri",
+    "+ Add" to "+ Aggiungi",
     "+ Add a time" to "+ Aggiungi ora",
+    "+ Add another entry" to "+ Altra nota",
     "+ Add aura moment" to "+ Momento aura",
     "+ Add pain entry" to "+ Nota dolore",
     "+ Add pain update" to "+ Aggiornamento",
@@ -333,8 +335,11 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Add medicine" to "Farmaco",
     "Add medicines you've taken" to "Aggiungi i farmaci che hai preso",
     "Add notes…" to "Note…",
+    "Add pain" to "Aggiungi dolore",
+    "Add postdrome" to "Aggiungi postdromo",
     "Add relief" to "Sollievo",
     "Add reliefs that helped" to "Aggiungi i sollievi che aiutano",
+    "Add symptom" to "Aggiungi sintomo",
     "Add to Frequent" to "In Frequenti",
     "Add to Pool" to "Nella lista",
     "Add to frequent" to "Tra i frequenti",
@@ -1217,8 +1222,6 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Frequency Trends" to "Frequenza",
     "Frequency trends" to "Trend frequenza",
     "Frequent" to "Frequente",
-    "Set end time" to "Imposta ora di fine",
-    "Duration in minutes (optional)" to "Durata in minuti (facoltativa)",
     "Frequent need to urinate" to "Bisogno di urinare spesso",
     "Frequent urination" to "Urinare spesso",
     "Frequent wake-ups or tossing and turning" to "Risvegli frequenti o rigirarsi",
@@ -1849,6 +1852,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "New discussion" to "Nuova discussione",
     "New medicine label" to "Nuovo farmaco",
     "New migraine label" to "Nuova emicrania",
+    "New pain entry" to "Nuova nota dolore",
     "New password" to "Nuova password",
     "New passwords do not match." to "Le nuove password non coincidono.",
     "New recommendations ready" to "Nuovi consigli pronti",
@@ -2011,6 +2015,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Notes (optional)" to "Note (facoltativo)",
     "Notes: %s" to "Note: %s",
     "Nothing here. When you tap Undo on a calendar event during your check-in, the title shows up here so you can revive it later." to "Qui non c'è nulla. Se durante il punto tocchi Annulla su un evento, il titolo compare qui e potrai recuperarlo.",
+    "Nothing in your list yet." to "Ancora niente nella tua lista.",
     "Nothing linked to an attack yet" to "Ancora nulla collegato a un attacco",
     "Nothing selected — go back to tap items, or save an empty check-in" to "Nulla scelto: torna e tocca delle voci, o salva vuoto",
     "Nothing to review yet" to "Nulla da rivedere",
@@ -2274,6 +2279,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Rarely" to "Di rado",
     "Rarely — they catch me off guard" to "Di rado, mi colgono di sorpresa",
     "Rate the severity and mark where you feel it. Add another entry if the pain moved or peaked later" to "Dai l'intensità e segna dove lo senti. Aggiungi una voce se il dolore si è spostato o è salito",
+    "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged." to "Valuta l'intensità e segna dove la senti. Le voci si aggiungono a questa emicrania senza cancellare quanto già registrato.",
     "Re-assess my profile" to "Rivedi il profilo",
     "Re-authentication failed." to "Riautenticazione fallita.",
     "Read full article" to "Leggi tutto",
@@ -3247,6 +3253,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "What best describes your daily routine?" to "Cosa descrive meglio la tua routine?",
     "What changed" to "Cosa è cambiato",
     "What did you do today?" to "Cosa hai fatto oggi?",
+    "What did you feel? Tap one to rate it." to "Cosa hai sentito? Tocca per valutare.",
     "What did you miss?" to "Cosa hai perso?",
     "What did you take today" to "Cosa hai preso oggi",
     "What do you miss because of migraines?" to "Cosa ti perdi per colpa delle emicranie?",
@@ -3259,6 +3266,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "What helps relieve your migraines?" to "Cosa allevia le tue emicranie?",
     "What is your age range?" to "Qual è la tua fascia d'età?",
     "What is your gender?" to "Il tuo genere?",
+    "What lingered after the attack? Tap one to rate it." to "Cosa è rimasto dopo l'attacco? Tocca per valutare.",
     "What makes those habits happen" to "Cosa rende possibili quelle abitudini",
     "What medicines do you take?" to "Che farmaci prendi?",
     "What symptoms do you experience?" to "Che sintomi hai?",
@@ -3636,5 +3644,4 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Microfono",
     "📍 Location" to "📍 Posizione",
     "📱 Usage Access" to "📱 Accesso all'uso",
-    "You rated it %1\$s relief, over %2\$s uses" to "Sollievo valutato %1\$s, su %2\$s utilizzi",
 )

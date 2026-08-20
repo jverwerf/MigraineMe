@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3620 entries.
+ * 3630 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -139,7 +139,9 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "(no title)" to "(geen titel)",
     "(unknown)" to "(onbekend)",
     "+ %s more" to "+ %s meer",
+    "+ Add" to "+ Toevoegen",
     "+ Add a time" to "+ Tijd erbij",
+    "+ Add another entry" to "+ Nog een notitie",
     "+ Add aura moment" to "+ Auramoment",
     "+ Add pain entry" to "+ Pijnnotitie",
     "+ Add pain update" to "+ Pijnupdate",
@@ -333,8 +335,11 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Add medicine" to "Medicijn",
     "Add medicines you've taken" to "Noteer de medicijnen die je nam",
     "Add notes…" to "Notities…",
+    "Add pain" to "Pijn erbij",
+    "Add postdrome" to "Nawee erbij",
     "Add relief" to "Verlichting",
     "Add reliefs that helped" to "Noteer wat verlichting gaf",
+    "Add symptom" to "Symptoom erbij",
     "Add to Frequent" to "Naar Vaak",
     "Add to Pool" to "Naar lijst",
     "Add to frequent" to "Bij favorieten",
@@ -1217,8 +1222,6 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Frequency Trends" to "Hoe vaak",
     "Frequency trends" to "Trend hoe vaak",
     "Frequent" to "Vaak",
-    "Set end time" to "Eindtijd instellen",
-    "Duration in minutes (optional)" to "Duur in minuten (optioneel)",
     "Frequent need to urinate" to "Vaak moeten plassen",
     "Frequent urination" to "Vaak plassen",
     "Frequent wake-ups or tossing and turning" to "Vaak wakker of veel woelen",
@@ -1849,6 +1852,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "New discussion" to "Nieuw gesprek",
     "New medicine label" to "Nieuw medicijn",
     "New migraine label" to "Nieuwe migraine",
+    "New pain entry" to "Nieuw pijnpunt",
     "New password" to "Nieuw wachtw.",
     "New passwords do not match." to "Nieuwe wachtwoorden komen niet overeen.",
     "New recommendations ready" to "Nieuwe aanbevelingen klaar",
@@ -2011,6 +2015,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Notes (optional)" to "Notities (opt.)",
     "Notes: %s" to "Notities: %s",
     "Nothing here. When you tap Undo on a calendar event during your check-in, the title shows up here so you can revive it later." to "Hier staat niets. Tik je tijdens de check op Ongedaan bij een afspraak, dan komt de titel hier terug te staan.",
+    "Nothing in your list yet." to "Nog niets in je lijst.",
     "Nothing linked to an attack yet" to "Nog niets aan een aanval gekoppeld",
     "Nothing selected — go back to tap items, or save an empty check-in" to "Niets gekozen: ga terug en tik items aan, of sla leeg op",
     "Nothing to review yet" to "Niets te bekijken",
@@ -2274,6 +2279,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Rarely" to "Zelden",
     "Rarely — they catch me off guard" to "Zelden, ze overvallen me",
     "Rate the severity and mark where you feel it. Add another entry if the pain moved or peaked later" to "Geef de zwaarte en markeer waar je het voelt. Nog een notitie als de pijn verschoof of piekte",
+    "Rate the severity and mark where you feel it. Entries are added to this migraine on top of what's already logged." to "Geef de ernst aan en markeer waar je het voelt. Invoer komt bovenop wat al is gelogd bij deze migraine.",
     "Re-assess my profile" to "Profiel opnieuw",
     "Re-authentication failed." to "Opnieuw inloggen mislukt.",
     "Read full article" to "Lees verder",
@@ -3247,6 +3253,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "What best describes your daily routine?" to "Wat past het best bij je dagelijkse routine?",
     "What changed" to "Wat veranderde",
     "What did you do today?" to "Wat deed je vandaag?",
+    "What did you feel? Tap one to rate it." to "Wat voelde je? Tik om te beoordelen.",
     "What did you miss?" to "Wat miste je?",
     "What did you take today" to "Wat nam je vandaag",
     "What do you miss because of migraines?" to "Wat mis je door migraine?",
@@ -3259,6 +3266,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "What helps relieve your migraines?" to "Wat verlicht je migraine?",
     "What is your age range?" to "Wat is je leeftijdsgroep?",
     "What is your gender?" to "Wat is je gender?",
+    "What lingered after the attack? Tap one to rate it." to "Wat bleef na de aanval? Tik om te beoordelen.",
     "What makes those habits happen" to "Wat die gewoonten mogelijk maakt",
     "What medicines do you take?" to "Welke medicijnen neem je?",
     "What symptoms do you experience?" to "Welke klachten heb je?",
@@ -3636,5 +3644,4 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Microfoon",
     "📍 Location" to "📍 Locatie",
     "📱 Usage Access" to "📱 Gebruikstoegang",
-    "You rated it %1\$s relief, over %2\$s uses" to "Verlichting beoordeeld als %1\$s, over %2\$s keer",
 )

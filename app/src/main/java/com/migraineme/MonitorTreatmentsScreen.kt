@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.alpha
 import org.json.JSONArray
 import org.json.JSONException
 import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -626,6 +627,21 @@ private fun AddTreatmentRegimenDialog(
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    // Voice input for the Notes field, same contract as JournalEditScreen:
+    // appends the spoken text to what is already there.
+    val notesSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                notes = if (notes.isBlank()) spoken else "$notes, $spoken"
+            }
+        }
+    }
+
     // One-unit system: for drug regimens the amount is a number and the unit
     // comes from the matching pool medicine (default mg).
     var poolUnits by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
@@ -756,6 +772,18 @@ private fun AddTreatmentRegimenDialog(
                 OutlinedTextField(
                     value = notes, onValueChange = { notes = it },
                     colors = treatmentFieldColors(),
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            }
+                            try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }) {
+                            Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = Color(0xFFB97BFF), modifier = Modifier.size(20.dp))
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                 )
                 error?.let {

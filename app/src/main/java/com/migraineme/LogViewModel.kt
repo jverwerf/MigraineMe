@@ -1386,6 +1386,44 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Quick-add landed new child rows on a migraine: re-fetch it with its
+     *  linked lists and swap the feed event, keeping the loaded window. */
+    fun refreshMigraineInJournal(accessToken: String, migraineId: String) {
+        viewModelScope.launch {
+            try {
+                if (_journal.value.none { journalEventId(it) == migraineId }) return@launch
+                val row = db.getMigraineById(accessToken, migraineId)
+                val linked = try { db.getLinkedItems(accessToken, migraineId) } catch (_: Exception) { SupabaseDbService.MigraineLinkedItems() }
+                val replacement = JournalEvent.Migraine(row, linked)
+                _journal.value = _journal.value
+                    .map { if (journalEventId(it) == migraineId) replacement else it }
+                    .sortedByDescending { journalEventStartAt(it) ?: "" }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    /** Drop one freshly inserted row into the loaded feed — the add-mode
+     *  sibling of refreshJournalEntry, which only swaps existing events. */
+    fun addJournalEntry(accessToken: String, itemType: String, id: String) {
+        viewModelScope.launch {
+            try {
+                if (_journal.value.any { journalEventId(it) == id }) {
+                    refreshJournalEntry(accessToken, itemType, id); return@launch
+                }
+                val ev: JournalEvent = when (itemType) {
+                    "trigger" -> JournalEvent.Trigger(db.getTriggerById(accessToken, id))
+                    "medicine" -> JournalEvent.Medicine(db.getMedicineById(accessToken, id))
+                    "relief" -> JournalEvent.Relief(db.getReliefById(accessToken, id))
+                    "prodrome" -> JournalEvent.Prodrome(db.getProdromeLogById(accessToken, id))
+                    "location" -> JournalEvent.Location(db.getLocationLogById(accessToken, id))
+                    else -> return@launch
+                }
+                _journal.value = (_journal.value + ev)
+                    .sortedByDescending { journalEventStartAt(it) ?: "" }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
     // ---- removals ----
     fun removeMigraine(accessToken: String, id: String) {
         viewModelScope.launch {

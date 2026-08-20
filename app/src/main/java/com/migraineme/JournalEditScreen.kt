@@ -44,7 +44,13 @@ fun JournalEditScreen(
     logVm: LogViewModel? = null,
     onBack: () -> Unit,
     onDeleted: () -> Unit = onBack,
+    // Add mode (journal quick-add): no row is loaded — the same sheet inserts a
+    // new row pre-linked to this migraine, with the start defaulting to the
+    // attack start rather than now.
+    addForMigraineId: String? = null,
+    addStartAtIso: String? = null,
 ) {
+    val isAdd = addForMigraineId != null
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val auth by authVm.state.collectAsState()
@@ -149,10 +155,13 @@ fun JournalEditScreen(
                     pickCategories = opts.associate { it.first to it.third }
                 }
 
+                if (isAdd) {
+                    startAt = runCatching { Instant.parse(addStartAtIso!!) }.getOrDefault(Instant.now())
+                }
+
                 when (itemType) {
                     "trigger" -> {
-                        val rows = db.getAllTriggers(token)
-                        val row = rows.find { it.id == itemId }
+                        val row = if (isAdd) null else db.getAllTriggers(token).find { it.id == itemId }
                         if (row != null) {
                             label = row.type?.let { t -> triggerLabelMap[t] ?: t.replace("_", " ").replaceFirstChar { c -> c.uppercase() } } ?: ""
                             pickType = row.type ?: ""
@@ -183,8 +192,7 @@ fun JournalEditScreen(
                         }
                     }
                     "medicine" -> {
-                        val rows = db.getAllMedicines(token)
-                        val row = rows.find { it.id == itemId }
+                        val row = if (isAdd) null else db.getAllMedicines(token).find { it.id == itemId }
                         val pool = runCatching { db.getAllMedicinePool(token) }.getOrNull().orEmpty()
                         if (row != null) {
                             label = row.name ?: ""
@@ -216,8 +224,7 @@ fun JournalEditScreen(
                         }
                     }
                     "relief" -> {
-                        val rows = db.getAllReliefs(token)
-                        val row = rows.find { it.id == itemId }
+                        val row = if (isAdd) null else db.getAllReliefs(token).find { it.id == itemId }
                         if (row != null) {
                             label = row.type ?: ""
                             reliefType = row.type ?: ""
@@ -249,8 +256,7 @@ fun JournalEditScreen(
                         }
                     }
                     "prodrome" -> {
-                        val rows = db.getAllProdromeLog(token)
-                        val row = rows.find { it.id == itemId }
+                        val row = if (isAdd) null else db.getAllProdromeLog(token).find { it.id == itemId }
                         if (row != null) {
                             label = row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: ""
                             pickType = row.type ?: ""
@@ -278,8 +284,7 @@ fun JournalEditScreen(
                         }
                     }
                     "activity" -> {
-                        val rows = db.getAllActivityLog(token)
-                        val row = rows.find { it.id == itemId }
+                        val row = if (isAdd) null else db.getAllActivityLog(token).find { it.id == itemId }
                         val pool = runCatching { db.getAllActivityPool(token) }.getOrNull().orEmpty()
                         if (row != null) {
                             label = row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: ""
@@ -303,8 +308,7 @@ fun JournalEditScreen(
                         }
                     }
                     "location" -> {
-                        val rows = db.getAllLocationLog(token)
-                        val row = rows.find { it.id == itemId }
+                        val row = if (isAdd) null else db.getAllLocationLog(token).find { it.id == itemId }
                         if (row != null) {
                             label = row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: ""
                             pickType = row.type ?: ""
@@ -376,6 +380,14 @@ fun JournalEditScreen(
                 "trigger" -> triggerLabelMap[pickType] ?: pickType.replace("_", " ").replaceFirstChar { c -> c.uppercase() }
                 "medicine" -> pickType
                 else -> pickType.replace("_", " ").replaceFirstChar { c -> c.uppercase() }
+            }
+
+            if (isAdd) {
+                Text(
+                    t("Add %s", typeTitle.lowercase()),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
             }
 
             // ── Item name. Reliefs are re-pickable from the user's own pool
@@ -938,6 +950,8 @@ fun JournalEditScreen(
                             saving = false
                             return@launch
                         }
+                        var addedId: String? = null
+                        var addedNeedsFullReload = false
                         withContext(Dispatchers.IO) {
                             try {
                                 val newStartAt = ZonedDateTime.of(selectedDate, selectedTime, ZoneId.systemDefault())
@@ -947,7 +961,57 @@ fun JournalEditScreen(
                                 // pool) send no type and keep their category.
                                 val newType = if (canPick) pickType.trim().ifBlank { null } else null
                                 val newCategory = newType?.let { pickCategories[it] }
-                                when (itemType) {
+                                if (isAdd) {
+                                    // Add mode: same sheet, but the save is an insert
+                                    // pre-linked to the migraine. All inserts stamp
+                                    // source='manual' through their defaults.
+                                    val pickedType = if (itemType == "relief") reliefType.trim() else (newType ?: "")
+                                    if (pickedType.isBlank()) {
+                                        error = "Pick one first"
+                                    } else when (itemType) {
+                                        "trigger" -> addedId = db.insertTrigger(token, addForMigraineId, pickedType, newStartAt, notes.ifBlank { null }).id
+                                        "medicine" -> {
+                                            val doseValue = DoseUnits.parseNumber(doseText)
+                                                ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
+                                            addedId = db.insertMedicine(
+                                                token, addForMigraineId, pickedType, amount = null,
+                                                startAt = newStartAt, notes = notes.ifBlank { null },
+                                                category = newCategory,
+                                                reliefScale = reliefScale.name,
+                                                sideEffectScale = sideEffectScale,
+                                                sideEffectNotes = sideEffectNotes.ifBlank { null },
+                                                doseValue = doseValue,
+                                                doseUnit = if (doseValue != null) doseUnit else null
+                                            ).id
+                                        }
+                                        "relief" -> {
+                                            val resolvedEnd: Instant? =
+                                                if (DoseUnits.isTakenOnlyRelief(reliefType) || !hasEnd) null else endAt
+                                            val row = db.insertRelief(
+                                                token, addForMigraineId, pickedType, newStartAt,
+                                                notes = notes.ifBlank { null },
+                                                endAt = resolvedEnd?.toString(),
+                                                reliefScale = reliefScale.name,
+                                                sideEffectScale = sideEffectScale,
+                                                sideEffectNotes = sideEffectNotes.ifBlank { null }
+                                            )
+                                            addedId = row.id
+                                            // Device reliefs schedule their follow-up here, same
+                                            // as quick log — skipping it silently stops them.
+                                            DeviceReliefOutcomeWorker.scheduleIfDevice(ctx, row.id, pickedType, row.category)
+                                        }
+                                        "prodrome" -> addedId = db.insertProdrome(token, addForMigraineId, pickedType, newStartAt, notes.ifBlank { null }).id
+                                        // activity_type is stored lowercased, matching the
+                                        // app's own insert path; the insert returns no row
+                                        // id, so the feed reloads instead.
+                                        "activity" -> {
+                                            db.insertActivityV2(token, addForMigraineId, pickedType.lowercase(), newStartAt, notes = notes.ifBlank { null })
+                                            addedNeedsFullReload = true
+                                        }
+                                        "location" -> addedId = db.insertLocation(token, addForMigraineId, pickedType, newStartAt, notes.ifBlank { null }).id
+                                        else -> {}
+                                    }
+                                } else when (itemType) {
                                     "trigger" -> db.updateTrigger(token, itemId, type = newType, startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
                                     "medicine" -> {
                                         val doseValue = DoseUnits.parseNumber(doseText)
@@ -984,9 +1048,18 @@ fun JournalEditScreen(
                         }
                         saving = false
                         if (error == null) {
-                            // Just this row, back into the window the feed already
-                            // holds — not a reload of the whole journal.
-                            auth.accessToken?.let { logVm?.refreshJournalEntry(it, itemType, itemId) }
+                            auth.accessToken?.let { tok ->
+                                if (isAdd) {
+                                    addedId?.let { logVm?.addJournalEntry(tok, itemType, it) }
+                                    if (addedNeedsFullReload) logVm?.loadJournal(tok)
+                                    addForMigraineId?.let { logVm?.refreshMigraineInJournal(tok, it) }
+                                    runCatching { EdgeFunctionsService().triggerRecalcRiskScores(ctx.applicationContext) }
+                                } else {
+                                    // Just this row, back into the window the feed already
+                                    // holds — not a reload of the whole journal.
+                                    logVm?.refreshJournalEntry(tok, itemType, itemId)
+                                }
+                            }
                             onBack()
                         }
                     }
@@ -1000,11 +1073,11 @@ fun JournalEditScreen(
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
                     Spacer(Modifier.width(8.dp))
                 }
-                Text(t("Save changes"), color = Color.White)
+                Text(if (isAdd) t("Add") else t("Save changes"), color = Color.White)
             }
 
-            // ── Delete button ──
-            OutlinedButton(
+            // ── Delete button (edit mode only — there is nothing to delete yet) ──
+            if (!isAdd) OutlinedButton(
                 onClick = { confirmDelete = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE57373)),

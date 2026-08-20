@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -80,7 +81,36 @@ fun QuickLogReliefScreen(
     var sideEffectScale by rememberSaveable { mutableStateOf("NONE") }
     var sideEffectNotes by rememberSaveable { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
-    
+
+    // Voice input for the Notes field, same contract as JournalEditScreen:
+    // appends the spoken text to what is already there.
+    val notesSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                notes = if (notes.isBlank()) spoken else "$notes, $spoken"
+            }
+        }
+    }
+
+    // Same voice input for the side-effect notes field.
+    val seSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
+            }
+        }
+    }
+
     val scrollState = rememberScrollState()
     
     // Get labels for display
@@ -272,6 +302,18 @@ fun QuickLogReliefScreen(
                             focusedBorderColor = AppTheme.AccentPurple,
                             unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
                         ),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                }
+                                try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                    android.widget.Toast.makeText(ctx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }) {
+                                Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                            }
+                        },
                         minLines = 2
                     )
 
@@ -343,6 +385,19 @@ fun QuickLogReliefScreen(
                             focusedBorderColor = AppTheme.AccentPurple,
                             unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
                         ),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                    putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                    putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Describe side effects…")
+                                }
+                                try { seSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                    android.widget.Toast.makeText(ctx, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }) {
+                                Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                            }
+                        },
                         minLines = 1, maxLines = 3
                     )
                 }

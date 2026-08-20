@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -506,6 +508,22 @@ private fun CorePage(
     onEditAura: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    // Voice input for the Notes field, same contract as JournalEditScreen:
+    // appends the spoken text to what is already there.
+    val notesSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                val updated = if (notes.text.isBlank()) spoken else "${notes.text}, $spoken"
+                setNotes(TextFieldValue(updated, androidx.compose.ui.text.TextRange(updated.length)))
+            }
+        }
+    }
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(vertical = 16.dp),
@@ -591,6 +609,18 @@ private fun CorePage(
                 value = notes,
                 onValueChange = setNotes,
                 label = { Text(t("Notes")) },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                        }
+                        try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
+                            android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -954,6 +984,22 @@ private fun MedicineAddDialog(
     var pickedIso by remember { mutableStateOf<String?>(null) }
     var notes by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    // Voice input for the Notes field, same contract as JournalEditScreen:
+    // appends the spoken text to what is already there.
+    val notesSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                notes = if (notes.isBlank()) spoken else "$notes, $spoken"
+            }
+        }
+    }
+
     AlertDialog(
         onDismissRequest = {},
         modifier = Modifier.border(1.dp, Color(0xFFCE93D8), RoundedCornerShape(28.dp)),
@@ -987,6 +1033,18 @@ private fun MedicineAddDialog(
                     value = notes,
                     onValueChange = { notes = it },
                     label = { Text(t("Notes")) },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            }
+                            try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }) {
+                            Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -1005,6 +1063,22 @@ private fun ReliefAddDialog(
     var durationText by remember { mutableStateOf("") }
     var pickedIso by remember { mutableStateOf<String?>(null) }
     var notes by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    // Voice input for the Notes field, same contract as JournalEditScreen:
+    // appends the spoken text to what is already there.
+    val notesSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                notes = if (notes.isBlank()) spoken else "$notes, $spoken"
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = {},
@@ -1036,6 +1110,18 @@ private fun ReliefAddDialog(
                     value = notes,
                     onValueChange = { notes = it },
                     label = { Text(t("Notes")) },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            }
+                            try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }) {
+                            Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

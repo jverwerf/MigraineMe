@@ -311,6 +311,30 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
     }
     val doNavigate: (String) -> Unit = { route -> navController.navigate(route) }
 
+    // ── Quick-add: routes for the standalone add flows; aura stays a sheet
+    // over the journal, so it needs screen-level state. ──
+    var auraAddFor by remember { mutableStateOf<JournalEvent.Migraine?>(null) }
+    val doQuickAdd: (JournalEvent.Migraine, QuickAddKind) -> Unit = { ev, kind ->
+        val id = ev.row.id
+        val start = java.net.URLEncoder.encode(
+            ev.row.startAt ?: java.time.Instant.now().toString(), "UTF-8"
+        )
+        when (kind) {
+            QuickAddKind.AURA -> auraAddFor = ev
+            QuickAddKind.PAIN -> doNavigate("${Routes.JOURNAL_ADD_PAIN}/$id/$start")
+            QuickAddKind.SYMPTOM -> doNavigate("${Routes.JOURNAL_ADD_SYMPTOM}/$id")
+            QuickAddKind.POSTDROME -> doNavigate("${Routes.JOURNAL_ADD_POSTDROME}/$id")
+            else -> doNavigate("${Routes.JOURNAL_ADD}/${kind.key}/$id/$start")
+        }
+    }
+    auraAddFor?.let { m ->
+        JournalAuraAddSheet(
+            authVm = authVm, logVm = vm,
+            migraineId = m.row.id, migraineStartAtIso = m.row.startAt,
+            onClose = { auraAddFor = null }
+        )
+    }
+
     // ── Pagination ──
     val listState = rememberLazyListState()
     // Each view starts at its top — carrying the Stream's scroll offset into
@@ -570,7 +594,10 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                                         verticalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         flagged.forEach { ev ->
-                                            JournalEntryRow(ev, triggerLabelMap, withMenu = true, doNavigate, doDelete)
+                                            JournalEntryRow(
+                                            ev, triggerLabelMap, withMenu = true, doNavigate, doDelete,
+                                            onQuickAdd = (ev as? JournalEvent.Migraine)?.let { m -> { k: QuickAddKind -> doQuickAdd(m, k) } }
+                                        )
                                         }
                                     }
                                 }
@@ -590,7 +617,10 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             )
                             BaseCard(contentPadding = 8.dp) {
                                 events.forEach { ev ->
-                                    JournalEntryRow(ev, triggerLabelMap, withMenu = true, doNavigate, doDelete)
+                                    JournalEntryRow(
+                                            ev, triggerLabelMap, withMenu = true, doNavigate, doDelete,
+                                            onQuickAdd = (ev as? JournalEvent.Migraine)?.let { m -> { k: QuickAddKind -> doQuickAdd(m, k) } }
+                                        )
                                 }
                             }
                         }
@@ -643,7 +673,10 @@ fun JournalScreen(navController: NavHostController, authVm: AuthViewModel, vm: L
                             } else {
                                 BaseCard(contentPadding = 8.dp) {
                                     dayEvents.forEach { ev ->
-                                        JournalEntryRow(ev, triggerLabelMap, withMenu = true, doNavigate, doDelete)
+                                        JournalEntryRow(
+                                            ev, triggerLabelMap, withMenu = true, doNavigate, doDelete,
+                                            onQuickAdd = (ev as? JournalEvent.Migraine)?.let { m -> { k: QuickAddKind -> doQuickAdd(m, k) } }
+                                        )
                                     }
                                 }
                             }
@@ -1057,6 +1090,8 @@ private fun JournalEntryRow(
     // Rich mode: attacks keep the old journal's full breakdown under the row.
     // Off in the Days previews, where the card is a summary by design.
     rich: Boolean = withMenu,
+    // Quick-add on migraine rows; null (Days previews) renders none.
+    onQuickAdd: ((QuickAddKind) -> Unit)? = null,
 ) {
     val info = remember(ev, labels) { entryRowInfo(ev, labels) }
     var menuOpen by remember { mutableStateOf(false) }
@@ -1143,7 +1178,10 @@ private fun JournalEntryRow(
             }
         }
     }
-    if (rich && ev is JournalEvent.Migraine) MigraineDetailLines(ev, labels)
+    if (rich && ev is JournalEvent.Migraine) {
+        MigraineDetailLines(ev, labels)
+        if (onQuickAdd != null) MigraineQuickAddSection(onAdd = onQuickAdd)
+    }
     }
 
     if (confirmDelete) {
