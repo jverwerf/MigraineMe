@@ -64,9 +64,9 @@ fun JournalEditScreen(
     var reliefType by remember { mutableStateOf("") }
     var reliefFrequent by remember { mutableStateOf<List<String>>(emptyList()) }
     var reliefAll by remember { mutableStateOf<List<String>>(emptyList()) }
+    // Label -> pool icon_key, so the picker can show each relief's Brainy art.
+    var reliefIconKeys by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var reliefTypeMenuOpen by remember { mutableStateOf(false) }
-    // Relief: optional duration in minutes; wins over the end-time pickers.
-    var durationText by remember { mutableStateOf("") }
     var hasEnd by remember { mutableStateOf(false) }
     var notes by remember { mutableStateOf("") }
     var loaded by remember { mutableStateOf(false) }
@@ -87,6 +87,21 @@ fun JournalEditScreen(
                 ?.firstOrNull()
             if (!spoken.isNullOrBlank()) {
                 sideEffectNotes = if (sideEffectNotes.isBlank()) spoken else "$sideEffectNotes, $spoken"
+            }
+        }
+    }
+
+    // Voice input for the general Notes field, same contract as the
+    // side-effect one: appends the spoken text to what is already there.
+    val notesSpeechLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                notes = if (notes.isBlank()) spoken else "$notes, $spoken"
             }
         }
     }
@@ -161,6 +176,10 @@ fun JournalEditScreen(
                         reliefAll = pool.map { it.label.trim() }
                             .filter { it.isNotEmpty() && it !in freq }
                             .sorted()
+                        reliefIconKeys = buildMap {
+                            pool.forEach { put(it.label.trim(), it.iconKey) }
+                            prefs.forEach { p -> p.relief?.let { r -> put(r.label.trim(), r.iconKey) } }
+                        }
                     }
                     "prodrome" -> {
                         val rows = db.getAllProdromeLog(token)
@@ -243,6 +262,7 @@ fun JournalEditScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
+                            BrainyRowIcon(reliefType, iconKey = reliefIconKeys[reliefType], category = "relief", size = 24.dp)
                             Text(
                                 reliefType.ifBlank { "Unknown" },
                                 color = Color.White,
@@ -266,6 +286,7 @@ fun JournalEditScreen(
                                 reliefFrequent.forEach { opt ->
                                     DropdownMenuItem(
                                         text = { Text(opt) },
+                                        leadingIcon = { BrainyRowIcon(opt, iconKey = reliefIconKeys[opt], category = "relief", size = 24.dp, gap = 0.dp) },
                                         onClick = {
                                             reliefType = opt
                                             reliefTypeMenuOpen = false
@@ -283,6 +304,7 @@ fun JournalEditScreen(
                                 reliefAll.forEach { opt ->
                                     DropdownMenuItem(
                                         text = { Text(opt) },
+                                        leadingIcon = { BrainyRowIcon(opt, iconKey = reliefIconKeys[opt], category = "relief", size = 24.dp, gap = 0.dp) },
                                         onClick = {
                                             reliefType = opt
                                             reliefTypeMenuOpen = false
@@ -419,11 +441,14 @@ fun JournalEditScreen(
                 }
             }
 
-            // ── Duration (relief only). Minutes entry wins over the end-time
-            // pickers; neither set clears the stored end. Taken-only reliefs
-            // (Water, Caffeine…) get no duration UI at all. The old version
-            // synced endAt from the pickers unconditionally, so every save
-            // fabricated end_at = start_at on reliefs that had no end. ──
+            // ── End time (relief only) — a plain End time card under When,
+            // no minutes field, no toggle. It stays optional: unset rows show
+            // "Not set" buttons (tapping one starts an end at now) and the x
+            // clears back to no end, because a bare relief log is always
+            // valid. The old version synced endAt from the pickers
+            // unconditionally, so every save fabricated end_at = start_at on
+            // reliefs that had no end. Taken-only reliefs (Water, Caffeine…)
+            // get no end-time UI at all. ──
             if (itemType == "relief" && !DoseUnits.isTakenOnlyRelief(reliefType)) {
                 val endZoned = endAt?.atZone(ZoneId.systemDefault())
                 // No stored end → pickers default to NOW, not the start time
@@ -440,40 +465,53 @@ fun JournalEditScreen(
                 }
 
                 BaseCard {
-                    Text(t("Duration in minutes (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = durationText,
-                        onValueChange = { new ->
-                            if (new.isEmpty() || new.all { it.isDigit() }) durationText = new
-                        },
-                        placeholder = { Text("30", color = AppTheme.SubtleTextColor) },
-                        singleLine = true,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = AppTheme.AccentPurple,
-                            unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
-                            cursorColor = AppTheme.AccentPurple,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        Text(t("Set end time"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                        Switch(
-                            checked = hasEnd,
-                            onCheckedChange = { hasEnd = it },
-                            colors = SwitchDefaults.colors(checkedTrackColor = AppTheme.AccentPurple),
-                        )
+                        Text(t("End time"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                        if (hasEnd) {
+                            IconButton(onClick = { hasEnd = false }, modifier = Modifier.size(24.dp)) {
+                                Icon(Icons.Outlined.Close, contentDescription = t("Clear"), tint = AppTheme.SubtleTextColor, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+
+                    if (!hasEnd) {
+                        // Placeholder buttons — tapping either starts an end
+                        // at now; the real pickers replace them right away.
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    selectedEndDate = LocalDate.now()
+                                    selectedEndTime = LocalTime.now()
+                                    hasEnd = true
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.SubtleTextColor),
+                            ) {
+                                Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(t("Not set"))
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    selectedEndDate = LocalDate.now()
+                                    selectedEndTime = LocalTime.now()
+                                    hasEnd = true
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.SubtleTextColor),
+                            ) {
+                                Icon(Icons.Outlined.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(t("Not set"))
+                            }
+                        }
                     }
 
-                    if (hasEnd && durationText.isBlank()) {
-                    Spacer(Modifier.height(8.dp))
+                    if (hasEnd) {
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -558,8 +596,7 @@ fun JournalEditScreen(
                 }
             }
 
-            // ── Notes (migraine only — medicines & reliefs use side effect notes) ──
-            if (itemType == "migraine") {
+            // ── Notes (all types, matching iOS; side effect notes stay separate) ──
             BaseCard {
                 Text(t("Notes"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
@@ -575,10 +612,24 @@ fun JournalEditScreen(
                         unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
                         cursorColor = AppTheme.AccentPurple,
                     ),
+                    trailingIcon = {
+                        // Same voice input as the side-effect notes field; the
+                        // screen opens on a note that already exists, so
+                        // dictation appends to it.
+                        IconButton(onClick = {
+                            val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            }
+                            try { notesSpeechLauncher.launch(intent) } catch (_: Exception) {
+                                android.widget.Toast.makeText(context, tSync("Voice input not available"), android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }) {
+                            Icon(Icons.Outlined.Mic, contentDescription = t("Voice input"), tint = AppTheme.AccentPurple, modifier = Modifier.size(20.dp))
+                        }
+                    },
                     minLines = 2,
                     maxLines = 5,
                 )
-            }
             }
 
             // ── Relief scale + Side effects (medicine & relief only) ──
@@ -697,19 +748,10 @@ fun JournalEditScreen(
                                         db.updateMedicine(token, itemId, startAt = newStartAt, amount = null, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, doseValue = doseValue, doseUnit = if (doseValue != null) doseUnit else null)
                                     }
                                     "relief" -> {
-                                        // Minutes entry wins, then the end pickers, else the
-                                        // stored end time is cleared (a bare relief log is
-                                        // always valid). A duration typed against a start close
-                                        // to now runs past it — the derived end is a log
-                                        // timestamp too and gets the same clamp.
-                                        val startInstant = ZonedDateTime.of(selectedDate, selectedTime, ZoneId.systemDefault()).toInstant()
-                                        val mins = durationText.toIntOrNull()?.takeIf { it > 0 }
-                                        val resolvedEnd: Instant? = when {
-                                            DoseUnits.isTakenOnlyRelief(reliefType) -> null
-                                            mins != null -> startInstant.plusSeconds(mins * 60L)
-                                                .let { if (it.isAfter(Instant.now())) Instant.now() else it }
-                                            else -> endAt
-                                        }
+                                        // End card set → end_at, cleared → the stored end
+                                        // time is wiped (a bare relief log is always valid).
+                                        val resolvedEnd: Instant? =
+                                            if (DoseUnits.isTakenOnlyRelief(reliefType) || !hasEnd) null else endAt
                                         db.updateRelief(
                                             token, itemId,
                                             type = reliefType.ifBlank { null },
