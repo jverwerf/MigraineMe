@@ -155,6 +155,25 @@ serve(async (req: Request) => {
 
     if (!profile) return json({ status: "no_profile" });
 
+    // Recently rejected proposals — fed to every AI call so a weekly run
+    // doesn't re-propose something the user said no to a week ago.
+    const { data: rejectedRows } = await supabase
+      .from("recalibration_proposals")
+      .select("type, label, to_value")
+      .eq("user_id", userId)
+      .eq("status", "rejected")
+      .gte("created_at", new Date(Date.now() - 60 * 86400000).toISOString());
+
+    let rejectionBlock = "";
+    if (rejectedRows && rejectedRows.length > 0) {
+      const lines = rejectedRows.map((r: any) =>
+        `- ${r.type}: "${r.label}"${r.to_value ? ` → ${r.to_value}` : ""}`);
+      rejectionBlock =
+        "\n\n=== RECENTLY REJECTED (last 60 days) ===\n" +
+        "The patient declined these proposals. Do NOT propose them again:\n" +
+        lines.join("\n");
+    }
+
     // Onboarding-tour demo rows must never reach the AI: the assessment has to
     // describe the patient, not the tour fixture. Seeded rows carry
     // source='demo' or notes starting '[demo]'; children of a demo migraine are
@@ -807,7 +826,7 @@ serve(async (req: Request) => {
       last30MigraineCount, priorMigraineCount,
       lifestyle,
       symSeverityByLabel, auraSummary, corrLines, treatmentLines, bedtimeStats,
-    );
+    ) + rejectionBlock;
 
     const call1Result = await callOpenAI(CALL1_SYSTEM_PROMPT + modelLanguageDirective(lang), call1UserMessage);
 
@@ -824,7 +843,7 @@ serve(async (req: Request) => {
         gaugeTP, gaugeFP, gaugeFN, gaugeTN,
         totalDays, greenDays, amberDays, yellowDays, redDays,
         thresholdRows ?? [], decayRows ?? [],
-      );
+      ) + rejectionBlock;
 
       call2Result = await callOpenAI(CALL2_SYSTEM_PROMPT + modelLanguageDirective(lang), call2UserMessage);
     }
@@ -888,13 +907,6 @@ serve(async (req: Request) => {
     // ══════════════════════════════════════════════════════════════
     // WRITE PROPOSALS
     // ══════════════════════════════════════════════════════════════
-
-    // Clear old pending
-    await supabase
-      .from("recalibration_proposals")
-      .delete()
-      .eq("user_id", userId)
-      .eq("status", "pending");
 
     const proposals: any[] = [];
 
@@ -1020,9 +1032,35 @@ serve(async (req: Request) => {
       });
     }
 
+    // ── No-op filter ──
+    // The AI sometimes proposes a "change" to the value already in place.
+    // from == to can never be worth a banner, so drop it deterministically.
+    const isNoop = (p: any) => {
+      if (p.from_value == null || p.to_value == null) return false;
+      if (String(p.from_value) === String(p.to_value)) return true;
+      if (p.type === "gauge_decay" || p.type === "menstruation_decay") {
+        try {
+          const a = JSON.parse(p.from_value), b = JSON.parse(p.to_value);
+          const keys = Object.keys(b);
+          return keys.length > 0 && keys.every((k) => Number(a[k]) === Number(b[k]));
+        } catch { return false; }
+      }
+      return false;
+    };
+    const actionable = proposals.filter((p) => !isNoop(p));
+
+    // ── Materiality gate ──
+    // A weekly run whose only output is a rewritten narrative (or a repeat
+    // data warning) must stay silent: no batch, no banner, no push. Any
+    // still-pending batch from a previous week is left in place untouched.
+    const material = actionable.filter((p) => p.type !== "data_warning");
+    if (material.length === 0) {
+      return json({ status: "no_material_changes", proposals: 0 });
+    }
+
     // Clinical assessment proposal — user must accept the updated narrative
     if (call1Result.clinical_assessment) {
-      proposals.push({
+      actionable.push({
         user_id: userId, type: "clinical_assessment", label: "Clinical assessment",
         from_value: (profile.clinical_assessment ?? "").substring(0, 200) + "…",
         to_value: call1Result.clinical_assessment,
@@ -1032,7 +1070,7 @@ serve(async (req: Request) => {
     }
 
     // Summary row
-    proposals.push({
+    actionable.push({
       user_id: userId, type: "summary", label: "_meta",
       reasoning: call1Result.clinical_assessment ?? "",
       status: "pending",
@@ -1047,25 +1085,38 @@ serve(async (req: Request) => {
       },
     });
 
-    // Insert all
-    if (proposals.length > 0) {
-      await supabase.from("recalibration_proposals").insert(proposals);
-    }
+    // Clear old pending — only now that a replacement batch exists. A silent
+    // (no-material-changes) run returned above and left any prior batch alone.
+    await supabase
+      .from("recalibration_proposals")
+      .delete()
+      .eq("user_id", userId)
+      .eq("status", "pending");
+
+    await supabase.from("recalibration_proposals").insert(actionable);
 
     // ── Send FCM ──
+    // user_ids + notification_key = a VISIBLE push rendered in the recipient's
+    // language. The old direct-token send was data-only: Android just set the
+    // banner flag and iOS got a silent background wake, so no user ever saw a
+    // notification. The banner reads the DB, so tray-rendering on Android
+    // (which suppresses onMessageReceived) loses nothing.
     try {
-      const { data: prof } = await supabase
-        .from("profiles").select("fcm_token").eq("user_id", userId).single();
-      if (prof?.fcm_token) {
-        await supabase.functions.invoke("send-fcm-push", {
-          body: { type: "recalibration_ready", tokens: [prof.fcm_token] },
-        });
-      }
+      await supabase.functions.invoke("send-fcm-push", {
+        body: {
+          type: "recalibration_ready",
+          user_ids: [userId],
+          notification_key: {
+            title: "Your weekly check-in found something",
+            body: "Your data has shifted. Review the suggested adjustments to your profile.",
+          },
+        },
+      });
     } catch (_) { /* non-fatal */ }
 
     return json({
       status: "ok",
-      proposals: proposals.length - 1, // exclude summary row
+      proposals: actionable.length - 1, // exclude summary row
     });
 
   } catch (err) {
@@ -1124,14 +1175,17 @@ STEP 2 — TRIGGER & PRODROME ADJUSTMENTS:
 Based on linked counts vs current prediction_value.
 
 CRITICAL RULES:
+- This recalibration runs WEEKLY. Propose an adjustment ONLY where the data clearly contradicts the current setting — for example a trigger's linked share of migraines no longer matches its level, or the correlation engine has confirmed a new pattern. Do not propose changes just because time has passed.
+- Empty adjustment lists are a valid, complete answer. Never manufacture a change to have something to show.
+- If a RECENTLY REJECTED section is present, do not re-propose anything in it.
 - Only adjust ONE NOTCH at a time: NONE→LOW, LOW→MILD, MILD→HIGH (and reverse). NEVER skip levels.
 - Use ONLY exact label strings from the AVAILABLE LABELS lists.
-- Limit to 10-15 most impactful changes.
+- At most 10 changes.
 - Frame gently: "We've noticed X was linked to Y of your migraines — we suggest adjusting it up a notch."
 - Lowering IS allowed — the user approves every change.
 
 STEP 3 — FAVORITE ADJUSTMENTS:
-Medicines, reliefs, symptoms, activities, missed activities. If logged frequently but not favorited → suggest favorite. If favorited but rarely used → suggest removing.
+Medicines, reliefs, symptoms, activities, missed activities. If logged frequently but not favorited → suggest favorite. If favorited but rarely used → suggest removing. Only clear-cut cases backed by the counts; an empty list is fine.
 
 STEP 4 — DATA WARNINGS:
 If a trigger is rated HIGH or MILD but the relevant data source isn't connected, flag it.
@@ -1484,12 +1538,14 @@ YOUR TASK:
    - Missed migraines (no warning + migraine happened) → thresholds too high
    - Stuck in one zone → thresholds don't match baseline
 
-2. ADJUST THRESHOLDS incrementally:
-   - Nudge by ~20-30% per recalibration, don't make dramatic jumps
+2. ADJUST THRESHOLDS only if the diagnosis shows a real problem:
+   - This recalibration runs WEEKLY. If the gauge is performing acceptably (sensible zone distribution, no systematic false-alarm or missed-migraine pattern), set "gauge_thresholds" to null. No change is the correct answer for a well-calibrated gauge.
+   - When adjusting: nudge by ~20-30% per recalibration, don't make dramatic jumps
    - Someone who gets migraines "1-3 per month" should NOT be in red every day
    - Most days should be GREEN. Red should be rare and meaningful.
 
-3. ADJUST DECAY CURVES if needed:
+3. ADJUST DECAY CURVES only if the performance data demands it:
+   - If the current curves are doing their job, return an empty "decay_weights" list.
    - Steeper curves if triggers hit fast then fade
    - Flatter curves if cumulative buildup matters more
    - Incremental changes only
@@ -1502,7 +1558,7 @@ YOUR TASK:
 
 5. WRITE summary (2-3 sentences)
 
-Respond with ONLY valid JSON (no markdown fences):
+Respond with ONLY valid JSON (no markdown fences). "gauge_thresholds" may be null and "decay_weights" may be [] when no change is warranted:
 {
   "gauge_thresholds": {"low": N, "mild": N, "high": N, "reasoning": "brief technical reasoning"},
   "decay_weights": [
@@ -1624,7 +1680,7 @@ B) PRESERVE THE SCALE OF THE CURRENT CURVE.
    This is non-negotiable. Compute the current peak value. The new peak MUST be within ±30% of that. So if current peak = 6, new peak is 4.2-7.8. If current peak = 1.0, new peak is 0.7-1.3. Never collapse the magnitude by an order of magnitude. The gauge depends on these weights stacking meaningfully with trigger contributions.
 
 C) NUDGE THE SHAPE, DON'T REBUILD IT.
-   Per recalibration, shift the peak by at most 1-2 days, and adjust individual weights by 20-40%. If the current curve peaks at day_m1 and the data peaks at day_p4, move toward day_p4 over multiple recalibrations — don't jump the whole way in one run.
+   This recalibration runs WEEKLY. If the current curve already fits the histogram, set "menstrual_weights" to null — no change is a valid, common outcome. When you do adjust: shift the peak by at most 1 day per recalibration, and adjust individual weights by at most 20%. If the current curve peaks at day_m1 and the data peaks at day_p4, move toward day_p4 over multiple recalibrations — don't jump the whole way in one run.
 
 D) SANITY CHECK.
    - If on_cycle migraines < 3, return a FLATTER curve, not a sharper one. The data isn't strong enough to fit a precise peak.
@@ -1642,7 +1698,7 @@ STEP 3 — WRITE menstrual_notes (2-3 paragraphs, warm, patient-facing, "you/you
 
 STEP 4 — WRITE summary (1-2 sentences, what changed in plain English) and reasoning (1-2 sentences, PLAIN ENGLISH, no jargon, no field names like "day_p4" or "histogram" or percentages — talk like a kind clinician explaining the change to the patient. Match the tone of "A flatter curve helps capture cumulative effect of mild triggers over several days").
 
-Respond with ONLY valid JSON (no markdown fences):
+Respond with ONLY valid JSON (no markdown fences). "menstrual_weights" may be null when the current curve already fits:
 {
   "menstrual_weights": {
     "day_m7": N, "day_m6": N, "day_m5": N, "day_m4": N, "day_m3": N, "day_m2": N, "day_m1": N,

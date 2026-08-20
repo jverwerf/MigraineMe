@@ -130,11 +130,14 @@ serve(async (req: Request) => {
 
     // ── Write history ──
     // Skipped when nothing at all applied but something failed: the history row
-    // carries the 30-day cooldown, and locking the user out for a month on the
-    // strength of a run that changed nothing would compound the failure.
+    // carries the cooldown, and locking the user out on the strength of a run
+    // that changed nothing would compound the failure.
+    // Full cooldown is 5 days: recalibration runs WEEKLY with a materiality
+    // gate, so the cooldown only has to stop back-to-back manual runs, not
+    // pace the cadence — 30 days here would silently starve the weekly cron.
     if (appliedIds.length > 0 || failures.length === 0) {
       const historyMode = summaryRow?.metadata?.mode ?? "full";
-      const cooldownDays = historyMode === "profile_only" ? 1 : 30;
+      const cooldownDays = historyMode === "profile_only" ? 1 : 5;
 
       check(await supabase.from("recalibration_history").insert({
         user_id: userId,
