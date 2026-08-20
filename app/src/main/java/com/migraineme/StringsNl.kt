@@ -3644,4 +3644,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Microfoon",
     "📍 Location" to "📍 Locatie",
     "📱 Usage Access" to "📱 Gebruikstoegang",
+    "In %1\$s days" to "Over %1\$s dagen",
+    "%1\$s days ago" to "%1\$s dagen geleden",
+    "%1\$s days" to "%1\$s dagen",
 )

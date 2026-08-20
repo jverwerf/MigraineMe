@@ -788,10 +788,10 @@ private fun MenstruationCard(
             
             val nextLabel = nextExpected.format(java.time.format.DateTimeFormatter.ofPattern("MMM d", appLocale()))
             val countdown = when {
-                daysUntil < 0 -> "${-daysUntil} days ago"
-                daysUntil == 0L -> "Today"
-                daysUntil == 1L -> "Tomorrow"
-                else -> "In $daysUntil days"
+                daysUntil < 0 -> t("%1\$s days ago", (-daysUntil).toString())
+                daysUntil == 0L -> t("Today")
+                daysUntil == 1L -> t("Tomorrow")
+                else -> t("In %1\$s days", daysUntil.toString())
             }
             val countdownColor = when {
                 daysUntil in -2..2 -> Color(0xFFE57373)

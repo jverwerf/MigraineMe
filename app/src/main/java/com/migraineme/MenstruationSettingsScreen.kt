@@ -178,10 +178,10 @@ fun MenstruationSettingsScreen(
                     val daysUntil = ChronoUnit.DAYS.between(today, nextExpected)
 
                     val countdownText = when {
-                        daysUntil < 0 -> "${-daysUntil} days ago"
-                        daysUntil == 0L -> "Today"
-                        daysUntil == 1L -> "Tomorrow"
-                        else -> "In $daysUntil days"
+                        daysUntil < 0 -> t("%1\$s days ago", (-daysUntil).toString())
+                        daysUntil == 0L -> t("Today")
+                        daysUntil == 1L -> t("Tomorrow")
+                        else -> t("In %1\$s days", daysUntil.toString())
                     }
                     val countdownColor = when {
                         daysUntil in -2..2 -> Color(0xFFE57373)
@@ -195,9 +195,9 @@ fun MenstruationSettingsScreen(
                     HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        MStatColumn("Last Period", s.lastMenstruationDate.toString())
-                        MStatColumn("Predicted", nextExpected.toString())
-                        MStatColumn("Cycle", "${s.avgCycleLength} days")
+                        MStatColumn(t("Last Period"), s.lastMenstruationDate.toString())
+                        MStatColumn(t("Predicted"), nextExpected.toString())
+                        MStatColumn(t("Cycle"), t("%1\$s days", s.avgCycleLength.toString()))
                     }
                 }
             }

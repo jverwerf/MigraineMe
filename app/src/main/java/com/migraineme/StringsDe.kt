@@ -3644,4 +3644,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Mikrofon",
     "📍 Location" to "📍 Standort",
     "📱 Usage Access" to "📱 Nutzungszugriff",
+    "In %1\$s days" to "In %1\$s Tagen",
+    "%1\$s days ago" to "vor %1\$s Tagen",
+    "%1\$s days" to "%1\$s Tage",
 )

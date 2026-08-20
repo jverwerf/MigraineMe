@@ -3644,4 +3644,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Microfono",
     "📍 Location" to "📍 Posizione",
     "📱 Usage Access" to "📱 Accesso all'uso",
+    "In %1\$s days" to "Tra %1\$s giorni",
+    "%1\$s days ago" to "%1\$s giorni fa",
+    "%1\$s days" to "%1\$s giorni",
 )

@@ -3644,4 +3644,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Micrófono",
     "📍 Location" to "📍 Ubicación",
     "📱 Usage Access" to "📱 Acceso de uso",
+    "In %1\$s days" to "En %1\$s días",
+    "%1\$s days ago" to "hace %1\$s días",
+    "%1\$s days" to "%1\$s días",
 )

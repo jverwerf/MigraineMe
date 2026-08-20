@@ -3644,4 +3644,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "🎤 Microphone" to "🎤 Microfone",
     "📍 Location" to "📍 Localização",
     "📱 Usage Access" to "📱 Acesso ao uso",
+    "In %1\$s days" to "Em %1\$s dias",
+    "%1\$s days ago" to "há %1\$s dias",
+    "%1\$s days" to "%1\$s dias",
 )
