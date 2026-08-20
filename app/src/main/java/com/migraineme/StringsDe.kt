@@ -1217,6 +1217,8 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Frequency Trends" to "Häufigkeit",
     "Frequency trends" to "Häufigkeitstrend",
     "Frequent" to "Häufig",
+    "Set end time" to "Endzeit festlegen",
+    "Duration in minutes (optional)" to "Dauer in Minuten (optional)",
     "Frequent need to urinate" to "Häufiger Harndrang",
     "Frequent urination" to "Häufiges Wasserlassen",
     "Frequent wake-ups or tossing and turning" to "Häufiges Aufwachen oder Hin- und Herwälzen",

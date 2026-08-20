@@ -1217,6 +1217,8 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Frequency Trends" to "Hoe vaak",
     "Frequency trends" to "Trend hoe vaak",
     "Frequent" to "Vaak",
+    "Set end time" to "Eindtijd instellen",
+    "Duration in minutes (optional)" to "Duur in minuten (optioneel)",
     "Frequent need to urinate" to "Vaak moeten plassen",
     "Frequent urination" to "Vaak plassen",
     "Frequent wake-ups or tossing and turning" to "Vaak wakker of veel woelen",

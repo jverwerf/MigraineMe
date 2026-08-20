@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -58,6 +59,15 @@ fun JournalEditScreen(
     var inputUnit by remember { mutableStateOf(DoseUnits.MG) }
     var startAt by remember { mutableStateOf(Instant.now()) }
     var endAt by remember { mutableStateOf<Instant?>(null) } // end time for relief
+    // Relief: which pool item the row is — the raw stored label, re-pickable
+    // from the user's own pool (Frequent, then All), matching EditReliefScreen.
+    var reliefType by remember { mutableStateOf("") }
+    var reliefFrequent by remember { mutableStateOf<List<String>>(emptyList()) }
+    var reliefAll by remember { mutableStateOf<List<String>>(emptyList()) }
+    var reliefTypeMenuOpen by remember { mutableStateOf(false) }
+    // Relief: optional duration in minutes; wins over the end-time pickers.
+    var durationText by remember { mutableStateOf("") }
+    var hasEnd by remember { mutableStateOf(false) }
     var notes by remember { mutableStateOf("") }
     var loaded by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
@@ -128,13 +138,29 @@ fun JournalEditScreen(
                         val row = rows.find { it.id == itemId }
                         if (row != null) {
                             label = row.type ?: ""
+                            reliefType = row.type ?: ""
                             startAt = Instant.parse(row.startAt)
                             endAt = row.endAt?.takeIf { it.isNotBlank() && it != row.startAt }?.let { Instant.parse(it) }
+                            hasEnd = endAt != null
                             notes = row.notes ?: ""
                             reliefScale = ReliefScale.fromString(row.reliefScale)
                             sideEffectScale = row.sideEffectScale ?: "NONE"
                             sideEffectNotes = row.sideEffectNotes ?: ""
                         }
+                        // Pool options for the type picker — frequent prefs in
+                        // position order first, the rest alphabetised. Best
+                        // effort: an empty pool leaves the name read-only.
+                        val prefs = runCatching { db.getReliefPrefs(token) }.getOrNull().orEmpty()
+                        val pool = runCatching { db.getAllReliefPool(token) }.getOrNull().orEmpty()
+                        val freq = prefs
+                            .filter { it.status == "frequent" }
+                            .sortedBy { it.position }
+                            .mapNotNull { it.relief?.label?.trim() }
+                            .filter { it.isNotEmpty() }
+                        reliefFrequent = freq
+                        reliefAll = pool.map { it.label.trim() }
+                            .filter { it.isNotEmpty() && it !in freq }
+                            .sorted()
                     }
                     "prodrome" -> {
                         val rows = db.getAllProdromeLog(token)
@@ -205,15 +231,78 @@ fun JournalEditScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // ── Item name (read-only) ──
-            BaseCard {
-                Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    label.ifBlank { "Unknown" },
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                )
+            // ── Item name. Reliefs are re-pickable from the user's own pool
+            // (Frequent, then All) — same dropdown as EditReliefScreen;
+            // everything else stays read-only. ──
+            if (itemType == "relief" && (reliefFrequent.isNotEmpty() || reliefAll.isNotEmpty())) {
+                BaseCard {
+                    Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(4.dp))
+                    Box(Modifier.fillMaxWidth()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                reliefType.ifBlank { "Unknown" },
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.weight(1f),
+                            )
+                            IconButton(onClick = { reliefTypeMenuOpen = true }) {
+                                Icon(Icons.Filled.ArrowDropDown, contentDescription = t("Choose type"), tint = AppTheme.SubtleTextColor)
+                            }
+                        }
+                        DropdownMenu(
+                            expanded = reliefTypeMenuOpen,
+                            onDismissRequest = { reliefTypeMenuOpen = false },
+                        ) {
+                            if (reliefFrequent.isNotEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text(t("Frequent"), fontWeight = FontWeight.Bold) },
+                                    onClick = {},
+                                    enabled = false,
+                                )
+                                reliefFrequent.forEach { opt ->
+                                    DropdownMenuItem(
+                                        text = { Text(opt) },
+                                        onClick = {
+                                            reliefType = opt
+                                            reliefTypeMenuOpen = false
+                                        },
+                                    )
+                                }
+                                if (reliefAll.isNotEmpty()) Divider()
+                            }
+                            if (reliefAll.isNotEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text(t("All"), fontWeight = FontWeight.Bold) },
+                                    onClick = {},
+                                    enabled = false,
+                                )
+                                reliefAll.forEach { opt ->
+                                    DropdownMenuItem(
+                                        text = { Text(opt) },
+                                        onClick = {
+                                            reliefType = opt
+                                            reliefTypeMenuOpen = false
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                BaseCard {
+                    Text(typeTitle, color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        label.ifBlank { "Unknown" },
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    )
+                }
             }
 
             // ── Amount (medicine only) — number only, unit fixed by the medicine ──
@@ -330,19 +419,57 @@ fun JournalEditScreen(
                 }
             }
 
-            // ── End time (relief only) ──
-            if (itemType == "relief") {
+            // ── Duration (relief only). Minutes entry wins over the end-time
+            // pickers; neither set clears the stored end. Taken-only reliefs
+            // (Water, Caffeine…) get no duration UI at all. The old version
+            // synced endAt from the pickers unconditionally, so every save
+            // fabricated end_at = start_at on reliefs that had no end. ──
+            if (itemType == "relief" && !DoseUnits.isTakenOnlyRelief(reliefType)) {
                 val endZoned = endAt?.atZone(ZoneId.systemDefault())
                 var selectedEndDate by remember(loaded) { mutableStateOf(endZoned?.toLocalDate() ?: selectedDate) }
                 var selectedEndTime by remember(loaded) { mutableStateOf(endZoned?.toLocalTime() ?: selectedTime) }
 
-                // Sync endAt whenever end date/time changes
-                LaunchedEffect(selectedEndDate, selectedEndTime) {
-                    endAt = ZonedDateTime.of(selectedEndDate, selectedEndTime, ZoneId.systemDefault()).toInstant()
+                // Sync endAt from the pickers only while an end is wanted
+                LaunchedEffect(selectedEndDate, selectedEndTime, hasEnd) {
+                    endAt = if (hasEnd) {
+                        ZonedDateTime.of(selectedEndDate, selectedEndTime, ZoneId.systemDefault()).toInstant()
+                    } else null
                 }
 
                 BaseCard {
-                    Text(t("End time"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Text(t("Duration in minutes (optional)"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = durationText,
+                        onValueChange = { new ->
+                            if (new.isEmpty() || new.all { it.isDigit() }) durationText = new
+                        },
+                        placeholder = { Text("30", color = AppTheme.SubtleTextColor) },
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = AppTheme.AccentPurple,
+                            unfocusedBorderColor = AppTheme.SubtleTextColor.copy(alpha = 0.3f),
+                            cursorColor = AppTheme.AccentPurple,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text(t("Set end time"), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = hasEnd,
+                            onCheckedChange = { hasEnd = it },
+                            colors = SwitchDefaults.colors(checkedTrackColor = AppTheme.AccentPurple),
+                        )
+                    }
+
+                    if (hasEnd && durationText.isBlank()) {
                     Spacer(Modifier.height(8.dp))
 
                     Row(
@@ -423,6 +550,7 @@ fun JournalEditScreen(
                                 text = { TimePicker(state = endTimePickerState) },
                             )
                         }
+                    }
                     }
                 }
             }
@@ -565,7 +693,32 @@ fun JournalEditScreen(
                                             ?.let { DoseUnits.toStored(it, doseUnit, inputUnit) }
                                         db.updateMedicine(token, itemId, startAt = newStartAt, amount = null, notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null }, doseValue = doseValue, doseUnit = if (doseValue != null) doseUnit else null)
                                     }
-                                    "relief" -> db.updateRelief(token, itemId, startAt = newStartAt, endAt = endAt?.toString(), notes = notes, reliefScale = reliefScale.name, sideEffectScale = sideEffectScale, sideEffectNotes = sideEffectNotes.ifBlank { null })
+                                    "relief" -> {
+                                        // Minutes entry wins, then the end pickers, else the
+                                        // stored end time is cleared (a bare relief log is
+                                        // always valid). A duration typed against a start close
+                                        // to now runs past it — the derived end is a log
+                                        // timestamp too and gets the same clamp.
+                                        val startInstant = ZonedDateTime.of(selectedDate, selectedTime, ZoneId.systemDefault()).toInstant()
+                                        val mins = durationText.toIntOrNull()?.takeIf { it > 0 }
+                                        val resolvedEnd: Instant? = when {
+                                            DoseUnits.isTakenOnlyRelief(reliefType) -> null
+                                            mins != null -> startInstant.plusSeconds(mins * 60L)
+                                                .let { if (it.isAfter(Instant.now())) Instant.now() else it }
+                                            else -> endAt
+                                        }
+                                        db.updateRelief(
+                                            token, itemId,
+                                            type = reliefType.ifBlank { null },
+                                            startAt = newStartAt,
+                                            endAt = resolvedEnd?.toString(),
+                                            clearEndAt = resolvedEnd == null,
+                                            notes = notes,
+                                            reliefScale = reliefScale.name,
+                                            sideEffectScale = sideEffectScale,
+                                            sideEffectNotes = sideEffectNotes.ifBlank { null }
+                                        )
+                                    }
                                     "prodrome" -> db.updateProdromeLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
                                     "activity" -> db.updateActivityLog(token, itemId, type = null, startAt = newStartAt, notes = notes)
                                     "location" -> db.updateLocationLog(token, itemId, type = null, startAt = newStartAt, notes = notes)

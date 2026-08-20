@@ -2841,8 +2841,12 @@ private fun needsAttention(ev: JournalEvent): Boolean {
         is JournalEvent.Medicine ->
             ev.row.amount.isNullOrBlank() || ev.row.startAt.isNullOrBlank()
 
+        // Dose contract 2026-08-13, already live in VertigoMe/MeSeries: a bare
+        // relief log is always valid — a skipped duration is deliberate, not
+        // "missing". Nothing in either MM app ever wrote duration_minutes
+        // (edits write end_at), so the old test flagged every relief forever.
         is JournalEvent.Relief ->
-            ev.row.durationMinutes == null || ev.row.startAt.isNullOrBlank()
+            ev.row.startAt.isNullOrBlank()
 
         is JournalEvent.Prodrome -> ev.row.startAt.isNullOrBlank()
         is JournalEvent.Activity -> ev.row.startAt.isNullOrBlank()

@@ -1217,6 +1217,8 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Frequency Trends" to "Frequenza",
     "Frequency trends" to "Trend frequenza",
     "Frequent" to "Frequente",
+    "Set end time" to "Imposta ora di fine",
+    "Duration in minutes (optional)" to "Durata in minuti (facoltativa)",
     "Frequent need to urinate" to "Bisogno di urinare spesso",
     "Frequent urination" to "Urinare spesso",
     "Frequent wake-ups or tossing and turning" to "Risvegli frequenti o rigirarsi",
