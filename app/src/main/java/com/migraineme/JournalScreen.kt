@@ -951,7 +951,8 @@ private fun entryRowInfo(ev: JournalEvent, labels: Map<String, String>): EntryRo
         cat = journalEventCategory(ev),
         timeIso = ev.row.startAt,
         needsAttention = false,
-        editRoute = null, // missed activities never had an edit flow
+        // Missed activities got their edit sheet with the quick-add work.
+        editRoute = "${Routes.EDIT_MISSED_ACTIVITY}/${ev.row.id}",
         canDelete = true,
         iconLabel = ev.row.type
     )

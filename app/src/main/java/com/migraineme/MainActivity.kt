@@ -215,6 +215,7 @@ object Routes {
     const val EDIT_PRODROME = "edit_prodrome"
     const val EDIT_ACTIVITY = "edit_activity"
     const val EDIT_LOCATION = "edit_location"
+    const val EDIT_MISSED_ACTIVITY = "edit_missed_activity"
 
     // Journal quick-add: standalone add flows pre-linked to one migraine.
     // {start} carries the attack start (URL-encoded ISO) as the default time.
@@ -1691,6 +1692,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable("${Routes.EDIT_LOCATION}/{id}") {
                         val id = it.arguments?.getString("id") ?: return@composable
                         JournalEditScreen(itemType = "location", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
+                    }
+                    composable("${Routes.EDIT_MISSED_ACTIVITY}/{id}") {
+                        val id = it.arguments?.getString("id") ?: return@composable
+                        JournalEditScreen(itemType = "missed_activity", itemId = id, authVm = authVm, logVm = logVm, onBack = { nav.popBackStack() })
                     }
 
                     // ── Journal quick-add: add a child row to an existing migraine ──
