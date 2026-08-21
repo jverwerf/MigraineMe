@@ -782,7 +782,11 @@ fun EveningCheckInScreen(
                     )
                 }
                 is CheckInPage.SideEffects -> {
-                    val page = currentPage as CheckInPage.SideEffects
+                    // Read the regimen off the page AnimatedContent handed us,
+                    // never off currentPage: while the slide to Review runs,
+                    // this outgoing page recomposes with currentPage already
+                    // set to Review, and casting that blew up the whole app
+                    // (ClassCastException, all check-in entries lost).
                     val regimen = activeRegimens.getOrNull(page.regimenIndex)
                     if (regimen != null) {
                         val regimenId = regimen.id
