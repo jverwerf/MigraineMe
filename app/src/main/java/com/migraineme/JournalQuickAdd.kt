@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,6 +58,7 @@ enum class QuickAddKind(val key: String, val label: String, val color: Color, va
     TRIGGER("trigger", "Trigger", Color(0xFFFFB74D), true),
     PRODROME("prodrome", "Prodrome", Color(0xFFFF8A65), true),
     ACTIVITY("activity", "Activity", Color(0xFF4DD0E1), true),
+    MISSED("missed_activity", "Missed", Color(0xFFFF7043), true),
     LOCATION("location", "Location", Color(0xFFA1887F), true),
 }
 
@@ -74,6 +76,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawQuickAddIcon(ki
             QuickAddKind.TRIGGER -> drawTriggerBolt(color)
             QuickAddKind.PRODROME -> drawProdromeEye(color)
             QuickAddKind.ACTIVITY -> drawActivityPulse(color)
+            QuickAddKind.MISSED -> drawMissedActivity(color)
             QuickAddKind.LOCATION -> drawCompass(color)
         }
     }
@@ -710,3 +713,181 @@ private fun formatQuickAddIso(iso: String): String = try {
     val ldt = odt?.toLocalDateTime() ?: java.time.LocalDateTime.parse(iso)
     ldt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))
 } catch (_: Exception) { iso }
+
+// ── Home: "Migraine in progress" card ──────────────────────────
+
+/** Attack red, same value the journal tags an attack row with. */
+private val MigraineCardRed = Color(0xFFE57373)
+
+/**
+ * Shown on Home in place of the quick-log strip while any migraine is still
+ * open. Quick log itself is untouched — Home simply renders this instead.
+ *
+ * With several attacks open it pages between them rather than stacking, so
+ * Home never fills up with migraine cards.
+ */
+@Composable
+fun MigraineInProgressCard(
+    open: List<SupabaseDbService.MigraineRow>,
+    onAdd: (SupabaseDbService.MigraineRow, QuickAddKind) -> Unit,
+    onFullLog: (SupabaseDbService.MigraineRow) -> Unit,
+    onEndNow: (SupabaseDbService.MigraineRow) -> Unit,
+    ending: Boolean = false,
+) {
+    if (open.isEmpty()) return
+    var index by remember(open.size) { mutableStateOf(0) }
+    val row = open.getOrNull(index.coerceIn(0, open.lastIndex)) ?: return
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AppTheme.BaseCardShape,
+        colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
+        elevation = CardDefaults.cardElevation(0.dp),
+        border = BorderStroke(1.dp, MigraineCardRed.copy(alpha = 0.35f))
+    ) {
+        // Thin accent rule along the top edge, the one flash of attack colour.
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(
+                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                        listOf(MigraineCardRed, AppTheme.AccentPink)
+                    )
+                )
+        )
+        Column(Modifier.padding(15.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (open.size > 1) {
+                    PagerArrow("‹") { index = (index - 1 + open.size) % open.size }
+                    Spacer(Modifier.width(8.dp))
+                }
+                Text(
+                    t("Migraine in progress").uppercase(appLocale()),
+                    color = MigraineCardRed,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold, letterSpacing = 0.09.em
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+                if (open.size > 1) {
+                    Text(
+                        "${index + 1} / ${open.size}",
+                        color = AppTheme.SubtleTextColor,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    PagerArrow("›") { index = (index + 1) % open.size }
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+            Text(
+                t("Started %s", formatOpenMigraineStart(row.startAt)),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+
+            Spacer(Modifier.height(15.dp))
+            Text(
+                t("Add to this migraine").uppercase(appLocale()),
+                color = AppTheme.TitleColor,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.SemiBold, letterSpacing = 0.06.em
+                )
+            )
+            Spacer(Modifier.height(8.dp))
+
+            // Same eleven the journal's "+ Add" offers, laid out six then five.
+            QuickAddKind.entries.filter { !it.compact }.chunked(3).forEach { chunk ->
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                    chunk.forEach { kind ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(11.dp))
+                                .background(Color.White.copy(alpha = 0.05f))
+                                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.11f)), RoundedCornerShape(11.dp))
+                                .clickable { onAdd(row, kind) }
+                                .padding(vertical = 9.dp, horizontal = 3.dp)
+                        ) {
+                            QuickAddIconChip(kind, circle = 26.dp, icon = 14.dp)
+                            Text(t(kind.label), color = Color.White, fontSize = 11.sp, maxLines = 1)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                QuickAddKind.entries.filter { it.compact }.forEach { kind ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(Color.White.copy(alpha = 0.05f))
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.11f)), RoundedCornerShape(11.dp))
+                            .clickable { onAdd(row, kind) }
+                            .padding(vertical = 7.dp, horizontal = 2.dp)
+                    ) {
+                        QuickAddIconChip(kind, circle = 20.dp, icon = 11.dp)
+                        Text(t(kind.label), color = Color.White, fontSize = 9.5.sp, maxLines = 1)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(13.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { onFullLog(row) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
+                ) { Text(t("Full log"), fontWeight = FontWeight.SemiBold) }
+                Button(
+                    onClick = { onEndNow(row) },
+                    enabled = !ending,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MigraineCardRed)
+                ) {
+                    if (ending) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text(t("End now"), color = Color.White, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PagerArrow(glyph: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(26.dp)
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(glyph, color = AppTheme.SubtleTextColor, fontSize = 15.sp)
+    }
+}
+
+/** "14:30" for an attack that started today, "Tue 21:40" for an older one —
+ *  the card shows when it began and nothing else. */
+private fun formatOpenMigraineStart(iso: String): String = try {
+    val zoned = java.time.ZonedDateTime.parse(iso).withZoneSameInstant(java.time.ZoneId.systemDefault())
+    val today = java.time.LocalDate.now()
+    val pattern = if (zoned.toLocalDate() == today) "HH:mm" else "EEE HH:mm"
+    zoned.format(java.time.format.DateTimeFormatter.ofPattern(pattern, appLocale()))
+} catch (_: Exception) {
+    iso.take(16).replace("T", " ")
+}

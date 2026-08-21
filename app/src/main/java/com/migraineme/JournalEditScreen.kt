@@ -307,6 +307,23 @@ fun JournalEditScreen(
                             setPickOptions(freq, options)
                         }
                     }
+                    "missed_activity" -> {
+                        val row = if (isAdd) null else db.getAllMissedActivityLog(token).find { it.id == itemId }
+                        if (row != null) {
+                            label = row.type?.replace("_", " ")?.replaceFirstChar { c -> c.uppercase() } ?: ""
+                            pickType = row.type ?: ""
+                            startAt = row.startAt?.let { Instant.parse(it) } ?: Instant.now()
+                            notes = row.notes ?: ""
+                        }
+                        val prefs = runCatching { db.getMissedActivityPrefs(token) }.getOrNull().orEmpty()
+                        val pool = runCatching { db.getAllMissedActivityPool(token) }.getOrNull().orEmpty()
+                        val options = pool.map { Triple(it.label.trim(), it.iconKey, it.category) }
+                        val freq = prefs.filter { it.status == "frequent" }
+                            .sortedBy { it.position }
+                            .mapNotNull { it.missedActivity?.label?.trim() }
+                            .filter { it.isNotEmpty() }
+                        setPickOptions(freq, options)
+                    }
                     "location" -> {
                         val row = if (isAdd) null else db.getAllLocationLog(token).find { it.id == itemId }
                         if (row != null) {
@@ -347,6 +364,7 @@ fun JournalEditScreen(
         "prodrome" -> "Prodrome"
         "activity" -> "Activity"
         "location" -> "Location"
+        "missed_activity" -> "Missed activity"
         else -> "Item"
     }
 
@@ -1009,6 +1027,7 @@ fun JournalEditScreen(
                                             addedNeedsFullReload = true
                                         }
                                         "location" -> addedId = db.insertLocation(token, addForMigraineId, pickedType, newStartAt, notes.ifBlank { null }).id
+                                        "missed_activity" -> addedId = db.insertMissedActivity(token, addForMigraineId, pickedType, newStartAt, notes.ifBlank { null }).id
                                         else -> {}
                                     }
                                 } else when (itemType) {
@@ -1040,6 +1059,7 @@ fun JournalEditScreen(
                                     // same as the app's own insert path.
                                     "activity" -> db.updateActivityLog(token, itemId, type = newType?.lowercase(), startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
                                     "location" -> db.updateLocationLog(token, itemId, type = newType, startAt = newStartAt, notes = notes, category = newCategory, moveCategory = newType != null)
+                                    "missed_activity" -> db.updateMissedActivityLog(token, itemId, type = newType, startAt = newStartAt, notes = notes)
                                     else -> {}
                                 }
                             } catch (e: Exception) {
@@ -1109,6 +1129,7 @@ fun JournalEditScreen(
                                             "prodrome" -> db.deleteProdromeLog(token, itemId)
                                             "activity" -> db.deleteActivityLog(token, itemId)
                                             "location" -> db.deleteLocationLog(token, itemId)
+                                            "missed_activity" -> db.deleteMissedActivityLog(token, itemId)
                                             else -> {}
                                         }
                                     } catch (_: Exception) {}

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3634 entries.
+ * 3641 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -336,6 +336,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Add locations to your migraines to spot hotspots" to "Voeg plekken toe aan je migraines om hotspots te zien",
     "Add medicine" to "Medicijn",
     "Add medicines you've taken" to "Noteer de medicijnen die je nam",
+    "Add missed activity" to "Gemiste activiteit erbij",
     "Add notes…" to "Notities…",
     "Add pain" to "Pijn erbij",
     "Add postdrome" to "Nawee erbij",
@@ -346,6 +347,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Add to Pool" to "Naar lijst",
     "Add to frequent" to "Bij favorieten",
     "Add to list" to "Naar lijst",
+    "Add to this migraine" to "Aan deze migraine",
     "Add trigger" to "Trigger",
     "Add → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Erbij → Triggers: %1\$s, Medicijnen: %2\$s, Verlichting: %3\$s",
     "Add, remove, or organise your triggers, medicines, reliefs, symptoms, AI companions, and more" to "Voeg toe, haal weg of orden je triggers, medicijnen, verlichting, klachten, AI-gidsen en meer",
@@ -898,6 +900,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Delete entry?" to "Weghalen?",
     "Delete failed: %1\$s" to "Verwijderen mislukt: %1\$s",
     "Delete manual entry" to "Notitie weghalen",
+    "Delete missed activity?" to "Gemiste activiteit verwijderen?",
     "Delete permanently" to "Definitief weg",
     "Delete this entry" to "Notitie weghalen",
     "Delete → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Wissen → Triggers: %1\$s, Medicijnen: %2\$s, Verlichting: %3\$s",
@@ -1061,6 +1064,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Enable sleep tracking in Data Settings to see your sleep data." to "Zet slaap aan bij Gegevens om je slaap te zien.",
     "Enabled metrics feed into your daily risk score and AI insights. " to "Aangezette waarden voeden je dagelijkse risicoscore en de AI-inzichten. ",
     "End" to "Einde",
+    "End now" to "Nu beëindigen",
     "End time" to "Einde",
     "End time cannot be before start time" to "Het einde kan niet voor het begin liggen",
     "End time: %s" to "Eindtijd: %s",
@@ -1245,6 +1249,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Full History & Journal" to "Historie & journaal",
     "Full Insights & Spider Charts" to "Alle inzichten & spinnenwebben",
     "Full Report" to "Rapport",
+    "Full log" to "Volledig log",
     "Full-head massager with air pressure, kneading and heat across scalp, temples and eyes, run from your phone." to "Massage voor het hele hoofd met luchtdruk, kneden en warmte over hoofdhuid, slapen en ogen, bediend via je telefoon.",
     "Galcanezumab (Emgality)" to "Galcanezumab (Emgality)",
     "Gaming" to "Gamen",
@@ -1729,6 +1734,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Migraine after stress ends (weekends, holidays)" to "Migraine als de stress stopt (weekend, vakantie)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Migraineapparaten zijn lastig te beoordelen via een website, omdat de reclame overal ",
     "Migraine ended" to "Migraine voorbij",
+    "Migraine in progress" to "Migraine bezig",
     "Migraine report" to "Migrainerapport",
     "Migraine selection" to "Kies migraine",
     "Migraine update" to "Migraine-update",
@@ -1777,6 +1783,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Missed Activities" to "Gemist",
     "Missed Activity" to "Gemist ding",
     "Missed activities" to "Gemist",
+    "Missed activity" to "Gemiste activiteit",
     "Missing Data from Health Connect" to "Gegevens ontbreken",
     "Missing Dependencies" to "Onderdelen weg",
     "Missing caffeine triggers it" to "Juist geen cafeïne",
@@ -2691,7 +2698,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Start tracking your migraines today" to "Begin vandaag met bijhouden",
     "Start: %s" to "Start: %s",
     "Started" to "Begonnen",
-    "Started %s" to "Sinds %s",
+    "Started %s" to "Begon %s",
     "Starting elsewhere" to "Vanaf elders",
     "Starts" to "Begint",
     "Statistically established patterns that did not appear in this report's time frame." to "Statistisch vastgestelde patronen die niet in het tijdsbestek van dit rapport voorkwamen.",

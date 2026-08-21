@@ -49,7 +49,9 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -64,6 +66,8 @@ fun HomeScreenRoot(
     onNavigateToRecalibrationReview: () -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
     onNavigateToChatAssistant: () -> Unit = {},
+    /** Route push, for the quick-add flows the in-progress card opens. */
+    onNavigateRoute: (String) -> Unit = {},
     authVm: AuthViewModel,
     logVm: LogViewModel,
     vm: HomeViewModel = viewModel(),
@@ -171,6 +175,31 @@ fun HomeScreenRoot(
         }
     }
 
+    // ── Open migraines: while any attack is still running, Home shows the
+    // in-progress card instead of the quick-log strip. Re-read on every
+    // resume, since an attack can be opened or closed elsewhere. ──
+    val db = remember { SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) }
+    var openMigraines by remember { mutableStateOf<List<SupabaseDbService.MigraineRow>>(emptyList()) }
+    var endingMigraine by remember { mutableStateOf(false) }
+    val homeScope = rememberCoroutineScope()
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    suspend fun reloadOpenMigraines() {
+        val token = auth.accessToken ?: return
+        openMigraines = withContext(Dispatchers.IO) {
+            runCatching { db.getOpenMigraines(token) }.getOrDefault(emptyList())
+        }
+    }
+    LaunchedEffect(auth.accessToken) { reloadOpenMigraines() }
+    DisposableEffect(lifecycleOwner, auth.accessToken) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                homeScope.launch { reloadOpenMigraines() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     // ── AI prose is being rewritten in the language just picked ──
     // The switch can be made from the drawer with Home already composed, so the
     // state that drives the card has to come from outside this screen. On the
@@ -236,16 +265,58 @@ fun HomeScreenRoot(
                     onTap = onNavigateToRecalibrationReview
                 )
 
-                // ── Quick Log Strip — above the gauge ──
-                QuickLogStrip(
-                    authVm = authVm,
-                    triggerVm = triggerVm,
-                    medicineVm = medicineVm,
-                    reliefVm = reliefVm,
-                    prodromeVm = prodromeVm,
-                    symptomVm = symptomVm,
-                    onLogComplete = { vm.loadRisk(appCtx, showSpinner = false) }
-                )
+                // ── Quick Log Strip — above the gauge. While an attack is
+                // still open the in-progress card takes this slot instead:
+                // during an attack almost everything logged belongs to it,
+                // and quick log would file it as a loose row. ──
+                if (openMigraines.isNotEmpty()) {
+                    MigraineInProgressCard(
+                        open = openMigraines,
+                        ending = endingMigraine,
+                        onAdd = { row, kind ->
+                            val start = java.net.URLEncoder.encode(row.startAt, "UTF-8")
+                            when (kind) {
+                                QuickAddKind.AURA -> onNavigateRoute("${Routes.JOURNAL_ADD_AURA}/${row.id}/$start")
+                                QuickAddKind.PAIN -> onNavigateRoute("${Routes.JOURNAL_ADD_PAIN}/${row.id}/$start")
+                                QuickAddKind.SYMPTOM -> onNavigateRoute("${Routes.JOURNAL_ADD_SYMPTOM}/${row.id}")
+                                QuickAddKind.POSTDROME -> onNavigateRoute("${Routes.JOURNAL_ADD_POSTDROME}/${row.id}")
+                                else -> onNavigateRoute("${Routes.JOURNAL_ADD}/${kind.key}/${row.id}/$start")
+                            }
+                        },
+                        onFullLog = { row -> onNavigateRoute("${Routes.EDIT_MIGRAINE}/${row.id}") },
+                        onEndNow = { row ->
+                            endingMigraine = true
+                            homeScope.launch {
+                                val token = auth.accessToken
+                                if (token != null) {
+                                    withContext(Dispatchers.IO) {
+                                        runCatching {
+                                            db.updateMigraine(token, row.id, endAt = Instant.now().toString())
+                                        }
+                                    }
+                                    reloadOpenMigraines()
+                                    vm.loadRisk(appCtx, showSpinner = false)
+                                }
+                                endingMigraine = false
+                            }
+                        }
+                    )
+                } else {
+                    QuickLogStrip(
+                        authVm = authVm,
+                        triggerVm = triggerVm,
+                        medicineVm = medicineVm,
+                        reliefVm = reliefVm,
+                        prodromeVm = prodromeVm,
+                        symptomVm = symptomVm,
+                        onLogComplete = {
+                            vm.loadRisk(appCtx, showSpinner = false)
+                            // A quick-logged migraine is an open attack, so the
+                            // card has to take over straight away.
+                            homeScope.launch { reloadOpenMigraines() }
+                        }
+                    )
+                }
 
                 Box(Modifier.onGloballyPositioned { riskCardY = it.positionInParent().y.toInt() }) {
                 // Three states, not two. Today's risk is free either way, so

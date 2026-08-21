@@ -1009,6 +1009,19 @@ class SupabaseDbService(
         return response.body()
     }
 
+    /** Every migraine without an ended_at, newest first. The Home card pages
+     *  through these, so it needs them all rather than just the latest. */
+    suspend fun getOpenMigraines(accessToken: String): List<MigraineRow> {
+        val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "*")
+            parameter("ended_at", "is.null")
+            parameter("order", "start_at.desc")
+        }
+        if (!response.status.isSuccess()) return emptyList()
+        return response.body()
+    }
+
     /** Most-recent migraine without an ended_at, or null if none open. */
     suspend fun getOpenMigraine(accessToken: String): MigraineRow? {
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {

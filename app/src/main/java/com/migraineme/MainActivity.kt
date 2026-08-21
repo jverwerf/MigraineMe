@@ -220,6 +220,7 @@ object Routes {
     // {start} carries the attack start (URL-encoded ISO) as the default time.
     const val JOURNAL_ADD = "journal_add"           // + /{itemType}/{migraineId}/{start}
     const val JOURNAL_ADD_PAIN = "journal_add_pain" // + /{migraineId}/{start}
+    const val JOURNAL_ADD_AURA = "journal_add_aura" // + /{migraineId}/{start}
     const val JOURNAL_ADD_SYMPTOM = "journal_add_symptom"     // + /{migraineId}
     const val JOURNAL_ADD_POSTDROME = "journal_add_postdrome" // + /{migraineId}
 
@@ -1385,6 +1386,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             onNavigateToRecalibrationReview = { nav.navigate(Routes.RECALIBRATION_REVIEW) },
                             onNavigateToPaywall = { nav.navigate(Routes.PAYWALL) },
                             onNavigateToChatAssistant = { nav.navigate(Routes.CHAT_ASSISTANT) },
+                            onNavigateRoute = { route -> nav.navigate(route) },
                             authVm = authVm,
                             logVm = logVm,
                             vm = homeVm,
@@ -1708,6 +1710,19 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         val migraineId = it.arguments?.getString("migraineId") ?: return@composable
                         val start = it.arguments?.getString("start")
                         QuickAddPainScreen(navController = nav, authVm = authVm, logVm = logVm, migraineId = migraineId, migraineStartAtIso = start)
+                    }
+                    composable("${Routes.JOURNAL_ADD_AURA}/{migraineId}/{start}") {
+                        val migraineId = it.arguments?.getString("migraineId") ?: return@composable
+                        val start = it.arguments?.getString("start")
+                        // The aura sheet over a bare scrim: from Home there is
+                        // no journal underneath to present it on.
+                        Box(Modifier.fillMaxSize().background(AppTheme.FadeColor)) {
+                            JournalAuraAddSheet(
+                                authVm = authVm, logVm = logVm,
+                                migraineId = migraineId, migraineStartAtIso = start,
+                                onClose = { nav.popBackStack() }
+                            )
+                        }
                     }
                     composable("${Routes.JOURNAL_ADD_SYMPTOM}/{migraineId}") {
                         val migraineId = it.arguments?.getString("migraineId") ?: return@composable

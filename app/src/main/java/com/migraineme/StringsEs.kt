@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3634 entries.
+ * 3641 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -336,6 +336,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Add locations to your migraines to spot hotspots" to "Añade lugares a tus migrañas para ver puntos calientes",
     "Add medicine" to "Medicina",
     "Add medicines you've taken" to "Añade las medicinas tomadas",
+    "Add missed activity" to "Añadir actividad perdida",
     "Add notes…" to "Notas…",
     "Add pain" to "Añadir dolor",
     "Add postdrome" to "Añadir posdromo",
@@ -346,6 +347,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Add to Pool" to "A la lista",
     "Add to frequent" to "Añadir a frecuentes",
     "Add to list" to "A la lista",
+    "Add to this migraine" to "Añadir a esta migraña",
     "Add trigger" to "Factor",
     "Add → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Añadir → Factores: %1\$s, Medicinas: %2\$s, Alivios: %3\$s",
     "Add, remove, or organise your triggers, medicines, reliefs, symptoms, AI companions, and more" to "Añade, quita u ordena factores, medicinas, alivios, síntomas, guías con IA y más",
@@ -898,6 +900,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Delete entry?" to "¿Borrar?",
     "Delete failed: %1\$s" to "Error al borrar: %1\$s",
     "Delete manual entry" to "Borrar entrada",
+    "Delete missed activity?" to "¿Eliminar actividad perdida?",
     "Delete permanently" to "Borrar del todo",
     "Delete this entry" to "Borrar entrada",
     "Delete → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Borrar → Factores: %1\$s, Medicinas: %2\$s, Alivios: %3\$s",
@@ -1061,6 +1064,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Enable sleep tracking in Data Settings to see your sleep data." to "Activa el sueño en Datos para ver tus datos.",
     "Enabled metrics feed into your daily risk score and AI insights. " to "Las medidas activas alimentan tu riesgo diario y los hallazgos de IA. ",
     "End" to "Fin",
+    "End now" to "Terminar ahora",
     "End time" to "Fin",
     "End time cannot be before start time" to "El fin no puede ir antes del inicio",
     "End time: %s" to "Fin: %s",
@@ -1245,6 +1249,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Full History & Journal" to "Historial y diario",
     "Full Insights & Spider Charts" to "Hallazgos y gráficas",
     "Full Report" to "Informe",
+    "Full log" to "Registro completo",
     "Full-head massager with air pressure, kneading and heat across scalp, temples and eyes, run from your phone." to "Masajeador de cabeza entera con presión de aire, amasado y calor en cuero cabelludo, sienes y ojos, desde tu teléfono.",
     "Galcanezumab (Emgality)" to "Galcanezumab (Emgality)",
     "Gaming" to "Videojuegos",
@@ -1729,6 +1734,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Migraine after stress ends (weekends, holidays)" to "Migraña al acabar el estrés (findes, vacaciones)",
     "Migraine devices are hard to judge from a website, because the marketing all sounds " to "Los aparatos para migraña son difíciles de juzgar por una web, porque la publicidad suena ",
     "Migraine ended" to "Migraña acabada",
+    "Migraine in progress" to "Migraña en curso",
     "Migraine report" to "Informe de migraña",
     "Migraine selection" to "Elegir migraña",
     "Migraine update" to "Migraña: cambio",
@@ -1777,6 +1783,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Missed Activities" to "Lo que perdiste",
     "Missed Activity" to "Actividad sin",
     "Missed activities" to "Lo que perdiste",
+    "Missed activity" to "Actividad perdida",
     "Missing Data from Health Connect" to "Faltan datos de Health Connect",
     "Missing Dependencies" to "Faltan piezas",
     "Missing caffeine triggers it" to "Lo provoca no tomarla",
@@ -1856,7 +1863,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "New discussion" to "Nuevo debate",
     "New medicine label" to "Nueva medicina",
     "New migraine label" to "Nueva migraña",
-    "New pain entry" to "Nueva entrada de dolor",
+    "New pain entry" to "Nueva entrada",
     "New password" to "Clave nueva",
     "New passwords do not match." to "Las contraseñas nuevas no coinciden.",
     "New recommendations ready" to "Nuevas recomendaciones",
@@ -2691,7 +2698,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Start tracking your migraines today" to "Empieza a registrar hoy",
     "Start: %s" to "Inicio: %s",
     "Started" to "Empezó",
-    "Started %s" to "Desde %s",
+    "Started %s" to "Inicio %s",
     "Starting elsewhere" to "Desde otro punto",
     "Starts" to "Empieza",
     "Statistically established patterns that did not appear in this report's time frame." to "Patrones establecidos estadísticamente que no aparecieron en el marco de este informe.",
