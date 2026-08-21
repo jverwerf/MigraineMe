@@ -103,7 +103,7 @@ const TABLE: Record<string, string> = {
   "Brightness": "Brilho",
   "Brightness high": "Brilho alto",
   "Brightness low": "Brilho baixo",
-  "Built from this patient's own patterns, reviewed monthly": "Construído a partir dos padrões do próprio doente, revisto todos os meses",
+  "Built from this patient's own patterns, reviewed weekly": "Construído a partir dos padrões do próprio doente, revisto todas as semanas",
   "Burden Profile": "Perfil de carga",
   "Bus": "Autocarro",
   "Butterbur": "Petasite",

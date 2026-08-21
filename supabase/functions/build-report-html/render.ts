@@ -2117,7 +2117,7 @@ function recommendations(d: ReportData, pageNo: number): string {
     if (!d.recommendationsPending) return "";
     return page(C.purple, `
       ${header(C.purple, ICON.bulb, rt("Recommendations"),
-      rt("Built from this patient's own patterns, reviewed monthly"))}
+      rt("Built from this patient's own patterns, reviewed weekly"))}
       ${historyNote(REGENERATING_NOTE())}
     `, pageNo);
   }
@@ -2129,7 +2129,7 @@ function recommendations(d: ReportData, pageNo: number): string {
   if (!isScoped(d)) {
     return page(C.purple, `
       ${header(C.purple, ICON.bulb, rt("Recommendations"),
-      rt("Built from this patient's own patterns, reviewed monthly"), true)}
+      rt("Built from this patient's own patterns, reviewed weekly"), true)}
       ${picked.map(card).join("")}
     `, pageNo);
   }
@@ -2137,7 +2137,7 @@ function recommendations(d: ReportData, pageNo: number): string {
   const [inPeriod, historyOnly] = split(picked, (r) => seen(r.title));
   return page(C.purple, `
     ${header(C.purple, ICON.bulb, rt("Recommendations"),
-      rt("Built from this patient's own patterns, reviewed monthly"))}
+      rt("Built from this patient's own patterns, reviewed weekly"))}
     ${historyNote(STATS_NOTE())}
     ${group(C.purple, rt("Seen in this period"), SEEN_NOTE(),
       inPeriod.map(card).join(""), inPeriod.length)}
