@@ -156,11 +156,11 @@
     "line": "                t(\"We earn a commission on links to devices.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:879",
+    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:909",
     "line": "        Text(t(\"Delete → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", deletes.first, deletes.second, deletes.third))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:880",
+    "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:910",
     "line": "        Text(t(\"Add → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", adds.first, adds.second, adds.third))"
   },
   {
@@ -184,7 +184,7 @@
     "line": "                    subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2312",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2370",
     "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
@@ -344,24 +344,36 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:316",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:323",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:351",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:358",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:385",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:392",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:419",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:426",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
     "site": "app/src/main/java/com/migraineme/ManagePoolScreen.kt:180",
     "line": "            snackbarHostState.showSnackbar(tSync(\"Failed to add: %1\\$s\", msg))"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:181",
+    "line": "                        daysUntil < 0 -> t(\"%1\\$s days ago\", (-daysUntil).toString())"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:184",
+    "line": "                        else -> t(\"In %1\\$s days\", daysUntil.toString())"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:200",
+    "line": "                        MStatColumn(t(\"Cycle\"), t(\"%1\\$s days\", s.avgCycleLength.toString()))"
   },
   {
     "site": "app/src/main/java/com/migraineme/MenstruationSettingsScreen.kt:215",
@@ -484,6 +496,14 @@
     "line": "                t(\"%1\\$s meals • %2\\$s items today\", mealTypes.size, nutritionItems.size),"
   },
   {
+    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:791",
+    "line": "                daysUntil < 0 -> t(\"%1\\$s days ago\", (-daysUntil).toString())"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MonitorScreen.kt:794",
+    "line": "                else -> t(\"In %1\\$s days\", daysUntil.toString())"
+  },
+  {
     "site": "app/src/main/java/com/migraineme/MonitorTreatmentDetailScreen.kt:256",
     "line": "            Text(t(\"You went from %1\\$s to %2\\$s migraine days a month, averaged since you started.\", b.toInt(), r.toInt()),"
   },
@@ -492,43 +512,43 @@
     "line": "        Text(t(\"%1\\$s weeks in · %2\\$s attacks tracked%3\\$s\", e.weeksActive, e.nAttacksRolling, trustNote),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:567",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:568",
     "line": "                    t(\"Track how well each drug, device, or lifestyle change is reducing your migraine days. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:568",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:569",
     "line": "                    t(\"Every regimen is compared against your migraine days in the 28 days BEFORE it started, vs the average across all weeks on treatment after the initial ramp.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:569",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
     "line": "                    t(\"The four bands (Not noticeable · Some effect · Showing progress · Working well) follow the clinical responder definition: \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:570",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:571",
     "line": "                    t(\"a 50% or greater drop is the gold standard.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:571",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:572",
     "line": "                    t(\"Ramp-in (when the drug isn't fully active yet) is excluded so the reading is honest: 8 weeks for oral preventives, 4 weeks for CGRP mAbs, gepants, or preventive devices, none for lifestyle changes. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:572",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:573",
     "line": "                    t(\"A secondary \\\"Last 4 weeks\\\" number on the detail screen shows whether things are trending up or down recently.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:573",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:574",
     "line": "                    t(\"A note on Link: linking treatments combines them into one shared % change. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:574",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:575",
     "line": "                    t(\"It's designed for CONSECUTIVE treatments or DOSE CHANGES of the same drug. \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:575",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:576",
     "line": "                    t(\"If you link two you took at the same time, both rows will read the same number because the math compares against time, not which drug caused the change.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:576",
+    "site": "app/src/main/java/com/migraineme/MonitorTreatmentsScreen.kt:577",
     "line": "                    t(\"Pick up to 3 to feature on this Monitor tile via Customize on the Treatments page.\"),"
   },
   {
@@ -540,11 +560,11 @@
     "line": "                            t(\"1 serving = %1\\$s %2\\$s\", food.servingSize.toInt(), food.servingSizeUnit),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:209",
+    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:213",
     "line": "                            Text(t(\"%1\\$s (avg: %2\\$s%3\\$s)\", label, avg, unit), color = color, style = MaterialTheme.typography.labelSmall)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:380",
+    "site": "app/src/main/java/com/migraineme/NutritionGraph.kt:384",
     "line": "            t(\"Select Metrics\") + (if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\"),"
   },
   {
@@ -585,7 +605,7 @@
   },
   {
     "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:757",
-    "line": "                    t(\"The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The monthly AI Calibration card in Insights nudges those values over time as the app learns from your data.\"),"
+    "line": "                    t(\"The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The weekly AI Calibration card in Insights nudges those values over time as the app learns from your data.\"),"
   },
   {
     "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:932",
@@ -593,22 +613,22 @@
   },
   {
     "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:933",
-    "line": "                    t(\"Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and monthly AI Calibration of your gauge.\\n\\n\") +"
+    "line": "                    t(\"Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and weekly AI Calibration of your gauge.\\n\\n\") +"
   },
   {
     "site": "app/src/main/java/com/migraineme/ProfileScreen.kt:934",
     "line": "                    t(\"Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/QuickLogMedicineScreen.kt:372",
+    "site": "app/src/main/java/com/migraineme/QuickLogMedicineScreen.kt:427",
     "line": "                                        snackbarHostState.showSnackbar(tSync(\"Error: %1\\$s\", e.message ?: \"\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/QuickLogReliefScreen.kt:404",
+    "site": "app/src/main/java/com/migraineme/QuickLogReliefScreen.kt:459",
     "line": "                                        snackbarHostState.showSnackbar(tSync(\"Error: %1\\$s\", e.message ?: \"\"))"
   },
   {
-    "site": "app/src/main/java/com/migraineme/QuickLogTriggerScreen.kt:270",
+    "site": "app/src/main/java/com/migraineme/QuickLogTriggerScreen.kt:298",
     "line": "                                        snackbarHostState.showSnackbar(tSync(\"Error: %1\\$s\", e.message ?: \"\"))"
   },
   {
