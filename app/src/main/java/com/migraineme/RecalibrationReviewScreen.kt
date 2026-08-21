@@ -104,7 +104,7 @@ fun RecalibrationReviewScreen(
             // ── No proposals ──
             if (state.proposals.isEmpty()) {
                 BaseCard {
-                    Text(t("No learning this month"), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)
+                    Text(t("No learning this week"), color = AppTheme.TitleColor, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         t("We don't have enough data yet to suggest changes. Keep logging your migraines, triggers, and symptoms — once we spot patterns, we'll have personalised suggestions for you here."),
@@ -126,7 +126,7 @@ fun RecalibrationReviewScreen(
             // ── Intro card — pinned to top ──
             BaseCard {
                 Text(
-                    t("Your monthly recalibration"),
+                    t("Your recalibration"),
                     color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 )

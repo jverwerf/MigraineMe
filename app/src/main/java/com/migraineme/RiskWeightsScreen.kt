@@ -59,12 +59,12 @@ fun RiskWeightsScreen(
         "Low is the score where the gauge fills green. Below this you can largely ignore today.\n" +
         "Mild is where it turns amber. Triggers are starting to pile up; consider pre-emptive relief and avoid stacking new ones.\n" +
         "High is where it goes red. Your bucket is close to overflowing; an attack is likely if you don't ease back.\n\n" +
-        "Defaults are 3 (Low) / 5 (Mild) / 10 (High) for the typical migraine profile. Tap any circle to edit. Lower thresholds make the gauge more sensitive (turns red sooner), higher ones make it more forgiving. The monthly AI Calibration nudges these for you based on which days actually preceded an attack."
+        "Defaults are 3 (Low) / 5 (Mild) / 10 (High) for the typical migraine profile. Tap any circle to edit. Lower thresholds make the gauge more sensitive (turns red sooner), higher ones make it more forgiving. The weekly AI Calibration nudges these for you based on which days actually preceded an attack."
 
     val decayInfoText = "Your decay curve controls how much an old trigger contributes versus a fresh one. A trigger logged six days ago shouldn't push your bucket as hard as one from this morning, and the decay weights set exactly how that fade-out works.\n\n" +
         "There's a separate curve for each severity (HIGH, MILD, LOW). Each curve is 7 day-by-day weights: T0 (today) through +6d (six days back). Higher numbers contribute more to the score, lower numbers contribute less.\n\n" +
         "Default HIGH curve is 10 / 5 / 2.5 / 0 / 0 / 0 / 0 — a HIGH trigger from today counts for 10 points, halves the next day, then drops to nothing after three days. MILD and LOW follow the same shape on a smaller scale.\n\n" +
-        "Tap any bar to edit. Flatter curves keep old triggers in play longer (good if your attacks build up over a week). Steeper curves zero out the past quickly (good if your triggers fire fast). The monthly AI Calibration adjusts these for you based on what your data actually shows."
+        "Tap any bar to edit. Flatter curves keep old triggers in play longer (good if your attacks build up over a week). Steeper curves zero out the past quickly (good if your triggers fire fast). The weekly AI Calibration adjusts these for you based on what your data actually shows."
 
     // ── Gauge thresholds ──
     var thresholdNone by remember { mutableStateOf(0.0) }

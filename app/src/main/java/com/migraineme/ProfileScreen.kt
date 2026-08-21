@@ -754,7 +754,7 @@ private fun AiMigraineProfileCard(data: JsonObject) {
                 Text(
                     t("What you told us during the AI Setup questionnaire when you onboarded. At signup, your answers shaped the initial state of the app: which triggers, prodromes, medicines, reliefs, symptoms, and activities got added to your pool, the severity weight on each one, your starting LOW / MILD / HIGH gauge thresholds, your day-by-day decay curve, and your menstruation config if you tracked your cycle.\n\n") +
                     t("Trigger Areas are the broad categories you flagged as relevant (sleep, hormones, weather, diet, etc.) and Clinical Assessment captures any diagnosis you mentioned. Both are kept as a snapshot of what you said; they're useful as a reference for you and any clinician you share data with, but they don't actively change how the app behaves day-to-day.\n\n") +
-                    t("The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The monthly AI Calibration card in Insights nudges those values over time as the app learns from your data."),
+                    t("The actual app behaviour is driven by what you currently have in Manage Items and Risk Model, which you can edit any time from the drawer. The weekly AI Calibration card in Insights nudges those values over time as the app learns from your data."),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -930,7 +930,7 @@ private fun SubscriptionCard(onNavigateToPaywall: () -> Unit) {
             text = {
                 Text(
                     t("Free Plan covers the basics: full logging (wizard + Quick Log + Daily Check-In), today's risk score with the top 3 contributors, and all Monitor cards.\n\n") +
-                    t("Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and monthly AI Calibration of your gauge.\n\n") +
+                    t("Premium unlocks the analysis layer: the 7-day risk forecast (instead of just today), the full contributor list, Daily Insights, Ask MigraineMe (AI chat with your data), AI Recommendations across six categories, the doctor-ready Full Report PDF, and weekly AI Calibration of your gauge.\n\n") +
                     t("Trial gives you Premium for free until the countdown on this card runs out. After that you stay on Free Plan unless you subscribe. Tap Upgrade any time to see plans."),
                     color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodyMedium
                 )

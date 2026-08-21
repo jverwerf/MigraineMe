@@ -72,7 +72,7 @@ fun RecalibrationProfileButton(
                                 statusMessage = "No learning available yet — we need at least 5 logged migraines to spot patterns (you have ${result.second} so far). Keep logging and we'll have suggestions for you soon!"
                             }
                             "cooldown" -> {
-                                statusMessage = "Your next re-assessment is available on ${result.second}. We space these out monthly so we can properly measure how changes are working for you."
+                                statusMessage = "Your next re-assessment is available on ${result.second}. We space these out so we can properly measure how changes are working for you."
                             }
                             else -> {
                                 statusMessage = result.second

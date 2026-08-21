@@ -517,7 +517,7 @@
    ]
   },
   {
-   "en": "Built from this patient's own patterns, reviewed monthly",
+   "en": "Built from this patient's own patterns, reviewed weekly",
    "class": "soft",
    "max_len": 100,
    "sites": [
