@@ -59,6 +59,13 @@ serve(async (req: Request) => {
     const body = await req.json().catch(() => ({}));
 
     // Auth
+    // A body user_id means a server caller (the weekly cron); otherwise the
+    // request carries the user's own JWT and they are sat in front of it.
+    // Only the automated run is allowed to come back silent — someone who
+    // TAPPED "re-assess" must always get an answer, even if the only thing
+    // to show them is a refreshed narrative.
+    const automated = !!body.user_id;
+
     let userId: string;
     if (body.user_id) {
       userId = body.user_id;
@@ -1049,12 +1056,14 @@ serve(async (req: Request) => {
     };
     const actionable = proposals.filter((p) => !isNoop(p));
 
-    // ── Materiality gate ──
+    // ── Materiality gate (automated runs only) ──
     // A weekly run whose only output is a rewritten narrative (or a repeat
     // data warning) must stay silent: no batch, no banner, no push. Any
     // still-pending batch from a previous week is left in place untouched.
+    // User-initiated runs skip the gate: the person is waiting on a reply, and
+    // the clients have no branch for an empty one.
     const material = actionable.filter((p) => p.type !== "data_warning");
-    if (material.length === 0) {
+    if (automated && material.length === 0) {
       return json({ status: "no_material_changes", proposals: 0 });
     }
 
