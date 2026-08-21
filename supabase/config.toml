@@ -1,0 +1,164 @@
+# Supabase CLI config for MigraineMe (qykflarpibofvffmzghi).
+#
+# WHY THIS FILE EXISTS. On 2026-08-19 14:54 UTC a bulk `supabase functions
+# deploy` ran without --no-verify-jwt. With no config.toml the CLI defaults
+# verify_jwt = true, so JWT verification switched ON for garmin-webhook and
+# nine cron-called functions. The gateway then answered 401 to every Garmin
+# push and to every pg_cron call carrying only x-cron-secret, before the
+# function could boot. Garmin data stopped for every connected user for 31
+# hours and nothing caught it.
+#
+# Every function listed below is called by something that cannot present a
+# Supabase JWT — an external webhook, or pg_cron sending only x-cron-secret.
+# Listing it here pins verify_jwt = false through any deploy, with or without
+# the flag. A function NOT listed here defaults to verify_jwt = true, which is
+# correct for anything the app calls with a user token.
+#
+# Adding a new webhook or cron-called function? Add it here in the same commit.
+# pipeline-watchdog's edge_auth_gate check will email if you forget.
+
+project_id = "qykflarpibofvffmzghi"
+
+[functions.admin-check-oura]
+verify_jwt = false
+
+[functions.admin-probe-oura-api]
+verify_jwt = false
+
+[functions.admin-trace-oura-job]
+verify_jwt = false
+
+[functions.admin-user-activity]
+verify_jwt = false
+
+[functions.backfill-garmin]
+verify_jwt = false
+
+[functions.backfill-polar]
+verify_jwt = false
+
+[functions.chat-assistant]
+verify_jwt = false
+
+[functions.daily-9am-garmin-sync]
+verify_jwt = false
+
+[functions.daily-9am-noise-index]
+verify_jwt = false
+
+[functions.daily-9am-nutrition]
+verify_jwt = false
+
+[functions.daily-9am-oura-sync]
+verify_jwt = false
+
+[functions.daily-9am-polar-sync]
+verify_jwt = false
+
+[functions.daily-9am-sync]
+verify_jwt = false
+
+[functions.daily-9am-weather-dispatcher]
+verify_jwt = false
+
+[functions.enqueue-login-backfill]
+verify_jwt = false
+
+[functions.env-fetcher]
+verify_jwt = false
+
+[functions.fetch_bucket]
+verify_jwt = false
+
+[functions.garmin-backfill]
+verify_jwt = false
+
+[functions.garmin-webhook]
+verify_jwt = false
+
+[functions.generate-bot-comments]
+verify_jwt = false
+
+[functions.generate-treatment-narrative]
+verify_jwt = false
+
+[functions.ingest-articles]
+verify_jwt = false
+
+[functions.oura-webhook]
+verify_jwt = false
+
+[functions.pair-watch]
+verify_jwt = false
+
+[functions.partner-commission-accrual]
+verify_jwt = false
+
+[functions.partner-offer-attribution]
+verify_jwt = false
+
+[functions.partner-payout]
+verify_jwt = false
+
+[functions.polar-webhook]
+verify_jwt = false
+
+[functions.recalc-risk-scores]
+verify_jwt = false
+
+[functions.redeem-promo]
+verify_jwt = false
+
+[functions.refresh-watch-jwt]
+verify_jwt = false
+
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.risk-score-dispatcher]
+verify_jwt = false
+
+[functions.send-fcm-push]
+verify_jwt = false
+
+[functions.stress-worker]
+verify_jwt = false
+
+[functions.sync-calendar-events]
+verify_jwt = false
+
+[functions.sync-user-tags]
+verify_jwt = false
+
+[functions.tag-articles]
+verify_jwt = false
+
+[functions.trial-ending-push]
+verify_jwt = false
+
+[functions.upsert-polar-token]
+verify_jwt = false
+
+[functions.upsert-whoop-token]
+verify_jwt = false
+
+[functions.watch-log]
+verify_jwt = false
+
+[functions.watch-pair-begin]
+verify_jwt = false
+
+[functions.watch-pair-poll]
+verify_jwt = false
+
+[functions.weather-worker]
+verify_jwt = false
+
+[functions.whoop-refresh-core]
+verify_jwt = false
+
+[functions.whoop-token-exchange]
+verify_jwt = false
+
+[functions.whoop-webhook]
+verify_jwt = false
