@@ -610,6 +610,15 @@ fun MonitorNutritionScreen(
 
                         Spacer(Modifier.height(4.dp))
                         HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
+                        Spacer(Modifier.height(6.dp))
+
+                        // Exposure verdicts FIRST. These are the only numbers here
+                        // that mean anything on their own to someone tracking
+                        // migraine; they used to sit at the bottom of All Nutrients.
+                        NutritionExposureRows(todayItems)
+
+                        Spacer(Modifier.height(6.dp))
+                        HorizontalDivider(color = AppTheme.SubtleTextColor.copy(alpha = 0.2f))
                         Spacer(Modifier.height(4.dp))
 
                         // Individual food items

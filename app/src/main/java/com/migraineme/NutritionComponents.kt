@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -166,3 +167,56 @@ fun NutrientRow(label: String, value: Double?, unit: String) {
     }
 }
 
+
+/**
+ * The four exposure verdicts for a day — tyramine, alcohol, gluten, histamine —
+ * as one compact block: geometric icon, name, severity word, vertical bar.
+ *
+ * These are the only nutrition numbers that mean anything on their own to
+ * someone tracking migraine, so they sit at the TOP of Today's Log rather than
+ * buried at the bottom of All Nutrients where they used to be the last thing on
+ * the screen. Colour comes from RiskColors, so the hue names the nutrient and
+ * the tint names the level, matching the All Nutrients rows exactly.
+ */
+@Composable
+fun NutritionExposureRows(todayItems: List<NutritionLogItem>) {
+    val exposureKeys = remember {
+        MetricRegistry.byGroup("nutrition")
+            .map { it.key }
+            .filter { ExposureScale.isExposureMetric(MetricRegistry.nutritionLegacyKey(it)) }
+    }
+    if (exposureKeys.isEmpty()) return
+
+    Column(Modifier.fillMaxWidth()) {
+        exposureKeys.forEach { registryKey ->
+            val legacyKey = MetricRegistry.nutritionLegacyKey(registryKey)
+            val total = todayItems.metricTotal(legacyKey)
+            val (levelText, valueColor) = RiskColors.formatRiskLevel(legacyKey, total.toInt())
+            val level = when (total.toInt()) { 3 -> "high"; 2 -> "medium"; 1 -> "low"; else -> "none" }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    when (legacyKey) {
+                        "tyramine_exposure" -> CheeseIcon(valueColor, 12.dp)
+                        "alcohol_exposure" -> WineGlassIcon(valueColor, 12.dp)
+                        "gluten_exposure" -> WheatIcon(valueColor, 12.dp)
+                        "histamine_exposure" -> FlaskIcon(valueColor, 12.dp)
+                    }
+                    Spacer(Modifier.width(5.dp))
+                    Text(t(MetricRegistry.label(registryKey)), color = AppTheme.BodyTextColor,
+                        style = MaterialTheme.typography.bodySmall)
+                }
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(levelText, color = valueColor, style = MaterialTheme.typography.bodySmall)
+                    if (level != "none") {
+                        Spacer(Modifier.width(4.dp))
+                        RiskBar(valueColor, level, maxHeight = 12.dp)
+                    }
+                }
+            }
+        }
+    }
+}

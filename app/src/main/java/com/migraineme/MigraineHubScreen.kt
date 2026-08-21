@@ -261,6 +261,9 @@ fun MigraineHubScreen(navController: NavController) {
                 }
             }
 
+            // Food — the Log-side door onto the Diet screen. See LogFoodCard.kt.
+            LogFoodCard(navController)
+
             // Quick Log Section Title
             var showQuickLogInfo by remember { mutableStateOf(false) }
             Box(modifier = Modifier.fillMaxWidth()) {
