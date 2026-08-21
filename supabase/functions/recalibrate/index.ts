@@ -102,7 +102,7 @@ serve(async (req: Request) => {
     }
 
     const force = body.force === true;
-    // "full" = monthly recalibration (both calls), "profile_only" = just Call 1
+    // "full" = the weekly recalibration (both calls), "profile_only" = just Call 1
     const mode: string = body.mode ?? "full";
 
     // ── Cooldown check ──
