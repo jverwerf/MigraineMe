@@ -1041,8 +1041,14 @@ class SupabaseDbService(
      * today leaves `getOpenMigraine` null, so callers that need "was there a
      * migraine today" must ask this, never the open-migraine helper.
      *
-     * Matches an attack that starts during the day, or one that started earlier
-     * and is either still open or ended during/after the day.
+     * Matches an attack that starts during the day, and one that started
+     * earlier and ended during or after it.
+     *
+     * An attack with no end time counts only if it started within the last
+     * week. Attacks left open for months are ordinary in real data — three sit
+     * on the test account alone, from June, July and August — and treating
+     * those as "a migraine today" would silence the question forever. A
+     * genuine multi-day attack sits well inside a week.
      */
     @Serializable private data class MigraineIdRow(val id: String)
 
@@ -1050,11 +1056,12 @@ class SupabaseDbService(
         val zone = java.time.ZoneId.systemDefault()
         val dayStart = day.atStartOfDay(zone).toInstant().toString()
         val dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant().toString()
+        val staleCutoff = day.minusDays(7).atStartOfDay(zone).toInstant().toString()
         val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {
             header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
             parameter("select", "id")
             parameter("start_at", "lt.$dayEnd")
-            parameter("or", "(ended_at.is.null,ended_at.gte.$dayStart)")
+            parameter("or", "(ended_at.gte.$dayStart,and(ended_at.is.null,start_at.gte.$staleCutoff))")
             parameter("limit", "1")
         }
         if (!response.status.isSuccess()) return false

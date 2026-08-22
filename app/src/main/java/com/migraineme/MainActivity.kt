@@ -1498,7 +1498,41 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     // Quick log screens (standalone)
                     composable(Routes.QUICK_LOG_MISSED) {
-                        QuickLogMissedScreen(navController = nav, authVm = authVm)
+                        // Same screen as the wizard step, in quick-log mode, so
+                        // logging a miss from Log looks exactly like logging an
+                        // activity does.
+                        val missedVm: MissedActivityViewModel = viewModel()
+                        val quickLogVm: LogViewModel = viewModel()
+                        val scope = rememberCoroutineScope()
+                        var linkedMigraineId by remember { mutableStateOf<String?>(null) }
+                        MissedActivitiesScreen(
+                            navController = nav, vm = missedVm, authVm = authVm, logVm = quickLogVm,
+                            quickLogMode = true,
+                            linkedMigraineId = linkedMigraineId,
+                            onMigraineSelect = { linkedMigraineId = it },
+                            onSave = { reasons, notes, anticipated ->
+                                scope.launch {
+                                    val token = authVm.state.value.accessToken ?: return@launch
+                                    val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                    quickLogVm.draft.value.missedActivities.forEach { m ->
+                                        // Linking it to an attack makes it a plain
+                                        // miss again, whatever the day looked like.
+                                        val isAnticipated = anticipated && linkedMigraineId == null
+                                        runCatching {
+                                            db.insertMissedActivity(
+                                                token, linkedMigraineId, m.type,
+                                                m.startAtIso ?: java.time.Instant.now().toString(),
+                                                notes[m.type]?.takeIf { it.isNotBlank() },
+                                                anticipated = isAnticipated,
+                                                reasonLabels = if (isAnticipated) reasons[m.type] else null,
+                                            )
+                                        }
+                                    }
+                                    quickLogVm.clearDraft()
+                                    nav.popBackStack()
+                                }
+                            }
+                        )
                     }
                     composable(Routes.QUICK_LOG_TRIGGER) {
                         val triggerVm: TriggerViewModel = viewModel()

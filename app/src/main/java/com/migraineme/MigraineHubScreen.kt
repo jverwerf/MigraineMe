@@ -378,26 +378,23 @@ fun MigraineHubScreen(navController: NavController) {
                     onClick = { navController.navigate(Routes.QUICK_LOG_RELIEF) }
                 )
 
-                QuickLogCard(
+                // One card, two halves: what you did and what you didn't.
+                // They are the same question asked both ways, so they share a
+                // slot rather than the second one becoming a card of its own.
+                SplitQuickLogCard(
                     modifier = Modifier.weight(1f),
-                    title = t("Activity"),
-                    subtitle = t("Log activity"),
-                    iconColor = Color(0xFFFF8A65),
-                    drawIcon = { HubIcons.run { drawActivityPulse(it) } },
-                    onClick = { navController.navigate(Routes.QUICK_LOG_ACTIVITY) }
+                    leftTitle = t("Activity"),
+                    leftSubtitle = t("What you did"),
+                    leftColor = Color(0xFFFF8A65),
+                    drawLeftIcon = { HubIcons.run { drawActivityPulse(it) } },
+                    onLeftClick = { navController.navigate(Routes.QUICK_LOG_ACTIVITY) },
+                    rightTitle = t("Missed"),
+                    rightSubtitle = t("What you didn't"),
+                    rightColor = Color(0xFFE8A0A0),
+                    drawRightIcon = { HubIcons.run { drawMissedActivity(it) } },
+                    onRightClick = { navController.navigate(Routes.QUICK_LOG_MISSED) },
                 )
             }
-
-            // Full width rather than a seventh half-card dangling on its own
-            // row, and it reads as the counterpart to Activity above it.
-            QuickLogCard(
-                modifier = Modifier.fillMaxWidth(),
-                title = t("Missed"),
-                subtitle = t("Something you didn't do"),
-                iconColor = Color(0xFFE8A0A0),
-                drawIcon = { HubIcons.run { drawMissedActivity(it) } },
-                onClick = { navController.navigate(Routes.QUICK_LOG_MISSED) }
-            )
         }
     }
 
@@ -505,6 +502,92 @@ private fun QuickLogCard(
     }
 }
 
+
+/**
+ * The Activity slot, split down the middle. Two tap targets in the space of
+ * one card, so "what you did" and "what you didn't" stay one thought and the
+ * grid keeps its pairs.
+ */
+@Composable
+private fun SplitQuickLogCard(
+    modifier: Modifier = Modifier,
+    leftTitle: String,
+    leftSubtitle: String,
+    leftColor: Color,
+    drawLeftIcon: DrawScope.(Color) -> Unit,
+    onLeftClick: () -> Unit,
+    rightTitle: String,
+    rightSubtitle: String,
+    rightColor: Color,
+    drawRightIcon: DrawScope.(Color) -> Unit,
+    onRightClick: () -> Unit,
+) {
+    BaseCard(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SplitHalf(Modifier.weight(1f), leftTitle, leftSubtitle, leftColor, drawLeftIcon, onLeftClick)
+            Box(
+                Modifier
+                    .width(1.dp)
+                    .height(104.dp)
+                    .background(Color.White.copy(alpha = 0.10f))
+            )
+            SplitHalf(Modifier.weight(1f), rightTitle, rightSubtitle, rightColor, drawRightIcon, onRightClick)
+        }
+    }
+}
+
+@Composable
+private fun SplitHalf(
+    modifier: Modifier,
+    title: String,
+    subtitle: String,
+    color: Color,
+    drawIcon: DrawScope.(Color) -> Unit,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Same circle, spacing and type as QuickLogCard so the split card
+        // stands exactly as tall as its neighbours in the grid.
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(color.copy(alpha = 0.15f))
+                .border(1.5.dp, color.copy(alpha = 0.3f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(Modifier.size(28.dp).drawBehind { drawIcon(color) })
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        Text(
+            title,
+            color = AppTheme.BodyTextColor,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1
+        )
+        Text(
+            subtitle,
+            color = AppTheme.SubtleTextColor,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+            textAlign = TextAlign.Center,
+            // Half the width of a normal card, so this one wraps rather than
+            // bleeding past its own edge.
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
 
 object LogQuickLogInfoCopy {
     val text: String get() = tSync("Still quick, but with a bit more choice. The home strip is one-tap-and-done; this Quick Log lets you pick any item from your full pool (not just your favourites), set the time to something other than right now, and add notes.\n\nFor medicines and reliefs you can also log the amount, how much it helped, and any side effects, so this is the right place when you've taken something specific and want it recorded properly.\n\nActivity logging lives here too. For a full attack with everything that goes around it (timing, symptoms, pain, prodromes, triggers, medicines, reliefs, locations, activities, postdromes, missed activities and notes), use the \"Log Migraine\" hero card above.")

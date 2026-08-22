@@ -25,8 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -39,7 +43,15 @@ fun MissedActivitiesScreen(
     vm: MissedActivityViewModel,
     authVm: AuthViewModel,
     logVm: LogViewModel,
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    // Quick-log mode: the same screen reached from Log instead of from inside
+    // the wizard, so it saves on its own and can ask why.
+    quickLogMode: Boolean = false,
+    onSave: ((reasons: Map<String, List<String>>, notes: Map<String, String>, anticipated: Boolean) -> Unit)? = null,
+    linkedMigraineId: String? = null,
+    onMigraineSelect: ((String?) -> Unit)? = null,
+    triggerVm: TriggerViewModel = viewModel(),
+    prodromeVm: ProdromeViewModel = viewModel(),
 ) {
     val pool by vm.pool.collectAsState()
     val frequent by vm.frequent.collectAsState()
@@ -63,6 +75,46 @@ fun MissedActivitiesScreen(
     // after the rebuildDraftWithMissed helper is defined.
     val upcoming by vm.upcoming.collectAsState()
 
+    // ── Why, in quick-log mode ────────────────────────────────────────────
+    val triggerPool by triggerVm.pool.collectAsState()
+    val triggerFreq by triggerVm.frequent.collectAsState()
+    val prodromePool by prodromeVm.pool.collectAsState()
+    val prodromeFreq by prodromeVm.frequent.collectAsState()
+    var hadMigraineToday by remember { mutableStateOf(false) }
+    val reasonsByLabel = remember { mutableStateMapOf<String, List<String>>() }
+    val notesByLabel = remember { mutableStateMapOf<String, String>() }
+    var whyForLabel by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(authState.accessToken, quickLogMode) {
+        if (!quickLogMode) return@LaunchedEffect
+        val token = authState.accessToken ?: return@LaunchedEffect
+        triggerVm.loadAll(token)
+        prodromeVm.loadAll(token)
+        // Any attack touching today, not just an open one: one that started and
+        // ended today would otherwise read as a migraine-free day.
+        hadMigraineToday = withContext(Dispatchers.IO) {
+            val db = SupabaseDbService(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+            runCatching { db.hasMigraineOnDay(token, LocalDate.now()) }.getOrDefault(false)
+        }
+    }
+
+    // Reasons come from what a person actually chooses. A pool row naming a
+    // metric table is read off a device or a food log, so it is detected, not
+    // a reason someone gives.
+    val triggerFavIds = remember(triggerFreq) { triggerFreq.map { it.triggerId }.toSet() }
+    val triggerReasonItems = remember(triggerPool, triggerFavIds) {
+        triggerPool
+            .filter { it.metricTable == null }
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+            .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
+    }
+    val prodromeFavIds = remember(prodromeFreq) { prodromeFreq.map { it.prodromeId }.toSet() }
+    val prodromeReasonItems = remember(prodromePool, prodromeFavIds) {
+        prodromePool
+            .filter { it.metricTable == null }
+            .map { SelectableItem(it.label, it.iconKey, it.id in prodromeFavIds, it.category) }
+    }
+
     // Only the missed-activity list changes here. This used to clearDraft() and
     // rebuild the whole draft field by field, which silently dropped
     // editMigraineId (turning an edit into a duplicate insert), every
@@ -78,6 +130,9 @@ fun MissedActivitiesScreen(
             rebuildDraftWithMissed(draft.missedActivities.toMutableList().apply { removeAt(idx) })
         } else {
             rebuildDraftWithMissed(draft.missedActivities + MissedActivityDraft(type = label))
+            // Straight over the picker, for what was just tapped. Only on a day
+            // with no attack: with one, the reason is already recorded.
+            if (quickLogMode && !hadMigraineToday) whyForLabel = label
         }
     }
 
@@ -116,14 +171,17 @@ fun MissedActivitiesScreen(
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(t("Activity"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+            // Wizard breadcrumb: only when this really is the wizard step.
+            if (!quickLogMode) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, t("Back"), tint = Color.White, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(t("Activity"), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
                 }
-                Spacer(Modifier.weight(1f))
-                IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, t("Close"), tint = Color.White, modifier = Modifier.size(28.dp)) }
             }
 
             HeroCard {
@@ -153,7 +211,9 @@ fun MissedActivitiesScreen(
                 }
             }
 
-            WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.NOTES) })
+            if (!quickLogMode) {
+                WizardStepNav(onBack = { navController.popBackStack() }, onSkip = { navController.navigate(Routes.NOTES) })
+            }
 
             BaseCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -161,6 +221,11 @@ fun MissedActivitiesScreen(
                     Text(t("Manage →"), color = AppTheme.AccentPurple, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.clickable { navController.navigate(Routes.MANAGE_MISSED_ACTIVITIES) })
                 }
+            }
+
+            if (quickLogMode && onMigraineSelect != null) {
+                val firstIso = draft.missedActivities.firstOrNull()?.startAtIso
+                MigrainePickerCard(itemStartAtIso = firstIso, authVm = authVm, selectedMigraineId = linkedMigraineId, onSelect = onMigraineSelect)
             }
 
             WizardSearchField(query = wizardSearch, onQueryChange = { wizardSearch = it }, accent = Color(0xFFEF9A9A))
@@ -194,13 +259,35 @@ fun MissedActivitiesScreen(
                 OutlinedButton(onClick = { navController.popBackStack() },
                     border = BorderStroke(1.dp, AppTheme.AccentPurple.copy(alpha = 0.5f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.AccentPurple)
-                ) { Text(t("Back")) }
-                Button(onClick = { navController.navigate(Routes.NOTES) },
+                ) { Text(if (quickLogMode) t("Cancel") else t("Back")) }
+                Button(
+                    onClick = {
+                        if (quickLogMode) onSave?.invoke(reasonsByLabel.toMap(), notesByLabel.toMap(), !hadMigraineToday)
+                        else navController.navigate(Routes.NOTES)
+                    },
+                    enabled = !quickLogMode || draft.missedActivities.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.AccentPurple)
-                ) { Text(t("Next")) }
+                ) { Text(if (quickLogMode) t("Save") else t("Next")) }
             }
             Spacer(Modifier.height(32.dp))
         }
+    }
+
+    // Why, over the picker, for whatever was just tapped.
+    whyForLabel?.let { label ->
+        MissedWhySheet(
+            label = label,
+            triggerItems = triggerReasonItems,
+            prodromeItems = prodromeReasonItems,
+            selectedReasons = reasonsByLabel[label] ?: emptyList(),
+            note = notesByLabel[label] ?: "",
+            onToggleReason = { l ->
+                val cur = reasonsByLabel[label] ?: emptyList()
+                reasonsByLabel[label] = if (cur.contains(l)) cur - l else cur + l
+            },
+            onNoteChange = { notesByLabel[label] = it },
+            onDismiss = { whyForLabel = null },
+        )
     }
 }
 

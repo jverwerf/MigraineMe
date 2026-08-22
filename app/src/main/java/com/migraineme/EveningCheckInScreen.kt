@@ -69,7 +69,7 @@ val TREATMENT_SIDE_EFFECT_POOL = listOf(
     "Mood shift", "Insomnia", "Appetite", "Dry mouth", "Headache"
 )
 
-private data class SelectableItem(
+internal data class SelectableItem(
     val label: String,
     val iconKey: String? = null,
     val isFavourite: Boolean = false,
@@ -134,9 +134,27 @@ fun EveningCheckInScreen(
             .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
             .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
     }
+    // Reasons come from what a person actually chooses. A pool row that names
+    // a metric table is read off a device or a food log — "Skin temp high",
+    // "Tyramine exposure high" — so it is detected, never a reason someone
+    // gives, and it would pad the list to 150-odd rows. prediction_value does
+    // not separate them: nearly every prodrome carries NONE, human ones too.
+    val triggerReasonItems = remember(triggerPool, triggerFavIds) {
+        triggerPool
+            .filter { it.metricTable == null }
+            .filterNot { it.label.equals("menstruation_predicted", ignoreCase = true) }
+            .map { SelectableItem(it.label, it.iconKey, it.id in triggerFavIds, it.category) }
+    }
     val prodromeFavIds = remember(prodromeFreq) { prodromeFreq.map { it.prodromeId }.toSet() }
     val prodromeItems = remember(prodromePool, prodromeFavIds) {
         prodromePool.map { SelectableItem(it.label, it.iconKey, it.id in prodromeFavIds, it.category) }
+    }
+    // Same rule for warning signs, which is what keeps Neck stiffness and
+    // Irritability in while dropping SpO2 and Brightness.
+    val prodromeReasonItems = remember(prodromePool, prodromeFavIds) {
+        prodromePool
+            .filter { it.metricTable == null }
+            .map { SelectableItem(it.label, it.iconKey, it.id in prodromeFavIds, it.category) }
     }
     val medicineFavIds = remember(medicineFreq) { medicineFreq.map { it.medicineId }.toSet() }
     val medicineItems = remember(medicinePool, medicineFavIds) {
@@ -156,8 +174,9 @@ fun EveningCheckInScreen(
     // Things given up today. Reasons are asked once, on the Why page, and
     // written onto every row this check-in saves.
     val selectedMissed = remember { mutableStateListOf<CheckInMissedItem>() }
-    val missedReasons = remember { mutableStateListOf<String>() }
-    var missedWhyNote by remember { mutableStateOf("") }
+    // The skipped item whose "why" sheet is open, if any. Reasons live on the
+    // item itself: asked per tap, so they belong to that tap.
+    var whyForLabel by remember { mutableStateOf<String?>(null) }
     // Whether ANY migraine touched today — not the same as an open one. An
     // attack that started and ended today leaves openMigraine null, and asking
     // "why did you skip that?" on a day she had a migraine reads as broken.
@@ -486,20 +505,14 @@ fun EveningCheckInScreen(
                     // Things given up today. `anticipated` is true only on a day
                     // with no migraine: with an attack this is the usual "the
                     // attack took it away" row the wizard writes.
-                    val whyNote = missedWhyNote.trim()
-                    val reasons = missedReasons.toList()
                     selectedMissed.forEach { m ->
                         runCatching {
                             db.insertMissedActivity(
                                 token, migraineId = null, type = m.label,
                                 startAt = m.startAtIso ?: now,
-                                notes = listOfNotNull(
-                                    m.note?.takeIf { it.isNotBlank() },
-                                    whyNote.takeIf { it.isNotEmpty() },
-                                ).joinToString(" ").ifBlank { "evening check-in" },
+                                notes = m.note?.takeIf { it.isNotBlank() } ?: "evening check-in",
                                 anticipated = !hadMigraineToday,
-                                reasonLabels = if (hadMigraineToday) null
-                                    else (m.reasons + reasons).distinct()
+                                reasonLabels = if (hadMigraineToday) null else m.reasons
                             )
                         }
                     }
@@ -760,26 +773,18 @@ fun EveningCheckInScreen(
                         if (aiMissedLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust")
                         else t("Tap anything you skipped or cancelled"),
                         missedItems, selectedMissed.map { it.label }, Color(0xFFE8A0A0),
-                        { MissedActivityIcons.forKey(it) }, aiMissedLabels,
-                        // Why sits under the picker on the same page: it is one
-                        // question about what was just tapped, not a step of
-                        // its own. Only on a day with no attack — with one, the
-                        // reason is already recorded.
-                        footer = {
-                            if (selectedMissed.isNotEmpty() && !hadMigraineToday) {
-                                MissedWhySection(
-                                    triggerItems = triggerItems,
-                                    prodromeItems = prodromeItems,
-                                    selectedReasons = missedReasons.toList(),
-                                    note = missedWhyNote,
-                                    onToggleReason = { l -> if (missedReasons.contains(l)) missedReasons.remove(l) else missedReasons.add(l) },
-                                    onNoteChange = { missedWhyNote = it },
-                                )
-                            }
-                        }
+                        { MissedActivityIcons.forKey(it) }, aiMissedLabels
                     ) { l ->
-                        if (isMissedSelected(l)) selectedMissed.removeAll { it.label == l }
-                        else selectedMissed.add(CheckInMissedItem(label = l, startAtIso = nowIso()))
+                        if (isMissedSelected(l)) {
+                            selectedMissed.removeAll { it.label == l }
+                        } else {
+                            selectedMissed.add(CheckInMissedItem(label = l, startAtIso = nowIso()))
+                            // Ask straight away, over the picker. Further down
+                            // the page it reads as unrelated and gets missed.
+                            // Only on a day with no attack: with one, the
+                            // reason is already recorded.
+                            if (!hadMigraineToday) whyForLabel = l
+                        }
                     }
                 }
                 CheckInPage.Calendar -> CalendarCheckInPage(
@@ -915,7 +920,6 @@ fun EveningCheckInScreen(
                 CheckInPage.Review -> ReviewPage(
                     selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs, selectedActivities,
                     missed = selectedMissed.toList(),
-                    sharedReasons = if (hadMigraineToday) emptyList() else missedReasons.toList(),
                     calendarMappings = calendarMappings.toList(),
                     aiResult = aiParseResult, saving = saving, saved = saved,
                     nowSymptoms = if (openMigraine != null) selectedNowSymptoms.toList() else emptyList(),
@@ -973,6 +977,30 @@ fun EveningCheckInScreen(
                     }
                 }
             }
+        }
+    }
+
+    // Why, over the picker, for whatever was just tapped.
+    whyForLabel?.let { label ->
+        val idx = selectedMissed.indexOfFirst { it.label == label }
+        if (idx >= 0) {
+            val item = selectedMissed[idx]
+            MissedWhySheet(
+                label = label,
+                triggerItems = triggerReasonItems,
+                prodromeItems = prodromeReasonItems,
+                selectedReasons = item.reasons,
+                note = item.note ?: "",
+                onToggleReason = { l ->
+                    val cur = selectedMissed[idx]
+                    val next = if (cur.reasons.contains(l)) cur.reasons - l else cur.reasons + l
+                    selectedMissed[idx] = cur.copy(reasons = next)
+                },
+                onNoteChange = { selectedMissed[idx] = selectedMissed[idx].copy(note = it) },
+                onDismiss = { whyForLabel = null },
+            )
+        } else {
+            whyForLabel = null
         }
     }
 }
@@ -1159,103 +1187,6 @@ private fun FavouritesPage(
         footer()
 
         Spacer(Modifier.height(80.dp))
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════
-//  Missed: why
-// ═══════════════════════════════════════════════════════════════════
-
-/**
- * Asked once per check-in, not once per skipped thing: on a day someone gave
- * up three things it is nearly always the same reason, and three identical
- * pickers is three times the work for the same answer. Whatever is picked here
- * is written onto every missed row this check-in saves.
- *
- * Reasons come from the trigger and prodrome pools, favourites first, plus a
- * free-text line. All three are equal — nothing here grades one kind of reason
- * against another.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun MissedWhySection(
-    triggerItems: List<SelectableItem>,
-    prodromeItems: List<SelectableItem>,
-    selectedReasons: List<String>,
-    note: String,
-    onToggleReason: (String) -> Unit,
-    onNoteChange: (String) -> Unit,
-) {
-    var showAllTriggers by rememberSaveable { mutableStateOf(false) }
-    var showAllProdromes by rememberSaveable { mutableStateOf(false) }
-
-    val triggerFavs = remember(triggerItems) { triggerItems.filter { it.isFavourite } }
-    val prodromeFavs = remember(prodromeItems) { prodromeItems.filter { it.isFavourite } }
-    val triggersShown = if (showAllTriggers || triggerFavs.isEmpty()) triggerItems else triggerFavs
-    val prodromesShown = if (showAllProdromes || prodromeFavs.isEmpty()) prodromeItems else prodromeFavs
-
-    Column(Modifier.fillMaxWidth()) {
-        Spacer(Modifier.height(20.dp))
-        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
-        Spacer(Modifier.height(16.dp))
-        Text(t("Why did you skip that?"), color = Color.White,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("No migraine today, so tell us what stopped you. Optional."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-
-        Spacer(Modifier.height(16.dp))
-        Text(t("Triggers"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-        Spacer(Modifier.height(12.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-            triggersShown.forEach { item ->
-                CheckInCircle(item.label, TriggerIcons.forKey(item.iconKey) ?: TriggerIcons.forKey(item.category),
-                    item.label in selectedReasons, Color(0xFFFFB74D), false) { onToggleReason(item.label) }
-            }
-        }
-        if (triggerFavs.isNotEmpty() && triggerFavs.size < triggerItems.size) {
-            TextButton(onClick = { showAllTriggers = !showAllTriggers }) {
-                Text(if (showAllTriggers) t("Show favourites only") else t("Show all"),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-        Text(t("Warning signs"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-        Spacer(Modifier.height(12.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-            prodromesShown.forEach { item ->
-                CheckInCircle(item.label, ProdromeIcons.forKey(item.iconKey) ?: ProdromeIcons.forKey(item.category),
-                    item.label in selectedReasons, Color(0xFF9575CD), false) { onToggleReason(item.label) }
-            }
-        }
-        if (prodromeFavs.isNotEmpty() && prodromeFavs.size < prodromeItems.size) {
-            TextButton(onClick = { showAllProdromes = !showAllProdromes }) {
-                Text(if (showAllProdromes) t("Show favourites only") else t("Show all"),
-                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-        Text(t("Anything else"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = note,
-            onValueChange = onNoteChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(t("In your own words"), color = AppTheme.SubtleTextColor) },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = AppTheme.AccentPurple,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
-                cursorColor = AppTheme.AccentPurple,
-            ),
-            shape = RoundedCornerShape(12.dp),
-            minLines = 2,
-        )
     }
 }
 
@@ -2054,7 +1985,7 @@ private fun formatTimeSubtitle(iso: String?): String? {
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolean, color: Color, isAiMatched: Boolean = false, onClick: () -> Unit) {
+internal fun CheckInCircle(label: String, icon: ImageVector?, isSelected: Boolean, color: Color, isAiMatched: Boolean = false, onClick: () -> Unit) {
     val bg = if (isSelected) color.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.08f)
     val bdr = if (isAiMatched && isSelected) Color(0xFFFFD54F) else if (isSelected) color.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f)
     val tint = if (isSelected) Color.White else AppTheme.SubtleTextColor
