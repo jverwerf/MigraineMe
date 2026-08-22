@@ -149,6 +149,7 @@ object Routes {
         const val FREQUENCY_TRENDS = "frequency_trends"
     const val MONITOR = "monitor"
     const val MONITOR_CONFIG = "monitor_config"
+    const val INSIGHTS_CONFIG = "insights_config"
     const val JOURNAL = "journal"
 
     const val MIGRAINE = "migraine"
@@ -900,6 +901,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.INSIGHTS_TREATMENTS ||
             current == Routes.INSIGHTS_WHATS_HELPING ||
             current == Routes.INSIGHTS_WHAT_CHANGED ||
+            current == Routes.INSIGHTS_CONFIG ||
             current == Routes.INSIGHTS_CONTEXT ||
             current == Routes.INSIGHTS_IMPACT ||
             current == Routes.INSIGHTS_THRESHOLDS ||
@@ -1035,6 +1037,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                             val titleText = when (current) {
                                     Routes.MONITOR -> "Monitor"
                                     Routes.MONITOR_CONFIG -> "Configure Monitor"
+                                    Routes.INSIGHTS_CONFIG -> "Customize Insights"
                                     Routes.INSIGHTS -> "Insights"
                                     Routes.INSIGHTS_DETAIL -> "Explore Migraines"
                                     Routes.INSIGHTS_TIMELINE -> "Migraine Timeline"
@@ -1233,6 +1236,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                 ) {
                     composable(Routes.MONITOR) { MonitorScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_CONFIG) { MonitorConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable(Routes.INSIGHTS_CONFIG) { InsightsConfigScreen(onBack = { nav.popBackStack() }) }
                     
                     // Monitor detail screens (placeholders for now)
                     composable(Routes.MONITOR_NUTRITION) { MonitorNutritionScreen(navController = nav, authVm = authVm) }
@@ -3032,6 +3036,7 @@ private fun BottomBar(
             val showInsightsDot = item.route == Routes.INSIGHTS && insightsHasNew
             val selected = currentRoute == item.route ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_DETAIL) ||
+                    (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_CONFIG) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_TIMELINE) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_REPORT) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_PATTERNS) ||

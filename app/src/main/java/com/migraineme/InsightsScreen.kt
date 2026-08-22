@@ -702,7 +702,47 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 val relEff by vm.reliefEffectiveness.collectAsState()
                 val recomputeStatus by vm.recomputeStatus.collectAsState()
 
-                // ── 2. FULL REPORT ──
+                // ── 0. CUSTOMIZE INSIGHTS (entry card, same as Monitor's Configure Monitor) ──
+                val insightsCtx = LocalContext.current
+                var insightsConfig by remember { mutableStateOf(InsightsCardConfigStore.load(insightsCtx)) }
+                LaunchedEffect(Unit) {
+                    insightsConfig = InsightsCardConfigStore.load(insightsCtx)
+                }
+                HeroCard(
+                    modifier = Modifier.clickable { navController.navigate(Routes.INSIGHTS_CONFIG) }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Tune,
+                            contentDescription = t("Configure"),
+                            tint = AppTheme.AccentPurple,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                t("Customize Insights"),
+                                color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Text(
+                                t("Show, hide, and reorder cards"),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Text(
+                            "\u2192",
+                            color = AppTheme.AccentPurple,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+
+                // ── 2. FULL REPORT (pinned, not configurable) ──
                 var showFullReportInfo by remember { mutableStateOf(false) }
                 Box(modifier = Modifier.fillMaxWidth()) {
                     BrainyWatermarkCard(modifier = Modifier
@@ -790,6 +830,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     }
                 }
                 } // end if(false) wrapper hiding the moved Explore Migraines card
+                // ── Configurable cards, in the user's order (Customize Insights) ──
+                // Each card keeps its own code; key(cardId) keeps remember{} state
+                // attached to the card when the order changes.
+                for (insightsCardId in insightsConfig.getOrderedVisibleCards()) {
+                key(insightsCardId) {
+                when (insightsCardId) {
+                InsightsCardConfig.CARD_RECOMMENDATIONS -> {
                 // ── 3b. AI RECOMMENDATIONS (premium) ──
                 val aiRecs by vm.aiRecommendations.collectAsState()
                 val dismissedRecKeys by vm.dismissedRecommendationKeys.collectAsState()
@@ -848,6 +895,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 }
 
 
+                } // end card
+
+                InsightsCardConfig.CARD_ACCURACY -> {
                 // ── 4. ACCURACY ──
                 var showAccuracyInfo by remember { mutableStateOf(false) }
                 PremiumGate(
@@ -900,6 +950,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                } // end card
+
+                InsightsCardConfig.CARD_PATTERNS -> {
                 // ── 5. WHAT HAPPENED ──
                 var showWhatHappenedInfo by remember { mutableStateOf(false) }
                 PremiumGate(
@@ -952,6 +1005,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                } // end card
+
+                InsightsCardConfig.CARD_TREATMENTS -> {
                 // ── 6. WHAT WORKED ──
                 var showWhatWorkedInfo by remember { mutableStateOf(false) }
                 PremiumGate(
@@ -1004,6 +1060,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                } // end card
+
+                InsightsCardConfig.CARD_HELPING -> {
                 // ── 6b. WHAT'S HELPING (Well Done positive layer) ──
                 // docs/well-done-layer-spec.md (migraineme-ios repo). Habits
                 // present on migraine-free days + what drives them.
@@ -1058,6 +1117,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                } // end card
+
+                InsightsCardConfig.CARD_CHANGES -> {
                 // ── 6c. WHAT CHANGED (last 30 days vs the 30 before) ──
                 // Mirrors the PDF report's What changed page; hidden entirely
                 // when no item's count moved between the two windows.
@@ -1113,6 +1175,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                } // end card
+
+                InsightsCardConfig.CARD_CONTEXT -> {
                 // ── 7. WHAT WERE YOU DOING ──
                 var showContextInfo by remember { mutableStateOf(false) }
                 PremiumGate(
@@ -1165,6 +1230,9 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                     )
                 }
 
+                } // end card
+
+                InsightsCardConfig.CARD_IMPACT -> {
                 // ── 8. HOW DID IT IMPACT YOU ──
                 val painLocCounts by vm.painLocationCounts.collectAsState()
                 val sevCounts by vm.severityCounts.collectAsState()
@@ -1224,6 +1292,11 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         containerColor = AppTheme.BaseCardContainer
                     )
                 }
+
+                } // end card
+                } // end when
+                } // end key
+                } // end for
 
                 // ── Medical disclaimer (dismissible, Google Play Health Content policy) ──
                 MedicalDisclaimerCard(prefKey = "insights_dismissed")

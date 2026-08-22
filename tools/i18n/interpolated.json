@@ -172,23 +172,23 @@
     "line": "                                    \"${entry.value}${if (entry.unit.isNotEmpty()) \" ${entry.unit}\" else \"\"}\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1179",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1307",
     "line": "                    NoteMatchPill(\"Pain update · ${p.severity}/10\", \"pain\", AppTheme.AccentPink, false, p.startAtIso,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1325",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1457",
     "line": "                    \"Pain update · $painNowSeverity/10\", AppTheme.AccentPink, false, false,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1332",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:1464",
     "line": "                    subtitle = (if (auraNowZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraNowZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2370",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:2514",
     "line": "                        (if (auraZones.size == 1) t(\"1 zone\") else t(\"%s zones\", auraZones.size)) +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:611",
+    "site": "app/src/main/java/com/migraineme/EveningCheckInScreen.kt:675",
     "line": "            t(\"Evening Check-in — %1\\$s of %2\\$s\", pageIndex + 1, pages.size),"
   },
   {
@@ -248,75 +248,79 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:223",
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:225",
     "line": "                                    t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), count),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:342",
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:344",
     "line": "                                Text(t(\"%1\\$s%% · %2\\$s attacks\", pct, s.totalCount),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:789",
+    "line": "        t(\"%1\\$s this month · %2\\$s\", last, direction),"
   },
   {
     "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:159",
     "line": "                        Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\", condPct.toInt(), baselinePct.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1010",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1032",
     "line": "                        t(\"Showing %1\\$s of %2\\$s attacks · the PDF includes all %3\\$s\", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1309",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1370",
     "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1741",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1802",
     "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1843",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1904",
     "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1850",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1911",
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2284",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2345",
     "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:755",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:777",
     "line": "                            Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], seasonalCounts[worstIdx], String.format(\"%.0f\", pct)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1305",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1378",
     "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1312",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1385",
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1396",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1469",
     "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1738",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1811",
     "line": "                    Text(t(\"%1\\$s within %2\\$s\", effectText, horizonText(row.horizonMinutes)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2135",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2208",
     "line": "                    Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2561",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2634",
     "line": "                        Text(t(\"%1\\$s migraines (%2\\$s%%)\", item.count, item.pctOfMigraines.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2715",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2788",
     "line": "                    Text(t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), timed),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3236",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3309",
     "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 about %3\\$s times an average day.\", w.dayName, String.format(\"%.0f\", w.pct), trimLift(ratio)),"
   },
   {
@@ -344,19 +348,19 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:323",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:329",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:358",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:364",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:392",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:398",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:426",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:432",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -398,6 +402,14 @@
   {
     "site": "app/src/main/java/com/migraineme/MentalHistoryGraph.kt:372",
     "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:249",
+    "line": "            tSync(\"%1\\$s suggested changes to your profile. Tap to review.\").replace(\"%1\\$s\", count.toString())"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigraineMeFirebaseService.kt:417",
+    "line": "            stage == \"forecast\" -> tSync(\"Heads up for %1\\$s\").replace(\"%1\\$s\", date)"
   },
   {
     "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:150",
@@ -590,6 +602,46 @@
   {
     "site": "app/src/main/java/com/migraineme/PhysicalHistoryGraph.kt:359",
     "line": "            text = t(\"Select Metrics\") + if (selectedMetrics.size > 1) t(\" (%s selected)\", selectedMetrics.size) else \"\","
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1006",
+    "line": "                        if (granted.isEmpty()) t(\"Share your data\") else t(\"%1\\$s shared\", granted.size),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:134",
+    "line": "            else -> t(\"%1\\$s days ago\", days)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:1409",
+    "line": "        title = { Text(t(\"Ask %1\\$s for an intro call\", practitionerName.substringBefore(' '))) },"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:340",
+    "line": "            title = { Text(t(\"Stop sharing with %1\\$s?\", name)) },"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:431",
+    "line": "                    t(\"Last looked %1\\$s\", agoText(lastViewedIso)),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:479",
+    "line": "        title = { Text(if (isFirstAnswer) t(\"Share your diary?\") else t(\"What %1\\$s can see\", practitionerName)) },"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:488",
+    "line": "                            t(\"%1\\$s is a %2\\$s. They have asked to see:\", practitionerName, role.lowercase())"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:489",
+    "line": "                        else t(\"%1\\$s has asked to see:\", practitionerName),"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:620",
+    "line": "                            if (some) t(\"%1\\$s of %2\\$s shared\", on, inGroup.size) else \"\""
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/PractitionerScreen.kt:621",
+    "line": "                        } + if (some) \"  ·  \" + t(\"%1\\$s of %2\\$s\", on, inGroup.size) else \"\","
   },
   {
     "site": "app/src/main/java/com/migraineme/PremiumGate.kt:479",

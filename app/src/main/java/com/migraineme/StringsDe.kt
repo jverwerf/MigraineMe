@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3641 entries.
+ * 3646 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -91,6 +91,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "%s location" to "%s Ort",
     "%s locations" to "%s Orte",
     "%s locations added" to "%s Orte erfasst",
+    "%s logged today · tap to add" to "%s heute erfasst · tippe zum Ergänzen",
     "%s medicine" to "%s Medikament",
     "%s medicines" to "%s Medikamente",
     "%s medicines added" to "%s Medikamente dazu",
@@ -838,12 +839,14 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Customize Diet Display" to "Ernährung anpassen",
     "Customize Display" to "Anzeige anpassen",
     "Customize Environment" to "Umgebung anpassen",
+    "Customize Insights" to "Erkenntnisse anpassen",
     "Customize Medicines" to "Medikamente anpassen",
     "Customize Monitor Card" to "Monitor-Karte anpassen",
     "Customize Physical Health" to "Körperwerte anpassen",
     "Customize Sleep" to "Schlaf anpassen",
     "Customize Treatments" to "Therapien anpassen",
     "Customize Triggers" to "Auslöser anpassen",
+    "Customize your Insights" to "Erkenntnisse anpassen",
     "Customize your Monitor" to "Monitor anpassen",
     "Cycle" to "Zyklus",
     "Cycle Length" to "Zykluslänge",
@@ -1195,6 +1198,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Folate high" to "Folat hoch",
     "Folate low" to "Folat niedrig",
     "Follow curators that flag relevant articles" to "Folge Kuratoren mit passenden Artikeln",
+    "Food" to "Essen",
     "Food & diet — what do you avoid?" to "Essen — was meidest du?",
     "Food Added!" to "Hinzugefügt!",
     "Food Risk Analysis" to "Essrisiko-Analyse",
@@ -2388,9 +2392,6 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Review Log" to "Prüfen",
     "Review your data settings & recalibrate your profile" to "Prüfe deine Dateneinstellungen und kalibriere neu",
     "Review your day" to "Dein Tag",
-    "Food" to "Essen",
-    "Search or scan what you ate" to "Suche oder scanne, was du gegessen hast",
-    "%s logged today · tap to add" to "%s heute erfasst · zum Hinzufügen tippen",
     "Review your entries before saving" to "Prüfe deine Einträge vor dem Sichern",
     "Riboflavin" to "Riboflavin",
     "Riboflavin (B2)" to "Riboflavin (B2)",
@@ -2471,6 +2472,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Search foods" to "Essen suchen",
     "Search help…" to "Hilfe suchen…",
     "Search models" to "Modelle suchen",
+    "Search or scan what you ate" to "Suche oder scanne, was du gegessen hast",
     "Search…" to "Suchen…",
     "Seasonal" to "Saisonal",
     "Seasonal pattern" to "Jahreszeitliches Muster",

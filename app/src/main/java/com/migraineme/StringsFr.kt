@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3641 entries.
+ * 3646 entries.
  */
 internal val FR_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Sur toutes les données",
@@ -91,6 +91,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "%s location" to "%s lieu",
     "%s locations" to "%s lieux",
     "%s locations added" to "%s lieux en plus",
+    "%s logged today · tap to add" to "%s aujourd'hui · touche pour ajouter",
     "%s medicine" to "%s médicament",
     "%s medicines" to "%s médicaments",
     "%s medicines added" to "%s médicaments",
@@ -347,7 +348,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Add to Pool" to "Vers la liste",
     "Add to frequent" to "Ajouter aux fréquents",
     "Add to list" to "Vers la liste",
-    "Add to this migraine" to "Ajouter à cette migraine",
+    "Add to this migraine" to "Ajouter à la migraine",
     "Add trigger" to "Facteur",
     "Add → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Ajouter → Facteurs : %1\$s, Médicaments : %2\$s, Soulagements : %3\$s",
     "Add, remove, or organise your triggers, medicines, reliefs, symptoms, AI companions, and more" to "Ajoute, retire ou range tes facteurs, médicaments, soulagements, symptômes, guides IA et plus",
@@ -838,12 +839,14 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Customize Diet Display" to "Ajuster l'alimentation",
     "Customize Display" to "Ajuster l'affichage",
     "Customize Environment" to "Ajuster l'environnement",
+    "Customize Insights" to "Ajuster les Analyses",
     "Customize Medicines" to "Ajuster médicaments",
     "Customize Monitor Card" to "Ajuster la carte Moniteur",
     "Customize Physical Health" to "Ajuster le corps",
     "Customize Sleep" to "Ajuster sommeil",
     "Customize Treatments" to "Ajuster traitements",
     "Customize Triggers" to "Ajuster facteurs",
+    "Customize your Insights" to "Ajuste tes Analyses",
     "Customize your Monitor" to "Ajuste ton Moniteur",
     "Cycle" to "Cycle",
     "Cycle Length" to "Durée du cycle",
@@ -1195,6 +1198,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Folate high" to "Folates élevés",
     "Folate low" to "Folates bas",
     "Follow curators that flag relevant articles" to "Suis ceux qui repèrent les bons articles",
+    "Food" to "Alimentation",
     "Food & diet — what do you avoid?" to "Alimentation : que fuis-tu ?",
     "Food Added!" to "Ajouté !",
     "Food Risk Analysis" to "Risque alimentaire",
@@ -1249,7 +1253,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Full History & Journal" to "Historique et journal",
     "Full Insights & Spider Charts" to "Analyses et radars",
     "Full Report" to "Rapport",
-    "Full log" to "Journal complet",
+    "Full log" to "Journal entier",
     "Full-head massager with air pressure, kneading and heat across scalp, temples and eyes, run from your phone." to "Masseur intégral à pression d'air, pétrissage et chaleur sur le cuir chevelu, les tempes et les yeux, piloté depuis ton téléphone.",
     "Galcanezumab (Emgality)" to "Galcanézumab (Emgality)",
     "Gaming" to "Jeux vidéo",
@@ -2388,9 +2392,6 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Review Log" to "Revoir",
     "Review your data settings & recalibrate your profile" to "Revois tes réglages et recalibre ton profil",
     "Review your day" to "Ta journée",
-    "Food" to "Alimentation",
-    "Search or scan what you ate" to "Cherche ou scanne ce que tu as mangé",
-    "%s logged today · tap to add" to "%s enregistrés aujourd'hui · touche pour ajouter",
     "Review your entries before saving" to "Revois tes saisies avant d'enregistrer",
     "Riboflavin" to "Riboflavine",
     "Riboflavin (B2)" to "Riboflavine (B2)",
@@ -2471,6 +2472,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Search foods" to "Chercher",
     "Search help…" to "Chercher…",
     "Search models" to "Chercher",
+    "Search or scan what you ate" to "Cherche ou scanne ce que tu as mangé",
     "Search…" to "Chercher…",
     "Seasonal" to "Saisonnier",
     "Seasonal pattern" to "Schéma saisonnier",

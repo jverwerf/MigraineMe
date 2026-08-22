@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3641 entries.
+ * 3646 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -91,6 +91,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "%s location" to "%s plek",
     "%s locations" to "%s plekken",
     "%s locations added" to "%s plekken erbij",
+    "%s logged today · tap to add" to "%s vandaag gelogd · tik om toe te voegen",
     "%s medicine" to "%s medicijn",
     "%s medicines" to "%s medicijnen",
     "%s medicines added" to "%s medicijnen erbij",
@@ -838,12 +839,14 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Customize Diet Display" to "Voeding aanpassen",
     "Customize Display" to "Weergave",
     "Customize Environment" to "Omgeving aanpassen",
+    "Customize Insights" to "Inzichten aanpassen",
     "Customize Medicines" to "Medicijnen",
     "Customize Monitor Card" to "Monitorkaart aanpassen",
     "Customize Physical Health" to "Lichaam aanpassen",
     "Customize Sleep" to "Slaap aanpassen",
     "Customize Treatments" to "Behandelingen",
     "Customize Triggers" to "Triggers aanpassen",
+    "Customize your Insights" to "Je Inzichten aanpassen",
     "Customize your Monitor" to "Je Monitor aanpassen",
     "Cycle" to "Cyclus",
     "Cycle Length" to "Cycluslengte",
@@ -1195,6 +1198,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Folate high" to "Folaat hoog",
     "Folate low" to "Folaat laag",
     "Follow curators that flag relevant articles" to "Volg wie nuttige artikelen markeert",
+    "Food" to "Eten",
     "Food & diet — what do you avoid?" to "Eten: wat vermijd je?",
     "Food Added!" to "Toegevoegd!",
     "Food Risk Analysis" to "Risico van eten",
@@ -2388,9 +2392,6 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Review Log" to "Bekijken",
     "Review your data settings & recalibrate your profile" to "Bekijk je gegevens en ijk je profiel opnieuw",
     "Review your day" to "Je dag",
-    "Food" to "Eten",
-    "Search or scan what you ate" to "Zoek of scan wat je hebt gegeten",
-    "%s logged today · tap to add" to "%s vandaag vastgelegd · tik om toe te voegen",
     "Review your entries before saving" to "Bekijk je notities voor je opslaat",
     "Riboflavin" to "Riboflavine",
     "Riboflavin (B2)" to "Riboflavine (B2)",
@@ -2471,6 +2472,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Search foods" to "Eten zoeken",
     "Search help…" to "Hulp zoeken…",
     "Search models" to "Model zoeken",
+    "Search or scan what you ate" to "Zoek of scan wat je hebt gegeten",
     "Search…" to "Zoeken…",
     "Seasonal" to "Seizoen",
     "Seasonal pattern" to "Seizoenspatroon",

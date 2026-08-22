@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3641 entries.
+ * 3646 entries.
  */
 internal val PT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos os dados",
@@ -91,6 +91,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "%s location" to "%s local",
     "%s locations" to "%s locais",
     "%s locations added" to "%s locais mais",
+    "%s logged today · tap to add" to "%s registados hoje · toca para adicionar",
     "%s medicine" to "%s medicamento",
     "%s medicines" to "%s medicamentos",
     "%s medicines added" to "%s medicamentos",
@@ -838,12 +839,14 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Customize Diet Display" to "Ajustar alimentação",
     "Customize Display" to "Ajustar o ecrã",
     "Customize Environment" to "Ajustar ambiente",
+    "Customize Insights" to "Ajustar Análises",
     "Customize Medicines" to "Ajustar medicamentos",
     "Customize Monitor Card" to "Ajustar cartão do Monitor",
     "Customize Physical Health" to "Ajustar corpo",
     "Customize Sleep" to "Ajustar sono",
     "Customize Treatments" to "Ajustar tratamentos",
     "Customize Triggers" to "Ajustar fatores",
+    "Customize your Insights" to "Ajusta as tuas Análises",
     "Customize your Monitor" to "Ajusta o teu Monitor",
     "Cycle" to "Ciclo",
     "Cycle Length" to "Duração ciclo",
@@ -1195,6 +1198,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Folate high" to "Folato alto",
     "Folate low" to "Folato baixo",
     "Follow curators that flag relevant articles" to "Segue quem marca artigos úteis",
+    "Food" to "Alimentação",
     "Food & diet — what do you avoid?" to "Comida: o que evitas?",
     "Food Added!" to "Juntado!",
     "Food Risk Analysis" to "Risco da comida",
@@ -1249,7 +1253,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Full History & Journal" to "Histórico e diário",
     "Full Insights & Spider Charts" to "Análises e gráficos radar",
     "Full Report" to "Relatório",
-    "Full log" to "Registo completo",
+    "Full log" to "Registo total",
     "Full-head massager with air pressure, kneading and heat across scalp, temples and eyes, run from your phone." to "Massajador de cabeça inteira com pressão de ar, massagem e calor no couro cabeludo, têmporas e olhos, controlado pelo telemóvel.",
     "Galcanezumab (Emgality)" to "Galcanezumab (Emgality)",
     "Gaming" to "Videojogos",
@@ -2388,9 +2392,6 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Review Log" to "Rever",
     "Review your data settings & recalibrate your profile" to "Revê os teus dados e recalibra o perfil",
     "Review your day" to "O teu dia",
-    "Food" to "Alimentação",
-    "Search or scan what you ate" to "Pesquisa ou digitaliza o que comeste",
-    "%s logged today · tap to add" to "%s registados hoje · toca para adicionar",
     "Review your entries before saving" to "Revê os registos antes de guardar",
     "Riboflavin" to "Riboflavina",
     "Riboflavin (B2)" to "Riboflavina (B2)",
@@ -2471,6 +2472,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Search foods" to "Procurar",
     "Search help…" to "Procurar…",
     "Search models" to "Procurar",
+    "Search or scan what you ate" to "Pesquisa ou digitaliza o que comeste",
     "Search…" to "Procurar…",
     "Seasonal" to "Sazonal",
     "Seasonal pattern" to "Padrão sazonal",

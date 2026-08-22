@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3641 entries.
+ * 3646 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -91,6 +91,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "%s location" to "%s luogo",
     "%s locations" to "%s luoghi",
     "%s locations added" to "%s luoghi in più",
+    "%s logged today · tap to add" to "%s registrati oggi · tocca e aggiungi",
     "%s medicine" to "%s farmaco",
     "%s medicines" to "%s farmaci",
     "%s medicines added" to "%s farmaci in più",
@@ -347,7 +348,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Add to Pool" to "Nella lista",
     "Add to frequent" to "Tra i frequenti",
     "Add to list" to "Nella lista",
-    "Add to this migraine" to "Aggiungi a questa emicrania",
+    "Add to this migraine" to "Aggiungi all'emicrania",
     "Add trigger" to "Fattore",
     "Add → Triggers: %1\$s, Medicines: %2\$s, Reliefs: %3\$s" to "Aggiungi → Fattori: %1\$s, Farmaci: %2\$s, Sollievi: %3\$s",
     "Add, remove, or organise your triggers, medicines, reliefs, symptoms, AI companions, and more" to "Aggiungi, togli o riordina fattori, farmaci, sollievi, sintomi, guide IA e altro",
@@ -838,12 +839,14 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Customize Diet Display" to "Modifica alimentazione",
     "Customize Display" to "Modifica vista",
     "Customize Environment" to "Modifica ambiente",
+    "Customize Insights" to "Personalizza Analisi",
     "Customize Medicines" to "Modifica farmaci",
     "Customize Monitor Card" to "Modifica scheda Monitor",
     "Customize Physical Health" to "Modifica corpo",
     "Customize Sleep" to "Modifica sonno",
     "Customize Treatments" to "Modifica terapie",
     "Customize Triggers" to "Modifica fattori",
+    "Customize your Insights" to "Personalizza le Analisi",
     "Customize your Monitor" to "Personalizza il Monitor",
     "Cycle" to "Ciclo",
     "Cycle Length" to "Durata ciclo",
@@ -1195,6 +1198,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Folate high" to "Folati alti",
     "Folate low" to "Folati bassi",
     "Follow curators that flag relevant articles" to "Segui chi segnala articoli utili",
+    "Food" to "Cibo",
     "Food & diet — what do you avoid?" to "Cibo: cosa eviti?",
     "Food Added!" to "Aggiunto!",
     "Food Risk Analysis" to "Rischio dei cibi",
@@ -2388,9 +2392,6 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Review Log" to "Rivedi",
     "Review your data settings & recalibrate your profile" to "Rivedi i tuoi dati e ritara il profilo",
     "Review your day" to "La tua giornata",
-    "Food" to "Cibo",
-    "Search or scan what you ate" to "Cerca o scansiona ciò che hai mangiato",
-    "%s logged today · tap to add" to "%s registrati oggi · tocca per aggiungere",
     "Review your entries before saving" to "Rivedi le voci prima di salvare",
     "Riboflavin" to "Riboflavina",
     "Riboflavin (B2)" to "Riboflavina (B2)",
@@ -2471,6 +2472,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Search foods" to "Cerca cibo",
     "Search help…" to "Cerca aiuto…",
     "Search models" to "Cerca modello",
+    "Search or scan what you ate" to "Cerca o scansiona ciò che hai mangiato",
     "Search…" to "Cerca…",
     "Seasonal" to "Stagionale",
     "Seasonal pattern" to "Schema stagionale",
