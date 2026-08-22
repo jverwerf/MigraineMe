@@ -17,6 +17,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.*
@@ -25,6 +27,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -145,12 +157,17 @@ fun PractitionerPanel(
     val scope = rememberCoroutineScope()
 
     var links by remember { mutableStateOf<List<SupabasePractitionerService.LinkRow>>(emptyList()) }
+    var directory by remember { mutableStateOf<List<SupabasePractitionerService.PractitionerRow>>(emptyList()) }
     var lastViewed by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<SupabasePractitionerService.LinkRow?>(null) }
     var confirmRevoke by remember { mutableStateOf<SupabasePractitionerService.LinkRow?>(null) }
     var reload by remember { mutableStateOf(0) }
+    var connecting by remember { mutableStateOf<SupabasePractitionerService.PractitionerRow?>(null) }
+    var requesting by remember { mutableStateOf<SupabasePractitionerService.PractitionerRow?>(null) }
+    var viewing by remember { mutableStateOf<SupabasePractitionerService.PractitionerRow?>(null) }
+    val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(auth.accessToken, reload) {
         val token = auth.accessToken
@@ -161,16 +178,15 @@ fun PractitionerPanel(
             withContext(Dispatchers.IO) {
                 val l = SupabasePractitionerService.myLinks(token)
                 val v = SupabasePractitionerService.lastViewed(token)
-                l to v
+                val d = SupabasePractitionerService.directory(token)
+                Triple(l, v, d)
             }
-        }.onSuccess { (l, v) -> links = l; lastViewed = v }
+        }.onSuccess { (l, v, d) -> links = l; lastViewed = v; directory = d }
             .onFailure { error = it.message }
         loading = false
     }
 
-    val pending = links.filter { it.isPending }
     val active = links.filter { it.isActive }
-    val past = links.filter { !it.isPending && !it.isActive }
 
     Column(
         modifier = Modifier
@@ -180,12 +196,6 @@ fun PractitionerPanel(
     ) {
         Spacer(Modifier.height(4.dp))
 
-            Text(
-                t("A practitioner can only ever see what you tick, and you can change it or stop sharing at any time."),
-                style = MaterialTheme.typography.bodyMedium,
-                color = AppTheme.SubtleTextColor,
-            )
-
             if (loading) {
                 Row(Modifier.fillMaxWidth().padding(vertical = 24.dp), horizontalArrangement = Arrangement.Center) {
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
@@ -194,15 +204,6 @@ fun PractitionerPanel(
 
             error?.let {
                 Text(it, color = AppTheme.AccentPink, style = MaterialTheme.typography.bodySmall)
-            }
-
-            // A request waiting on the patient comes first: it is the only
-            // thing on this screen that is asking something of them.
-            if (pending.isNotEmpty()) {
-                SectionLabel(t("Waiting on you"))
-                pending.forEach { link ->
-                    PendingCard(link = link, onRespond = { editing = link })
-                }
             }
 
             if (active.isNotEmpty()) {
@@ -217,47 +218,28 @@ fun PractitionerPanel(
                 }
             }
 
-            if (!loading && active.isEmpty() && pending.isEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
-                    shape = AppTheme.BaseCardShape,
-                    border = AppTheme.BaseCardBorder,
-                ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(t("Nobody can see your diary"), fontWeight = FontWeight.SemiBold, color = AppTheme.TitleColor)
-                        Text(
-                            t("If you work with a nutritional therapist, physiotherapist or psychologist, they can ask to see the parts of your diary you choose. Nothing is shared until you say yes."),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = AppTheme.SubtleTextColor,
+            // The directory, as cards. A practitioner already connected keeps
+            // her card too: it is where the patient goes to change what she
+            // sees, and it is the only place her own words are.
+            if (directory.isNotEmpty()) {
+                SectionLabel(t("Practitioners"))
+                directory.forEach { p ->
+                    val link = links.firstOrNull { it.practitioner_id == p.id }
+                    Box(Modifier.clickable { viewing = p }) {
+                        PractitionerCard(
+                            p = p,
+                            link = link,
+                            lang = LangPrefs.get().code,
+                            onRequestPlace = { requesting = p },
+                            onShareData = {
+                                if (link != null) editing = link else connecting = p
+                            },
+                            onOpenWebsite = { viewing = p },
                         )
                     }
                 }
             }
 
-            if (past.isNotEmpty()) {
-                SectionLabel(t("Stopped"))
-                past.forEach { link ->
-                    val name = link.practitioners?.display_name ?: t("Practitioner")
-                    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
-        shape = AppTheme.BaseCardShape,
-        border = AppTheme.BaseCardBorder,
-    ) {
-                        Column(Modifier.padding(14.dp)) {
-                            Text(name, fontWeight = FontWeight.SemiBold, color = AppTheme.TitleColor)
-                            Text(
-                                if (link.status == "revoked")
-                                    t("You stopped sharing %1\$s", agoText(link.revoked_at))
-                                else t("You declined this request"),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = AppTheme.SubtleTextColor,
-                            )
-                        }
-                    }
-                }
-            }
 
         Spacer(Modifier.height(28.dp))
     }
@@ -278,6 +260,68 @@ fun PractitionerPanel(
                         withContext(Dispatchers.IO) {
                             if (link.isPending) SupabasePractitionerService.respondToRequest(token, link, chosen)
                             else SupabasePractitionerService.updateScopes(token, link, chosen)
+                        }
+                    }.onFailure { error = it.message }
+                    reload++
+                }
+            },
+        )
+    }
+
+    viewing?.let { p ->
+        PractitionerDetailSheet(
+            p = p,
+            link = links.firstOrNull { it.practitioner_id == p.id },
+            lang = LangPrefs.get().code,
+            onDismiss = { viewing = null },
+            onRequestPlace = { viewing = null; requesting = p },
+            onShareData = {
+                val existing = links.firstOrNull { it.practitioner_id == p.id }
+                viewing = null
+                if (existing != null) editing = existing else connecting = p
+            },
+        )
+    }
+
+    // Connecting for the first time is the same consent question as changing
+    // it later, so it is the same sheet; only the row it writes differs.
+    connecting?.let { p ->
+        val target = p
+        ConsentSheet(
+            practitionerName = target.display_name,
+            discipline = target.discipline,
+            asked = Scope.entries.toSet(),
+            alreadyGranted = emptySet(),
+            isFirstAnswer = true,
+            onDismiss = { connecting = null },
+            onConfirm = { chosen ->
+                val token = auth.accessToken
+                val uid = auth.userId
+                connecting = null
+                if (token != null && uid != null) scope.launch {
+                    runCatching {
+                        withContext(Dispatchers.IO) {
+                            SupabasePractitionerService.connect(token, uid, target.id, chosen)
+                        }
+                    }.onFailure { error = it.message }
+                    reload++
+                }
+            },
+        )
+    }
+
+    requesting?.let { p ->
+        AskForPlaceDialog(
+            practitionerName = p.display_name,
+            onDismiss = { requesting = null },
+            onSend = { note ->
+                val token = auth.accessToken
+                val uid = auth.userId
+                requesting = null
+                if (token != null && uid != null) scope.launch {
+                    runCatching {
+                        withContext(Dispatchers.IO) {
+                            SupabasePractitionerService.requestAppointment(token, uid, p.id, note, null)
                         }
                     }.onFailure { error = it.message }
                     reload++
@@ -324,38 +368,6 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun PendingCard(
-    link: SupabasePractitionerService.LinkRow,
-    onRespond: () -> Unit,
-) {
-    val name = link.practitioners?.display_name ?: t("A practitioner")
-    val asked = scopeList(link.requested)
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = AppTheme.HeroCardContainer),
-        shape = AppTheme.BaseCardShape,
-        border = AppTheme.BaseCardBorder,
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(t("%1\$s would like to see your diary", name), fontWeight = FontWeight.SemiBold, color = AppTheme.TitleColor)
-            if (asked.isNotBlank()) {
-                Text(
-                    t("They have asked for: %1\$s", asked),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.SubtleTextColor,
-                )
-            }
-            Text(
-                t("Nothing of yours is visible until you answer."),
-                style = MaterialTheme.typography.bodySmall,
-                color = AppTheme.SubtleTextColor,
-            )
-            Button(onClick = onRespond, modifier = Modifier.fillMaxWidth()) { Text(t("Choose what to share")) }
-        }
-    }
-}
-
-@Composable
 private fun ActiveCard(
     link: SupabasePractitionerService.LinkRow,
     lastViewedIso: String?,
@@ -373,46 +385,39 @@ private fun ActiveCard(
         shape = AppTheme.BaseCardShape,
         border = AppTheme.BaseCardBorder,
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(name, fontWeight = FontWeight.SemiBold, color = AppTheme.TitleColor)
             p?.practice_name?.takeIf { it.isNotBlank() }?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
             }
 
-            Text(t("They can see"), style = MaterialTheme.typography.labelSmall, color = AppTheme.SubtleTextColor)
-            if (granted.isEmpty()) {
-                Text(t("Nothing"), style = MaterialTheme.typography.bodySmall, color = AppTheme.BodyTextColor)
-            } else {
-                // Summarised by category, with a count where it is partial, so
-                // the card stays readable at twenty five separate consents.
-                SupabasePractitionerService.SCOPE_GROUPS.forEach { g ->
-                    val on = g.scopes.count { it in link.granted }
-                    if (on == 0) return@forEach
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(
-                            Icons.Outlined.CheckCircle,
-                            contentDescription = null,
-                            tint = AppTheme.AccentPurple,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Text(
-                            if (on == g.scopes.size) t(g.title) else t("%1\$s (%2\$s of %3\$s)", t(g.title), on, g.scopes.size),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = AppTheme.BodyTextColor,
-                        )
-                    }
+            // Twelve ticked rows is a column of the same word over and over.
+            // A count with the names beside it says the same thing in two lines.
+            val shown = SupabasePractitionerService.SCOPE_GROUPS.mapNotNull { g ->
+                val on = g.scopes.count { it in link.granted }
+                when {
+                    on == 0 -> null
+                    on == g.scopes.size -> t(g.title)
+                    else -> t("%1\$s (%2\$s/%3\$s)", t(g.title), on, g.scopes.size)
                 }
             }
-
-            // Naming what was refused, to the patient, is the counterpart of
-            // the dashboard telling the practitioner it was refused rather
-            // than showing her an empty chart.
-            if (refused.isNotEmpty()) {
-                Text(
-                    t("You are not sharing: %1\$s", scopeList(refused)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.SubtleTextColor,
-                )
+            if (shown.isEmpty()) {
+                Text(t("Sharing nothing"), style = MaterialTheme.typography.bodySmall, color = AppTheme.SubtleTextColor)
+            } else {
+                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(
+                        Icons.Outlined.CheckCircle,
+                        contentDescription = null,
+                        tint = AppTheme.AccentPurple,
+                        modifier = Modifier.size(15.dp).padding(top = 2.dp),
+                    )
+                    Text(
+                        shown.joinToString(", "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.BodyTextColor,
+                        lineHeight = 17.sp,
+                    )
+                }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -444,6 +449,7 @@ private fun ActiveCard(
  * underneath. Not a list of pre-ticked switches: pre-ticked consent for health
  * data is not consent, and an explicit tap is no slower.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ConsentSheet(
     practitionerName: String,
@@ -455,10 +461,15 @@ fun ConsentSheet(
     onConfirm: (Set<Scope>) -> Unit,
 ) {
     var choosing by remember { mutableStateOf(!isFirstAnswer) }
-    var picked by remember { mutableStateOf(if (isFirstAnswer) asked else alreadyGranted) }
+    // Everything they asked for is ticked when the sheet opens, so the
+    // question is what to hold back rather than starting from nothing and
+    // rebuilding the whole list. An existing link opens on what is already
+    // shared, because that is the thing being edited.
+    var picked by remember {
+        mutableStateOf(if (alreadyGranted.isEmpty()) asked else alreadyGranted)
+    }
 
     val role = disciplineLabel(discipline)
-    val askedList = scopeList(asked)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -474,11 +485,35 @@ fun ConsentSheet(
                 if (isFirstAnswer) {
                     Text(
                         if (role != null)
-                            t("%1\$s is a %2\$s. They have asked to see: %3\$s.", practitionerName, role.lowercase(), askedList)
-                        else t("%1\$s has asked to see: %2\$s.", practitionerName, askedList),
+                            t("%1\$s is a %2\$s. They have asked to see:", practitionerName, role.lowercase())
+                        else t("%1\$s has asked to see:", practitionerName),
                         style = MaterialTheme.typography.bodyMedium,
                         color = AppTheme.BodyTextColor,
                     )
+
+                    // The categories, not the twenty five things inside them.
+                    // Spelling every leaf out made a paragraph nobody would
+                    // read, which is the opposite of informed consent.
+                    if (!choosing) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            SupabasePractitionerService.SCOPE_GROUPS
+                                .filter { g -> g.scopes.any { it in asked } }
+                                .forEach { g ->
+                                    Text(
+                                        t(g.title),
+                                        fontSize = 11.5.sp,
+                                        color = Color(0xFFE3CEFF),
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(AppTheme.AccentPurple.copy(alpha = 0.16f))
+                                            .padding(horizontal = 9.dp, vertical = 4.dp),
+                                    )
+                                }
+                        }
+                    }
                 }
 
                 if (choosing) {
@@ -499,12 +534,7 @@ fun ConsentSheet(
                     TextButton(onClick = { choosing = true }, colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.AccentPurple)) { Text(t("Choose what to share")) }
                 }
 
-                Text(
-                    t("You can change this or stop sharing at any time, and you will be able to see when they last looked."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.SubtleTextColor,
-                )
-            }
+}
         },
         confirmButton = {
             if (choosing) {
@@ -526,6 +556,24 @@ fun ConsentSheet(
  * inside, unticking drops everything, and a partial selection is shown as a
  * count rather than pretending to be either.
  */
+@Composable
+private fun groupDetail(title: String): String = when (title) {
+    "Migraines" -> t("Attacks, symptoms, warning signs, pain, aura, your notes")
+    "Triggers" -> t("Everything you logged as a possible trigger")
+    "Diet" -> t("Meals, caffeine, alcohol and flagged ingredients")
+    "Medicines" -> t("What you took, whether it helped, side effects")
+    "Treatments" -> t("Ongoing treatment and your treatment story")
+    "Sleep" -> t("Hours, score, efficiency and disturbances")
+    "Physical Health" -> t("Heart, movement and body measurements")
+    "Cognitive" -> t("Stress, screen time and phone use")
+    "Environment" -> t("Weather, pollen and air quality where you were")
+    "Menstruation" -> t("Period dates and cycle settings")
+    "Risk" -> t("The daily risk score the app showed you")
+    "Insights" -> t("Patterns the app found, and your setup answers")
+    else -> ""
+}
+
+
 @Composable
 private fun ScopeGroupRow(
     group: SupabasePractitionerService.ScopeGroup,
@@ -568,15 +616,15 @@ private fun ScopeGroupRow(
                 )
                 if (inGroup.size > 1) {
                     Text(
-                        if (some) t("%1\$s of %2\$s shared", on, inGroup.size)
-                        else if (all) t("All %1\$s shared", inGroup.size)
-                        else t("Nothing shared"),
+                        groupDetail(group.title).ifBlank {
+                            if (some) t("%1\$s of %2\$s shared", on, inGroup.size) else ""
+                        } + if (some) "  ·  " + t("%1\$s of %2\$s", on, inGroup.size) else "",
                         style = MaterialTheme.typography.bodySmall,
                         color = AppTheme.SubtleTextColor,
                     )
                 } else {
                     Text(
-                        scopeDetail(inGroup.first()),
+                        groupDetail(group.title).ifBlank { scopeDetail(inGroup.first()) },
                         style = MaterialTheme.typography.bodySmall,
                         color = AppTheme.SubtleTextColor,
                     )
@@ -704,4 +752,695 @@ fun RowScope.PractitionerTab(
     }
 }
 
+/**
+ * The practitioner card.
+ *
+ * Designed with Stephanie and approved by her: a landscape from her practice,
+ * her portrait over it, her own line about her work, and the things she
+ * treats. A directory of names is not what anyone picks a therapist from.
+ *
+ * The three actions sit in the order she asked for them: ask for a place,
+ * see what she offers, and release your data.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun PractitionerCard(
+    p: SupabasePractitionerService.PractitionerRow,
+    link: SupabasePractitionerService.LinkRow?,
+    lang: String,
+    onRequestPlace: () -> Unit,
+    onShareData: () -> Unit,
+    onOpenWebsite: () -> Unit,
+    showActions: Boolean = true,
+) {
+    val bio = p.bioFor(lang)
+    val granted = link?.granted.orEmpty()
+    // The stat boxes are words, so they belong to a language. The row on the
+    // practitioner is the fallback for a translation that has not set its own.
+    val offers = p.offersFor(lang)
+    val main = offers.firstOrNull { it.kind == "service" }
+    val intro = offers.firstOrNull { it.kind == "intro" }
+    val facts = listOfNotNull(
+        main?.price?.let { SupabasePractitionerService.Fact(t("From"), it) },
+        main?.subtitle?.substringBefore(" · ")?.takeIf { it.isNotBlank() }
+            ?.let { SupabasePractitionerService.Fact(t("Length"), it) },
+        SupabasePractitionerService.Fact(
+            t("Intro call"),
+            intro?.price ?: t("ask"),
+            if (intro != null) "good" else null,
+        ),
+    ).ifEmpty { bio?.facts?.takeIf { it.isNotEmpty() } ?: p.facts }
 
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF220C33)),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, Color(0xFF3E1D55)),
+    ) {
+        Column {
+            // Banner and head share a box so the portrait genuinely overlaps
+            // the photo. offset() would move it visually and still reserve its
+            // old space, which leaves a hole under the card.
+            Box(Modifier.fillMaxWidth()) {
+                Box(Modifier.fillMaxWidth().height(92.dp)) {
+                    if (!p.banner_url.isNullOrBlank()) {
+                        AsyncImage(
+                            model = p.banner_url,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    0.35f to Color.Transparent,
+                                    1f to Color(0xFF220C33).copy(alpha = 0.85f),
+                                )
+                            )
+                    )
+
+                    // Which languages she actually works in. Not the languages
+                    // the card has been translated into: a card you can read
+                    // is no use if you cannot hold the session.
+                    if (p.languages.isNotEmpty()) {
+                        Row(
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(10.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(Color(0xCC160523))
+                                .border(1.dp, Color(0x593E1D55), RoundedCornerShape(9.dp))
+                                .padding(horizontal = 9.dp, vertical = 5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                t("Speaks"),
+                                fontSize = 9.sp,
+                                letterSpacing = 0.6.sp,
+                                color = Color(0xFFA991C4),
+                            )
+                            Text(
+                                p.languages.joinToString(" · ") { c ->
+                                    Lang.fromCode(c)?.code?.uppercase() ?: c.uppercase()
+                                },
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFE3CEFF),
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 18.dp, end = 18.dp)
+                        .offset(y = 44.dp),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Box(
+                        Modifier
+                            .size(width = 78.dp, height = 96.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color(0xFF301244))
+                            .border(2.dp, Color(0xFF220C33), RoundedCornerShape(18.dp)),
+                    ) {
+                        if (!p.photo_url.isNullOrBlank()) {
+                            AsyncImage(
+                                model = p.photo_url,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                    }
+                    Column(Modifier.weight(1f).padding(bottom = 6.dp)) {
+                        Text(
+                            p.display_name,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppTheme.BodyTextColor,
+                            lineHeight = 23.sp,
+                        )
+                        bio?.headline?.takeIf { it.isNotBlank() }?.let {
+                            Text(it, fontSize = 12.sp, color = Color(0xFFA991C4), lineHeight = 15.sp)
+                        }
+                    }
+                }
+            }
+
+            // the height the portrait hangs below the banner
+            Spacer(Modifier.height(50.dp))
+
+            Column(
+                Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                bio?.quote?.takeIf { it.isNotBlank() }?.let { q ->
+                    Row(Modifier.height(IntrinsicSize.Min)) {
+                        Box(Modifier.width(2.dp).fillMaxHeight().background(AppTheme.AccentPurple))
+                        Text(
+                            q,
+                            fontSize = 13.5.sp,
+                            lineHeight = 19.sp,
+                            color = Color(0xFFE4D6F5),
+                            modifier = Modifier.padding(start = 12.dp),
+                        )
+                    }
+                }
+
+                val treats = bio?.treats.orEmpty()
+                if (treats.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        treats.forEachIndexed { i, label ->
+                            val lead = i == 0
+                            Text(
+                                label,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (lead) Color(0xFFE3CEFF) else Color(0xFFD8C6EE),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (lead) AppTheme.AccentPurple.copy(alpha = 0.16f) else Color(0xFF301244))
+                                    .border(
+                                        1.dp,
+                                        if (lead) AppTheme.AccentPurple.copy(alpha = 0.45f) else Color(0xFF3E1D55),
+                                        RoundedCornerShape(8.dp),
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                            )
+                        }
+                    }
+                }
+
+                val meta = bio?.meta.orEmpty()
+                if (meta.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        meta.forEach { Text(it, fontSize = 11.5.sp, color = Color(0xFFA991C4), lineHeight = 15.sp) }
+                    }
+                }
+
+                if (facts.isNotEmpty()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.dp, Color(0xFF3E1D55), RoundedCornerShape(12.dp)),
+                    ) {
+                        facts.take(3).forEachIndexed { i, f ->
+                            Column(
+                                Modifier
+                                    .weight(1f)
+                                    .background(Color(0xFF220C33))
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                            ) {
+                                Text(
+                                    f.k.uppercase(),
+                                    fontSize = 9.sp,
+                                    letterSpacing = 0.8.sp,
+                                    color = Color(0xFFA991C4),
+                                )
+                                Text(
+                                    f.v,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = when (f.tone) {
+                                        "good" -> Color(0xFF81C784)
+                                        "warm" -> Color(0xFFE5A80C)
+                                        else -> AppTheme.BodyTextColor
+                                    },
+                                )
+                            }
+                            if (i < facts.size - 1) {
+                                Box(Modifier.width(1.dp).height(46.dp).background(Color(0xFF3E1D55)))
+                            }
+                        }
+                    }
+                }
+
+                if (showActions) Button(
+                    onClick = onRequestPlace,
+                    modifier = Modifier.fillMaxWidth().height(40.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppTheme.AccentPurple,
+                        contentColor = Color(0xFF20062F),
+                    ),
+                ) { Text(t("Book an intro call"), fontWeight = FontWeight.Bold, fontSize = 13.5.sp) }
+
+                // Tapping the card already opens her page, so a button that
+                // does the same is one decision too many.
+                if (showActions) OutlinedButton(
+                    onClick = onShareData,
+                    modifier = Modifier.fillMaxWidth().height(38.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFF3E1D55)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
+                ) {
+                    Text(
+                        if (granted.isEmpty()) t("Share your data") else t("%1\$s shared", granted.size),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+}
+        }
+    }
+}
+
+/**
+ * The practitioner's own page.
+ *
+ * Everything on it comes from Supabase: her card, her words, her offers and
+ * her prices. Nothing about any practitioner is compiled into the app, so
+ * adding one is an insert and never a release.
+ */
+@Composable
+fun PractitionerDetailSheet(
+    p: SupabasePractitionerService.PractitionerRow,
+    link: SupabasePractitionerService.LinkRow?,
+    lang: String,
+    onDismiss: () -> Unit,
+    onRequestPlace: () -> Unit,
+    onShareData: () -> Unit,
+) {
+    val bio = p.bioFor(lang)
+    val offers = p.offersFor(lang)
+    val uriHandler = LocalUriHandler.current
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            color = AppTheme.FadeColor,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Column(Modifier.fillMaxSize()) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = t("Back"),
+                            tint = AppTheme.SubtleTextColor,
+                        )
+                    }
+                    Text(
+                        t("Practitioner"),
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppTheme.TitleColor,
+                    )
+                }
+
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    PractitionerCard(
+                        p = p,
+                        link = link,
+                        lang = lang,
+                        onRequestPlace = onRequestPlace,
+                        onShareData = onShareData,
+                        onOpenWebsite = { p.website?.let { uriHandler.openUri(it) } },
+                        showActions = false,
+                    )
+
+                    // How she describes her own work. On the card there is only
+                    // room for the quote; this is the page where it belongs.
+                    bio?.bio?.takeIf { it.isNotBlank() }?.let { about ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                            shape = AppTheme.BaseCardShape,
+                            border = AppTheme.BaseCardBorder,
+                        ) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                // A short accent rule, the way her own site
+                                // opens a section, so this reads as a statement
+                                // rather than a paragraph of small print.
+                                Box(
+                                    Modifier
+                                        .width(34.dp)
+                                        .height(2.dp)
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(AppTheme.AccentPurple, AppTheme.AccentPink)
+                                            )
+                                        )
+                                )
+                                Text(
+                                    t("In her words"),
+                                    fontSize = 9.5.sp,
+                                    letterSpacing = 1.4.sp,
+                                    color = AppTheme.SubtleTextColor,
+                                )
+                                Text(
+                                    about,
+                                    fontSize = 14.sp,
+                                    lineHeight = 23.sp,
+                                    color = AppTheme.BodyTextColor,
+                                )
+                            }
+                        }
+                    }
+
+                    p.sectionsFor(lang).forEach { SectionCard(it) }
+
+                    if (offers.isNotEmpty()) {
+                        Text(
+                            t("Ways of working together"),
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppTheme.TitleColor,
+                            fontSize = 15.sp,
+                        )
+                        offers.forEach { OfferCard(it) }
+                    }
+
+                    val practical = buildList {
+                        p.languages.takeIf { it.isNotEmpty() }?.let {
+                            add(t("Languages") to it.joinToString(", ") { c -> Lang.fromCode(c)?.endonym ?: c })
+                        }
+                        listOfNotNull(p.city, p.country).takeIf { it.isNotEmpty() }?.let {
+                            add(t("Where") to it.joinToString(", "))
+                        }
+                        add(t("Appointments") to when (p.consult_mode) {
+                            "in_person" -> t("In person")
+                            "online" -> t("Online")
+                            else -> t("In person and online")
+                        })
+                        if (!p.registration_body.isNullOrBlank() && !p.registration_number.isNullOrBlank()) {
+                            add(t("Registered with") to "${p.registration_body} · ${p.registration_number}")
+                        }
+                    }
+                    if (practical.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                            shape = AppTheme.BaseCardShape,
+                            border = AppTheme.BaseCardBorder,
+                        ) {
+                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                practical.forEach { (k, v) ->
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Text(
+                                            k,
+                                            fontSize = 11.5.sp,
+                                            color = AppTheme.SubtleTextColor,
+                                            modifier = Modifier.width(112.dp),
+                                        )
+                                        Text(v, fontSize = 12.5.sp, color = AppTheme.BodyTextColor)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    p.website?.takeIf { it.isNotBlank() }?.let { site ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clickable { uriHandler.openUri(site) },
+                            colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                            shape = AppTheme.BaseCardShape,
+                            border = AppTheme.BaseCardBorder,
+                        ) {
+                            Row(
+                                Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Language,
+                                    contentDescription = null,
+                                    tint = AppTheme.AccentPurple,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        t("Her own site"),
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = AppTheme.BodyTextColor,
+                                    )
+                                    Text(
+                                        site.removePrefix("https://").removePrefix("http://"),
+                                        fontSize = 11.5.sp,
+                                        color = AppTheme.SubtleTextColor,
+                                    )
+                                }
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = AppTheme.SubtleTextColor,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
+                    }
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+                        shape = AppTheme.BaseCardShape,
+                        border = AppTheme.BaseCardBorder,
+                    ) {
+                        Row(
+                            Modifier.padding(14.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(
+                                Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = AppTheme.SubtleTextColor,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                t("Practitioners listed here are independent. MigraineMe does not employ them and takes no part in what you agree with them."),
+                                fontSize = 11.5.sp,
+                                color = AppTheme.SubtleTextColor,
+                                lineHeight = 16.sp,
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                }
+
+                // The actions stay on screen rather than scrolling away with
+                // the offers, since deciding is what this page is for.
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(AppTheme.FadeColor)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Button(
+                        onClick = onRequestPlace,
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppTheme.AccentPurple,
+                            contentColor = Color(0xFF20062F),
+                        ),
+                    ) { Text(t("Book an intro call"), fontWeight = FontWeight.Bold) }
+                    OutlinedButton(
+                        onClick = onShareData,
+                        modifier = Modifier.fillMaxWidth().height(40.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color(0xFF3E1D55)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD9C7F0)),
+                    ) {
+                        Text(
+                            if (link?.granted.isNullOrEmpty()) t("Share your data")
+                            else t("Change what they see"),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * One of her formats, drawn the way her own site draws them: a photograph, the
+ * name, her one line about it, and the practical detail underneath. A plain
+ * bordered rectangle does not do the work justice.
+ */
+@Composable
+private fun OfferCard(o: SupabasePractitionerService.Offer) {
+    val free = o.kind == "intro"
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF220C33)),
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(1.dp, Color(0xFF3E1D55)),
+    ) {
+        Column {
+            if (!o.image_url.isNullOrBlank()) {
+                Box(Modifier.fillMaxWidth().height(104.dp)) {
+                    AsyncImage(
+                        model = o.image_url,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    Box(
+                        Modifier.fillMaxSize().background(
+                            Brush.verticalGradient(
+                                0.3f to Color.Transparent,
+                                1f to Color(0xFF220C33).copy(alpha = 0.92f),
+                            )
+                        )
+                    )
+                }
+            }
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        o.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppTheme.BodyTextColor,
+                        modifier = Modifier.weight(1f),
+                    )
+                    o.price?.let {
+                        Text(
+                            it,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (free) Color(0xFF81C784) else AppTheme.AccentPurple,
+                        )
+                    }
+                }
+                // The first bullet is her own line about this format; the rest
+                // are the practical points.
+                o.bullets.firstOrNull()?.takeIf { it.isNotBlank() }?.let {
+                    Text(it, fontSize = 13.sp, lineHeight = 19.sp, color = Color(0xFFD5C6E8))
+                }
+                o.subtitle?.takeIf { it.isNotBlank() }?.let {
+                    Text(it, fontSize = 11.5.sp, color = AppTheme.SubtleTextColor)
+                }
+                o.bullets.drop(1).takeIf { it.isNotEmpty() }?.let { rest ->
+                    Spacer(Modifier.height(3.dp))
+                    rest.forEach { b ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(
+                                Modifier
+                                    .padding(top = 6.dp)
+                                    .size(4.dp)
+                                    .background(AppTheme.AccentPurple, CircleShape)
+                            )
+                            Text(b, fontSize = 11.5.sp, color = AppTheme.SubtleTextColor, lineHeight = 16.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A block of her own writing, such as how the work unfolds. */
+@Composable
+private fun SectionCard(sec: SupabasePractitionerService.Section) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.BaseCardContainer),
+        shape = AppTheme.BaseCardShape,
+        border = AppTheme.BaseCardBorder,
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(sec.title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = AppTheme.TitleColor)
+            sec.body?.takeIf { it.isNotBlank() }?.let {
+                Text(it, fontSize = 12.sp, color = AppTheme.SubtleTextColor, lineHeight = 17.sp)
+            }
+            sec.items.forEachIndexed { i, item ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(
+                        Modifier
+                            .padding(top = 2.dp)
+                            .size(20.dp)
+                            .background(AppTheme.AccentPurple.copy(alpha = 0.18f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("${i + 1}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AppTheme.AccentPurple)
+                    }
+                    Text(item, fontSize = 12.5.sp, color = AppTheme.BodyTextColor, lineHeight = 18.sp)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Asking for a place.
+ *
+ * No slot picker: a practitioner has no way to release times yet, so offering
+ * a calendar would be showing something that does not exist. It is a request
+ * with a short note, which she accepts or declines — which is what was agreed
+ * anyway: the yes and the no stay with her.
+ */
+@Composable
+fun AskForPlaceDialog(
+    practitionerName: String,
+    onDismiss: () -> Unit,
+    onSend: (String?) -> Unit,
+) {
+    var note by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF2A0C3C),
+        titleContentColor = AppTheme.TitleColor,
+        textContentColor = AppTheme.BodyTextColor,
+        title = { Text(t("Ask %1\$s for an intro call", practitionerName.substringBefore(' '))) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    t("A first conversation, free and with no obligation. They will see your note and either accept or decline. Nothing is booked, and none of your diary is shared by asking."),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AppTheme.SubtleTextColor,
+                )
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text(t("What it is about"), color = AppTheme.SubtleTextColor) },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppTheme.AccentPurple,
+                        unfocusedBorderColor = Color(0xFF3E1D55),
+                        focusedTextColor = AppTheme.BodyTextColor,
+                        unfocusedTextColor = AppTheme.BodyTextColor,
+                        cursorColor = AppTheme.AccentPurple,
+                    ),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSend(note.trim().takeIf { it.isNotEmpty() }) },
+                colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.AccentPurple),
+            ) { Text(t("Send request")) }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.SubtleTextColor),
+            ) { Text(t("Cancel")) }
+        },
+    )
+}
