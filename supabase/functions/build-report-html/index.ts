@@ -73,6 +73,32 @@ Deno.serve(async (req) => {
     }, 403);
   }
 
+  // A practitioner reading a client. Consent is checked here, against the
+  // caller's own token, before anything is fetched: practitioner_can_read
+  // returns true only for an active, unrevoked link that carries the scope.
+  // Without this the subject parameter would be a way to read any user id.
+  if (typeof params.subject === "string" && params.subject) {
+    const gate = await fetch(
+      `${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/practitioner_can_read`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ target_user: params.subject, required_scope: "attacks" }),
+      },
+    );
+    const allowed = gate.ok && (await gate.json()) === true;
+    if (!allowed) {
+      return json({
+        error: "not permitted",
+        detail: "You do not hold an active consent to read this person's diary.",
+      }, 403);
+    }
+  }
+
   try {
     const data = await loadReportData(authHeader, params);
     const html = renderReport(data);

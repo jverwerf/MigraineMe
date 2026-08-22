@@ -323,3 +323,19 @@ create policy "practitioner manages own view prefs" on public.practitioner_view_
     exists (select 1 from public.practitioners p
             where p.id = practitioner_id and p.user_id = auth.uid())
   );
+-- Belt as well as braces: a code_only practitioner told us they do not want
+-- clients through the app, so the public policy itself must not expose them.
+-- The worker also filters, but a future caller that forgets should get
+-- nothing rather than an unwanted listing.
+drop policy if exists "active practitioners are public" on public.practitioners;
+create policy "listed practitioners are public" on public.practitioners
+  for select using (status = 'active' and listing_mode in ('bookable','listed'));
+
+drop policy if exists "bios of active practitioners are public" on public.practitioner_bios;
+create policy "bios of listed practitioners are public" on public.practitioner_bios
+  for select using (
+    exists (select 1 from public.practitioners p
+            where p.id = practitioner_id
+              and p.status = 'active'
+              and p.listing_mode in ('bookable','listed'))
+  );

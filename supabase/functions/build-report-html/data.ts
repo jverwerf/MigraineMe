@@ -31,6 +31,10 @@ export type ReportParams = {
   /** Keys the reader explicitly disabled. Subtracted after auto-detection, so
    *  a switched-off metric never sneaks back onto an attack chart. */
   disabledMetricKeys?: string[];
+  /** Read another user's data instead of the caller's own. Only ever set by
+   *  the practitioner dashboard, and only honoured after index.ts has checked
+   *  the caller actually holds consent for this subject. */
+  subject?: string;
   /** Metric series the client already holds. Until the metric registry moves
    *  server-side, the client passes what it charted so the PDF matches the
    *  screen exactly rather than approximating it. */
@@ -214,6 +218,31 @@ const riskNum = (raw: unknown): number | null =>
 
 /** Rows linked to one of the filtered attacks. PostgREST caps `in.()` lists,
  *  so ids are chunked rather than sent as one enormous filter. */
+/** Pin every PostgREST read to one user.
+ *
+ *  Row-level security keeps a caller to rows they may see, which for a patient
+ *  reading their own report is the whole job. A practitioner is different: she
+ *  may legitimately read several people, so RLS alone would hand back every
+ *  consented client's rows merged into one document.
+ *
+ *  Rather than remember a .eq("user_id", ...) on thirty-odd queries — where one
+ *  omission silently blends two patients — the filter is appended once, here,
+ *  to every /rest/v1/ request the client makes. PostgREST ANDs repeated column
+ *  filters, so this can only ever narrow a query, never widen one. */
+function scopedFetch(subject: string): typeof fetch {
+  return (input: Request | URL | string, init?: RequestInit) => {
+    const href = typeof input === "string"
+      ? input
+      : input instanceof URL ? input.toString() : input.url;
+    if (!href.includes("/rest/v1/")) return fetch(input as Request, init);
+    const u = new URL(href);
+    u.searchParams.append("user_id", `eq.${subject}`);
+    return typeof input === "string" || input instanceof URL
+      ? fetch(u.toString(), init)
+      : fetch(new Request(u.toString(), input), init);
+  };
+}
+
 async function childrenFor(
   sb: SupabaseClient, table: string, ids: string[], select: string,
 ): Promise<ChildRow[]> {
@@ -231,17 +260,29 @@ async function childrenFor(
 export async function loadReportData(
   authHeader: string, params: ReportParams,
 ): Promise<ReportData> {
-  const sb = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } },
-  );
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const auth = { global: { headers: { Authorization: authHeader } } };
 
-  const { data: authUser } = await sb.auth.getUser();
+  // Who is asking. Never pinned to the subject, or a practitioner could not
+  // look up her own name or language.
+  const readerSb = createClient(url, anon, auth);
+
+  // Where the report's data comes from. Same identity, but pinned to one
+  // patient when a practitioner is reading.
+  const sb = params.subject
+    ? createClient(url, anon, {
+      global: { ...auth.global, fetch: scopedFetch(params.subject) },
+    })
+    : readerSb;
+
+  const { data: authUser } = await readerSb.auth.getUser();
   const readerId = authUser?.user?.id ?? null;
   let lang: Lang = "en";
   if (readerId) {
-    const { data: langRow } = await sb
+    // The reader's language, not the subject's: the practitioner has to be
+    // able to read the document she just opened.
+    const { data: langRow } = await readerSb
       .from("profiles").select("lang").eq("user_id", readerId).maybeSingle();
     lang = asLang((langRow as { lang?: unknown } | null)?.lang);
   }
