@@ -60,9 +60,6 @@ private sealed class CheckInPage {
     data object Reliefs : CheckInPage()
     data object Activities : CheckInPage()
     data object Missed : CheckInPage()
-    /** Only appears on a day with no migraine and at least one thing skipped:
-     *  with an attack the reason is already obvious. */
-    data object MissedWhy : CheckInPage()
     data class SideEffects(val regimenIndex: Int) : CheckInPage()
     data object Review : CheckInPage()
 }
@@ -614,9 +611,6 @@ fun EveningCheckInScreen(
         add(CheckInPage.Reliefs)
         add(CheckInPage.Activities)
         add(CheckInPage.Missed)
-        // Why only when there is something to explain and no attack to explain
-        // it: with a migraine today the reason is already known.
-        if (selectedMissed.isNotEmpty() && !hadMigraineToday) add(CheckInPage.MissedWhy)
         for (i in activeRegimens.indices) add(CheckInPage.SideEffects(i))
         add(CheckInPage.Review)
     }
@@ -766,21 +760,28 @@ fun EveningCheckInScreen(
                         if (aiMissedLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust")
                         else t("Tap anything you skipped or cancelled"),
                         missedItems, selectedMissed.map { it.label }, Color(0xFFE8A0A0),
-                        { MissedActivityIcons.forKey(it) }, aiMissedLabels
+                        { MissedActivityIcons.forKey(it) }, aiMissedLabels,
+                        // Why sits under the picker on the same page: it is one
+                        // question about what was just tapped, not a step of
+                        // its own. Only on a day with no attack — with one, the
+                        // reason is already recorded.
+                        footer = {
+                            if (selectedMissed.isNotEmpty() && !hadMigraineToday) {
+                                MissedWhySection(
+                                    triggerItems = triggerItems,
+                                    prodromeItems = prodromeItems,
+                                    selectedReasons = missedReasons.toList(),
+                                    note = missedWhyNote,
+                                    onToggleReason = { l -> if (missedReasons.contains(l)) missedReasons.remove(l) else missedReasons.add(l) },
+                                    onNoteChange = { missedWhyNote = it },
+                                )
+                            }
+                        }
                     ) { l ->
                         if (isMissedSelected(l)) selectedMissed.removeAll { it.label == l }
                         else selectedMissed.add(CheckInMissedItem(label = l, startAtIso = nowIso()))
                     }
                 }
-                CheckInPage.MissedWhy -> MissedWhyPage(
-                    skipped = selectedMissed.map { it.label },
-                    triggerItems = triggerItems,
-                    prodromeItems = prodromeItems,
-                    selectedReasons = missedReasons.toList(),
-                    note = missedWhyNote,
-                    onToggleReason = { l -> if (missedReasons.contains(l)) missedReasons.remove(l) else missedReasons.add(l) },
-                    onNoteChange = { missedWhyNote = it },
-                )
                 CheckInPage.Calendar -> CalendarCheckInPage(
                     activityVm = activityVm,
                     reliefVm = reliefVm,
@@ -1062,7 +1063,18 @@ private fun SideEffectsPage(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FavouritesPage(title: String, subtitle: String, items: List<SelectableItem>, selected: List<String>, accentColor: Color, iconResolver: (String?) -> ImageVector?, aiMatched: Set<String> = emptySet(), onToggle: (String) -> Unit) {
+private fun FavouritesPage(
+    title: String,
+    subtitle: String,
+    items: List<SelectableItem>,
+    selected: List<String>,
+    accentColor: Color,
+    iconResolver: (String?) -> ImageVector?,
+    aiMatched: Set<String> = emptySet(),
+    /** Extra content inside the same scroll, under the pools. */
+    footer: @Composable () -> Unit = {},
+    onToggle: (String) -> Unit,
+) {
     val scrollState = rememberScrollState()
     val favourites = remember(items) { items.filter { it.isFavourite } }
     val others = remember(items) { items.filter { !it.isFavourite } }
@@ -1144,6 +1156,8 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
             }
         }
 
+        footer()
+
         Spacer(Modifier.height(80.dp))
     }
 }
@@ -1164,8 +1178,7 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun MissedWhyPage(
-    skipped: List<String>,
+private fun MissedWhySection(
     triggerItems: List<SelectableItem>,
     prodromeItems: List<SelectableItem>,
     selectedReasons: List<String>,
@@ -1173,7 +1186,6 @@ private fun MissedWhyPage(
     onToggleReason: (String) -> Unit,
     onNoteChange: (String) -> Unit,
 ) {
-    val scrollState = rememberScrollState()
     var showAllTriggers by rememberSaveable { mutableStateOf(false) }
     var showAllProdromes by rememberSaveable { mutableStateOf(false) }
 
@@ -1182,20 +1194,17 @@ private fun MissedWhyPage(
     val triggersShown = if (showAllTriggers || triggerFavs.isEmpty()) triggerItems else triggerFavs
     val prodromesShown = if (showAllProdromes || prodromeFavs.isEmpty()) prodromeItems else prodromeFavs
 
-    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
-        Text(t("Why did you skip that?"), color = Color.White,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-        Spacer(Modifier.height(4.dp))
-        Text(t("You had no migraine today, so tell us what stopped you. Optional."),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
-
-        if (skipped.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text(skipped.joinToString(", ") { tSync(it) }, color = Color(0xFFE8A0A0),
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
-        }
-
+    Column(Modifier.fillMaxWidth()) {
         Spacer(Modifier.height(20.dp))
+        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+        Spacer(Modifier.height(16.dp))
+        Text(t("Why did you skip that?"), color = Color.White,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+        Spacer(Modifier.height(4.dp))
+        Text(t("No migraine today, so tell us what stopped you. Optional."),
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+
+        Spacer(Modifier.height(16.dp))
         Text(t("Triggers"), color = AppTheme.TitleColor,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
         Spacer(Modifier.height(12.dp))
@@ -1247,8 +1256,6 @@ private fun MissedWhyPage(
             shape = RoundedCornerShape(12.dp),
             minLines = 2,
         )
-
-        Spacer(Modifier.height(80.dp))
     }
 }
 
