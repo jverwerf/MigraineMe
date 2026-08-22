@@ -172,13 +172,15 @@ async function sendFcmMessage(
 
 // ─── Evening check-in: get tokens for users at 8pm local ───────────
 
-async function getEveningCheckinTokens(
+type CheckinTarget = { token: string; lang: unknown };
+
+async function getEveningCheckinTargets(
   supabase: any
-): Promise<string[]> {
-  // Get all profiles with FCM tokens
+): Promise<CheckinTarget[]> {
+  // Get all profiles with FCM tokens (+ language, so the copy renders per recipient)
   const { data: profiles, error } = await supabase
     .from("profiles")
-    .select("user_id, fcm_token")
+    .select("user_id, fcm_token, lang")
     .not("fcm_token", "is", null);
 
   if (error || !profiles || profiles.length === 0) return [];
@@ -205,7 +207,7 @@ async function getEveningCheckinTokens(
 
   // Filter to users where local hour = 20 (8pm)
   const now = new Date();
-  const tokens: string[] = [];
+  const tokens: CheckinTarget[] = [];
 
   for (const profile of profiles) {
     const tz = tzMap[profile.user_id];
@@ -216,7 +218,7 @@ async function getEveningCheckinTokens(
         now.toLocaleString("en-US", { timeZone: tz })
       );
       if (localTime.getHours() === 20) {
-        tokens.push(profile.fcm_token);
+        tokens.push({ token: profile.fcm_token, lang: profile.lang });
       }
     } catch {
       // Invalid timezone, skip
@@ -224,6 +226,17 @@ async function getEveningCheckinTokens(
   }
 
   return tokens;
+}
+
+// The evening check-in was a data-only push: Android rendered it locally,
+// iOS got a silent background wake that is throttled and never reaches a
+// force-quit app, so most evenings nothing appeared. It now carries copy in
+// the recipient's language. Android stays data-only (ios_alert semantics)
+// so onMessageReceived still renders on the user's own "evening_checkin"
+// channel, which the settings toggle can switch off.
+function eveningCheckinCopy(lang: unknown): { title: string; body: string } {
+  const t = translatorFor(asLang(lang));
+  return { title: t("How was today?"), body: t("Take 15 seconds to log your day") };
 }
 
 // A body sent as sentence parts is translated part by part and joined; a
@@ -398,7 +411,11 @@ serve(async (req) => {
 
     } else if (messageType === "evening_checkin") {
       // ── Evening check-in: only users where it's 8pm local ──
-      tokensToSend = await getEveningCheckinTokens(supabase);
+      const targets = await getEveningCheckinTargets(supabase);
+      tokensToSend = targets.map((c) => c.token);
+      for (const c of targets) notificationByToken.set(c.token, eveningCheckinCopy(c.lang));
+      notification = eveningCheckinCopy("en");
+      iosAlertOnly = true;
       console.log(`Evening check-in: ${tokensToSend.length} users at 8pm`);
 
     } else {
@@ -531,14 +548,16 @@ serve(async (req) => {
 
     // ── Piggyback: send evening_checkin to users at 8pm local ──
     let checkinSent = 0;
+    let checkinFailed = 0;
     if (messageType === "sync_hourly") {
-      const checkinTokens = await getEveningCheckinTokens(supabase);
-      for (const fcmToken of checkinTokens) {
-        const ok = await sendFcmMessage(firebaseToken, fcmToken, "evening_checkin");
+      const targets = await getEveningCheckinTargets(supabase);
+      for (const c of targets) {
+        const ok = await sendFcmMessage(firebaseToken, c.token, "evening_checkin", {}, eveningCheckinCopy(c.lang), true);
         if (ok) checkinSent++;
+        else checkinFailed++;
       }
-      if (checkinTokens.length > 0) {
-        console.log(`Evening check-in: sent=${checkinSent}/${checkinTokens.length}`);
+      if (targets.length > 0) {
+        console.log(`Evening check-in: sent=${checkinSent}/${targets.length}`);
       }
     }
 
@@ -550,9 +569,18 @@ serve(async (req) => {
     try {
       await supabase.from("push_delivery_log").insert({
         push_type: messageType,
-        sent: sent + checkinSent,
+        sent,
         failed,
       });
+      // The check-in rode inside the sync_hourly count and was invisible;
+      // its own row makes "did anyone get the 8pm reminder" answerable.
+      if (checkinSent + checkinFailed > 0) {
+        await supabase.from("push_delivery_log").insert({
+          push_type: "evening_checkin",
+          sent: checkinSent,
+          failed: checkinFailed,
+        });
+      }
       // Keep the table small; it exists only for a 24h rolling ratio.
       await supabase
         .from("push_delivery_log")
