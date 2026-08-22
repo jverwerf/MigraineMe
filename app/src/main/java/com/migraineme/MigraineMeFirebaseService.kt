@@ -75,12 +75,13 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                 showEveningCheckinNotification()
             }
             "recalibration_ready" -> {
-                Log.d(TAG, "Recalibration proposals ready — setting flag")
+                Log.d(TAG, "Recalibration proposals ready — setting flag + showing notification")
                 applicationContext
                     .getSharedPreferences("recalibration", android.content.Context.MODE_PRIVATE)
                     .edit()
                     .putBoolean("has_proposals", true)
                     .apply()
+                showRecalibrationNotification(message.data["count"]?.toIntOrNull())
             }
             "new_insight" -> {
                 Log.d(TAG, "New daily insight ready — setting flag + showing notification")
@@ -214,6 +215,50 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
             .build()
 
         nm.notify(8021, notification)
+    }
+
+    /**
+     * The weekly recalibration found material changes and wrote a new batch of
+     * proposals. Until now this only set the SharedPreferences flag, so the
+     * in-app banner was the sole signal and the push was invisible.
+     */
+    private fun showRecalibrationNotification(count: Int?) {
+        val channelId = "recalibration_ready"
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // Create channel (no-op if already exists)
+        val channel = android.app.NotificationChannel(
+            channelId, tSync("Profile Recalibration"),
+            android.app.NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = tSync("Alerts when the app has learned something new about your migraines") }
+        nm.createNotificationChannel(channel)
+
+        // Tap opens the review screen where the proposals are accepted or rejected
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", Routes.RECALIBRATION_REVIEW)
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 2, intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val body = if (count != null && count > 0) {
+            tSync("%1\$s suggested changes to your profile. Tap to review.").replace("%1\$s", count.toString())
+        } else {
+            tSync("We have suggested changes to your profile. Tap to review.")
+        }
+
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(tSync("Your profile has learned something new"))
+            .setContentText(body)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+
+        nm.notify(8025, notification)
     }
 
     /**
