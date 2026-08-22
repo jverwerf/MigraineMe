@@ -90,9 +90,17 @@ object SupabasePractitionerService {
      */
     data class ScopeGroup(val title: String, val scopes: List<Scope>)
 
+    /**
+     * The categories as agreed with Stephanie on the card, in her order, with
+     * the app's own extras placed where they belong. Kept here rather than
+     * fetched: the consent sheet must render with no network at all, or a
+     * patient on a bad connection is asked to agree to a list that has not
+     * loaded.
+     */
     val SCOPE_GROUPS: List<ScopeGroup> = listOf(
-        ScopeGroup("Migraines", listOf(Scope.ATTACKS, Scope.SYMPTOMS, Scope.PRODROMES,
-            Scope.PAIN_LOCATIONS, Scope.AURA, Scope.ATTACK_NOTES, Scope.CONTEXT)),
+        ScopeGroup("Migraines", listOf(
+            Scope.ATTACKS, Scope.SYMPTOMS, Scope.PRODROMES, Scope.PAIN_LOCATIONS,
+            Scope.AURA, Scope.ATTACK_NOTES, Scope.CONTEXT)),
         ScopeGroup("Triggers", listOf(Scope.TRIGGERS)),
         ScopeGroup("Diet", listOf(Scope.FOOD)),
         ScopeGroup("Medicines", listOf(Scope.MEDICATION, Scope.SIDE_EFFECTS)),
@@ -112,9 +120,39 @@ object SupabasePractitionerService {
     data class BioRow(
         val lang: String? = null,
         val headline: String? = null,
+        val quote: String? = null,
         val bio: String? = null,
         val treats: List<String> = emptyList(),
+        val meta: List<String> = emptyList(),
+        val facts: List<Fact> = emptyList(),
         val is_source: Boolean = false,
+    )
+
+    /** One of the card's two stat boxes. */
+    @Serializable
+    data class Fact(val k: String = "", val v: String = "", val tone: String? = null)
+
+    /** One thing a practitioner offers, in her own words and at her own price. */
+    @Serializable
+    data class Offer(
+        val lang: String = "de",
+        val sort: Int = 0,
+        val title: String = "",
+        val price: String? = null,
+        val subtitle: String? = null,
+        val bullets: List<String> = emptyList(),
+        val kind: String = "service",
+        val image_url: String? = null,
+    )
+
+    /** A titled block of her own writing — how the work unfolds, and so on. */
+    @Serializable
+    data class Section(
+        val lang: String = "de",
+        val sort: Int = 0,
+        val title: String = "",
+        val body: String? = null,
+        val items: List<String> = emptyList(),
     )
 
     @Serializable
@@ -125,6 +163,9 @@ object SupabasePractitionerService {
         val practice_name: String? = null,
         val discipline: String,
         val photo_url: String? = null,
+        val banner_url: String? = null,
+        val logo_url: String? = null,
+        val facts: List<Fact> = emptyList(),
         val website: String? = null,
         val languages: List<String> = emptyList(),
         val country: String? = null,
@@ -134,14 +175,33 @@ object SupabasePractitionerService {
         val registration_body: String? = null,
         val registration_number: String? = null,
         val practitioner_bios: List<BioRow> = emptyList(),
+        val practitioner_offers: List<Offer> = emptyList(),
+        val practitioner_sections: List<Section> = emptyList(),
     ) {
-        /** The card copy in the reader's language, then the practitioner's own,
-         *  then English. A bio nobody has translated should still show in the
-         *  words she wrote it in rather than disappear. */
+        fun sectionsFor(lang: String): List<Section> {
+            val own = practitioner_sections.filter { it.lang == lang }
+                .ifEmpty { practitioner_sections.filter { it.lang == "en" } }
+                .ifEmpty { practitioner_sections }
+            return own.sortedBy { it.sort }
+        }
+        /** Her offers in the reader's language, on the same fallback as the
+         *  card: a price list in a language you cannot read is worse than one
+         *  in English. */
+        fun offersFor(lang: String): List<Offer> {
+            val own = practitioner_offers.filter { it.lang == lang }
+                .ifEmpty { practitioner_offers.filter { it.lang == "en" } }
+                .ifEmpty { practitioner_offers }
+            return own.sortedBy { it.sort }
+        }
+        /** The card copy in the reader's language, then English, then the
+         *  language she wrote it in. English before the source language on
+         *  purpose: a Dutch reader with no Dutch row is far likelier to read
+         *  English than Swiss German. A card nobody has translated still shows
+         *  in her own words rather than disappearing. */
         fun bioFor(lang: String): BioRow? =
             practitioner_bios.firstOrNull { it.lang == lang }
-                ?: practitioner_bios.firstOrNull { it.is_source }
                 ?: practitioner_bios.firstOrNull { it.lang == "en" }
+                ?: practitioner_bios.firstOrNull { it.is_source }
                 ?: practitioner_bios.firstOrNull()
     }
 
@@ -183,9 +243,12 @@ object SupabasePractitionerService {
     )
 
     private const val PRAC_SELECT =
-        "id,slug,display_name,practice_name,discipline,photo_url,website,languages,country,city," +
-            "consult_mode,listing_mode,registration_body,registration_number," +
-            "practitioner_bios(lang,headline,bio,treats,is_source)"
+        "id,slug,display_name,practice_name,discipline,photo_url,banner_url,logo_url,facts," +
+            "website,languages,country,city,consult_mode,listing_mode," +
+            "registration_body,registration_number," +
+            "practitioner_bios(lang,headline,quote,bio,treats,meta,facts,is_source),"+
+            "practitioner_offers(lang,sort,title,price,subtitle,bullets,kind,image_url),"+
+            "practitioner_sections(lang,sort,title,body,items)"
 
     // ---- reads ----
 

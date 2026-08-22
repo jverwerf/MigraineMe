@@ -156,3 +156,57 @@ begin
       for select using (public.practitioner_can_read(user_id, 'risk'));
   end if;
 end $$;
+-- The consent categories as agreed with Stephanie on the card, not the ones I
+-- grouped by myself. Her seven, in her order, with the app's own extras placed
+-- where they belong. The individual scopes underneath are unchanged, so no
+-- grant widens or narrows.
+--
+--   Anfälle & Symptome      Daten, Dauer, Schmerzstärke, Aura
+--   Schmerzfreie Strecken   Gute Phasen und was sie gemeinsam haben
+--   Trigger & Schmerzpunkte Was rund um einen Anfall erfasst wurde
+--   Schlaf & Erholung       Von Uhr oder Telefon
+--   Stresswerte             Aus der Garmin, im Hintergrund erfasst
+--   Medikamente & Linderung Was du nimmst und ob es geholfen hat
+--   Wetter & Standort       Luftdruck und Bedingungen in deiner Nähe
+insert into public.consent_scopes (key, grp, sort) values
+  ('attacks','Attacks and symptoms',10), ('symptoms','Attacks and symptoms',20),
+  ('aura','Attacks and symptoms',30), ('attack_notes','Attacks and symptoms',40),
+  ('prodromes','Attacks and symptoms',50),
+
+  ('insights','Pain-free stretches',10), ('risk','Pain-free stretches',20),
+  ('setup_profile','Pain-free stretches',30),
+
+  ('triggers','Triggers and pain points',10), ('pain_locations','Triggers and pain points',20),
+  ('food','Triggers and pain points',30), ('context','Triggers and pain points',40),
+
+  ('sleep','Sleep and recovery',10), ('activity','Sleep and recovery',20),
+
+  ('stress','Stress',10), ('heart','Stress',20), ('phone_use','Stress',30),
+  ('body_measures','Stress',40),
+
+  ('medication','Medication and relief',10), ('side_effects','Medication and relief',20),
+  ('regimens','Medication and relief',30), ('narrative','Medication and relief',40),
+
+  ('weather','Weather and location',10), ('air_quality','Weather and location',20),
+
+  ('cycle','Cycle',10)
+on conflict (key) do update set grp = excluded.grp, sort = excluded.sort;
+-- Back to the app's own cards. A person who has spent months reading a
+-- "Physical Health" card in Monitor should meet that same name here, not a
+-- grouping invented for this screen.
+insert into public.consent_scopes (key, grp, sort) values
+  ('attacks','Migraines',10), ('symptoms','Migraines',20), ('prodromes','Migraines',30),
+  ('pain_locations','Migraines',40), ('aura','Migraines',50), ('attack_notes','Migraines',60),
+  ('context','Migraines',70),
+  ('triggers','Triggers',10),
+  ('food','Diet',10),
+  ('medication','Medicines',10), ('side_effects','Medicines',20),
+  ('regimens','Treatments',10), ('narrative','Treatments',20),
+  ('sleep','Sleep',10),
+  ('heart','Physical Health',10), ('activity','Physical Health',20), ('body_measures','Physical Health',30),
+  ('stress','Cognitive',10), ('phone_use','Cognitive',20),
+  ('weather','Environment',10), ('air_quality','Environment',20),
+  ('cycle','Menstruation',10),
+  ('risk','Risk',10),
+  ('insights','Insights',10), ('setup_profile','Insights',20)
+on conflict (key) do update set grp = excluded.grp, sort = excluded.sort;
