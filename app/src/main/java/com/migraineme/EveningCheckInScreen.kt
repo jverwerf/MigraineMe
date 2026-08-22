@@ -59,6 +59,10 @@ private sealed class CheckInPage {
     data object Medicines : CheckInPage()
     data object Reliefs : CheckInPage()
     data object Activities : CheckInPage()
+    data object Missed : CheckInPage()
+    /** Only appears on a day with no migraine and at least one thing skipped:
+     *  with an attack the reason is already obvious. */
+    data object MissedWhy : CheckInPage()
     data class SideEffects(val regimenIndex: Int) : CheckInPage()
     data object Review : CheckInPage()
 }
@@ -98,6 +102,7 @@ fun EveningCheckInScreen(
     medicineVm: MedicineViewModel = viewModel(),
     reliefVm: ReliefViewModel = viewModel(),
     activityVm: ActivityViewModel = viewModel(),
+    missedActivityVm: MissedActivityViewModel = viewModel(),
     symptomVm: SymptomViewModel = viewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -110,6 +115,7 @@ fun EveningCheckInScreen(
             medicineVm.loadAll(token)
             reliefVm.loadAll(token)
             activityVm.loadAll(token)
+            missedActivityVm.loadAll(token)
             symptomVm.loadAll(token)
         }
     }
@@ -150,6 +156,15 @@ fun EveningCheckInScreen(
     val selectedMedicines = remember { mutableStateListOf<CheckInMedicineItem>() }
     val selectedReliefs = remember { mutableStateListOf<CheckInReliefItem>() }
     val selectedActivities = remember { mutableStateListOf<CheckInActivityItem>() }
+    // Things given up today. Reasons are asked once, on the Why page, and
+    // written onto every row this check-in saves.
+    val selectedMissed = remember { mutableStateListOf<CheckInMissedItem>() }
+    val missedReasons = remember { mutableStateListOf<String>() }
+    var missedWhyNote by remember { mutableStateOf("") }
+    // Whether ANY migraine touched today — not the same as an open one. An
+    // attack that started and ended today leaves openMigraine null, and asking
+    // "why did you skip that?" on a day she had a migraine reads as broken.
+    var hadMigraineToday by remember { mutableStateOf(false) }
 
     var noteText by remember { mutableStateOf("") }
     var aiParseResult by remember { mutableStateOf<CheckInParseResult?>(null) }
@@ -194,6 +209,9 @@ fun EveningCheckInScreen(
             // side-effect check-ins are for drugs/supplements/lifestyle only.
             activeRegimens.addAll(rows.filter { it.stopDate == null && it.kind != "device" })
             openMigraine = withContext(Dispatchers.IO) { db.getOpenMigraine(token) }
+            hadMigraineToday = withContext(Dispatchers.IO) {
+                runCatching { db.hasMigraineOnDay(token, LocalDate.now()) }.getOrDefault(openMigraine != null)
+            }
             var tsePool = withContext(Dispatchers.IO) {
                 runCatching { db.getUserTreatmentSideEffects(token) }.getOrDefault(emptyList())
             }
@@ -310,6 +328,14 @@ fun EveningCheckInScreen(
         activityPool.map { SelectableItem(it.label, it.iconKey, false, it.category) }
     }
 
+    val missedPool by missedActivityVm.pool.collectAsState()
+    val missedFreq by missedActivityVm.frequent.collectAsState()
+    val missedFavIds = remember(missedFreq) { missedFreq.map { it.missedActivityId }.toSet() }
+    val missedItems = remember(missedPool, missedFavIds) {
+        missedPool.map { SelectableItem(it.label, it.iconKey, it.id in missedFavIds, it.category) }
+    }
+    fun isMissedSelected(label: String) = selectedMissed.any { it.label == label }
+
     // Symptom pools, hoisted so the note parser can match against them too.
     val accompanyingSymptomPool by symptomVm.accompanying.collectAsState()
     val postdromeSymptomPool by symptomVm.postdrome.collectAsState()
@@ -330,6 +356,7 @@ fun EveningCheckInScreen(
                         medicinePool.map { it.label },
                         reliefPool.map { it.label },
                         activityPool.map { it.label },
+                        missedPool.map { it.label },
                         symptomPool = if (openMigraine != null) accompanyingSymptomPool.map { it.label } else emptyList(),
                         painLocationLabels = if (openMigraine != null) painLocationLabels else emptyList()
                     )
@@ -348,6 +375,7 @@ fun EveningCheckInScreen(
                                 reliefPool.map { it.label },
                                 deterResult,
                                 activities = activityPool.map { it.label },
+                                missedActivities = missedPool.map { it.label },
                                 postdromePool = postdromeSymptomPool.map { it.label },
                                 regimenNames = activeRegimens.map { it.name },
                                 symptomPool = if (openMigraine != null) accompanyingSymptomPool.map { it.label } else emptyList(),
@@ -381,6 +409,9 @@ fun EveningCheckInScreen(
                 merged.activities.forEach { a ->
                     if (!isActivitySelected(a.label)) selectedActivities.add(a)
                 }
+                merged.missedActivities.forEach { m ->
+                    if (!isMissedSelected(m.label)) selectedMissed.add(m)
+                }
 
             } catch (e: Exception) {
                 Log.e("EveningCheckIn", "AI parse failed, falling back to deterministic", e)
@@ -391,6 +422,7 @@ fun EveningCheckInScreen(
                     medicinePool.map { it.label },
                     reliefPool.map { it.label },
                     activityPool.map { it.label },
+                    missedPool.map { it.label },
                     symptomPool = if (openMigraine != null) accompanyingSymptomPool.map { it.label } else emptyList(),
                     painLocationLabels = if (openMigraine != null) painLocationLabels else emptyList()
                 )
@@ -400,6 +432,7 @@ fun EveningCheckInScreen(
                 deterResult.medicines.forEach { m -> if (!isMedicineSelected(m.label)) selectedMedicines.add(m) }
                 deterResult.reliefs.forEach { r -> if (!isReliefSelected(r.label)) selectedReliefs.add(r) }
                 deterResult.activities.forEach { a -> if (!isActivitySelected(a.label)) selectedActivities.add(a) }
+                deterResult.missedActivities.forEach { m -> if (!isMissedSelected(m.label)) selectedMissed.add(m) }
             }
             aiParsed = true; aiLoading = false
         }
@@ -450,6 +483,26 @@ fun EveningCheckInScreen(
                                 token, null, a.label, a.startAtIso ?: now,
                                 endAt = a.endAtIso,
                                 notes = a.note ?: "evening check-in"
+                            )
+                        }
+                    }
+                    // Things given up today. `anticipated` is true only on a day
+                    // with no migraine: with an attack this is the usual "the
+                    // attack took it away" row the wizard writes.
+                    val whyNote = missedWhyNote.trim()
+                    val reasons = missedReasons.toList()
+                    selectedMissed.forEach { m ->
+                        runCatching {
+                            db.insertMissedActivity(
+                                token, migraineId = null, type = m.label,
+                                startAt = m.startAtIso ?: now,
+                                notes = listOfNotNull(
+                                    m.note?.takeIf { it.isNotBlank() },
+                                    whyNote.takeIf { it.isNotEmpty() },
+                                ).joinToString(" ").ifBlank { "evening check-in" },
+                                anticipated = !hadMigraineToday,
+                                reasonLabels = if (hadMigraineToday) null
+                                    else (m.reasons + reasons).distinct()
                             )
                         }
                     }
@@ -560,6 +613,10 @@ fun EveningCheckInScreen(
         add(CheckInPage.Medicines)
         add(CheckInPage.Reliefs)
         add(CheckInPage.Activities)
+        add(CheckInPage.Missed)
+        // Why only when there is something to explain and no attack to explain
+        // it: with a migraine today the reason is already known.
+        if (selectedMissed.isNotEmpty() && !hadMigraineToday) add(CheckInPage.MissedWhy)
         for (i in activeRegimens.indices) add(CheckInPage.SideEffects(i))
         add(CheckInPage.Review)
     }
@@ -702,6 +759,28 @@ fun EveningCheckInScreen(
                         } else if (isActivitySelected(l)) selectedActivities.removeAll { it.label == l } else selectedActivities.add(CheckInActivityItem(label = l, startAtIso = nowIso(), note = "evening check-in"))
                     }
                 }
+                CheckInPage.Missed -> {
+                    val aiMissedLabels = remember(aiParseResult) { aiParseResult?.missedActivities?.map { it.label }?.toSet() ?: emptySet() }
+                    FavouritesPage(
+                        t("Anything you didn't do?"),
+                        if (aiMissedLabels.isNotEmpty()) t("We matched some from your note — confirm or adjust")
+                        else t("Tap anything you skipped or cancelled"),
+                        missedItems, selectedMissed.map { it.label }, Color(0xFFE8A0A0),
+                        { MissedActivityIcons.forKey(it) }, aiMissedLabels
+                    ) { l ->
+                        if (isMissedSelected(l)) selectedMissed.removeAll { it.label == l }
+                        else selectedMissed.add(CheckInMissedItem(label = l, startAtIso = nowIso()))
+                    }
+                }
+                CheckInPage.MissedWhy -> MissedWhyPage(
+                    skipped = selectedMissed.map { it.label },
+                    triggerItems = triggerItems,
+                    prodromeItems = prodromeItems,
+                    selectedReasons = missedReasons.toList(),
+                    note = missedWhyNote,
+                    onToggleReason = { l -> if (missedReasons.contains(l)) missedReasons.remove(l) else missedReasons.add(l) },
+                    onNoteChange = { missedWhyNote = it },
+                )
                 CheckInPage.Calendar -> CalendarCheckInPage(
                     activityVm = activityVm,
                     reliefVm = reliefVm,
@@ -834,8 +913,10 @@ fun EveningCheckInScreen(
                 }
                 CheckInPage.Review -> ReviewPage(
                     selectedTriggers, selectedProdromes, selectedMedicines, selectedReliefs, selectedActivities,
-                    calendarMappings.toList(),
-                    aiParseResult, saving, saved,
+                    missed = selectedMissed.toList(),
+                    sharedReasons = if (hadMigraineToday) emptyList() else missedReasons.toList(),
+                    calendarMappings = calendarMappings.toList(),
+                    aiResult = aiParseResult, saving = saving, saved = saved,
                     nowSymptoms = if (openMigraine != null) selectedNowSymptoms.toList() else emptyList(),
                     painNowLocations = if (openMigraine != null) painNowLocations.toList() else emptyList(),
                     painNowSeverity = painNowSeverity,
@@ -851,6 +932,7 @@ fun EveningCheckInScreen(
                     rmMedicine = { label -> selectedMedicines.removeAll { it.label == label } },
                     rmRelief = { label -> selectedReliefs.removeAll { it.label == label } },
                     rmActivity = { label -> selectedActivities.removeAll { it.label == label } },
+                    rmMissed = { label -> selectedMissed.removeAll { it.label == label } },
                     rmCalendar = { mapping ->
                         activityScope.launch {
                             CalendarService.skip(activityCtx, mapping)
@@ -1067,6 +1149,110 @@ private fun FavouritesPage(title: String, subtitle: String, items: List<Selectab
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  Missed: why
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Asked once per check-in, not once per skipped thing: on a day someone gave
+ * up three things it is nearly always the same reason, and three identical
+ * pickers is three times the work for the same answer. Whatever is picked here
+ * is written onto every missed row this check-in saves.
+ *
+ * Reasons come from the trigger and prodrome pools, favourites first, plus a
+ * free-text line. All three are equal — nothing here grades one kind of reason
+ * against another.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MissedWhyPage(
+    skipped: List<String>,
+    triggerItems: List<SelectableItem>,
+    prodromeItems: List<SelectableItem>,
+    selectedReasons: List<String>,
+    note: String,
+    onToggleReason: (String) -> Unit,
+    onNoteChange: (String) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+    var showAllTriggers by rememberSaveable { mutableStateOf(false) }
+    var showAllProdromes by rememberSaveable { mutableStateOf(false) }
+
+    val triggerFavs = remember(triggerItems) { triggerItems.filter { it.isFavourite } }
+    val prodromeFavs = remember(prodromeItems) { prodromeItems.filter { it.isFavourite } }
+    val triggersShown = if (showAllTriggers || triggerFavs.isEmpty()) triggerItems else triggerFavs
+    val prodromesShown = if (showAllProdromes || prodromeFavs.isEmpty()) prodromeItems else prodromeFavs
+
+    Column(Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Text(t("Why did you skip that?"), color = Color.White,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Spacer(Modifier.height(4.dp))
+        Text(t("You had no migraine today, so tell us what stopped you. Optional."),
+            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodyMedium)
+
+        if (skipped.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Text(skipped.joinToString(", ") { tSync(it) }, color = Color(0xFFE8A0A0),
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium))
+        }
+
+        Spacer(Modifier.height(20.dp))
+        Text(t("Triggers"), color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.height(12.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+            triggersShown.forEach { item ->
+                CheckInCircle(item.label, TriggerIcons.forKey(item.iconKey) ?: TriggerIcons.forKey(item.category),
+                    item.label in selectedReasons, Color(0xFFFFB74D), false) { onToggleReason(item.label) }
+            }
+        }
+        if (triggerFavs.isNotEmpty() && triggerFavs.size < triggerItems.size) {
+            TextButton(onClick = { showAllTriggers = !showAllTriggers }) {
+                Text(if (showAllTriggers) t("Show favourites only") else t("Show all"),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text(t("Warning signs"), color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.height(12.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+            prodromesShown.forEach { item ->
+                CheckInCircle(item.label, ProdromeIcons.forKey(item.iconKey) ?: ProdromeIcons.forKey(item.category),
+                    item.label in selectedReasons, Color(0xFF9575CD), false) { onToggleReason(item.label) }
+            }
+        }
+        if (prodromeFavs.isNotEmpty() && prodromeFavs.size < prodromeItems.size) {
+            TextButton(onClick = { showAllProdromes = !showAllProdromes }) {
+                Text(if (showAllProdromes) t("Show favourites only") else t("Show all"),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text(t("Anything else"), color = AppTheme.TitleColor,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value = note,
+            onValueChange = onNoteChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(t("In your own words"), color = AppTheme.SubtleTextColor) },
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = AppTheme.AccentPurple,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                cursorColor = AppTheme.AccentPurple,
+            ),
+            shape = RoundedCornerShape(12.dp),
+            minLines = 2,
+        )
+
+        Spacer(Modifier.height(80.dp))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  Note Page
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1256,6 +1442,9 @@ private fun ReviewPage(
     medicines: List<CheckInMedicineItem>,
     reliefs: List<CheckInReliefItem>,
     activities: List<CheckInActivityItem>,
+    missed: List<CheckInMissedItem> = emptyList(),
+    /** Reasons picked once on the Why page, shown against every missed row. */
+    sharedReasons: List<String> = emptyList(),
     calendarMappings: List<CalendarService.Mapping>,
     aiResult: CheckInParseResult?,
     saving: Boolean, saved: Boolean,
@@ -1274,6 +1463,7 @@ private fun ReviewPage(
     rmMedicine: (String) -> Unit,
     rmRelief: (String) -> Unit,
     rmActivity: (String) -> Unit,
+    rmMissed: (String) -> Unit = {},
     rmCalendar: (CalendarService.Mapping) -> Unit,
     onUpdateMedicine: (CheckInMedicineItem) -> Unit,
     onUpdateRelief: (CheckInReliefItem) -> Unit,
@@ -1288,9 +1478,9 @@ private fun ReviewPage(
         (if (painNowLocations.isNotEmpty()) 1 else 0) +
         (if (auraNowZones.isNotEmpty()) 1 else 0) +
         (if (endedAtIso != null) 1 else 0)
-    val total = triggers.size + prodromes.size + medicines.size + reliefs.size + activities.size + todayCalendar.size + migraineNowCount
+    val total = triggers.size + prodromes.size + medicines.size + reliefs.size + activities.size + missed.size + todayCalendar.size + migraineNowCount
     val aiLabels = aiResult?.let {
-        (it.triggers.map { t -> t.label } + it.prodromes.map { p -> p.label } + it.medicines.map { m -> m.label } + it.reliefs.map { r -> r.label } + it.activities.map { a -> a.label }).toSet()
+        (it.triggers.map { t -> t.label } + it.prodromes.map { p -> p.label } + it.medicines.map { m -> m.label } + it.reliefs.map { r -> r.label } + it.activities.map { a -> a.label } + it.missedActivities.map { m -> m.label }).toSet()
     } ?: emptySet()
 
     var expandedKey by remember { mutableStateOf<String?>(null) }
@@ -1431,6 +1621,18 @@ private fun ReviewPage(
                 ReviewItemRow(a.label, Color(0xFFFF8A65), a.label in aiLabels, a.inferred,
                     subtitle = formatTimeSubtitle(a.startAtIso),
                     onRemove = { rmActivity(a.label) },
+                    onClick = {}
+                )
+            }
+        }
+        if (missed.isNotEmpty()) {
+            ReviewSectionHeader(t("Didn't do"), Color(0xFFE8A0A0), missed.size)
+            missed.forEach { m ->
+                val reasons = (m.reasons + sharedReasons).distinct()
+                ReviewItemRow(m.label, Color(0xFFE8A0A0), m.label in aiLabels, m.inferred,
+                    subtitle = if (reasons.isEmpty()) formatTimeSubtitle(m.startAtIso)
+                        else reasons.joinToString(", ") { tSync(it) },
+                    onRemove = { rmMissed(m.label) },
                     onClick = {}
                 )
             }

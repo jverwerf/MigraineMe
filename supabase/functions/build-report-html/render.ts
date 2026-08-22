@@ -1947,6 +1947,66 @@ function whatsHelping(d: ReportData, pageNo: number): string {
   `, pageNo);
 }
 
+
+// ── given up with no attack ──────────────────────────────────────
+// These rows carry no migraine_id — that is the whole point of them — so they
+// can appear nowhere in the attack-by-attack sections or the attack log. They
+// get their own page: the tally first, then every entry with its date and the
+// reason the person gave.
+function anticipatedPage(d: ReportData, pageNo: number): string {
+  const rows = d.anticipatedMissed ?? [];
+  if (!rows.length) return "";
+
+  const byName = new Map<string, { n: number; reasons: Map<string, number> }>();
+  for (const r of rows) {
+    const name = r.type;
+    if (!name) continue;
+    const e = byName.get(name) ?? { n: 0, reasons: new Map<string, number>() };
+    e.n += 1;
+    for (const w of r.reason_labels ?? []) e.reasons.set(w, (e.reasons.get(w) ?? 0) + 1);
+    byName.set(name, e);
+  }
+  const tally = [...byName.entries()]
+    .map(([name, e]) => ({
+      name,
+      n: e.n,
+      why: [...e.reasons.entries()].sort((a, b) => b[1] - a[1]).map(([w]) => w).slice(0, 3),
+    }))
+    .sort((a, b) => b.n - a.n);
+
+  const max = Math.max(1, ...tally.map((x) => x.n));
+  const summary = tally.slice(0, 8).map((x) => `<div class="card row">
+      <div class="grow">
+        <div class="name">${esc(pretty(x.name))}</div>
+        <div class="meta">${x.why.length ? esc(x.why.map(pretty).join(", ")) : rt("no reason given")}</div>
+      </div>
+      <div class="meta" style="width:44px;text-align:right">${x.n}×</div>
+      <div style="width:110px">${bar(C.red, (x.n / max) * 100)}</div>
+    </div>`).join("");
+
+  const SHOWN = 30;
+  const listed = rows.slice(0, SHOWN).map((r) => {
+    const why = (r.reason_labels ?? []).map(pretty).join(", ")
+      || (r.notes && r.notes !== "evening check-in" ? r.notes : "");
+    return `<div class="card row">
+      <div class="meta" style="width:78px">${esc(fmtDate(new Date(r.start_at)))}</div>
+      <div class="grow"><div class="name">${esc(pretty(r.type ?? ""))}</div></div>
+      <div class="meta grow">${esc(why)}</div>
+    </div>`;
+  }).join("");
+
+  const more = rows.length > SHOWN
+    ? `<div class="meta" style="margin-top:6px">${rt("Showing {0} of {1}", SHOWN, rows.length)}</div>`
+    : "";
+
+  return page(C.red, `
+    ${header(C.red, ICON.run, rt("Given up with no attack"),
+      rt("Days with no migraine where something was skipped anyway"))}
+    ${sub(C.red, rt("Most often"))}${summary}
+    ${sub(C.red, rt("Every entry"))}${listed}${more}
+  `, pageNo);
+}
+
 // ── context ──────────────────────────────────────────────────────
 function contextPage(d: ReportData, pageNo: number): string {
   const tally = (rows: ChildRow[]) => {
@@ -2786,6 +2846,7 @@ export function renderReport(d: ReportData): string {
     whatsHelping: { title: rt("What's Helping"),         build: whatsHelping },
     context:      { title: rt("What Were You Doing"),    build: contextPage },
     impact:       { title: rt("How Did It Impact You"),  build: impact },
+    anticipated:  { title: rt("Given up with no attack"), build: anticipatedPage },
     recommend:    { title: rt("Recommendations"),        build: recommendations },
     treatments:   { title: rt("Treatments"),             build: treatments },
     metrics:      { title: rt("Health metrics"),         build: metrics },
@@ -2794,7 +2855,7 @@ export function renderReport(d: ReportData): string {
   const DEFAULT_ORDER = [
     "profile", "narrative", "frequency", "trends", "severity", "breakdowns",
     "whatHappened", "whatWorked", "painResponse", "usage", "whatsHelping",
-    "context", "impact", "recommend", "treatments", "metrics",
+    "context", "impact", "anticipated", "recommend", "treatments", "metrics",
   ];
 
   // Unknown keys are dropped rather than throwing: a saved layout must not

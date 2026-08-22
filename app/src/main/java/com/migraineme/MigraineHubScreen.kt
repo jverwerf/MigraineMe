@@ -387,6 +387,17 @@ fun MigraineHubScreen(navController: NavController) {
                     onClick = { navController.navigate(Routes.QUICK_LOG_ACTIVITY) }
                 )
             }
+
+            // Full width rather than a seventh half-card dangling on its own
+            // row, and it reads as the counterpart to Activity above it.
+            QuickLogCard(
+                modifier = Modifier.fillMaxWidth(),
+                title = t("Missed"),
+                subtitle = t("Something you didn't do"),
+                iconColor = Color(0xFFE8A0A0),
+                drawIcon = { HubIcons.run { drawMissedActivity(it) } },
+                onClick = { navController.navigate(Routes.QUICK_LOG_MISSED) }
+            )
         }
     }
 

@@ -173,6 +173,28 @@ fun InsightsReportScreen(
     val allActs by vm.allActivities.collectAsState()
     val allSymptoms by vm.allSymptoms.collectAsState()
 
+    // Given up with no attack: same time window as the attacks above, but no
+    // attack filter can apply since these rows have no attack.
+    val anticipatedRows = remember(allMissed, timeFrame, customRange) {
+        if (timeFrame == InsightsViewModel.TimeFrame.NONE) return@remember emptyList()
+        val cutoff = when {
+            timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null ->
+                customRange!!.from.atStartOfDay(zone).toInstant()
+            timeFrame.days != null -> Instant.now().minus(Duration.ofDays(timeFrame.days!!.toLong()))
+            else -> null
+        }
+        val upperBound = if (timeFrame == InsightsViewModel.TimeFrame.CUSTOM && customRange != null)
+            customRange!!.to.plusDays(1).atStartOfDay(zone).toInstant() else null
+        allMissed.filter { it.anticipated }
+            .mapNotNull { row -> runCatching { Instant.parse(row.startAt) }.getOrNull()?.let { row to it } }
+            .filter { (_, at) ->
+                (cutoff == null || !at.isBefore(cutoff)) && (upperBound == null || !at.isAfter(upperBound))
+            }
+            .sortedByDescending { it.second }
+            .map { it.first }
+    }
+
+
     // Data for comprehensive doctor report
     val correlationStats by vm.correlationStats.collectAsState()
     val gaugeAccuracy by vm.gaugeAccuracy.collectAsState()
@@ -1012,6 +1034,45 @@ fun InsightsReportScreen(
                         style = MaterialTheme.typography.labelSmall,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     )
+                }
+            }
+
+            // ========== 6b. GIVEN UP WITH NO ATTACK ==========
+            // These rows have no migraine to hang off, so they cannot sit in
+            // the attack log above. Listed in full, with their reasons.
+            if (anticipatedRows.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                ReportSectionHeader(
+                    title = t("Given up with no attack"),
+                    subtitle = t("Days with no migraine where something was skipped anyway"),
+                    resId = R.drawable.brainy_recover_small,
+                )
+                Spacer(Modifier.height(8.dp))
+                BaseCard {
+                    anticipatedRows.forEach { row ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                formatReportDay(row.startAt),
+                                color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.width(64.dp)
+                            )
+                            Text(
+                                prettyLabel(row.type ?: ""),
+                                color = Color(0xFFF3EAFB),
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                modifier = Modifier.weight(1f)
+                            )
+                            val why = (row.reasonLabels ?: emptyList()).joinToString(", ") { prettyLabel(it) }
+                            Text(
+                                why.ifBlank { row.notes?.takeIf { it != "evening check-in" } ?: "" },
+                                color = Color(0xFF9C8BB0),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.weight(1.2f),
+                                maxLines = 2, overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
             }
 
@@ -3028,3 +3089,9 @@ internal fun AttackChart(
         }
     }
 }
+
+/** ISO instant → "12 Aug", in the app's locale. Used by the no-attack list. */
+private fun formatReportDay(iso: String): String = runCatching {
+    java.time.LocalDate.ofInstant(Instant.parse(iso), java.time.ZoneId.systemDefault())
+        .format(java.time.format.DateTimeFormatter.ofPattern("d MMM", appLocale()))
+}.getOrDefault(iso.take(10))

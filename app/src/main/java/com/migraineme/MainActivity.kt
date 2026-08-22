@@ -159,6 +159,7 @@ object Routes {
     const val QUICK_LOG_ACTIVITY = "quick_log_activity"
     const val QUICK_LOG_PRODROME = "quick_log_prodrome"
     const val QUICK_LOG_MIGRAINE = "quick_log_migraine"
+    const val QUICK_LOG_MISSED = "quick_log_missed"
     
     const val MONITOR_NUTRITION = "monitor_nutrition"
     const val MONITOR_MEDICINES = "monitor_medicines"
@@ -910,6 +911,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.QUICK_LOG_ACTIVITY ||
             current == Routes.QUICK_LOG_PRODROME ||
             current == Routes.QUICK_LOG_MIGRAINE ||
+            current == Routes.QUICK_LOG_MISSED ||
             current == Routes.LOG_MIGRAINE ||
             current == Routes.PAIN_LOCATION ||
             current == Routes.TRIGGERS ||
@@ -1052,6 +1054,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.QUICK_LOG_ACTIVITY -> "Log Activity"
                                     Routes.QUICK_LOG_PRODROME -> "Log Prodrome"
                                     Routes.QUICK_LOG_MIGRAINE -> "Quick Migraine"
+                                    Routes.QUICK_LOG_MISSED -> "Log Missed"
                                     Routes.MONITOR_NUTRITION -> "Diet"
                                     Routes.NUTRITION_CONFIG -> "Customize Diet"
                                     Routes.NUTRITION_HISTORY -> "Diet History"
@@ -1490,6 +1493,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     }
 
                     // Quick log screens (standalone)
+                    composable(Routes.QUICK_LOG_MISSED) {
+                        QuickLogMissedScreen(navController = nav, authVm = authVm)
+                    }
                     composable(Routes.QUICK_LOG_TRIGGER) {
                         val triggerVm: TriggerViewModel = viewModel()
                         val quickLogVm: LogViewModel = viewModel()

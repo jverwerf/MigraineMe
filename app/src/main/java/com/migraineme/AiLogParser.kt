@@ -820,6 +820,17 @@ data class CheckInActivityItem(
     val inferred: Boolean = false
 )
 
+/** Something given up today. `reasons` are trigger/prodrome pool labels and
+ *  only ever get asked for on a day with no migraine — with an attack the
+ *  reason is already obvious. */
+data class CheckInMissedItem(
+    val label: String,
+    val startAtIso: String? = null,
+    val note: String? = null,
+    val reasons: List<String> = emptyList(),
+    val inferred: Boolean = false
+)
+
 data class CheckInPostdromeItem(val label: String, val inferred: Boolean = false)
 data class CheckInTreatmentSideEffectItem(
     val regimenName: String? = null,
@@ -841,6 +852,7 @@ data class CheckInParseResult(
     val medicines: List<CheckInMedicineItem> = emptyList(),
     val reliefs: List<CheckInReliefItem> = emptyList(),
     val activities: List<CheckInActivityItem> = emptyList(),
+    val missedActivities: List<CheckInMissedItem> = emptyList(),
     val postdrome: List<CheckInPostdromeItem> = emptyList(),
     val treatmentSideEffects: List<CheckInTreatmentSideEffectItem> = emptyList(),
     // Open-migraine extras — only populated when the check-in has an open
@@ -864,6 +876,7 @@ internal fun deterministicParseCheckIn(
     medicinePool: List<String>,
     reliefPool: List<String>,
     activityPool: List<String> = emptyList(),
+    missedActivityPool: List<String> = emptyList(),
     // Open-migraine extras: pools for the "How's the migraine now?" page.
     // Left empty when there is no open migraine so nothing gets extracted.
     symptomPool: List<String> = emptyList(),
@@ -876,6 +889,18 @@ internal fun deterministicParseCheckIn(
     val medicines = mutableListOf<CheckInMedicineItem>()
     val reliefs = mutableListOf<CheckInReliefItem>()
     val activities = mutableListOf<CheckInActivityItem>()
+    val missed = mutableListOf<CheckInMissedItem>()
+
+    // Missed activities first: the same label sits in both pools ("Yoga" is
+    // something you do and something you skip), so a skipped one must not also
+    // be logged as done. Only counts when the clause it sits in says it was
+    // skipped — a bare mention is an activity, not a miss.
+    missedActivityPool.forEach { label ->
+        if (hitExpanded(lower, label) && clauseSaysSkipped(lower, label)) {
+            missed.add(CheckInMissedItem(label, startAtIso = inferItemTime(lower, label), inferred = false))
+        }
+    }
+    val missedLabels = missed.map { it.label.lowercase() }.toSet()
 
     // Match triggers
     triggerPool.forEach { label ->
@@ -920,7 +945,7 @@ internal fun deterministicParseCheckIn(
 
     // Match activities (voice can describe what the user did during the day)
     activityPool.forEach { label ->
-        if (hitExpanded(lower, label)) {
+        if (hitExpanded(lower, label) && label.lowercase() !in missedLabels) {
             val time = inferItemTime(lower, label)
             activities.add(CheckInActivityItem(label, startAtIso = time, inferred = false))
         }
@@ -951,10 +976,30 @@ internal fun deterministicParseCheckIn(
 
     return CheckInParseResult(
         triggers, prodromes, medicines, reliefs, activities,
+        missedActivities = missed,
         symptomsNow = symptomsNow,
         painNow = painNow,
         migraineEndedAtIso = endedAt,
     )
+}
+
+/**
+ * True when the clause holding `label` says the thing was skipped rather than
+ * done. Clause, not whole note: "went to yoga, cancelled dinner" must not mark
+ * yoga as missed. Splits on sentence enders plus "but/and/so/then", which is
+ * how people actually string these together when speaking.
+ */
+private val SKIP_CUES = listOf(
+    "skip", "skipped", "skipping", "cancel", "cancelled", "canceled", "cancelling",
+    "missed", "miss", "didn't go", "didnt go", "did not go", "couldn't", "couldnt",
+    "could not", "had to drop", "dropped out", "stayed home", "stayed in",
+    "called off", "backed out", "gave up", "passed on", "bailed", "no go",
+)
+
+private fun clauseSaysSkipped(text: String, label: String): Boolean {
+    val l = label.lowercase()
+    val clauses = text.split(Regex("""[.!?;\n]|\bbut\b|\band\b|\bso\b|\bthen\b"""))
+    return clauses.any { clause -> clause.contains(l) && SKIP_CUES.any { clause.contains(it) } }
 }
 
 // ── Infer time for a specific item from surrounding context ──────
@@ -1131,6 +1176,7 @@ internal suspend fun callGptForCheckInParse(
     reliefs: List<String>,
     deterministicResult: CheckInParseResult,
     activities: List<String> = emptyList(),
+    missedActivities: List<String> = emptyList(),
     postdromePool: List<String> = emptyList(),
     regimenNames: List<String> = emptyList(),
     // Open-migraine extras — empty/null when no migraine is open, which
@@ -1169,6 +1215,7 @@ PRODROME pool: ${prodromes.joinToString(", ")}
 MEDICINE pool: ${medicines.joinToString(", ")}
 RELIEF pool: ${reliefs.joinToString(", ")}
 ACTIVITY pool: ${activities.joinToString(", ")}
+MISSED ACTIVITY pool: ${missedActivities.joinToString(", ")}
 POSTDROME pool: ${postdromePool.joinToString(", ")}
 ACTIVE TREATMENT regimens: ${regimenNames.joinToString(", ")}
 
@@ -1204,7 +1251,7 @@ Extract everything. JSON only.
     val allPools = mapOf(
         "trigger" to triggers, "prodrome" to prodromes,
         "medicine" to medicines, "relief" to reliefs,
-        "activity" to activities
+        "activity" to activities, "missed_activity" to missedActivities
     )
 
     val resTriggers = mutableListOf<CheckInTriggerItem>()
@@ -1212,6 +1259,7 @@ Extract everything. JSON only.
     val resMedicines = mutableListOf<CheckInMedicineItem>()
     val resReliefs = mutableListOf<CheckInReliefItem>()
     val resActivities = mutableListOf<CheckInActivityItem>()
+    val resMissed = mutableListOf<CheckInMissedItem>()
     val resPostdromes = mutableListOf<CheckInPostdromeItem>()
     val resSymptomsNow = mutableListOf<CheckInSymptomItem>()
     // Group treatment side-effect rows by regimen_name so callers can pre-fill
@@ -1262,6 +1310,12 @@ Extract everything. JSON only.
                 "medicine" -> resMedicines.add(CheckInMedicineItem(label, amount, startAt, null, reliefScale, sideEffectScale, sideEffectNotes, inf))
                 "relief" -> resReliefs.add(CheckInReliefItem(label, startAt, null, null, reliefScale, sideEffectScale, sideEffectNotes, inf))
                 "activity" -> resActivities.add(CheckInActivityItem(label, startAt, null, null, inf))
+                // Something given up, not done. Same label can sit in both
+                // pools, so drop any "done" twin the model also emitted.
+                "missed_activity" -> {
+                    resMissed.add(CheckInMissedItem(label, startAt, null, emptyList(), inf))
+                    resActivities.removeAll { it.label.equals(label, ignoreCase = true) }
+                }
             }
         }
     }
@@ -1314,12 +1368,16 @@ Extract everything. JSON only.
         )
     }
 
+    // A label can only be one of the two: skipped wins over done, whatever
+    // order the model emitted them in.
+    val missedLabelsLower = resMissed.map { it.label.lowercase() }.toSet()
     return CheckInParseResult(
         triggers = resTriggers,
         prodromes = resProdromes,
         medicines = resMedicines,
         reliefs = resReliefs,
-        activities = resActivities,
+        activities = resActivities.filterNot { it.label.lowercase() in missedLabelsLower },
+        missedActivities = resMissed,
         postdrome = resPostdromes,
         treatmentSideEffects = resSideEffects,
         symptomsNow = resSymptomsNow,
@@ -1420,6 +1478,21 @@ internal fun mergeCheckInResults(
         )}
     )
 
+    val missedItems = mergeByLabel(
+        deterministic.missedActivities, gpt.missedActivities,
+        { it.label }, { it.inferred },
+        { det, g -> det.copy(
+            startAtIso = det.startAtIso ?: g.startAtIso,
+            note = det.note ?: g.note,
+            reasons = if (det.reasons.isNotEmpty()) det.reasons else g.reasons,
+            inferred = det.inferred && g.inferred
+        )}
+    )
+    // Skipped beats done: if either pass called a label missed, it is not also
+    // an activity the user did.
+    val missedLabelsLower = missedItems.map { it.label.lowercase() }.toSet()
+    val activityItemsMinusMissed = activityItems.filterNot { it.label.lowercase() in missedLabelsLower }
+
     // Postdrome, treatment side effects and the open-migraine extras only ever
     // come from the GPT pass (with deterministic fallbacks for symptoms/pain/
     // ended) — dropping them here was a bug that silently killed the voice
@@ -1434,7 +1507,8 @@ internal fun mergeCheckInResults(
         map.values.toList()
     }
     return CheckInParseResult(
-        triggers, prodromes, medicines, reliefItems, activityItems,
+        triggers, prodromes, medicines, reliefItems, activityItemsMinusMissed,
+        missedActivities = missedItems,
         postdrome = gpt.postdrome,
         treatmentSideEffects = gpt.treatmentSideEffects,
         symptomsNow = symptomsNow,

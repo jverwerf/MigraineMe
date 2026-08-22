@@ -1036,6 +1036,32 @@ class SupabaseDbService(
         return rows.firstOrNull()
     }
 
+    /**
+     * Did any migraine touch this local day? An attack that started AND ended
+     * today leaves `getOpenMigraine` null, so callers that need "was there a
+     * migraine today" must ask this, never the open-migraine helper.
+     *
+     * Matches an attack that starts during the day, or one that started earlier
+     * and is either still open or ended during/after the day.
+     */
+    @Serializable private data class MigraineIdRow(val id: String)
+
+    suspend fun hasMigraineOnDay(accessToken: String, day: java.time.LocalDate): Boolean {
+        val zone = java.time.ZoneId.systemDefault()
+        val dayStart = day.atStartOfDay(zone).toInstant().toString()
+        val dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant().toString()
+        val response: HttpResponse = client.get("$supabaseUrl/rest/v1/migraines") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken"); header("apikey", supabaseKey)
+            parameter("select", "id")
+            parameter("start_at", "lt.$dayEnd")
+            parameter("or", "(ended_at.is.null,ended_at.gte.$dayStart)")
+            parameter("limit", "1")
+        }
+        if (!response.status.isSuccess()) return false
+        val rows: List<MigraineIdRow> = response.body()
+        return rows.isNotEmpty()
+    }
+
     @Serializable
     data class SymptomLogRow(
         val id: String,
@@ -2842,7 +2868,14 @@ class SupabaseDbService(
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
         @SerialName("migraine_id") val migraineId: String? = null,
-        val source: String? = "manual"
+        val source: String? = "manual",
+        /** True when the activity was given up because an attack was EXPECTED,
+         *  not because one happened. Never infer this from a null migraineId:
+         *  a quick-logged miss on an attack day can be left unlinked. */
+        val anticipated: Boolean = false,
+        /** Trigger/prodrome pool labels the user gave as the reason. Free text
+         *  stays in `notes`. */
+        @SerialName("reason_labels") val reasonLabels: List<String>? = null
     )
     @Serializable
     private data class MissedActivityLogInsert(
@@ -2850,17 +2883,24 @@ class SupabaseDbService(
         val category: String? = null,
         @SerialName("start_at") val startAt: String,
         val notes: String? = null,
-        @SerialName("migraine_id") val migraineId: String? = null
+        @SerialName("migraine_id") val migraineId: String? = null,
+        val anticipated: Boolean = false,
+        @SerialName("reason_labels") val reasonLabels: List<String>? = null
     )
     suspend fun insertMissedActivity(
         accessToken: String,
         migraineId: String?,
         type: String?,
         startAt: String?,
-        notes: String?
+        notes: String?,
+        anticipated: Boolean = false,
+        reasonLabels: List<String>? = null
     ): MissedActivityLogRow {
         val safeStart = startAt?.takeIf { it.isNotBlank() } ?: Instant.now().toString()
-        val payload = MissedActivityLogInsert(type = type, startAt = safeStart, notes = notes, migraineId = migraineId)
+        val payload = MissedActivityLogInsert(
+            type = type, startAt = safeStart, notes = notes, migraineId = migraineId,
+            anticipated = anticipated, reasonLabels = reasonLabels?.takeIf { it.isNotEmpty() }
+        )
         val response: HttpResponse = client.post("$supabaseUrl/rest/v1/missed_activities") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)

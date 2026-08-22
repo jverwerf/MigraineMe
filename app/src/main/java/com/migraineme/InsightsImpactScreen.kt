@@ -29,6 +29,8 @@ fun InsightsImpactScreen(
     vm: InsightsViewModel = viewModel()
 ) {
     val impactItems by vm.impactItems.collectAsState()
+    val anticipatedItems by vm.anticipatedItems.collectAsState()
+    val anticipatedByMonth by vm.anticipatedByMonth.collectAsState()
     val painLocationCounts by vm.painLocationCounts.collectAsState()
     val severityCounts by vm.severityCounts.collectAsState()
     val totalMigraineCount by vm.totalMigraineCount.collectAsState()
@@ -55,7 +57,7 @@ fun InsightsImpactScreen(
         auraDurationBuckets.isNotEmpty() || auraDurationStats != null
 
     val lastCard = when {
-        impactItems.isNotEmpty() -> "missed"
+        impactItems.isNotEmpty() || anticipatedItems.isNotEmpty() -> "missed"
         symptomStats.isNotEmpty() -> "symptoms"
         else -> "severity"
     }
@@ -375,12 +377,24 @@ fun InsightsImpactScreen(
             // ── Card 2b: Aura ──
 
             // ── Card 3: Missed Activities ──
-            if (impactItems.isNotEmpty()) {
+            // Two halves: what an attack took, and what was given up expecting
+            // one. Same labels either side, so an activity can show in both.
+            if (impactItems.isNotEmpty() || anticipatedItems.isNotEmpty()) {
                 var missedSort by remember { mutableStateOf("Most missed") }
                 val sortedMissed = remember(impactItems, missedSort) {
                     when (missedSort) {
                         "A to Z" -> impactItems.sortedBy { prettyLabel(it.name).lowercase() }
+                        "Most without an attack" -> {
+                            val byName = anticipatedItems.associate { it.name to it.count }
+                            impactItems.sortedByDescending { byName[it.name] ?: 0 }
+                        }
                         else -> impactItems.sortedByDescending { it.totalMissed }
+                    }
+                }
+                val sortedAnticipated = remember(anticipatedItems, missedSort) {
+                    when (missedSort) {
+                        "A to Z" -> anticipatedItems.sortedBy { prettyLabel(it.name).lowercase() }
+                        else -> anticipatedItems.sortedByDescending { it.count }
                     }
                 }
                 val tileShape = RoundedCornerShape(18.dp)
@@ -389,13 +403,19 @@ fun InsightsImpactScreen(
                         Column(Modifier.weight(1f)) {
                             Text(t("Missed Activities"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(t("What you couldn't do because of migraines"),
+                            Text(t("What you couldn't do, and why"),
                                 color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
                         }
-                        SortChipMenu(missedSort, listOf("Most missed", "A to Z")) { missedSort = it }
+                        SortChipMenu(missedSort, listOf("Most missed", "Most without an attack", "A to Z")) { missedSort = it }
                     }
 
                     Spacer(Modifier.height(6.dp))
+
+                    if (sortedMissed.isNotEmpty() && sortedAnticipated.isNotEmpty()) {
+                        Text(t("Because of a migraine"), color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(6.dp))
+                    }
 
                     sortedMissed.forEach { item ->
                         Column(
@@ -420,6 +440,50 @@ fun InsightsImpactScreen(
                         }
                         Spacer(Modifier.height(6.dp))
                     }
+
+                    if (sortedAnticipated.isNotEmpty()) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(t("Because you expected one"), color = AppTheme.TitleColor,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                        Spacer(Modifier.height(6.dp))
+                        sortedAnticipated.forEach { item ->
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(tileShape)
+                                    .background(Color.White.copy(alpha = 0.035f))
+                                    .border(1.dp, Color.White.copy(alpha = 0.05f), tileShape)
+                                    .padding(horizontal = 16.dp, vertical = 13.dp)
+                            ) {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    BrainyRowIcon(item.name, size = 20.dp)
+                                    Text(prettyLabel(item.name), color = Color(0xFFF3EAFB),
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    Text(t("%s×", item.count), color = Color(0xFFE8A0A0),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                }
+                                if (item.reasons.isNotEmpty()) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(item.reasons.take(2).joinToString(", ") { prettyLabel(it) },
+                                        color = Color(0xFF9C8BB0), style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            Spacer(Modifier.height(6.dp))
+                        }
+
+                        // Direction lives here, not on the migraines Trends
+                        // screen: these are not migraines.
+                        if (anticipatedByMonth.any { it.second > 0 }) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(t("Given up with no attack, by month"),
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
+                            Spacer(Modifier.height(6.dp))
+                            AnticipatedMonthlyStrip(anticipatedByMonth)
+                            Spacer(Modifier.height(6.dp))
+                        }
+                    }
+
                     Text(t("Counts are the total times you logged the activity as missed."),
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
                         style = MaterialTheme.typography.labelSmall)
@@ -427,7 +491,7 @@ fun InsightsImpactScreen(
             }
 
             // Empty state
-            if (painLocationCounts.isEmpty() && severityCounts.isEmpty() && impactItems.isEmpty()) {
+            if (painLocationCounts.isEmpty() && severityCounts.isEmpty() && impactItems.isEmpty() && anticipatedItems.isEmpty()) {
                 BaseCard {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Canvas(Modifier.size(36.dp)) { HubIcons.run { drawRipple(Color(0xFFE57373)) } }
@@ -669,3 +733,66 @@ private fun SeveritySideBox(
         )
     }
 }
+
+/**
+ * Six months of anticipated misses, oldest to newest.
+ *
+ * Deliberately a count and not a rate: there is no honest denominator for
+ * "days you might have gone", so the shape over time is the finding, and the
+ * sentence underneath says the direction in words rather than leaving the
+ * reader to judge bar heights.
+ */
+@Composable
+private fun AnticipatedMonthlyStrip(months: List<Pair<String, Int>>) {
+    if (months.isEmpty()) return
+    val max = (months.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1)
+    val barColor = Color(0xFFE8A0A0)
+
+    Row(
+        Modifier.fillMaxWidth().height(52.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        months.forEach { (ym, count) ->
+            Column(
+                Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                val frac = count.toFloat() / max
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height((4 + 30 * frac).dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (count == 0) Color.White.copy(alpha = 0.06f) else barColor.copy(alpha = 0.55f))
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    monthInitial(ym),
+                    color = AppTheme.SubtleTextColor.copy(alpha = 0.8f),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+
+    val last = months.lastOrNull()?.second ?: 0
+    val prev = months.getOrNull(months.size - 2)?.second ?: 0
+    val direction = when {
+        last == prev -> t("same as last month")
+        last < prev -> t("down from %s last month", prev)
+        else -> t("up from %s last month", prev)
+    }
+    Spacer(Modifier.height(4.dp))
+    Text(
+        t("%1\$s this month · %2\$s", last, direction),
+        color = Color(0xFF9C8BB0), style = MaterialTheme.typography.labelSmall
+    )
+}
+
+/** "2026-08" → the month's short name, so the strip needs no legend. */
+private fun monthInitial(ym: String): String = runCatching {
+    java.time.YearMonth.parse(ym)
+        .format(java.time.format.DateTimeFormatter.ofPattern("LLL", appLocale()))
+}.getOrDefault(ym.takeLast(2))

@@ -204,6 +204,19 @@ class InsightsViewModel : ViewModel() {
         val pctOfMigraines: Float, // % of migraines where this was missed
     )
 
+    /**
+     * Something given up on a day with NO attack, because one was expected.
+     * No denominator exists for these (the "days you might have gone" is not a
+     * number we hold), so the card shows the count and the trend, never a
+     * percentage that would imply one.
+     */
+    data class AnticipatedItem(
+        val name: String,
+        val count: Int,
+        /** Reason labels, most-logged first. */
+        val reasons: List<String>,
+    )
+
     private val _medicineItems = MutableStateFlow<List<TreatmentItem>>(emptyList())
     val medicineItems: StateFlow<List<TreatmentItem>> = _medicineItems
 
@@ -641,6 +654,13 @@ class InsightsViewModel : ViewModel() {
     // "How Did It Impact You?" card data (missed activities)
     private val _impactItems = MutableStateFlow<List<ImpactItem>>(emptyList())
     val impactItems: StateFlow<List<ImpactItem>> = _impactItems
+
+    private val _anticipatedItems = MutableStateFlow<List<AnticipatedItem>>(emptyList())
+    val anticipatedItems: StateFlow<List<AnticipatedItem>> = _anticipatedItems
+
+    /** Last 6 months of anticipated misses, oldest first: (yyyy-MM, count). */
+    private val _anticipatedByMonth = MutableStateFlow<List<Pair<String, Int>>>(emptyList())
+    val anticipatedByMonth: StateFlow<List<Pair<String, Int>>> = _anticipatedByMonth
 
     // Category maps (label.lowercase -> category)
     private val _catMaps = MutableStateFlow<CatMaps>(CatMaps())
@@ -1978,6 +1998,31 @@ class InsightsViewModel : ViewModel() {
                     pctOfMigraines = (uniqueMigraines.size.toFloat() / totalMigraines * 100),
                 )
             }.sortedByDescending { it.totalMissed }
+
+            // Anticipated: given up on a day with no attack. These never have a
+            // migraine_id, so they are invisible to the block above by design.
+            val anticipated = _allMissedActivities.value.filter { it.anticipated }
+            _anticipatedItems.value = anticipated
+                .mapNotNull { row -> row.type?.let { it to row } }
+                .groupBy({ it.first }, { it.second })
+                .map { (name, rows) ->
+                    val reasonCounts = rows.flatMap { it.reasonLabels ?: emptyList() }
+                        .groupingBy { it }.eachCount()
+                    AnticipatedItem(
+                        name = name,
+                        count = rows.size,
+                        reasons = reasonCounts.entries.sortedByDescending { it.value }.map { it.key },
+                    )
+                }
+                .sortedByDescending { it.count }
+
+            val zone = java.time.ZoneId.systemDefault()
+            val thisMonth = java.time.YearMonth.now(zone)
+            val months = (5 downTo 0).map { thisMonth.minusMonths(it.toLong()) }
+            val perMonth = anticipated.mapNotNull { row ->
+                runCatching { java.time.YearMonth.from(java.time.OffsetDateTime.parse(row.startAt).atZoneSameInstant(zone)) }.getOrNull()
+            }.groupingBy { it }.eachCount()
+            _anticipatedByMonth.value = months.map { m -> m.toString() to (perMonth[m] ?: 0) }
             val allSym = migs.flatMap { row ->
                 row.type?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() && it != "Migraine" } ?: emptyList()
             }

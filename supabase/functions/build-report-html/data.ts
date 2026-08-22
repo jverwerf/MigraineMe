@@ -138,6 +138,12 @@ export type ReportData = {
   activities: ChildRow[];
   locations: ChildRow[];
   missedActivities: ChildRow[];
+  /** Given up on a day with NO attack, so these hang off no migraine and
+   *  cannot appear in the attack-by-attack sections. */
+  anticipatedMissed: {
+    id: string; type: string | null; start_at: string;
+    notes: string | null; reason_labels: string[] | null;
+  }[];
   symptoms: SymptomRow[];
   painPoints: PainPoint[];
   auraZones: AuraZone[];
@@ -330,6 +336,18 @@ export async function loadReportData(
     childrenFor(sb, "locations", ids, "id,migraine_id,type,start_at,source"),
     childrenFor(sb, "missed_activities", ids, "id,migraine_id,type,start_at,source"),
   ]);
+
+  // Anticipated misses are user-scoped, not attack-scoped: they exist
+  // precisely because there was no attack that day. RLS keeps them to the
+  // caller the same way every other query here does.
+  let amq = sb.from("missed_activities")
+    .select("id,type,start_at,notes,reason_labels")
+    .eq("anticipated", true)
+    .order("start_at", { ascending: false });
+  if (params.from) amq = amq.gte("start_at", params.from);
+  if (params.to) amq = amq.lt("start_at", params.to);
+  const { data: antRows } = await amq;
+  const anticipatedMissed = (antRows ?? []) as ReportData["anticipatedMissed"];
 
   const symptoms = (await childrenFor(
     sb, "symptoms", ids, "id,migraine_id,type,severity,start_at",
@@ -772,6 +790,7 @@ export async function loadReportData(
     params,
     migraines,
     triggers, prodromes, medicines, reliefs, activities, locations, missedActivities,
+    anticipatedMissed,
     symptoms, painPoints, auraZones,
     correlations: (corr ?? []) as CorrelationStat[],
     treatmentTiming: (timing ?? []) as ReportData["treatmentTiming"],
