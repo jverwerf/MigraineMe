@@ -341,7 +341,8 @@ object DemoDataSeeder {
                 upsertRow(client, "$base/rest/v1/phone_dark_mode_daily", token, key, "user_id,date",
                     buildJsonObject {
                         put("date",d); put("user_id",userId); put("source",SOURCE)
-                        put("value_hours", if (bad) 2.0+Random.nextDouble(4.0) else 8.0+Random.nextDouble(8.0))
+                        // Hours of screen-on time with dark mode on, not a share of the day.
+                        put("value_hours", if (bad) 0.1+Random.nextDouble(0.4) else 1.5+Random.nextDouble(2.0))
                     })
             }
         } finally { client.close() }
