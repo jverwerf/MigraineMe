@@ -64,7 +64,11 @@ fun CommunityScreen(
     // Guidance is a fourth tab, held locally rather than in the viewmodel so
     // the existing Articles/Forum/Blogs indices, and everything keyed off
     // them, keep meaning what they meant.
-    var guidance by remember { mutableStateOf(false) }
+    // Community opens on Guidance. Who can read your diary is the thing on
+    // this screen with consequences; articles and the forum are still one
+    // tap away, and the underlying topTab stays on Articles for when the
+    // patient taps off.
+    var guidance by remember { mutableStateOf(true) }
 
     // Refresh forum data every time this screen becomes visible
     var refreshKey by remember { mutableIntStateOf(0) }
