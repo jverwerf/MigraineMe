@@ -101,7 +101,7 @@ as $function$
         from picked
     )
     select
-        coalesce((select sum(secs) filter (where is_dark) from weighted), 0.0) / 3600.0,
+        (coalesce((select sum(secs) filter (where is_dark) from weighted), 0.0) / 3600.0)::double precision,
         (select count(*) from picked where is_dark)::int,
         (select count(*) from s)::int,
         (select count(*) from s where on_screen)::int;
