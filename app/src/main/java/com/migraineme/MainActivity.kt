@@ -455,11 +455,32 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleNavigationIntent(intent: Intent?) {
-        intent?.getStringExtra("navigate_to")?.let { route ->
+        if (intent == null) return
+        // Notifications the app built itself carry the exact route. Pushes the
+        // system tray rendered (a payload with a top-level `notification`:
+        // recalibration_ready, community_comment, trial_ending) arrive with
+        // only the FCM data fields as extras, so route on the push `type`
+        // instead. Without this every one of those taps landed on Home.
+        val route = intent.getStringExtra("navigate_to")
+            ?: intent.getStringExtra("type")?.let { routeForPushType(it) }
+        if (route != null) {
             pendingNavigationRoute.value = route
             // Clear so it doesn't re-trigger
             intent.removeExtra("navigate_to")
+            intent.removeExtra("type")
         }
+    }
+
+    /** Where a tap on a server-rendered push of this type should land. */
+    private fun routeForPushType(type: String): String? = when (type) {
+        "recalibration_ready" -> Routes.RECALIBRATION_REVIEW
+        "community_comment" -> Routes.COMMUNITY
+        "trial_ending" -> Routes.PAYWALL
+        "new_insight" -> Routes.INSIGHTS
+        "evening_checkin" -> Routes.EVENING_CHECKIN
+        "daily_gauge" -> Routes.HOME
+        "ongoing_migraine", "trigger_alert" -> Routes.JOURNAL
+        else -> null
     }
 }
 
