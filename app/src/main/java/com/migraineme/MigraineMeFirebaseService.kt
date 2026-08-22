@@ -115,7 +115,9 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
                 showTriggerAlertNotification(
                     label = label,
                     notes = message.data["notes"].orEmpty(),
-                    itemType = message.data["item_type"].orEmpty()
+                    itemType = message.data["item_type"].orEmpty(),
+                    stage = message.data["stage"] ?: "today",
+                    date = message.data["date"].orEmpty()
                 )
             }
             else -> {
@@ -382,7 +384,12 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
      * carries the real numbers (e.g. "Sleep duration: 5.2h — 2SD below avg
      * 7.4h") so the notification can say why rather than a vague "went off".
      */
-    private fun showTriggerAlertNotification(label: String, notes: String, itemType: String) {
+    /**
+     * stage: "today" = the item fired now; "tomorrow" / "forecast" = a heads-up
+     * for a coming day, which taps through to the monitor (the forecast lives
+     * there) instead of the journal.
+     */
+    private fun showTriggerAlertNotification(label: String, notes: String, itemType: String, stage: String = "today", date: String = "") {
         val channelId = "trigger_alert"
         val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
 
@@ -393,17 +400,24 @@ class MigraineMeFirebaseService : FirebaseMessagingService() {
         ).apply { description = tSync("Alerts when an item you follow becomes a trigger for the day") }
         nm.createNotificationChannel(channel)
 
-        // Tap opens the journal, where the fired item shows on today's log
+        // Today: tap opens the journal, where the fired item shows on today's
+        // log. Heads-up: tap opens the monitor, where the forecast lives.
+        val ahead = stage != "today"
         val intent = android.content.Intent(this, MainActivity::class.java).apply {
             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("navigate_to", Routes.JOURNAL)
+            putExtra("navigate_to", if (ahead) Routes.MONITOR else Routes.JOURNAL)
         }
         val pi = android.app.PendingIntent.getActivity(
             this, 3, intent,
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (itemType == "prodrome") tSync("Early warning detected") else tSync("Trigger detected")
+        val title = when {
+            stage == "tomorrow" -> tSync("Heads up for tomorrow")
+            stage == "forecast" -> tSync("Heads up for %1\$s").replace("%1\$s", date)
+            itemType == "prodrome" -> tSync("Early warning detected")
+            else -> tSync("Trigger detected")
+        }
         val body = if (notes.isNotBlank()) notes else label
 
         val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
