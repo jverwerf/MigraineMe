@@ -112,12 +112,24 @@ grant execute on function public.aggregate_phone_dark_mode(uuid, text, text)  to
 
 -- ── 5. Existing brightness history onto the percent scale ───────────────────
 -- Every stored daily row predates the fix, so all of them are raw 0-255.
-update public.phone_brightness_daily
-   set value_mean = value_mean * 100.0 / 255.0,
-       value_max  = round(value_max * 100.0 / 255.0),
-       updated_at = now()
- where screen_on_samples = 0
-   and value_mean is not null;
+--
+-- Guarded on this migration not having run before. screen_on_samples stays 0 on
+-- legacy rows until app builds carrying the fix reach the stores, so it cannot
+-- be the guard: without this check a second run would halve every value again.
+do $$
+begin
+  if not exists (
+      select 1 from supabase_migrations.schema_migrations
+       where version = '20260822300000'
+  ) then
+    update public.phone_brightness_daily
+       set value_mean = value_mean * 100.0 / 255.0,
+           value_max  = round(value_max * 100.0 / 255.0),
+           updated_at = now()
+     where screen_on_samples = 0
+       and value_mean is not null;
+  end if;
+end $$;
 
 -- ── 6. Thresholds and units that the unit change invalidates ────────────────
 -- Dark mode used to be a share of the 24-hour day; it is now hours of screen-on

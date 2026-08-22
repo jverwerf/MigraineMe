@@ -7,9 +7,11 @@
 # has drifted from the local files. Everything else (app code, edge functions,
 # the migration file) is committed and pushed; this is the one step left.
 #
-# It is safe to re-run: every statement in the migration is idempotent except
-# the brightness rescale, which is guarded on screen_on_samples = 0 and so only
-# ever touches rows the fix has not already converted.
+# It is safe to re-run: every statement is idempotent, and the one that is not
+# naturally so — the brightness rescale — is guarded on this migration not being
+# recorded yet. Do not remove that guard: legacy rows keep screen_on_samples = 0
+# until app builds carrying the fix reach the stores, so the column cannot tell
+# a converted row from an unconverted one.
 #
 # Run it, then check the verification output at the bottom.
 
