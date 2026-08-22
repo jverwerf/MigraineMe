@@ -37,6 +37,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Language
@@ -127,6 +128,7 @@ object Routes {
     const val PROFILE = "profile"
     const val DATA = "data"
     const val MENSTRUATION_SETTINGS = "menstruation_settings"
+    const val PRACTITIONERS = "practitioners"
     const val COMMUNITY = "community"
     const val ARTICLE_DETAIL = "community/article"
     const val BLOG_DETAIL = "community/blog"
@@ -969,6 +971,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.RISK_DETAIL ||
             current == Routes.CHANGE_PASSWORD ||
             current == Routes.MENSTRUATION_SETTINGS ||
+            current == Routes.PRACTITIONERS ||
             current == Routes.EVENING_CHECKIN ||
             current == Routes.COMMUNITY ||
             current?.startsWith(Routes.ARTICLE_DETAIL) == true ||
@@ -1082,6 +1085,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.PROFILE -> "Profile"
                                     Routes.HELP -> "Help"
                                     Routes.DATA -> "Data"
+                                    Routes.PRACTITIONERS -> "Practitioners"
                                     Routes.LANGUAGE -> "Language"
                                     Routes.MENSTRUATION_SETTINGS -> "Menstruation Settings"
                                     Routes.LOGOUT -> "Logout"
@@ -2507,6 +2511,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.DATA) {
                         DataSettingsScreen(onBack = { nav.popBackStack() }, onOpenMenstruationSettings = { nav.navigate(Routes.MENSTRUATION_SETTINGS) })
+                    }
+
+                    composable(Routes.PRACTITIONERS) {
+                        PractitionerScreen(onBack = { nav.popBackStack() }, authVm = authVm)
                     }
 
                     composable(Routes.LANGUAGE) {

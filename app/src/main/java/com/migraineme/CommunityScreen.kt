@@ -61,6 +61,11 @@ fun CommunityScreen(
     val listState = rememberLazyListState()
     val density = LocalDensity.current
 
+    // Guidance is a fourth tab, held locally rather than in the viewmodel so
+    // the existing Articles/Forum/Blogs indices, and everything keyed off
+    // them, keep meaning what they meant.
+    var guidance by remember { mutableStateOf(false) }
+
     // Refresh forum data every time this screen becomes visible
     var refreshKey by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { refreshKey++ }
@@ -95,19 +100,32 @@ fun CommunityScreen(
             contentPadding = PaddingValues(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── Top-level tab row: Articles / Forum (matches iOS: standalone, not in hero card) ──
+            // ── Top-level tab row ──
+            // Practitioners leads it: community is where everyone else the
+            // patient deals with lives, so the people who can read their diary
+            // belong beside the forum rather than buried in settings. It
+            // navigates rather than selecting, so it never holds the pill.
             item("tabs") {
                 SegmentedTabRow(
                     tabs = listOf("Articles", "Forum", "Blogs"),
-                    selectedIndex = state.topTab,
-                    onSelect = { vm.selectTopTab(it) },
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    selectedIndex = if (guidance) -1 else state.topTab,
+                    onSelect = { guidance = false; vm.selectTopTab(it) },
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    leading = {
+                        PractitionerTab(
+                            authVm = authVm,
+                            selected = guidance,
+                            onOpen = { guidance = true },
+                        )
+                    },
                 )
             }
 
             // ── Tab content (each article/forum post is its own card) ──
             item("content") {
-                when (state.topTab) {
+                if (guidance) {
+                    PractitionerPanel(authVm = authVm)
+                } else when (state.topTab) {
                     0 -> ArticlesContent(vm, state, authState.accessToken, navController)
                     1 -> ForumContent(vm, state, authState.accessToken, authState.userId, navController)
                     2 -> BlogsContent(vm, state, authState.accessToken, navController)
@@ -119,7 +137,7 @@ fun CommunityScreen(
         }
 
         // Forum FAB — only when Forum tab active
-        if (state.topTab == 1 && authState.accessToken != null) {
+        if (!guidance && state.topTab == 1 && authState.accessToken != null) {
             var showCreateDialog by remember { mutableStateOf(false) }
 
             FloatingActionButton(
@@ -570,7 +588,8 @@ private fun SegmentedTabRow(
     tabs: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    leading: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(14.dp)
 
@@ -582,6 +601,7 @@ private fun SegmentedTabRow(
             .background(Color.White.copy(alpha = 0.06f))
             .border(1.dp, Color.White.copy(alpha = 0.10f), shape)
     ) {
+        leading?.invoke(this)
         tabs.forEachIndexed { index, label ->
             val selected = index == selectedIndex
             val pillShape = RoundedCornerShape(12.dp)
