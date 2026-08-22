@@ -286,17 +286,30 @@ async function applyProposal(supabase: any, userId: string, p: any): Promise<boo
         .eq("user_id", userId)
         .ilike("label", p.label);
       check({ error }, "read user_triggers");
-      if (!items || items.length === 0) throw new Error(`no user_triggers row labelled ${p.label}`);
+      let rows: any[] = items ?? [];
+      if (rows.length === 0) {
+        // A group label ("Poor sleep" standing for its sleep metrics) has no
+        // row of its own; the change applies to every member, which is how
+        // the gauge scores it.
+        const { data: members, error: gErr } = await supabase
+          .from("user_triggers")
+          .select("id, display_group")
+          .eq("user_id", userId)
+          .ilike("display_group", p.label);
+        check({ error: gErr }, "read user_triggers group");
+        rows = members ?? [];
+      }
+      if (rows.length === 0) throw new Error(`no user_triggers row or group labelled ${p.label}`);
 
       // Update all group members (same as AiSetupApplier)
-      for (const item of items) {
+      for (const item of rows) {
         check(await supabase.from("user_triggers")
           .update({ prediction_value: value })
           .eq("id", item.id), "update user_triggers");
       }
 
       if (p.should_favorite) {
-        await upsertFavorite(supabase, "trigger_preferences", "trigger_id", userId, items[0].id);
+        await upsertFavorite(supabase, "trigger_preferences", "trigger_id", userId, rows[0].id);
       }
 
       return true;
@@ -311,16 +324,29 @@ async function applyProposal(supabase: any, userId: string, p: any): Promise<boo
         .eq("user_id", userId)
         .ilike("label", p.label);
       check({ error }, "read user_prodromes");
-      if (!items || items.length === 0) throw new Error(`no user_prodromes row labelled ${p.label}`);
+      let rows: any[] = items ?? [];
+      if (rows.length === 0) {
+        // A group label ("Poor sleep" standing for its sleep metrics) has no
+        // row of its own; the change applies to every member, which is how
+        // the gauge scores it.
+        const { data: members, error: gErr } = await supabase
+          .from("user_prodromes")
+          .select("id, display_group")
+          .eq("user_id", userId)
+          .ilike("display_group", p.label);
+        check({ error: gErr }, "read user_prodromes group");
+        rows = members ?? [];
+      }
+      if (rows.length === 0) throw new Error(`no user_prodromes row or group labelled ${p.label}`);
 
-      for (const item of items) {
+      for (const item of rows) {
         check(await supabase.from("user_prodromes")
           .update({ prediction_value: value })
           .eq("id", item.id), "update user_prodromes");
       }
 
       if (p.should_favorite) {
-        await upsertFavorite(supabase, "prodrome_user_preferences", "prodrome_id", userId, items[0].id);
+        await upsertFavorite(supabase, "prodrome_user_preferences", "prodrome_id", userId, rows[0].id);
       }
 
       return true;

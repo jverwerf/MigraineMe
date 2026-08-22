@@ -24,6 +24,34 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
 // database; checking here as well keeps a proposal that could never be applied
 // from ever being shown to the user.
 const PREDICTION_VALUES = new Set(["NONE", "LOW", "MILD", "HIGH"]);
+
+// ── Group-aware severity ──
+// A display_group ("Poor sleep" standing for seven sleep metrics) is logged
+// and scored under the GROUP name, and the risk engine rates it at its
+// strongest member (_shared/riskAggregation.ts buildRiskMaps). Recalibration
+// must see the same number, or it advises on a profile the gauge is not
+// running: it read "Poor sleep" as a missing NONE item and proposed LOW while
+// the gauge was scoring it MILD.
+const SEVERITY_RANK: Record<string, number> = { NONE: 0, LOW: 1, MILD: 2, HIGH: 3 };
+function strongestOf(values: (string | null | undefined)[]): string {
+  let best = "NONE";
+  for (const v of values) {
+    const s = String(v ?? "NONE").toUpperCase();
+    if ((SEVERITY_RANK[s] ?? 0) > (SEVERITY_RANK[best] ?? 0)) best = s;
+  }
+  return best;
+}
+// Current severity of a label as the gauge sees it: the row itself, or the
+// strongest member when the label is a display_group. null = nothing to adjust.
+function effectiveSeverity(pool: any[], label: string): string | null {
+  const key = String(label ?? "").trim().toLowerCase();
+  if (!key) return null;
+  const row = (pool ?? []).find((p: any) => String(p.label ?? "").toLowerCase() === key);
+  if (row) return String(row.prediction_value ?? "NONE").toUpperCase();
+  const members = (pool ?? []).filter((p: any) => String(p.display_group ?? "").toLowerCase() === key);
+  if (members.length === 0) return null;
+  return strongestOf(members.map((m: any) => m.prediction_value));
+}
 const FAVORITE_ITEM_TYPES = new Set([
   "medicine", "relief", "symptom", "activity", "missed_activity",
 ]);
@@ -928,9 +956,23 @@ serve(async (req: Request) => {
         console.warn(`recalibrate: dropping trigger_adjustment with to=${JSON.stringify(adj.to)}`);
         continue;
       }
+      // `from` is what the gauge actually runs (a group = its strongest member).
+      // A label that is neither a pool row nor a display_group can never be
+      // applied, and a model that misread the current value reasoned from a
+      // wrong premise; both are dropped rather than offered.
+      const currentTrig = effectiveSeverity(triggerPool ?? [], adj.label);
+      const claimedTrig = String(adj.from ?? "").trim().toUpperCase();
+      if (currentTrig === null) {
+        console.warn(`recalibrate: dropping trigger_adjustment for unknown label ${JSON.stringify(adj.label)}`);
+        continue;
+      }
+      if (PREDICTION_VALUES.has(claimedTrig) && claimedTrig !== currentTrig) {
+        console.warn(`recalibrate: dropping trigger_adjustment ${JSON.stringify(adj.label)}: model saw ${claimedTrig}, gauge runs ${currentTrig}`);
+        continue;
+      }
       proposals.push({
         user_id: userId, type: "trigger", label: adj.label,
-        from_value: adj.from, to_value: String(adj.to).trim().toUpperCase(),
+        from_value: currentTrig, to_value: String(adj.to).trim().toUpperCase(),
         should_favorite: adj.should_favorite ?? false,
         reasoning: adj.reasoning, status: "pending",
       });
@@ -942,9 +984,19 @@ serve(async (req: Request) => {
         console.warn(`recalibrate: dropping prodrome_adjustment with to=${JSON.stringify(adj.to)}`);
         continue;
       }
+      const currentProd = effectiveSeverity(prodromePool ?? [], adj.label);
+      const claimedProd = String(adj.from ?? "").trim().toUpperCase();
+      if (currentProd === null) {
+        console.warn(`recalibrate: dropping prodrome_adjustment for unknown label ${JSON.stringify(adj.label)}`);
+        continue;
+      }
+      if (PREDICTION_VALUES.has(claimedProd) && claimedProd !== currentProd) {
+        console.warn(`recalibrate: dropping prodrome_adjustment ${JSON.stringify(adj.label)}: model saw ${claimedProd}, gauge runs ${currentProd}`);
+        continue;
+      }
       proposals.push({
         user_id: userId, type: "prodrome", label: adj.label,
-        from_value: adj.from, to_value: String(adj.to).trim().toUpperCase(),
+        from_value: currentProd, to_value: String(adj.to).trim().toUpperCase(),
         should_favorite: adj.should_favorite ?? false,
         reasoning: adj.reasoning, status: "pending",
       });
@@ -1310,8 +1362,15 @@ function buildCall1Message(
   L.push("");
 
   // ── Triggers with linked counts ──
-  L.push("=== TRIGGERS — linked to migraines ===");
+  L.push(`=== TRIGGERS — linked to migraines ===`);
+  const triggerGroups = new Map<string, any[]>();
   for (const pool of triggerPool) {
+    if (pool.display_group) {
+      const gk = String(pool.display_group).toLowerCase();
+      if (!triggerGroups.has(gk)) triggerGroups.set(gk, []);
+      triggerGroups.get(gk)!.push(pool);
+      continue; // reported once, as the group, below
+    }
     const key = pool.label.toLowerCase();
     const counts = triggerCounts[key];
     const sev = (pool.prediction_value ?? "NONE").toUpperCase();
@@ -1324,17 +1383,42 @@ function buildCall1Message(
       L.push(`- "${pool.label}": NEVER LOGGED but rated ${sev}. Favorite: ${fav}. Auto: ${auto}.`);
     }
   }
+  // Grouped auto triggers are logged and scored under the GROUP name and the
+  // gauge rates the group at its strongest member. Report them the same way,
+  // or the model reads the group as a missing NONE item and every member as
+  // "never logged".
+  for (const [gk, members] of triggerGroups) {
+    const name = members[0].display_group;
+    const counts = triggerCounts[gk];
+    const sev = strongestOf(members.map((m: any) => m.prediction_value));
+    const fav = members.some((m: any) => trigFavIds.has(m.id));
+    const memberList = members.map((m: any) => `${m.label}=${String(m.prediction_value ?? "NONE").toUpperCase()}`).join(", ");
+    const linked = counts
+      ? `linked to ${counts.linked} of ${mc} migraines (logged ${counts.total}x, last30: ${counts.linked30}, prior: ${counts.linkedPrior})`
+      : "NEVER LOGGED";
+    L.push(`- "${name}" [GROUP of ${members.length} auto triggers: ${memberList}]: ${linked}. Currently: ${sev} (the gauge scores the group at its strongest member). Favorite: ${fav}. Auto: true. Adjust it under the label "${name}" — a change applies to all ${members.length} members.`);
+  }
   for (const [key, counts] of Object.entries(triggerCounts)) {
+    if (triggerGroups.has(key)) continue;
     const inPool = triggerPool.find((p: any) => p.label.toLowerCase() === key);
-    if (!inPool || (inPool.prediction_value ?? "NONE").toUpperCase() === "NONE") {
+    if (!inPool) {
+      L.push(`- "${key}": linked to ${(counts as any).linked} of ${mc} migraines but has no pool item — not adjustable, do not propose it.`);
+    } else if ((inPool.prediction_value ?? "NONE").toUpperCase() === "NONE") {
       L.push(`- "${key}": linked to ${(counts as any).linked} of ${mc} migraines (last30: ${(counts as any).linked30}, prior: ${(counts as any).linkedPrior}) but currently NONE — worth reviewing!`);
     }
   }
   L.push("");
 
   // ── Prodromes ──
-  L.push("=== PRODROMES — linked to migraines ===");
+  L.push(`=== PRODROMES — linked to migraines ===`);
+  const prodromeGroups = new Map<string, any[]>();
   for (const pool of prodromePool) {
+    if (pool.display_group) {
+      const gk = String(pool.display_group).toLowerCase();
+      if (!prodromeGroups.has(gk)) prodromeGroups.set(gk, []);
+      prodromeGroups.get(gk)!.push(pool);
+      continue;
+    }
     const key = pool.label.toLowerCase();
     const counts = prodromeCounts[key];
     const sev = (pool.prediction_value ?? "NONE").toUpperCase();
@@ -1344,6 +1428,17 @@ function buildCall1Message(
     } else if (sev !== "NONE") {
       L.push(`- "${pool.label}": NEVER LOGGED but rated ${sev}. Favorite: ${fav}.`);
     }
+  }
+  for (const [gk, members] of prodromeGroups) {
+    const name = members[0].display_group;
+    const counts = prodromeCounts[gk];
+    const sev = strongestOf(members.map((m: any) => m.prediction_value));
+    const fav = members.some((m: any) => prodFavIds.has(m.id));
+    const memberList = members.map((m: any) => `${m.label}=${String(m.prediction_value ?? "NONE").toUpperCase()}`).join(", ");
+    const linked = counts
+      ? `linked to ${counts.linked} of ${mc} migraines (logged ${counts.total}x, last30: ${counts.linked30}, prior: ${counts.linkedPrior})`
+      : "NEVER LOGGED";
+    L.push(`- "${name}" [GROUP of ${members.length} auto prodromes: ${memberList}]: ${linked}. Currently: ${sev} (the gauge scores the group at its strongest member). Favorite: ${fav}. Adjust it under the label "${name}" — a change applies to all ${members.length} members.`);
   }
   L.push("");
 
