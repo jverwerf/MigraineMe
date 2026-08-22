@@ -1759,6 +1759,8 @@ internal fun CorrelationRow(stat: EdgeFunctionsService.CorrelationStat) {
 internal fun IntradayResponseCard(
     rows: List<EdgeFunctionsService.IntradayResponseStat>,
     easers: Boolean,
+    showBlob: Boolean = false,
+    watermark: Boolean = false,
 ) {
     if (rows.isEmpty()) return
     fun horizonText(minutes: Int): String = when {
@@ -1770,13 +1772,21 @@ internal fun IntradayResponseCard(
     val green = Color(0xFF81C784)
     val sorted = remember(rows) { rows.sortedByDescending { kotlin.math.abs(it.medianEffect) } }
     val top = sorted.take(4)
-    BaseCard {
-        Text(t("Pain response"), color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-        Text(
-            if (easers) t("How your pain moved after these treatments")
-            else t("How your pain moved after these were logged"),
-            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_detective) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBlob) {
+                BrainyBlobIcon(flip = true)
+                Spacer(Modifier.width(10.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(t("Pain response"), color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+                Text(
+                    if (easers) t("How your pain moved after these treatments")
+                    else t("How your pain moved after these were logged"),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
+        }
         Spacer(Modifier.height(6.dp))
         top.forEach { row ->
             val rising = row.medianEffect > 0f
@@ -1903,6 +1913,7 @@ internal fun TopPatternsCard(
     interactions: List<EdgeFunctionsService.CorrelationStat> = emptyList(),
     iconKeys: Map<String, String> = emptyMap(),
     watermarkOnLast: Boolean = false,
+    showBlob: Boolean = true,
 ) {
     // Source of truth — matches the edge function's "topRiskFactors"
     // definition (compute-correlation-stats:1491): trigger || metric.
@@ -1952,8 +1963,10 @@ internal fun TopPatternsCard(
         if (combined.isNotEmpty()) {
             MaybeWatermarkCard(watermark = watermarkOnLast && !combosCardShown, resId = R.drawable.brainy_detective) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    BrainyBlobIcon(flip = true)
-                    Spacer(Modifier.width(10.dp))
+                    if (showBlob) {
+                        BrainyBlobIcon(flip = true)
+                        Spacer(Modifier.width(10.dp))
+                    }
                     Column(Modifier.weight(1f)) {
                         Text(t("Patterns"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))

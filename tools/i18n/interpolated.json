@@ -248,19 +248,19 @@
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:225",
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:261",
     "line": "                                    t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), count),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:344",
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:384",
     "line": "                                Text(t(\"%1\\$s%% · %2\\$s attacks\", pct, s.totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:789",
+    "site": "app/src/main/java/com/migraineme/InsightsImpactScreen.kt:860",
     "line": "        t(\"%1\\$s this month · %2\\$s\", last, direction),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:159",
+    "site": "app/src/main/java/com/migraineme/InsightsPatternsScreen.kt:192",
     "line": "                        Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\", condPct.toInt(), baselinePct.toInt()),"
   },
   {
@@ -304,23 +304,23 @@
     "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1811",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:1821",
     "line": "                    Text(t(\"%1\\$s within %2\\$s\", effectText, horizonText(row.horizonMinutes)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2208",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2221",
     "line": "                    Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2634",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2647",
     "line": "                        Text(t(\"%1\\$s migraines (%2\\$s%%)\", item.count, item.pctOfMigraines.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2788",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:2801",
     "line": "                    Text(t(\"%1\\$s · %2\\$s timed\", formatAuraDuration(avgMin), timed),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3309",
+    "site": "app/src/main/java/com/migraineme/InsightsScreen.kt:3322",
     "line": "                        t(\"%1\\$ss account for %2\\$s%% of your migraines \\u2014 about %3\\$s times an average day.\", w.dayName, String.format(\"%.0f\", w.pct), trimLift(ratio)),"
   },
   {
@@ -344,23 +344,23 @@
     "line": "                        t(\"Nearest: %s\", city.label) + (city.timezone?.let { \"  •  $it\" } ?: \"\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsWhatsHelpingScreen.kt:197",
+    "site": "app/src/main/java/com/migraineme/InsightsWhatsHelpingScreen.kt:227",
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:329",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:330",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:364",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:365",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:398",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:399",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:432",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:433",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -764,19 +764,19 @@
     "line": "    tSync(\"Taken within %1\\$s (your median delay): peak %2\\$s · later: peak %3\\$s\","
   },
   {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:587",
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:594",
     "line": "                    if (rising) t(\"pain rose after these doses, in %1\\$s of %2\\$s\", hits, row.n)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:588",
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:595",
     "line": "                    else t(\"by %1\\$s, in %2\\$s of %3\\$s doses\", horizonPhrase(row.horizonMinutes), hits, row.n),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:672",
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:686",
     "line": "                Text(t(\"Used together in %1\\$s of your %2\\$s attacks\", together, stat.sampleSize),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:765",
+    "site": "app/src/main/java/com/migraineme/TreatmentEffectiveness.kt:784",
     "line": "                        t(\"%1\\$s relief on %2\\$s attacks with %3\\$s, against %4\\$s on %5\\$s without\","
   },
   {

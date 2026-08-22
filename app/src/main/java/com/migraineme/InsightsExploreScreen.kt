@@ -496,7 +496,15 @@ fun RecommendationsCard(
 fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsViewModel) {
     val recs by vm.aiRecommendations.collectAsState()
     val dismissedKeys by vm.dismissedRecommendationKeys.collectAsState()
-    val sections = buildRecommendationSections(recs, dismissedKeys)
+    val allSections = buildRecommendationSections(recs, dismissedKeys)
+    // Customize: category order + visibility (InsightsSectionConfig). The
+    // summary card stays pinned on top; the category cards follow the user's
+    // order with hidden categories skipped. Stale ids simply don't render.
+    val sectionConfig by rememberInsightsSectionConfig(InsightsSections.PAGE_RECOMMENDATIONS)
+    val sections = remember(allSections, sectionConfig) {
+        val byCat = allSections.associateBy { it.category }
+        sectionConfig.orderedVisible().mapNotNull { byCat[it] }
+    }
     val scrollState = rememberScrollState()
     val context = androidx.compose.ui.platform.LocalContext.current
     var sortMode by remember { mutableStateOf("Category") }
@@ -514,6 +522,8 @@ fun RecommendationsDetailScreen(navController: NavHostController, vm: InsightsVi
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+            InsightsCustomizeRow(navController, InsightsSections.PAGE_RECOMMENDATIONS)
+
             MaybeWatermarkCard(
                 watermark = visibleSections.isEmpty() || sortMode != "Category",
                 resId = R.drawable.brainy_recs,

@@ -56,23 +56,42 @@ fun InsightsImpactScreen(
     val hasAuraCard = hasAuraZones || auraInsights.isNotEmpty() ||
         auraDurationBuckets.isNotEmpty() || auraDurationStats != null
 
-    val lastCard = when {
-        impactItems.isNotEmpty() || anticipatedItems.isNotEmpty() -> "missed"
-        symptomStats.isNotEmpty() -> "symptoms"
-        else -> "severity"
-    }
-
     val scrollState = rememberScrollState()
+
+    // Customize: section order + visibility (InsightsSectionConfig). A section
+    // only counts when it has data, so the Brainy header blob lands on the first
+    // visible section and the bottom watermark on the last, whatever the order.
+    val sectionConfig by rememberInsightsSectionConfig(InsightsSections.PAGE_IMPACT)
+    val presentSections = buildSet {
+        if (severityCounts.isNotEmpty()) add(InsightsSections.IMPACT_SEVERITY)
+        if (painLocationCounts.isNotEmpty() && totalMigraineCount > 0) add(InsightsSections.IMPACT_PAIN_LOCATIONS)
+        if (hasAuraCard) add(InsightsSections.IMPACT_AURA)
+        if (symptomStats.isNotEmpty()) add(InsightsSections.IMPACT_SYMPTOMS)
+        if (severityPredictors.isNotEmpty()) add(InsightsSections.IMPACT_SEVERITY_PREDICTOR)
+        if (painMigration != null) add(InsightsSections.IMPACT_PAIN_MIGRATION)
+        if (impactItems.isNotEmpty() || anticipatedItems.isNotEmpty()) add(InsightsSections.IMPACT_MISSED_ACTIVITIES)
+    }
+    val visibleSections = sectionConfig.orderedVisible().filter { it in presentSections }
+    val firstSection = visibleSections.firstOrNull()
+    val lastSection = visibleSections.lastOrNull()
 
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
+            InsightsCustomizeRow(navController, InsightsSections.PAGE_IMPACT)
+
+            for (sectionId in visibleSections) {
+            key(sectionId) {
+            when (sectionId) {
+
             // ── Card 1: Severity ──
-            if (severityCounts.isNotEmpty()) {
-                MaybeWatermarkCard(watermark = lastCard == "severity", resId = R.drawable.brainy_recover, flipWatermark = true) {
+            InsightsSections.IMPACT_SEVERITY -> {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        BrainyBlobIcon(R.drawable.brainy_recover_small)
-                        Spacer(Modifier.width(10.dp))
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_recover_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
                         Column {
                             Text(t("Severity"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -107,10 +126,18 @@ fun InsightsImpactScreen(
                             barHeight = 60.dp,
                         )
                     }
+                }
+            } // end severity
 
-                    if (painLocationCounts.isNotEmpty() && totalMigraineCount > 0) {
-                        Spacer(Modifier.height(16.dp))
+            // ── Card 2: Pain Locations ──
+            InsightsSections.IMPACT_PAIN_LOCATIONS -> {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_recover, flipWatermark = true) {
+                    run {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (sectionId == firstSection) {
+                                BrainyBlobIcon(R.drawable.brainy_recover_small)
+                                Spacer(Modifier.width(10.dp))
+                            }
                             Column {
                                 Text(t("Pain Locations"), color = AppTheme.TitleColor,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -164,9 +191,18 @@ fun InsightsImpactScreen(
                             }
                         }
                     }
-                    if (hasAuraCard) {
-                        Spacer(Modifier.height(16.dp))
+                }
+            } // end pain locations
+
+            // ── Card 2b: Aura ──
+            InsightsSections.IMPACT_AURA -> {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_recover, flipWatermark = true) {
+                    run {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (sectionId == firstSection) {
+                                BrainyBlobIcon(R.drawable.brainy_recover_small)
+                                Spacer(Modifier.width(10.dp))
+                            }
                             Column {
                                 Text(if (hasAuraZones) t("Aura Location") else t("Your Aura"),
                                     color = AppTheme.TitleColor,
@@ -296,10 +332,10 @@ fun InsightsImpactScreen(
                         }
                     }
                 }
-            }
+            } // end aura
 
             // ── Card 1b: Your Symptoms (Phase 2a) ──
-            if (symptomStats.isNotEmpty()) {
+            InsightsSections.IMPACT_SYMPTOMS -> {
                 var symptomSort by remember { mutableStateOf("Most frequent") }
                 val sortedSymptoms = remember(symptomStats, symptomSort) {
                     when (symptomSort) {
@@ -310,8 +346,12 @@ fun InsightsImpactScreen(
                     }
                 }
                 val tileShape = RoundedCornerShape(18.dp)
-                MaybeWatermarkCard(watermark = lastCard == "symptoms", resId = R.drawable.brainy_recover, flipWatermark = true) {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_recover_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
                         Column(Modifier.weight(1f)) {
                             Text(t("Your Symptoms"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -364,22 +404,26 @@ fun InsightsImpactScreen(
                 }
             }
 
-            // ── Card 2: Pain Locations ──
-
             // ── Card 2c: Does aura / onset predict a worse attack? ──
-            if (severityPredictors.isNotEmpty()) {
-                SeverityPredictorCard(severityPredictors)
+            InsightsSections.IMPACT_SEVERITY_PREDICTOR -> {
+                SeverityPredictorCard(severityPredictors,
+                    showBlob = sectionId == firstSection,
+                    watermark = sectionId == lastSection)
             }
 
             // ── Card 2a: How the pain moves — needs timelined attacks ──
-            painMigration?.let { pm -> PainMigrationCard(pm) }
-
-            // ── Card 2b: Aura ──
+            InsightsSections.IMPACT_PAIN_MIGRATION -> {
+                painMigration?.let { pm ->
+                    PainMigrationCard(pm,
+                        showBlob = sectionId == firstSection,
+                        watermark = sectionId == lastSection)
+                }
+            }
 
             // ── Card 3: Missed Activities ──
             // Two halves: what an attack took, and what was given up expecting
             // one. Same labels either side, so an activity can show in both.
-            if (impactItems.isNotEmpty() || anticipatedItems.isNotEmpty()) {
+            InsightsSections.IMPACT_MISSED_ACTIVITIES -> {
                 var missedSort by remember { mutableStateOf("Most missed") }
                 val sortedMissed = remember(impactItems, missedSort) {
                     when (missedSort) {
@@ -398,8 +442,12 @@ fun InsightsImpactScreen(
                     }
                 }
                 val tileShape = RoundedCornerShape(18.dp)
-                BrainyWatermarkCard(resId = R.drawable.brainy_recover, flipWatermark = true) {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_recover, flipWatermark = true) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_recover_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
                         Column(Modifier.weight(1f)) {
                             Text(t("Missed Activities"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -488,7 +536,12 @@ fun InsightsImpactScreen(
                         color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
                         style = MaterialTheme.typography.labelSmall)
                 }
-            }
+            } // end missed activities
+
+            else -> {}
+            } // end when
+            } // end key
+            } // end for
 
             // Empty state
             if (painLocationCounts.isEmpty() && severityCounts.isEmpty() && impactItems.isEmpty() && anticipatedItems.isEmpty()) {
@@ -521,7 +574,11 @@ fun InsightsImpactScreen(
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PainMigrationCard(stat: EdgeFunctionsService.PainMigrationStat) {
+fun PainMigrationCard(
+    stat: EdgeFunctionsService.PainMigrationStat,
+    showBlob: Boolean = false,
+    watermark: Boolean = false,
+) {
     fun peakText(mins: Int): String {
         if (mins < 90) return "$mins minutes"
         val hours = mins / 60.0
@@ -530,17 +587,25 @@ fun PainMigrationCard(stat: EdgeFunctionsService.PainMigrationStat) {
         return if (oneDecimal.endsWith(".0")) "${oneDecimal.dropLast(2)} hours" else "$oneDecimal hours"
     }
 
-    BaseCard {
-        Text(
-            t("How your pain moves"),
-            color = AppTheme.TitleColor,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
-        )
-        Text(
-            t("Across %s attacks where you logged more than one pain entry", stat.attacksAnalysed),
-            color = AppTheme.SubtleTextColor,
-            style = MaterialTheme.typography.bodySmall
-        )
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_recover, flipWatermark = true) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBlob) {
+                BrainyBlobIcon(R.drawable.brainy_recover_small)
+                Spacer(Modifier.width(10.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    t("How your pain moves"),
+                    color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    t("Across %s attacks where you logged more than one pain entry", stat.attacksAnalysed),
+                    color = AppTheme.SubtleTextColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
         Spacer(Modifier.height(8.dp))
 
         // Staged on the body rather than as a list of names: where it starts
@@ -659,11 +724,17 @@ private fun PainStageLegend(title: String, locations: List<String>, color: Color
  * Static only — no animation anywhere in this app.
  */
 @Composable
-fun SeverityPredictorCard(rows: List<EdgeFunctionsService.SeverityPredictorStat>) {
-    BaseCard {
+fun SeverityPredictorCard(
+    rows: List<EdgeFunctionsService.SeverityPredictorStat>,
+    showBlob: Boolean = true,
+    watermark: Boolean = false,
+) {
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_recover, flipWatermark = true) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            BrainyBlobIcon(R.drawable.brainy_recover_small)
-            Spacer(Modifier.width(10.dp))
+            if (showBlob) {
+                BrainyBlobIcon(R.drawable.brainy_recover_small)
+                Spacer(Modifier.width(10.dp))
+            }
             Column {
                 Text(t("What tends to run worse"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))

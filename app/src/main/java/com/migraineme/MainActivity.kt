@@ -150,6 +150,7 @@ object Routes {
     const val MONITOR = "monitor"
     const val MONITOR_CONFIG = "monitor_config"
     const val INSIGHTS_CONFIG = "insights_config"
+    const val INSIGHTS_SECTION_CONFIG = "insights_section_config"
     const val JOURNAL = "journal"
 
     const val MIGRAINE = "migraine"
@@ -902,6 +903,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
             current == Routes.INSIGHTS_WHATS_HELPING ||
             current == Routes.INSIGHTS_WHAT_CHANGED ||
             current == Routes.INSIGHTS_CONFIG ||
+            current?.startsWith(Routes.INSIGHTS_SECTION_CONFIG) == true ||
             current == Routes.INSIGHTS_CONTEXT ||
             current == Routes.INSIGHTS_IMPACT ||
             current == Routes.INSIGHTS_THRESHOLDS ||
@@ -1138,6 +1140,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     else -> when {
                                         current?.startsWith(Routes.INSIGHTS_BREAKDOWN) == true ->
                                             backStack?.arguments?.getString("logType") ?: "Breakdown"
+                                        current?.startsWith(Routes.INSIGHTS_SECTION_CONFIG) == true -> "Customize"
                                         current?.startsWith("help_article") == true -> "Help"
                                         current?.startsWith(Routes.ARTICLE_DETAIL) == true -> "Article"
                                         current?.startsWith(Routes.BLOG_DETAIL) == true -> "Blog"
@@ -1237,6 +1240,10 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                     composable(Routes.MONITOR) { MonitorScreen(navController = nav, authVm = authVm) }
                     composable(Routes.MONITOR_CONFIG) { MonitorConfigScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.INSIGHTS_CONFIG) { InsightsConfigScreen(onBack = { nav.popBackStack() }) }
+                    composable("${Routes.INSIGHTS_SECTION_CONFIG}/{page}") { backStack ->
+                        val page = backStack.arguments?.getString("page") ?: InsightsSections.PAGE_PATTERNS
+                        InsightsSectionConfigScreen(page = page, onBack = { nav.popBackStack() })
+                    }
                     
                     // Monitor detail screens (placeholders for now)
                     composable(Routes.MONITOR_NUTRITION) { MonitorNutritionScreen(navController = nav, authVm = authVm) }
@@ -1380,14 +1387,14 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                            InsightsWhatsHelpingScreen(vm = insightsVm)
+                            InsightsWhatsHelpingScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_WHAT_CHANGED) {
                         PremiumRoute(onDenied = { nav.navigate(Routes.PAYWALL) { popUpTo(Routes.INSIGHTS) } }) {
                             val owner = androidx.compose.ui.platform.LocalContext.current as androidx.lifecycle.ViewModelStoreOwner
                             val insightsVm: InsightsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(owner)
-                            InsightsWhatChangedScreen(vm = insightsVm)
+                            InsightsWhatChangedScreen(navController = nav, vm = insightsVm)
                         }
                     }
                     composable(Routes.INSIGHTS_CONTEXT) {
@@ -3037,6 +3044,7 @@ private fun BottomBar(
             val selected = currentRoute == item.route ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_DETAIL) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_CONFIG) ||
+                    (item.route == Routes.INSIGHTS && currentRoute?.startsWith(Routes.INSIGHTS_SECTION_CONFIG) == true) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_TIMELINE) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_REPORT) ||
                     (item.route == Routes.INSIGHTS && currentRoute == Routes.INSIGHTS_PATTERNS) ||

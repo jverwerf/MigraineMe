@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3646 entries.
+ * 3648 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -1633,6 +1633,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Log your activity" to "Aktivität erfassen",
     "Log your location" to "Ort erfassen",
     "Log — Capture Everything" to "Erfassen — alles festhalten",
+    "Logged items" to "Erfasste Einträge",
     "Logged: %s" to "Erfasst: %s",
     "Logging %1\$s item%2\$s" to "Erfasse %1\$s Item%2\$s",
     "Logging %s items" to "Erfasse %s Einträge",
@@ -2579,6 +2580,7 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Show all days" to "Alle Tage zeigen",
     "Show less" to "Weniger",
     "Show, hide, and reorder cards" to "Karten zeigen, verbergen, ordnen",
+    "Show, hide, and reorder sections" to "Abschnitte zeigen, verbergen, ordnen",
     "Shower" to "Dusche",
     "Showing %1\$s of %2\$s attacks · the PDF includes all %3\$s" to "%1\$s von %2\$s Attacken · das PDF enthält alle %3\$s",
     "Showing %1\$s of %2\$s pain entries" to "%1\$s von %2\$s Schmerzeinträgen",

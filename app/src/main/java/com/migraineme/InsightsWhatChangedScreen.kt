@@ -50,7 +50,10 @@ private val KIND_CHIP_LABELS = mapOf(
 )
 
 @Composable
-fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
+fun InsightsWhatChangedScreen(
+    navController: androidx.navigation.NavHostController,
+    vm: InsightsViewModel = viewModel()
+) {
     val trends by vm.itemTrends.collectAsState()
     val attacks by vm.attackTrends.collectAsState()
     val habits by vm.habitTrends.collectAsState()
@@ -76,16 +79,37 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
 
     val scrollState = rememberScrollState()
 
+    // Customize: section order + visibility (InsightsSectionConfig). A section
+    // only counts when it has data, so the Brainy header blob lands on the first
+    // visible section and the bottom watermark on the last, whatever the order.
+    val sectionConfig by rememberInsightsSectionConfig(InsightsSections.PAGE_CHANGES)
+    val presentSections = buildSet {
+        if (attacks.isNotEmpty()) add(InsightsSections.CHANGES_MIGRAINES)
+        if (changed.isNotEmpty()) add(InsightsSections.CHANGES_ITEMS)
+        if (habits.isNotEmpty()) add(InsightsSections.CHANGES_HABITS)
+    }
+    val visibleSections = sectionConfig.orderedVisible().filter { it in presentSections }
+    val firstSection = visibleSections.firstOrNull()
+    val lastSection = visibleSections.lastOrNull()
+
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
 
+            InsightsCustomizeRow(navController, InsightsSections.PAGE_CHANGES)
+
+            for (sectionId in visibleSections) {
+            key(sectionId) {
+            when (sectionId) {
+
             // Your migraines: attack-level shifts over the same windows.
             // Missing sides count as zero; both-zero rows never arrive here.
-            if (attacks.isNotEmpty()) {
-                BaseCard {
+            InsightsSections.CHANGES_MIGRAINES -> {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_risk, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        BrainyBlobIcon(R.drawable.brainy_risk_small)
-                        Spacer(Modifier.width(10.dp))
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_risk_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
                         Column {
                             Text(t("Your migraines"), color = Color.White,
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -98,12 +122,16 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
                 }
             }
 
-            if (changed.isNotEmpty()) {
+            InsightsSections.CHANGES_ITEMS -> {
                 Text(t("Occurrences on your attacks, last 30 days vs the 30 before."),
                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
 
-                BaseCard {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_risk, flipWatermark = true) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_risk_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
                         Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.weight(1f))
@@ -165,21 +193,31 @@ fun InsightsWhatChangedScreen(vm: InsightsViewModel = viewModel()) {
             // Daily habits: the PDF's Lifestyle context, converted to the same
             // diverging bars as the items above. Renders nothing at all when
             // no metric has data in either window.
-            if (habits.isNotEmpty()) {
-                BrainyWatermarkCard(resId = R.drawable.brainy_risk, flipWatermark = true) {
-                    // No header blob: the page carries one brainy identity (the
-                    // risk pose on the first card + this card's watermark), the
-                    // same as every other Insights detail page.
-                    Column {
-                        Text(t("Daily habits"), color = Color.White,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
-                            style = MaterialTheme.typography.labelSmall)
+            InsightsSections.CHANGES_HABITS -> {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_risk, flipWatermark = true) {
+                    // One brainy identity per page: the risk blob on whichever
+                    // card is first, the watermark on whichever is last.
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_risk_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
+                        Column {
+                            Text(t("Daily habits"), color = Color.White,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(t("Last 30 days vs the 30 before"), color = AppTheme.SubtleTextColor,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                     Spacer(Modifier.height(4.dp))
                     habits.forEach { h -> DailyHabitRow(h) }
                 }
             }
+
+            else -> {}
+            } // end when
+            } // end key
+            } // end for
         }
     }
 }

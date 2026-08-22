@@ -556,15 +556,22 @@ internal fun TreatmentTrailingText(text: String, color: Color) {
 fun PainResponseCard(
     rows: List<EdgeFunctionsService.IntradayResponseStat>,
     watermark: Boolean = false,
+    showBlob: Boolean = false,
 ) {
     if (rows.isEmpty()) return
     val sorted = remember(rows) { rows.sortedByDescending { kotlin.math.abs(it.medianEffect) } }
     MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
-        Column(Modifier.fillMaxWidth()) {
-            Text(t("Pain response"), color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            Text(t("What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time."),
-                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBlob) {
+                BrainyBlobIcon(R.drawable.brainy_shield_small)
+                Spacer(Modifier.width(10.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(t("Pain response"), color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("What your pain did in the hours after a dose, inside the same attack. Needs pain logged over time."),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
         }
         Spacer(Modifier.height(8.dp))
         sorted.forEach { row ->
@@ -647,14 +654,21 @@ internal fun dotsForP(p: Float?): Int {
 fun UsedTogetherCard(
     rows: List<EdgeFunctionsService.CorrelationStat>,
     watermark: Boolean = false,
+    showBlob: Boolean = false,
 ) {
     if (rows.isEmpty()) return
     MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
-        Column(Modifier.fillMaxWidth()) {
-            Text(t("Used Together"), color = AppTheme.TitleColor,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            Text(t("Pairs you reach for in the same attack, and how those attacks went."),
-                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBlob) {
+                BrainyBlobIcon(R.drawable.brainy_shield_small)
+                Spacer(Modifier.width(10.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(t("Used Together"), color = AppTheme.TitleColor,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(t("Pairs you reach for in the same attack, and how those attacks went."),
+                    color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            }
         }
         Spacer(Modifier.height(8.dp))
         rows.take(6).forEach { stat ->
@@ -711,6 +725,7 @@ private fun segmentReliefWord(v: Float): String =
 fun WorksBestWhenCard(
     rows: List<EdgeFunctionsService.CorrelationStat>,
     watermark: Boolean = true,
+    showBlob: Boolean = false,
 ) {
     if (rows.isEmpty()) return
     // Half a point apart on the 0-3 relief scale is the smallest gap worth
@@ -732,6 +747,10 @@ fun WorksBestWhenCard(
     }
     MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_shield, flipWatermark = true) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBlob) {
+                BrainyBlobIcon(R.drawable.brainy_shield_small)
+                Spacer(Modifier.width(10.dp))
+            }
             Column(Modifier.weight(1f)) {
                 Text(t("Works Best When…"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))

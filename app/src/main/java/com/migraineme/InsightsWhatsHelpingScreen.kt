@@ -27,11 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 
 private val WD_GREEN = Color(0xFF81C784)
 
 @Composable
 fun InsightsWhatsHelpingScreen(
+    navController: NavHostController,
     vm: InsightsViewModel = viewModel()
 ) {
     val correlationStats by vm.correlationStats.collectAsState()
@@ -48,8 +50,22 @@ fun InsightsWhatsHelpingScreen(
 
     val scrollState = rememberScrollState()
 
+    // Customize: section order + visibility (InsightsSectionConfig). A section
+    // only counts when it has data, so the Brainy header blob lands on the first
+    // visible section and the bottom watermark on the last, whatever the order.
+    val sectionConfig by rememberInsightsSectionConfig(InsightsSections.PAGE_HELPING)
+    val presentSections = buildSet {
+        if (wellDone.isNotEmpty()) add(InsightsSections.HELPING_DIRECT)
+        if (chains.isNotEmpty()) add(InsightsSections.HELPING_HABITS_WHY)
+    }
+    val visibleSections = sectionConfig.orderedVisible().filter { it in presentSections }
+    val firstSection = visibleSections.firstOrNull()
+    val lastSection = visibleSections.lastOrNull()
+
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+
+            InsightsCustomizeRow(navController, InsightsSections.PAGE_HELPING)
 
             if (correlationsLoading) {
                 BaseCard {
@@ -62,33 +78,47 @@ fun InsightsWhatsHelpingScreen(
                 }
             }
 
-            if (wellDone.isNotEmpty()) {
-                MaybeWatermarkCard(watermark = chains.isEmpty(), resId = R.drawable.brainy_gardener, flipWatermark = true) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        BrainyBlobIcon(R.drawable.brainy_gardener_small)
-                        Spacer(Modifier.width(10.dp))
-                        Column {
-                            Text(t("Well Done"), color = AppTheme.TitleColor,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                            Text(t("Habits that show up on your migraine-free days"),
-                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+            for (sectionId in visibleSections) {
+                key(sectionId) {
+                    when (sectionId) {
+                        InsightsSections.HELPING_DIRECT -> {
+                            MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_gardener, flipWatermark = true) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (sectionId == firstSection) {
+                                        BrainyBlobIcon(R.drawable.brainy_gardener_small)
+                                        Spacer(Modifier.width(10.dp))
+                                    }
+                                    Column {
+                                        Text(t("Well Done"), color = AppTheme.TitleColor,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                        Text(t("Habits that show up on your migraine-free days"),
+                                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                wellDone.take(10).forEach { stat -> WellDoneDirectRow(stat) }
+                            }
                         }
+                        InsightsSections.HELPING_HABITS_WHY -> {
+                            MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_gardener, flipWatermark = true) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (sectionId == firstSection) {
+                                        BrainyBlobIcon(R.drawable.brainy_gardener_small)
+                                        Spacer(Modifier.width(10.dp))
+                                    }
+                                    Column {
+                                        Text(t("What Drives It"), color = AppTheme.TitleColor,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                        Text(t("What makes those habits happen"),
+                                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                chains.take(10).forEach { stat -> WellDoneChainRow(stat) }
+                            }
+                        }
+                        else -> {}
                     }
-                    Spacer(Modifier.height(8.dp))
-                    wellDone.take(10).forEach { stat -> WellDoneDirectRow(stat) }
-                }
-            }
-
-            if (chains.isNotEmpty()) {
-                BrainyWatermarkCard(resId = R.drawable.brainy_gardener, flipWatermark = true) {
-                    Column {
-                        Text(t("What Drives It"), color = AppTheme.TitleColor,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                        Text(t("What makes those habits happen"),
-                            color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    chains.take(10).forEach { stat -> WellDoneChainRow(stat) }
                 }
             }
 

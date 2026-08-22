@@ -53,8 +53,23 @@ fun InsightsPatternsScreen(
 
     val scrollState = rememberScrollState()
 
+    // Customize: section order + visibility (InsightsSectionConfig). A section
+    // only counts when it has data, so the Brainy header blob lands on the first
+    // visible section and the bottom watermark on the last, whatever the order.
+    val sectionConfig by rememberInsightsSectionConfig(InsightsSections.PAGE_PATTERNS)
+    val presentSections = buildSet {
+        if (allPatterns.isNotEmpty() || interactionCorrelations.isNotEmpty()) add(InsightsSections.PATTERNS_TOP)
+        if (intradayAggravators.isNotEmpty()) add(InsightsSections.PATTERNS_INTRADAY)
+        if (symptomOutcomes.isNotEmpty()) add(InsightsSections.PATTERNS_TRIGGER_SYMPTOM)
+    }
+    val visibleSections = sectionConfig.orderedVisible().filter { it in presentSections }
+    val firstSection = visibleSections.firstOrNull()
+    val lastSection = visibleSections.lastOrNull()
+
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+
+            InsightsCustomizeRow(navController, InsightsSections.PAGE_PATTERNS)
 
             if (correlationsLoading) {
                 BaseCard {
@@ -67,20 +82,30 @@ fun InsightsPatternsScreen(
                 }
             }
 
-            if (allPatterns.isNotEmpty() || interactionCorrelations.isNotEmpty()) {
-                TopPatternsCard(triggerCorrelations, metricCorrelations, interactionCorrelations, triggerIconKeys,
-                    watermarkOnLast = symptomOutcomes.isEmpty())
-            }
-
-            // Pain response: how pain moved after these events.
-            // Hidden entirely when the engine wrote no aggravator rows.
-            if (intradayAggravators.isNotEmpty()) {
-                IntradayResponseCard(intradayAggravators, easers = false)
-            }
-
-            // Per-trigger symptom profile (Phase 2b)
-            if (symptomOutcomes.isNotEmpty()) {
-                TriggerSymptomProfileCard(symptomOutcomes)
+            for (sectionId in visibleSections) {
+                key(sectionId) {
+                    when (sectionId) {
+                        InsightsSections.PATTERNS_TOP -> {
+                            TopPatternsCard(triggerCorrelations, metricCorrelations, interactionCorrelations, triggerIconKeys,
+                                watermarkOnLast = sectionId == lastSection,
+                                showBlob = sectionId == firstSection)
+                        }
+                        // Pain response: how pain moved after these events.
+                        // Hidden entirely when the engine wrote no aggravator rows.
+                        InsightsSections.PATTERNS_INTRADAY -> {
+                            IntradayResponseCard(intradayAggravators, easers = false,
+                                showBlob = sectionId == firstSection,
+                                watermark = sectionId == lastSection)
+                        }
+                        // Per-trigger symptom profile (Phase 2b)
+                        InsightsSections.PATTERNS_TRIGGER_SYMPTOM -> {
+                            TriggerSymptomProfileCard(symptomOutcomes,
+                                showBlob = sectionId == firstSection,
+                                watermark = sectionId == lastSection)
+                        }
+                        else -> {}
+                    }
+                }
             }
 
             if (!correlationsLoading && allPatterns.isEmpty() && interactionCorrelations.isEmpty()) {
@@ -102,7 +127,11 @@ fun InsightsPatternsScreen(
 }
 
 @Composable
-private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.CorrelationStat>) {
+private fun TriggerSymptomProfileCard(
+    rows: List<EdgeFunctionsService.CorrelationStat>,
+    showBlob: Boolean = false,
+    watermark: Boolean = true,
+) {
     val grouped = remember(rows) {
         rows.groupBy { it.factorName }
             .map { (name, list) -> name to list.sortedByDescending { it.liftRatio } }
@@ -119,8 +148,12 @@ private fun TriggerSymptomProfileCard(rows: List<EdgeFunctionsService.Correlatio
             else -> grouped
         }
     }
-    BrainyWatermarkCard {
+    MaybeWatermarkCard(watermark = watermark, resId = R.drawable.brainy_detective) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showBlob) {
+                BrainyBlobIcon(flip = true)
+                Spacer(Modifier.width(10.dp))
+            }
             Column(Modifier.weight(1f)) {
                 Text(t("What These Triggers Do to You"), color = AppTheme.TitleColor,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))

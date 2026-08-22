@@ -61,8 +61,24 @@ fun InsightsTreatmentsScreen(
 
     val scrollState = rememberScrollState()
 
+    // Customize: section order + visibility (InsightsSectionConfig). A section
+    // only counts when it has data, so the Brainy header blob lands on the first
+    // visible section and the bottom watermark on the last, whatever the order.
+    val sectionConfig by rememberInsightsSectionConfig(InsightsSections.PAGE_TREATMENTS)
+    val presentSections = buildSet {
+        if (whatWorkedRows.isNotEmpty()) add(InsightsSections.TREATMENTS_WHAT_WORKED)
+        if (intradayEasers.isNotEmpty()) add(InsightsSections.TREATMENTS_PAIN_RESPONSE)
+        if (treatmentInteractionCorrelations.isNotEmpty()) add(InsightsSections.TREATMENTS_USED_TOGETHER)
+        if (symptomSegments.isNotEmpty()) add(InsightsSections.TREATMENTS_WORKS_BEST_WHEN)
+    }
+    val visibleSections = sectionConfig.orderedVisible().filter { it in presentSections }
+    val firstSection = visibleSections.firstOrNull()
+    val lastSection = visibleSections.lastOrNull()
+
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+
+            InsightsCustomizeRow(navController, InsightsSections.PAGE_TREATMENTS)
 
             if (correlationsLoading) {
                 BaseCard {
@@ -78,45 +94,52 @@ fun InsightsTreatmentsScreen(
             val anythingShown = whatWorkedRows.isNotEmpty() || intradayEasers.isNotEmpty() ||
                 symptomSegments.isNotEmpty() || treatmentInteractionCorrelations.isNotEmpty()
 
-            // ── Card 1: across your attacks ──
-            // No statistical gate: if it was logged, it is on the page, with its
-            // verdict, the line the verdict came from, its timing line where the
-            // engine measured one, and its dots.
-            if (whatWorkedRows.isNotEmpty()) {
-                WhatWorkedCard(
-                    rows = whatWorkedRows,
-                    medicineCategories = medicineCategories,
-                    reliefIconKeys = reliefIconKeys,
-                    watermark = intradayEasers.isEmpty() && symptomSegments.isEmpty() &&
-                        treatmentInteractionCorrelations.isEmpty(),
-                    showBlob = true,
-                )
-            }
+            for (sectionId in visibleSections) {
+                key(sectionId) {
+                    when (sectionId) {
+                        // ── Card 1: across your attacks ──
+                        // No statistical gate: if it was logged, it is on the page, with its
+                        // verdict, the line the verdict came from, its timing line where the
+                        // engine measured one, and its dots.
+                        InsightsSections.TREATMENTS_WHAT_WORKED -> {
+                            WhatWorkedCard(
+                                rows = whatWorkedRows,
+                                medicineCategories = medicineCategories,
+                                reliefIconKeys = reliefIconKeys,
+                                watermark = sectionId == lastSection,
+                                showBlob = sectionId == firstSection,
+                            )
+                        }
+                        // ── Card 2: within the attack ──
+                        // Pain response: how pain moved after these treatments, in pain
+                        // points with the sign kept. A treatment after which pain ROSE
+                        // renders in the warning colour, flagged, never hidden. Hidden
+                        // entirely when the engine wrote no easer rows — 15 of 198 users log
+                        // pain points, so card 1 has to stand alone for everyone else.
+                        InsightsSections.TREATMENTS_PAIN_RESPONSE -> {
+                            PainResponseCard(intradayEasers,
+                                watermark = sectionId == lastSection,
+                                showBlob = sectionId == firstSection)
+                        }
+                        // The standalone Timing card is gone: early-vs-late now sits on the
+                        // treatment's own row in card 1, where it belongs, instead of being
+                        // repeated as a separate list of the same treatment names.
 
-            // ── Card 2: within the attack ──
-            // Pain response: how pain moved after these treatments, in pain
-            // points with the sign kept. A treatment after which pain ROSE
-            // renders in the warning colour, flagged, never hidden. Hidden
-            // entirely when the engine wrote no easer rows — 15 of 198 users log
-            // pain points, so card 1 has to stand alone for everyone else.
-            if (intradayEasers.isNotEmpty()) {
-                PainResponseCard(intradayEasers,
-                    watermark = treatmentInteractionCorrelations.isEmpty() && symptomSegments.isEmpty())
-            }
-
-            // The standalone Timing card is gone: early-vs-late now sits on the
-            // treatment's own row in card 1, where it belongs, instead of being
-            // repeated as a separate list of the same treatment names.
-
-            // ── Card 3: pairs ──
-            if (treatmentInteractionCorrelations.isNotEmpty()) {
-                UsedTogetherCard(treatmentInteractionCorrelations,
-                    watermark = symptomSegments.isEmpty())
-            }
-
-            // ── Card 4: symptom segments ──
-            if (symptomSegments.isNotEmpty()) {
-                WorksBestWhenCard(symptomSegments, watermark = true)
+                        // ── Card 3: pairs ──
+                        InsightsSections.TREATMENTS_USED_TOGETHER -> {
+                            UsedTogetherCard(treatmentInteractionCorrelations,
+                                watermark = sectionId == lastSection,
+                                showBlob = sectionId == firstSection)
+                        }
+                        // ── Card 4: symptom segments ──
+                        InsightsSections.TREATMENTS_WORKS_BEST_WHEN -> {
+                            WorksBestWhenCard(symptomSegments,
+                                watermark = sectionId == lastSection,
+                                showBlob = sectionId == firstSection)
+                        }
+                        else -> {}
+                    }
+                }
             }
 
             if (!correlationsLoading && !anythingShown) {

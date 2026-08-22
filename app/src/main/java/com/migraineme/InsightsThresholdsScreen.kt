@@ -27,8 +27,20 @@ fun InsightsThresholdsScreen(
 
     val scrollState = rememberScrollState()
 
+    // Customize: section order + visibility (InsightsSectionConfig). The Brainy
+    // header blob lands on the first visible section and the bottom watermark
+    // on the last, whatever the order.
+    val sectionConfig by rememberInsightsSectionConfig(InsightsSections.PAGE_ACCURACY)
+    val presentSections = if (gaugeAccuracy != null)
+        setOf(InsightsSections.ACCURACY_GAUGE, InsightsSections.ACCURACY_MATRIX) else emptySet()
+    val visibleSections = sectionConfig.orderedVisible().filter { it in presentSections }
+    val firstSection = visibleSections.firstOrNull()
+    val lastSection = visibleSections.lastOrNull()
+
     ScrollFadeContainer(scrollState = scrollState) { scroll ->
         ScrollableScreenContent(scrollState = scroll, logoRevealHeight = 0.dp) {
+
+            InsightsCustomizeRow(navController, InsightsSections.PAGE_ACCURACY)
 
             if (correlationsLoading) {
                 BaseCard {
@@ -47,14 +59,21 @@ fun InsightsThresholdsScreen(
             if (gaugeAccuracy != null) {
                 val ga = gaugeAccuracy!!
 
+                for (sectionId in visibleSections) {
+                key(sectionId) {
+                when (sectionId) {
+
                 // ── Gauge Accuracy card ──
-                BaseCard {
+                InsightsSections.ACCURACY_GAUGE -> {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_archer, flipWatermark = true) {
                     Row(
                         Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        BrainyBlobIcon(R.drawable.brainy_archer_small)
-                        Spacer(Modifier.width(10.dp))
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_archer_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
                         Column {
                             Text(t("Gauge Accuracy"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -106,15 +125,28 @@ fun InsightsThresholdsScreen(
                     }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                if (sectionId != lastSection) Spacer(Modifier.height(12.dp))
+                } // end gauge
 
                 // ── Confusion matrix ──
-                BrainyWatermarkCard(resId = R.drawable.brainy_archer, flipWatermark = true) {
-                    Text(t("Detailed Breakdown"), color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(Modifier.height(4.dp))
-                    Text(t("Every tracked day, sorted by warning vs outcome"),
-                        color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                InsightsSections.ACCURACY_MATRIX -> {
+                MaybeWatermarkCard(watermark = sectionId == lastSection, resId = R.drawable.brainy_archer, flipWatermark = true) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (sectionId == firstSection) {
+                            BrainyBlobIcon(R.drawable.brainy_archer_small)
+                            Spacer(Modifier.width(10.dp))
+                        }
+                        Column {
+                            Text(t("Detailed Breakdown"), color = AppTheme.TitleColor,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Spacer(Modifier.height(4.dp))
+                            Text(t("Every tracked day, sorted by warning vs outcome"),
+                                color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
 
                     Spacer(Modifier.height(14.dp))
 
@@ -168,6 +200,13 @@ fun InsightsThresholdsScreen(
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
+                if (sectionId != lastSection) Spacer(Modifier.height(12.dp))
+                } // end matrix
+
+                else -> {}
+                } // end when
+                } // end key
+                } // end for
             }
 
             // ── Empty state ──
