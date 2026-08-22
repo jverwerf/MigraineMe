@@ -35,6 +35,10 @@ export type ReportParams = {
    *  the practitioner dashboard, and only honoured after index.ts has checked
    *  the caller actually holds consent for this subject. */
   subject?: string;
+  /** Section keys, in the order they should appear. Unset means the app's
+   *  default order in full. Set by the practitioner dashboard from a saved
+   *  layout, so a nutritionist opens on food and a psychologist on sleep. */
+  sections?: string[];
   /** Metric series the client already holds. Until the metric registry moves
    *  server-side, the client passes what it charted so the PDF matches the
    *  screen exactly rather than approximating it. */

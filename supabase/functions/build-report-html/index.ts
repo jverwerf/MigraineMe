@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
   const params = body as ReportParams;
   // The list params must really be arrays — episodeIds especially, where
   // present-but-empty means "zero attacks" and absent means "no filter".
-  for (const k of ["episodeIds", "metricKeys", "disabledMetricKeys"] as const) {
+  for (const k of ["episodeIds", "metricKeys", "disabledMetricKeys", "sections"] as const) {
     if (params[k] !== undefined && !Array.isArray(params[k])) delete params[k];
   }
 

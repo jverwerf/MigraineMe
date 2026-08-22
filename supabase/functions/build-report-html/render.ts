@@ -2764,26 +2764,59 @@ export function renderReport(d: ReportData): string {
   };
 
   // Who the patient is, then how their migraines are trending, then the log
-  // itself — the order a clinician reads in.
-  add(rt("Patient profile"), profile);
-  add(rt("Narrative"), narrative);
-  add(rt("Frequency trends"), frequency);
-  add(rt("What changed"), trendsPage);
-  add(rt("Severity spread"), severitySpread);
+  // itself — the order a clinician reads in, and the order the app's own PDF
+  // has always used.
+  //
+  // A practitioner reads differently. A nutritional therapist wants food and
+  // triggers first and may never look at aura; a psychologist wants sleep and
+  // impact. So the section list is data, and params.sections can reorder it or
+  // cut it down. Unset means this default order, in full, which is what every
+  // app still asks for.
+  const SECTIONS: Record<string, { title: string; build: (d: ReportData, n: number) => string }> = {
+    profile:      { title: rt("Patient profile"),        build: profile },
+    narrative:    { title: rt("Narrative"),              build: narrative },
+    frequency:    { title: rt("Frequency trends"),       build: frequency },
+    trends:       { title: rt("What changed"),           build: trendsPage },
+    severity:     { title: rt("Severity spread"),        build: severitySpread },
+    breakdowns:   { title: rt("What you logged"),        build: breakdowns },
+    whatHappened: { title: rt("What Happened"),          build: whatHappened },
+    whatWorked:   { title: rt("What Worked"),            build: whatWorked },
+    painResponse: { title: rt("Pain response"),          build: painResponse },
+    usage:        { title: rt("Usage vs effectiveness"), build: usageVsEffectiveness },
+    whatsHelping: { title: rt("What's Helping"),         build: whatsHelping },
+    context:      { title: rt("What Were You Doing"),    build: contextPage },
+    impact:       { title: rt("How Did It Impact You"),  build: impact },
+    recommend:    { title: rt("Recommendations"),        build: recommendations },
+    treatments:   { title: rt("Treatments"),             build: treatments },
+    metrics:      { title: rt("Health metrics"),         build: metrics },
+  };
 
-  // Breakdowns can span several pages, so it counts its own.
-  add(rt("What you logged"), breakdowns);
+  const DEFAULT_ORDER = [
+    "profile", "narrative", "frequency", "trends", "severity", "breakdowns",
+    "whatHappened", "whatWorked", "painResponse", "usage", "whatsHelping",
+    "context", "impact", "recommend", "treatments", "metrics",
+  ];
 
-  add(rt("What Happened"), whatHappened);
-  add(rt("What Worked"), whatWorked);
-  add(rt("Pain response"), painResponse);
-  add(rt("Usage vs effectiveness"), usageVsEffectiveness);
-  add(rt("What's Helping"), whatsHelping);
-  add(rt("What Were You Doing"), contextPage);
-  add(rt("How Did It Impact You"), impact);
-  add(rt("Recommendations"), recommendations);
-  add(rt("Treatments"), treatments);
-  add(rt("Health metrics"), metrics);
+  // Unknown keys are dropped rather than throwing: a saved layout must not
+  // break the report when a section is renamed or retired.
+  const order = (d.params.sections?.length
+    ? d.params.sections.filter((k) => k in SECTIONS)
+    : DEFAULT_ORDER);
+
+  for (const key of order) add(SECTIONS[key].title, SECTIONS[key].build);
+
+  // The attack log is last whenever it is wanted: it counts its own pages and
+  // is the reference appendix, not a section to read past.
+  const wantsLog = !d.params.sections?.length || d.params.sections.includes("attackLog");
+  if (!wantsLog) {
+    return `<!doctype html><html><head><meta charset="utf-8">
+    <meta name="viewport" content="width=794">
+    <title>${rt("MigraineMe clinical summary")}</title>
+    <style>${STYLES}</style></head><body>
+    ${cover(d, contents)}
+    ${parts.join("")}
+    </body></html>`;
+  }
 
   const log = attackLog(d, p);
   if (log.pages) { contents.push({ title: rt("Attack log"), page: p }); parts.push(log.html); p += log.pages; }
