@@ -1509,7 +1509,7 @@ internal data class MentalSummary(
         MentalCardConfig.METRIC_NOISE_AVG -> noiseAvg?.takeIf { it != 0.0 }?.let { noiseLabel(it) } ?: "-"
         MentalCardConfig.METRIC_NOISE_HIGH -> noiseHigh?.takeIf { it != 0.0 }?.let { noiseLabel(it) } ?: "-"
         MentalCardConfig.METRIC_NOISE_LOW -> noiseLow?.takeIf { it != 0.0 }?.let { noiseLabel(it) } ?: "-"
-        MentalCardConfig.METRIC_BRIGHTNESS -> brightness?.takeIf { it != 0.0 }?.let { String.format("%.0f", it) } ?: "-"
+        MentalCardConfig.METRIC_BRIGHTNESS -> brightness?.takeIf { it != 0.0 }?.let { String.format("%.0f%%", it) } ?: "-"
         MentalCardConfig.METRIC_VOLUME -> volumePct?.takeIf { it != 0.0 }?.let { "${it.toInt()}%" } ?: "-"
         MentalCardConfig.METRIC_DARK_MODE -> darkModeHours?.takeIf { it != 0.0 }?.let { String.format("%.1fh", it) } ?: "-"
         MentalCardConfig.METRIC_UNLOCKS -> unlockCount?.takeIf { it != 0 }?.let { "$it" } ?: "-"

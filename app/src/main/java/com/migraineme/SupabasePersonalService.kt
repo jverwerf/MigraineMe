@@ -115,6 +115,10 @@ class SupabasePersonalService(context: Context) {
         val user_id: String,
         val sampled_at: String,
         val value: Int,
+        // Always true: the collector refuses to sample a sleeping phone. The
+        // flag also tells the aggregate that `value` is a 0-100 percentage,
+        // where rows without it hold the old raw 0-255 Android setting.
+        val screen_on: Boolean = true,
         val source: String = "android"
     )
 
@@ -124,6 +128,7 @@ class SupabasePersonalService(context: Context) {
         val sampled_at: String,
         val value_pct: Int,
         val stream_type: String? = "media",
+        val screen_on: Boolean = true,
         val source: String = "android"
     )
 
@@ -132,6 +137,7 @@ class SupabasePersonalService(context: Context) {
         val user_id: String,
         val sampled_at: String,
         val is_dark: Boolean,
+        val screen_on: Boolean = true,
         val source: String = "android"
     )
 

@@ -59,7 +59,7 @@ export const METRICS: MetricDef[] = [
   { key: "screen_time", label: "Screen time",   unit: "h",  color: "#64B5F6", table: "screen_time_daily",        column: "total_hours",   group: "Cognitive" },
   { key: "late_screen", label: "Late screen",   unit: "h",  color: "#FF7043", table: "screen_time_late_night",   column: "value_hours",   group: "Cognitive" },
   { key: "noise",       label: "Noise",         unit: "",   color: "#A1887F", table: "ambient_noise_index_daily", column: "day_mean_lmean", group: "Cognitive" },
-  { key: "brightness",  label: "Brightness",    unit: "",   color: "#FFD54F", table: "phone_brightness_daily",   column: "value_mean",    group: "Cognitive" },
+  { key: "brightness",  label: "Brightness",    unit: "%",  color: "#FFD54F", table: "phone_brightness_daily",   column: "value_mean",    group: "Cognitive" },
   { key: "volume",      label: "Phone volume",  unit: "%",  color: "#4DB6AC", table: "phone_volume_daily",       column: "value_mean_pct", group: "Cognitive" },
   { key: "unlocks",     label: "Phone unlocks", unit: "",   color: "#90A4AE", table: "phone_unlock_daily",       column: "value_count",   group: "Cognitive" },
   { key: "dark_mode",   label: "Dark mode",     unit: "h",  color: "#546E7A", table: "phone_dark_mode_daily",    column: "value_hours",   group: "Cognitive" },

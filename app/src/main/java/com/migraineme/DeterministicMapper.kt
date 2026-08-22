@@ -152,7 +152,9 @@ object DeterministicMapper {
         "SpO2 high" to 100.0, "SpO2 low" to 95.0,
         // Sensory (phone)
         "Brightness high" to 80.0, "Brightness low" to 20.0,
-        "Dark mode high" to 14.0, "Dark mode low" to 2.0,
+        // Hours of screen-on time with dark mode active. Was 14/2 back when the
+        // metric was a share of the whole calendar day, which no phone can reach.
+        "Dark mode high" to 4.0, "Dark mode low" to 0.5,
         "Phone unlocks high" to 150.0, "Phone unlocks low" to 10.0,
         "Volume high" to 80.0, "Volume low" to 20.0,
     )

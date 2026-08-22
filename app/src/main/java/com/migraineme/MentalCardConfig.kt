@@ -69,7 +69,7 @@ object MentalCardConfig {
         METRIC_SCREEN_TIME -> "h"
         METRIC_LATE_SCREEN_TIME -> "h"
         METRIC_NOISE_HIGH, METRIC_NOISE_AVG, METRIC_NOISE_LOW -> ""
-        METRIC_BRIGHTNESS -> ""
+        METRIC_BRIGHTNESS -> "%"
         METRIC_VOLUME -> "%"
         METRIC_DARK_MODE -> "h"
         METRIC_UNLOCKS -> ""

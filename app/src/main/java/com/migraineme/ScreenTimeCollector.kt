@@ -1,6 +1,7 @@
 package com.migraineme
 
 import android.app.AppOpsManager
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Build
@@ -56,34 +57,10 @@ object ScreenTimeCollector {
 
             Log.d(TAG, "Querying screen time for $date ($startMillis to $endMillis)")
 
-            // queryAndAggregateUsageStats merges the multiple raw buckets per package
-            // that queryUsageStats returns, so each app is counted once.
-            val aggregated = usageStatsManager.queryAndAggregateUsageStats(
-                startMillis,
-                endMillis
-            )
+            val measured = measureInteractiveTime(usageStatsManager, startMillis, endMillis)
+            Log.d(TAG, "Total screen time for $date: ${measured.totalSeconds}s across ${measured.appCount} apps")
 
-            if (aggregated.isNullOrEmpty()) {
-                Log.d(TAG, "No usage stats found for $date")
-                return ScreenTimeData(date, 0, 0)
-            }
-
-            // Sum up total foreground time across all apps (one entry per package)
-            var totalTimeInForeground = 0L
-            var appCount = 0
-
-            for ((_, usageStats) in aggregated) {
-                val timeInForeground = usageStats.totalTimeInForeground
-                if (timeInForeground > 0) {
-                    totalTimeInForeground += timeInForeground
-                    appCount++
-                }
-            }
-
-            val totalSeconds = (totalTimeInForeground / 1000).toInt()
-            Log.d(TAG, "Total screen time for $date: ${totalSeconds}s across $appCount apps")
-
-            return ScreenTimeData(date, totalSeconds, appCount)
+            return ScreenTimeData(date, measured.totalSeconds, measured.appCount)
 
         } catch (e: Exception) {
             Log.e(TAG, "Error getting screen time for $date", e)
@@ -124,38 +101,95 @@ object ScreenTimeCollector {
 
             Log.d(TAG, "Querying late-night screen time for $date (22:00-06:00): $startMillis to $endMillis")
 
-            // queryAndAggregateUsageStats merges the multiple raw buckets per package
-            // into one entry each, aggregated strictly between start/end millis.
-            val aggregated = usageStatsManager.queryAndAggregateUsageStats(
-                startMillis,
-                endMillis
-            )
+            val measured = measureInteractiveTime(usageStatsManager, startMillis, endMillis)
+            Log.d(TAG, "Late-night screen time for $date: ${measured.totalSeconds}s across ${measured.appCount} apps")
 
-            if (aggregated.isNullOrEmpty()) {
-                Log.d(TAG, "No late-night usage stats for $date")
-                return ScreenTimeData(date, 0, 0)
-            }
-
-            var totalTimeInForeground = 0L
-            var appCount = 0
-
-            for ((_, usageStats) in aggregated) {
-                val timeInForeground = usageStats.totalTimeInForeground
-                if (timeInForeground > 0) {
-                    totalTimeInForeground += timeInForeground
-                    appCount++
-                }
-            }
-
-            val totalSeconds = (totalTimeInForeground / 1000).toInt()
-            Log.d(TAG, "Late-night screen time for $date: ${totalSeconds}s across $appCount apps")
-
-            return ScreenTimeData(date, totalSeconds, appCount)
+            return ScreenTimeData(date, measured.totalSeconds, measured.appCount)
 
         } catch (e: Exception) {
             Log.e(TAG, "Error getting late-night screen time for $date", e)
             return null
         }
+    }
+
+    // ─── Interactive-time measurement ────────────────────────────────────────
+
+    private data class Measured(val totalSeconds: Int, val appCount: Int)
+
+    // UsageEvents.Event constants used as literals so the code compiles and runs
+    // on API levels where the newer names are not available.
+    private const val EV_ACTIVITY_RESUMED = 1        // MOVE_TO_FOREGROUND
+    private const val EV_ACTIVITY_PAUSED = 2         // MOVE_TO_BACKGROUND
+    private const val EV_SCREEN_NON_INTERACTIVE = 16
+    private const val EV_KEYGUARD_SHOWN = 17
+    private const val EV_ACTIVITY_STOPPED = 23
+    private const val EV_DEVICE_SHUTDOWN = 26
+
+    /** A single foreground stretch is never credited more than this. */
+    private const val MAX_INTERVAL_MS = 2L * 60 * 60 * 1000
+
+    /** How far before the window to start reading events, to catch a session
+     *  that was already in the foreground when the window opened. */
+    private const val LOOKBACK_MS = 12L * 60 * 60 * 1000
+
+    /**
+     * Measure real screen-on foreground time in [startMillis, endMillis).
+     *
+     * Replaces summing `UsageStats.totalTimeInForeground` across packages, which
+     * over-counted badly: it credits apps that hold the foreground with the
+     * screen off (music, navigation), it counts overlapping sessions twice, and
+     * its buckets bleed across day boundaries. On live data that produced days
+     * of 19.7 hours.
+     *
+     * Here at most one interval is open at a time — a new ACTIVITY_RESUMED closes
+     * the previous app's interval — and the screen going off, the keyguard
+     * appearing or the device shutting down closes it too. Intervals are clamped
+     * to the window, so nothing outside the day can leak in.
+     */
+    private fun measureInteractiveTime(
+        usageStatsManager: UsageStatsManager,
+        startMillis: Long,
+        endMillis: Long
+    ): Measured {
+        val perPackage = mutableMapOf<String, Long>()
+        var openPackage: String? = null
+        var openSince = 0L
+
+        fun close(at: Long) {
+            val pkg = openPackage ?: return
+            openPackage = null
+            val from = maxOf(openSince, startMillis)
+            val to = minOf(at, endMillis)
+            var duration = to - from
+            if (duration <= 0) return
+            if (duration > MAX_INTERVAL_MS) duration = MAX_INTERVAL_MS
+            perPackage[pkg] = (perPackage[pkg] ?: 0L) + duration
+        }
+
+        val events = usageStatsManager.queryEvents(startMillis - LOOKBACK_MS, endMillis)
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val ts = event.timeStamp
+            when (event.eventType) {
+                EV_ACTIVITY_RESUMED -> {
+                    close(ts)
+                    openPackage = event.packageName
+                    openSince = ts
+                }
+                EV_ACTIVITY_PAUSED, EV_ACTIVITY_STOPPED -> {
+                    if (event.packageName == openPackage) close(ts)
+                }
+                EV_SCREEN_NON_INTERACTIVE, EV_KEYGUARD_SHOWN, EV_DEVICE_SHUTDOWN -> close(ts)
+            }
+        }
+        close(endMillis)
+
+        val totalMs = perPackage.values.sum()
+        return Measured(
+            totalSeconds = (totalMs / 1000).toInt(),
+            appCount = perPackage.count { it.value > 0 }
+        )
     }
 
     /**

@@ -407,7 +407,7 @@ private fun formatMentalEntryValue(table: String, obj: org.json.JSONObject): Str
         }
         "phone_brightness_daily" -> {
             val v = obj.optDouble("value_mean")
-            if (!v.isNaN()) String.format("%.0f", v) else "-"
+            if (!v.isNaN()) String.format("%.0f%%", v) else "-"
         }
         "phone_volume_daily" -> {
             val v = obj.optDouble("value_mean_pct")

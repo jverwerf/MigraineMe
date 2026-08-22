@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.media.AudioManager
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import java.time.LocalDate
@@ -16,16 +17,17 @@ import java.time.ZoneId
  * Point-in-time snapshot of phone behavioral signals.
  */
 data class PhoneBehaviorSnapshot(
-    val brightness: Int,          // 0-255 raw Android brightness
+    val brightnessPct: Int,       // 0-100 screen brightness as percentage
     val volumePct: Int,           // 0-100 media volume as percentage
     val isDarkMode: Boolean,      // true = dark mode active
-    val unlockCount: Int          // cumulative unlock count for the day so far
+    val unlockCount: Int,         // cumulative unlock count for the day so far
+    val screenOn: Boolean         // false = phone asleep; do not store screen signals
 )
 
 /**
  * Reads phone behavioral signals from Android system APIs.
  *
- * - Brightness: Settings.System.SCREEN_BRIGHTNESS (0-255)
+ * - Brightness: Settings.System.SCREEN_BRIGHTNESS, converted to a 0-100 percentage
  * - Volume: AudioManager media stream volume as percentage
  * - Dark mode: Configuration.uiMode night mask
  * - Unlock count: UsageStatsManager KEYGUARD_HIDDEN events (requires PACKAGE_USAGE_STATS)
@@ -42,18 +44,20 @@ object PhoneBehaviorCollector {
      */
     fun collectSnapshot(context: Context): PhoneBehaviorSnapshot? {
         return try {
-            val brightness = getBrightness(context)
+            val screenOn = isScreenOn(context)
+            val brightnessPct = getBrightnessPct(context)
             val volumePct = getMediaVolumePct(context)
             val isDark = isDarkMode(context)
             val unlocks = getUnlockCountToday(context)
 
-            Log.d(TAG, "Snapshot: brightness=$brightness, volume=$volumePct%, dark=$isDark, unlocks=$unlocks")
+            Log.d(TAG, "Snapshot: screenOn=$screenOn, brightness=$brightnessPct%, volume=$volumePct%, dark=$isDark, unlocks=$unlocks")
 
             PhoneBehaviorSnapshot(
-                brightness = brightness,
+                brightnessPct = brightnessPct,
                 volumePct = volumePct,
                 isDarkMode = isDark,
-                unlockCount = unlocks
+                unlockCount = unlocks,
+                screenOn = screenOn
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error collecting phone behavior snapshot", e)
@@ -64,19 +68,65 @@ object PhoneBehaviorCollector {
     // ─── Brightness ──────────────────────────────────────────────────────────
 
     /**
-     * Read current screen brightness (0-255).
-     * Falls back to 128 if adaptive brightness is on and manual value is unavailable.
+     * Read current screen brightness as a percentage (0-100).
+     *
+     * Settings.System.SCREEN_BRIGHTNESS is a raw panel value whose maximum is
+     * device-specific (255 on most, higher on some OEM builds), so it is scaled
+     * by the platform's own `config_screenBrightnessSettingMaximum`. Storing the
+     * raw value is what made a full-brightness reading render as "255%" and put
+     * every ordinary daytime reading above the 80 "brightness high" threshold.
      */
-    fun getBrightness(context: Context): Int {
+    fun getBrightnessPct(context: Context): Int {
         return try {
-            Settings.System.getInt(
+            val raw = Settings.System.getInt(
                 context.contentResolver,
                 Settings.System.SCREEN_BRIGHTNESS,
-                128 // default if unreadable
+                -1
             )
+            if (raw < 0) return 50 // unreadable: mid-scale, same as the old 128/255
+            val max = maxBrightnessSetting()
+            ((raw.toFloat() / max) * 100f).toInt().coerceIn(0, 100)
         } catch (e: Exception) {
             Log.w(TAG, "Could not read brightness", e)
-            128
+            50
+        }
+    }
+
+    /**
+     * The device's maximum value for SCREEN_BRIGHTNESS. Read from the platform
+     * integer resource; 255 when that lookup is unavailable.
+     */
+    private fun maxBrightnessSetting(): Int {
+        return try {
+            val res = android.content.res.Resources.getSystem()
+            val id = res.getIdentifier(
+                "config_screenBrightnessSettingMaximum", "integer", "android"
+            )
+            val max = if (id != 0) res.getInteger(id) else 0
+            if (max > 0) max else 255
+        } catch (e: Exception) {
+            255
+        }
+    }
+
+    // ─── Screen state ────────────────────────────────────────────────────────
+
+    /**
+     * True when the screen is on. Brightness, volume and dark mode are only
+     * meaningful while the phone is being used: sampling hourly around the
+     * clock averaged 8-10 sleeping readings into every day, which pulled the
+     * daily brightness mean under the "brightness low" threshold before the
+     * user had touched the phone, and made a scheduled night theme look like
+     * a full day of dark mode.
+     */
+    fun isScreenOn(context: Context): Boolean {
+        return try {
+            val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                ?: return true
+            pm.isInteractive
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not read screen state", e)
+            true
         }
     }
 

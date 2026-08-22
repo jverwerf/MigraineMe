@@ -76,12 +76,19 @@ class PhoneBehaviorSyncWorker(
             var ok = 0
             var fail = 0
 
+            // Screen signals are only stored while the phone is awake. A sample
+            // taken with the screen off records the adaptive-brightness floor and
+            // the scheduled night theme, not the user's behaviour.
+            if (!snapshot.screenOn) {
+                Log.d(TAG, "Screen off — storing unlock count only")
+            }
+
             // Insert brightness sample
-            if ("phone_brightness_daily" in enabledMetrics) {
+            if (snapshot.screenOn && "phone_brightness_daily" in enabledMetrics) {
                 runCatching {
-                    svc.insertPhoneBrightnessSample(access, userId, now, snapshot.brightness)
+                    svc.insertPhoneBrightnessSample(access, userId, now, snapshot.brightnessPct)
                     ok++
-                    Log.d(TAG, "Inserted brightness sample: ${snapshot.brightness}")
+                    Log.d(TAG, "Inserted brightness sample: ${snapshot.brightnessPct}%")
                 }.onFailure { e ->
                     fail++
                     Log.e(TAG, "Failed to insert brightness sample", e)
@@ -89,7 +96,7 @@ class PhoneBehaviorSyncWorker(
             }
 
             // Insert volume sample
-            if ("phone_volume_daily" in enabledMetrics) {
+            if (snapshot.screenOn && "phone_volume_daily" in enabledMetrics) {
                 runCatching {
                     svc.insertPhoneVolumeSample(access, userId, now, snapshot.volumePct)
                     ok++
@@ -101,7 +108,7 @@ class PhoneBehaviorSyncWorker(
             }
 
             // Insert dark mode sample
-            if ("phone_dark_mode_daily" in enabledMetrics) {
+            if (snapshot.screenOn && "phone_dark_mode_daily" in enabledMetrics) {
                 runCatching {
                     svc.insertPhoneDarkModeSample(access, userId, now, snapshot.isDarkMode)
                     ok++
