@@ -86,6 +86,10 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
           apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
           Authorization: authHeader,
+          // practitioner_can_read is false without this, by design: it is what
+          // keeps client rows out of the practitioner's own app, where the
+          // same RLS policies would otherwise merge them into her journal.
+          "x-practitioner-view": "1",
         },
         body: JSON.stringify({ target_user: params.subject, required_scope: "attacks" }),
       },

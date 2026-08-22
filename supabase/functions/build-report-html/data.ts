@@ -240,6 +240,15 @@ const riskNum = (raw: unknown): number | null =>
  *  to every /rest/v1/ request the client makes. PostgREST ANDs repeated column
  *  filters, so this can only ever narrow a query, never widen one. */
 function scopedFetch(subject: string): typeof fetch {
+  // The practitioner policies only fire when the request carries
+  // x-practitioner-view: 1 (see migration 20260822240000). Without it the
+  // database answers as it would to the app: the caller's own rows only, and
+  // a subject filter on top of that returns nothing.
+  const withView = (base: HeadersInit | undefined, init?: RequestInit): RequestInit => {
+    const h = new Headers(init?.headers ?? base);
+    h.set("x-practitioner-view", "1");
+    return { ...init, headers: h };
+  };
   return (input: Request | URL | string, init?: RequestInit) => {
     const href = typeof input === "string"
       ? input
@@ -248,8 +257,8 @@ function scopedFetch(subject: string): typeof fetch {
     const u = new URL(href);
     u.searchParams.append("user_id", `eq.${subject}`);
     return typeof input === "string" || input instanceof URL
-      ? fetch(u.toString(), init)
-      : fetch(new Request(u.toString(), input), init);
+      ? fetch(u.toString(), withView(undefined, init))
+      : fetch(new Request(u.toString(), input), withView(input.headers, init));
   };
 }
 
