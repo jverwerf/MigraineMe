@@ -129,6 +129,7 @@ object BrainyLogManifest {
         "mis_travel" to R.drawable.brainy_mis_travel,
         "mis_walk" to R.drawable.brainy_mis_walk,
         "mis_work" to R.drawable.brainy_mis_work,
+        "prod_background_pain" to R.drawable.brainy_prod_background_pain,
         "prod_brainfog" to R.drawable.brainy_prod_brainfog,
         "prod_depression" to R.drawable.brainy_prod_depression,
         "prod_difficulty_sleeping" to R.drawable.brainy_prod_difficulty_sleeping,
@@ -636,6 +637,7 @@ object BrainyLogManifest {
             "weakness" to "sym_weakness",
         ),
         "prodrome" to mapOf(
+            "background_pain" to "prod_background_pain",
             "brainfog" to "prod_brainfog",
             "depression" to "prod_depression",
             "difficulty_focusing" to "prod_brainfog",
@@ -1227,6 +1229,7 @@ object BrainyLogManifest {
             Regex("sleep") to "mis_napping",
         ),
         "prodrome" to listOf(
+            Regex("background pain|background dizziness|background ache") to "prod_background_pain",
             Regex("strange feeling|unease|odd feeling|foreboding|impending") to "prod_unease",
             Regex("headache") to "sym_migraine_starburst",
             Regex("sensitivity to light|light sensit|photophob") to "prod_light",
@@ -1364,9 +1367,6 @@ object BrainyLogManifest {
             Regex("head turn|head movement|quick head") to "vm_head_movement_sudden",
             Regex("rolling in bed|roll over") to "vm_rolling_in_bed",
             Regex("skipped meal|missed meal|hypoglycemia|hypoglycaemia|fasting") to "trig_skipped_meals",
-            // "Wake time early" / "Wake time late" carry no icon_key, and the
-            // alias table only covers the bare key, so both fell through to the
-            // generic fallback despite the art existing.
             Regex("wake time|wake.?up time") to "trig_wake_time",
             Regex("hrv|heart rate variability") to "metric_hrv",
             Regex("hr zone|heart rate zone") to "trig_hr_zones",
