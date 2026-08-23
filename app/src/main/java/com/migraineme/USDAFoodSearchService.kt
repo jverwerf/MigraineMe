@@ -85,10 +85,22 @@ class USDAFoodSearchService(private val context: Context) {
     }
 
     /**
-     * Search for foods — USDA API primary, local Supabase DB fallback on rate limit.
+     * Search for foods.
+     *
+     * English UI: USDA API primary, local Supabase DB fallback on rate limit.
+     * Other languages: the local DB first, via search_usda_foods(lang), which
+     * searches the translated names in usda_foods_i18n and returns them in the
+     * user's language (with the English name as descriptionEn). Only when that
+     * finds nothing do we hit USDA, so an English word or a brand still works.
      */
     suspend fun searchFoods(query: String): List<USDAFoodSearchResult> = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
+
+        val lang = LangPrefs.lang.value.code
+        if (lang != "en") {
+            val localized = searchLocalFoods(query, lang)
+            if (localized.isNotEmpty()) return@withContext localized
+        }
 
         val result: List<USDAFoodSearchResult> = try {
             val url = "$BASE_URL/foods/search?api_key=$API_KEY" +
@@ -143,15 +155,18 @@ class USDAFoodSearchService(private val context: Context) {
     }
 
     /**
-     * Fallback: search local Supabase usda_foods table using RPC.
+     * Search the local Supabase usda_foods table using the search_usda_foods RPC.
+     * With lang != "en" the RPC searches usda_foods_i18n and returns the name in
+     * that language; it falls back to English itself when nothing matches.
      */
-    private fun searchLocalFoods(query: String): List<USDAFoodSearchResult> {
+    private fun searchLocalFoods(query: String, lang: String = "en"): List<USDAFoodSearchResult> {
         try {
             val token = SessionStore.readAccessToken(context) ?: return emptyList()
             val rpcUrl = "${BuildConfig.SUPABASE_URL}/rest/v1/rpc/search_usda_foods"
             val body = org.json.JSONObject().apply {
                 put("search_query", query)
                 put("result_limit", 20)
+                put("lang", lang)
             }
 
             val request = Request.Builder()
@@ -181,6 +196,7 @@ class USDAFoodSearchService(private val context: Context) {
                     USDAFoodSearchResult(
                         fdcId = obj.getInt("fdc_id"),
                         description = obj.getString("description"),
+                        descriptionEn = obj.optString("description_en").takeIf { it.isNotBlank() },
                         brandName = null,
                         servingSize = if (obj.isNull("serving_size")) null else obj.optDouble("serving_size").takeIf { !it.isNaN() },
                         servingSizeUnit = if (obj.isNull("serving_size_unit")) null else obj.optString("serving_size_unit"),
@@ -1121,10 +1137,13 @@ data class NutritionDayData(
     val values: Map<String, Float> = emptyMap()
 )
 
-// Search result for display
+// Search result for display. description is in the user's language when it came
+// from usda_foods_i18n; descriptionEn is then the USDA name (use it for the risk
+// classifier so its cache is shared across languages).
 data class USDAFoodSearchResult(
     val fdcId: Int,
     val description: String,
+    val descriptionEn: String? = null,
     val brandName: String?,
     val servingSize: Double?,
     val servingSizeUnit: String?,

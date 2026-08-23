@@ -154,7 +154,7 @@ fun MonitorNutritionScreen(
                     val classifier = FoodRiskClassifierService()
                     val risks = mutableMapOf<Int, FoodRiskResult>()
                     for (food in searchResults) {
-                        try { risks[food.fdcId] = classifier.classify(token, food.description) } catch (_: Exception) {}
+                        try { risks[food.fdcId] = classifier.classify(token, food.descriptionEn ?: food.description) } catch (_: Exception) {}
                     }
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { foodRisks = risks; isClassifyingSearchRisks = false }
                 }
@@ -182,7 +182,7 @@ fun MonitorNutritionScreen(
                 searchResults.forEach { food ->
                     try {
                         val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                            classifier.classify(token, food.description)
+                            classifier.classify(token, food.descriptionEn ?: food.description)
                         }
                         risks[food.fdcId] = result
                         foodRisks = risks.toMap()
@@ -271,7 +271,7 @@ fun MonitorNutritionScreen(
                 try {
                     val token = authState.accessToken ?: return@launch
                     val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        FoodRiskClassifierService().classify(token, food.description)
+                        FoodRiskClassifierService().classify(token, food.descriptionEn ?: food.description)
                     }
                     selectedFoodRisks = result
                 } catch (e: Exception) {
