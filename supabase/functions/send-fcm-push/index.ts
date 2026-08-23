@@ -174,58 +174,31 @@ async function sendFcmMessage(
 
 type CheckinTarget = { token: string; lang: unknown };
 
+// Selection happens in Postgres (evening_checkin_targets, migration
+// 20260823080000). It used to be done here: pull every profile holding a token,
+// then filter user_location_daily with .in("user_id", [...all of them]). Once the
+// token count passed ~330 that URL crossed the gateway's request-line limit and
+// the call failed outright; the error was never inspected, so the map came back
+// empty and NOBODY had ever received an 8pm check-in on MigraineMe. The same
+// select was also silently capped at 1000 rows well before that. Both faults are
+// structural in the client-side join, so the join moved to the database.
 async function getEveningCheckinTargets(
   supabase: any
 ): Promise<CheckinTarget[]> {
-  // Get all profiles with FCM tokens (+ language, so the copy renders per recipient)
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("user_id, fcm_token, lang")
-    .not("fcm_token", "is", null);
+  const { data, error } = await supabase.rpc("evening_checkin_targets", {
+    target_hour: 20,
+  });
 
-  if (error || !profiles || profiles.length === 0) return [];
-
-  const userIds = profiles.map((p: any) => p.user_id);
-
-  // Get most recent timezone per user from user_location_daily
-  const { data: locData } = await supabase
-    .from("user_location_daily")
-    .select("user_id, timezone, date")
-    .in("user_id", userIds)
-    .not("timezone", "is", null)
-    .order("date", { ascending: false });
-
-  // Build timezone map (most recent per user)
-  const tzMap: Record<string, string> = {};
-  if (locData) {
-    for (const row of locData) {
-      if (!tzMap[row.user_id]) {
-        tzMap[row.user_id] = row.timezone;
-      }
-    }
+  if (error) {
+    // Loud on purpose. The silent-null version of this cost every user the
+    // feature for as long as it shipped.
+    console.error("evening_checkin_targets failed:", error.message);
+    return [];
   }
 
-  // Filter to users where local hour = 20 (8pm)
-  const now = new Date();
-  const tokens: CheckinTarget[] = [];
-
-  for (const profile of profiles) {
-    const tz = tzMap[profile.user_id];
-    if (!tz || !profile.fcm_token) continue;
-
-    try {
-      const localTime = new Date(
-        now.toLocaleString("en-US", { timeZone: tz })
-      );
-      if (localTime.getHours() === 20) {
-        tokens.push({ token: profile.fcm_token, lang: profile.lang });
-      }
-    } catch {
-      // Invalid timezone, skip
-    }
-  }
-
-  return tokens;
+  return ((data ?? []) as Array<{ token: string | null; lang: unknown }>)
+    .filter((r) => !!r.token)
+    .map((r) => ({ token: r.token as string, lang: r.lang }));
 }
 
 // The evening check-in was a data-only push: Android rendered it locally,
