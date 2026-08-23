@@ -942,6 +942,69 @@ function attackLog(d: ReportData, startPage: number): { html: string; pages: num
   return { html, pages: chunks.length };
 }
 
+/**
+ * Every day of each month accounted for: migraine days, pain days, free days.
+ *
+ * Bars are the full month's height so a short or part month cannot read as a
+ * good month, and the free count sits above each bar because that is the
+ * number a practitioner is looking for.
+ * Spec: docs/day-classification-spec.md
+ */
+function dayMixByMonth(d: ReportData): Array<{
+  key: string; migraine: number; pain: number; free: number; daysInMonth: number;
+}> {
+  const DAY = 86_400_000;
+  const dayKey = (dt: Date) => Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate());
+
+  // Every date an attack spans. An open attack runs to today.
+  const migraineDays = new Set<number>();
+  for (const m of d.migraines) {
+    const start = parseDate(m.start_at);
+    if (!start) continue;
+    const end = parseDate(m.ended_at ?? "") ?? new Date();
+    let cur = dayKey(start);
+    const last = dayKey(end);
+    let guard = 0;
+    while (cur <= last && guard < 62) { migraineDays.add(cur); cur += DAY; guard++; }
+  }
+
+  // Days carrying a Background pain log. An attack the same day wins.
+  const painDays = new Set<number>();
+  for (const r of d.backgroundPain) {
+    const at = parseDate(r.start_at ?? "");
+    if (at) painDays.add(dayKey(at));
+  }
+  if (!migraineDays.size && !painDays.size) return [];
+
+  // The range the report was asked for, clipped to days that could be logged.
+  const all = [...migraineDays, ...painDays];
+  const firstLogged = Math.min(...all);
+  const today = dayKey(new Date());
+  const from = d.params.from ? Math.max(dayKey(parseDate(d.params.from)!), firstLogged) : firstLogged;
+  const to = d.params.to ? Math.min(dayKey(parseDate(d.params.to)!), today) : today;
+
+  const out = new Map<string, { key: string; migraine: number; pain: number; free: number; daysInMonth: number }>();
+  for (let cur = from; cur <= to; cur += DAY) {
+    const dt = new Date(cur);
+    const key = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}`;
+    let row = out.get(key);
+    if (!row) {
+      row = {
+        key,
+        migraine: 0,
+        pain: 0,
+        free: 0,
+        daysInMonth: new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + 1, 0)).getUTCDate(),
+      };
+      out.set(key, row);
+    }
+    if (migraineDays.has(cur)) row.migraine++;
+    else if (painDays.has(cur)) row.pain++;
+    else row.free++;
+  }
+  return [...out.values()].sort((a, b) => (a.key < b.key ? -1 : 1));
+}
+
 // ── frequency trends ─────────────────────────────────────────────
 function frequency(d: ReportData, pageNo: number): string {
   // The old generator's floor: below three attacks a "trend" is noise.
@@ -1015,6 +1078,32 @@ function frequency(d: ReportData, pageNo: number): string {
       Math.floor((v / Math.max(1, max)) * ramp.length))];
   };
 
+  // Every day of the month accounted for, not just the attacks.
+  const mix = dayMixByMonth(d);
+  const MIX = { migraine: "#D98F9A", pain: "#EFC98A", free: "#CFE3DA" };
+  const stackedMonths = (
+    rows: ReturnType<typeof dayMixByMonth>,
+    fmt: (k: string) => string,
+  ) => {
+    const H = 62;
+    const seg = (n: number, span: number, color: string) => n <= 0 ? ""
+      : `<i style="display:block;height:${Math.max(1, Math.round((n / span) * H))}px;background:${color}"></i>`;
+    return `<div class="card"><div class="cols">
+      ${rows.map((r) => {
+        const span = Math.max(r.daysInMonth, 1);
+        return `<div>
+          <span>${r.free}</span>
+          <i style="height:${H}px;border-radius:3px;background:#F0EEF5;overflow:hidden;
+            display:flex;flex-direction:column;justify-content:flex-end">
+            ${seg(r.free, span, MIX.free)}${seg(r.pain, span, MIX.pain)}${seg(r.migraine, span, MIX.migraine)}
+          </i>
+          <span>${esc(fmt(r.key))}</span></div>`;
+      }).join("")}
+    </div>
+    <p class="meta">${rt("Free days above each bar. Bars are the whole month: free, then pain days, then attack days.")}</p>
+    </div>`;
+  };
+
   const cols = (entries: [string, number][], _color: string, fmt = (k: string) => k) => {
     chartNo += 1;
     const max = Math.max(1, ...entries.map(([, n]) => n));
@@ -1057,7 +1146,9 @@ function frequency(d: ReportData, pageNo: number): string {
       <div>${sub(C.pink, rt("By day of week"))}
         ${cols(days.map((dn, i) => [dn, counts[i]] as [string, number]), "#CE93D8", (k) => rt(k))}</div>
       <div>${sub(C.pink, rt("Per month"))}
-        ${cols(months, "#9575CD", monthLabel)}</div>
+        ${mix.length
+          ? stackedMonths(mix, monthLabel)
+          : cols(months, "#9575CD", monthLabel)}</div>
       ${weeks.length >= 3 ? `<div>${sub(C.pink, rt("Last {0} weeks", weeks.length))}
         ${weeks.length < 12
           ? `<p class="meta" style="margin:-4px 0 4px">${rt("Only {0} weeks of data in this record", weeks.length)}</p>`

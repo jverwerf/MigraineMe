@@ -15,6 +15,18 @@ import { exposureRank } from "../_shared/exposureScale.ts";
 export const WINDOW_BEFORE_DAYS = 3;
 export const WINDOW_AFTER_DAYS = 2;
 
+/**
+ * Labels that mean "Background pain". The pool item is locked so it cannot be
+ * deleted, but it CAN be renamed, and historical rows keep the label they were
+ * logged with. So match the seeded labels for every app in the family,
+ * case-insensitively, rather than one exact string.
+ */
+const BACKGROUND_PAIN_LABELS = new Set([
+  "background pain",       // MigraineMe, MeSeries
+  "background dizziness",  // VertigoMe
+]);
+
+
 export type ReportParams = {
   from?: string;            // full ISO timestamp with offset, inclusive lower bound
   to?: string;              // full ISO timestamp with offset, EXCLUSIVE upper bound
@@ -133,6 +145,8 @@ export type ReportData = {
   migraines: Migraine[];
   triggers: ChildRow[];
   prodromes: ChildRow[];
+  /** Standalone Background pain logs: days that hurt with no attack. */
+  backgroundPain: Array<{ type: string | null; start_at: string | null }>;
   medicines: ChildRow[];
   reliefs: ChildRow[];
   activities: ChildRow[];
@@ -357,6 +371,18 @@ export async function loadReportData(
   if (params.to) amq = amq.lt("start_at", params.to);
   const { data: antRows } = await amq;
   const anticipatedMissed = (antRows ?? []) as ReportData["anticipatedMissed"];
+
+  // Background pain is user-scoped, not attack-scoped: it exists precisely
+  // because there was no attack that day. Same shape as the anticipated
+  // misses query above. Spec: docs/day-classification-spec.md
+  let bpq = sb.from("prodromes")
+    .select("id,type,start_at")
+    .order("start_at", { ascending: false });
+  if (params.from) bpq = bpq.gte("start_at", params.from);
+  if (params.to) bpq = bpq.lt("start_at", params.to);
+  const { data: bpRows } = await bpq;
+  const backgroundPain = ((bpRows ?? []) as Array<{ type: string | null; start_at: string | null }>)
+    .filter((r) => BACKGROUND_PAIN_LABELS.has((r.type ?? "").trim().toLowerCase()));
 
   const symptoms = (await childrenFor(
     sb, "symptoms", ids, "id,migraine_id,type,severity,start_at",
@@ -800,6 +826,7 @@ export async function loadReportData(
     migraines,
     triggers, prodromes, medicines, reliefs, activities, locations, missedActivities,
     anticipatedMissed,
+    backgroundPain,
     symptoms, painPoints, auraZones,
     correlations: (corr ?? []) as CorrelationStat[],
     treatmentTiming: (timing ?? []) as ReportData["treatmentTiming"],
