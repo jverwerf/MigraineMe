@@ -35,6 +35,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
     val vm: InsightsViewModel = if (owner != null) viewModel(owner) else viewModel()
     val ws by vm.weeklySummary.collectAsState()
     val streak by vm.streakSummary.collectAsState()
+    val thisMonth by vm.freeDaysThisMonth.collectAsState()
     var showInfo by remember { mutableStateOf(false) }
 
     // Trigger load if we have an access token; mirrors InsightsScreen pattern.
@@ -92,6 +93,43 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
 
             // Attack-free streak. Positive only: below 2 days the row simply isn't there,
             // so an attack day never shows a zero.
+            // Free days this calendar month, beside the streak. They answer
+            // different questions: the streak is "how long since the last one",
+            // this is "how was this month". Practitioners work in months.
+            // Spec: docs/day-classification-spec.md
+            thisMonth?.let { mix ->
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(DayMixColors.Free.copy(alpha = 0.12f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .border(1.dp, DayMixColors.Free.copy(alpha = 0.30f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(11.dp)
+                ) {
+                    Text(
+                        "${mix.freeDays}",
+                        color = DayMixColors.Free,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Column {
+                        Text(
+                            if (mix.isPartial) t("free days so far this month") else t("free days this month"),
+                            color = AppTheme.BodyTextColor,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        Text(
+                            if (mix.painDays > 0)
+                                t("%1\$s migraine days, %2\$s pain days", mix.migraineDays, mix.painDays)
+                            else t("%s migraine days", mix.migraineDays),
+                            color = AppTheme.SubtleTextColor,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
+
             streak?.takeIf { it.streakDays >= 2 }?.let { s ->
                 Row(
                     Modifier

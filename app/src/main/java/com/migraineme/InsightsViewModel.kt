@@ -596,6 +596,37 @@ class InsightsViewModel : ViewModel() {
     private val _streakSummary = MutableStateFlow<StreakSummary?>(null)
     val streakSummary: StateFlow<StreakSummary?> = _streakSummary
 
+    // ======= Day mix per calendar month =======
+    //
+    // Every day is exactly one of three, worked out from what is already
+    // logged. Spec: docs/day-classification-spec.md.
+    //   migraine — an attack covers the day (multi-day attacks colour every
+    //              day they span; an open attack runs to today)
+    //   pain     — no attack, but Background pain was logged that day
+    //   free     — neither
+    // A day with nothing logged counts as free. The (i) on the chart says so,
+    // because the number is only as honest as the logging behind it.
+
+    data class MonthDayMix(
+        val month: java.time.YearMonth,
+        val migraineDays: Int,
+        val painDays: Int,
+        val freeDays: Int,
+        /** Days of the month actually covered, so a part-month reads as one. */
+        val daysCounted: Int,
+        val isPartial: Boolean,
+    ) {
+        val totalDays: Int get() = migraineDays + painDays + freeDays
+    }
+
+    private val _dayMixByMonth = MutableStateFlow<List<MonthDayMix>>(emptyList())
+    val dayMixByMonth: StateFlow<List<MonthDayMix>> = _dayMixByMonth
+
+    /** This calendar month's free-day count, for the Monitor card. */
+    val freeDaysThisMonth: StateFlow<MonthDayMix?> = _dayMixByMonth
+        .map { list -> list.lastOrNull { it.month == java.time.YearMonth.now() } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     // ======= Day-of-week pattern =======
 
     data class DayOfWeekStat(val dayName: String, val dayIndex: Int, val count: Int, val pct: Float)
@@ -1413,6 +1444,7 @@ class InsightsViewModel : ViewModel() {
                 loadAiRecommendations(context)
                 computeWeeklySummary()
                 computeStreakSummary()
+                computeDayMixByMonth()
                 computeDayOfWeekPattern()
             } catch (_: Exception) {
                 _migraines.value = emptyList()
@@ -2689,6 +2721,96 @@ class InsightsViewModel : ViewModel() {
             _streakSummary.value = StreakSummary(streakDays = streak, longestRunDaysThisYear = longest)
         } catch (_: Exception) {
             _streakSummary.value = null
+        }
+    }
+
+    // ======= Day mix per month (computed from loaded migraines + prodromes) =======
+
+    /**
+     * Labels that mean "Background pain". The pool item is locked so it cannot
+     * be deleted, but it CAN be renamed, and historical prodrome rows keep the
+     * label they were logged with. So match the seeded labels for every app in
+     * the family, case-insensitively, rather than one exact string.
+     */
+    private val backgroundPainLabels = setOf(
+        "background pain",       // MigraineMe, MeSeries
+        "background dizziness",  // VertigoMe
+    )
+
+    private fun computeDayMixByMonth(monthsBack: Int = 6) {
+        try {
+            val migs = _migraines.value
+            val prods = _allProdromes.value
+            if (migs.isEmpty() && prods.isEmpty()) {
+                _dayMixByMonth.value = emptyList()
+                return
+            }
+            val zone = ZoneId.systemDefault()
+            val today = LocalDate.now()
+
+            // Every date an attack spans. An open attack runs to today.
+            val migraineDays = HashSet<LocalDate>()
+            migs.forEach { m ->
+                var d = LocalDate.ofInstant(m.start, zone)
+                val endDay = LocalDate.ofInstant(m.end ?: Instant.now(), zone)
+                var guard = 0
+                while (!d.isAfter(endDay) && guard < 62) {
+                    migraineDays.add(d)
+                    d = d.plusDays(1)
+                    guard++
+                }
+            }
+
+            // Days carrying a Background pain log. An attack on the same day
+            // wins, so these are filtered against migraineDays below.
+            val painDays = HashSet<LocalDate>()
+            prods.forEach { p ->
+                val label = p.type?.trim()?.lowercase() ?: return@forEach
+                if (label !in backgroundPainLabels) return@forEach
+                val at = p.startAt ?: return@forEach
+                val day = runCatching { LocalDate.ofInstant(Instant.parse(at), zone) }
+                    .getOrElse { runCatching { LocalDate.parse(at.take(10)) }.getOrNull() }
+                    ?: return@forEach
+                painDays.add(day)
+            }
+
+            // The series starts at the first logged day, never at signup, so
+            // months before there was any data are not shown as perfect.
+            val firstLogged = (migraineDays + painDays).minOrNull() ?: today
+            val firstMonth = java.time.YearMonth.from(firstLogged)
+            val thisMonth = java.time.YearMonth.now()
+            var m = maxOf(thisMonth.minusMonths((monthsBack - 1).toLong()), firstMonth)
+
+            val out = mutableListOf<MonthDayMix>()
+            while (!m.isAfter(thisMonth)) {
+                val from = maxOf(m.atDay(1), firstLogged)
+                val to = minOf(m.atEndOfMonth(), today)
+                if (!from.isAfter(to)) {
+                    var mig = 0; var pain = 0; var free = 0
+                    var d = from
+                    while (!d.isAfter(to)) {
+                        when {
+                            migraineDays.contains(d) -> mig++
+                            painDays.contains(d) -> pain++
+                            else -> free++
+                        }
+                        d = d.plusDays(1)
+                    }
+                    val counted = mig + pain + free
+                    out += MonthDayMix(
+                        month = m,
+                        migraineDays = mig,
+                        painDays = pain,
+                        freeDays = free,
+                        daysCounted = counted,
+                        isPartial = counted < m.lengthOfMonth(),
+                    )
+                }
+                m = m.plusMonths(1)
+            }
+            _dayMixByMonth.value = out
+        } catch (_: Exception) {
+            _dayMixByMonth.value = emptyList()
         }
     }
 

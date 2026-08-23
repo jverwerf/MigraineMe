@@ -201,6 +201,24 @@ fun InsightsDetailScreen(
                 onClear = { vm.clearFilters() }
             )
 
+            // ========== 1b. YOUR MONTHS ==========
+            // Free / pain / migraine days per calendar month, and the way into
+            // the frequency screen, which nothing linked to before this.
+            // Spec: docs/day-classification-spec.md
+            val dayMix by vm.dayMixByMonth.collectAsState()
+            BaseCard {
+                DayMixMonthlyChart(months = dayMix)
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    t("More frequency and trends →"),
+                    color = AppTheme.AccentPurple,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { navController.navigate(Routes.FREQUENCY_TRENDS) }
+                )
+            }
+
             // ========== 2. GRAPH CARD ==========
             HeroCard {
                 Text(t("Migraine Timeline"), color = AppTheme.TitleColor,

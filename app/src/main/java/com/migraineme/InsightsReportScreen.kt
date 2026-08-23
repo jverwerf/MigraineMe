@@ -672,8 +672,15 @@ fun InsightsReportScreen(
                     }
                 }
 
-                // 3. Monthly Frequency
-                if (filteredByMonth.size >= 2) {
+                // 3. Monthly Frequency — every day of the month accounted for,
+                //    migraine / pain / free, rather than attack counts alone.
+                //    Spec: docs/day-classification-spec.md
+                val dayMix by vm.dayMixByMonth.collectAsState()
+                if (dayMix.isNotEmpty()) {
+                    BaseCard {
+                        DayMixMonthlyChart(months = dayMix, title = t("Monthly Frequency"))
+                    }
+                } else if (filteredByMonth.size >= 2) {
                     BaseCard {
                         Text(t("Monthly Frequency"), color = AppTheme.TitleColor,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))

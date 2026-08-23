@@ -126,8 +126,19 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
         }.toSortedMap()
     }
 
+    val dayMix by vm.dayMixByMonth.collectAsState()
+
     Column(Modifier.fillMaxWidth()) {
         run {
+            // ── Your months: migraine / pain / free days per calendar month.
+            //    Replaces the old Monthly attack-count bars, which showed the
+            //    same months with two thirds of the story missing.
+            //    Spec: docs/day-classification-spec.md
+            BaseCard {
+                DayMixMonthlyChart(months = dayMix)
+            }
+            Spacer(Modifier.height(4.dp))
+
             // ── Day-of-week (moved earlier per spec) ──
             run {
                 BaseCard {
@@ -204,52 +215,6 @@ fun FrequencyChartsSection(vm: InsightsViewModel) {
                         avgCount = avgWk,
                         modifier = Modifier.fillMaxWidth().height(160.dp),
                     )
-                }
-            }
-
-            // ── Monthly bar chart ──
-            run {
-                Spacer(Modifier.height(4.dp))
-                BaseCard {
-                    Text(t("Monthly"), color = AppTheme.TitleColor,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(Modifier.height(8.dp))
-
-                    val months = byMonth.keys.toList()
-                    val counts = months.map { byMonth[it]?.size ?: 0 }
-                    val maxCount = (counts.maxOrNull() ?: 1).coerceAtLeast(1)
-                    val avgCount = if (counts.isEmpty()) 0f else counts.average().toFloat()
-
-                    if (counts.isNotEmpty()) {
-                        MonthlyBarChart(
-                            months = months,
-                            counts = counts,
-                            maxCount = maxCount,
-                            avgCount = avgCount,
-                            modifier = Modifier.fillMaxWidth().height(200.dp),
-                        )
-                    }
-
-                    // Trend indicator
-                    if (counts.size >= 4) {
-                        val firstHalf = counts.take(counts.size / 2).average()
-                        val secondHalf = counts.drop(counts.size / 2).average()
-                        val trendText = when {
-                            secondHalf < firstHalf * 0.75 -> "↓ Improving — frequency decreasing"
-                            secondHalf > firstHalf * 1.25 -> "↑ Worsening — frequency increasing"
-                            else -> "→ Stable — consistent frequency"
-                        }
-                        val trendColor = when {
-                            secondHalf < firstHalf * 0.75 -> Color(0xFF81C784)
-                            secondHalf > firstHalf * 1.25 -> Color(0xFFE57373)
-                            else -> AppTheme.BodyTextColor
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Text(trendText, color = trendColor,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth())
-                    }
                 }
             }
 

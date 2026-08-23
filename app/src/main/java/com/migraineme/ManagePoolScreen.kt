@@ -75,7 +75,10 @@ data class PoolItem(
     val direction: String? = null,
     val displayGroup: String? = null,
     /** Medicines only: the item's one dose unit ('mg', 'amount', …). */
-    val doseUnit: String? = null
+    val doseUnit: String? = null,
+    /** Seeded item a chart depends on: no delete control, and the database
+     *  refuses the delete anyway. Still renameable and re-categorisable. */
+    val locked: Boolean = false
 )
 
 /** Icon entry for the add-dialog picker grid */
@@ -948,9 +951,11 @@ private fun PoolItemRow(
                 )
             }
 
-            // Delete
-            IconButton(onClick = { showDeleteDialog(item) }, modifier = Modifier.size(28.dp)) {
-                Icon(Icons.Outlined.Delete, t("Delete"), tint = AppTheme.SubtleTextColor.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+            // Delete — hidden on locked items, which the database refuses to delete.
+            if (!item.locked) {
+                IconButton(onClick = { showDeleteDialog(item) }, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Outlined.Delete, t("Delete"), tint = AppTheme.SubtleTextColor.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+                }
             }
         }
 

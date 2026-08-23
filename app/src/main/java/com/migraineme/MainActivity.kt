@@ -2157,7 +2157,8 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     defaultThreshold = row.defaultThreshold,
                                     unit = row.unit,
                                     direction = row.direction,
-                                    displayGroup = row.displayGroup
+                                    displayGroup = row.displayGroup,
+                                    locked = row.locked
                                 )
                             }
                         }

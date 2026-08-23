@@ -2095,7 +2095,10 @@ class SupabaseDbService(
         @SerialName("metric_table") val metricTable: String? = null,
         @SerialName("metric_column") val metricColumn: String? = null,
         @SerialName("display_group") val displayGroup: String? = null,
-        @SerialName("alert_enabled") val alertEnabled: Boolean? = null
+        @SerialName("alert_enabled") val alertEnabled: Boolean? = null,
+        /** Seeded item a chart depends on. Renameable, but the delete policy
+         *  refuses to remove it, so the UI hides the delete control too. */
+        val locked: Boolean = false
     )
     @Serializable
     data class ProdromePrefRow(
