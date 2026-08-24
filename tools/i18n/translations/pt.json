@@ -3674,5 +3674,15 @@
  "Protein dense": "Rico em proteínas",
  "Therapy": "Terapia",
  "Throbbing": "Latejante",
- "physical activity": "Atividade física"
+ "physical activity": "Atividade física",
+ "Consistent sleep duration": "Duração do sono constante",
+ "Consistent sleep score": "Valor do sono constante",
+ "Consistent sleep efficiency": "Eficiência do sono constante",
+ "Consistent sleep disturbances": "Sono interrompido constante",
+ "Consistent bedtime": "Hora de deitar constante",
+ "Consistent wake time": "Hora de acordar constante",
+ "Consistent stress": "Stress constante",
+ "Consistent HRV": "VFC constante",
+ "Consistent resting HR": "Pulso em repouso constante",
+ "Consistent recovery": "Recuperação constante"
 }

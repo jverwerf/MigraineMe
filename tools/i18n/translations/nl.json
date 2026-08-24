@@ -3674,5 +3674,15 @@
  "Protein dense": "Eiwitrijk",
  "Therapy": "Therapie",
  "Throbbing": "Bonzend",
- "physical activity": "Lichaamsbeweging"
+ "physical activity": "Lichaamsbeweging",
+ "Consistent sleep duration": "Consistente slaapduur",
+ "Consistent sleep score": "Consistente slaapscore",
+ "Consistent sleep efficiency": "Consistente slaapefficiëntie",
+ "Consistent sleep disturbances": "Consistente slaaponderbrekingen",
+ "Consistent bedtime": "Consistente bedtijd",
+ "Consistent wake time": "Consistente wektijd",
+ "Consistent stress": "Consistente stress",
+ "Consistent HRV": "Consistente HRV",
+ "Consistent resting HR": "Consistente rusthartslag",
+ "Consistent recovery": "Consistent herstel"
 }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3676 entries.
+ * 3686 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -806,7 +806,17 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Connected" to "Gekoppeld",
     "Connected Services" to "Koppelingen",
     "Connections" to "Koppelingen",
+    "Consistent HRV" to "Consistente HRV",
+    "Consistent bedtime" to "Consistente bedtijd",
+    "Consistent recovery" to "Consistent herstel",
+    "Consistent resting HR" to "Consistente rusthartslag",
     "Consistent risk scoring" to "Consistente risicoscore",
+    "Consistent sleep disturbances" to "Consistente slaaponderbrekingen",
+    "Consistent sleep duration" to "Consistente slaapduur",
+    "Consistent sleep efficiency" to "Consistente slaapefficiëntie",
+    "Consistent sleep score" to "Consistente slaapscore",
+    "Consistent stress" to "Consistente stress",
+    "Consistent wake time" to "Consistente wektijd",
     "Constipation" to "Verstopping",
     "Content under review" to "In beoordeling",
     "Continue" to "Verder",

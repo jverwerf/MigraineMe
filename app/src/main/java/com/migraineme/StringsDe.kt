@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3676 entries.
+ * 3686 entries.
  */
 internal val DE_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Aus allen Daten",
@@ -806,7 +806,17 @@ internal val DE_STRINGS: Map<String, String> = mapOf(
     "Connected" to "Verbunden",
     "Connected Services" to "Verbindungen",
     "Connections" to "Verbindungen",
+    "Consistent HRV" to "Gleichmäßige HRV",
+    "Consistent bedtime" to "Gleichmäßige Schlafenszeit",
+    "Consistent recovery" to "Gleichmäßige Erholung",
+    "Consistent resting HR" to "Gleichmäßiger Ruhepuls",
     "Consistent risk scoring" to "Konsistente Risikowerte",
+    "Consistent sleep disturbances" to "Gleichmäßige Schlafstörungen",
+    "Consistent sleep duration" to "Gleichmäßige Schlafdauer",
+    "Consistent sleep efficiency" to "Gleichmäßige Schlafeffizienz",
+    "Consistent sleep score" to "Gleichmäßiger Schlafwert",
+    "Consistent stress" to "Gleichmäßiges Stresslevel",
+    "Consistent wake time" to "Gleichmäßige Aufwachzeit",
     "Constipation" to "Verstopfung",
     "Content under review" to "Wird geprüft",
     "Continue" to "Weiter",

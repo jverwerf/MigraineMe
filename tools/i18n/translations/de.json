@@ -3674,5 +3674,15 @@
  "Protein dense": "Proteinreich",
  "Therapy": "Therapie",
  "Throbbing": "Pochend",
- "physical activity": "Körperliche Aktivität"
+ "physical activity": "Körperliche Aktivität",
+ "Consistent sleep duration": "Gleichmäßige Schlafdauer",
+ "Consistent sleep score": "Gleichmäßiger Schlafwert",
+ "Consistent sleep efficiency": "Gleichmäßige Schlafeffizienz",
+ "Consistent sleep disturbances": "Gleichmäßige Schlafstörungen",
+ "Consistent bedtime": "Gleichmäßige Schlafenszeit",
+ "Consistent wake time": "Gleichmäßige Aufwachzeit",
+ "Consistent stress": "Gleichmäßiges Stresslevel",
+ "Consistent HRV": "Gleichmäßige HRV",
+ "Consistent resting HR": "Gleichmäßiger Ruhepuls",
+ "Consistent recovery": "Gleichmäßige Erholung"
 }
