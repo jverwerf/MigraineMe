@@ -334,12 +334,8 @@ private fun ShopCard(item: ShopCatalogue.Item, onOpenLink: (String) -> Unit) {
                     tint = AppTheme.AccentPurple, modifier = Modifier.size(16.dp)
                 )
             }
-            Text(
-                t("We earn a commission."),
-                color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(top = 6.dp)
-            )
+            // No per-card commission line: the disclaimer at the foot of the
+            // page says it once for the whole Shop.
             item.safetyNote?.let {
                 Text(
                     t(it),
