@@ -21,3 +21,6 @@ captures/
 # Build artifacts
 *.aab
 *.apk
+
+# i18n tooling run logs
+tools/usda_i18n/*.log
