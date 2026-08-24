@@ -11,7 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,20 +52,37 @@ fun ShopScreen(onBack: () -> Unit) {
             .verticalScroll(scrollState)
             .padding(horizontal = 16.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        // Hero card, same shape as iOS: bag, title, the promise. The page has
+        // no other chrome, so the header carries it.
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(AppTheme.HeroCardContainer)
+                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                .padding(vertical = 20.dp, horizontal = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                Icons.Outlined.ShoppingBag,
+                contentDescription = null,
+                tint = AppTheme.AccentPurple,
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(Modifier.height(8.dp))
             Text(
                 t("Shop"),
-                color = AppTheme.AccentPurple,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.padding(bottom = 12.dp)
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                t("Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first."),
+                color = AppTheme.SubtleTextColor,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
-
-        Text(
-            t("Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first."),
-            color = AppTheme.BodyTextColor,
-            style = MaterialTheme.typography.bodySmall
-        )
 
         Spacer(Modifier.height(20.dp))
 
