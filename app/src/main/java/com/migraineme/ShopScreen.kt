@@ -36,13 +36,13 @@ import androidx.compose.ui.unit.dp
  * relief_templates — a device that can be logged should be explainable here.
  */
 
-private enum class DeviceAccess { OTC, PRESCRIPTION }
+private enum class ShopAccess { OTC, PRESCRIPTION }
 
-private data class DeviceInfo(
+private data class ShopItem(
     val name: String,
     /** Matches a ReliefIcons key so the card shows the same art as the log screens. */
     val iconKey: String,
-    val access: DeviceAccess,
+    val access: ShopAccess,
     /** One line on what the thing physically does. */
     val what: String,
     /** Honest read on the evidence, including when it is thin. */
@@ -68,92 +68,92 @@ private data class DeviceInfo(
     val safetyNote: String? = null
 )
 
-private data class DeviceGroup(val title: String, val blurb: String, val devices: List<DeviceInfo>)
+private data class ShopGroup(val title: String, val blurb: String, val devices: List<ShopItem>)
 
-private val DEVICE_GROUPS = listOf(
-    DeviceGroup(
+private val SHOP_GROUPS = listOf(
+    ShopGroup(
         title = tSync("Nerve stimulation"),
         blurb = "Send a small electrical or magnetic signal to a nerve involved in migraine.",
         devices = listOf(
-            DeviceInfo(
+            ShopItem(
                 name = "CEFALY",
                 iconKey = "cefaly",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Headband that stimulates the trigeminal nerve on the forehead. Separate acute and prevention programmes.",
                 evidence = "The best studied device on this list. Randomised trials support both stopping an attack and reducing how often they come."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "Nerivio",
                 iconKey = "nerivio",
-                access = DeviceAccess.PRESCRIPTION,
+                access = ShopAccess.PRESCRIPTION,
                 what = "Armband worn on the upper arm during an attack. Stimulates nerves in the arm to dampen pain signals.",
                 evidence = "Randomised trial evidence for acute treatment, and later evidence for prevention. Needs a prescription."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "gammaCore",
                 iconKey = "gammacore",
-                access = DeviceAccess.PRESCRIPTION,
+                access = ShopAccess.PRESCRIPTION,
                 what = "Handheld unit held against the neck to stimulate the vagus nerve.",
                 evidence = "Trial evidence in migraine and stronger evidence in cluster headache. Needs a prescription."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "sTMS (SAVI Dual)",
                 iconKey = "stms",
-                access = DeviceAccess.PRESCRIPTION,
+                access = ShopAccess.PRESCRIPTION,
                 what = "Device held at the back of the head that delivers single magnetic pulses.",
                 evidence = "Studied for attacks with aura and for prevention. Bulkier and pricier than most. Needs a prescription."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "Relivion",
                 iconKey = "relivion",
-                access = DeviceAccess.PRESCRIPTION,
+                access = ShopAccess.PRESCRIPTION,
                 what = "Headset that stimulates the trigeminal and occipital nerves at the same time.",
                 evidence = "Newer than the others, with less independent data behind it so far. Needs a prescription."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "Quell",
                 iconKey = "quell",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Band worn on the calf that delivers TENS-style stimulation.",
                 evidence = "Built for chronic pain generally. Migraine-specific evidence is thin, so treat it as an experiment."
             )
         )
     ),
-    DeviceGroup(
+    ShopGroup(
         title = tSync("Light and glare"),
         blurb = "For light sensitivity between and during attacks.",
         devices = listOf(
-            DeviceInfo(
+            ShopItem(
                 name = "Avulux glasses",
                 iconKey = "avulux",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Lenses that filter out most blue, amber and red light while letting green through.",
                 evidence = "A randomised trial in migraine backs the filter approach. Worth knowing they are much darker than normal tinted glasses."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "TheraSpecs",
                 iconKey = "theraspecs",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "FL-41 tinted glasses, indoor and outdoor versions.",
                 evidence = "FL-41 tint has been studied for light sensitivity for decades. Cheaper than Avulux and easier to wear all day."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "Allay Lamp",
                 iconKey = "allay",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Lamp that emits a narrow band of green light you can sit and read under during an attack.",
                 evidence = "Comes out of Harvard research showing green light is the least aggravating wavelength. Small studies only."
             )
         )
     ),
-    DeviceGroup(
+    ShopGroup(
         title = tSync("Prodrome management"),
         blurb = "For the early warning signs, before an attack fully arrives.",
         devices = listOf(
-            DeviceInfo(
+            ShopItem(
                 name = "Breo See 7",
                 iconKey = "breo_see7",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Heated eye massager with hot and cold compress and gentle vibration, for eye strain and light sensitivity.",
                 evidence = "Eases eye strain and light sensitivity with heat and gentle pressure around the eyes, right when an attack is building.",
                 link = "https://us.breo.com/?ref=ME-SERIES",
@@ -167,10 +167,10 @@ private val DEVICE_GROUPS = listOf(
                 iconImage = R.drawable.icon_breo,
                 safetyNote = "Compression-based eye massagers raise pressure inside the eye, so anyone with glaucoma, ocular hypertension or a history of eye surgery should check with their doctor first."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "Breo iDream 5S",
                 iconKey = "breo_idream",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Full-head massager with air pressure, kneading and heat across scalp, temples and eyes, run from your phone.",
                 evidence = "Eases head and temple pressure with kneading and heat across the scalp, right where tension builds during an attack.",
                 link = "https://us.breo.com/?ref=ME-SERIES",
@@ -183,10 +183,10 @@ private val DEVICE_GROUPS = listOf(
                 communitySourceURL = "https://www.trustpilot.com/review/us.breo.com",
                 iconImage = R.drawable.icon_breo
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "Breo iNeck 3 Pro",
                 iconKey = "breo_neck",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Wraparound neck massager with deep kneading, air pressure and heat, controlled from your phone.",
                 evidence = "Eases neck tension, one of the most common migraine triggers, with kneading and heat before it escalates.",
                 link = "https://us.breo.com/?ref=ME-SERIES",
@@ -201,57 +201,57 @@ private val DEVICE_GROUPS = listOf(
             )
         )
     ),
-    DeviceGroup(
+    ShopGroup(
         title = tSync("Nausea"),
         blurb = "For when the sickness is the worst part.",
         devices = listOf(
-            DeviceInfo(
+            ShopItem(
                 name = "Reliefband",
                 iconKey = "reliefband",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Wristband that stimulates the median nerve to settle nausea.",
                 evidence = "Cleared for nausea and vomiting rather than for migraine. Useful if sickness is the part that floors you."
             )
         )
     ),
-    DeviceGroup(
+    ShopGroup(
         title = tSync("Trigger management"),
         blurb = "Aimed at stress and recovery, which for a lot of people is the trigger rather than the attack.",
         devices = listOf(
-            DeviceInfo(
+            ShopItem(
                 name = "Apollo Neuro",
                 iconKey = "apollo",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Silent, soothing vibrations you wear on your wrist or ankle. Calms you down in minutes, rebalances your nervous system and lifts your HRV.",
                 evidence = "Built by neuroscientists, with published work on stress, sleep and HRV. Most useful if stress or broken sleep are among your triggers.",
                 link = "https://apolloneuro.com/migraineme",
                 linkNote = "$99 off, 30-day trial",
                 photo = R.drawable.device_photo_apollo
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "CalmiGo",
                 iconKey = "calmigo",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Handheld device that paces your breathing and gives feedback as you go.",
                 evidence = "Studied for stress and anxiety. Any migraine benefit is indirect, through the trigger rather than the attack."
             ),
-            DeviceInfo(
+            ShopItem(
                 name = "HeartMath Inner Balance",
                 iconKey = "heartmath",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Ear or finger sensor that coaches heart rate variability breathing through an app.",
                 evidence = "Biofeedback has real support as a preventive approach. This is one of several ways to do it, not the only one."
             )
         )
     ),
-    DeviceGroup(
+    ShopGroup(
         title = tSync("Heat and cold"),
         blurb = "The oldest idea on this page, done with a machine.",
         devices = listOf(
-            DeviceInfo(
+            ShopItem(
                 name = "ThermaZone",
                 iconKey = "thermazone",
-                access = DeviceAccess.OTC,
+                access = ShopAccess.OTC,
                 what = "Circulates hot or cold water through a head or neck pad at a steady temperature.",
                 evidence = "No migraine trials to speak of. It is a more controllable ice pack, and priced accordingly."
             )
@@ -260,15 +260,15 @@ private val DEVICE_GROUPS = listOf(
 )
 
 /** Groups with at least one device we can actually link to. */
-private val visibleGroups: List<DeviceGroup> =
-    DEVICE_GROUPS.mapNotNull { group ->
+private val visibleGroups: List<ShopGroup> =
+    SHOP_GROUPS.mapNotNull { group ->
         group.devices.filter { it.link != null }
             .takeIf { it.isNotEmpty() }
             ?.let { group.copy(devices = it) }
     }
 
 @Composable
-fun DevicesScreen(onBack: () -> Unit) {
+fun ShopScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     var showInfo by remember { mutableStateOf(false) }
@@ -281,7 +281,7 @@ fun DevicesScreen(onBack: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
-                t("Devices"),
+                t("Shop"),
                 color = AppTheme.AccentPurple,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -300,7 +300,7 @@ fun DevicesScreen(onBack: () -> Unit) {
         }
 
         Text(
-            t("Devices that complement or integrate with MigraineMe."),
+            t("Practical kit for the parts of migraine you can do something about: light, noise and sleep. Every one of them has been through our own bad days first."),
             color = AppTheme.BodyTextColor,
             style = MaterialTheme.typography.bodySmall
         )
@@ -342,9 +342,9 @@ fun DevicesScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(top = 2.dp, bottom = 10.dp)
             )
-            group.devices.forEach { device ->
-                DeviceCard(
-                    device = device,
+            group.devices.forEach { shopItem ->
+                ShopCard(
+                    item = shopItem,
                     onOpenLink = { url ->
                         runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
                     }
@@ -356,7 +356,7 @@ fun DevicesScreen(onBack: () -> Unit) {
 
         // Devices needs its own wording: the Insights disclaimer is about risk
         // scores, which has nothing to do with this page. Same dismissible box.
-        DevicesDisclaimerCard()
+        ShopDisclaimerCard()
 
         Spacer(Modifier.height(32.dp))
     }
@@ -395,9 +395,9 @@ fun DevicesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
-    val drawable = remember(device.iconKey) { ReliefIcons.drawableForKey(device.iconKey) }
-    val vector = remember(device.iconKey) { ReliefIcons.forKey(device.iconKey) }
+private fun ShopCard(item: ShopItem, onOpenLink: (String) -> Unit) {
+    val drawable = remember(item.iconKey) { ReliefIcons.drawableForKey(item.iconKey) }
+    val vector = remember(item.iconKey) { ReliefIcons.forKey(item.iconKey) }
 
     Column(
         modifier = Modifier
@@ -415,9 +415,9 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                     .background(Color.White.copy(alpha = 0.06f)),
                 contentAlignment = Alignment.Center
             ) {
-                if (device.iconImage != null) {
+                if (item.iconImage != null) {
                     androidx.compose.foundation.Image(
-                        painter = painterResource(device.iconImage),
+                        painter = painterResource(item.iconImage),
                         contentDescription = null,
                         modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp))
                     )
@@ -434,22 +434,26 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    device.name,
+                    item.name,
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
-                Text(
-                    if (device.access == DeviceAccess.PRESCRIPTION) t("Prescription only") else t("Available without a prescription"),
-                    color = if (device.access == DeviceAccess.PRESCRIPTION) AppTheme.AccentPink else AppTheme.SubtleTextColor,
-                    style = MaterialTheme.typography.labelSmall
-                )
+                // Only the ones that need a doctor say so. Printing "available
+                // without a prescription" under every other card was noise.
+                if (item.access == ShopAccess.PRESCRIPTION) {
+                    Text(
+                        t("Prescription only"),
+                        color = AppTheme.AccentPink,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
             // Real product shot sits opposite the Brainy icon so you can see what
             // the thing actually looks like without leaving the app.
-            device.photo?.let { photo ->
+            item.photo?.let { photo ->
                 androidx.compose.foundation.Image(
                     painter = painterResource(photo),
-                    contentDescription = t("%s product photo", device.name),
+                    contentDescription = t("%s product photo", item.name),
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -459,17 +463,17 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
 
         Spacer(Modifier.height(10.dp))
 
-        Text(t(device.what), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
+        Text(t(item.what), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
 
         Spacer(Modifier.height(6.dp))
 
         Text(
-            t(device.evidence),
+            t(item.evidence),
             color = AppTheme.SubtleTextColor,
             style = MaterialTheme.typography.labelSmall
         )
 
-        if (device.communityPros != null || device.communityCons != null) {
+        if (item.communityPros != null || item.communityCons != null) {
             Spacer(Modifier.height(10.dp))
             Column(
                 modifier = Modifier
@@ -486,21 +490,21 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.weight(1f)
                     )
-                    device.communityRating?.let { rating ->
+                    item.communityRating?.let { rating ->
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 rating,
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                             )
-                            device.communitySource?.let { source ->
+                            item.communitySource?.let { source ->
                                 Text(
                                     t(source),
                                     color = AppTheme.SubtleTextColor,
                                     style = MaterialTheme.typography.labelSmall,
                                     textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
                                     modifier = Modifier.clickable {
-                                        device.communitySourceURL?.let(onOpenLink)
+                                        item.communitySourceURL?.let(onOpenLink)
                                     }
                                 )
                             }
@@ -510,7 +514,7 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                 Spacer(Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.weight(1f)) {
-                        device.communityPros?.forEach { line ->
+                        item.communityPros?.forEach { line ->
                             Row {
                                 Text("+", color = Color(0xFF81C784), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                                 Spacer(Modifier.width(6.dp))
@@ -520,7 +524,7 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                         }
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        device.communityCons?.forEach { line ->
+                        item.communityCons?.forEach { line ->
                             Row {
                                 Text("–", color = AppTheme.AccentPink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                                 Spacer(Modifier.width(6.dp))
@@ -533,24 +537,24 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
             }
         }
 
-        if (device.link != null) {
+        if (item.link != null) {
             Spacer(Modifier.height(12.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(AppTheme.AccentPurple.copy(alpha = 0.16f))
-                    .clickable { onOpenLink(device.link) }
+                    .clickable { onOpenLink(item.link) }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(
-                        t("Visit %s", device.name),
+                        t("Buy %s", item.name),
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    device.linkNote?.let {
+                    item.linkNote?.let {
                         Text(t(it), color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -565,7 +569,7 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(top = 6.dp)
             )
-            device.safetyNote?.let {
+            item.safetyNote?.let {
                 Text(
                     t(it),
                     color = AppTheme.SubtleTextColor.copy(alpha = 0.75f),
@@ -583,7 +587,7 @@ private fun DeviceCard(device: DeviceInfo, onOpenLink: (String) -> Unit) {
  * Dismissal is per-device and never synced, so a fresh install always sees it.
  */
 @Composable
-private fun DevicesDisclaimerCard() {
+private fun ShopDisclaimerCard() {
     val ctx = LocalContext.current
     val prefs = remember {
         ctx.getSharedPreferences("medical_disclaimer", android.content.Context.MODE_PRIVATE)
