@@ -1,6 +1,10 @@
 -- Seed: the catalogue as it stands in DevicesScreen.kt on 2026-08-24, plus the
 -- three cards approved today (Alpine Silence, TheraSpecs, TheraSpecs FL-Pro).
 -- Idempotent: re-running updates the English copy rather than duplicating rows.
+--
+-- Only Alpine Silence and the two TheraSpecs cards are active: the Shop opens
+-- with those three (Jordy, 2026-08-24). Breo, Apollo and the reference-only
+-- devices stay as rows so switching one on is an update, not a re-seed.
 
 insert into public.shop_groups (key, title, blurb, sort) values
   ('nerve_stimulation', 'Nerve stimulation', 'Send a small electrical or magnetic signal to a nerve involved in migraine.', 10),
@@ -52,3 +56,11 @@ insert into public.shop_item_links (item_key, slug, countries, url, code, note, 
 on conflict (item_key, slug) do update set
   countries = excluded.countries, url = excluded.url, code = excluded.code,
   note = excluded.note, sort = excluded.sort, updated_at = now();
+
+update public.shop_items
+   set active = key in ('alpine_silence','theraspecs_fl41','theraspecs_fl_pro'),
+       updated_at = now();
+
+update public.shop_groups
+   set active = key in ('sound_and_noise','light_and_glare'),
+       updated_at = now();
