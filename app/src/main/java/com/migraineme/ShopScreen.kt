@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 fun ShopScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    var showInfo by remember { mutableStateOf(false) }
     var groups by remember { mutableStateOf<List<ShopCatalogue.Group>?>(null) }
 
     LaunchedEffect(LangPrefs.get()) {
@@ -60,17 +59,6 @@ fun ShopScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.padding(bottom = 12.dp)
             )
-            IconButton(
-                onClick = { showInfo = true },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(28.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.Info, contentDescription = t("About the Shop"),
-                    tint = AppTheme.SubtleTextColor, modifier = Modifier.size(18.dp)
-                )
-            }
         }
 
         Text(
@@ -129,39 +117,8 @@ fun ShopScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(32.dp))
     }
 
-    if (showInfo) {
-        AlertDialog(
-            onDismissRequest = { showInfo = false },
-            containerColor = Color(0xFF241035),
-            title = {
-                Text(
-                    t("About the Shop"),
-                    color = AppTheme.TitleColor,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                )
-            },
-            text = {
-                Text(
-                    t("This stuff is hard to judge from a website, because the marketing all sounds ") +
-                        t("the same whether there are ten trials behind it or none.\n\n") +
-                        t("Each card says what the thing physically does, how solid the evidence is, ") +
-                        t("including where it is thin, and what buyers complain about. Anything that ") +
-                        t("needs a prescription is marked.\n\n") +
-                        t("Once you own one, logging it is the point: MigraineMe compares how your attacks go ") +
-                        t("with and without it, so after a few weeks you have your own answer rather than the ") +
-                        t("manufacturer's."),
-                    color = AppTheme.BodyTextColor,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showInfo = false }) {
-                    Text(t("Got it"), color = AppTheme.AccentPurple)
-                }
-            }
-        )
-    }
 }
+
 
 @Composable
 private fun ShopCard(item: ShopCatalogue.Item, onOpenLink: (String) -> Unit) {
