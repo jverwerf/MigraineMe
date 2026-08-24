@@ -262,7 +262,7 @@ fun AddFoodDialog(
                 
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                     OutlinedTextField(
-                        value = mealType.replaceFirstChar { it.uppercase() },
+                        value = t(mealType.replaceFirstChar { it.uppercase() }),
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -278,7 +278,7 @@ fun AddFoodDialog(
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         mealTypes.forEach { type ->
                             DropdownMenuItem(
-                                text = { Text(type.replaceFirstChar { it.uppercase() }) },
+                                text = { Text(t(type.replaceFirstChar { it.uppercase() })) },
                                 onClick = {
                                     onMealTypeChange(type)
                                     expanded = false
@@ -379,7 +379,7 @@ fun EditFoodDialog(
                 
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                     OutlinedTextField(
-                        value = mealType.replaceFirstChar { it.uppercase() },
+                        value = t(mealType.replaceFirstChar { it.uppercase() }),
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -395,7 +395,7 @@ fun EditFoodDialog(
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         mealTypes.forEach { type ->
                             DropdownMenuItem(
-                                text = { Text(type.replaceFirstChar { it.uppercase() }) },
+                                text = { Text(t(type.replaceFirstChar { it.uppercase() })) },
                                 onClick = {
                                     onMealTypeChange(type)
                                     expanded = false
@@ -455,7 +455,7 @@ private fun DialogRiskRowWithIcon(
             Text(t(label), color = AppTheme.BodyTextColor, style = MaterialTheme.typography.bodySmall)
         }
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(display, color = color, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+            Text(t(display), color = color, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
             if (level != "none") {
                 Spacer(Modifier.width(4.dp))
                 RiskBar(color, level, maxHeight = 14.dp)

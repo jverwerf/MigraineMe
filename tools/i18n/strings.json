@@ -3554,6 +3554,16 @@
     "count": 2
   },
   {
+    "en": "Breakfast",
+    "class": "hard",
+    "sites": [
+      "NutritionDialogs.kt:mealType",
+      "BarcodeAddFoodDialog.kt:mealType"
+    ],
+    "max_len": 16,
+    "count": 2
+  },
+  {
     "en": "Calendar",
     "class": "hard",
     "sites": [
@@ -3691,6 +3701,16 @@
       "app/src/main/java/com/migraineme/MonitorScreen.kt:479"
     ],
     "max_len": 14,
+    "count": 2
+  },
+  {
+    "en": "Dinner",
+    "class": "hard",
+    "sites": [
+      "NutritionDialogs.kt:mealType",
+      "BarcodeAddFoodDialog.kt:mealType"
+    ],
+    "max_len": 16,
     "count": 2
   },
   {
@@ -3991,6 +4011,16 @@
       "app/src/main/java/com/migraineme/widget/MigraineMeWidget.kt:139"
     ],
     "max_len": 15,
+    "count": 2
+  },
+  {
+    "en": "Lunch",
+    "class": "hard",
+    "sites": [
+      "NutritionDialogs.kt:mealType",
+      "BarcodeAddFoodDialog.kt:mealType"
+    ],
+    "max_len": 16,
     "count": 2
   },
   {
@@ -4601,6 +4631,16 @@
       "app/src/main/java/com/migraineme/AiSetupScreen.kt:733"
     ],
     "max_len": 14,
+    "count": 2
+  },
+  {
+    "en": "Snack",
+    "class": "hard",
+    "sites": [
+      "NutritionDialogs.kt:mealType",
+      "BarcodeAddFoodDialog.kt:mealType"
+    ],
+    "max_len": 16,
     "count": 2
   },
   {

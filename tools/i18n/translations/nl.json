@@ -3653,5 +3653,9 @@
  "%sd##forumage": "%s d",
  "%sd ago": "%s d geleden",
  "%sw ago": "%s w geleden",
- "Migraine type": "Migrainetype"
+ "Migraine type": "Migrainetype",
+ "Breakfast": "Ontbijt",
+ "Lunch": "Lunch",
+ "Dinner": "Avondeten",
+ "Snack": "Snack"
 }

@@ -3653,5 +3653,9 @@
  "%sd##forumage": "%s g",
  "%sd ago": "%s g fa",
  "%sw ago": "%s sett. fa",
- "Migraine type": "Tipo di emicrania"
+ "Migraine type": "Tipo di emicrania",
+ "Breakfast": "Colazione",
+ "Lunch": "Pranzo",
+ "Dinner": "Cena",
+ "Snack": "Spuntino"
 }

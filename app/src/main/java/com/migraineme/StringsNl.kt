@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3655 entries.
+ * 3659 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -632,6 +632,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Brain fog" to "Hersenmist",
     "Brain fog (after)" to "Hersenmist (erna)",
     "Breakdown" to "Verdeling",
+    "Breakfast" to "Ontbijt",
     "Breathing" to "Ademhaling",
     "Bright lights feel painful or overwhelming" to "Fel licht doet pijn of is te veel",
     "Bright or fluorescent lights" to "Fel of tl-licht",
@@ -936,6 +937,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Digestive" to "Buik",
     "Digital wellness correlation" to "Verband met schermgebruik",
     "Dihydroergotamine (DHE)" to "Dihydro-ergotamine (DHE)",
+    "Dinner" to "Avondeten",
     "Disable Battery Optimization" to "Optimalisatie uit",
     "Discard" to "Weggooien",
     "Disconnect" to "Loskoppelen",
@@ -1667,6 +1669,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Low sleep score" to "Lage slaapscore",
     "Low/none" to "Laag/geen",
     "Lowest" to "Laagste",
+    "Lunch" to "Lunch",
     "M" to "M",
     "MIGRAINE DAYS PER MONTH" to "MIGRAINEDAGEN PER MAAND",
     "MILD" to "LICHT",
@@ -2658,6 +2661,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Smell sensitivity" to "Geurgevoeligheid",
     "Smoke" to "Rook",
     "Smoke or fumes" to "Rook of dampen",
+    "Snack" to "Snack",
     "Snow" to "Sneeuw",
     "Snow grains" to "Motsneeuw",
     "Snow showers" to "Sneeuwbuien",

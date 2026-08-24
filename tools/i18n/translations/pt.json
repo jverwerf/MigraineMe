@@ -3653,5 +3653,9 @@
  "%sd##forumage": "%s d",
  "%sd ago": "há %s d",
  "%sw ago": "há %s sem",
- "Migraine type": "Tipo de enxaqueca"
+ "Migraine type": "Tipo de enxaqueca",
+ "Breakfast": "Pequeno-almoço",
+ "Lunch": "Almoço",
+ "Dinner": "Jantar",
+ "Snack": "Lanche"
 }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3655 entries.
+ * 3659 entries.
  */
 internal val FR_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Sur toutes les données",
@@ -632,6 +632,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Brain fog" to "Brouillard mental",
     "Brain fog (after)" to "Brouillard mental (après)",
     "Breakdown" to "Détail",
+    "Breakfast" to "Petit-déjeuner",
     "Breathing" to "Respiration",
     "Bright lights feel painful or overwhelming" to "Les lumières vives font mal ou submergent",
     "Bright or fluorescent lights" to "Lumières vives ou néons",
@@ -936,6 +937,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Digestive" to "Digestif",
     "Digital wellness correlation" to "Lien avec l'usage des écrans",
     "Dihydroergotamine (DHE)" to "Dihydroergotamine (DHE)",
+    "Dinner" to "Dîner",
     "Disable Battery Optimization" to "Désactiver l'optimisation",
     "Discard" to "Abandonner",
     "Disconnect" to "Déconnecter",
@@ -1667,6 +1669,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Low sleep score" to "Score sommeil bas",
     "Low/none" to "Faible/nul",
     "Lowest" to "Minimum",
+    "Lunch" to "Déjeuner",
     "M" to "M",
     "MIGRAINE DAYS PER MONTH" to "JOURS DE MIGRAINE PAR MOIS",
     "MILD" to "LÉGÈRE",
@@ -2658,6 +2661,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Smell sensitivity" to "Odorat sensible",
     "Smoke" to "Fumée",
     "Smoke or fumes" to "Fumée ou vapeurs",
+    "Snack" to "Encas",
     "Snow" to "Neige",
     "Snow grains" to "Neige grains",
     "Snow showers" to "Neige averses",

@@ -3653,5 +3653,9 @@
  "%sd##forumage": "%s T.",
  "%sd ago": "vor %s T.",
  "%sw ago": "vor %s W.",
- "Migraine type": "Migränetyp"
+ "Migraine type": "Migränetyp",
+ "Breakfast": "Frühstück",
+ "Lunch": "Mittagessen",
+ "Dinner": "Abendessen",
+ "Snack": "Snack"
 }

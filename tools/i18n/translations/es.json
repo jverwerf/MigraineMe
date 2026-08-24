@@ -3653,5 +3653,9 @@
  "%sd##forumage": "%s d",
  "%sd ago": "hace %s d",
  "%sw ago": "hace %s sem",
- "Migraine type": "Tipo de migraña"
+ "Migraine type": "Tipo de migraña",
+ "Breakfast": "Desayuno",
+ "Lunch": "Almuerzo",
+ "Dinner": "Cena",
+ "Snack": "Snack"
 }

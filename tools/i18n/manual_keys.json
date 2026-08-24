@@ -3495,6 +3495,42 @@
         "tagCategoryLabel:community-browse-heading"
       ],
       "max_len": 24
+    },
+    {
+      "en": "Breakfast",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
+    },
+    {
+      "en": "Lunch",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
+    },
+    {
+      "en": "Dinner",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
+    },
+    {
+      "en": "Snack",
+      "class": "hard",
+      "sites": [
+        "NutritionDialogs.kt:mealType",
+        "BarcodeAddFoodDialog.kt:mealType"
+      ],
+      "max_len": 16
     }
   ],
   "_why": "Pool-item vocabulary: canonical English labels seeded into every user's template pools (triggers, symptoms, medicines, reliefs, locations, activities, migraine types, wearable/auto-trigger metrics). The client translates them at render via t(label); the stored value stays English. Nothing in the Compose sources spells these out at a display site, so extract.py cannot scan them — they are declared here and merged into strings.json, which keeps them under the length gate and in the generated tables.",
