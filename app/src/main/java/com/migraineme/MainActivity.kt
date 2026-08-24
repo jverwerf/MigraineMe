@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Watch
 import androidx.compose.material.icons.outlined.Tune
@@ -210,6 +211,7 @@ object Routes {
     const val SIGNUP = "signup"
     const val LOGOUT = "logout"
     const val LANGUAGE = "language"
+    const val SHOP = "shop"
     const val HELP = "help"
     const val HELP_ARTICLE = "help_article/{slug}"
 
@@ -778,6 +780,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
         DrawerItem("Data", Routes.DATA, Icons.Outlined.Storage),
         DrawerItem("Risk Model", Routes.RISK_WEIGHTS, Icons.Outlined.Speed),
         DrawerItem("Manage Items", Routes.MANAGE_ITEMS, Icons.Outlined.Tune),
+        DrawerItem("Shop", Routes.SHOP, Icons.Outlined.ShoppingBag),
         DrawerItem("Language", Routes.LANGUAGE, Icons.Outlined.Language),
         DrawerItem("Logout", Routes.LOGOUT, Icons.AutoMirrored.Outlined.Logout),
         DrawerItem("Help", Routes.HELP, Icons.Outlined.HelpOutline)
@@ -2565,6 +2568,9 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
 
                     composable(Routes.LANGUAGE) {
                         LanguageScreen()
+                    }
+                    composable(Routes.SHOP) {
+                        ShopScreen(onBack = { nav.popBackStack() })
                     }
                     composable(Routes.HELP) {
                         HelpScreen(
