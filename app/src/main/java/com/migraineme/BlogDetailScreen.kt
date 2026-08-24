@@ -286,7 +286,7 @@ private fun BlogHtmlBody(bodyHtml: String) {
 private fun buildByline(blog: BlogRow): String {
     val parts = mutableListOf<String>()
     if (!blog.author.isNullOrBlank()) parts.add(blog.author)
-    if (blog.readMinutes != null) parts.add("${blog.readMinutes} min read")
+    if (blog.readMinutes != null) parts.add(tSync("%s min read", blog.readMinutes))
     formatBlogDate(blog.publishedAt)?.let { parts.add(it) }
     return parts.joinToString(" · ")
 }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3648 entries.
+ * 3655 entries.
  */
 internal val FR_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Sur toutes les données",
@@ -136,6 +136,11 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "%s-Day Sleep History" to "Sommeil, %s jours",
     "%s/10 avg severity" to "%s/10 intensité moy",
     "%s/3 selected" to "%s/3 choisis",
+    "%sd ago" to "il y a %s j",
+    "%sd##forumage" to "%s j",
+    "%sh##forumage" to "%s h",
+    "%sm##forumage" to "%s min",
+    "%sw ago" to "il y a %s sem",
     "%s× missed" to "%s× raté",
     "%s× more likely" to "%s× plus souvent",
     "%s× used" to "%s× utilisé",
@@ -1742,6 +1747,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "Migraine in progress" to "Migraine en cours",
     "Migraine report" to "Rapport migraine",
     "Migraine selection" to "Choisir la crise",
+    "Migraine type" to "Type de migraine",
     "Migraine update" to "Migraine : maj",
     "Migraine with aura" to "Migraine avec aura",
     "Migraine without aura" to "Migraine sans aura",
@@ -3556,6 +3562,7 @@ internal val FR_STRINGS: Map<String, String> = mapOf(
     "in %s attacks" to "sur %s crises",
     "in %s%% of attacks" to "dans %s%% des crises",
     "including the ones where it's thin. Prescription devices are marked as such.\n\n" to "y compris là où elles sont minces. Les appareils sur ordonnance sont signalés.\n\n",
+    "just now" to "à l'instant",
     "last %s wks" to "%s dern. sem",
     "likely" to "probable",
     "longest run this year: %s" to "plus longue série cette année : %s",

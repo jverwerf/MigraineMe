@@ -133,6 +133,9 @@ verify_jwt = false
 [functions.tag-articles]
 verify_jwt = false
 
+[functions.translate-community]
+verify_jwt = false
+
 [functions.trial-ending-push]
 verify_jwt = false
 

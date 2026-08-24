@@ -3646,5 +3646,12 @@
  "📍 Location": "📍 Position",
  "📱 Usage Access": "📱 Accès à l'usage",
  "Show, hide, and reorder sections": "Afficher, masquer, réordonner les sections",
- "Logged items": "Éléments consignés"
+ "Logged items": "Éléments consignés",
+ "just now": "à l'instant",
+ "%sm##forumage": "%s min",
+ "%sh##forumage": "%s h",
+ "%sd##forumage": "%s j",
+ "%sd ago": "il y a %s j",
+ "%sw ago": "il y a %s sem",
+ "Migraine type": "Type de migraine"
 }

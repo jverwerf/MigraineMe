@@ -192,11 +192,11 @@
     "line": "            t(\"Evening Check-in — %1\\$s of %2\\$s\", pageIndex + 1, pages.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:176",
+    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:187",
     "line": "                        Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", worst.dayName, worst.count, String.format(\"%.0f\", worst.pct)),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:327",
+    "site": "app/src/main/java/com/migraineme/FrequencyTrendsScreen.kt:292",
     "line": "                        Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], counts[worstIdx], String.format(\"%.0f\", pct)),"
   },
   {
@@ -220,15 +220,15 @@
     "line": "            t(\"%1\\$s logged • %2\\$s types\", spider.totalLogged, spider.axes.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:372",
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:390",
     "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:756",
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:774",
     "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:763",
+    "site": "app/src/main/java/com/migraineme/InsightsDetailScreen.kt:781",
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
@@ -264,31 +264,31 @@
     "line": "                        Text(t(\"%1\\$s%% of days vs %2\\$s%% usually\", condPct.toInt(), baselinePct.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1032",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1039",
     "line": "                        t(\"Showing %1\\$s of %2\\$s attacks · the PDF includes all %3\\$s\", ATTACK_CARDS_SHOWN, filteredSorted.size, filteredSorted.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1370",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1377",
     "line": "                    Text(t(\"%1\\$s of %2\\$s migraines\", filteredCount, totalCount),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1802",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1809",
     "line": "                Text(t(\"%1\\$s logged • %2\\$s categories\", data.totalLogged, data.breakdown.size),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1904",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1911",
     "line": "                    Text(t(\"%1\\$s%2\\$sm • Severity: %3\\$s/10\", hStr, d.minusHours(d.toHours()).toMinutes(), sel.severity ?: \"-\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1911",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:1918",
     "line": "            Text(t(\"%1\\$s of %2\\$s\", idx + 1, sorted.size), color = AppTheme.AccentPurple,"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2345",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:2352",
     "line": "                    t(\"Showing %1\\$s of %2\\$s pain entries\", d.painEntries.size, d.totalPainEntries),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:777",
+    "site": "app/src/main/java/com/migraineme/InsightsReportScreen.kt:784",
     "line": "                            Text(t(\"Most frequent: %1\\$s (%2\\$s migraines, %3\\$s%%)\", labels[worstIdx], seasonalCounts[worstIdx], String.format(\"%.0f\", pct)),"
   },
   {
@@ -364,7 +364,7 @@
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/ManagePoolScreen.kt:180",
+    "site": "app/src/main/java/com/migraineme/ManagePoolScreen.kt:183",
     "line": "            snackbarHostState.showSnackbar(tSync(\"Failed to add: %1\\$s\", msg))"
   },
   {
@@ -412,55 +412,59 @@
     "line": "            stage == \"forecast\" -> tSync(\"Heads up for %1\\$s\").replace(\"%1\\$s\", date)"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:150",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:124",
+    "line": "                                t(\"%1\\$s migraine days, %2\\$s pain days\", mix.migraineDays, mix.painDays)"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:188",
     "line": "                    t(\"Your overview of logged migraine attacks. The card shows three things side-by-side: \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:151",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:189",
     "line": "                    t(\"the number of attacks this week (with an up/down arrow comparing to last week), \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:152",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:190",
     "line": "                    t(\"your average severity this week (green / amber / red), and your all-time total.\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:153",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:191",
     "line": "                    t(\"Tap into the detail screen and you'll get:\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:154",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:192",
     "line": "                    t(\"• The full weekly summary hero (this week vs last week, average per month)\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:155",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:193",
     "line": "                    t(\"• Frequency charts — by month, week, day-of-week, and severity\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:156",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:194",
     "line": "                    t(\"• The Migraine Timeline: scroll through every attack you've logged, with \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:157",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:195",
     "line": "                    t(\"category-count chips showing how many triggers / prodromes / medicines / reliefs / \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:158",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:196",
     "line": "                    t(\"activities / locations were linked to each one\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:159",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:197",
     "line": "                    t(\"• Spider cards breaking down what was happening around each attack\\n\\n\") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:160",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:198",
     "line": "                    t(\"Use the card for a quick weekly trend read; tap in when you want to understand \") +"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:161",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:199",
     "line": "                    t(\"the pattern behind a specific attack.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:73",
+    "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:74",
     "line": "                        \"this week (vs ${wsValue.lastWeekCount})\","
   },
   {

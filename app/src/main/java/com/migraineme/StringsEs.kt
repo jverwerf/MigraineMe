@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3648 entries.
+ * 3655 entries.
  */
 internal val ES_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos los datos",
@@ -136,6 +136,11 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "%s-Day Sleep History" to "Sueño, %s días",
     "%s/10 avg severity" to "%s/10 fuerza media",
     "%s/3 selected" to "%s/3 elegidos",
+    "%sd ago" to "hace %s d",
+    "%sd##forumage" to "%s d",
+    "%sh##forumage" to "%s h",
+    "%sm##forumage" to "%s min",
+    "%sw ago" to "hace %s sem",
     "%s× missed" to "%s× sin ella",
     "%s× more likely" to "%s× más probable",
     "%s× used" to "%s× usado",
@@ -1742,6 +1747,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "Migraine in progress" to "Migraña en curso",
     "Migraine report" to "Informe de migraña",
     "Migraine selection" to "Elegir migraña",
+    "Migraine type" to "Tipo de migraña",
     "Migraine update" to "Migraña: cambio",
     "Migraine with aura" to "Migraña con aura",
     "Migraine without aura" to "Migraña sin aura",
@@ -3556,6 +3562,7 @@ internal val ES_STRINGS: Map<String, String> = mapOf(
     "in %s attacks" to "en %s ataques",
     "in %s%% of attacks" to "en %s%% de ataques",
     "including the ones where it's thin. Prescription devices are marked as such.\n\n" to "incluidas aquellas en las que es escasa. Los aparatos con receta van marcados.\n\n",
+    "just now" to "ahora mismo",
     "last %s wks" to "últimas %s sem",
     "likely" to "probable",
     "longest run this year: %s" to "racha más larga del año: %s",

@@ -476,7 +476,7 @@ fun ForumPostDetailScreen(
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                pinnedTopic.title,
+                                t(pinnedTopic.title),
                                 color = Color.White,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
@@ -485,7 +485,7 @@ fun ForumPostDetailScreen(
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                pinnedTopic.description,
+                                t(pinnedTopic.description),
                                 color = AppTheme.BodyTextColor,
                                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp)
                             )
@@ -720,11 +720,12 @@ private fun formatForumDate(isoDate: String): String {
         val hours = ChronoUnit.HOURS.between(instant, now)
         val days = ChronoUnit.DAYS.between(instant, now)
         when {
-            minutes < 1 -> "just now"
-            minutes < 60 -> "${minutes}m"
-            hours < 24 -> "${hours}h"
-            days < 7 -> "${days}d"
-            else -> DateTimeFormatter.ofPattern("d MMM").withZone(ZoneId.systemDefault()).format(instant)
+            minutes < 1 -> tSync("just now")
+            minutes < 60 -> tSync("%sm##forumage", minutes)
+            hours < 24 -> tSync("%sh##forumage", hours)
+            days < 7 -> tSync("%sd##forumage", days)
+            else -> DateTimeFormatter.ofPattern("d MMM", appLocale())
+                .withZone(ZoneId.systemDefault()).format(instant)
         }
     } catch (_: Exception) { "" }
 }

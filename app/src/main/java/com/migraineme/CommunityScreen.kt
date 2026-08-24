@@ -74,7 +74,13 @@ fun CommunityScreen(
     var refreshKey by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { refreshKey++ }
 
-    LaunchedEffect(authState.accessToken, refreshKey) {
+    // The feed itself is translated server-side, so a language change is a
+    // refetch, not just a recomposition. Keying the load on it means switching
+    // language on the Community tab reloads the articles in that language
+    // instead of leaving an English feed under a German app.
+    val contentLang by LangPrefs.lang.collectAsState()
+
+    LaunchedEffect(authState.accessToken, refreshKey, contentLang) {
         authState.accessToken?.let {
             vm.loadAll(it)
             vm.markAllRead(it)
@@ -456,7 +462,7 @@ private fun PinnedTopicCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    topic.title,
+                    t(topic.title),
                     color = Color.White,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -464,7 +470,7 @@ private fun PinnedTopicCard(
                 Spacer(Modifier.height(2.dp))
 
                 Text(
-                    topic.description,
+                    t(topic.description),
                     color = AppTheme.BodyTextColor,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
@@ -687,7 +693,7 @@ private fun BrowseTagsSection(
             for ((category, tags) in tagsByCategory) {
                 val catColor = tagCategoryColor(category)
                 Text(
-                    category.replaceFirstChar { it.uppercase() },
+                    t(tagCategoryLabel(category)),
                     color = catColor,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
@@ -718,7 +724,7 @@ private fun BrowseTagsSection(
                                 .padding(horizontal = 10.dp, vertical = 5.dp)
                         ) {
                             Text(
-                                tag.name,
+                                t(tag.name),
                                 color = if (isSelected) Color.White else catColor,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
@@ -834,7 +840,7 @@ private fun ArticleCard(
                             }
                             Box(modifier = tagModifier) {
                                 Text(
-                                    tag.name,
+                                    t(tag.name),
                                     color = if (isMatched) Color.White else catColor,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = if (isMatched) FontWeight.SemiBold else FontWeight.Normal
@@ -899,18 +905,29 @@ private fun ArticleCard(
 
 // ── Helpers ──
 
+/**
+ * "Today", "3d ago", "12 Aug" for an article's date.
+ *
+ * Both halves used to print English on a translated screen: the words were bare
+ * literals, and the month names came from a formatter with no locale, which
+ * follows the DEVICE locale rather than the app language. appLocale() is the
+ * app's own choice, so a German reader on an English phone gets "12 Aug" in
+ * German and not in the phone's language.
+ */
 private fun formatRelativeDate(isoDate: String): String {
     return try {
         val instant = Instant.parse(isoDate)
         val now = Instant.now()
         val days = ChronoUnit.DAYS.between(instant, now)
         when {
-            days == 0L -> "Today"
-            days == 1L -> "Yesterday"
-            days < 7L -> "${days}d ago"
-            days < 30L -> "${days / 7}w ago"
-            days < 365L -> DateTimeFormatter.ofPattern("d MMM").withZone(ZoneId.systemDefault()).format(instant)
-            else -> DateTimeFormatter.ofPattern("d MMM yy").withZone(ZoneId.systemDefault()).format(instant)
+            days == 0L -> tSync("Today")
+            days == 1L -> tSync("Yesterday")
+            days < 7L -> tSync("%sd ago", days)
+            days < 30L -> tSync("%sw ago", days / 7)
+            days < 365L -> DateTimeFormatter.ofPattern("d MMM", appLocale())
+                .withZone(ZoneId.systemDefault()).format(instant)
+            else -> DateTimeFormatter.ofPattern("d MMM yy", appLocale())
+                .withZone(ZoneId.systemDefault()).format(instant)
         }
     } catch (e: Exception) { "" }
 }

@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3648 entries.
+ * 3655 entries.
  */
 internal val PT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  De todos os dados",
@@ -136,6 +136,11 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "%s-Day Sleep History" to "Sono, %s dias",
     "%s/10 avg severity" to "%s/10 força média",
     "%s/3 selected" to "%s/3 marcados",
+    "%sd ago" to "há %s d",
+    "%sd##forumage" to "%s d",
+    "%sh##forumage" to "%s h",
+    "%sm##forumage" to "%s min",
+    "%sw ago" to "há %s sem",
     "%s× missed" to "%s× sem ela",
     "%s× more likely" to "%s× mais provável",
     "%s× used" to "%s× usado",
@@ -1742,6 +1747,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "Migraine in progress" to "Enxaqueca a decorrer",
     "Migraine report" to "Relatório de enxaqueca",
     "Migraine selection" to "Escolher a crise",
+    "Migraine type" to "Tipo de enxaqueca",
     "Migraine update" to "Enxaqueca: novo",
     "Migraine with aura" to "Enxaqueca com aura",
     "Migraine without aura" to "Enxaqueca sem aura",
@@ -3556,6 +3562,7 @@ internal val PT_STRINGS: Map<String, String> = mapOf(
     "in %s attacks" to "em %s ataques",
     "in %s%% of attacks" to "em %s%% das crises",
     "including the ones where it's thin. Prescription devices are marked as such.\n\n" to "incluindo onde é fraca. Os aparelhos com receita estão assinalados.\n\n",
+    "just now" to "agora mesmo",
     "last %s wks" to "últimas %s sem",
     "likely" to "provável",
     "longest run this year: %s" to "maior sequência do ano: %s",

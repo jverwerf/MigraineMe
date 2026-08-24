@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3648 entries.
+ * 3655 entries.
  */
 internal val IT_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Su tutti i dati",
@@ -136,6 +136,11 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "%s-Day Sleep History" to "Sonno, %s giorni",
     "%s/10 avg severity" to "%s/10 intensità med",
     "%s/3 selected" to "%s/3 scelti",
+    "%sd ago" to "%s g fa",
+    "%sd##forumage" to "%s g",
+    "%sh##forumage" to "%s h",
+    "%sm##forumage" to "%s min",
+    "%sw ago" to "%s sett. fa",
     "%s× missed" to "%s× persa",
     "%s× more likely" to "%s× più spesso",
     "%s× used" to "%s× usato",
@@ -1742,6 +1747,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "Migraine in progress" to "Emicrania in corso",
     "Migraine report" to "Report emicrania",
     "Migraine selection" to "Scegli l'emicrania",
+    "Migraine type" to "Tipo di emicrania",
     "Migraine update" to "Emicrania: nuovo",
     "Migraine with aura" to "Emicrania con aura",
     "Migraine without aura" to "Emicrania senza aura",
@@ -3556,6 +3562,7 @@ internal val IT_STRINGS: Map<String, String> = mapOf(
     "in %s attacks" to "in %s attacchi",
     "in %s%% of attacks" to "nel %s%% attacchi",
     "including the ones where it's thin. Prescription devices are marked as such.\n\n" to "comprese quelle in cui è scarsa. I dispositivi su prescrizione sono segnalati.\n\n",
+    "just now" to "proprio ora",
     "last %s wks" to "ultime %s sett",
     "likely" to "probabile",
     "longest run this year: %s" to "serie più lunga dell'anno: %s",

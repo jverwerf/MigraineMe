@@ -11,7 +11,7 @@ package com.migraineme
  * cannot wrap stay inside the space the English occupies. A key absent here
  * renders its English source, so partial coverage is safe.
  *
- * 3648 entries.
+ * 3655 entries.
  */
 internal val NL_STRINGS: Map<String, String> = mapOf(
     "  Based on all time data" to "  Uit alle gegevens",
@@ -136,6 +136,11 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "%s-Day Sleep History" to "Slaap, %s dagen",
     "%s/10 avg severity" to "%s/10 gem. zwaarte",
     "%s/3 selected" to "%s/3 gekozen",
+    "%sd ago" to "%s d geleden",
+    "%sd##forumage" to "%s d",
+    "%sh##forumage" to "%s u",
+    "%sm##forumage" to "%s min",
+    "%sw ago" to "%s w geleden",
     "%s× missed" to "%s× gemist",
     "%s× more likely" to "%s× vaker",
     "%s× used" to "%s× gebruikt",
@@ -1742,6 +1747,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "Migraine in progress" to "Migraine bezig",
     "Migraine report" to "Migrainerapport",
     "Migraine selection" to "Kies migraine",
+    "Migraine type" to "Migrainetype",
     "Migraine update" to "Migraine-update",
     "Migraine with aura" to "Migraine met aura",
     "Migraine without aura" to "Migraine zonder aura",
@@ -3556,6 +3562,7 @@ internal val NL_STRINGS: Map<String, String> = mapOf(
     "in %s attacks" to "in %s aanvallen",
     "in %s%% of attacks" to "bij %s%% aanvallen",
     "including the ones where it's thin. Prescription devices are marked as such.\n\n" to "ook waar dat bewijs dun is. Apparaten op recept staan als zodanig gemarkeerd.\n\n",
+    "just now" to "zojuist",
     "last %s wks" to "laatste %s wk",
     "likely" to "waarschijnlijk",
     "longest run this year: %s" to "langste reeks dit jaar: %s",

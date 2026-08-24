@@ -3646,5 +3646,12 @@
  "📍 Location": "📍 Posizione",
  "📱 Usage Access": "📱 Accesso all'uso",
  "Show, hide, and reorder sections": "Mostra, nascondi e ordina le sezioni",
- "Logged items": "Voci registrate"
+ "Logged items": "Voci registrate",
+ "just now": "proprio ora",
+ "%sm##forumage": "%s min",
+ "%sh##forumage": "%s h",
+ "%sd##forumage": "%s g",
+ "%sd ago": "%s g fa",
+ "%sw ago": "%s sett. fa",
+ "Migraine type": "Tipo di emicrania"
 }

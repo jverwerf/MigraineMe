@@ -11,37 +11,46 @@ data class PinnedTopicData(
     val drawIcon: DrawScope.(Color) -> Unit
 )
 
+/**
+ * The five conversation starters pinned above the forum.
+ *
+ * Held in ENGLISH, translated at the render site. They used to call tSync()
+ * here, but `all` is an object initialiser: it runs once, on first access, and
+ * froze the five titles into whichever language happened to be active at that
+ * moment. Switching language afterwards translated the entire rest of the
+ * screen and left these five alone until the process was killed.
+ */
 object PinnedTopics {
 
     val all = listOf(
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000001",
-            title = tSync("What actually works for you?"),
-            description = tSync("Share the treatments, habits, or lifestyle changes that have made a real difference for your migraines."),
+            title = "What actually works for you?",
+            description = "Share the treatments, habits, or lifestyle changes that have made a real difference for your migraines.",
             drawIcon = { color -> HubIcons.run { drawThumbsUp(color) } }
         ),
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000002",
-            title = tSync("Your most surprising trigger"),
-            description = tSync("Tell us about a trigger you didn't expect — the one that took you ages to figure out."),
+            title = "Your most surprising trigger",
+            description = "Tell us about a trigger you didn't expect — the one that took you ages to figure out.",
             drawIcon = { color -> HubIcons.run { drawTriggerBolt(color) } }
         ),
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000003",
-            title = tSync("Managing migraines at work"),
-            description = tSync("How do you handle migraines in the workplace? Tips on communicating with employers, coping mid-shift, or working from home."),
+            title = "Managing migraines at work",
+            description = "How do you handle migraines in the workplace? Tips on communicating with employers, coping mid-shift, or working from home.",
             drawIcon = { color -> HubIcons.run { drawBriefcase(color) } }
         ),
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000004",
-            title = tSync("Sleep routines that help"),
-            description = tSync("What does your sleep routine look like? Share what's helped you get better rest and fewer morning migraines."),
+            title = "Sleep routines that help",
+            description = "What does your sleep routine look like? Share what's helped you get better rest and fewer morning migraines.",
             drawIcon = { color -> HubIcons.run { drawMoonSleep(color) } }
         ),
         PinnedTopicData(
             id = "00000000-0000-0000-0000-000000000006",
-            title = tSync("Food & diet — what do you avoid?"),
-            description = tSync("Elimination diets, safe foods, meals that help — share what you've learned about food and migraines."),
+            title = "Food & diet — what do you avoid?",
+            description = "Elimination diets, safe foods, meals that help — share what you've learned about food and migraines.",
             drawIcon = { color -> HubIcons.run { drawForkLeaf(color) } }
         ),
     )

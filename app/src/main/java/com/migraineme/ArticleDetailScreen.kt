@@ -222,7 +222,7 @@ fun ArticleDetailScreen(
 
                         Box(modifier = tagModifier) {
                             Text(
-                                tag.name,
+                                t(tag.name),
                                 color = if (isMatched) Color.White else catColor,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = if (isMatched) FontWeight.SemiBold else FontWeight.Normal
@@ -277,6 +277,29 @@ fun ArticleDetailScreen(
 }
 
 // ── Shared helpers ──
+
+/**
+ * The browse-by-category heading for a tag category.
+ *
+ * The category is a database enum, so it cannot be shown raw: it rendered
+ * "Missed_activity" with the underscore in it, and being a bare column value it
+ * never entered the translation tables at all. Mapping to a written English
+ * label puts it back on the normal t() path, where the words already exist
+ * because the rest of the app uses them.
+ */
+internal fun tagCategoryLabel(category: String?): String = when (category) {
+    "trigger" -> "Trigger"
+    "medicine" -> "Medicine"
+    "relief" -> "Relief"
+    "symptom" -> "Symptom"
+    "prodrome" -> "Prodrome"
+    "activity" -> "Activity"
+    "location" -> "Location"
+    "missed_activity" -> "Missed activity"
+    "migraine_type" -> "Migraine type"
+    "profile" -> "Profile"
+    else -> "Other"
+}
 
 internal fun tagCategoryColor(category: String?): Color {
     return when (category) {

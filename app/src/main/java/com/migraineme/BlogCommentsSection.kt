@@ -71,8 +71,37 @@ data class BlogCommentRow(
     val attachment: JsonObject? = null,
     val status: String? = null,
     @SerialName("created_at") val createdAt: String,
-    val profiles: CommentProfile? = null
+    val profiles: CommentProfile? = null,
+    @SerialName("blog_comment_translations") val translations: List<CommunityTranslationRow>? = null
 )
+
+/** The blog post's comment thread, in the reader's language. See the twin in ArticleCommentsSection. */
+private suspend fun fetchBlogComments(
+    client: HttpClient,
+    supabaseUrl: String,
+    supabaseKey: String,
+    accessToken: String?,
+    blogId: String
+): List<BlogCommentRow>? {
+    val response = client.get("$supabaseUrl/rest/v1/blog_comments") {
+        header(HttpHeaders.Authorization, "Bearer $accessToken")
+        header("apikey", supabaseKey)
+        parameter("blog_id", "eq.$blogId")
+        parameter("status", "eq.active")
+        parameter(
+            "select",
+            "id,blog_id,user_id,parent_id,body,attachment,status,created_at," +
+                "profiles(display_name,avatar_url)" +
+                CommunityI18n.embed("blog_comment_translations", "body")
+        )
+        translationLang("blog_comment_translations")
+        parameter("order", "created_at.asc")
+    }
+    if (response.status.value !in 200..299) return null
+    return response.body<List<BlogCommentRow>>().map { c ->
+        c.copy(body = c.translations.one()?.body.orEnglish(c.body), translations = null)
+    }
+}
 
 //  Comments Section Composable
 
@@ -104,21 +133,14 @@ fun BlogCommentsSection(
     val supabaseUrl = BuildConfig.SUPABASE_URL
     val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
 
+    val contentLang by LangPrefs.lang.collectAsState()
+
     // Fetch comments
-    LaunchedEffect(blogId) {
+    LaunchedEffect(blogId, contentLang) {
         loading = true
         try {
-            val response = client.get("$supabaseUrl/rest/v1/blog_comments") {
-                header(HttpHeaders.Authorization, "Bearer $accessToken")
-                header("apikey", supabaseKey)
-                parameter("blog_id", "eq.$blogId")
-                parameter("status", "eq.active")
-                parameter("select", "id,blog_id,user_id,parent_id,body,attachment,status,created_at,profiles(display_name,avatar_url)")
-                parameter("order", "created_at.asc")
-            }
-            if (response.status.value in 200..299) {
-                comments = response.body()
-            }
+            fetchBlogComments(client, supabaseUrl, supabaseKey, accessToken, blogId)
+                ?.let { comments = it }
         } catch (e: Exception) {
             Log.e(TAG, "fetch comments error", e)
         }
@@ -381,33 +403,17 @@ fun BlogCommentsSection(
                                 Log.d(TAG, "Post response: ${response.status}")
                                 if (response.status.value in 200..299) {
                                     // Refetch all comments
-                                    val fetchResponse = client.get("$supabaseUrl/rest/v1/blog_comments") {
-                                        header(HttpHeaders.Authorization, "Bearer $accessToken")
-                                        header("apikey", supabaseKey)
-                                        parameter("blog_id", "eq.$blogId")
-                                        parameter("status", "eq.active")
-                                        parameter("select", "id,blog_id,user_id,parent_id,body,attachment,status,created_at,profiles(display_name,avatar_url)")
-                                        parameter("order", "created_at.asc")
-                                    }
-                                    if (fetchResponse.status.value in 200..299) {
-                                        comments = fetchResponse.body()
-                                    }
+                                    fetchBlogComments(client, supabaseUrl, supabaseKey, accessToken, blogId)
+                                        ?.let { comments = it }
                                     commentText = ""
                                     replyingTo = null
                                     pendingAttachment = null
                                     // Delayed re-fetch after moderation has had time to process
                                     val preModCount = comments.size
                                     kotlinx.coroutines.delay(4000L)
-                                    val modFetch = client.get("$supabaseUrl/rest/v1/blog_comments") {
-                                        header(HttpHeaders.Authorization, "Bearer $accessToken")
-                                        header("apikey", supabaseKey)
-                                        parameter("blog_id", "eq.$blogId")
-                                        parameter("status", "eq.active")
-                                        parameter("select", "id,blog_id,user_id,parent_id,body,attachment,status,created_at,profiles(display_name,avatar_url)")
-                                        parameter("order", "created_at.asc")
-                                    }
-                                    if (modFetch.status.value in 200..299) {
-                                        val updatedComments: List<BlogCommentRow> = modFetch.body()
+                                    val updatedComments =
+                                        fetchBlogComments(client, supabaseUrl, supabaseKey, accessToken, blogId)
+                                    if (updatedComments != null) {
                                         comments = updatedComments
                                         if (updatedComments.size < preModCount) {
                                             showModerationAlert = true
@@ -717,10 +723,10 @@ private fun formatBlogCommentDate(isoDate: String): String {
         val hours = ChronoUnit.HOURS.between(instant, now)
         val days = ChronoUnit.DAYS.between(instant, now)
         when {
-            minutes < 1 -> "just now"
-            minutes < 60 -> "${minutes}m"
-            hours < 24 -> "${hours}h"
-            days < 7 -> "${days}d"
+            minutes < 1 -> tSync("just now")
+            minutes < 60 -> tSync("%sm##forumage", minutes)
+            hours < 24 -> tSync("%sh##forumage", hours)
+            days < 7 -> tSync("%sd##forumage", days)
             else -> {
                 val fmt = DateTimeFormatter.ofPattern("d MMM").withZone(ZoneId.systemDefault())
                 fmt.format(instant)

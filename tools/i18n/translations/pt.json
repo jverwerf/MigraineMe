@@ -3646,5 +3646,12 @@
  "📍 Location": "📍 Localização",
  "📱 Usage Access": "📱 Acesso ao uso",
  "Show, hide, and reorder sections": "Mostrar, ocultar e ordenar secções",
- "Logged items": "Itens registados"
+ "Logged items": "Itens registados",
+ "just now": "agora mesmo",
+ "%sm##forumage": "%s min",
+ "%sh##forumage": "%s h",
+ "%sd##forumage": "%s d",
+ "%sd ago": "há %s d",
+ "%sw ago": "há %s sem",
+ "Migraine type": "Tipo de enxaqueca"
 }

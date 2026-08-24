@@ -3646,5 +3646,12 @@
  "📍 Location": "📍 Standort",
  "📱 Usage Access": "📱 Nutzungszugriff",
  "Show, hide, and reorder sections": "Abschnitte zeigen, verbergen, ordnen",
- "Logged items": "Erfasste Einträge"
+ "Logged items": "Erfasste Einträge",
+ "just now": "gerade eben",
+ "%sm##forumage": "%s Min.",
+ "%sh##forumage": "%s Std.",
+ "%sd##forumage": "%s T.",
+ "%sd ago": "vor %s T.",
+ "%sw ago": "vor %s W.",
+ "Migraine type": "Migränetyp"
 }

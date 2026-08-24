@@ -70,7 +70,8 @@ data class CommentRow(
     val body: String,
     val attachment: JsonObject? = null,
     @SerialName("created_at") val createdAt: String,
-    val profiles: CommentProfile? = null
+    val profiles: CommentProfile? = null,
+    @SerialName("article_comment_translations") val translations: List<CommunityTranslationRow>? = null
 )
 
 @Serializable
@@ -78,6 +79,41 @@ data class CommentProfile(
     @SerialName("display_name") val displayName: String? = null,
     @SerialName("avatar_url") val avatarUrl: String? = null
 )
+
+/**
+ * The article's comment thread, in the reader's language.
+ *
+ * Three call sites needed the identical query (first load, straight after
+ * posting, and again once moderation has had a moment), and each one that
+ * forgot the translation embed would silently snap the whole thread back to
+ * English. One function, so that cannot happen.
+ */
+private suspend fun fetchArticleComments(
+    client: HttpClient,
+    supabaseUrl: String,
+    supabaseKey: String,
+    accessToken: String?,
+    articleId: String
+): List<CommentRow>? {
+    val response = client.get("$supabaseUrl/rest/v1/article_comments") {
+        header(HttpHeaders.Authorization, "Bearer $accessToken")
+        header("apikey", supabaseKey)
+        parameter("article_id", "eq.$articleId")
+        parameter("status", "eq.active")
+        parameter(
+            "select",
+            "id,article_id,user_id,parent_id,body,attachment,created_at," +
+                "profiles(display_name,avatar_url)" +
+                CommunityI18n.embed("article_comment_translations", "body")
+        )
+        translationLang("article_comment_translations")
+        parameter("order", "created_at.asc")
+    }
+    if (response.status.value !in 200..299) return null
+    return response.body<List<CommentRow>>().map { c ->
+        c.copy(body = c.translations.one()?.body.orEnglish(c.body), translations = null)
+    }
+}
 
 //  Comments Section Composable 
 
@@ -109,21 +145,17 @@ fun ArticleCommentsSection(
     val supabaseUrl = BuildConfig.SUPABASE_URL
     val supabaseKey = BuildConfig.SUPABASE_ANON_KEY
 
+    // Refetch when the language changes: the companions' comments are content,
+    // translated server-side, so switching language has to go back for them the
+    // same way it does for the article they sit under.
+    val contentLang by LangPrefs.lang.collectAsState()
+
     // Fetch comments
-    LaunchedEffect(articleId) {
+    LaunchedEffect(articleId, contentLang) {
         loading = true
         try {
-            val response = client.get("$supabaseUrl/rest/v1/article_comments") {
-                header(HttpHeaders.Authorization, "Bearer $accessToken")
-                header("apikey", supabaseKey)
-                parameter("article_id", "eq.$articleId")
-                parameter("status", "eq.active")
-                parameter("select", "id,article_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
-                parameter("order", "created_at.asc")
-            }
-            if (response.status.value in 200..299) {
-                comments = response.body()
-            }
+            fetchArticleComments(client, supabaseUrl, supabaseKey, accessToken, articleId)
+                ?.let { comments = it }
         } catch (e: Exception) {
             Log.e(TAG, "fetch comments error", e)
         }
@@ -386,33 +418,17 @@ fun ArticleCommentsSection(
                                 Log.d(TAG, "Post response: ${response.status}")
                                 if (response.status.value in 200..299) {
                                     // Refetch all comments
-                                    val fetchResponse = client.get("$supabaseUrl/rest/v1/article_comments") {
-                                        header(HttpHeaders.Authorization, "Bearer $accessToken")
-                                        header("apikey", supabaseKey)
-                                        parameter("article_id", "eq.$articleId")
-                                        parameter("status", "eq.active")
-                                        parameter("select", "id,article_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
-                                        parameter("order", "created_at.asc")
-                                    }
-                                    if (fetchResponse.status.value in 200..299) {
-                                        comments = fetchResponse.body()
-                                    }
+                                    fetchArticleComments(client, supabaseUrl, supabaseKey, accessToken, articleId)
+                                        ?.let { comments = it }
                                     commentText = ""
                                     replyingTo = null
                                     pendingAttachment = null
                                     // Delayed re-fetch after moderation has had time to process
                                     val preModCount = comments.size
                                     kotlinx.coroutines.delay(4000L)
-                                    val modFetch = client.get("$supabaseUrl/rest/v1/article_comments") {
-                                        header(HttpHeaders.Authorization, "Bearer $accessToken")
-                                        header("apikey", supabaseKey)
-                                        parameter("article_id", "eq.$articleId")
-                                        parameter("status", "eq.active")
-                                        parameter("select", "id,article_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
-                                        parameter("order", "created_at.asc")
-                                    }
-                                    if (modFetch.status.value in 200..299) {
-                                        val updatedComments: List<CommentRow> = modFetch.body()
+                                    val updatedComments =
+                                        fetchArticleComments(client, supabaseUrl, supabaseKey, accessToken, articleId)
+                                    if (updatedComments != null) {
                                         comments = updatedComments
                                         if (updatedComments.size < preModCount) {
                                             showModerationAlert = true
@@ -722,10 +738,10 @@ private fun formatCommentDate(isoDate: String): String {
         val hours = ChronoUnit.HOURS.between(instant, now)
         val days = ChronoUnit.DAYS.between(instant, now)
         when {
-            minutes < 1 -> "just now"
-            minutes < 60 -> "${minutes}m"
-            hours < 24 -> "${hours}h"
-            days < 7 -> "${days}d"
+            minutes < 1 -> tSync("just now")
+            minutes < 60 -> tSync("%sm##forumage", minutes)
+            hours < 24 -> tSync("%sh##forumage", hours)
+            days < 7 -> tSync("%sd##forumage", days)
             else -> {
                 val fmt = DateTimeFormatter.ofPattern("d MMM", appLocale()).withZone(ZoneId.systemDefault())
                 fmt.format(instant)

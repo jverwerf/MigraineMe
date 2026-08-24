@@ -3646,5 +3646,12 @@
  "📍 Location": "📍 Locatie",
  "📱 Usage Access": "📱 Gebruikstoegang",
  "Show, hide, and reorder sections": "Secties tonen, verbergen, ordenen",
- "Logged items": "Gelogde items"
+ "Logged items": "Gelogde items",
+ "just now": "zojuist",
+ "%sm##forumage": "%s min",
+ "%sh##forumage": "%s u",
+ "%sd##forumage": "%s d",
+ "%sd ago": "%s d geleden",
+ "%sw ago": "%s w geleden",
+ "Migraine type": "Migrainetype"
 }

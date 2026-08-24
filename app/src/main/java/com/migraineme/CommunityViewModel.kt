@@ -51,7 +51,8 @@ data class ArticleRow(
     @SerialName("ai_summary") val aiSummary: String? = null,
     @SerialName("relevance_score") val relevanceScore: Int? = null,
     @SerialName("published_at") val publishedAt: String? = null,
-    @SerialName("article_tags") val articleTags: List<ArticleTagJoin>? = null
+    @SerialName("article_tags") val articleTags: List<ArticleTagJoin>? = null,
+    @SerialName("article_translations") val translations: List<CommunityTranslationRow>? = null
 )
 
 // -- Blog models --
@@ -73,7 +74,8 @@ data class BlogRow(
     @SerialName("reply_count") val replyCount: Int = 0,
     @SerialName("published_at") val publishedAt: String? = null,
     @SerialName("created_at") val createdAt: String? = null,
-    @SerialName("updated_at") val updatedAt: String? = null
+    @SerialName("updated_at") val updatedAt: String? = null,
+    @SerialName("blog_translations") val translations: List<CommunityTranslationRow>? = null
 )
 
 @Serializable
@@ -104,7 +106,8 @@ data class ForumPostRow(
     @SerialName("reply_count") val replyCount: Int = 0,
     @SerialName("created_at") val createdAt: String,
     @SerialName("updated_at") val updatedAt: String? = null,
-    val profiles: ForumProfile? = null
+    val profiles: ForumProfile? = null,
+    @SerialName("forum_post_translations") val translations: List<CommunityTranslationRow>? = null
 )
 
 @Serializable
@@ -122,7 +125,8 @@ data class ForumCommentRow(
     val body: String,
     val attachment: JsonObject? = null,
     @SerialName("created_at") val createdAt: String,
-    val profiles: ForumProfile? = null
+    val profiles: ForumProfile? = null,
+    @SerialName("forum_comment_translations") val translations: List<CommunityTranslationRow>? = null
 )
 
 // -- Lightweight models for user data --
@@ -228,7 +232,8 @@ data class ThreadSummaryRow(
     @SerialName("post_id") val postId: String,
     val summary: String,
     @SerialName("comment_count") val commentCount: Int = 0,
-    @SerialName("generated_at") val generatedAt: String? = null
+    @SerialName("generated_at") val generatedAt: String? = null,
+    @SerialName("forum_thread_summary_translations") val translations: List<CommunityTranslationRow>? = null
 )
 
 // -- Discussion starter model --
@@ -492,14 +497,19 @@ class CommunityViewModel : ViewModel() {
             val response = client.get("$supabaseUrl/rest/v1/forum_thread_summaries") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 header("apikey", supabaseKey)
-                parameter("select", "post_id,summary,comment_count,generated_at")
+                parameter(
+                    "select",
+                    "post_id,summary,comment_count,generated_at" +
+                        CommunityI18n.embed("forum_thread_summary_translations", "summary")
+                )
+                translationLang("forum_thread_summary_translations")
             }
             if (response.status.value !in 200..299) {
                 Log.w(TAG, "fetchThreadSummaries: ${response.status}")
                 emptyMap()
             } else {
                 val rows: List<ThreadSummaryRow> = response.body()
-                rows.associate { it.postId to it.summary }
+                rows.associate { it.postId to it.translations.one()?.summary.orEnglish(it.summary) }
             }
         } catch (e: Exception) {
             Log.w(TAG, "fetchThreadSummaries error: ${e.message}")
@@ -597,7 +607,13 @@ class CommunityViewModel : ViewModel() {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
                 header("apikey", supabaseKey)
                 parameter("status", "eq.active")
-                parameter("select", "id,user_id,title,body,attachment,reply_count,created_at,updated_at,profiles(display_name,avatar_url)")
+                parameter(
+                    "select",
+                    "id,user_id,title,body,attachment,reply_count,created_at,updated_at," +
+                        "profiles(display_name,avatar_url)" +
+                        CommunityI18n.embed("forum_post_translations", "title,body")
+                )
+                translationLang("forum_post_translations")
                 parameter("order", "updated_at.desc.nullslast")
                 parameter("limit", "100")
             }
@@ -609,6 +625,14 @@ class CommunityViewModel : ViewModel() {
                 Log.d(TAG, "fetchForumPosts raw: ${bodyText.take(500)}")
                 Json { ignoreUnknownKeys = true; explicitNulls = false }
                     .decodeFromString<List<ForumPostRow>>(bodyText)
+                    .map { post ->
+                        val tr = post.translations.one()
+                        post.copy(
+                            title = tr?.title.orEnglish(post.title),
+                            body = tr?.body.orEnglish(post.body),
+                            translations = null
+                        )
+                    }
             }
         } catch (e: Exception) {
             Log.e(TAG, "fetchForumPosts error", e)
@@ -700,11 +724,19 @@ class CommunityViewModel : ViewModel() {
                     header("apikey", supabaseKey)
                     parameter("post_id", "eq.$postId")
                     parameter("status", "eq.active")
-                    parameter("select", "id,post_id,user_id,parent_id,body,attachment,created_at,profiles(display_name,avatar_url)")
+                    parameter(
+                        "select",
+                        "id,post_id,user_id,parent_id,body,attachment,created_at," +
+                            "profiles(display_name,avatar_url)" +
+                            CommunityI18n.embed("forum_comment_translations", "body")
+                    )
+                    translationLang("forum_comment_translations")
                     parameter("order", "created_at.asc")
                 }
                 if (response.status.value in 200..299) {
-                    val comments: List<ForumCommentRow> = response.body()
+                    val comments: List<ForumCommentRow> = response.body<List<ForumCommentRow>>().map { c ->
+                        c.copy(body = c.translations.one()?.body.orEnglish(c.body), translations = null)
+                    }
                     _state.value = _state.value.copy(forumComments = comments, forumCommentsLoading = false)
                 } else {
                     Log.e(TAG, "loadForumComments: ${response.status}")
@@ -868,7 +900,13 @@ class CommunityViewModel : ViewModel() {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("status", "eq.published")
-            parameter("select", "id,title,url,image_url,source,ai_summary,relevance_score,published_at,article_tags(confidence,tags(id,name,category))")
+            parameter(
+                "select",
+                "id,title,url,image_url,source,ai_summary,relevance_score,published_at," +
+                    "article_tags(confidence,tags(id,name,category))" +
+                    CommunityI18n.embed("article_translations", "title,ai_summary")
+            )
+            translationLang("article_translations")
             parameter("order", "published_at.desc.nullslast")
             parameter("limit", "100")
         }
@@ -876,10 +914,15 @@ class CommunityViewModel : ViewModel() {
             Log.e(TAG, "fetchArticles: ${response.status} ${response.bodyAsText()}")
             return emptyList()
         }
+        // Translation first, entity decoding second: the source feeds hand us
+        // "&#8217;" and the translator was given the same raw text, so both
+        // sides of the fallback need the same clean-up.
         return response.body<List<ArticleRow>>().map { article ->
+            val tr = article.translations.one()
             article.copy(
-                title = decodeHtml(article.title),
-                aiSummary = article.aiSummary?.let { decodeHtml(it) }
+                title = decodeHtml(tr?.title.orEnglish(article.title)),
+                aiSummary = (tr?.aiSummary ?: article.aiSummary)?.let { decodeHtml(it) },
+                translations = null
             )
         }
     }
@@ -889,7 +932,16 @@ class CommunityViewModel : ViewModel() {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             header("apikey", supabaseKey)
             parameter("status", "eq.published")
-            parameter("select", "id,slug,title,excerpt,tag,body_html,faq,read_minutes,seo_description,cover_image_url,author,status,reply_count,published_at,created_at,updated_at")
+            parameter(
+                "select",
+                "id,slug,title,excerpt,tag,body_html,faq,read_minutes,seo_description," +
+                    "cover_image_url,author,status,reply_count,published_at,created_at,updated_at" +
+                    CommunityI18n.embed(
+                        "blog_translations",
+                        "title,excerpt,tag,body_html,faq,seo_description"
+                    )
+            )
+            translationLang("blog_translations")
             parameter("order", "published_at.desc.nullslast")
             parameter("limit", "100")
         }
@@ -897,10 +949,19 @@ class CommunityViewModel : ViewModel() {
             Log.e(TAG, "fetchBlogs: ${response.status} ${response.bodyAsText()}")
             return emptyList()
         }
+        // blog_translations is filled by the website's weekly blog pipeline and
+        // has been complete for every published post for a while; the apps were
+        // simply the one reader that never asked for it.
         return response.body<List<BlogRow>>().map { blog ->
+            val tr = blog.translations.one()
             blog.copy(
-                title = decodeHtml(blog.title),
-                excerpt = blog.excerpt?.let { decodeHtml(it) }
+                title = decodeHtml(tr?.title.orEnglish(blog.title)),
+                excerpt = (tr?.excerpt ?: blog.excerpt)?.let { decodeHtml(it) },
+                tag = tr?.tag ?: blog.tag,
+                bodyHtml = tr?.bodyHtml ?: blog.bodyHtml,
+                faq = tr?.faq ?: blog.faq,
+                seoDescription = tr?.seoDescription ?: blog.seoDescription,
+                translations = null
             )
         }
     }
