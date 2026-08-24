@@ -3657,5 +3657,22 @@
  "Breakfast": "Petit-déjeuner",
  "Lunch": "Déjeuner",
  "Dinner": "Dîner",
- "Snack": "Encas"
+ "Snack": "Encas",
+ "At least about %1$s points less pain than attacks you treated with nothing, over %2$s uses": "Au moins environ %1$s points de douleur en moins que les crises non traitées, sur %2$s prises",
+ "Attacks ended about %1$s sooner, over %2$s uses": "Les crises ont fini environ %1$s plus tôt, sur %2$s prises",
+ "Attacks ran about %1$s longer, over %2$s uses": "Les crises ont duré environ %1$s de plus, sur %2$s prises",
+ "Pain dropped about %1$s points within 2 hours, over %2$s uses": "La douleur a baissé d'environ %1$s points en 2 heures, sur %2$s prises",
+ "Pain rose about %1$s points within 2 hours, over %2$s uses": "La douleur a monté d'environ %1$s points en 2 heures, sur %2$s prises",
+ "Taken within %1$s (your median delay): peak %2$s · later: peak %3$s": "Pris dans les %1$s (ta médiane) : pic %2$s · plus tard : pic %3$s",
+ "Air quality warning": "Alerte qualité de l'air",
+ "Burning": "Brûlure",
+ "Dull ache": "Douleur sourde",
+ "Guidance": "Suivi",
+ "Ice-pick": "Pic à glace",
+ "Mast cell reaction": "Réaction mastocytaire",
+ "Migraine glasses": "Lunettes anti-migraine",
+ "Protein dense": "Riche en protéines",
+ "Therapy": "Thérapie",
+ "Throbbing": "Pulsatile",
+ "physical activity": "Activité physique"
 }

@@ -3657,5 +3657,22 @@
  "Breakfast": "Colazione",
  "Lunch": "Pranzo",
  "Dinner": "Cena",
- "Snack": "Spuntino"
+ "Snack": "Spuntino",
+ "At least about %1$s points less pain than attacks you treated with nothing, over %2$s uses": "Almeno circa %1$s punti di dolore in meno rispetto agli attacchi non trattati, su %2$s utilizzi",
+ "Attacks ended about %1$s sooner, over %2$s uses": "Gli attacchi sono finiti circa %1$s prima, su %2$s utilizzi",
+ "Attacks ran about %1$s longer, over %2$s uses": "Gli attacchi sono durati circa %1$s in più, su %2$s utilizzi",
+ "Pain dropped about %1$s points within 2 hours, over %2$s uses": "Il dolore è sceso di circa %1$s punti in 2 ore, su %2$s utilizzi",
+ "Pain rose about %1$s points within 2 hours, over %2$s uses": "Il dolore è salito di circa %1$s punti in 2 ore, su %2$s utilizzi",
+ "Taken within %1$s (your median delay): peak %2$s · later: peak %3$s": "Preso entro %1$s (la tua mediana): picco %2$s · più tardi: picco %3$s",
+ "Air quality warning": "Allerta qualità dell'aria",
+ "Burning": "Bruciore",
+ "Dull ache": "Dolore sordo",
+ "Guidance": "Guida",
+ "Ice-pick": "Fitta acuta",
+ "Mast cell reaction": "Reazione mastocitaria",
+ "Migraine glasses": "Occhiali anti-emicrania",
+ "Protein dense": "Ricco di proteine",
+ "Therapy": "Terapia",
+ "Throbbing": "Pulsante",
+ "physical activity": "Attività fisica"
 }

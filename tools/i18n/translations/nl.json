@@ -3657,5 +3657,22 @@
  "Breakfast": "Ontbijt",
  "Lunch": "Lunch",
  "Dinner": "Avondeten",
- "Snack": "Snack"
+ "Snack": "Snack",
+ "At least about %1$s points less pain than attacks you treated with nothing, over %2$s uses": "Minstens ongeveer %1$s punten minder pijn dan bij onbehandelde aanvallen, over %2$s keer",
+ "Attacks ended about %1$s sooner, over %2$s uses": "Aanvallen eindigden ongeveer %1$s eerder, over %2$s keer",
+ "Attacks ran about %1$s longer, over %2$s uses": "Aanvallen duurden ongeveer %1$s langer, over %2$s keer",
+ "Pain dropped about %1$s points within 2 hours, over %2$s uses": "Pijn zakte ongeveer %1$s punten binnen 2 uur, over %2$s keer",
+ "Pain rose about %1$s points within 2 hours, over %2$s uses": "Pijn steeg ongeveer %1$s punten binnen 2 uur, over %2$s keer",
+ "Taken within %1$s (your median delay): peak %2$s · later: peak %3$s": "Binnen %1$s ingenomen (je mediaan): piek %2$s · later: piek %3$s",
+ "Air quality warning": "Luchtkwaliteitswaarschuwing",
+ "Burning": "Branderig",
+ "Dull ache": "Doffe pijn",
+ "Guidance": "Begeleiding",
+ "Ice-pick": "Ijspriem",
+ "Mast cell reaction": "Mestcelreactie",
+ "Migraine glasses": "Migrainebril",
+ "Protein dense": "Eiwitrijk",
+ "Therapy": "Therapie",
+ "Throbbing": "Bonzend",
+ "physical activity": "Lichaamsbeweging"
 }

@@ -3657,5 +3657,22 @@
  "Breakfast": "Desayuno",
  "Lunch": "Almuerzo",
  "Dinner": "Cena",
- "Snack": "Snack"
+ "Snack": "Snack",
+ "At least about %1$s points less pain than attacks you treated with nothing, over %2$s uses": "Al menos unos %1$s puntos menos de dolor que en los ataques sin tratar, en %2$s usos",
+ "Attacks ended about %1$s sooner, over %2$s uses": "Los ataques terminaron unas %1$s antes, en %2$s usos",
+ "Attacks ran about %1$s longer, over %2$s uses": "Los ataques duraron unas %1$s más, en %2$s usos",
+ "Pain dropped about %1$s points within 2 hours, over %2$s uses": "El dolor bajó unos %1$s puntos en 2 horas, en %2$s usos",
+ "Pain rose about %1$s points within 2 hours, over %2$s uses": "El dolor subió unos %1$s puntos en 2 horas, en %2$s usos",
+ "Taken within %1$s (your median delay): peak %2$s · later: peak %3$s": "Tomado en %1$s (tu mediana): pico %2$s · más tarde: pico %3$s",
+ "Air quality warning": "Aviso de calidad del aire",
+ "Burning": "Ardor",
+ "Dull ache": "Dolor sordo",
+ "Guidance": "Orientación",
+ "Ice-pick": "Punzante",
+ "Mast cell reaction": "Reacción de mastocitos",
+ "Migraine glasses": "Gafas para migraña",
+ "Protein dense": "Rico en proteínas",
+ "Therapy": "Terapia",
+ "Throbbing": "Pulsátil",
+ "physical activity": "Actividad física"
 }
