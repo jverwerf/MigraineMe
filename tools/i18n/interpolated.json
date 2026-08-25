@@ -116,46 +116,6 @@
     "line": "                            t(\"Some metrics need a wearable or Health Connect, or phone permissions — the row will guide you.\"),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:377",
-    "line": "                    t(\"Migraine devices are hard to judge from a website, because the marketing all sounds \") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:378",
-    "line": "                        t(\"the same whether there are ten trials behind it or none.\\n\\n\") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:379",
-    "line": "                        t(\"This page lists what each one physically does and how solid the evidence is, \") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:380",
-    "line": "                        t(\"including the ones where it's thin. Prescription devices are marked as such.\\n\\n\") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:381",
-    "line": "                        t(\"Once you own one, logging it is the point: MigraineMe compares how your attacks go \") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:382",
-    "line": "                        t(\"with and without it, so after a few weeks you have your own answer rather than the \") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:383",
-    "line": "                        t(\"manufacturer's.\"),"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:603",
-    "line": "            t(\"MigraineMe is not a medical device and does not recommend treatments. \") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:604",
-    "line": "                t(\"Prescription devices need a conversation with your doctor. \") +"
-  },
-  {
-    "site": "app/src/main/java/com/migraineme/DevicesScreen.kt:605",
-    "line": "                t(\"We earn a commission on links to devices.\"),"
-  },
-  {
     "site": "app/src/main/java/com/migraineme/EditMigraineScreen.kt:909",
     "line": "        Text(t(\"Delete → Triggers: %1\\$s, Medicines: %2\\$s, Reliefs: %3\\$s\", deletes.first, deletes.second, deletes.third))"
   },
@@ -348,19 +308,19 @@
     "line": "        Text(t(\"Steady %1\\$s%% of the time with it, %2\\$s%% without.\", stat.pctControlWindows.toInt(), stat.pctMigraineWindows.toInt()),"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:330",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:332",
     "line": "                    Toast.makeText(this, tSync(\"WHOOP auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:365",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:367",
     "line": "                    Toast.makeText(this, tSync(\"Oura auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:399",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:401",
     "line": "                    Toast.makeText(this, tSync(\"Polar auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
-    "site": "app/src/main/java/com/migraineme/MainActivity.kt:433",
+    "site": "app/src/main/java/com/migraineme/MainActivity.kt:435",
     "line": "                    Toast.makeText(this, tSync(\"Garmin auth error: %1\\$s\", error), Toast.LENGTH_SHORT).show()"
   },
   {
@@ -465,7 +425,7 @@
   },
   {
     "site": "app/src/main/java/com/migraineme/MigrainesMonitorCard.kt:74",
-    "line": "                        \"this week (vs ${wsValue.lastWeekCount})\","
+    "line": "                        t(\"this week (vs %1\\$s)\", wsValue.lastWeekCount),"
   },
   {
     "site": "app/src/main/java/com/migraineme/MonitorMedicineScreen.kt:438",
@@ -722,6 +682,18 @@
   {
     "site": "app/src/main/java/com/migraineme/ScreenTimePermissionDialog.kt:26",
     "line": "                        t(\"You'll be taken to Settings where you can grant this permission.\")"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:348",
+    "line": "            t(\"MigraineMe is not a medical device and does not recommend treatments. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:349",
+    "line": "                t(\"Prescription devices need a conversation with your doctor. \") +"
+  },
+  {
+    "site": "app/src/main/java/com/migraineme/ShopScreen.kt:350",
+    "line": "                t(\"We earn a commission on links to devices.\"),"
   },
   {
     "site": "app/src/main/java/com/migraineme/SleepHistoryGraph.kt:175",

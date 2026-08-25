@@ -71,7 +71,7 @@ fun MigrainesMonitorCard(onClick: () -> Unit) {
                     }
                     MetricTile(
                         "${wsValue.thisWeekCount}$trendSuffix",
-                        "this week (vs ${wsValue.lastWeekCount})",
+                        t("this week (vs %1\$s)", wsValue.lastWeekCount),
                         if (wsValue.trend == "up") Color(0xFFE57373) else Color.White,
                         Modifier.weight(1f)
                     )
