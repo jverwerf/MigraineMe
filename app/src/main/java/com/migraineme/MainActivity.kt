@@ -1049,7 +1049,7 @@ fun AppRoot(pendingNavigationRoute: MutableState<String?> = mutableStateOf(null)
                                     Routes.INSIGHTS_REPORT -> "Full Report"
                                     Routes.INSIGHTS_PATTERNS -> "What Happened"
                                     Routes.INSIGHTS_TREATMENTS -> "What Worked"
-                                    Routes.INSIGHTS_WHATS_HELPING -> "What's Helping"
+                                    Routes.INSIGHTS_WHATS_HELPING -> "What Strengthens You"
                                     Routes.INSIGHTS_WHAT_CHANGED -> "What changed"
                                     Routes.INSIGHTS_CONTEXT -> "What Were You Doing"
                                     Routes.INSIGHTS_IMPACT -> "How Did It Impact You"

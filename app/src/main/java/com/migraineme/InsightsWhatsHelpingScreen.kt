@@ -1,6 +1,6 @@
 package com.migraineme
 
-// What's Helping — Well Done positive layer
+// What Strengthens You — Well Done positive layer
 // (docs/well-done-layer-spec.md in the migraineme-ios repo).
 // Two sections: consistent habits present on migraine-free days (direct
 // rows, factor_type well_done) and the improvers that make them steady

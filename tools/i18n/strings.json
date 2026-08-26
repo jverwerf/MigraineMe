@@ -3224,7 +3224,7 @@
     "count": 2
   },
   {
-    "en": "About What's Helping",
+    "en": "About What Strengthens You",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1109",
@@ -4884,7 +4884,7 @@
     "count": 2
   },
   {
-    "en": "What's Helping",
+    "en": "What Strengthens You",
     "class": "hard",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsReportScreen.kt:915",
@@ -24899,7 +24899,7 @@
     "count": 1
   },
   {
-    "en": "Unlock What's Helping",
+    "en": "Unlock What Strengthens You",
     "class": "soft",
     "sites": [
       "app/src/main/java/com/migraineme/InsightsScreen.kt:1071"
@@ -26636,7 +26636,7 @@
     "count": 1
   },
   {
-    "en": "What's helping",
+    "en": "What strengthens you",
     "class": "soft",
     "sites": [
       "build-report-html/render.ts"

@@ -2031,7 +2031,7 @@ function whatsHelping(d: ReportData, pageNo: number): string {
   }
 
   return page(C.green, `
-    ${header(C.green, ICON.leaf, rt("What's Helping"),
+    ${header(C.green, ICON.leaf, rt("What Strengthens You"),
       rt("Habits that show up on migraine-free days, and what drives them"), !scoped)}
     ${scoped ? historyNote(STATS_NOTE()) : ""}
     ${body}
@@ -2934,7 +2934,7 @@ export function renderReport(d: ReportData): string {
     whatWorked:   { title: rt("What Worked"),            build: whatWorked },
     painResponse: { title: rt("Pain response"),          build: painResponse },
     usage:        { title: rt("Usage vs effectiveness"), build: usageVsEffectiveness },
-    whatsHelping: { title: rt("What's Helping"),         build: whatsHelping },
+    whatsHelping: { title: rt("What Strengthens You"),         build: whatsHelping },
     context:      { title: rt("What Were You Doing"),    build: contextPage },
     impact:       { title: rt("How Did It Impact You"),  build: impact },
     anticipated:  { title: rt("Given up with no attack"), build: anticipatedPage },

@@ -1068,13 +1068,13 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                 // present on migraine-free days + what drives them.
                 var showWhatsHelpingInfo by remember { mutableStateOf(false) }
                 PremiumGate(
-                    message = t("Unlock What's Helping"),
+                    message = t("Unlock What Strengthens You"),
                     subtitle = t("See the habits behind your migraine-free days"),
                     onUpgrade = { navController.navigate(Routes.PAYWALL) }
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         BrainyNavCard(
-                            title = t("What's Helping"),
+                            title = t("What Strengthens You"),
                             description = t("Habits that show up on your migraine-free days"),
                             resId = R.drawable.brainy_gardener,
                             flipWatermark = true,
@@ -1090,7 +1090,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                         ) {
                                 Icon(
                                     Icons.Outlined.Info,
-                                    contentDescription = t("About What's Helping"),
+                                    contentDescription = t("About What Strengthens You"),
                                     tint = AppTheme.SubtleTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -1106,7 +1106,7 @@ fun InsightsScreen(navController: NavHostController, vm: InsightsViewModel = vie
                             }
                         },
                         title = {
-                            Text(t("About What's Helping"), color = AppTheme.TitleColor,
+                            Text(t("About What Strengthens You"), color = AppTheme.TitleColor,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                         },
                         text = {

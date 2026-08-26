@@ -762,7 +762,7 @@ const TABLE: Record<string, string> = {
   "What we can tell you is what tends to set migraines off for most people: disrupted or short sleep, stress and the let-down after it, dehydration, skipped meals, hormonal shifts, bright light and long screen sessions, drops in air pressure, and changes in alcohol or caffeine. We suggest keeping an eye on those to begin with.": "O que podemos dizer-te é o que costuma desencadear enxaquecas na maioria das pessoas: sono curto ou interrompido, stress e a quebra a seguir, desidratação, refeições saltadas, variações hormonais, luz forte e longas sessões de ecrã, quedas de pressão e mudanças no álcool ou na cafeína. Sugerimos ficar de olho nisso para começar.",
   "What you logged": "O que anotaste",
   "What you missed": "O que perdeste",
-  "What's Helping": "O que ajuda",
+  "What Strengthens You": "O que te fortalece",
   "Where": "Onde",
   "Whether a treatment landed differently depending on the symptoms that came with the attack. Ratings compared, not measured — no statistical test runs on these.": "Se um tratamento resultou de forma diferente consoante os sintomas da crise. Avaliações comparadas, não medidas — aqui não corre qualquer teste estatístico.",
   "Wind": "Vento",

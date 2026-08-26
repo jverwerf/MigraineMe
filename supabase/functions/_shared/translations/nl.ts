@@ -762,7 +762,7 @@ const TABLE: Record<string, string> = {
   "What we can tell you is what tends to set migraines off for most people: disrupted or short sleep, stress and the let-down after it, dehydration, skipped meals, hormonal shifts, bright light and long screen sessions, drops in air pressure, and changes in alcohol or caffeine. We suggest keeping an eye on those to begin with.": "Wat we je wel kunnen vertellen: wat bij de meeste mensen migraine uitlokt — verstoorde of korte slaap, stress en de terugval erna, uitdroging, overgeslagen maaltijden, hormonale schommelingen, fel licht en lange schermsessies, luchtdrukdalingen en veranderingen in alcohol of cafeïne. Houd die om te beginnen in de gaten.",
   "What you logged": "Wat je noteerde",
   "What you missed": "Wat je miste",
-  "What's Helping": "Wat helpt",
+  "What Strengthens You": "Wat je sterker maakt",
   "Where": "Waar",
   "Whether a treatment landed differently depending on the symptoms that came with the attack. Ratings compared, not measured — no statistical test runs on these.": "Of een behandeling anders uitpakte afhankelijk van de symptomen bij de aanval. Beoordelingen vergeleken, niet gemeten — hierop draait geen statistische toets.",
   "Wind": "Wind",

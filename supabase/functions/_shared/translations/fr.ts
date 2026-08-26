@@ -762,7 +762,7 @@ const TABLE: Record<string, string> = {
   "What we can tell you is what tends to set migraines off for most people: disrupted or short sleep, stress and the let-down after it, dehydration, skipped meals, hormonal shifts, bright light and long screen sessions, drops in air pressure, and changes in alcohol or caffeine. We suggest keeping an eye on those to begin with.": "Ce qu'on peut te dire, c'est ce qui déclenche des migraines chez la plupart des gens : sommeil court ou perturbé, stress et son relâchement, déshydratation, repas sautés, variations hormonales, lumière vive et longues sessions d'écran, chutes de pression, et changements d'alcool ou de caféine. On te conseille de les surveiller pour commencer.",
   "What you logged": "Ce que tu as noté",
   "What you missed": "Activités ratées",
-  "What's Helping": "Ce qui aide",
+  "What Strengthens You": "Ce qui te renforce",
   "Where": "Où",
   "Whether a treatment landed differently depending on the symptoms that came with the attack. Ratings compared, not measured — no statistical test runs on these.": "Si un traitement a agi différemment selon les symptômes présents pendant la crise. Évaluations comparées, non mesurées — aucun test statistique n'est appliqué ici.",
   "Wind": "Vent",

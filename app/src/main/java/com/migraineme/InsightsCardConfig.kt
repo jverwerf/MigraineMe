@@ -44,7 +44,7 @@ data class InsightsCardConfig(
             CARD_ACCURACY to "Accuracy",
             CARD_PATTERNS to "What Happened",
             CARD_TREATMENTS to "What Worked",
-            CARD_HELPING to "What's Helping",
+            CARD_HELPING to "What Strengthens You",
             CARD_CHANGES to "What changed",
             CARD_CONTEXT to "What Were You Doing",
             CARD_IMPACT to "How Did It Impact You"

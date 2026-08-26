@@ -57,7 +57,7 @@ object InsightsSections {
     const val TREATMENTS_USED_TOGETHER = "used_together"
     const val TREATMENTS_WORKS_BEST_WHEN = "works_best_when"
 
-    // What's Helping
+    // What Strengthens You
     const val HELPING_DIRECT = "helping"
     const val HELPING_HABITS_WHY = "habits_why"
 
@@ -156,7 +156,7 @@ object InsightsSections {
     val PAGE_TITLES: Map<String, String> = mapOf(
         PAGE_PATTERNS to "What Happened",
         PAGE_TREATMENTS to "What Worked",
-        PAGE_HELPING to "What's Helping",
+        PAGE_HELPING to "What Strengthens You",
         PAGE_IMPACT to "How Did It Impact You",
         PAGE_CHANGES to "What changed",
         PAGE_ACCURACY to "Accuracy",

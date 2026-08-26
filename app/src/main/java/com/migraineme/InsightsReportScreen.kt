@@ -904,7 +904,7 @@ fun InsightsReportScreen(
             }
             if (previewWellDone.isNotEmpty() || previewWellDoneChains.isNotEmpty()) {
                 Column {
-                    // Gardener is What's Helping's costume on the Insights hub;
+                    // Gardener is What Strengthens You's costume on the Insights hub;
                     // the report section wears the same one so the two read as
                     // the same thing.
                     BrainyWatermarkCard(resId = R.drawable.brainy_gardener, flipWatermark = true) {
@@ -912,7 +912,7 @@ fun InsightsReportScreen(
                             BrainyBlobIcon(resId = R.drawable.brainy_gardener_small)
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(t("What's Helping"), color = AppTheme.TitleColor,
+                                Text(t("What Strengthens You"), color = AppTheme.TitleColor,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                                 Text(t("Habits that show up on your migraine-free days"),
                                     color = AppTheme.SubtleTextColor, style = MaterialTheme.typography.bodySmall)
