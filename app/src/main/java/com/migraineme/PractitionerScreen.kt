@@ -169,6 +169,14 @@ fun PractitionerPanel(
     var viewing by remember { mutableStateOf<SupabasePractitionerService.PractitionerRow?>(null) }
     val uriHandler = LocalUriHandler.current
 
+    // A practitioner who already runs her own booking tool gets the button
+    // sent straight there. Filing an in-app request would mean asking her to
+    // watch a second inbox, which is how a booking goes unanswered.
+    val bookOrRequest: (SupabasePractitionerService.PractitionerRow) -> Unit = { p ->
+        val booking = p.booking_url?.trim()
+        if (!booking.isNullOrEmpty()) uriHandler.openUri(booking) else requesting = p
+    }
+
     LaunchedEffect(auth.accessToken, reload) {
         val token = auth.accessToken
         if (token.isNullOrBlank()) { loading = false; return@LaunchedEffect }
@@ -230,7 +238,7 @@ fun PractitionerPanel(
                             p = p,
                             link = link,
                             lang = LangPrefs.get().code,
-                            onRequestPlace = { requesting = p },
+                            onRequestPlace = { bookOrRequest(p) },
                             onShareData = {
                                 if (link != null) editing = link else connecting = p
                             },
@@ -274,7 +282,7 @@ fun PractitionerPanel(
             link = links.firstOrNull { it.practitioner_id == p.id },
             lang = LangPrefs.get().code,
             onDismiss = { viewing = null },
-            onRequestPlace = { viewing = null; requesting = p },
+            onRequestPlace = { viewing = null; bookOrRequest(p) },
             onShareData = {
                 val existing = links.firstOrNull { it.practitioner_id == p.id }
                 viewing = null

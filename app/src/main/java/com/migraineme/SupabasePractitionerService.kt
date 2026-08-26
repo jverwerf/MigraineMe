@@ -172,6 +172,7 @@ object SupabasePractitionerService {
         val city: String? = null,
         val consult_mode: String = "both",
         val listing_mode: String = "listed",
+        val booking_url: String? = null,
         val registration_body: String? = null,
         val registration_number: String? = null,
         val practitioner_bios: List<BioRow> = emptyList(),
@@ -244,7 +245,7 @@ object SupabasePractitionerService {
 
     private const val PRAC_SELECT =
         "id,slug,display_name,practice_name,discipline,photo_url,banner_url,logo_url,facts," +
-            "website,languages,country,city,consult_mode,listing_mode," +
+            "website,languages,country,city,consult_mode,listing_mode,booking_url," +
             "registration_body,registration_number," +
             "practitioner_bios(lang,headline,quote,bio,treats,meta,facts,is_source),"+
             "practitioner_offers(lang,sort,title,price,subtitle,bullets,kind,image_url),"+
