@@ -90,6 +90,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -116,7 +117,9 @@ import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import io.ktor.client.statement.bodyAsText
@@ -3105,7 +3108,7 @@ private fun BottomBar(
                         }
                     }
                 },
-                label = { Text(t(item.label)) },
+                label = { NavLabel(t(item.label)) },
                 alwaysShowLabel = true,
                 colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.White,
@@ -3117,6 +3120,36 @@ private fun BottomBar(
             )
         }
     }
+}
+
+/**
+ * A bottom-bar label that never wraps.
+ *
+ * German "Erkenntnisse" is half again the width of "Insights" and broke onto
+ * a second line, leaving a stranded "e" under the tab. Truncating instead
+ * would give "Erkenntniss…", which is worse: the reader cannot finish a word
+ * they cannot see. So the label keeps one line and shrinks until it fits its
+ * slot, which also covers whatever the next language throws at it.
+ *
+ * Compose 1.7 has no TextAutoSize, hence the measure-and-shrink loop. It is
+ * held invisible for the frames it takes to settle so the text never jumps.
+ */
+@Composable
+private fun NavLabel(text: String) {
+    val start = 12.sp
+    var size by remember(text) { mutableStateOf(start) }
+    var settled by remember(text) { mutableStateOf(false) }
+    Text(
+        text,
+        fontSize = size,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Clip,
+        modifier = Modifier.drawWithContent { if (settled) drawContent() },
+        onTextLayout = { result ->
+            if (result.didOverflowWidth && size > 8.sp) size = size * 0.92f else settled = true
+        },
+    )
 }
 
 
