@@ -63,6 +63,9 @@ object PremiumManager {
                 Purchases.configure(
                     PurchasesConfiguration.Builder(context, REVENUECAT_API_KEY).build()
                 )
+                // Google Ads attribution: sends GAID to RevenueCat so paid installs
+                // are credited to the campaign. Requires the AD_ID permission.
+                Purchases.sharedInstance.collectDeviceIdentifiers()
                 Log.d(TAG, "RevenueCat configured successfully")
             }
 

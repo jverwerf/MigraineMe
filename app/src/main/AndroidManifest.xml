@@ -10,6 +10,9 @@
     <!-- In-app billing -->
     <uses-permission android:name="com.android.vending.BILLING" />
 
+    <!-- Advertising ID — RevenueCat attribution of Google Ads installs; declared in Play Console ad-ID form -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+
     <!-- Calendar (read-only) — for the evening check-in calendar mapper -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
 
