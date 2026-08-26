@@ -134,7 +134,10 @@ fun CommunityScreen(
             // ── Tab content (each article/forum post is its own card) ──
             item("content") {
                 if (guidance) {
-                    PractitionerPanel(authVm = authVm)
+                    PractitionerPanel(
+                        authVm = authVm,
+                        onUpgrade = { navController.navigate(Routes.PAYWALL) },
+                    )
                 } else when (state.topTab) {
                     0 -> ArticlesContent(vm, state, authState.accessToken, navController)
                     1 -> ForumContent(vm, state, authState.accessToken, authState.userId, navController)

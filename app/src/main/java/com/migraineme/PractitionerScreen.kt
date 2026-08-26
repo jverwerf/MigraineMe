@@ -34,6 +34,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -152,9 +153,11 @@ fun PractitionerScreen(
 fun PractitionerPanel(
     authVm: AuthViewModel = viewModel(),
     scrolls: Boolean = false,
+    onUpgrade: () -> Unit = {},
 ) {
     val auth by authVm.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var links by remember { mutableStateOf<List<SupabasePractitionerService.LinkRow>>(emptyList()) }
     var directory by remember { mutableStateOf<List<SupabasePractitionerService.PractitionerRow>>(emptyList()) }
@@ -168,6 +171,26 @@ fun PractitionerPanel(
     var requesting by remember { mutableStateOf<SupabasePractitionerService.PractitionerRow?>(null) }
     var viewing by remember { mutableStateOf<SupabasePractitionerService.PractitionerRow?>(null) }
     val uriHandler = LocalUriHandler.current
+    val premiumState by PremiumManager.state.collectAsState()
+
+    // Sharing a diary with a practitioner is a premium feature. LOADING is not
+    // FREE: sending someone who pays to the paywall is the worse error, so
+    // only a settled NOT_ENTITLED turns them away.
+    val shareOrUpgrade: (SupabasePractitionerService.PractitionerRow) -> Unit = { p ->
+        if (premiumState.access == PremiumAccess.NOT_ENTITLED) {
+            onUpgrade()
+        } else {
+            val existing = links.firstOrNull { it.practitioner_id == p.id }
+            when {
+                // Already offered and waiting on her. Re-opening the consent
+                // sheet here would try to accept on her behalf, which the
+                // database refuses; there is nothing to decide until she answers.
+                existing?.isOffered == true -> Unit
+                existing != null -> editing = existing
+                else -> connecting = p
+            }
+        }
+    }
 
     // A practitioner who already runs her own booking tool gets the button
     // sent straight there. Filing an in-app request would mean asking her to
@@ -178,7 +201,7 @@ fun PractitionerPanel(
     }
 
     LaunchedEffect(auth.accessToken, reload) {
-        val token = auth.accessToken
+        val token = authVm.getValidAccessToken(context)
         if (token.isNullOrBlank()) { loading = false; return@LaunchedEffect }
         loading = true
         error = null
@@ -239,9 +262,7 @@ fun PractitionerPanel(
                             link = link,
                             lang = LangPrefs.get().code,
                             onRequestPlace = { bookOrRequest(p) },
-                            onShareData = {
-                                if (link != null) editing = link else connecting = p
-                            },
+                            onShareData = { shareOrUpgrade(p) },
                             onOpenWebsite = { viewing = p },
                         )
                     }
@@ -261,9 +282,9 @@ fun PractitionerPanel(
             isFirstAnswer = link.isPending,
             onDismiss = { editing = null },
             onConfirm = { chosen ->
-                val token = auth.accessToken
                 editing = null
-                if (token != null) scope.launch {
+                scope.launch {
+                    val token = authVm.getValidAccessToken(context) ?: return@launch
                     runCatching {
                         withContext(Dispatchers.IO) {
                             if (link.isPending) SupabasePractitionerService.respondToRequest(token, link, chosen)
@@ -283,11 +304,7 @@ fun PractitionerPanel(
             lang = LangPrefs.get().code,
             onDismiss = { viewing = null },
             onRequestPlace = { viewing = null; bookOrRequest(p) },
-            onShareData = {
-                val existing = links.firstOrNull { it.practitioner_id == p.id }
-                viewing = null
-                if (existing != null) editing = existing else connecting = p
-            },
+            onShareData = { viewing = null; shareOrUpgrade(p) },
         )
     }
 
@@ -303,10 +320,10 @@ fun PractitionerPanel(
             isFirstAnswer = true,
             onDismiss = { connecting = null },
             onConfirm = { chosen ->
-                val token = auth.accessToken
-                val uid = auth.userId
                 connecting = null
-                if (token != null && uid != null) scope.launch {
+                scope.launch {
+                    val token = authVm.getValidAccessToken(context) ?: return@launch
+                    val uid = auth.userId ?: return@launch
                     runCatching {
                         withContext(Dispatchers.IO) {
                             SupabasePractitionerService.connect(token, uid, target.id, chosen)
@@ -323,10 +340,10 @@ fun PractitionerPanel(
             practitionerName = p.display_name,
             onDismiss = { requesting = null },
             onSend = { note ->
-                val token = auth.accessToken
-                val uid = auth.userId
                 requesting = null
-                if (token != null && uid != null) scope.launch {
+                scope.launch {
+                    val token = authVm.getValidAccessToken(context) ?: return@launch
+                    val uid = auth.userId ?: return@launch
                     runCatching {
                         withContext(Dispatchers.IO) {
                             SupabasePractitionerService.requestAppointment(token, uid, p.id, note, null)
@@ -351,9 +368,9 @@ fun PractitionerPanel(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    val token = auth.accessToken
                     confirmRevoke = null
-                    if (token != null) scope.launch {
+                    scope.launch {
+                        val token = authVm.getValidAccessToken(context) ?: return@launch
                         runCatching { withContext(Dispatchers.IO) { SupabasePractitionerService.revoke(token, link) } }
                             .onFailure { error = it.message }
                         reload++
@@ -712,8 +729,10 @@ fun RowScope.PractitionerTab(
     val auth by authVm.state.collectAsState()
     var pending by remember { mutableStateOf(0) }
 
+    val context = LocalContext.current
+
     LaunchedEffect(auth.accessToken) {
-        val token = auth.accessToken ?: return@LaunchedEffect
+        val token = authVm.getValidAccessToken(context) ?: return@LaunchedEffect
         runCatching { withContext(Dispatchers.IO) { SupabasePractitionerService.myLinks(token) } }
             .onSuccess { links -> pending = links.count { it.isPending } }
     }

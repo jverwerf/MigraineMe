@@ -224,7 +224,12 @@ object SupabasePractitionerService {
         val granted: Set<Scope> get() = scopes.mapNotNull { Scope.fromKey(it) }.toSet()
         val requested: Set<Scope> get() = requested_scopes.mapNotNull { Scope.fromKey(it) }.toSet()
         val isActive: Boolean get() = status == "active"
-        val isPending: Boolean get() = status == "pending"
+
+        // "pending" now means two opposite things, so neither side may test
+        // status alone. She asked and the patient has not answered, or the
+        // patient offered and she has not answered.
+        val isPending: Boolean get() = status == "pending" && initiated_by == "practitioner"
+        val isOffered: Boolean get() = status == "pending" && initiated_by == "client"
     }
 
     @Serializable
@@ -330,11 +335,13 @@ object SupabasePractitionerService {
         val body = buildJsonObject {
             put("practitioner_id", practitionerId)
             put("user_id", userId)
-            put("status", "active")
+            // "pending", not "active": she has to accept before anything is
+            // readable. practitioner_can_read gates on "active", so until she
+            // answers this row grants nothing.
+            put("status", "pending")
             put("initiated_by", "client")
             putJsonArray("scopes") { scopes.forEach { add(it.key) } }
             putJsonArray("requested_scopes") { scopes.forEach { add(it.key) } }
-            put("connected_at", nowIso())
         }
         val rows: List<LinkRow> = client.post("$baseUrl/rest/v1/practitioner_clients") {
             header("apikey", anonKey)
