@@ -123,7 +123,6 @@ fun CommunityScreen(
                     modifier = Modifier.padding(vertical = 4.dp),
                     leading = {
                         PractitionerTab(
-                            authVm = authVm,
                             selected = guidance,
                             onOpen = { guidance = true },
                         )

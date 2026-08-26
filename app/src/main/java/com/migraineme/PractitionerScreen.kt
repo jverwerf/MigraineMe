@@ -279,7 +279,7 @@ fun PractitionerPanel(
             discipline = link.practitioners?.discipline,
             asked = if (link.requested.isNotEmpty()) link.requested else Scope.entries.toSet(),
             alreadyGranted = link.granted,
-            isFirstAnswer = link.isPending,
+            isFirstAnswer = false,
             onDismiss = { editing = null },
             onConfirm = { chosen ->
                 editing = null
@@ -287,8 +287,7 @@ fun PractitionerPanel(
                     val token = authVm.getValidAccessToken(context) ?: return@launch
                     runCatching {
                         withContext(Dispatchers.IO) {
-                            if (link.isPending) SupabasePractitionerService.respondToRequest(token, link, chosen)
-                            else SupabasePractitionerService.updateScopes(token, link, chosen)
+                            SupabasePractitionerService.updateScopes(token, link, chosen)
                         }
                     }.onFailure { error = it.message }
                     reload++
@@ -722,21 +721,9 @@ private fun disciplineLabel(d: String?): String? = when (d) {
  */
 @Composable
 fun RowScope.PractitionerTab(
-    authVm: AuthViewModel,
     selected: Boolean,
     onOpen: () -> Unit,
 ) {
-    val auth by authVm.state.collectAsState()
-    var pending by remember { mutableStateOf(0) }
-
-    val context = LocalContext.current
-
-    LaunchedEffect(auth.accessToken) {
-        val token = authVm.getValidAccessToken(context) ?: return@LaunchedEffect
-        runCatching { withContext(Dispatchers.IO) { SupabasePractitionerService.myLinks(token) } }
-            .onSuccess { links -> pending = links.count { it.isPending } }
-    }
-
     val pillShape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
@@ -764,17 +751,11 @@ fun RowScope.PractitionerTab(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 t("Guidance"),
-                color = if (selected) Color.White else if (pending > 0) AppTheme.AccentPink else AppTheme.SubtleTextColor,
+                color = if (selected) Color.White else AppTheme.SubtleTextColor,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (selected || pending > 0) FontWeight.SemiBold else FontWeight.Normal,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 maxLines = 1,
             )
-            // A request waiting on the patient is the only thing in this row
-            // that asks something of them, so it gets the one dot.
-            if (pending > 0) {
-                Spacer(Modifier.width(4.dp))
-                Box(Modifier.size(6.dp).background(AppTheme.AccentPink, CircleShape))
-            }
         }
     }
 }

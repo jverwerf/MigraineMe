@@ -225,11 +225,9 @@ object SupabasePractitionerService {
         val requested: Set<Scope> get() = requested_scopes.mapNotNull { Scope.fromKey(it) }.toSet()
         val isActive: Boolean get() = status == "active"
 
-        // "pending" now means two opposite things, so neither side may test
-        // status alone. She asked and the patient has not answered, or the
-        // patient offered and she has not answered.
-        val isPending: Boolean get() = status == "pending" && initiated_by == "practitioner"
-        val isOffered: Boolean get() = status == "pending" && initiated_by == "client"
+        // Offered by the patient and waiting on her. A practitioner cannot
+        // ask for a diary, so this is the only thing "pending" can mean.
+        val isOffered: Boolean get() = status == "pending"
     }
 
     @Serializable
@@ -357,26 +355,6 @@ object SupabasePractitionerService {
 
     /** Answer a practitioner's request. Granting nothing is a decline, and is
      *  recorded as one rather than left as a request nobody ever answered. */
-    suspend fun respondToRequest(
-        accessToken: String,
-        link: LinkRow,
-        scopes: Set<Scope>,
-    ) {
-        val declining = scopes.isEmpty()
-        val body = buildJsonObject {
-            put("status", if (declining) "declined" else "active")
-            putJsonArray("scopes") { scopes.forEach { add(it.key) } }
-            if (!declining) put("connected_at", nowIso())
-            put("updated_at", nowIso())
-        }
-        client.patch("$baseUrl/rest/v1/practitioner_clients?id=eq.${link.id}") {
-            header("apikey", anonKey)
-            header("Authorization", "Bearer $accessToken")
-            contentType(ContentType.Application.Json)
-            setBody(body)
-        }
-        logConsent(accessToken, link.id, if (declining) "declined" else "granted", link.granted, scopes)
-    }
 
     /** Change what an already-connected practitioner may see. */
     suspend fun updateScopes(accessToken: String, link: LinkRow, scopes: Set<Scope>) {
